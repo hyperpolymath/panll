@@ -1,0 +1,29 @@
+{
+  "name": "panll",
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true
+    }
+  ],
+  "package-specs": [
+    {
+      "module": "es6",
+      "in-source": true
+    }
+  ],
+  "suffix": ".res.js",
+  "bs-dependencies": [
+    "@rescript/core",
+    "rescript-tea"
+  ],
+  "bsc-flags": [
+    "-open RescriptCore"
+  ],
+  "warnings": {
+    "error": "+101"
+  },
+  "jsx": {
+    "version": 4
+  }
+}

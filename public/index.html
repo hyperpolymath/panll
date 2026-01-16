@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PanLL eNSAID - Environment for NeSy-Agentic Integrated Development" />
+  <meta name="theme-color" content="#030712" />
+
+  <title>PanLL eNSAID</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/styles.css" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Critical CSS for initial load */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #030712;
+      color: #f3f4f6;
+    }
+
+    #root {
+      height: 100%;
+    }
+
+    /* Dark Start loading state */
+    .loading-state {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #030712;
+    }
+
+    .loading-title {
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: #4b5563;
+      margin-bottom: 2rem;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .loading-subtitle {
+      font-size: 0.875rem;
+      color: #374151;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <!-- Loading state shown before app hydrates -->
+    <div class="loading-state">
+      <div class="loading-title">PanLL</div>
+      <div class="loading-subtitle">Initialising eNSAID Environment...</div>
+    </div>
+  </div>
+
+  <!-- Application entry point -->
+  <script type="module">
+    import { main } from '/src/App.res.js';
+
+    // Mount the TEA application
+    const app = main(document.getElementById('root'), () => {
+      console.log('[PanLL] Environment initialised');
+    });
+  </script>
+</body>
+</html>

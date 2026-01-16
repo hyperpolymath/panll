@@ -1,0 +1,20 @@
+{
+  "name": "@hyperpolymath/panll",
+  "version": "0.0.1",
+  "tasks": {
+    "dev": "deno task css:watch & tauri dev",
+    "build": "deno task css:build && tauri build",
+    "css:build": "tailwindcss -i ./src/styles/input.css -o ./public/styles.css --minify",
+    "css:watch": "tailwindcss -i ./src/styles/input.css -o ./public/styles.css --watch",
+    "lint": "deno lint scripts/",
+    "fmt": "deno fmt scripts/"
+  },
+  "imports": {
+    "@std/": "jsr:@std/",
+    "@tauri-apps/api": "npm:@tauri-apps/api@^2.0.0"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true
+  }
+}

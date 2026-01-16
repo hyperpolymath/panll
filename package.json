@@ -1,0 +1,30 @@
+{
+  "name": "panll",
+  "version": "0.0.1",
+  "description": "PanLL eNSAID - Environment for NeSy-Agentic Integrated Development",
+  "type": "module",
+  "scripts": {
+    "res:build": "rescript build",
+    "res:watch": "rescript build -w",
+    "res:clean": "rescript clean",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "devDependencies": {
+    "rescript": "^11.1.0",
+    "@rescript/core": "^1.6.0",
+    "rescript-tea": "^0.9.0",
+    "@tauri-apps/cli": "^2.0.0",
+    "tailwindcss": "^3.4.0"
+  },
+  "keywords": [
+    "nesy",
+    "neurosymbolic",
+    "htmi",
+    "eNSAID",
+    "rescript",
+    "tauri"
+  ],
+  "author": "hyperpolymath",
+  "license": "AGPL-3.0-or-later"
+}

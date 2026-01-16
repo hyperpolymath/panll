@@ -1,0 +1,220 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/*
+ * PanLL eNSAID - Base Styles
+ *
+ * "Memory Foam" aesthetic with Indigo (Symbolic) and Emerald (Neural) accents.
+ * Oxford British English throughout.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Root variables for the ambient substrate */
+  :root {
+    --colour-symbolic: theme('colors.indigo.500');
+    --colour-neural: theme('colors.emerald.500');
+    --colour-stable: theme('colors.indigo.900');
+    --colour-decay: theme('colors.amber.900');
+
+    --aura-opacity: 0.2;
+    --humidity-high: 1;
+    --humidity-medium: 0.7;
+    --humidity-low: 0.4;
+  }
+
+  /* Base body styles */
+  body {
+    @apply bg-gray-950 text-gray-100 antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Code/editor fonts */
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  /* Scrollbar styling for Memory Foam feel */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-600;
+  }
+
+  /* Selection colours */
+  ::selection {
+    @apply bg-indigo-600/40 text-white;
+  }
+}
+
+@layer components {
+  /* Pane container styling */
+  .pane {
+    @apply flex flex-col h-full overflow-hidden;
+    @apply bg-gray-900 border-gray-800;
+  }
+
+  .pane-header {
+    @apply px-4 py-3 border-b border-gray-800;
+    @apply flex items-center justify-between;
+  }
+
+  .pane-content {
+    @apply flex-1 overflow-auto p-4;
+  }
+
+  /* Symbolic (Pane-L) specific */
+  .pane-symbolic {
+    @apply border-r border-indigo-900/30;
+  }
+
+  .pane-symbolic .pane-header {
+    @apply border-b-indigo-900/50;
+  }
+
+  /* Neural (Pane-N) specific */
+  .pane-neural {
+    @apply border-r border-emerald-900/30;
+  }
+
+  .pane-neural .pane-header {
+    @apply border-b-emerald-900/50;
+  }
+
+  /* Orbital Drift Aura */
+  .drift-aura {
+    @apply fixed inset-0 pointer-events-none transition-all duration-1000;
+    opacity: var(--aura-opacity);
+  }
+
+  .drift-aura-stable {
+    @apply bg-gradient-radial from-indigo-900/20 to-transparent;
+  }
+
+  .drift-aura-decay {
+    @apply bg-gradient-radial from-amber-900/20 to-transparent;
+  }
+
+  /* Vexometer bar */
+  .vexometer-bar {
+    @apply h-2 rounded-full overflow-hidden transition-all duration-300;
+  }
+
+  .vexometer-bar-fill {
+    @apply h-full transition-all duration-500;
+  }
+
+  /* Binary Star diagram */
+  .binary-star-container {
+    @apply relative flex items-center justify-center;
+  }
+
+  .star {
+    @apply rounded-full flex items-center justify-center;
+    @apply transition-all duration-300;
+  }
+
+  .star-symbolic {
+    @apply bg-indigo-600/50 border-2 border-indigo-400;
+    @apply shadow-lg shadow-indigo-500/30;
+  }
+
+  .star-neural {
+    @apply bg-emerald-600/50 border-2 border-emerald-400;
+    @apply shadow-lg shadow-emerald-500/30;
+  }
+
+  .star-barycentre {
+    @apply bg-gray-600/50 border-2 border-gray-400;
+  }
+
+  /* Anti-Crash halt overlay */
+  .anti-crash-halt {
+    @apply fixed inset-0 bg-red-950/80 flex items-center justify-center z-50;
+    @apply backdrop-blur-sm;
+  }
+
+  .anti-crash-halt-content {
+    @apply bg-gray-900 border border-red-700 rounded-lg p-6;
+    @apply max-w-md text-center;
+  }
+
+  /* Feedback-O-Tron modal */
+  .feedback-modal {
+    @apply fixed inset-0 bg-black/80 flex items-center justify-center z-50;
+    @apply backdrop-blur-sm;
+  }
+
+  .feedback-modal-content {
+    @apply bg-gray-900 border border-gray-700 rounded-lg;
+    @apply w-[500px] max-h-[80vh] overflow-auto;
+  }
+
+  /* Information Humidity levels */
+  .humidity-high {
+    opacity: var(--humidity-high);
+  }
+
+  .humidity-medium {
+    opacity: var(--humidity-medium);
+  }
+
+  .humidity-low {
+    opacity: var(--humidity-low);
+  }
+
+  /* Dark Start mode */
+  .dark-start {
+    @apply fixed inset-0 bg-gray-950 flex items-center justify-center;
+  }
+
+  .dark-start-title {
+    @apply text-4xl font-light text-gray-600;
+  }
+}
+
+@layer utilities {
+  /* Gradient radial (for aura effects) */
+  .bg-gradient-radial {
+    background: radial-gradient(circle at center, var(--tw-gradient-from), var(--tw-gradient-to));
+  }
+
+  /* Subtle glow effects */
+  .glow-indigo {
+    box-shadow: 0 0 20px theme('colors.indigo.500/30');
+  }
+
+  .glow-emerald {
+    box-shadow: 0 0 20px theme('colors.emerald.500/30');
+  }
+
+  .glow-amber {
+    box-shadow: 0 0 20px theme('colors.amber.500/30');
+  }
+
+  /* Pulse animations for active inference */
+  .inference-pulse {
+    animation: inferencePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes inferencePulse {
+    0%, 100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+}

@@ -1,0 +1,81 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+= PanLL eNSAID
+:toc:
+:toc-placement: preamble
+:icons: font
+
+**Environment for NeSy-Agentic Integrated Development**
+
+PanLL (pronounced "parallel") is a Human-Things Interface (HTI) designed to facilitate a "Binary Star" co-orbit between a Human Operator and a Neurosymbolic Machine.
+
+== Vision
+
+This is not a passive text editor. It is an active, synchronous environment that manages Cognitive Ergonomics and kills Inertia.
+
+== Architecture
+
+=== The Three-Pane Parallel Layout
+
+[cols="1,3"]
+|===
+|Pane-L (Symbolic)|Strict logic, types, and constraints. "The Law" that governs neural inference.
+|Pane-N (Neural)|Streaming "Inference Manifold" showing the Agent's internal monologue and OODA loop.
+|Pane-W (World)|Central shared canvas (The Barycentre) where results manifest.
+|===
+
+=== Core Systems
+
+* **Anti-Crash Library**: Logical Circuit Breaker preventing unvalidated neural output from reaching the Barycentre
+* **Vexometer**: Real-time friction/cognitive load monitoring with anti-inflammatory UI adjustments
+* **Contractiles**: Adaptive state contracts between Operator and Machine
+* **Feedback-O-Tron**: Community-driven performance reporting and constraint suggestions
+
+== Technical Stack
+
+[cols="1,2"]
+|===
+|Frontend|ReScript + rescript-tea (TEA pattern)
+|Backend|Rust + Tauri 2.0
+|Runtime|Deno
+|Styling|Tailwind CSS
+|Middleware|Elixir/BEAM (planned)
+|Verification|Echidna (planned)
+|===
+
+== Development
+
+[source,bash]
+----
+# Install dependencies
+npm install
+
+# Build ReScript
+npm run res:build
+
+# Watch ReScript
+npm run res:watch
+
+# Run Tauri dev
+npm run tauri:dev
+
+# Build for production
+npm run tauri:build
+----
+
+== Keyboard Shortcuts
+
+[cols="1,2"]
+|===
+|`Ctrl+Shift+L`|Toggle Pane-L (Symbolic Mass)
+|`Ctrl+Shift+N`|Toggle Pane-N (Neural Stream)
+|`Ctrl+Shift+B`|Toggle Pane-W (Task Barycentre)
+|===
+
+== Licence
+
+AGPL-3.0-or-later
+
+== Status
+
+v0.0.1-alpha - Initial scaffold
