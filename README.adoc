@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: PMPL-1.0-or-later
 
 = PanLL eNSAID
 :toc:
@@ -74,7 +74,7 @@ npm run tauri:build
 
 == Licence
 
-AGPL-3.0-or-later
+PMPL-1.0-or-later
 
 == Status
 
