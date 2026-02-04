@@ -1,34 +1,15 @@
 # Security Policy
 
-<!-- 
-============================================================================
-TEMPLATE INSTRUCTIONS (delete this block before publishing)
-============================================================================
-Replace all {{PLACEHOLDER}} values with your information:
-  {{PROJECT_NAME}}     - Your project name
-  {{OWNER}}            - GitHub username or org (e.g., hyperpolymath)
-  {{REPO}}             - Repository name
-  {{SECURITY_EMAIL}}   - Security contact email
-  {{PGP_FINGERPRINT}}  - Your PGP key fingerprint (40 chars, no spaces)
-  {{PGP_KEY_URL}}      - URL to your public PGP key
-  {{WEBSITE}}          - Your website/domain
-  {{CURRENT_YEAR}}     - Current year for copyright
-
-Optional: Remove sections that don't apply (e.g., PGP if you don't use it)
-============================================================================
--->
-
 We take security seriously. We appreciate your efforts to responsibly disclose vulnerabilities and will make every effort to acknowledge your contributions.
 
 ## Table of Contents
 
 - [Reporting a Vulnerability](#reporting-a-vulnerability)
-- [What to Include](#what-to-include)
+- [Cryptographic Requirements](#cryptographic-requirements)
 - [Response Timeline](#response-timeline)
 - [Disclosure Policy](#disclosure-policy)
 - [Scope](#scope)
 - [Safe Harbour](#safe-harbour)
-- [Recognition](#recognition)
 - [Security Updates](#security-updates)
 - [Security Best Practices](#security-best-practices)
 
@@ -40,7 +21,7 @@ We take security seriously. We appreciate your efforts to responsibly disclose v
 
 The preferred method for reporting security vulnerabilities is through GitHub's Security Advisory feature:
 
-1. Navigate to [Report a Vulnerability](https://github.com/{{OWNER}}/{{REPO}}/security/advisories/new)
+1. Navigate to [Report a Vulnerability](https://github.com/hyperpolymath/panll/security/advisories/new)
 2. Click **"Report a vulnerability"**
 3. Complete the form with as much detail as possible
 4. Submit — we'll receive a private notification
@@ -54,88 +35,76 @@ This method ensures:
 
 ### Alternative: Encrypted Email
 
-If you cannot use GitHub Security Advisories, you may email us directly:
+If you cannot use GitHub Security Advisories, you may email us directly at:
 
-| | |
-|---|---|
-| **Email** | {{SECURITY_EMAIL}} |
-| **PGP Key** | [Download Public Key]({{PGP_KEY_URL}}) |
-| **Fingerprint** | `{{PGP_FINGERPRINT}}` |
-
-```bash
-# Import our PGP key
-curl -sSL {{PGP_KEY_URL}} | gpg --import
-
-# Verify fingerprint
-gpg --fingerprint {{SECURITY_EMAIL}}
-
-# Encrypt your report
-gpg --armor --encrypt --recipient {{SECURITY_EMAIL}} report.txt
-```
+**Email:** jonathan.jewell@open.ac.uk
 
 > **⚠️ Important:** Do not report security vulnerabilities through public GitHub issues, pull requests, discussions, or social media.
 
 ---
 
-## What to Include
+## Cryptographic Requirements
 
-A good vulnerability report helps us understand and reproduce the issue quickly.
+When implementing cryptographic features in this project, the following standards MUST be followed:
 
-### Required Information
+### Password Hashing
+- **Algorithm:** Argon2id
+- **Parameters:** 512 MiB memory, 8 iterations, 4 lanes
+- **Rationale:** Maximum resistance to GPU/ASIC attacks
 
-- **Description**: Clear explanation of the vulnerability
-- **Impact**: What an attacker could achieve (confidentiality, integrity, availability)
-- **Affected versions**: Which versions/commits are affected
-- **Reproduction steps**: Detailed steps to reproduce the issue
+### General Hashing
+- **Algorithm:** SHAKE3-512 (512-bit output)
+- **Standard:** FIPS 202
+- **Use Cases:** Provenance, key derivation, long-term storage
+- **Rationale:** Post-quantum secure
 
-### Helpful Additional Information
+### Post-Quantum Signatures
+- **Primary:** Dilithium5-AES (hybrid)
+- **Standard:** ML-DSA-87 (FIPS 204)
+- **Fallback:** SPHINCS+ (conservative backup)
+- **Rationale:** Hybrid with AES-256 for belt-and-suspenders security
 
-- **Proof of concept**: Code, scripts, or screenshots demonstrating the vulnerability
-- **Attack scenario**: Realistic attack scenario showing exploitability
-- **CVSS score**: Your assessment of severity (use [CVSS 3.1 Calculator](https://www.first.org/cvss/calculator/3.1))
-- **CWE ID**: Common Weakness Enumeration identifier if known
-- **Suggested fix**: If you have ideas for remediation
-- **References**: Links to related vulnerabilities, research, or advisories
+### Post-Quantum Key Exchange
+- **Algorithm:** Kyber-1024 + SHAKE256-KDF
+- **Standard:** ML-KEM-1024 (FIPS 203)
+- **Fallback:** SPHINCS+
+- **Rationale:** Maximum PQ security level
 
-### Example Report Structure
+### Classical Signatures
+- **Algorithm:** Ed448 + Dilithium5 (hybrid)
+- **Fallback:** SPHINCS+
+- **⚠️ CRITICAL:** TERMINATE Ed25519/SHA-1 immediately - do not use in new code
 
-```markdown
-## Summary
-[One-sentence description of the vulnerability]
+### Symmetric Encryption
+- **Algorithm:** XChaCha20-Poly1305
+- **Key Size:** 256-bit
+- **Rationale:** Larger nonce space, quantum margin
 
-## Vulnerability Type
-[e.g., SQL Injection, XSS, SSRF, Path Traversal, etc.]
+### Key Derivation
+- **Algorithm:** HKDF-SHAKE512
+- **Standard:** FIPS 202
+- **Use:** All secret key material
+- **Rationale:** Post-quantum secure KDF
 
-## Affected Component
-[File path, function name, API endpoint, etc.]
+### Random Number Generation
+- **Algorithm:** ChaCha20-DRBG
+- **Seed Size:** 512-bit
+- **Standard:** SP 800-90Ar1
+- **Use:** CSPRNG for deterministic, high-entropy needs
 
-## Affected Versions
-[Version range or specific commits]
+### Database Hashing
+- **Primary:** BLAKE3 (512-bit)
+- **Long-term:** SHAKE3-512
+- **Rationale:** BLAKE3 for speed, SHAKE3-512 for archival with semantic XML/ARIA tags
 
-## Severity Assessment
-- CVSS 3.1 Score: [X.X]
-- CVSS Vector: [CVSS:3.1/AV:X/AC:X/PR:X/UI:X/S:X/C:X/I:X/A:X]
+### Protocol Stack
+- **Required:** QUIC + HTTP/3 + IPv6 only
+- **⚠️ TERMINATED:** HTTP/1.1, IPv4, SHA-1 (danger zone)
 
-## Description
-[Detailed technical description]
-
-## Steps to Reproduce
-1. [First step]
-2. [Second step]
-3. [...]
-
-## Proof of Concept
-[Code, curl commands, screenshots, etc.]
-
-## Impact
-[What can an attacker achieve?]
-
-## Suggested Remediation
-[Optional: your ideas for fixing]
-
-## References
-[Links to related issues, CVEs, research]
-```
+### Formal Verification
+- **Tool:** Idris2/Coq
+- **Requirement:** All cryptographic primitives must have formal proofs
+- **Rationale:** Proactive attestation and transparent logic
 
 ---
 
@@ -151,8 +120,6 @@ We commit to the following response times:
 | **Resolution** | 90 days | Target for fix development and release (complex issues may take longer) |
 | **Disclosure** | 90 days | Public disclosure after fix is available (coordinated with you) |
 
-> **Note:** These are targets, not guarantees. Complex vulnerabilities may require more time. We'll communicate openly about any delays.
-
 ---
 
 ## Disclosure Policy
@@ -166,60 +133,17 @@ We follow **coordinated disclosure** (also known as responsible disclosure):
 5. **We publish** security advisory and fix simultaneously
 6. **You may publish** your research after disclosure
 
-### Our Commitments
-
-- We will not take legal action against researchers who follow this policy
-- We will work with you to understand and resolve the issue
-- We will credit you in the security advisory (unless you prefer anonymity)
-- We will notify you before public disclosure
-- We will publish advisories with sufficient detail for users to assess risk
-
-### Your Commitments
-
-- Report vulnerabilities promptly after discovery
-- Give us reasonable time to address the issue before disclosure
-- Do not access, modify, or delete data beyond what's necessary to demonstrate the vulnerability
-- Do not degrade service availability (no DoS testing on production)
-- Do not share vulnerability details with others until coordinated disclosure
-
-### Disclosure Timeline
-
-```
-Day 0          You report vulnerability
-Day 1-2        We acknowledge receipt
-Day 7          We confirm vulnerability and share initial assessment
-Day 7-90       We develop and test fix
-Day 90         Coordinated public disclosure
-               (earlier if fix is ready; later by mutual agreement)
-```
-
-If we cannot reach agreement on disclosure timing, we default to 90 days from your initial report.
-
 ---
 
 ## Scope
 
 ### In Scope ✅
 
-The following are within scope for security research:
-
-- This repository (`{{OWNER}}/{{REPO}}`) and all its code
+- This repository (`hyperpolymath/panll`) and all its code
 - Official releases and packages published from this repository
 - Documentation that could lead to security issues
 - Build and deployment configurations in this repository
 - Dependencies (report here, we'll coordinate with upstream)
-
-### Out of Scope ❌
-
-The following are **not** in scope:
-
-- Third-party services we integrate with (report directly to them)
-- Social engineering attacks against maintainers
-- Physical security
-- Denial of service attacks against production infrastructure
-- Spam, phishing, or other non-technical attacks
-- Issues already reported or publicly known
-- Theoretical vulnerabilities without proof of concept
 
 ### Qualifying Vulnerabilities
 
@@ -232,25 +156,11 @@ We're particularly interested in:
 - Server-side request forgery (SSRF)
 - Path traversal / local file inclusion
 - Information disclosure (credentials, PII, secrets)
-- Cryptographic weaknesses
+- **Cryptographic weaknesses** (especially deviation from requirements above)
 - Deserialisation vulnerabilities
 - Memory safety issues (buffer overflows, use-after-free, etc.)
 - Supply chain vulnerabilities (dependency confusion, etc.)
-- Significant logic flaws
-
-### Non-Qualifying Issues
-
-The following generally do not qualify as security vulnerabilities:
-
-- Missing security headers on non-sensitive pages
-- Clickjacking on pages without sensitive actions
-- Self-XSS (requires victim to paste code)
-- Missing rate limiting (unless it enables a specific attack)
-- Username/email enumeration (unless high-risk context)
-- Missing cookie flags on non-sensitive cookies
-- Software version disclosure
-- Verbose error messages (unless exposing secrets)
-- Best practice deviations without demonstrable impact
+- Significant logic flaws in Anti-Crash validation
 
 ---
 
@@ -265,53 +175,7 @@ If you conduct security research in accordance with this policy:
 - ✅ We will not initiate legal action against you
 - ✅ We will not report your activity to law enforcement
 - ✅ We will work with you in good faith to resolve issues
-- ✅ We consider your research authorised under the Computer Fraud and Abuse Act (CFAA), UK Computer Misuse Act, and similar laws
-- ✅ We waive any potential claim against you for circumvention of security controls
-
-### Good Faith Requirements
-
-To qualify for safe harbour, you must:
-
-- Comply with this security policy
-- Report vulnerabilities promptly
-- Avoid privacy violations (do not access others' data)
-- Avoid service degradation (no destructive testing)
-- Not exploit vulnerabilities beyond proof-of-concept
-- Not use vulnerabilities for profit (beyond bug bounties where offered)
-
-> **⚠️ Important:** This safe harbour does not extend to third-party systems. Always check their policies before testing.
-
----
-
-## Recognition
-
-We believe in recognising security researchers who help us improve.
-
-### Hall of Fame
-
-Researchers who report valid vulnerabilities will be acknowledged in our [Security Acknowledgments](SECURITY-ACKNOWLEDGMENTS.md) (unless they prefer anonymity).
-
-Recognition includes:
-
-- Your name (or chosen alias)
-- Link to your website/profile (optional)
-- Brief description of the vulnerability class
-- Date of report
-
-### What We Offer
-
-- ✅ Public credit in security advisories
-- ✅ Acknowledgment in release notes
-- ✅ Entry in our Hall of Fame
-- ✅ Reference/recommendation letter upon request (for significant findings)
-
-### What We Don't Currently Offer
-
-- ❌ Monetary bug bounties
-- ❌ Hardware or swag
-- ❌ Paid security research contracts
-
-> **Note:** We're a community project with limited resources. Your contributions help everyone who uses this software.
+- ✅ We consider your research authorised
 
 ---
 
@@ -321,34 +185,22 @@ Recognition includes:
 
 To stay informed about security updates:
 
-- **Watch this repository**: Click "Watch" → "Custom" → Select "Security alerts"
-- **GitHub Security Advisories**: Published at [Security Advisories](https://github.com/{{OWNER}}/{{REPO}}/security/advisories)
-- **Release notes**: Security fixes noted in [CHANGELOG](CHANGELOG.md)
-
-### Update Policy
-
-| Severity | Response |
-|----------|----------|
-| **Critical/High** | Patch release as soon as fix is ready |
-| **Medium** | Included in next scheduled release (or earlier) |
-| **Low** | Included in next scheduled release |
+- **Watch this repository**: Click "Watch" → "Custom" → "Security alerts"
+- **GitHub Security Advisories**: Published at [Security Advisories](https://github.com/hyperpolymath/panll/security/advisories)
 
 ### Supported Versions
-
-<!-- Adjust this table to match your actual version support policy -->
 
 | Version | Supported | Notes |
 |---------|-----------|-------|
 | `main` branch | ✅ Yes | Latest development |
 | Latest release | ✅ Yes | Current stable |
-| Previous minor release | ✅ Yes | Security fixes backported |
 | Older versions | ❌ No | Please upgrade |
 
 ---
 
 ## Security Best Practices
 
-When using {{PROJECT_NAME}}, we recommend:
+When using PanLL eNSAID, we recommend:
 
 ### General
 
@@ -365,42 +217,13 @@ When using {{PROJECT_NAME}}, we recommend:
 - Review dependencies before adding them
 - Run security linters locally before pushing
 - Report any concerns about existing code
+- **NEVER use deprecated crypto:** Ed25519, SHA-1, MD5, DES, RC4
+- **ALWAYS use approved algorithms** from the Cryptographic Requirements section
 
 ---
 
-## Additional Resources
-
-- [Our PGP Public Key]({{PGP_KEY_URL}})
-- [Security Advisories](https://github.com/{{OWNER}}/{{REPO}}/security/advisories)
-- [Changelog](CHANGELOG.md)
-- [Contributing Guidelines](CONTRIBUTING.md)
-- [CVE Database](https://cve.mitre.org/)
-- [CVSS Calculator](https://www.first.org/cvss/calculator/3.1)
+*Thank you for helping keep PanLL and its users safe.* 🛡️
 
 ---
 
-## Contact
-
-| Purpose | Contact |
-|---------|---------|
-| **Security issues** | [Report via GitHub](https://github.com/{{OWNER}}/{{REPO}}/security/advisories/new) or {{SECURITY_EMAIL}} |
-| **General questions** | [GitHub Discussions](https://github.com/{{OWNER}}/{{REPO}}/discussions) |
-| **Other enquiries** | See [README](README.md) for contact information |
-
----
-
-## Policy Changes
-
-This security policy may be updated from time to time. Significant changes will be:
-
-- Committed to this repository with a clear commit message
-- Noted in the changelog
-- Announced via GitHub Discussions (for major changes)
-
----
-
-*Thank you for helping keep {{PROJECT_NAME}} and its users safe.* 🛡️
-
----
-
-<sub>Last updated: {{CURRENT_YEAR}} · Policy version: 1.0.0</sub>
+<sub>Last updated: 2026-02-04 · Policy version: 2.0.0</sub>
