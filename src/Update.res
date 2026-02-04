@@ -7,7 +7,6 @@
 
 open Model
 open Msg
-open Tea.Cmd
 
 /// Update Pane-L state
 let updatePaneL = (model: model, msg: paneLMsg): model => {
@@ -123,7 +122,7 @@ let updateFeedback = (model: model, msg: feedbackMsg): model => {
 }
 
 /// Main update function
-let update = (model: model, msg: msg): (model, cmd<msg>) => {
+let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   let newModel = switch msg {
   | PaneL(m) => updatePaneL(model, m)
   | PaneN(m) => updatePaneN(model, m)
@@ -143,5 +142,5 @@ let update = (model: model, msg: msg): (model, cmd<msg>) => {
     newModel
   }
 
-  (finalModel, none)
+  (finalModel, Tea_Cmd.none)
 }

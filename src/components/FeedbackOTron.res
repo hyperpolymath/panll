@@ -41,7 +41,7 @@ let getReportColour = (rt: reportType): string => {
 }
 
 /// Render a report type button
-let renderReportTypeButton = (rt: reportType, selected: bool): Vdom.t<msg> => {
+let renderReportTypeButton = (rt: reportType, selected: bool): Tea_Vdom.t<msg> => {
   let baseClass = "px-3 py-1 rounded text-xs transition-all"
   let colour = getReportColour(rt)
   let selectedClass = selected
@@ -49,35 +49,35 @@ let renderReportTypeButton = (rt: reportType, selected: bool): Vdom.t<msg> => {
     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
 
   button(
-    list{Attrs.class(`${baseClass} ${selectedClass}`)},
+    list{Attrs.class_(`${baseClass} ${selectedClass}`)},
     list{text(getReportLabel(rt))},
   )
 }
 
 /// Render the feedback form
-let renderFeedbackForm = (pendingReport: option<string>): Vdom.t<msg> => {
+let renderFeedbackForm = (pendingReport: option<string>): Tea_Vdom.t<msg> => {
   let reportTypes = [Hallucination, ConstraintViolation, PerformanceIssue, UXFriction, FeatureRequest]
 
   div(
-    list{Attrs.class("fixed inset-0 bg-black/80 flex items-center justify-center z-50")},
+    list{Attrs.class_("fixed inset-0 bg-black/80 flex items-center justify-center z-50")},
     list{
       div(
-        list{Attrs.class("bg-gray-900 border border-gray-700 rounded-lg w-[500px] max-h-[80vh] overflow-auto")},
+        list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg w-[500px] max-h-[80vh] overflow-auto")},
         list{
           // Header
           div(
-            list{Attrs.class("p-4 border-b border-gray-700")},
+            list{Attrs.class_("p-4 border-b border-gray-700")},
             list{
               div(
-                list{Attrs.class("flex items-center justify-between")},
+                list{Attrs.class_("flex items-center justify-between")},
                 list{
                   div(
-                    list{Attrs.class("text-lg font-semibold text-gray-200")},
+                    list{Attrs.class_("text-lg font-semibold text-gray-200")},
                     list{text("Feedback-O-Tron")},
                   ),
                   button(
                     list{
-                      Attrs.class("text-gray-500 hover:text-gray-300"),
+                      Attrs.class_("text-gray-500 hover:text-gray-300"),
                       Events.onClick(Feedback(CancelFeedback)),
                     },
                     list{text("×")},
@@ -85,7 +85,7 @@ let renderFeedbackForm = (pendingReport: option<string>): Vdom.t<msg> => {
                 },
               ),
               div(
-                list{Attrs.class("text-xs text-gray-500 mt-1")},
+                list{Attrs.class_("text-xs text-gray-500 mt-1")},
                 list{text("Report Orbital Decay to the Community")},
               ),
             },
@@ -93,30 +93,30 @@ let renderFeedbackForm = (pendingReport: option<string>): Vdom.t<msg> => {
 
           // Report type selection
           div(
-            list{Attrs.class("p-4 border-b border-gray-800")},
+            list{Attrs.class_("p-4 border-b border-gray-800")},
             list{
               div(
-                list{Attrs.class("text-xs text-gray-500 mb-2")},
+                list{Attrs.class_("text-xs text-gray-500 mb-2")},
                 list{text("REPORT TYPE")},
               ),
               div(
-                list{Attrs.class("flex flex-wrap gap-2")},
-                reportTypes->Array.map(rt => renderReportTypeButton(rt, false))->Array.toList,
+                list{Attrs.class_("flex flex-wrap gap-2")},
+                reportTypes->Array.map(rt => renderReportTypeButton(rt, false))->List.fromArray,
               ),
             },
           ),
 
           // Description
           div(
-            list{Attrs.class("p-4 border-b border-gray-800")},
+            list{Attrs.class_("p-4 border-b border-gray-800")},
             list{
               div(
-                list{Attrs.class("text-xs text-gray-500 mb-2")},
+                list{Attrs.class_("text-xs text-gray-500 mb-2")},
                 list{text("DESCRIPTION")},
               ),
               textarea(
                 list{
-                  Attrs.class(
+                  Attrs.class_(
                     "w-full h-24 bg-gray-800 border border-gray-700 rounded p-3 text-sm text-gray-300 resize-none focus:border-gray-500 focus:outline-none",
                   ),
                   Attrs.placeholder("Describe the issue..."),
@@ -130,50 +130,50 @@ let renderFeedbackForm = (pendingReport: option<string>): Vdom.t<msg> => {
 
           // Context snapshot info
           div(
-            list{Attrs.class("p-4 border-b border-gray-800")},
+            list{Attrs.class_("p-4 border-b border-gray-800")},
             list{
               div(
-                list{Attrs.class("text-xs text-gray-500 mb-2")},
+                list{Attrs.class_("text-xs text-gray-500 mb-2")},
                 list{text("CONTEXT SNAPSHOT")},
               ),
               div(
-                list{Attrs.class("grid grid-cols-3 gap-2 text-xs")},
+                list{Attrs.class_("grid grid-cols-3 gap-2 text-xs")},
                 list{
                   div(
-                    list{Attrs.class("bg-indigo-900/30 p-2 rounded")},
+                    list{Attrs.class_("bg-indigo-900/30 p-2 rounded")},
                     list{
                       div(
-                        list{Attrs.class("text-indigo-400")},
+                        list{Attrs.class_("text-indigo-400")},
                         list{text("Pane-L")},
                       ),
                       div(
-                        list{Attrs.class("text-gray-500")},
+                        list{Attrs.class_("text-gray-500")},
                         list{text("Captured")},
                       ),
                     },
                   ),
                   div(
-                    list{Attrs.class("bg-emerald-900/30 p-2 rounded")},
+                    list{Attrs.class_("bg-emerald-900/30 p-2 rounded")},
                     list{
                       div(
-                        list{Attrs.class("text-emerald-400")},
+                        list{Attrs.class_("text-emerald-400")},
                         list{text("Pane-N")},
                       ),
                       div(
-                        list{Attrs.class("text-gray-500")},
+                        list{Attrs.class_("text-gray-500")},
                         list{text("Captured")},
                       ),
                     },
                   ),
                   div(
-                    list{Attrs.class("bg-gray-800/50 p-2 rounded")},
+                    list{Attrs.class_("bg-gray-800/50 p-2 rounded")},
                     list{
                       div(
-                        list{Attrs.class("text-gray-400")},
+                        list{Attrs.class_("text-gray-400")},
                         list{text("Pane-W")},
                       ),
                       div(
-                        list{Attrs.class("text-gray-500")},
+                        list{Attrs.class_("text-gray-500")},
                         list{text("Captured")},
                       ),
                     },
@@ -185,11 +185,11 @@ let renderFeedbackForm = (pendingReport: option<string>): Vdom.t<msg> => {
 
           // Actions
           div(
-            list{Attrs.class("p-4 flex justify-end gap-2")},
+            list{Attrs.class_("p-4 flex justify-end gap-2")},
             list{
               button(
                 list{
-                  Attrs.class(
+                  Attrs.class_(
                     "px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded text-sm text-gray-400 transition-colors",
                   ),
                   Events.onClick(Feedback(CancelFeedback)),
@@ -198,7 +198,7 @@ let renderFeedbackForm = (pendingReport: option<string>): Vdom.t<msg> => {
               ),
               button(
                 list{
-                  Attrs.class(
+                  Attrs.class_(
                     "px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-sm text-white transition-colors",
                   ),
                   Events.onClick(Feedback(FeedbackSubmitted)),
@@ -214,10 +214,10 @@ let renderFeedbackForm = (pendingReport: option<string>): Vdom.t<msg> => {
 }
 
 /// Render the feedback trigger button
-let renderTriggerButton = (): Vdom.t<msg> => {
+let renderTriggerButton = (): Tea_Vdom.t<msg> => {
   button(
     list{
-      Attrs.class(
+      Attrs.class_(
         "fixed bottom-4 left-4 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-xs text-gray-400 transition-colors",
       ),
       Events.onClick(Feedback(OpenFeedback)),
@@ -227,7 +227,7 @@ let renderTriggerButton = (): Vdom.t<msg> => {
 }
 
 /// Main Feedback-O-Tron view
-let view = (feedbackPending: option<string>): Vdom.t<msg> => {
+let view = (feedbackPending: option<string>): Tea_Vdom.t<msg> => {
   switch feedbackPending {
   | Some(_) => renderFeedbackForm(feedbackPending)
   | None => renderTriggerButton()

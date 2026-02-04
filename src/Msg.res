@@ -9,7 +9,7 @@ open Model
 
 /// Messages for Pane-L (Symbolic)
 type paneLMsg =
-  | AddConstraint(constraint)
+  | AddConstraint(symbolicConstraint)
   | RemoveConstraint(string)
   | ToggleConstraint(string)
   | PinConstraint(string)

@@ -43,12 +43,12 @@ let init = (): antiCrashState => {
 }
 
 /// Check if a token violates type constraints
-let checkTypeConstraints = (token: neuralToken, constraints: array<constraint>): option<violationType> => {
+let checkTypeConstraints = (token: neuralToken, constraints: array<symbolicConstraint>): option<violationType> => {
   // TODO: Integrate with Echidna for formal type checking
   // For now, basic pattern matching
   let activeConstraints = Array.filter(constraints, c => c.active)
 
-  let violation = Array.find(activeConstraints, constraint => {
+  let violation = Array.find(activeConstraints, c => {
     // Check if token content contradicts constraint
     // This is a placeholder for real symbolic validation
     String.includes(token.content, "undefined") ||
@@ -85,7 +85,7 @@ let checkSecurityConstraints = (token: neuralToken): option<violationType> => {
 }
 
 /// Check for logical contradictions
-let checkLogicConstraints = (token: neuralToken, _constraints: array<constraint>): option<violationType> => {
+let checkLogicConstraints = (token: neuralToken, _constraints: array<symbolicConstraint>): option<violationType> => {
   // TODO: Integrate with Echidna for SAT solving
   // For now, basic contradiction detection
   if String.includes(token.content, "true && false") ||
@@ -97,42 +97,39 @@ let checkLogicConstraints = (token: neuralToken, _constraints: array<constraint>
 }
 
 /// Main validation function - the Circuit Breaker
-let validate = (token: neuralToken, constraints: array<constraint>): validationResult => {
+let validate = (token: neuralToken, constraints: array<symbolicConstraint>): validationResult => {
   // Check security first (highest priority)
   switch checkSecurityConstraints(token) {
   | Some(SecurityViolation(pattern)) =>
     Invalid(`Security violation: dangerous pattern "${pattern}" detected`)
   | Some(_) => Invalid("Security violation detected")
-  | None => ()
-  }
-
-  // Check type constraints
-  switch checkTypeConstraints(token, constraints) {
-  | Some(TypeMismatch(expected, actual)) =>
-    Invalid(`Type mismatch: expected ${expected}, got ${actual}`)
-  | Some(_) => Invalid("Type constraint violation")
-  | None => ()
-  }
-
-  // Check logic constraints
-  switch checkLogicConstraints(token, constraints) {
-  | Some(LogicContradiction(msg)) => Invalid(`Logic contradiction: ${msg}`)
-  | Some(_) => Invalid("Logic constraint violation")
-  | None => ()
-  }
-
-  // Low confidence tokens require review
-  if token.confidence < 0.7 {
-    RequiresReview("Low confidence inference requires operator review")
-  } else {
-    Valid
+  | None =>
+    // Check type constraints
+    switch checkTypeConstraints(token, constraints) {
+    | Some(TypeMismatch(expected, actual)) =>
+      Invalid(`Type mismatch: expected ${expected}, got ${actual}`)
+    | Some(_) => Invalid("Type constraint violation")
+    | None =>
+      // Check logic constraints
+      switch checkLogicConstraints(token, constraints) {
+      | Some(LogicContradiction(msg)) => Invalid(`Logic contradiction: ${msg}`)
+      | Some(_) => Invalid("Logic constraint violation")
+      | None =>
+        // Low confidence tokens require review
+        if token.confidence < 0.7 {
+          RequiresReview("Low confidence inference requires operator review")
+        } else {
+          Valid
+        }
+      }
+    }
   }
 }
 
 /// Process a token through the Anti-Crash pipeline
 let processToken = (
   token: neuralToken,
-  constraints: array<constraint>,
+  constraints: array<symbolicConstraint>,
   state: antiCrashState,
 ): (antiCrashState, option<neuralToken>) => {
   if !state.enabled {

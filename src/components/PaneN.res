@@ -10,7 +10,7 @@ open Msg
 open Tea.Html
 
 /// Render the OODA phase indicator
-let renderOodaPhase = (phase: oodaPhase): Vdom.t<msg> => {
+let renderOodaPhase = (phase: oodaPhase): Tea_Vdom.t<msg> => {
   let phases = [
     (Observe, "O", "Observe"),
     (Orient, "O", "Orient"),
@@ -19,7 +19,7 @@ let renderOodaPhase = (phase: oodaPhase): Vdom.t<msg> => {
   ]
 
   div(
-    list{Attrs.class("flex gap-1 mb-4")},
+    list{Attrs.class_("flex gap-1 mb-4")},
     phases
     ->Array.map(((p, letter, label)) => {
       let isActive = p === phase
@@ -28,42 +28,42 @@ let renderOodaPhase = (phase: oodaPhase): Vdom.t<msg> => {
 
       div(
         list{
-          Attrs.class(`${bgClass} ${textClass} w-8 h-8 rounded flex items-center justify-center text-xs font-bold`),
+          Attrs.class_(`${bgClass} ${textClass} w-8 h-8 rounded flex items-center justify-center text-xs font-bold`),
           Attrs.title(label),
         },
         list{text(letter)},
       )
     })
-    ->Array.toList,
+    ->List.fromArray,
   )
 }
 
 /// Render the Thing-Agency monitor
-let renderAgencyMonitor = (agency: agencyState): Vdom.t<msg> => {
+let renderAgencyMonitor = (agency: agencyState): Tea_Vdom.t<msg> => {
   let autonomyPercent = Int.toString(Int.fromFloat(agency.autonomyLevel *. 100.0))
   let barWidth = autonomyPercent ++ "%"
 
   div(
-    list{Attrs.class("mb-4 p-3 bg-gray-800/50 rounded")},
+    list{Attrs.class_("mb-4 p-3 bg-gray-800/50 rounded")},
     list{
       div(
-        list{Attrs.class("text-xs text-gray-500 mb-2")},
+        list{Attrs.class_("text-xs text-gray-500 mb-2")},
         list{text("THING-AGENCY MONITOR")},
       ),
       renderOodaPhase(agency.phase),
       div(
-        list{Attrs.class("flex items-center gap-2")},
+        list{Attrs.class_("flex items-center gap-2")},
         list{
           div(
-            list{Attrs.class("text-xs text-gray-400 w-20")},
+            list{Attrs.class_("text-xs text-gray-400 w-20")},
             list{text("Autonomy:")},
           ),
           div(
-            list{Attrs.class("flex-1 h-2 bg-gray-700 rounded overflow-hidden")},
+            list{Attrs.class_("flex-1 h-2 bg-gray-700 rounded overflow-hidden")},
             list{
               div(
                 list{
-                  Attrs.class("h-full bg-emerald-500 transition-all duration-300"),
+                  Attrs.class_("h-full bg-emerald-500 transition-all duration-300"),
                   Attrs.style("width", barWidth),
                 },
                 list{},
@@ -71,7 +71,7 @@ let renderAgencyMonitor = (agency: agencyState): Vdom.t<msg> => {
             },
           ),
           div(
-            list{Attrs.class("text-xs text-emerald-400 w-12 text-right")},
+            list{Attrs.class_("text-xs text-emerald-400 w-12 text-right")},
             list{text(autonomyPercent ++ "%")},
           ),
         },
@@ -81,19 +81,19 @@ let renderAgencyMonitor = (agency: agencyState): Vdom.t<msg> => {
 }
 
 /// Render a neural token
-let renderToken = (token: neuralToken): Vdom.t<msg> => {
+let renderToken = (token: neuralToken): Tea_Vdom.t<msg> => {
   let validatedClass = token.validated ? "border-emerald-700" : "border-amber-700"
   let confidencePercent = Int.toString(Int.fromFloat(token.confidence *. 100.0))
 
   div(
-    list{Attrs.class(`p-2 mb-1 border-l-2 ${validatedClass} bg-gray-800/30`)},
+    list{Attrs.class_(`p-2 mb-1 border-l-2 ${validatedClass} bg-gray-800/30`)},
     list{
       div(
-        list{Attrs.class("text-sm text-gray-300")},
+        list{Attrs.class_("text-sm text-gray-300")},
         list{text(token.content)},
       ),
       div(
-        list{Attrs.class("text-xs text-gray-600 mt-1")},
+        list{Attrs.class_("text-xs text-gray-600 mt-1")},
         list{text(`confidence: ${confidencePercent}%`)},
       ),
     },
@@ -101,23 +101,23 @@ let renderToken = (token: neuralToken): Vdom.t<msg> => {
 }
 
 /// Render the token stream
-let renderTokenStream = (tokens: array<neuralToken>): Vdom.t<msg> => {
+let renderTokenStream = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class("mb-4")},
+    list{Attrs.class_("mb-4")},
     list{
       div(
-        list{Attrs.class("text-xs text-gray-500 mb-2")},
+        list{Attrs.class_("text-xs text-gray-500 mb-2")},
         list{text("TOKEN STREAM")},
       ),
       if Array.length(tokens) === 0 {
         div(
-          list{Attrs.class("text-gray-600 text-sm italic")},
+          list{Attrs.class_("text-gray-600 text-sm italic")},
           list{text("No tokens received")},
         )
       } else {
         div(
-          list{Attrs.class("max-h-32 overflow-y-auto")},
-          tokens->Array.map(renderToken)->Array.toList,
+          list{Attrs.class_("max-h-32 overflow-y-auto")},
+          tokens->Array.map(renderToken)->List.fromArray,
         )
       },
     },
@@ -125,29 +125,29 @@ let renderTokenStream = (tokens: array<neuralToken>): Vdom.t<msg> => {
 }
 
 /// Render the monologue/inference stream
-let renderMonologue = (monologue: string, inferenceActive: bool): Vdom.t<msg> => {
+let renderMonologue = (monologue: string, inferenceActive: bool): Tea_Vdom.t<msg> => {
   let statusClass = inferenceActive ? "text-emerald-400" : "text-gray-500"
   let statusText = inferenceActive ? "streaming..." : "idle"
 
   div(
-    list{Attrs.class("flex-1")},
+    list{Attrs.class_("flex-1")},
     list{
       div(
-        list{Attrs.class("flex items-center justify-between mb-2")},
+        list{Attrs.class_("flex items-center justify-between mb-2")},
         list{
           div(
-            list{Attrs.class("text-xs text-gray-500")},
+            list{Attrs.class_("text-xs text-gray-500")},
             list{text("INFERENCE MANIFOLD")},
           ),
           div(
-            list{Attrs.class(`text-xs ${statusClass}`)},
+            list{Attrs.class_(`text-xs ${statusClass}`)},
             list{text(statusText)},
           ),
         },
       ),
       div(
         list{
-          Attrs.class(
+          Attrs.class_(
             "h-48 bg-gray-800/50 rounded p-3 overflow-y-auto text-sm text-emerald-200 whitespace-pre-wrap",
           ),
         },
@@ -158,20 +158,20 @@ let renderMonologue = (monologue: string, inferenceActive: bool): Vdom.t<msg> =>
 }
 
 /// Main Pane-N view
-let view = (state: paneNState): Vdom.t<msg> => {
+let view = (state: paneNState): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class("h-full flex flex-col p-4 bg-gray-900")},
+    list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900")},
     list{
       // Header
       div(
-        list{Attrs.class("flex items-center justify-between mb-4")},
+        list{Attrs.class_("flex items-center justify-between mb-4")},
         list{
           div(
-            list{Attrs.class("text-emerald-400 font-semibold")},
+            list{Attrs.class_("text-emerald-400 font-semibold")},
             list{text("Neural Stream")},
           ),
           div(
-            list{Attrs.class("text-xs text-gray-600")},
+            list{Attrs.class_("text-xs text-gray-600")},
             list{text("Ctrl+Shift+N")},
           ),
         },

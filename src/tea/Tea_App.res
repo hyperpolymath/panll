@@ -13,75 +13,136 @@ type programConfig<'model, 'msg> = {
   subscriptions: 'model => Tea_Sub.t<'msg>,
 }
 
-/// Simple program without subscriptions
-type simpleProgramConfig<'model, 'msg> = {
-  init: unit => ('model, Tea_Cmd.t<'msg>),
-  update: ('model, 'msg) => ('model, Tea_Cmd.t<'msg>),
-  view: 'model => Tea_Vdom.t<'msg>,
-}
-
-/// Application state
+/// Application state (internal)
 type appState<'model, 'msg> = {
   mutable model: 'model,
-  mutable subscriptionCleanup: option<unit => unit>,
+  mutable currentSub: Tea_Sub.t<'msg>,
+  mutable subscriptionCleanup: unit => unit,
+  mutable isDispatching: bool, // Prevent recursive dispatch
+  mutable messageQueue: array<'msg>,
 }
 
-/// Create a standard program
-let standardProgram = (config: programConfig<'model, 'msg>) => {
-  (container: Tea_Render.domElement, onReady: unit => unit) => {
-    // Initialise model and commands
-    let (initialModel, initialCmd) = config.init()
+/// Program interface for external control
+type programInterface<'msg, 'model> = {
+  shutdown: unit => unit,
+  getModel: unit => 'model,
+}
 
-    // Create mutable app state
-    let state = {
-      model: initialModel,
-      subscriptionCleanup: None,
+/// Create a standard TEA program
+let standardProgram = (
+  ~init: unit => ('model, Tea_Cmd.t<'msg>),
+  ~update: ('model, 'msg) => ('model, Tea_Cmd.t<'msg>),
+  ~view: 'model => Tea_Vdom.t<'msg>,
+  ~subscriptions: 'model => Tea_Sub.t<'msg>,
+  (),
+): programInterface<'msg, 'model> => {
+  let config = {init, update, view, subscriptions}
+
+  // Initialize model and commands
+  let (initialModel, initialCmd) = config.init()
+
+  // Create mutable app state
+  let state: appState<'model, 'msg> = {
+    model: initialModel,
+    currentSub: Tea_Sub.none,
+    subscriptionCleanup: () => (),
+    isDispatching: false,
+    messageQueue: [],
+  }
+
+  // Message dispatch function
+  let rec dispatch = (msg: 'msg): unit => {
+    // Queue message if already dispatching (prevent recursion)
+    if state.isDispatching {
+      Array.push(state.messageQueue, msg)
+    } else {
+      state.isDispatching = true
+
+      // Process this message
+      processMessage(msg)
+
+      // Process queued messages
+      while Array.length(state.messageQueue) > 0 {
+        let queuedMsg = Array.shift(state.messageQueue)
+        switch queuedMsg {
+        | Some(m) => processMessage(m)
+        | None => ()
+        }
+      }
+
+      state.isDispatching = false
     }
+  }
 
-    // Dispatch function - the heart of TEA
-    let rec dispatch = (msg: 'msg): unit => {
-      // Update model
-      let (newModel, cmd) = config.update(state.model, msg)
-      state.model = newModel
+  and processMessage = (msg: 'msg): unit => {
+    // Update model
+    let (newModel, cmd) = config.update(state.model, msg)
+    state.model = newModel
 
-      // Execute commands
-      let cmdMsgs = Tea_Cmd.execute(cmd)
-      Array.forEach(cmdMsgs, dispatch)
-
-      // Re-render
-      render()
-    }
-    and render = (): unit => {
-      let vdom = config.view(state.model)
-      Tea_Render.render(container, vdom, dispatch)
-    }
-
-    // Initial render
+    // Re-render
     render()
 
-    // Execute initial commands
-    let cmdMsgs = Tea_Cmd.execute(initialCmd)
-    Array.forEach(cmdMsgs, dispatch)
+    // Update subscriptions if they changed
+    updateSubscriptions()
 
-    // Set up subscriptions
-    let sub = config.subscriptions(state.model)
-    if sub.key !== "__none__" {
-      state.subscriptionCleanup = Some(sub.enable(dispatch))
+    // Execute commands (may dispatch more messages)
+    Tea_Cmd.execute(cmd, dispatch)
+  }
+
+  and render = (): unit => {
+    let _vdom = config.view(state.model)
+    // TODO: Implement rendering when Tea_Render module is created (Task 2)
+    // For now, the update cycle works but no actual DOM rendering happens
+    ()
+  }
+
+  and updateSubscriptions = (): unit => {
+    let newSub = config.subscriptions(state.model)
+
+    // Check if subscriptions changed (compare keys)
+    let oldKeys = Tea_Sub.getKeys(state.currentSub)
+    let newKeys = Tea_Sub.getKeys(newSub)
+
+    let changed =
+      Array.length(oldKeys) !== Array.length(newKeys) ||
+      Array.some(oldKeys, key => !Array.includes(newKeys, key))
+
+    if changed {
+      // Clean up old subscriptions
+      state.subscriptionCleanup()
+
+      // Enable new subscriptions
+      state.currentSub = newSub
+      state.subscriptionCleanup = Tea_Sub.enable(newSub, dispatch)
     }
+  }
 
-    // Signal ready
-    onReady()
+  // Initial render
+  render()
 
-    state
+  // Set up initial subscriptions
+  let initialSub = config.subscriptions(state.model)
+  state.currentSub = initialSub
+  state.subscriptionCleanup = Tea_Sub.enable(initialSub, dispatch)
+
+  // Execute initial commands
+  Tea_Cmd.execute(initialCmd, dispatch)
+
+  // Return program interface
+  {
+    shutdown: () => {
+      state.subscriptionCleanup()
+    },
+    getModel: () => state.model,
   }
 }
 
 /// Create a simple program (no subscriptions)
-let simpleProgram = (config: simpleProgramConfig<'model, 'msg>) => {
-  standardProgram({
-    init: config.init,
-    update: config.update,
-    view: config.view,
-    subscriptions: _ => Tea_Sub.none,
-  })
+let simpleProgram = (
+  ~init: unit => ('model, Tea_Cmd.t<'msg>),
+  ~update: ('model, 'msg) => ('model, Tea_Cmd.t<'msg>),
+  ~view: 'model => Tea_Vdom.t<'msg>,
+  (),
+): programInterface<'msg, 'model> => {
+  standardProgram(~init, ~update, ~view, ~subscriptions=_ => Tea_Sub.none, ())
 }

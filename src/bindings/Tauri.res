@@ -19,7 +19,7 @@ let validateInference = (token: string, constraints: array<string>): invokeResul
 
 /// Get the current vexation index from the backend
 let getVexationIndex = (): invokeResult<float> => {
-  invoke("get_vexation_index", {})
+  invoke("get_vexation_index", Js.Dict.empty())
 }
 
 /// Submit feedback to the Feedback-O-Tron

@@ -2,13 +2,18 @@
 
 /// PanLL Application Entry Point
 ///
-/// Initialises the TEA application with the Binary Star co-orbit model.
+/// Initializes the TEA application with the Binary Star co-orbit model.
 
-open Tea.App
+/// Initialize the application
+let init = (): (Model.model, Tea_Cmd.t<Msg.msg>) => {
+  (Model.init(), Tea_Cmd.none)
+}
 
-let main = standardProgram({
-  init: () => (Model.init(), Tea.Cmd.none),
-  update: Update.update,
-  view: View.view,
-  subscriptions: _ => Tea.Sub.none,
-})
+/// Main TEA program
+let main = Tea_App.standardProgram(
+  ~init,
+  ~update=Update.update,
+  ~view=View.view,
+  ~subscriptions=SubscriptionsFixed.all,
+  (),
+)

@@ -5,34 +5,56 @@
 /// Commands represent side effects that should be performed by the runtime.
 /// They are opaque values that get executed after the update function returns.
 
+/// Callbacks for command execution
+type callbacks<'msg> = {enqueue: 'msg => unit}
+
 /// A command that can produce messages of type 'msg
-type t<'msg> = array<unit => option<'msg>>
+type rec t<'msg> =
+  | None
+  | Msg('msg)
+  | Batch(array<t<'msg>>)
+  | Call(callbacks<'msg> => unit)
 
-/// No command - no side effects (function to avoid value restriction)
-let none = (): t<'msg> => []
+/// No command - no side effects
+let none: t<'msg> = None
 
-/// Create a command from a function that may produce a message
-let msg = (m: 'msg): t<'msg> => [() => Some(m)]
+/// Create a command that immediately sends a message
+let msg = (m: 'msg): t<'msg> => Msg(m)
 
 /// Batch multiple commands together
-let batch = (cmds: array<t<'msg>>): t<'msg> => Array.flat(cmds)
-
-/// Map a command's message type
-let map = (cmd: t<'a>, f: 'a => 'b): t<'b> => {
-  Array.map(cmd, thunk => {
-    () => {
-      switch thunk() {
-      | Some(a) => Some(f(a))
-      | None => None
-      }
-    }
-  })
+let batch = (cmds: list<t<'msg>>): t<'msg> => {
+  let cmdArray = List.toArray(cmds)
+  switch Array.length(cmdArray) {
+  | 0 => None
+  | 1 => Array.getUnsafe(cmdArray, 0)
+  | _ => Batch(cmdArray)
+  }
 }
 
-/// Execute all commands and collect messages
-let execute = (cmd: t<'msg>): array<'msg> => {
-  cmd
-  ->Array.map(thunk => thunk())
-  ->Array.filter(Option.isSome)
-  ->Array.map(opt => Option.getExn(opt))
+/// Create a command from a callback function
+/// This is the main way to integrate async operations (Promises, etc.)
+let call = (f: callbacks<'msg> => unit): t<'msg> => Call(f)
+
+/// Map a command's message type
+let rec map = (cmd: t<'a>, f: 'a => 'b): t<'b> => {
+  switch cmd {
+  | None => None
+  | Msg(a) => Msg(f(a))
+  | Batch(cmds) => Batch(Array.map(cmds, c => map(c, f)))
+  | Call(callback) => Call(callbacks => callback({enqueue: a => callbacks.enqueue(f(a))}))
+  }
+}
+
+/// Execute a command and collect immediate messages
+/// Async commands are started but their results come later via callbacks
+let rec execute = (cmd: t<'msg>, dispatch: 'msg => unit): unit => {
+  switch cmd {
+  | None => ()
+  | Msg(m) => dispatch(m)
+  | Batch(cmds) => Array.forEach(cmds, c => execute(c, dispatch))
+  | Call(f) => {
+      let callbacks = {enqueue: dispatch}
+      f(callbacks)
+    }
+  }
 }

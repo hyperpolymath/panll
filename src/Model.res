@@ -6,7 +6,7 @@
 /// managing the synchronised state across all three panes.
 
 /// Constraint types for the Symbolic Mass (Pane-L)
-type constraint = {
+type symbolicConstraint = {
   id: string,
   expression: string,
   active: bool,
@@ -37,7 +37,7 @@ type agencyState = {
 
 /// Pane-L: Symbolic Mass (Noumena)
 type paneLState = {
-  constraints: array<constraint>,
+  constraints: array<symbolicConstraint>,
   activeConstraintId: option<string>,
   editorContent: string,
 }

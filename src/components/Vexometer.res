@@ -66,7 +66,7 @@ let getStatusText = (index: float, antiInflammatory: bool, inertia: bool): strin
 }
 
 /// Render the expanded vexometer panel
-let renderExpandedView = (state: vexometerState): Vdom.t<msg> => {
+let renderExpandedView = (state: vexometerState): Tea_Vdom.t<msg> => {
   let indexPercent = Int.toString(Int.fromFloat(state.index *. 100.0))
   let barWidth = indexPercent ++ "%"
   let barColour = getBarColour(state.index)
@@ -74,18 +74,18 @@ let renderExpandedView = (state: vexometerState): Vdom.t<msg> => {
   let statusText = getStatusText(state.index, state.antiInflammatoryActive, state.inertiaDetected)
 
   div(
-    list{Attrs.class("fixed bottom-4 right-4 w-64 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl")},
+    list{Attrs.class_("fixed bottom-4 right-4 w-64 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl")},
     list{
       // Header
       div(
-        list{Attrs.class("flex items-center justify-between mb-3")},
+        list{Attrs.class_("flex items-center justify-between mb-3")},
         list{
           div(
-            list{Attrs.class("text-sm font-semibold text-gray-300")},
+            list{Attrs.class_("text-sm font-semibold text-gray-300")},
             list{text("Vexation Index")},
           ),
           div(
-            list{Attrs.class(`text-lg font-bold ${textColour}`)},
+            list{Attrs.class_(`text-lg font-bold ${textColour}`)},
             list{text(indexPercent ++ "%")},
           ),
         },
@@ -93,11 +93,11 @@ let renderExpandedView = (state: vexometerState): Vdom.t<msg> => {
 
       // Progress bar
       div(
-        list{Attrs.class("h-3 bg-gray-800 rounded-full overflow-hidden mb-3")},
+        list{Attrs.class_("h-3 bg-gray-800 rounded-full overflow-hidden mb-3")},
         list{
           div(
             list{
-              Attrs.class(`h-full ${barColour} transition-all duration-500`),
+              Attrs.class_(`h-full ${barColour} transition-all duration-500`),
               Attrs.style("width", barWidth),
             },
             list{},
@@ -107,36 +107,36 @@ let renderExpandedView = (state: vexometerState): Vdom.t<msg> => {
 
       // Status
       div(
-        list{Attrs.class(`text-xs ${textColour} mb-3`)},
+        list{Attrs.class_(`text-xs ${textColour} mb-3`)},
         list{text(statusText)},
       ),
 
       // Metrics
       div(
-        list{Attrs.class("grid grid-cols-2 gap-2 text-xs")},
+        list{Attrs.class_("grid grid-cols-2 gap-2 text-xs")},
         list{
           div(
-            list{Attrs.class("bg-gray-800/50 p-2 rounded")},
+            list{Attrs.class_("bg-gray-800/50 p-2 rounded")},
             list{
               div(
-                list{Attrs.class("text-gray-500")},
+                list{Attrs.class_("text-gray-500")},
                 list{text("Cancellations")},
               ),
               div(
-                list{Attrs.class("text-amber-300 font-mono")},
+                list{Attrs.class_("text-amber-300 font-mono")},
                 list{text(Int.toString(state.recentCancellations))},
               ),
             },
           ),
           div(
-            list{Attrs.class("bg-gray-800/50 p-2 rounded")},
+            list{Attrs.class_("bg-gray-800/50 p-2 rounded")},
             list{
               div(
-                list{Attrs.class("text-gray-500")},
+                list{Attrs.class_("text-gray-500")},
                 list{text("Corrections")},
               ),
               div(
-                list{Attrs.class("text-amber-300 font-mono")},
+                list{Attrs.class_("text-amber-300 font-mono")},
                 list{text(Int.toString(state.recentCorrections))},
               ),
             },
@@ -147,7 +147,7 @@ let renderExpandedView = (state: vexometerState): Vdom.t<msg> => {
       // Anti-inflammatory indicator
       if state.antiInflammatoryActive {
         div(
-          list{Attrs.class("mt-3 p-2 bg-indigo-900/30 border border-indigo-700/50 rounded text-xs text-indigo-300")},
+          list{Attrs.class_("mt-3 p-2 bg-indigo-900/30 border border-indigo-700/50 rounded text-xs text-indigo-300")},
           list{text("Environment simplified to reduce friction")},
         )
       } else {
@@ -157,7 +157,7 @@ let renderExpandedView = (state: vexometerState): Vdom.t<msg> => {
       // Inertia breaker prompt
       if state.inertiaDetected {
         div(
-          list{Attrs.class("mt-3 p-2 bg-amber-900/30 border border-amber-700/50 rounded text-xs text-amber-300")},
+          list{Attrs.class_("mt-3 p-2 bg-amber-900/30 border border-amber-700/50 rounded text-xs text-amber-300")},
           list{text("Stasis detected. Consider: What's the smallest next step?")},
         )
       } else {
@@ -168,30 +168,30 @@ let renderExpandedView = (state: vexometerState): Vdom.t<msg> => {
 }
 
 /// Render the compact vexometer indicator
-let renderCompactView = (state: vexometerState): Vdom.t<msg> => {
+let renderCompactView = (state: vexometerState): Tea_Vdom.t<msg> => {
   let indexPercent = Int.toString(Int.fromFloat(state.index *. 100.0))
   let barWidth = indexPercent ++ "%"
   let barColour = getBarColour(state.index)
 
   div(
-    list{Attrs.class("fixed bottom-4 right-4 w-32")},
+    list{Attrs.class_("fixed bottom-4 right-4 w-32")},
     list{
       div(
-        list{Attrs.class("text-xs text-gray-500 mb-1 flex items-center justify-between")},
+        list{Attrs.class_("text-xs text-gray-500 mb-1 flex items-center justify-between")},
         list{
           text("Vexation"),
           div(
-            list{Attrs.class("text-gray-400")},
+            list{Attrs.class_("text-gray-400")},
             list{text(indexPercent ++ "%")},
           ),
         },
       ),
       div(
-        list{Attrs.class("h-2 bg-gray-800 rounded-full overflow-hidden")},
+        list{Attrs.class_("h-2 bg-gray-800 rounded-full overflow-hidden")},
         list{
           div(
             list{
-              Attrs.class(`h-full ${barColour} transition-all duration-300`),
+              Attrs.class_(`h-full ${barColour} transition-all duration-300`),
               Attrs.style("width", barWidth),
             },
             list{},
@@ -203,7 +203,7 @@ let renderCompactView = (state: vexometerState): Vdom.t<msg> => {
 }
 
 /// Main Vexometer view
-let view = (state: vexometerState, expanded: bool): Vdom.t<msg> => {
+let view = (state: vexometerState, expanded: bool): Tea_Vdom.t<msg> => {
   if expanded {
     renderExpandedView(state)
   } else {

@@ -173,10 +173,11 @@ let updateAntiCrash = (model: model, msg: antiCrashMsg): (model, Tea_Cmd.t<msg>)
 
   | ValidationFailed(token, reason) => {
       // Token failed validation - record in vexometer and halt if strict mode
+      let newIndex = model.vexometer.index +. 0.1
       let vexometer = {
         ...model.vexometer,
         recentCancellations: model.vexometer.recentCancellations + 1,
-        index: Float.min(1.0, model.vexometer.index +. 0.1),
+        index: newIndex > 1.0 ? 1.0 : newIndex,
       }
       ({...model, vexometer}, Tea_Cmd.none)
     }

@@ -14,8 +14,7 @@
   ],
   "suffix": ".res.js",
   "bs-dependencies": [
-    "@rescript/core",
-    "rescript-tea"
+    "@rescript/core"
   ],
   "bsc-flags": [
     "-open RescriptCore"
