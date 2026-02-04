@@ -4,9 +4,9 @@
 name = "panll"
 version = "0.0.1"
 description = "PanLL eNSAID - Environment for NeSy-Agentic Integrated Development"
-authors = ["hyperpolymath"]
+authors = ["Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"]
 edition = "2021"
-license = "AGPL-3.0-or-later"
+license = "PMPL-1.0-or-later"
 repository = "https://github.com/hyperpolymath/panll"
 
 [build-dependencies]

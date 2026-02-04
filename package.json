@@ -25,6 +25,6 @@
     "rescript",
     "tauri"
   ],
-  "author": "hyperpolymath",
-  "license": "AGPL-3.0-or-later"
+  "author": "Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>",
+  "license": "PMPL-1.0-or-later"
 }
