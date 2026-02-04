@@ -1,0 +1,243 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= PanLL Development Roadmap
+:toc:
+:toclevels: 3
+
+== Overview
+
+This roadmap outlines the development plan for **PanLL eNSAID** (Environment for NeSy-Agentic Integrated Development), a neurosymbolic agentic development environment built on The Elm Architecture.
+
+== Current Status: v0.1.0 (2026-02-04)
+
+✅ **Complete TEA Implementation**
+
+* Model-Update-View architecture
+* Command and Subscription management
+* Comprehensive test suite (33 tests, 87-91% coverage)
+* Modern tooling (Vitest, Deno, Tauri 2.0)
+* Complete documentation
+
+== Roadmap
+
+=== v0.2.0 - Enhanced UI & Components (Q1 2026)
+
+==== Must Have
+* [ ] Complete Tauri desktop app integration
+* [ ] Functional UI components (current stubs)
+  - [ ] FeedbackOTron component
+  - [ ] Vexometer component
+  - [ ] PaneL/PaneN/PaneW components
+* [ ] State persistence
+* [ ] Basic settings management
+
+==== Should Have
+* [ ] Keyboard shortcuts fully implemented
+* [ ] Error boundary handling
+* [ ] Loading states and transitions
+* [ ] Accessibility improvements (ARIA labels)
+
+==== Could Have
+* [ ] Theme support (dark/light modes)
+* [ ] Component style customization
+* [ ] Animation framework
+* [ ] Onboarding tutorial
+
+=== v0.3.0 - Neurosymbolic Core (Q2 2026)
+
+==== Must Have
+* [ ] Integration with neurosymbolic reasoning engine
+* [ ] Symbolic constraint system
+* [ ] Neural network interface layer
+* [ ] Hybrid reasoning pipeline
+
+==== Should Have
+* [ ] Visualization of reasoning traces
+* [ ] Performance monitoring
+* [ ] Debugging tools for NeSy operations
+* [ ] Example NeSy applications
+
+==== Could Have
+* [ ] Multiple reasoning backends
+* [ ] Custom constraint languages
+* [ ] Interactive reasoning explorer
+
+=== v0.4.0 - Agentic Capabilities (Q3 2026)
+
+==== Must Have
+* [ ] Agent architecture framework
+* [ ] Multi-agent coordination
+* [ ] Task planning and execution
+* [ ] Agent communication protocols
+
+==== Should Have
+* [ ] Agent lifecycle management
+* [ ] Performance metrics per agent
+* [ ] Agent debugging tools
+* [ ] Pre-built agent templates
+
+==== Could Have
+* [ ] Agent marketplace/registry
+* [ ] Custom agent builder UI
+* [ ] Agent behavior visualization
+* [ ] Distributed agent deployment
+
+=== v0.5.0 - Development Tools (Q4 2026)
+
+==== Must Have
+* [ ] Code editor integration
+* [ ] REPL for interactive development
+* [ ] Project scaffolding tools
+* [ ] Build and deployment pipeline
+
+==== Should Have
+* [ ] Syntax highlighting for DSLs
+* [ ] Auto-completion
+* [ ] Code navigation
+* [ ] Refactoring tools
+
+==== Could Have
+* [ ] Visual programming interface
+* [ ] Collaborative editing
+* [ ] Version control integration
+* [ ] CI/CD integration
+
+=== v1.0.0 - Production Ready (Q1 2027)
+
+==== Must Have
+* [ ] Comprehensive documentation
+* [ ] Production-grade performance
+* [ ] Security audit completed
+* [ ] Stable API (no breaking changes)
+* [ ] Migration guides
+* [ ] Example projects and tutorials
+
+==== Should Have
+* [ ] Plugin system
+* [ ] Extension marketplace
+* [ ] Enterprise features
+* [ ] Multi-platform support (Windows, macOS, Linux)
+
+==== Could Have
+* [ ] Cloud deployment options
+* [ ] SaaS offering
+* [ ] Mobile companion app
+* [ ] Web-based version
+
+== Technical Debt & Maintenance
+
+=== High Priority
+* [ ] Increase test coverage to 95%+
+* [ ] Add integration tests
+* [ ] Performance benchmarks
+* [ ] Memory leak detection
+* [ ] Security scanning (automated)
+
+=== Medium Priority
+* [ ] Code documentation (JSDoc/inline)
+* [ ] API documentation generation
+* [ ] Contribution guidelines
+* [ ] Code of conduct
+
+=== Low Priority
+* [ ] Logo and branding
+* [ ] Website/landing page
+* [ ] Blog/announcement system
+* [ ] Community forum
+
+== Research & Exploration
+
+=== Active Research Areas
+* Neurosymbolic AI architectures
+* Agentic reasoning frameworks
+* Human-AI collaboration patterns
+* Formal verification for AI systems
+
+=== Experimental Features
+* Quantum-inspired optimization
+* Multi-modal reasoning
+* Explainable AI integration
+* Federated learning support
+
+== Success Metrics
+
+=== v0.2.0
+* Desktop app runs smoothly on all platforms
+* All UI components functional
+* 90%+ test coverage
+
+=== v0.3.0
+* NeSy reasoning performs faster than baseline
+* 10+ example applications demonstrating capabilities
+* 95%+ test coverage
+
+=== v0.4.0
+* Agents can coordinate on complex tasks
+* Performance scales with number of agents
+* 95%+ test coverage maintained
+
+=== v1.0.0
+* 1000+ GitHub stars
+* 100+ production deployments
+* Active community (forums, Discord)
+* Regular contributor base
+
+== Dependencies & Integration
+
+=== Current Dependencies
+* ReScript 11.1.x
+* Tauri 2.x
+* Vitest 4.x
+* Deno runtime
+
+=== Planned Integrations
+* VSCode extension
+* JetBrains plugin
+* Neovim/Vim plugin
+* Emacs mode
+
+== Community & Ecosystem
+
+=== Documentation
+* [ ] API reference (auto-generated)
+* [ ] Architecture guide
+* [ ] Contributing guide
+* [ ] Code of conduct
+* [ ] Security policy
+* [ ] Example gallery
+
+=== Community Building
+* [ ] Discord server
+* [ ] GitHub Discussions
+* [ ] Monthly community calls
+* [ ] Conference presentations
+* [ ] Academic papers
+
+=== Ecosystem Projects
+* [ ] PanLL plugin system
+* [ ] Third-party agent marketplace
+* [ ] Example project templates
+* [ ] Integration libraries
+
+== License & Governance
+
+**License:** PMPL-1.0-or-later (Palimpsest License)
+
+**Governance Model:** Benevolent Dictator for Life (BDFL) with community input
+
+**Decision Making:**
+* Major features: RFC process with community feedback
+* Bug fixes: Direct commits with review
+* Breaking changes: Require RFC + community consensus
+
+== Contact & Links
+
+* **Repository:** https://github.com/hyperpolymath/panll
+* **Issues:** https://github.com/hyperpolymath/panll/issues
+* **Discussions:** https://github.com/hyperpolymath/panll/discussions
+* **Author:** Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>
+
+---
+
+_Last Updated: 2026-02-04_
+
+_This roadmap is a living document and will be updated as the project evolves._

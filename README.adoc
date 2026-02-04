@@ -5,6 +5,12 @@
 :toc-placement: preamble
 :icons: font
 
+image:https://img.shields.io/github/v/release/hyperpolymath/panll[Release,link="https://github.com/hyperpolymath/panll/releases"]
+image:https://img.shields.io/badge/License-PMPL--1.0-indigo.svg[PMPL-1.0-or-later,link="LICENSE"]
+image:https://img.shields.io/badge/Tests-33%20passing-brightgreen[Tests]
+image:https://img.shields.io/badge/Coverage-87--91%25-green[Coverage]
+image:https://img.shields.io/badge/RSR-compliant-blue[RSR Compliant]
+
 **Environment for NeSy-Agentic Integrated Development**
 
 PanLL (pronounced "parallel") is a Human-Things Interface (HTI) designed to facilitate a "Binary Star" co-orbit between a Human Operator and a Neurosymbolic Machine.

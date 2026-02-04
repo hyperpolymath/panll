@@ -1,6 +1,6 @@
 {
   "name": "panll",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "PanLL eNSAID - Environment for NeSy-Agentic Integrated Development",
   "type": "module",
   "scripts": {

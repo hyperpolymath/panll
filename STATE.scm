@@ -5,10 +5,10 @@
 
 (state
   (metadata
-    (version "0.0.1")
+    (version "0.1.0")
     (schema-version "1.0")
     (created "2026-01-16")
-    (updated "2026-02-04")
+    (updated "2026-02-04T18:30:00")
     (project "panll")
     (repo "https://github.com/hyperpolymath/panll"))
 
@@ -95,11 +95,21 @@
         "Core modules (AntiCrash, Contractiles, OrbitalSync)"
         "Tauri backend with basic commands"
         "Tailwind config and base CSS"))
-    (session "2026-02-04"
+    (session "2026-02-04T10:00:00"
       (accomplishments
         "Test infrastructure setup (vitest + happy-dom)"
         "Comprehensive Tea_Cmd test suite (13 tests, 87% coverage)"
         "Comprehensive Tea_Sub test suite (16 tests, 91% coverage)"
         "Complete TEA architecture documentation (docs/TEA_GUIDE.md)"
         "Fixed ReScript list interop issues in tests"
-        "Memory leak prevention tests for subscriptions"))))
+        "Memory leak prevention tests for subscriptions"))
+    (session "2026-02-04T18:30:00"
+      (accomplishments
+        "Released v0.1.0 - Initial Release!"
+        "Updated all dependencies (vitest 4.0.18, happy-dom 20.5.0, tailwindcss 4.1.18)"
+        "Fixed CI/CD workflows (removed mirror, fixed instant-sync)"
+        "Created comprehensive ROADMAP.adoc with quarterly milestones"
+        "Created GitHub release with detailed release notes"
+        "Updated README with release badges and test coverage"
+        "Updated package.json version to 0.1.0"
+        "All 33 tests passing with 87-91% coverage"))))
