@@ -71,6 +71,10 @@ deno task css:watch
 deno task build
 ----
 
+== Documentation
+
+* **link:docs/TEA_GUIDE.md[TEA Architecture Guide]** — Comprehensive documentation for The Elm Architecture (TEA) implementation including Tea_Cmd, Tea_Sub, Tea_Vdom, and Tea_App modules with testing guide and best practices
+
 == Keyboard Shortcuts
 
 [cols="1,2"]
