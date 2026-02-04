@@ -1,79 +1,65 @@
 <!DOCTYPE html>
-<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
-<html lang="en-GB">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="PanLL eNSAID - Environment for NeSy-Agentic Integrated Development" />
-  <meta name="theme-color" content="#030712" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanLL - eNSAID (Environment for NeSy-Agentic Integrated Development)</title>
 
-  <title>PanLL eNSAID</title>
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="/styles.css" />
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS CDN for styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    /* Critical CSS for initial load */
-    html, body {
+    body {
       margin: 0;
       padding: 0;
-      height: 100%;
-      background-color: #030712;
-      color: #f3f4f6;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #111827; /* gray-900 */
+      color: #f9fafb; /* gray-50 */
     }
 
-    #root {
-      height: 100%;
+    #app {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
     }
 
-    /* Dark Start loading state */
-    .loading-state {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background-color: #030712;
+    /* Custom scrollbar for dark theme */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
     }
 
-    .loading-title {
-      font-size: 2.5rem;
-      font-weight: 300;
-      color: #4b5563;
-      margin-bottom: 2rem;
-      font-family: 'Inter', system-ui, sans-serif;
+    ::-webkit-scrollbar-track {
+      background: #1f2937; /* gray-800 */
     }
 
-    .loading-subtitle {
-      font-size: 0.875rem;
-      color: #374151;
-      font-family: 'Inter', system-ui, sans-serif;
+    ::-webkit-scrollbar-thumb {
+      background: #4b5563; /* gray-600 */
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6b7280; /* gray-500 */
     }
   </style>
 </head>
 <body>
-  <div id="root">
-    <!-- Loading state shown before app hydrates -->
-    <div class="loading-state">
-      <div class="loading-title">PanLL</div>
-      <div class="loading-subtitle">Initialising eNSAID Environment...</div>
-    </div>
-  </div>
+  <!-- TEA app mount point -->
+  <div id="app"></div>
 
-  <!-- Application entry point -->
+  <!-- Load the compiled ReScript application -->
   <script type="module">
-    import { main } from '/src/App.res.js';
+    // Import the main application (auto-starts on import)
+    import '../src/App.res.js';
 
-    // Mount the TEA application
-    const app = main(document.getElementById('root'), () => {
-      console.log('[PanLL] Environment initialised');
-    });
+    console.log('PanLL eNSAID loaded - TEA app should be mounted to #app');
   </script>
+
+  <noscript>
+    <div style="padding: 2rem; text-align: center;">
+      <h1>JavaScript Required</h1>
+      <p>PanLL requires JavaScript to run. Please enable JavaScript in your browser.</p>
+    </div>
+  </noscript>
 </body>
 </html>
