@@ -45,22 +45,30 @@ This is not a passive text editor. It is an active, synchronous environment that
 
 == Development
 
+PanLL relies on Deno tasks to coordinate the Tailwind/Tauri pieces while npm scripts continue to drive ReScript compilation. Run the steps below (or their watchers) inside the repo root:
+
 [source,bash]
 ----
-# Install dependencies
+# Install npm dependencies (ReScript, Tailwind, Tauri CLI)
 npm install
 
-# Build ReScript
+# Compile ReScript modules
 npm run res:build
 
-# Watch ReScript
+# Watch ReScript sources during development
 npm run res:watch
 
-# Run Tauri dev
-npm run tauri:dev
+# Produce Tailwind CSS via Deno
+deno task css:build
 
-# Build for production
-npm run tauri:build
+# Tailwind watch + Tauri dev runner through Deno
+deno task dev
+
+# Tailwind-only watcher (optional)
+deno task css:watch
+
+# Full production build (Tailwind CSS + Tauri)
+deno task build
 ----
 
 == Keyboard Shortcuts

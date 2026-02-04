@@ -1,6 +1,13 @@
 {
   "name": "@hyperpolymath/panll",
   "version": "0.0.1",
+  "permissions": {
+    "read": true,
+    "write": [
+      "./public"
+    ],
+    "run": true
+  },
   "tasks": {
     "dev": "deno task css:watch & tauri dev",
     "build": "deno task css:build && tauri build",
