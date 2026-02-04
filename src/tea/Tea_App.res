@@ -20,6 +20,8 @@ type appState<'model, 'msg> = {
   mutable subscriptionCleanup: unit => unit,
   mutable isDispatching: bool, // Prevent recursive dispatch
   mutable messageQueue: array<'msg>,
+  mutable renderState: option<Tea_Render.renderState<'msg>>,
+  mutable container: option<Tea_Render.domElement>,
 }
 
 /// Program interface for external control
@@ -48,6 +50,8 @@ let standardProgram = (
     subscriptionCleanup: () => (),
     isDispatching: false,
     messageQueue: [],
+    renderState: None,
+    container: None,
   }
 
   // Message dispatch function
@@ -90,10 +94,30 @@ let standardProgram = (
   }
 
   and render = (): unit => {
-    let _vdom = config.view(state.model)
-    // TODO: Implement rendering when Tea_Render module is created (Task 2)
-    // For now, the update cycle works but no actual DOM rendering happens
-    ()
+    let vdom = config.view(state.model)
+
+    switch (state.container, state.renderState) {
+    | (Some(container), Some(renderState)) => {
+        // Update existing render
+        Tea_Render.update(container, vdom, renderState)
+      }
+    | (Some(container), None) => {
+        // Initial render - create render state
+        let renderState = Tea_Render.createState(dispatch)
+        Tea_Render.render(container, vdom, renderState)
+        state.renderState = Some(renderState)
+      }
+    | (None, _) => {
+        // No container - try to mount to #app
+        switch Tea_Render.mount("#app", vdom, dispatch) {
+        | Some(renderState) => {
+            state.renderState = Some(renderState)
+            state.container = Tea_Render.querySelector("#app")
+          }
+        | None => Console.warn("No #app element found - rendering disabled")
+        }
+      }
+    }
   }
 
   and updateSubscriptions = (): unit => {
