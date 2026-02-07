@@ -1,0 +1,577 @@
+# ReScript TEA Migration Guide: Custom → Official (rescript-tea@0.16.0)
+
+**Status:** NOT STARTED (custom TEA currently works, 33 tests passing)
+**Risk Level:** HIGH (core architecture change)
+**Estimated Effort:** 1-2 weeks
+**Requires:** Comprehensive testing before deployment
+
+---
+
+## Current Status ⚠️
+
+**IMPORTANT:** The MIGRATION-TO-RESCRIPT-TEA.md checklist is incorrect!
+
+- ❌ rescript-tea@0.16.0 is **NOT installed** (not in package.json or node_modules)
+- ✅ Custom TEA implementation in `src/tea/` is **fully functional** (33 tests passing)
+- ✅ Draft "New" files exist (AppNew.res, etc.) but **are not being used**
+- ✅ All modules use custom TEA APIs (Tea_App, Tea_Sub, Tea_Cmd, Tea_Html, etc.)
+
+**Recommendation:** Do NOT start this migration until:
+1. v0.1.0 milestone complete
+2. Full test coverage (95%+) for custom TEA
+3. Comprehensive migration test plan ready
+4. Backup/rollback plan in place
+
+---
+
+## Why Migrate?
+
+### Benefits of Official rescript-tea
+
+1. **Battle-tested** - Used by Darklang and other production apps
+2. **More features** - Navigation, HTTP, Time, Mouse, AnimationFrame, Random, Debug
+3. **Community support** - Issues, PRs, updates, documentation
+4. **Less maintenance** - No need to maintain custom TEA runtime
+5. **Better performance** - Optimized virtual DOM diffing
+6. **Documentation** - Follows Elm's well-documented architecture
+
+### Costs of Migration
+
+1. **High risk** - Core architecture change affects all modules
+2. **Time investment** - 1-2 weeks of focused work
+3. **Testing burden** - Need to re-test everything
+4. **Potential bugs** - API differences may introduce regressions
+5. **No keyboard subscriptions** - rescript-tea doesn't have built-in keyboard support (need custom)
+
+---
+
+## Pre-Migration Checklist
+
+Before starting migration, ensure:
+
+- [ ] All 33 tests passing with custom TEA
+- [ ] Test coverage ≥95% (currently 87-91%)
+- [ ] All features documented and working
+- [ ] Git branch created: `git checkout -b feature/migrate-to-official-rescript-tea`
+- [ ] Backup created: `git tag pre-rescript-tea-migration`
+- [ ] Team approval obtained (if applicable)
+- [ ] User stories written for all features to preserve
+- [ ] Performance baseline measured (render time, update time)
+
+---
+
+## Migration Plan: 6 Phases
+
+### Phase 0: Install rescript-tea ✅ (30 minutes)
+
+```bash
+# Install official rescript-tea package
+npm install rescript-tea@0.16.0
+
+# Update rescript.json to include rescript-tea
+# Add to bs-dependencies: ["rescript-tea"]
+
+# Verify installation
+ls node_modules/rescript-tea/  # Should see src/ directory
+
+# Check available modules
+ls node_modules/rescript-tea/src/*.res
+# Expected: tea_app.res, tea_cmd.res, tea_sub.res, tea_html.res, etc.
+```
+
+**Verify:** `npm list rescript-tea` shows `rescript-tea@0.16.0`
+
+---
+
+### Phase 1: Create Custom Subscriptions ✅ (1-2 days)
+
+**Problem:** Official rescript-tea has no built-in keyboard subscriptions.
+
+**Solution:** Create custom keyboard subscription using Tea_Sub.registration.
+
+#### Step 1.1: Create `src/subscriptions/KeyboardV2.res`
+
+```rescript
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Custom keyboard subscription for rescript-tea
+
+module KeyboardV2 = {
+  type keyEvent = {
+    key: string,
+    ctrlKey: bool,
+    shiftKey: bool,
+    altKey: bool,
+    metaKey: bool,
+  }
+
+  // External bindings to browser addEventListener/removeEventListener
+  @val @scope("window")
+  external addEventListener: (string, Dom.event => unit) => unit = "addEventListener"
+
+  @val @scope("window")
+  external removeEventListener: (string, Dom.event => unit) => unit = "removeEventListener"
+
+  // Extract key event data from DOM event
+  let extractKeyEvent = (evt: Dom.event): keyEvent => {
+    open Webapi.Dom
+    let keyboardEvt = evt->KeyboardEvent.fromEvent
+    switch keyboardEvt {
+    | Some(ke) => {
+        key: ke->KeyboardEvent.key,
+        ctrlKey: ke->KeyboardEvent.ctrlKey,
+        shiftKey: ke->KeyboardEvent.shiftKey,
+        altKey: ke->KeyboardEvent.altKey,
+        metaKey: ke->KeyboardEvent.metaKey,
+      }
+    | None => {
+        key: "",
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+        metaKey: false,
+      }
+    }
+  }
+
+  // Create keyboard subscription using Tea_Sub.registration
+  let onKeyDown = (tagger: keyEvent => 'msg): Tea_Sub.t<'msg> => {
+    Tea_Sub.registration(
+      "keyboard-keydown",
+      enabler => {
+        // Handler function that extracts event and calls tagger
+        let handler = evt => {
+          let keyEvent = extractKeyEvent(evt)
+          enabler(tagger(keyEvent))
+        }
+
+        // Subscribe to keydown events
+        addEventListener("keydown", handler)
+
+        // Return cleanup function
+        () => removeEventListener("keydown", handler)
+      }
+    )
+  }
+
+  let onKeyUp = (tagger: keyEvent => 'msg): Tea_Sub.t<'msg> => {
+    Tea_Sub.registration(
+      "keyboard-keyup",
+      enabler => {
+        let handler = evt => {
+          let keyEvent = extractKeyEvent(evt)
+          enabler(tagger(keyEvent))
+        }
+        addEventListener("keyup", handler)
+        () => removeEventListener("keyup", handler)
+      }
+    )
+  }
+}
+```
+
+#### Step 1.2: Test KeyboardV2
+
+```rescript
+// tests/keyboard_v2_test.ts (Deno test after npm→Deno migration)
+// Or tests/KeyboardV2.test.js (Vitest for now)
+
+import { test, expect } from 'vitest';
+// Test keyboard subscription creation
+// (Manual testing in browser required for actual key events)
+```
+
+---
+
+### Phase 2: Create Custom Tauri Commands ✅ (1-2 days)
+
+**Problem:** Official rescript-tea doesn't know about Tauri.
+
+**Solution:** Wrap Tauri invoke calls in Tea_Cmd.call.
+
+#### Step 2.1: Create `src/commands/TauriCmdV2.res`
+
+```rescript
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Tauri commands wrapped for rescript-tea
+
+module TauriCmdV2 = {
+  // External binding to Tauri invoke
+  @module("@tauri-apps/api/core")
+  external invoke: (string, 'payload) => promise<'result> = "invoke"
+
+  // Validate inference token against constraints
+  let validateInference = (
+    token: string,
+    constraints: array<string>,
+    tagger: result<bool, string> => 'msg
+  ): Tea_Cmd.t<'msg> => {
+    Tea_Cmd.call(callbacks => {
+      // Call Tauri backend
+      invoke("validate_inference", {"token": token, "constraints": constraints})
+      ->Promise.then(result => {
+        // Enqueue success message
+        callbacks.enqueue(tagger(Ok(result)))
+        Promise.resolve()
+      })
+      ->Promise.catch(err => {
+        // Enqueue error message
+        callbacks.enqueue(tagger(Error("Validation failed")))
+        Promise.resolve()
+      })
+      ->ignore
+    })
+  }
+
+  // Get vexation index from backend
+  let getVexationIndex = (tagger: float => 'msg): Tea_Cmd.t<'msg> => {
+    Tea_Cmd.call(callbacks => {
+      invoke("get_vexation_index", ())
+      ->Promise.then(index => {
+        callbacks.enqueue(tagger(index))
+        Promise.resolve()
+      })
+      ->Promise.catch(_err => {
+        // Default to 0.0 on error
+        callbacks.enqueue(tagger(0.0))
+        Promise.resolve()
+      })
+      ->ignore
+    })
+  }
+
+  // Submit feedback to backend
+  let submitFeedback = (
+    paneLState: string,
+    paneNState: string,
+    paneWState: string,
+    reportType: string,
+    tagger: result<string, string> => 'msg
+  ): Tea_Cmd.t<'msg> => {
+    Tea_Cmd.call(callbacks => {
+      let payload = {
+        "pane_l_state": paneLState,
+        "pane_n_state": paneNState,
+        "pane_w_state": paneWState,
+        "report_type": reportType,
+      }
+      invoke("submit_feedback", payload)
+      ->Promise.then(response => {
+        callbacks.enqueue(tagger(Ok(response)))
+        Promise.resolve()
+      })
+      ->Promise.catch(_err => {
+        callbacks.enqueue(tagger(Error("Feedback submission failed")))
+        Promise.resolve()
+      })
+      ->ignore
+    })
+  }
+}
+```
+
+#### Step 2.2: Test Tauri Commands
+
+```javascript
+// tests/tauri_cmd_v2_test.ts
+// Integration test with Tauri backend (requires Tauri dev running)
+```
+
+---
+
+### Phase 3: Update Module Imports ✅ (2-3 days)
+
+Update all source files to use official rescript-tea modules.
+
+#### Files to Update
+
+1. `src/App.res`
+2. `src/Update.res`
+3. `src/Subscriptions.res`
+4. `src/View.res` (if uses Tea_Html)
+5. `src/components/*.res` (if use Tea_Html)
+
+#### Import Changes
+
+**Before (Custom TEA):**
+```rescript
+// Imports come from src/tea/
+// (implicitly via rescript.json bsc-flags: -open Tea)
+```
+
+**After (Official rescript-tea):**
+```rescript
+// src/App.res
+open Tea_App  // From rescript-tea package
+open Tea_Cmd  // From rescript-tea package
+
+// src/Subscriptions.res
+open Tea_Sub    // From rescript-tea package
+open Tea_Time   // From rescript-tea package
+open Tea_Animationframe  // From rescript-tea package
+open KeyboardV2  // Our custom subscription
+
+// src/Update.res
+open Tea_Cmd  // From rescript-tea package
+open TauriCmdV2  // Our custom Tauri commands
+```
+
+#### Step 3.1: Update `src/App.res`
+
+**Before:**
+```rescript
+let main = Tea_App.standardProgram(
+  ~init,
+  ~update=Update.update,
+  ~view=View.view,
+  ~subscriptions=SubscriptionsFixed.all,
+  (),
+)
+```
+
+**After:**
+```rescript
+open Tea_App  // Official rescript-tea
+
+let main = standardProgram(
+  ~init,
+  ~update=Update.update,
+  ~view=View.view,
+  ~subscriptions=Subscriptions.all,
+  (),
+)
+```
+
+#### Step 3.2: Update `src/Subscriptions.res`
+
+Replace `Keyboard.onKeyDown` with `KeyboardV2.onKeyDown`.
+
+#### Step 3.3: Update `src/Update.res`
+
+Replace `TauriCmd.*` with `TauriCmdV2.*`.
+
+#### Step 3.4: Compile and Fix Errors
+
+```bash
+npm run res:clean
+npm run res:build
+
+# Fix compilation errors one by one
+# Check error messages carefully - API differences may exist
+```
+
+---
+
+### Phase 4: Update Tests ✅ (3-4 days)
+
+Re-test everything with official rescript-tea.
+
+#### Test Files to Update
+
+- `tests/Tea_App.test.js`
+- `tests/Tea_Cmd.test.js`
+- `tests/Tea_Sub.test.js`
+- `tests/Tea_Render.test.js`
+
+#### Changes Needed
+
+1. Import from `rescript-tea` package instead of custom `src/tea/`
+2. Update expectations for API differences
+3. Add tests for KeyboardV2 and TauriCmdV2
+4. Test integration: keyboard → update → view cycle
+
+#### Run Tests
+
+```bash
+npm run test  # Should see 33 passing tests (at minimum)
+npm run test:coverage  # Coverage should be ≥87%
+```
+
+---
+
+### Phase 5: Remove Custom TEA ✅ (1 day)
+
+Only after ALL tests passing and manual testing complete!
+
+```bash
+# Backup first
+git add -A
+git commit -m "refactor: working with official rescript-tea (pre-cleanup)"
+
+# Remove custom TEA implementation
+rm -rf src/tea/
+
+# Remove draft "New" files (if not needed)
+rm src/AppNew.res src/UpdateNew.res src/SubscriptionsFixed.res
+
+# Remove old files (if "New" files were renamed to replace them)
+# (depends on your approach)
+
+# Compile
+npm run res:build
+
+# Should compile without src/tea/ directory
+
+# Test
+npm run test  # Should still pass
+
+# Commit
+git add -A
+git commit -m "refactor: remove custom TEA implementation"
+```
+
+---
+
+### Phase 6: Manual Testing & Validation ✅ (2-3 days)
+
+Comprehensive end-to-end testing.
+
+#### Test Scenarios
+
+1. **App Startup**
+   - [ ] App launches without errors
+   - [ ] Three panes render correctly
+   - [ ] Dark Start mode displays Binary Star diagram
+
+2. **Pane Toggling**
+   - [ ] Ctrl+Shift+L toggles Pane-L
+   - [ ] Ctrl+Shift+N toggles Pane-N
+   - [ ] Ctrl+Shift+W toggles Pane-W
+   - [ ] Panes hide/show smoothly
+
+3. **Constraint Management**
+   - [ ] Can add constraint in Pane-L
+   - [ ] Can toggle constraint active/inactive
+   - [ ] Can pin constraint
+   - [ ] Can remove constraint
+
+4. **Neural Inference**
+   - [ ] Can trigger neural token generation
+   - [ ] Anti-Crash validation called
+   - [ ] Valid tokens pass to Pane-W
+   - [ ] Invalid tokens trigger intervention
+
+5. **Vexometer**
+   - [ ] Vexation index updates periodically
+   - [ ] Cancellations/corrections recorded
+   - [ ] Anti-inflammatory mode activates when vexation high
+
+6. **Performance**
+   - [ ] Render time acceptable (<100ms)
+   - [ ] Update time acceptable (<50ms)
+   - [ ] No memory leaks (check DevTools over 10 minutes)
+
+7. **Subscriptions**
+   - [ ] Keyboard events fire correctly
+   - [ ] Timer subscriptions work (vexation updates every 2s)
+   - [ ] Animation frame subscription works (orbital drift)
+
+#### Performance Baseline Comparison
+
+| Metric | Custom TEA | Official rescript-tea | Delta |
+|--------|------------|----------------------|-------|
+| Initial render | ? | ? | ? |
+| Update (avg) | ? | ? | ? |
+| View render (avg) | ? | ? | ? |
+| Memory usage (10 min) | ? | ? | ? |
+
+---
+
+## Rollback Plan
+
+If migration fails:
+
+```bash
+# Revert to pre-migration state
+git checkout main
+git branch -D feature/migrate-to-official-rescript-tea
+
+# Or revert to backup tag
+git reset --hard pre-rescript-tea-migration
+
+# Reinstall dependencies
+npm install
+npm run res:build
+npm run test
+```
+
+Keep custom TEA implementation until official migration proven stable.
+
+---
+
+## Post-Migration Tasks
+
+After successful migration:
+
+- [ ] Update MIGRATION-TO-RESCRIPT-TEA.md (mark complete)
+- [ ] Update STATE.scm (work-completed, completion-percentage)
+- [ ] Update ROADMAP.adoc (v0.1.0 → v0.2.0)
+- [ ] Update README.adoc (mention official rescript-tea)
+- [ ] Update PLAYBOOK.scm (no changes to commands)
+- [ ] Create GitHub release: v0.1.1 (patch with TEA migration)
+- [ ] Announce migration in discussions
+- [ ] Close migration-related issues
+
+---
+
+## Risks & Mitigation
+
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| API differences break functionality | High | Medium | Thorough testing, feature parity checklist |
+| Performance regression | Medium | Low | Baseline comparison, profiling |
+| Bugs in official rescript-tea | High | Low | Report upstream, keep custom TEA as fallback |
+| Test coverage gaps | Medium | Medium | Increase coverage to 95% before migration |
+| Time overrun (>2 weeks) | Medium | Medium | Time-box, defer non-critical features |
+
+---
+
+## Decision: Defer or Proceed?
+
+### Arguments for DEFER (Recommended)
+
+1. **Custom TEA works perfectly** (33 tests passing, 87-91% coverage)
+2. **High risk, high effort** (1-2 weeks focused work)
+3. **v0.1.0 not complete yet** (other priorities)
+4. **No blocking bugs in custom TEA**
+5. **Official rescript-tea has no keyboard subscriptions** (need custom anyway)
+
+### Arguments for PROCEED
+
+1. **Less maintenance long-term** (community maintains rescript-tea)
+2. **More features available** (HTTP, Navigation, Debug, etc.)
+3. **Better documentation** (Elm-style guides)
+4. **Community support** (issues, PRs)
+5. **Policy preference** (use existing libraries over custom)
+
+### Recommendation
+
+**DEFER until v0.2.0 or later.**
+
+Focus on:
+- Completing v0.1.0 milestone (UI components, Tauri integration)
+- Increasing test coverage to 95%+
+- npm→Deno migration (higher priority, lower risk)
+- Documenting custom TEA thoroughly (if keeping long-term)
+
+Revisit after v0.2.0 when:
+- More features need official rescript-tea (HTTP, Navigation)
+- Custom TEA maintenance burden increases
+- Team has bandwidth for 2-week migration
+
+---
+
+## Conclusion
+
+Migration from custom TEA to official rescript-tea is:
+- **Feasible** (API similar, custom subscriptions possible)
+- **Risky** (core architecture change)
+- **High effort** (1-2 weeks)
+- **Not urgent** (custom TEA works fine)
+
+**Decision:** Defer until v0.2.0 or later. Document custom TEA thoroughly for now.
+
+---
+
+**Last Updated:** 2026-02-07
+**Maintainer:** Jonathan D.A. Jewell
+**Status:** Migration guide complete, awaiting decision to proceed
