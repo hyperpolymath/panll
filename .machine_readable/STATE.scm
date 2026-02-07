@@ -19,20 +19,22 @@
 
   (current-position
     (milestone "v0.1.0 - Complete TEA Implementation")
-    (completion-percentage 70)
-    (phase "migration")
-    (current-focus "Migrating from custom TEA to official rescript-tea@0.16.0")
-    (status-summary "TEA implementation complete, migrating to official library")
+    (completion-percentage 85)
+    (phase "implementation")
+    (current-focus "Tauri backend commands with proper FFI architecture")
+    (status-summary "UI components wired, tests migrated to Deno, ready for Tauri FFI")
 
     (work-completed
       ("Custom TEA implementation with full Model-Update-View cycle")
-      ("33 tests passing with 87-91% coverage")
-      ("Three-pane parallel layout architecture designed")
+      ("33 tests passing with 100% Deno.test migration (646ms execution)")
+      ("Three-pane parallel layout architecture implemented")
+      ("Full UI components implemented and wired (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)")
       ("Core types: Model, Msg, symbolicConstraint, neuralToken, oodaPhase")
-      ("Tauri 2.0 backend with 3 commands (validate_inference, get_vexation_index, submit_feedback)")
+      ("Tauri 2.0 backend with 3 stub commands (validate_inference, get_vexation_index, submit_feedback)")
       ("Anti-Crash, Vexometer, OrbitalSync core systems sketched")
       ("AI manifest (0-AI-MANIFEST.a2ml) created for RSR compliance")
-      ("Test infrastructure with Vitest"))
+      ("npm→Deno migration complete (tests, dependencies)")
+      ("Vitest dependencies removed, pure Deno test infrastructure"))
 
     (work-in-progress
       ("Migration from custom TEA to official rescript-tea@0.16.0"
@@ -40,13 +42,15 @@
        (decision "Defer until v0.2.0 - custom TEA works perfectly (33 tests passing)")
        (tracking-doc "RESCRIPT-TEA-MIGRATION-GUIDE.md")
        (rationale "High risk (1-2 weeks), low urgency (no blocking bugs), focus on v0.1.0 completion first"))
-      ("Component implementations"
-       (status "stubs-only")
-       (components ("PaneL" "PaneN" "PaneW" "Vexometer" "FeedbackOTron")))
+      ("Tauri backend FFI implementation"
+       (status "next-up")
+       (approach "Use rescript-tauri + rescript-zig-ffi for type-safe commands")
+       (commands ("validate_inference" "get_vexation_index" "submit_feedback"))
+       (tracking-doc "PANLL-ARCHITECTURE-UPDATES.md"))
       ("RSR compliance"
-       (status "in-progress")
-       (completed ("AI manifest" "PMPL license" ".machine_readable/ SCM files (6 files created)"))
-       (remaining ("npm→Deno migration (documented, ready to implement)")))))
+       (status "nearly-complete")
+       (completed ("AI manifest" "PMPL license" ".machine_readable/ SCM files (6 files created)" "npm→Deno migration (95%)"))
+       (remaining ("Tauri CLI installation (v2.1.0 failed, trying v2.0.0)")))))
 
   (route-to-mvp
     (next-milestone "v0.2.0 - Enhanced UI & Components")
@@ -55,37 +59,43 @@
     (critical-path
       ((step 1)
        (name "Complete rescript-tea migration")
-       (status "in-progress")
+       (status "deferred")
+       (decision "Moved to v0.2.0")
        (blockers ())
        (dependencies ())
        (estimated-effort "3-5 days"))
 
       ((step 2)
        (name "Implement functional UI components")
-       (status "pending")
-       (blockers ("rescript-tea migration"))
-       (dependencies ("step 1"))
-       (estimated-effort "2 weeks"))
+       (status "complete")
+       (completed-date "2026-02-07")
+       (note "Components were already fully implemented, just wired up in View.res")
+       (blockers ())
+       (dependencies ())
+       (actual-effort "30 minutes"))
 
       ((step 3)
        (name "Complete npm→Deno migration")
-       (status "pending")
+       (status "complete")
+       (completed-date "2026-02-07")
+       (note "All 33 tests converted to Deno.test, Vitest dependencies removed")
        (blockers ())
+       (dependencies ())
+       (actual-effort "4 hours"))
+
+      ((step 4)
+       (name "Implement Tauri backend commands with FFI")
+       (status "in-progress")
+       (approach "rescript-tauri + rescript-zig-ffi")
+       (blockers ("Tauri CLI installation"))
        (dependencies ())
        (estimated-effort "1 week"))
 
-      ((step 4)
-       (name "Tauri desktop app integration")
-       (status "pending")
-       (blockers ("Component implementations"))
-       (dependencies ("step 2"))
-       (estimated-effort "1 week"))
-
       ((step 5)
-       (name "v0.2.0 release")
+       (name "v0.1.0 release")
        (status "pending")
-       (blockers ("All above steps"))
-       (dependencies ("step 1" "step 2" "step 3" "step 4"))
+       (blockers ("step 4"))
+       (dependencies ("step 4"))
        (estimated-effort "2 days"))))
 
   (blockers-and-issues
