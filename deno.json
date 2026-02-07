@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "exports": "./mod.ts",
   "tasks": {
-    "dev": "deno task css:watch & tauri dev",
-    "build": "deno task css:build && tauri build",
+    "dev": "deno task css:watch & npx @tauri-apps/cli dev",
+    "build": "deno task css:build && npx @tauri-apps/cli build",
     "css:build": "tailwindcss -i ./src/styles/input.css -o ./public/styles.css --minify",
     "css:watch": "tailwindcss -i ./src/styles/input.css -o ./public/styles.css --watch",
     "test": "deno test --no-check --allow-read --allow-env tests/",
