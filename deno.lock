@@ -4,7 +4,6 @@
     "jsr:@std/assert@*": "1.0.18",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "npm:@rescript/core@^1.6.1": "1.6.1_rescript@11.1.4",
-    "npm:@tauri-apps/api@2": "2.9.1",
     "npm:@tauri-apps/cli@2": "2.10.0",
     "npm:rescript-webapi@0.10": "0.10.0",
     "npm:rescript@^11.1.4": "11.1.4",
@@ -841,13 +840,15 @@
   "workspace": {
     "dependencies": [
       "npm:@rescript/core@1.6.1",
-      "npm:@tauri-apps/api@2",
+      "npm:@tauri-apps/api@^2.10.0",
       "npm:rescript@11.1.4"
     ],
     "packageJson": {
       "dependencies": [
         "npm:@rescript/core@^1.6.1",
+        "npm:@tauri-apps/api@^2.10.0",
         "npm:@tauri-apps/cli@2",
+        "npm:rescript-tea@0.16",
         "npm:rescript-webapi@0.10",
         "npm:rescript@^11.1.4",
         "npm:tailwindcss@^4.1.18"

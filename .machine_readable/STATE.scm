@@ -40,10 +40,12 @@
 
     (work-in-progress
       ("Migration from custom TEA to official rescript-tea@0.16.0"
-       (status "deferred")
-       (decision "Defer until v0.2.0 - custom TEA works perfectly (33 tests passing)")
+       (status "blocked")
+       (decision "Incompatible with ReScript 11.x - keeping custom TEA")
        (tracking-doc "RESCRIPT-TEA-MIGRATION-GUIDE.md")
-       (rationale "High risk (1-2 weeks), low urgency (no blocking bugs), focus on v0.1.0 completion first"))
+       (blocker "rescript-tea@0.16.0 depends on rescript-webapi@0.7.0 (incompatible with ReScript 11.1.4)")
+       (rationale "Official rescript-tea not maintained since 2021, requires fork and major update effort")
+       (resolution "Keep custom TEA - works perfectly (33 tests, 86.2% coverage), well-tested, documented"))
       ("Tauri backend FFI implementation"
        (status "next-up")
        (approach "Use rescript-tauri + rescript-zig-ffi for type-safe commands")

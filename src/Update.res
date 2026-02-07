@@ -121,6 +121,26 @@ let updateFeedback = (model: model, msg: feedbackMsg): model => {
   }
 }
 
+/// Determine if a message should trigger auto-save
+let shouldAutoSave = (msg: msg): bool => {
+  switch msg {
+  | PaneL(AddConstraint(_))
+  | PaneL(RemoveConstraint(_))
+  | PaneL(ToggleConstraint(_))
+  | PaneL(PinConstraint(_))
+  | PaneL(UpdateEditorContent(_))
+  | PaneN(ReceiveToken(_))
+  | PaneN(ClearTokens)
+  | PaneW(UpdateContent(_))
+  | View(SetViewMode(_))
+  | View(SetHumidity(_))
+  | View(TogglePaneL)
+  | View(TogglePaneN)
+  | View(TogglePaneW) => true
+  | _ => false
+  }
+}
+
 /// Main update function
 let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   let newModel = switch msg {
@@ -132,6 +152,11 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | View(m) => updateView(model, m)
   | Feedback(m) => updateFeedback(model, m)
   | AntiCrash(_) => model // Handled by AntiCrash module
+  | SaveState => {
+      // Save current state to storage
+      Storage.save(model)
+      model
+    }
   | NoOp => model
   }
 
@@ -140,6 +165,11 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
     {...newModel, vexometer: {...newModel.vexometer, antiInflammatoryActive: true}}
   } else {
     newModel
+  }
+
+  // Auto-save state after important changes
+  if shouldAutoSave(msg) {
+    Storage.save(finalModel)
   }
 
   (finalModel, Tea_Cmd.none)

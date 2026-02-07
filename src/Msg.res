@@ -79,4 +79,5 @@ type msg =
   | View(viewMsg)
   | Feedback(feedbackMsg)
   | AntiCrash(antiCrashMsg)
+  | SaveState // Persist current state to storage
   | NoOp

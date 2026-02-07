@@ -26,6 +26,7 @@
   "author": "Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>",
   "license": "PMPL-1.0-or-later",
   "dependencies": {
+    "rescript-tea": "^0.16.0",
     "rescript-webapi": "^0.10.0"
   }
 }
