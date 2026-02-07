@@ -28,102 +28,54 @@ let renderDriftAura = (orbital: orbitalState, humidity: humidityLevel): Tea_Vdom
   )
 }
 
-/// Render the Vexation Index indicator
-let renderVexometer = (vex: vexometerState): Tea_Vdom.t<msg> => {
-  let barWidth = Int.toString(Int.fromFloat(vex.index *. 100.0)) ++ "%"
-  let barColour = if vex.index > 0.7 {
-    "bg-red-500"
-  } else if vex.index > 0.4 {
-    "bg-amber-500"
-  } else {
-    "bg-emerald-500"
-  }
-
-  div(
-    list{Attrs.class_("fixed bottom-4 right-4 w-32")},
-    list{
-      div(
-        list{Attrs.class_("text-xs text-gray-400 mb-1")},
-        list{text("Vexation Index")},
-      ),
-      div(
-        list{Attrs.class_("h-2 bg-gray-800 rounded overflow-hidden")},
-        list{
-          div(
-            list{
-              Attrs.class_(`h-full ${barColour} transition-all duration-300`),
-              Attrs.style("width", barWidth),
-            },
-            list{},
-          ),
-        },
-      ),
-    },
-  )
-}
-
-/// Render Pane-L (Symbolic Mass)
+/// Render Pane-L (Symbolic Mass) - using full component
 let renderPaneL = (paneL: paneLState, visible: bool): Tea_Vdom.t<msg> => {
   if !visible {
     noNode
   } else {
     div(
-      list{
-        Attrs.class_("flex-1 bg-gray-900 border-r border-indigo-900/50 p-4 overflow-auto"),
-      },
-      list{
-        div(
-          list{Attrs.class_("text-indigo-400 text-sm font-semibold mb-2")},
-          list{text("SYMBOLIC MASS (Pane-L)")},
-        ),
-        div(
-          list{Attrs.class_("text-gray-300 font-mono text-sm whitespace-pre-wrap")},
-          list{text(paneL.editorContent === "" ? "// Enter constraints..." : paneL.editorContent)},
-        ),
-      },
+      list{Attrs.class_("flex-1 overflow-auto")},
+      list{PaneL.view(paneL)},
     )
   }
 }
 
-/// Render Pane-N (Neural Stream)
+/// Render Pane-N (Neural Stream) - using full component
 let renderPaneN = (paneN: paneNState, visible: bool): Tea_Vdom.t<msg> => {
   if !visible {
     noNode
   } else {
     div(
-      list{
-        Attrs.class_("flex-1 bg-gray-900 border-r border-emerald-900/50 p-4 overflow-auto"),
-      },
-      list{
-        div(
-          list{Attrs.class_("text-emerald-400 text-sm font-semibold mb-2")},
-          list{text("NEURAL STREAM (Pane-N)")},
-        ),
-        div(
-          list{Attrs.class_("text-gray-300 text-sm")},
-          list{text(paneN.monologue === "" ? "Awaiting inference..." : paneN.monologue)},
-        ),
-        div(
-          list{Attrs.class_("mt-4 text-xs text-gray-500")},
-          list{
-            text(
-              `Agency: ${Float.toString(paneN.agency.autonomyLevel *. 100.0)}% autonomous`,
-            ),
-          },
-        ),
-      },
+      list{Attrs.class_("flex-1 overflow-auto")},
+      list{PaneN.view(paneN)},
     )
   }
 }
 
-/// Render the Binary Star diagram (Topology View)
-let renderBinaryStarDiagram = (): Tea_Vdom.t<msg> => {
+/// Render Pane-W (World/Barycentre) - using full component
+let renderPaneW = (paneW: paneWState, orbital: orbitalState, visible: bool): Tea_Vdom.t<msg> => {
+  if !visible {
+    noNode
+  } else {
+    div(
+      list{Attrs.class_("flex-1 overflow-auto")},
+      list{PaneW.view(paneW, orbital)},
+    )
+  }
+}
+
+/// Render the Dark Start architecture manifold
+let renderDarkStart = (): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("flex items-center justify-center h-full")},
+    list{Attrs.class_("fixed inset-0 bg-gray-950 flex items-center justify-center")},
     list{
       div(
         list{Attrs.class_("text-center")},
         list{
+          div(
+            list{Attrs.class_("text-4xl font-light text-gray-600 mb-8")},
+            list{text("PanLL")},
+          ),
           div(
             list{Attrs.class_("flex items-center justify-center gap-16")},
             list{
@@ -155,54 +107,6 @@ let renderBinaryStarDiagram = (): Tea_Vdom.t<msg> => {
             },
           ),
           div(
-            list{Attrs.class_("mt-8 text-gray-500 text-sm")},
-            list{text("Binary Star Co-Orbit")},
-          ),
-        },
-      ),
-    },
-  )
-}
-
-/// Render Pane-W (World/Barycentre)
-let renderPaneW = (paneW: paneWState, visible: bool): Tea_Vdom.t<msg> => {
-  if !visible {
-    noNode
-  } else {
-    div(
-      list{Attrs.class_("flex-1 bg-gray-900 p-4 overflow-auto")},
-      list{
-        div(
-          list{Attrs.class_("text-gray-400 text-sm font-semibold mb-2")},
-          list{text("TASK BARYCENTRE (Pane-W)")},
-        ),
-        if paneW.topologyView {
-          renderBinaryStarDiagram()
-        } else {
-          div(
-            list{Attrs.class_("text-gray-300 text-sm")},
-            list{text(paneW.content === "" ? "Shared world state..." : paneW.content)},
-          )
-        },
-      },
-    )
-  }
-}
-
-/// Render the Dark Start architecture manifold
-let renderDarkStart = (): Tea_Vdom.t<msg> => {
-  div(
-    list{Attrs.class_("fixed inset-0 bg-gray-950 flex items-center justify-center")},
-    list{
-      div(
-        list{Attrs.class_("text-center")},
-        list{
-          div(
-            list{Attrs.class_("text-4xl font-light text-gray-600 mb-8")},
-            list{text("PanLL")},
-          ),
-          renderBinaryStarDiagram(),
-          div(
             list{Attrs.class_("mt-12 text-gray-600 text-sm")},
             list{text("eNSAID Environment")},
           ),
@@ -230,12 +134,15 @@ let view = (model: model): Tea_Vdom.t<msg> => {
           list{
             renderPaneL(model.paneL, model.paneLVisible),
             renderPaneN(model.paneN, model.paneNVisible),
-            renderPaneW(model.paneW, model.paneWVisible),
+            renderPaneW(model.paneW, model.orbital, model.paneWVisible),
           },
         ),
 
-        // Vexometer indicator
-        renderVexometer(model.vexometer),
+        // Vexometer - using full component with compact view by default
+        Vexometer.view(model.vexometer, false),
+
+        // Feedback-O-Tron - using full component
+        FeedbackOTron.view(model.feedbackPending),
       },
     )
   }
