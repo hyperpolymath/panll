@@ -6,13 +6,9 @@
     "npm:@rescript/core@^1.6.1": "1.6.1_rescript@11.1.4",
     "npm:@tauri-apps/api@2": "2.9.1",
     "npm:@tauri-apps/cli@2": "2.10.0",
-    "npm:@vitest/coverage-v8@^4.0.18": "4.0.18_vitest@4.0.18__@vitest+ui@4.0.18___vitest@4.0.18___happy-dom@20.5.0__happy-dom@20.5.0__vite@7.3.1___picomatch@4.0.3_@vitest+ui@4.0.18__vitest@4.0.18___@vitest+ui@4.0.18___happy-dom@20.5.0___vite@7.3.1____picomatch@4.0.3__happy-dom@20.5.0_happy-dom@20.5.0",
-    "npm:@vitest/ui@^4.0.18": "4.0.18_vitest@4.0.18__@vitest+ui@4.0.18__happy-dom@20.5.0__vite@7.3.1___picomatch@4.0.3_happy-dom@20.5.0",
-    "npm:happy-dom@^20.5.0": "20.5.0",
     "npm:rescript-webapi@0.10": "0.10.0",
     "npm:rescript@^11.1.4": "11.1.4",
-    "npm:tailwindcss@^4.1.18": "4.1.18",
-    "npm:vitest@^4.0.18": "4.0.18_@vitest+ui@4.0.18__vitest@4.0.18__happy-dom@20.5.0_happy-dom@20.5.0_vite@7.3.1__picomatch@4.0.3"
+    "npm:tailwindcss@^4.1.18": "4.1.18"
   },
   "jsr": {
     "@std/assert@1.0.18": {
@@ -852,13 +848,9 @@
       "dependencies": [
         "npm:@rescript/core@^1.6.1",
         "npm:@tauri-apps/cli@2",
-        "npm:@vitest/coverage-v8@^4.0.18",
-        "npm:@vitest/ui@^4.0.18",
-        "npm:happy-dom@^20.5.0",
         "npm:rescript-webapi@0.10",
         "npm:rescript@^11.1.4",
-        "npm:tailwindcss@^4.1.18",
-        "npm:vitest@^4.0.18"
+        "npm:tailwindcss@^4.1.18"
       ]
     }
   }

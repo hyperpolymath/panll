@@ -6,23 +6,13 @@
   "scripts": {
     "res:build": "rescript build",
     "res:watch": "rescript build -w",
-    "res:clean": "rescript clean",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "res:clean": "rescript clean"
   },
   "devDependencies": {
     "@rescript/core": "^1.6.1",
     "@tauri-apps/cli": "^2.0.0",
-    "@vitest/ui": "^4.0.18",
-    "@vitest/coverage-v8": "^4.0.18",
-    "happy-dom": "^20.5.0",
     "rescript": "^11.1.4",
-    "tailwindcss": "^4.1.18",
-    "vitest": "^4.0.18"
+    "tailwindcss": "^4.1.18"
   },
   "keywords": [
     "nesy",
