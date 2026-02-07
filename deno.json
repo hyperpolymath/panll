@@ -1,6 +1,6 @@
 {
   "name": "@hyperpolymath/panll",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "exports": "./mod.ts",
   "tasks": {
     "dev": "deno task css:watch & npx @tauri-apps/cli dev",
@@ -15,7 +15,7 @@
   },
   "imports": {
     "@std/": "jsr:@std/",
-    "@tauri-apps/api": "npm:@tauri-apps/api@^2.0.0",
+    "@tauri-apps/api": "npm:@tauri-apps/api@^2.10.0",
     "rescript/": "npm:/rescript@11.1.4/",
     "@rescript/core/": "npm:/@rescript/core@1.6.1/"
   },

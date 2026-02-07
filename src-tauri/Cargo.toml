@@ -2,7 +2,7 @@
 
 [package]
 name = "panll"
-version = "0.0.1"
+version = "0.1.0"
 description = "PanLL eNSAID - Environment for NeSy-Agentic Integrated Development"
 authors = ["Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"]
 edition = "2021"
