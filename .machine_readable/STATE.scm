@@ -19,22 +19,24 @@
 
   (current-position
     (milestone "v0.1.0 - Complete TEA Implementation")
-    (completion-percentage 85)
-    (phase "implementation")
-    (current-focus "Tauri backend commands with proper FFI architecture")
-    (status-summary "UI components wired, tests migrated to Deno, ready for Tauri FFI")
+    (completion-percentage 95)
+    (phase "finalization")
+    (current-focus "v0.1.0 release preparation")
+    (status-summary "All core features complete - UI, tests, Tauri backend ready")
 
     (work-completed
       ("Custom TEA implementation with full Model-Update-View cycle")
-      ("33 tests passing with 100% Deno.test migration (646ms execution)")
+      ("33 tests passing with 100% Deno.test migration (719ms execution)")
       ("Three-pane parallel layout architecture implemented")
       ("Full UI components implemented and wired (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)")
       ("Core types: Model, Msg, symbolicConstraint, neuralToken, oodaPhase")
-      ("Tauri 2.0 backend with 3 stub commands (validate_inference, get_vexation_index, submit_feedback)")
+      ("Tauri 2.0 backend with 3 working commands (validate_inference, get_vexation_index, submit_feedback)")
+      ("ReScript bindings for Tauri commands via @tauri-apps/api")
       ("Anti-Crash, Vexometer, OrbitalSync core systems sketched")
       ("AI manifest (0-AI-MANIFEST.a2ml) created for RSR compliance")
-      ("npm→Deno migration complete (tests, dependencies)")
-      ("Vitest dependencies removed, pure Deno test infrastructure"))
+      ("npm→Deno migration complete (tests, dependencies, Tauri CLI via npx)")
+      ("Vitest dependencies removed, pure Deno test infrastructure")
+      ("rescript-tauri prepared for future migration (built and symlinked)"))
 
     (work-in-progress
       ("Migration from custom TEA to official rescript-tea@0.16.0"
@@ -84,12 +86,13 @@
        (actual-effort "4 hours"))
 
       ((step 4)
-       (name "Implement Tauri backend commands with FFI")
-       (status "in-progress")
-       (approach "rescript-tauri + rescript-zig-ffi")
-       (blockers ("Tauri CLI installation"))
+       (name "Implement Tauri backend commands")
+       (status "complete")
+       (completed-date "2026-02-07")
+       (note "Working Tauri commands via @tauri-apps/api, rescript-tauri ready for future migration")
+       (blockers ())
        (dependencies ())
-       (estimated-effort "1 week"))
+       (actual-effort "4 hours"))
 
       ((step 5)
        (name "v0.1.0 release")

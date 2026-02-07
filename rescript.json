@@ -14,7 +14,8 @@
   ],
   "suffix": ".res.js",
   "bs-dependencies": [
-    "@rescript/core"
+    "@rescript/core",
+    "rescript-tauri"
   ],
   "bsc-flags": [
     "-open RescriptCore"
