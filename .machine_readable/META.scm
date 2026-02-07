@@ -45,7 +45,7 @@
         "Need architecture that prevents state corruption and makes reasoning transparent.")
       (decision
         "Use The Elm Architecture (Model-Update-View with Commands and Subscriptions). "
-        "Migrating from custom TEA implementation to official rescript-tea@0.16.0. "
+        "Custom TEA implementation for v0.1.0 (migration to official rescript-tea deferred to v0.2.0). "
         "All state changes flow through typed messages, ensuring deterministic updates.")
       (consequences
         (positive

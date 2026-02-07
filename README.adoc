@@ -5,9 +5,10 @@
 :toc-placement: preamble
 :icons: font
 
-image:https://img.shields.io/github/v/release/hyperpolymath/panll[Release,link="https://github.com/hyperpolymath/panll/releases"]
+image:https://img.shields.io/badge/version-v0.1.0--alpha-blue[Version]
+image:https://img.shields.io/badge/completion-95%25-brightgreen[Completion]
 image:https://img.shields.io/badge/License-PMPL--1.0-indigo.svg[PMPL-1.0-or-later,link="LICENSE"]
-image:https://img.shields.io/badge/Tests-33%20passing-brightgreen[Tests]
+image:https://img.shields.io/badge/Tests-33%20passing%20(719ms)-brightgreen[Tests]
 image:https://img.shields.io/badge/Coverage-87--91%25-green[Coverage]
 image:https://img.shields.io/badge/RSR-compliant-blue[RSR Compliant]
 
@@ -41,40 +42,55 @@ This is not a passive text editor. It is an active, synchronous environment that
 
 [cols="1,2"]
 |===
-|Frontend|ReScript + rescript-tea (TEA pattern)
+|Frontend|ReScript + Custom TEA (The Elm Architecture)
 |Backend|Rust + Tauri 2.0
-|Runtime|Deno
-|Styling|Tailwind CSS
+|Runtime|Deno (tests, build orchestration)
+|Testing|Deno.test (33 tests, 719ms)
+|Styling|Tailwind CSS 4.x
 |Middleware|Elixir/BEAM (planned)
 |Verification|Echidna (planned)
 |===
 
 == Development
 
-PanLL relies on Deno tasks to coordinate the Tailwind/Tauri pieces while npm scripts continue to drive ReScript compilation. Run the steps below (or their watchers) inside the repo root:
+PanLL uses Deno for runtime, testing, and build orchestration. ReScript compilation uses the symlinked compiler in node_modules.
 
 [source,bash]
 ----
-# Install npm dependencies (ReScript, Tailwind, Tauri CLI)
-npm install
-
 # Compile ReScript modules
-npm run res:build
+node_modules/rescript/rescript build
 
 # Watch ReScript sources during development
-npm run res:watch
+node_modules/rescript/rescript build -w
 
-# Produce Tailwind CSS via Deno
-deno task css:build
+# Run tests (33 tests, ~719ms)
+deno task test
 
-# Tailwind watch + Tauri dev runner through Deno
+# Watch mode for tests
+deno task test:watch
+
+# Development mode (Tailwind + Tauri hot reload)
 deno task dev
 
-# Tailwind-only watcher (optional)
-deno task css:watch
+# Build Tailwind CSS
+deno task css:build
 
-# Full production build (Tailwind CSS + Tauri)
+# Full production build
 deno task build
+----
+
+=== Quick Start
+
+[source,bash]
+----
+# 1. Compile ReScript
+node_modules/rescript/rescript build
+
+# 2. Run tests to verify
+deno task test
+
+# 3. Start development server
+deno task dev
 ----
 
 == Documentation
@@ -96,4 +112,13 @@ PMPL-1.0-or-later
 
 == Status
 
-v0.0.1-alpha - Initial scaffold
+**v0.1.0-alpha** (95% complete)
+
+✅ Complete TEA implementation (Model-Update-View)
+✅ All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)
+✅ Tauri 2.0 backend with working commands
+✅ 33 tests passing in 719ms (Deno.test)
+✅ npm→Deno migration complete
+✅ Full ReScript compilation (180ms)
+
+**Next:** v0.1.0 release preparation

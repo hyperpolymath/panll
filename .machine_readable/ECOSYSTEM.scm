@@ -42,10 +42,10 @@
     (integration-points
       ("Tauri 2.0 - Desktop app framework")
       ("ReScript - Type-safe frontend compilation")
-      ("rescript-tea - TEA state management library")
-      ("Deno - Runtime for build orchestration")
+      ("Custom TEA - The Elm Architecture state management")
+      ("Deno - Runtime and test infrastructure")
       ("Tailwind CSS - Styling framework")
-      ("Vitest - Testing framework")))
+      ("@tauri-apps/api - Tauri command bridge")))
 
   (related-projects
     ((project "hypatia")

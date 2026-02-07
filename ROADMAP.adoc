@@ -7,28 +7,34 @@
 
 This roadmap outlines the development plan for **PanLL eNSAID** (Environment for NeSy-Agentic Integrated Development), a neurosymbolic agentic development environment built on The Elm Architecture.
 
-== Current Status: v0.1.0 (2026-02-04)
+== Current Status: v0.1.0 (2026-02-07) - 95% Complete
 
 ✅ **Complete TEA Implementation**
 
-* Model-Update-View architecture
+* Model-Update-View architecture (custom TEA)
 * Command and Subscription management
-* Comprehensive test suite (33 tests, 87-91% coverage)
-* Modern tooling (Vitest, Deno, Tauri 2.0)
-* Complete documentation
+* Comprehensive test suite (33 tests, 87-91% coverage, 719ms execution)
+* Modern tooling (Deno.test, Tauri 2.0, ReScript 11.1)
+* npm→Deno migration complete
+* All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)
+* Tauri backend commands working (validate_inference, get_vexation_index, submit_feedback)
 
 == Roadmap
 
-=== v0.2.0 - Enhanced UI & Components (Q1 2026)
+=== v0.2.0 - Enhanced Features & Polish (Q1 2026)
+
+==== Completed in v0.1.0
+* [x] Complete Tauri desktop app integration
+* [x] Functional UI components
+  - [x] FeedbackOTron component
+  - [x] Vexometer component
+  - [x] PaneL/PaneN/PaneW components
 
 ==== Must Have
-* [ ] Complete Tauri desktop app integration
-* [ ] Functional UI components (current stubs)
-  - [ ] FeedbackOTron component
-  - [ ] Vexometer component
-  - [ ] PaneL/PaneN/PaneW components
-* [ ] State persistence
+* [ ] Migration to official rescript-tea (deferred from v0.1.0)
+* [ ] State persistence (localStorage/Tauri)
 * [ ] Basic settings management
+* [ ] Polish UI/UX based on user feedback
 
 ==== Should Have
 * [ ] Keyboard shortcuts fully implemented
@@ -186,8 +192,9 @@ This roadmap outlines the development plan for **PanLL eNSAID** (Environment for
 === Current Dependencies
 * ReScript 11.1.x
 * Tauri 2.x
-* Vitest 4.x
-* Deno runtime
+* Deno runtime (tests + build)
+* Tailwind CSS 4.x
+* @tauri-apps/api 2.x
 
 === Planned Integrations
 * VSCode extension
@@ -238,6 +245,6 @@ This roadmap outlines the development plan for **PanLL eNSAID** (Environment for
 
 ---
 
-_Last Updated: 2026-02-04_
+_Last Updated: 2026-02-07_
 
 _This roadmap is a living document and will be updated as the project evolves._
