@@ -6,6 +6,12 @@
   (last-updated "2026-02-07")
   (manifest-reference "0-AI-MANIFEST.a2ml")
 
+  (migration-notice
+    "⚠️  npm→Deno migration completed (2026-02-07). Some npm commands in this file are outdated."
+    "Current workflow: Use 'deno task test' (not npm run test), 'deno task dev' for development."
+    "ReScript: node_modules/rescript/rescript build"
+    "Tests: deno task test (33 tests, 719ms)")
+
   (agent-protocols
     (session-startup
       "1. Read 0-AI-MANIFEST.a2ml FIRST (mandatory, before any file operations)"

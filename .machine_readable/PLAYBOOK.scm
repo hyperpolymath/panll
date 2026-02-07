@@ -5,6 +5,14 @@
   (version "1.0.0")
   (last-updated "2026-02-07")
 
+  (migration-notice
+    "⚠️  npm→Deno migration completed (2026-02-07). Many npm commands in this file are outdated."
+    "CURRENT TEST COMMAND: deno task test (not npm run test)"
+    "CURRENT DEV COMMAND: deno task dev"
+    "ReScript compilation: node_modules/rescript/rescript build (or npm run res:build still works)"
+    "Test results: 33 tests passing in 719ms with Deno.test"
+    "This file will be comprehensively updated in a future session.")
+
   (setup-procedures
     (initial-setup
       "Setting up PanLL development environment for the first time."
