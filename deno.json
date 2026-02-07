@@ -1,24 +1,23 @@
 {
   "name": "@hyperpolymath/panll",
   "version": "0.0.1",
-  "permissions": {
-    "read": true,
-    "write": [
-      "./public"
-    ],
-    "run": true
-  },
+  "exports": "./mod.ts",
   "tasks": {
     "dev": "deno task css:watch & tauri dev",
     "build": "deno task css:build && tauri build",
     "css:build": "tailwindcss -i ./src/styles/input.css -o ./public/styles.css --minify",
     "css:watch": "tailwindcss -i ./src/styles/input.css -o ./public/styles.css --watch",
+    "test": "deno test --no-check --allow-read --allow-env tests/",
+    "test:watch": "deno test --no-check --watch --allow-read --allow-env tests/",
+    "test:coverage": "deno test --no-check --coverage=coverage/ tests/ && deno coverage coverage/",
     "lint": "deno lint scripts/",
     "fmt": "deno fmt scripts/"
   },
   "imports": {
     "@std/": "jsr:@std/",
-    "@tauri-apps/api": "npm:@tauri-apps/api@^2.0.0"
+    "@tauri-apps/api": "npm:@tauri-apps/api@^2.0.0",
+    "rescript/": "npm:/rescript@11.1.4/",
+    "@rescript/core/": "npm:/@rescript/core@1.6.1/"
   },
   "compilerOptions": {
     "strict": true,
