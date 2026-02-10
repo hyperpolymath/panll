@@ -29,11 +29,17 @@ type paneWMsg =
   | UpdateContent(string)
   | ToggleTopologyView
   | SetValidatedOutput(string)
+  | UpdateEventChainInput(string)
+  | ImportEventChain
+  | ImportEventChainFile
+  | EventChainFileLoaded(result<string, string>)
+  | ClearEventChain
 
 /// Vexometer messages
 type vexometerMsg =
   | RecordCancellation
   | RecordCorrection
+  | RequestVexationIndex
   | UpdateVexationIndex(float)
   | ToggleAntiInflammatory(bool)
   | SetInertiaDetected(bool)
@@ -60,7 +66,9 @@ type feedbackMsg =
   | OpenFeedback
   | SubmitFeedback(string)
   | CancelFeedback
+  | SetReportType(string)
   | FeedbackSubmitted
+  | FeedbackSubmissionResult(result<string, string>)
 
 /// Anti-Crash validation messages
 type antiCrashMsg =
@@ -79,4 +87,5 @@ type msg =
   | View(viewMsg)
   | Feedback(feedbackMsg)
   | AntiCrash(antiCrashMsg)
+  | SaveState // Persist current state to storage
   | NoOp

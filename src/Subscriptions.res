@@ -32,7 +32,7 @@ let subscriptions = (model: model): Tea_Sub.t<msg> => {
     if model.paneN.inferenceActive {
       Tea_Time.every(2000.0, _time => {
         // Request vexation index update from backend
-        Vexometer(RecordCancellation) // Placeholder - will be replaced with actual backend call
+        Vexometer(RequestVexationIndex)
       })
     } else {
       Tea_Sub.none
@@ -56,7 +56,7 @@ let inferenceSubscriptions = (model: model): Tea_Sub.t<msg> => {
   if model.paneN.inferenceActive {
     Tea_Sub.batch(list{
       // More frequent vexation updates during inference
-      Tea_Time.every(500.0, _time => Vexometer(UpdateVexationIndex(0.0))),
+      Tea_Time.every(500.0, _time => Vexometer(RequestVexationIndex)),
 
       // Monitor for operator input
       Keyboard.onKeyDown(_evt => {

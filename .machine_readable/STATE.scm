@@ -4,7 +4,7 @@
 (state
   (metadata
     (version "1.0.0")
-    (last-updated "2026-02-07")
+    (last-updated "2026-02-09")
     (format-spec "hyperpolymath/rsr-template-repo/spec/STATE-FORMAT-SPEC.adoc"))
 
   (project-context
@@ -22,7 +22,7 @@
     (completion-percentage 100)
     (phase "release")
     (current-focus "v0.1.0 production release")
-    (status-summary "v0.1.0 complete - Custom TEA, 33 tests, Tauri backend, all UI components ready")
+    (status-summary "v0.1.0 complete - Custom TEA, 33 tests, Tauri backend, event-chain import, Anti-Crash gating")
 
     (work-completed
       ("Custom TEA implementation with full Model-Update-View cycle")
@@ -32,6 +32,10 @@
       ("Core types: Model, Msg, symbolicConstraint, neuralToken, oodaPhase")
       ("Tauri 2.0 backend with 3 working commands (validate_inference, get_vexation_index, submit_feedback)")
       ("ReScript bindings for Tauri commands via @tauri-apps/api")
+      ("Anti-Crash token gating wired into Pane-N ingestion with backend validation hooks")
+      ("Event-chain import from panic-attack (paste or file load) for Pane-W")
+      ("Feedback-O-Tron report type selection wired to backend")
+      ("Local dev server wired for Tauri devUrl (static public/ at :8000)")
       ("Anti-Crash, Vexometer, OrbitalSync core systems sketched")
       ("AI manifest (0-AI-MANIFEST.a2ml) created for RSR compliance")
       ("npm→Deno migration complete (tests, dependencies, Tauri CLI via npx)")
@@ -40,13 +44,15 @@
 
     (work-in-progress
       ("Migration from custom TEA to official rescript-tea@0.16.0"
-       (status "deferred")
-       (decision "Defer until v0.2.0 - custom TEA works perfectly (33 tests passing)")
+       (status "blocked")
+       (decision "Incompatible with ReScript 11.x - keeping custom TEA")
        (tracking-doc "RESCRIPT-TEA-MIGRATION-GUIDE.md")
-       (rationale "High risk (1-2 weeks), low urgency (no blocking bugs), focus on v0.1.0 completion first"))
-      ("Tauri backend FFI implementation"
+       (blocker "rescript-tea@0.16.0 depends on rescript-webapi@0.7.0 (incompatible with ReScript 11.1.4)")
+       (rationale "Official rescript-tea not maintained since 2021, requires fork and major update effort")
+       (resolution "Keep custom TEA - works perfectly (33 tests, 86.2% coverage), well-tested, documented"))
+      ("Tauri backend command implementation depth"
        (status "next-up")
-       (approach "Use rescript-tauri + rescript-zig-ffi for type-safe commands")
+       (approach "Replace stubbed validation/vexation/feedback logic with real implementations")
        (commands ("validate_inference" "get_vexation_index" "submit_feedback"))
        (tracking-doc "PANLL-ARCHITECTURE-UPDATES.md"))
       ("RSR compliance"
@@ -180,6 +186,16 @@
        ("Implement FeedbackOTron submission form"))))
 
   (session-history
+    ((session-id "2026-02-09-codex-1")
+     (date "2026-02-09")
+     (agent "Codex (GPT-5)")
+     (focus "Anti-Crash gating, event-chain import, dev server wiring")
+     (outcomes
+       ("Wired Anti-Crash token gating into Pane-N ingestion with backend validation")
+       ("Added event-chain import from panic-attack (paste + file load)")
+       ("Wired feedback report types to backend submission")
+       ("Added Tauri dialog/fs plugins and capabilities for file import")
+       ("Aligned dev server with Tauri devUrl using serve.sh on :8000"))))
     ((session-id "2026-02-07-claude-1")
      (date "2026-02-07")
      (agent "Claude Sonnet 4.5")

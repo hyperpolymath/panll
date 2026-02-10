@@ -3,7 +3,7 @@
 
 (ecosystem
   (version "1.0.0")
-  (last-updated "2026-02-07")
+  (last-updated "2026-02-09")
   (format-spec "hyperpolymath/rsr-template-repo/spec/ECOSYSTEM-FORMAT-SPEC.adoc")
 
   (identity
@@ -48,6 +48,12 @@
       ("@tauri-apps/api - Tauri command bridge")))
 
   (related-projects
+    ((project "panic-attack")
+     (relationship "producer")
+     (nature "Panic-attack exports ambush event-chain timelines for PanLL ingestion and visualisation")
+     (integration-status "active")
+     (notes "Use panic-attack panll export to feed event-chain data into PanLL workflows"))
+
     ((project "hypatia")
      (relationship "potential-consumer")
      (nature "Hypatia (neurosymbolic CI/CD) could use PanLL UI for visualising build reasoning chains")

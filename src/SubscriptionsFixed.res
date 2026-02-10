@@ -30,7 +30,7 @@ let subscriptions = (model: model): Tea_Sub.t<msg> => {
     // Only when vexometer is active
     if model.paneN.inferenceActive {
       Tea_Time.every(2000.0, _time => {
-        NoOp // Will be replaced with actual backend call
+        Vexometer(RequestVexationIndex)
       })
     } else {
       Tea_Sub.none
@@ -43,7 +43,7 @@ let inferenceSubscriptions = (model: model): Tea_Sub.t<msg> => {
   if model.paneN.inferenceActive {
     Tea_Sub.batch(list{
       // More frequent updates during inference
-      Tea_Time.every(500.0, _time => Vexometer(UpdateVexationIndex(0.0))),
+      Tea_Time.every(500.0, _time => Vexometer(RequestVexationIndex)),
     })
   } else {
     Tea_Sub.none

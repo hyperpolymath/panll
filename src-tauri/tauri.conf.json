@@ -5,7 +5,7 @@
   "identifier": "com.hyperpolymath.panll",
   "build": {
     "frontendDist": "../public",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:8000",
     "beforeDevCommand": "",
     "beforeBuildCommand": ""
   },
@@ -26,6 +26,17 @@
     ],
     "security": {
       "csp": null
+    }
+  },
+  "plugins": {
+    "fs": {
+      "scope": {
+        "allow": ["$HOME/**", "$DOCUMENT/**", "$DESKTOP/**"],
+        "deny": []
+      }
+    },
+    "dialog": {
+      "open": true
     }
   },
   "bundle": {

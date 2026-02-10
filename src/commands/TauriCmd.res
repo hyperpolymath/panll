@@ -8,6 +8,16 @@
 @module("@tauri-apps/api/core")
 external invoke: (string, 'a) => promise<'b> = "invoke"
 
+module Dialog = {
+  @module("@tauri-apps/api/dialog")
+  external open: Js.Json.t => promise<Js.Nullable.t<Js.Json.t>> = "open"
+}
+
+module Fs = {
+  @module("@tauri-apps/api/fs")
+  external readTextFile: string => promise<string> = "readTextFile"
+}
+
 /// Validate a neural inference token against symbolic constraints
 let validateInference = (
   token: string,
@@ -69,6 +79,63 @@ let submitFeedback = (
     })
     ->Promise.catch(_err => {
       callbacks.enqueue(tagger(Error("Feedback submission failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+let decodeDialogPath = (value: Js.Json.t): option<string> => {
+  switch Js.Json.decodeString(value) {
+  | Some(path) => Some(path)
+  | None =>
+    switch Js.Json.decodeArray(value) {
+    | Some(arr) =>
+      switch Array.get(arr, 0) {
+      | Some(item) => Js.Json.decodeString(item)
+      | None => None
+      }
+    | None => None
+    }
+  }
+}
+
+/// Open and read a PanLL event-chain JSON file
+let openEventChainFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    let options: Js.Json.t =
+      %raw(`({
+        multiple: false,
+        filters: [{ name: "PanLL Event Chain", extensions: ["json"] }]
+      })`)
+    Dialog.open(options)
+    ->Promise.then(result => {
+      switch Js.Nullable.toOption(result) {
+      | None => {
+          callbacks.enqueue(tagger(Error("No file selected")))
+          Promise.resolve()
+        }
+      | Some(value) =>
+        switch decodeDialogPath(value) {
+        | Some(path) =>
+          Fs.readTextFile(path)
+          ->Promise.then(contents => {
+            callbacks.enqueue(tagger(Ok(contents)))
+            Promise.resolve()
+          })
+          ->Promise.catch(_err => {
+            callbacks.enqueue(tagger(Error("Failed to read file")))
+            Promise.resolve()
+          })
+        | None => {
+            callbacks.enqueue(tagger(Error("Unsupported dialog response")))
+            Promise.resolve()
+          }
+        }
+      }
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("File selection failed")))
       Promise.resolve()
     })
     ->ignore

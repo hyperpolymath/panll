@@ -10,6 +10,131 @@ open Model
 open Msg
 open Tea.Html
 
+let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
+  let eventCount = Array.length(state.eventChain)
+  let summaryView = switch state.eventChainSummary {
+  | Some(summary) =>
+    div(
+      list{Attrs.class_("text-xs text-gray-500 mb-2")},
+      list{
+        text(
+          "Program: "
+          ++ summary.program
+          ++ " · Weak points: "
+          ++ Int.toString(summary.weakPoints)
+          ++ " · Crashes: "
+          ++ Int.toString(summary.totalCrashes)
+          ++ " · Robustness: "
+          ++ Float.toString(summary.robustnessScore),
+        ),
+      },
+    )
+  | None =>
+    div(
+      list{Attrs.class_("text-xs text-gray-600 mb-2")},
+      list{text("No event-chain summary loaded.")},
+    )
+  }
+
+  let errorView = switch state.eventChainError {
+  | Some(err) =>
+    div(
+      list{Attrs.class_("text-xs text-red-400 mb-2")},
+      list{text(err)},
+    )
+  | None => text("")
+  }
+
+  let previewCount = eventCount > 8 ? 8 : eventCount
+  let eventRows =
+    state.eventChain
+    ->Array.slice(~offset=0, ~len=previewCount)
+    ->Array.map(ev => {
+        let startLabel = switch ev.startMs {
+        | Some(ms) => Float.toString(ms) ++ "ms"
+        | None => "n/a"
+        }
+        div(
+          list{Attrs.class_("text-xs text-gray-400 flex justify-between")},
+          list{
+            div(list{Attrs.class_("truncate")}, list{text(ev.id)}),
+            div(list{}, list{text(ev.axis)}),
+            div(list{}, list{text(startLabel)}),
+            div(list{}, list{text(Float.toString(ev.durationMs) ++ "ms")}),
+            div(list{}, list{text(ev.status)}),
+          },
+        )
+      })
+    ->List.fromArray
+
+  div(
+    list{
+      Attrs.class_(
+        "mt-4 p-3 border border-gray-800 rounded bg-gray-900/60 space-y-2",
+      ),
+    },
+    list{
+      div(
+        list{Attrs.class_("text-xs text-gray-500 tracking-widest")},
+        list{text("EVENT CHAIN (PANLL IMPORT)")},
+      ),
+      summaryView,
+      div(
+        list{Attrs.class_("flex gap-2")},
+        list{
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
+              ),
+              Events.onClick(PaneW(ImportEventChain)),
+            },
+            list{text("Import JSON")},
+          ),
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
+              ),
+              Events.onClick(PaneW(ImportEventChainFile)),
+            },
+            list{text("Load File")},
+          ),
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-gray-900 hover:bg-gray-800 rounded text-gray-400",
+              ),
+              Events.onClick(PaneW(ClearEventChain)),
+            },
+            list{text("Clear")},
+          ),
+          div(
+            list{Attrs.class_("text-xs text-gray-600 ml-auto")},
+            list{text("Events: " ++ Int.toString(eventCount))},
+          ),
+        },
+      ),
+      errorView,
+      textarea(
+        list{
+          Attrs.class_(
+            "w-full h-24 bg-gray-950 border border-gray-800 rounded p-2 font-mono text-[11px] text-gray-400 resize-none focus:border-gray-600 focus:outline-none",
+          ),
+          Attrs.placeholder("Paste panic-attack PanLL JSON export here..."),
+          Attrs.value(state.eventChainInput),
+          Events.onInput(value => PaneW(UpdateEventChainInput(value))),
+        },
+        list{},
+      ),
+      div(
+        list{Attrs.class_("space-y-1")},
+        eventRows,
+      ),
+    },
+  )
+}
+
 /// Render the Binary Star topology diagram
 let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
   let stabilityPercent = Int.toString(Int.fromFloat(orbital.stability *. 100.0))
@@ -161,7 +286,7 @@ let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
 }
 
 /// Render the code/content view
-let renderContentView = (content: string, lastValidated: string): Tea_Vdom.t<msg> => {
+let renderContentView = (state: paneWState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("h-full flex flex-col")},
     list{
@@ -179,7 +304,13 @@ let renderContentView = (content: string, lastValidated: string): Tea_Vdom.t<msg
                 "p-3 bg-gray-800/50 rounded border border-emerald-900/30 font-mono text-sm text-emerald-200 min-h-[60px]",
               ),
             },
-            list{text(lastValidated === "" ? "No validated output yet" : lastValidated)},
+            list{
+              text(
+                state.lastValidatedOutput === ""
+                  ? "No validated output yet"
+                  : state.lastValidatedOutput,
+              ),
+            },
           ),
         },
       ),
@@ -198,13 +329,15 @@ let renderContentView = (content: string, lastValidated: string): Tea_Vdom.t<msg
                 "w-full h-full bg-gray-800 border border-gray-700 rounded p-3 font-mono text-sm text-gray-300 resize-none focus:border-gray-500 focus:outline-none",
               ),
               Attrs.placeholder("Task output manifests here..."),
-              Attrs.value(content),
+              Attrs.value(state.content),
               Events.onInput(value => PaneW(UpdateContent(value))),
             },
             list{},
           ),
         },
       ),
+
+      renderEventChainPanel(state),
 
       // Toggle button
       div(
@@ -249,7 +382,7 @@ let view = (state: paneWState, orbital: orbitalState): Tea_Vdom.t<msg> => {
       if state.topologyView {
         renderTopologyView(orbital)
       } else {
-        renderContentView(state.content, state.lastValidatedOutput)
+        renderContentView(state)
       },
     },
   )

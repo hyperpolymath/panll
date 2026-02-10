@@ -142,7 +142,11 @@ let view = (model: model): Tea_Vdom.t<msg> => {
         Vexometer.view(model.vexometer, false),
 
         // Feedback-O-Tron - using full component
-        FeedbackOTron.view(model.feedbackPending),
+        FeedbackOTron.view(
+          model.feedbackPending,
+          model.feedbackError,
+          model.feedbackReportType,
+        ),
       },
     )
   }

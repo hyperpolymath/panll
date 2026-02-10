@@ -14,10 +14,10 @@
 @layer base {
   /* Root variables for the ambient substrate */
   :root {
-    --colour-symbolic: theme('colors.indigo.500');
-    --colour-neural: theme('colors.emerald.500');
-    --colour-stable: theme('colors.indigo.900');
-    --colour-decay: theme('colors.amber.900');
+    --colour-symbolic: #6366f1;
+    --colour-neural: #10b981;
+    --colour-stable: #312e81;
+    --colour-decay: #78350f;
 
     --aura-opacity: 0.2;
     --humidity-high: 1;
@@ -193,15 +193,15 @@
 
   /* Subtle glow effects */
   .glow-indigo {
-    box-shadow: 0 0 20px theme('colors.indigo.500/30');
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
   }
 
   .glow-emerald {
-    box-shadow: 0 0 20px theme('colors.emerald.500/30');
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
   }
 
   .glow-amber {
-    box-shadow: 0 0 20px theme('colors.amber.500/30');
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
   }
 
   /* Pulse animations for active inference */

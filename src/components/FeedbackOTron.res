@@ -29,6 +29,17 @@ let getReportLabel = (rt: reportType): string => {
   }
 }
 
+/// Map report type to string value
+let reportTypeToString = (rt: reportType): string => {
+  switch rt {
+  | Hallucination => "Hallucination"
+  | ConstraintViolation => "ConstraintViolation"
+  | PerformanceIssue => "PerformanceIssue"
+  | UXFriction => "UXFriction"
+  | FeatureRequest => "FeatureRequest"
+  }
+}
+
 /// Get report type colour
 let getReportColour = (rt: reportType): string => {
   switch rt {
@@ -41,22 +52,41 @@ let getReportColour = (rt: reportType): string => {
 }
 
 /// Render a report type button
-let renderReportTypeButton = (rt: reportType, selected: bool): Tea_Vdom.t<msg> => {
+let renderReportTypeButton = (
+  rt: reportType,
+  selectedType: option<string>,
+): Tea_Vdom.t<msg> => {
   let baseClass = "px-3 py-1 rounded text-xs transition-all"
   let colour = getReportColour(rt)
-  let selectedClass = selected
+  let isSelected = selectedType === Some(reportTypeToString(rt))
+  let selectedClass = isSelected
     ? `${colour} text-white`
     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
 
   button(
-    list{Attrs.class_(`${baseClass} ${selectedClass}`)},
+    list{
+      Attrs.class_(`${baseClass} ${selectedClass}`),
+      Events.onClick(Feedback(SetReportType(reportTypeToString(rt)))),
+    },
     list{text(getReportLabel(rt))},
   )
 }
 
 /// Render the feedback form
-let renderFeedbackForm = (pendingReport: option<string>): Tea_Vdom.t<msg> => {
+let renderFeedbackForm = (
+  pendingReport: option<string>,
+  feedbackError: option<string>,
+  selectedType: option<string>,
+): Tea_Vdom.t<msg> => {
   let reportTypes = [Hallucination, ConstraintViolation, PerformanceIssue, UXFriction, FeatureRequest]
+  let errorView = switch feedbackError {
+  | Some(err) =>
+    div(
+      list{Attrs.class_("mt-2 text-xs text-red-400")},
+      list{text(err)},
+    )
+  | None => noNode
+  }
 
   div(
     list{Attrs.class_("fixed inset-0 bg-black/80 flex items-center justify-center z-50")},
@@ -101,7 +131,9 @@ let renderFeedbackForm = (pendingReport: option<string>): Tea_Vdom.t<msg> => {
               ),
               div(
                 list{Attrs.class_("flex flex-wrap gap-2")},
-                reportTypes->Array.map(rt => renderReportTypeButton(rt, false))->List.fromArray,
+                reportTypes
+                ->Array.map(rt => renderReportTypeButton(rt, selectedType))
+                ->List.fromArray,
               ),
             },
           ),
@@ -125,6 +157,7 @@ let renderFeedbackForm = (pendingReport: option<string>): Tea_Vdom.t<msg> => {
                 },
                 list{},
               ),
+              errorView,
             },
           ),
 
@@ -227,9 +260,13 @@ let renderTriggerButton = (): Tea_Vdom.t<msg> => {
 }
 
 /// Main Feedback-O-Tron view
-let view = (feedbackPending: option<string>): Tea_Vdom.t<msg> => {
+let view = (
+  feedbackPending: option<string>,
+  feedbackError: option<string>,
+  selectedType: option<string>,
+): Tea_Vdom.t<msg> => {
   switch feedbackPending {
-  | Some(_) => renderFeedbackForm(feedbackPending)
+  | Some(_) => renderFeedbackForm(feedbackPending, feedbackError, selectedType)
   | None => renderTriggerButton()
   }
 }

@@ -21,6 +21,23 @@ type neuralToken = {
   validated: bool, // Has passed Anti-Crash validation
 }
 
+/// Constraint violation types (Anti-Crash)
+type violationType =
+  | TypeMismatch(string, string) // expected, actual
+  | BoundaryViolation(string)
+  | LogicContradiction(string)
+  | UndefinedReference(string)
+  | SecurityViolation(string)
+
+/// Anti-Crash validation state
+type antiCrashState = {
+  enabled: bool,
+  strictMode: bool,
+  violations: array<violationType>,
+  halted: bool,
+  pendingReview: option<neuralToken>,
+}
+
 /// OODA loop phase for Thing-Agency Monitor
 type oodaPhase =
   | Observe
@@ -51,10 +68,33 @@ type paneNState = {
 }
 
 /// Pane-W: World/Task Barycentre
+type eventChainEvent = {
+  id: string,
+  axis: string,
+  startMs: option<float>,
+  durationMs: float,
+  intensity: string,
+  status: string,
+  peakMemory: option<float>,
+  notes: option<string>,
+}
+
+type eventChainSummary = {
+  program: string,
+  weakPoints: int,
+  criticalWeakPoints: int,
+  totalCrashes: int,
+  robustnessScore: float,
+}
+
 type paneWState = {
   content: string,
   topologyView: bool, // Binary Star diagram mode
   lastValidatedOutput: string,
+  eventChain: array<eventChainEvent>,
+  eventChainSummary: option<eventChainSummary>,
+  eventChainInput: string,
+  eventChainError: option<string>,
 }
 
 /// Vexometer state
@@ -94,6 +134,7 @@ type model = {
   paneW: paneWState,
 
   // Cognitive governance
+  antiCrash: antiCrashState,
   vexometer: vexometerState,
   orbital: orbitalState,
   humidity: humidityLevel,
@@ -107,6 +148,8 @@ type model = {
 
   // Feedback-O-Tron
   feedbackPending: option<string>,
+  feedbackError: option<string>,
+  feedbackReportType: option<string>,
 }
 
 /// Initial model state - "Dark Start" mode
@@ -130,6 +173,17 @@ let init = (): model => {
     content: "",
     topologyView: true, // Start with Binary Star diagram
     lastValidatedOutput: "",
+    eventChain: [],
+    eventChainSummary: None,
+    eventChainInput: "",
+    eventChainError: None,
+  },
+  antiCrash: {
+    enabled: true,
+    strictMode: true,
+    violations: [],
+    halted: false,
+    pendingReview: None,
   },
   vexometer: {
     index: 0.0,
@@ -150,4 +204,6 @@ let init = (): model => {
   paneWVisible: true,
   protocolAnalysisVisible: false,
   feedbackPending: None,
+  feedbackError: None,
+  feedbackReportType: Some("FeatureRequest"),
 }

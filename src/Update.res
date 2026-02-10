@@ -7,6 +7,7 @@
 
 open Model
 open Msg
+open EventChain
 
 /// Update Pane-L state
 let updatePaneL = (model: model, msg: paneLMsg): model => {
@@ -55,6 +56,48 @@ let updatePaneW = (model: model, msg: paneWMsg): model => {
   | UpdateContent(content) => {...paneW, content}
   | ToggleTopologyView => {...paneW, topologyView: !paneW.topologyView}
   | SetValidatedOutput(output) => {...paneW, lastValidatedOutput: output}
+  | UpdateEventChainInput(input) => {
+      ...paneW,
+      eventChainInput: input,
+      eventChainError: None,
+    }
+  | ImportEventChain =>
+    switch EventChain.parse(paneW.eventChainInput) {
+    | Ok(payload) => {
+        ...paneW,
+        eventChain: payload.events,
+        eventChainSummary: payload.summary,
+        eventChainError: None,
+      }
+    | Error(err) => {...paneW, eventChainError: Some(err)}
+    }
+  | ImportEventChainFile => paneW
+  | EventChainFileLoaded(result) =>
+    switch result {
+    | Ok(contents) => {
+        let base = {
+          ...paneW,
+          eventChainInput: contents,
+          eventChainError: None,
+        }
+        switch EventChain.parse(contents) {
+        | Ok(payload) => {
+            ...base,
+            eventChain: payload.events,
+            eventChainSummary: payload.summary,
+            eventChainError: None,
+          }
+        | Error(err) => {...base, eventChainError: Some(err)}
+        }
+      }
+    | Error(err) => {...paneW, eventChainError: Some(err)}
+    }
+  | ClearEventChain => {
+      ...paneW,
+      eventChain: [],
+      eventChainSummary: None,
+      eventChainError: None,
+    }
   }
   {...model, paneW: newPaneW}
 }
@@ -65,6 +108,7 @@ let updateVexometer = (model: model, msg: vexometerMsg): model => {
   let newVex = switch msg {
   | RecordCancellation => {...vex, recentCancellations: vex.recentCancellations + 1}
   | RecordCorrection => {...vex, recentCorrections: vex.recentCorrections + 1}
+  | RequestVexationIndex => vex
   | UpdateVexationIndex(idx) => {...vex, index: idx}
   | ToggleAntiInflammatory(active) => {...vex, antiInflammatoryActive: active}
   | SetInertiaDetected(detected) => {...vex, inertiaDetected: detected}
@@ -114,25 +158,142 @@ let updateView = (model: model, msg: viewMsg): model => {
 /// Update Feedback state
 let updateFeedback = (model: model, msg: feedbackMsg): model => {
   switch msg {
-  | OpenFeedback => {...model, feedbackPending: Some("")}
+  | OpenFeedback => {
+      ...model,
+      feedbackPending: Some(""),
+      feedbackError: None,
+      feedbackReportType: Some(Option.getOr(model.feedbackReportType, "FeatureRequest")),
+    }
   | SubmitFeedback(report) => {...model, feedbackPending: Some(report)}
-  | CancelFeedback => {...model, feedbackPending: None}
-  | FeedbackSubmitted => {...model, feedbackPending: None}
+  | CancelFeedback => {...model, feedbackPending: None, feedbackError: None}
+  | SetReportType(reportType) => {...model, feedbackReportType: Some(reportType)}
+  | FeedbackSubmitted => {...model, feedbackError: None}
+  | FeedbackSubmissionResult(result) =>
+    switch result {
+    | Ok(_) => {...model, feedbackPending: None, feedbackError: None}
+    | Error(err) => {...model, feedbackError: Some(err)}
+    }
+  }
+}
+
+/// Determine if a message should trigger auto-save
+let shouldAutoSave = (msg: msg): bool => {
+  switch msg {
+  | PaneL(AddConstraint(_))
+  | PaneL(RemoveConstraint(_))
+  | PaneL(ToggleConstraint(_))
+  | PaneL(PinConstraint(_))
+  | PaneL(UpdateEditorContent(_))
+  | PaneN(ReceiveToken(_))
+  | PaneN(ClearTokens)
+  | PaneW(UpdateContent(_))
+  | PaneW(ImportEventChain)
+  | PaneW(EventChainFileLoaded(_))
+  | PaneW(ClearEventChain)
+  | View(SetViewMode(_))
+  | View(SetHumidity(_))
+  | View(TogglePaneL)
+  | View(TogglePaneN)
+  | View(TogglePaneW) => true
+  | _ => false
   }
 }
 
 /// Main update function
 let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
-  let newModel = switch msg {
-  | PaneL(m) => updatePaneL(model, m)
-  | PaneN(m) => updatePaneN(model, m)
-  | PaneW(m) => updatePaneW(model, m)
-  | Vexometer(m) => updateVexometer(model, m)
-  | Orbital(m) => updateOrbital(model, m)
-  | View(m) => updateView(model, m)
-  | Feedback(m) => updateFeedback(model, m)
-  | AntiCrash(_) => model // Handled by AntiCrash module
-  | NoOp => model
+  let (newModel, command) = switch msg {
+  | PaneL(m) => (updatePaneL(model, m), Tea_Cmd.none)
+  | PaneN(ReceiveToken(token)) => {
+      let (nextAntiCrash, maybeToken) =
+        AntiCrash.processToken(token, model.paneL.constraints, model.antiCrash)
+      let nextPaneN = switch maybeToken {
+      | Some(approved) => {
+          ...model.paneN,
+          tokens: Array.concat(model.paneN.tokens, [approved]),
+        }
+      | None => model.paneN
+      }
+      let updatedModel = {...model, paneN: nextPaneN, antiCrash: nextAntiCrash}
+      let command = switch maybeToken {
+      | Some(approved) =>
+        if model.antiCrash.enabled {
+          let activeConstraints =
+            model.paneL.constraints
+            ->Array.filter(c => c.active)
+            ->Array.map(c => c.expression)
+          TauriCmd.validateInference(
+            approved.content,
+            activeConstraints,
+            result =>
+              switch result {
+              | Ok(true) => AntiCrash(ValidationPassed(approved))
+              | Ok(false) => AntiCrash(ValidationFailed(approved, "Backend validation failed"))
+              | Error(err) => AntiCrash(ValidationFailed(approved, err))
+              },
+          )
+        } else {
+          Tea_Cmd.none
+        }
+      | None => Tea_Cmd.none
+      }
+      (updatedModel, command)
+    }
+  | PaneN(m) => (updatePaneN(model, m), Tea_Cmd.none)
+  | PaneW(ImportEventChainFile) =>
+    (model, TauriCmd.openEventChainFile(result => PaneW(EventChainFileLoaded(result))))
+  | PaneW(m) => (updatePaneW(model, m), Tea_Cmd.none)
+  | Vexometer(RequestVexationIndex) =>
+    (model, TauriCmd.getVexationIndex(idx => Vexometer(UpdateVexationIndex(idx))))
+  | Vexometer(m) => (updateVexometer(model, m), Tea_Cmd.none)
+  | Orbital(m) => (updateOrbital(model, m), Tea_Cmd.none)
+  | View(m) => (updateView(model, m), Tea_Cmd.none)
+  | Feedback(FeedbackSubmitted) => {
+      let report = Option.getOr(model.feedbackPending, "")
+      let reportType = Option.getOr(model.feedbackReportType, "General")
+      let command =
+        TauriCmd.submitFeedback(
+          model.paneL.editorContent,
+          model.paneN.monologue,
+          model.paneW.content,
+          reportType,
+          result => Feedback(FeedbackSubmissionResult(result)),
+        )
+      ({...model, feedbackError: None}, command)
+    }
+  | Feedback(m) => (updateFeedback(model, m), Tea_Cmd.none)
+  | AntiCrash(ValidationPassed(token)) => {
+      let updatedTokens =
+        model.paneN.tokens
+        ->Array.map(t =>
+            t.timestamp === token.timestamp && t.content === token.content
+              ? {...t, validated: true}
+              : t
+          )
+      let updatedPaneN = {...model.paneN, tokens: updatedTokens}
+      ({...model, paneN: updatedPaneN}, Tea_Cmd.none)
+    }
+  | AntiCrash(ValidationFailed(token, reason)) => {
+      let updatedTokens =
+        model.paneN.tokens
+        ->Array.map(t =>
+            t.timestamp === token.timestamp && t.content === token.content
+              ? {...t, validated: false}
+              : t
+          )
+      let updatedPaneN = {...model.paneN, tokens: updatedTokens}
+      let updatedAntiCrash = {
+        ...model.antiCrash,
+        violations: Array.concat(model.antiCrash.violations, [LogicContradiction(reason)]),
+        halted: model.antiCrash.strictMode,
+      }
+      ({...model, paneN: updatedPaneN, antiCrash: updatedAntiCrash}, Tea_Cmd.none)
+    }
+  | AntiCrash(_) => (model, Tea_Cmd.none)
+  | SaveState => {
+      Storage.save(model)
+      (model, Tea_Cmd.none)
+    }
+  | NoOp => (model, Tea_Cmd.none)
   }
 
   // Check for anti-inflammatory triggers
@@ -142,5 +303,10 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
     newModel
   }
 
-  (finalModel, Tea_Cmd.none)
+  // Auto-save state after important changes
+  if shouldAutoSave(msg) {
+    Storage.save(finalModel)
+  }
+
+  (finalModel, command)
 }

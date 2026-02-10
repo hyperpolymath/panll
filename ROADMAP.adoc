@@ -7,7 +7,7 @@
 
 This roadmap outlines the development plan for **PanLL eNSAID** (Environment for NeSy-Agentic Integrated Development), a neurosymbolic agentic development environment built on The Elm Architecture.
 
-== Current Status: v0.1.0 (2026-02-07) - 95% Complete
+== Current Status: v0.1.0 (2026-02-09) - 95% Complete
 
 ✅ **Complete TEA Implementation**
 
@@ -18,6 +18,10 @@ This roadmap outlines the development plan for **PanLL eNSAID** (Environment for
 * npm→Deno migration complete
 * All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)
 * Tauri backend commands working (validate_inference, get_vexation_index, submit_feedback)
+* Anti-Crash token gating wired into Pane-N ingestion (backend validation hooks)
+* Event-chain import from panic-attack (paste + file load)
+* Feedback report types wired to backend
+* Local dev server wired for Tauri devUrl (serve.sh @ :8000)
 
 == Roadmap
 
@@ -193,7 +197,7 @@ This roadmap outlines the development plan for **PanLL eNSAID** (Environment for
 * ReScript 11.1.x
 * Tauri 2.x
 * Deno runtime (tests + build)
-* Tailwind CSS 4.x
+* Tailwind CSS 3.x
 * @tauri-apps/api 2.x
 
 === Planned Integrations
@@ -245,6 +249,6 @@ This roadmap outlines the development plan for **PanLL eNSAID** (Environment for
 
 ---
 
-_Last Updated: 2026-02-07_
+_Last Updated: 2026-02-09_
 
 _This roadmap is a living document and will be updated as the project evolves._

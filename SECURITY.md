@@ -47,6 +47,8 @@ If you cannot use GitHub Security Advisories, you may email us directly at:
 
 When implementing cryptographic features in this project, the following standards MUST be followed:
 
+Machine-readable policy: see `.machine_readable/SECURITY.scm` for the canonical requirements list.
+
 ### Password Hashing
 - **Algorithm:** Argon2id
 - **Parameters:** 512 MiB memory, 8 iterations, 4 lanes
@@ -226,4 +228,4 @@ When using PanLL eNSAID, we recommend:
 
 ---
 
-<sub>Last updated: 2026-02-04 · Policy version: 2.0.0</sub>
+<sub>Last updated: 2026-02-09 · Policy version: 2.0.0</sub>

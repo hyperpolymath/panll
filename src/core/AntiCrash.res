@@ -16,23 +16,6 @@ type validationResult =
   | Invalid(string)
   | RequiresReview(string)
 
-/// Constraint violation types
-type violationType =
-  | TypeMismatch(string, string) // expected, actual
-  | BoundaryViolation(string)
-  | LogicContradiction(string)
-  | UndefinedReference(string)
-  | SecurityViolation(string)
-
-/// The Anti-Crash validation state
-type antiCrashState = {
-  enabled: bool,
-  strictMode: bool,
-  violations: array<violationType>,
-  halted: bool,
-  pendingReview: option<neuralToken>,
-}
-
 /// Initial Anti-Crash state
 let init = (): antiCrashState => {
   enabled: true,

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.tauri.app/config/2/capabilities",
+  "identifier": "default",
+  "description": "Default PanLL capabilities",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:allow-open",
+    "fs:allow-read"
+  ]
+}

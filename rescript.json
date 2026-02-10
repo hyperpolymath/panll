@@ -14,14 +14,13 @@
   ],
   "suffix": ".res.js",
   "bs-dependencies": [
-    "@rescript/core",
-    "rescript-tauri"
+    "@rescript/core"
   ],
   "bsc-flags": [
     "-open RescriptCore"
   ],
   "warnings": {
-    "error": "+101"
+    "error": "+101-33-44"
   },
   "jsx": {
     "version": 4

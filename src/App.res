@@ -6,7 +6,13 @@
 
 /// Initialize the application
 let init = (): (Model.model, Tea_Cmd.t<Msg.msg>) => {
-  (Model.init(), Tea_Cmd.none)
+  // Try to load persisted state
+  let model = switch Storage.load() {
+  | Some(loadedModel) => loadedModel
+  | None => Model.init() // Use default if no saved state
+  }
+
+  (model, Tea_Cmd.none)
 }
 
 /// Main TEA program

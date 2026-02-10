@@ -46,7 +46,7 @@ This is not a passive text editor. It is an active, synchronous environment that
 |Backend|Rust + Tauri 2.0
 |Runtime|Deno (tests, build orchestration)
 |Testing|Deno.test (33 tests, 719ms)
-|Styling|Tailwind CSS 4.x
+|Styling|Tailwind CSS 3.x
 |Middleware|Elixir/BEAM (planned)
 |Verification|Echidna (planned)
 |===
@@ -69,7 +69,7 @@ deno task test
 # Watch mode for tests
 deno task test:watch
 
-# Development mode (Tailwind + Tauri hot reload)
+# Development mode (Tailwind + static dev server + Tauri hot reload)
 deno task dev
 
 # Build Tailwind CSS
@@ -97,6 +97,18 @@ deno task dev
 
 * **link:docs/TEA_GUIDE.md[TEA Architecture Guide]** — Comprehensive documentation for The Elm Architecture (TEA) implementation including Tea_Cmd, Tea_Sub, Tea_Vdom, and Tea_App modules with testing guide and best practices
 
+== Event-Chain Import (panic-attack)
+
+PanLL can ingest the PanLL event-chain JSON exported by `panic-attack` and
+surface it in Pane-W for MVP timeline review. Paste the JSON export into the
+Event Chain panel and click **Import JSON**, or use **Load File** to open a
+saved export.
+
+== Local Dev Server
+
+`deno task dev` starts a static server for `public/` on `http://localhost:8000`
+to satisfy the Tauri `devUrl`.
+
 == Keyboard Shortcuts
 
 [cols="1,2"]
@@ -120,5 +132,8 @@ PMPL-1.0-or-later
 ✅ 33 tests passing in 719ms (Deno.test)
 ✅ npm→Deno migration complete
 ✅ Full ReScript compilation (180ms)
+✅ Anti-Crash token gating + backend validation hooks
+✅ Event-chain import from panic-attack (paste + file)
+✅ Feedback report types wired to backend
 
 **Next:** v0.1.0 release preparation
