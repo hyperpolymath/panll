@@ -32,7 +32,13 @@ type paneWMsg =
   | UpdateEventChainInput(string)
   | ImportEventChain
   | ImportEventChainFile
+  | ImportPanicAttackerReportFile
+  | ImportLatestPanicAttacker
+  | CheckPanicAttackerCapability
   | EventChainFileLoaded(result<string, string>)
+  | PanicAttackerReportPathLoaded(result<string, string>)
+  | PanicAttackerImportLoaded(result<string, string>)
+  | PanicAttackerCapabilityLoaded(result<string, string>)
   | ClearEventChain
 
 /// Vexometer messages

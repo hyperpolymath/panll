@@ -10,7 +10,7 @@ external invoke: (string, 'a) => promise<'b> = "invoke"
 
 module Dialog = {
   @module("@tauri-apps/api/dialog")
-  external open: Js.Json.t => promise<Js.Nullable.t<Js.Json.t>> = "open"
+  external openDialog: Js.Json.t => promise<Js.Nullable.t<Js.Json.t>> = "open"
 }
 
 module Fs = {
@@ -108,7 +108,7 @@ let openEventChainFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'ms
         multiple: false,
         filters: [{ name: "PanLL Event Chain", extensions: ["json"] }]
       })`)
-    Dialog.open(options)
+    Dialog.openDialog(options)
     ->Promise.then(result => {
       switch Js.Nullable.toOption(result) {
       | None => {
@@ -136,6 +136,93 @@ let openEventChainFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'ms
     })
     ->Promise.catch(_err => {
       callbacks.enqueue(tagger(Error("File selection failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Open a panic-attacker assault report JSON file and return the chosen path.
+let openPanicAttackerReportFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    let options: Js.Json.t =
+      %raw(`({
+        multiple: false,
+        filters: [{ name: "panic-attacker Assault Report", extensions: ["json"] }]
+      })`)
+    Dialog.openDialog(options)
+    ->Promise.then(result => {
+      switch Js.Nullable.toOption(result) {
+      | None => {
+          callbacks.enqueue(tagger(Error("No panic-attacker report selected")))
+          Promise.resolve()
+        }
+      | Some(value) =>
+        switch decodeDialogPath(value) {
+        | Some(path) => {
+            callbacks.enqueue(tagger(Ok(path)))
+            Promise.resolve()
+          }
+        | None => {
+            callbacks.enqueue(tagger(Error("Unsupported dialog response")))
+            Promise.resolve()
+          }
+        }
+      }
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("panic-attacker report selection failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Convert a panic-attacker assault report into PanLL event-chain JSON.
+let importPanicAttackerReport = (
+  reportPath: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("import_panic_attacker_report", {"report_path": reportPath})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("panic-attacker import failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Import the latest panic-attacker report from its reports directory.
+let importLatestPanicAttackerReport = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("import_latest_panic_attacker_report", ())
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("No latest panic-attacker report could be imported")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Probe panic-attacker capabilities and report whether full PanLL export is available.
+let getPanicAttackerCapability = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("get_panic_attacker_capability", ())
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("panic-attacker capability probe failed")))
       Promise.resolve()
     })
     ->ignore

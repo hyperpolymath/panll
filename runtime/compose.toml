@@ -1,0 +1,48 @@
+version = "1.0"
+
+[services.panll]
+image = "runtime/out/panll-beam.ctp"
+ports = ["4100:4100", "4101:4101", "50051:50051"]
+depends_on = ["svalinn", "vordr", "selur", "rokur"]
+networks = ["panll"]
+restart = "always"
+environment = { PANLL_BEAM_APIS = "http,graphql,grpc", PANLL_BEAM_HTTP_PORT = "4100", PANLL_BEAM_GRAPHQL_PORT = "4101", PANLL_BEAM_GRPC_PORT = "50051" }
+
+[services.panll.healthcheck]
+test = "curl -f http://localhost:4100/healthz"
+interval = "10s"
+timeout = "3s"
+retries = 5
+
+[services.svalinn]
+image = "svalinn:latest.ctp"
+ports = ["8080:8000"]
+depends_on = ["vordr", "selur"]
+networks = ["panll"]
+restart = "always"
+environment = { VORDR_ENDPOINT = "selur://unix:///run/selur-sv.sock", SELUR_WASM = "/usr/local/lib/selur.wasm" }
+
+[services.vordr]
+image = "vordr:latest.ctp"
+ports = ["8081:8081"]
+depends_on = ["selur"]
+networks = ["panll"]
+restart = "always"
+environment = { VORDR_LISTEN = "0.0.0.0:8081", VORDR_SELUR_IPC = "unix:///run/selur-sv.sock" }
+volumes = ["vordr_state:/var/lib/vordr"]
+
+[services.selur]
+image = "selur:latest.ctp"
+networks = ["panll"]
+restart = "always"
+
+[services.rokur]
+image = "rokur:latest.ctp"
+networks = ["panll"]
+restart = "always"
+
+[networks.panll]
+driver = "selur"
+
+[volumes.vordr_state]
+driver = "local"

@@ -10,6 +10,20 @@ open Model
 // Storage key for localStorage
 let storageKey = "panll_state_v1"
 
+module LocalStorage = {
+  @scope("localStorage")
+  @val
+  external setItem: (string, string) => unit = "setItem"
+
+  @scope("localStorage")
+  @val
+  external getItem: string => Js.Nullable.t<string> = "getItem"
+
+  @scope("localStorage")
+  @val
+  external removeItem: string => unit = "removeItem"
+}
+
 // Type for serializable state (subset of model that should persist)
 type persistedState = {
   version: int,
@@ -20,6 +34,7 @@ type persistedState = {
   worldContent: string,
   eventChain: array<eventChainEvent>,
   eventChainSummary: option<eventChainSummary>,
+  eventChainTimeline: option<eventChainTimeline>,
 
   // User preferences (Priority 2)
   viewMode: viewMode,
@@ -100,6 +115,7 @@ let extractPersistedState = (model: model): persistedState => {
   worldContent: model.paneW.content,
   eventChain: model.paneW.eventChain,
   eventChainSummary: model.paneW.eventChainSummary,
+  eventChainTimeline: model.paneW.eventChainTimeline,
   viewMode: model.viewMode,
   paneLVisible: model.paneLVisible,
   paneNVisible: model.paneNVisible,
@@ -111,11 +127,6 @@ let extractPersistedState = (model: model): persistedState => {
 
 // Serialize persisted state to JSON string
 let serialize = (state: persistedState): string => {
-  // Convert variant types to strings first
-  let viewModeStr = viewModeToString(state.viewMode)
-  let humidityStr = humidityToString(state.humidity)
-  let eventChainSummaryValue = Js.Nullable.fromOption(state.eventChainSummary)
-
   // Use raw JavaScript to stringify
   %raw(`
     JSON.stringify({
@@ -144,12 +155,13 @@ let serialize = (state: persistedState): string => {
         peakMemory: e.peakMemory,
         notes: e.notes
       })),
-      eventChainSummary: eventChainSummaryValue,
-      viewMode: viewModeStr,
+      eventChainSummary: state.eventChainSummary == null ? null : state.eventChainSummary,
+      eventChainTimeline: state.eventChainTimeline == null ? null : state.eventChainTimeline,
+      viewMode: viewModeToString(state.viewMode),
       paneLVisible: state.paneLVisible,
       paneNVisible: state.paneNVisible,
       paneWVisible: state.paneWVisible,
-      humidity: humidityStr,
+      humidity: humidityToString(state.humidity),
       vexometerIndex: state.vexometerIndex,
       orbitalStability: state.orbitalStability
     })
@@ -160,10 +172,9 @@ let serialize = (state: persistedState): string => {
 let save = (model: model): unit => {
   try {
     let state = extractPersistedState(model)
-    let json = serialize(state)
 
     // Save to localStorage
-    %raw(`localStorage.setItem(storageKey, json)`)
+    LocalStorage.setItem(storageKey, serialize(state))
 
     Console.log("State saved to localStorage")
   } catch {
@@ -175,7 +186,7 @@ let save = (model: model): unit => {
 let load = (): option<model> => {
   try {
     // Load from localStorage
-    let json: option<string> = %raw(`localStorage.getItem(storageKey)`)
+    let json = LocalStorage.getItem(storageKey)->Js.Nullable.toOption
 
     switch json {
     | None => None
@@ -312,6 +323,19 @@ let load = (): option<model> => {
         | None => []
         }
 
+        let eventChainTimeline = switch getField(parsed, "eventChainTimeline") {
+        | Some(value) =>
+          switch value->JSON.Decode.object {
+          | Some(_) =>
+            Some({
+              durationMs: getFloat(value, "durationMs", 0.0),
+              events: Int.fromFloat(getFloat(value, "events", 0.0)),
+            })
+          | None => None
+          }
+        | None => None
+        }
+
         // Create model with loaded state
         let baseModel = init()
         let loadedModel: model = {
@@ -330,6 +354,7 @@ let load = (): option<model> => {
             content: getString(parsed, "worldContent", ""),
             eventChain: eventChain,
             eventChainSummary: eventChainSummary,
+            eventChainTimeline: eventChainTimeline,
           },
           viewMode: stringToViewMode(getString(parsed, "viewMode", "DarkStart")),
           paneLVisible: getBool(parsed, "paneLVisible", true),
@@ -361,7 +386,7 @@ let load = (): option<model> => {
 // Clear persisted state
 let clear = (): unit => {
   try {
-    %raw(`localStorage.removeItem(storageKey)`)
+    LocalStorage.removeItem(storageKey)
     Console.log("State cleared from localStorage")
   } catch {
   | exn => Console.error2("Failed to clear state:", exn)

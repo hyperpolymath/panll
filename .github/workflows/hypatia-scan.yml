@@ -56,13 +56,13 @@ jobs:
           HYPATIA_FORMAT=json "$HOME/hypatia/hypatia-cli.sh" scan . > hypatia-findings.json
 
           # Count findings
-          FINDING_COUNT=$(jq '. | length' hypatia-findings.json 2>/dev/null || echo 0)
+          FINDING_COUNT=$(jq '.findings | length' hypatia-findings.json 2>/dev/null || echo 0)
           echo "findings_count=$FINDING_COUNT" >> $GITHUB_OUTPUT
 
           # Extract severity counts
-          CRITICAL=$(jq '[.[] | select(.severity == "critical")] | length' hypatia-findings.json)
-          HIGH=$(jq '[.[] | select(.severity == "high")] | length' hypatia-findings.json)
-          MEDIUM=$(jq '[.[] | select(.severity == "medium")] | length' hypatia-findings.json)
+          CRITICAL=$(jq '[.findings[] | select(.severity == "critical")] | length' hypatia-findings.json)
+          HIGH=$(jq '[.findings[] | select(.severity == "high")] | length' hypatia-findings.json)
+          MEDIUM=$(jq '[.findings[] | select(.severity == "medium")] | length' hypatia-findings.json)
 
           echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
           echo "high=$HIGH" >> $GITHUB_OUTPUT
@@ -82,9 +82,9 @@ jobs:
           retention-days: 90
 
       - name: Submit findings to gitbot-fleet (Phase 2)
-        if: steps.scan.outputs.findings_count > 0
+        if: steps.scan.outputs.findings_count > 0 && secrets.FLEET_GITHUB_TOKEN != ''
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.FLEET_GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
@@ -101,6 +101,12 @@ jobs:
           rm -rf "$FLEET_DIR"
 
           echo "✅ Finding submission complete"
+
+      - name: Note missing fleet token
+        if: steps.scan.outputs.findings_count > 0 && secrets.FLEET_GITHUB_TOKEN == ''
+        run: |
+          echo "⚠️ FLEET_GITHUB_TOKEN is not configured; findings were not submitted to gitbot-fleet."
+          echo "Set repository secret FLEET_GITHUB_TOKEN with write access to hyperpolymath/gitbot-fleet."
 
       - name: Check for critical issues
         if: steps.scan.outputs.critical > 0
@@ -150,7 +156,8 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const findings = JSON.parse(fs.readFileSync('hypatia-findings.json', 'utf8'));
+            const payload = JSON.parse(fs.readFileSync('hypatia-findings.json', 'utf8'));
+            const findings = Array.isArray(payload) ? payload : (payload.findings || []);
 
             const critical = findings.filter(f => f.severity === 'critical').length;
             const high = findings.filter(f => f.severity === 'high').length;

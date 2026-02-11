@@ -12,7 +12,10 @@ let init = (): (Model.model, Tea_Cmd.t<Msg.msg>) => {
   | None => Model.init() // Use default if no saved state
   }
 
-  (model, Tea_Cmd.none)
+  let capabilityProbe =
+    TauriCmd.getPanicAttackerCapability(result => Msg.PaneW(Msg.PanicAttackerCapabilityLoaded(result)))
+
+  (model, capabilityProbe)
 }
 
 /// Main TEA program

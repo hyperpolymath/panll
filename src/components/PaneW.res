@@ -36,6 +36,48 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
     )
   }
 
+  let timelineView = switch state.eventChainTimeline {
+  | Some(timeline) =>
+    div(
+      list{Attrs.class_("text-xs text-gray-500 mb-2")},
+      list{
+        text(
+          "Timeline: "
+          ++ Int.toString(timeline.events)
+          ++ " events · Duration: "
+          ++ Float.toString(timeline.durationMs)
+          ++ "ms",
+        ),
+      },
+    )
+  | None =>
+    div(
+      list{Attrs.class_("text-xs text-gray-600 mb-2")},
+      list{text("No timeline metadata loaded.")},
+    )
+  }
+
+  let capabilityTone = PanicAttackerMode.toneClass(state.panicAttackerMode)
+  let capabilityLabel = PanicAttackerMode.label(state.panicAttackerMode)
+
+  let capabilityBinaryView = switch state.panicAttackerBinary {
+  | Some(binary) =>
+    div(
+      list{Attrs.class_("text-xs text-gray-600")},
+      list{text("Binary: " ++ binary)},
+    )
+  | None => text("")
+  }
+
+  let capabilityDetailView = switch state.panicAttackerStatusDetail {
+  | Some(detail) =>
+    div(
+      list{Attrs.class_("text-xs text-gray-500")},
+      list{text(detail)},
+    )
+  | None => text("")
+  }
+
   let errorView = switch state.eventChainError {
   | Some(err) =>
     div(
@@ -48,7 +90,7 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
   let previewCount = eventCount > 8 ? 8 : eventCount
   let eventRows =
     state.eventChain
-    ->Array.slice(~offset=0, ~len=previewCount)
+    ->Array.slice(~start=0, ~end=previewCount)
     ->Array.map(ev => {
         let startLabel = switch ev.startMs {
         | Some(ms) => Float.toString(ms) ++ "ms"
@@ -103,6 +145,33 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
+                "px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
+              ),
+              Events.onClick(PaneW(CheckPanicAttackerCapability)),
+            },
+            list{text("Probe panic-attacker")},
+          ),
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
+              ),
+              Events.onClick(PaneW(ImportPanicAttackerReportFile)),
+            },
+            list{text("Load panic-attacker Report")},
+          ),
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
+              ),
+              Events.onClick(PaneW(ImportLatestPanicAttacker)),
+            },
+            list{text("Latest panic-attacker")},
+          ),
+          button(
+            list{
+              Attrs.class_(
                 "px-3 py-1 text-xs bg-gray-900 hover:bg-gray-800 rounded text-gray-400",
               ),
               Events.onClick(PaneW(ClearEventChain)),
@@ -115,13 +184,25 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
+      timelineView,
+      div(
+        list{Attrs.class_("space-y-1")},
+        list{
+          div(
+            list{Attrs.class_("text-xs " ++ capabilityTone)},
+            list{text(capabilityLabel)},
+          ),
+          capabilityBinaryView,
+          capabilityDetailView,
+        },
+      ),
       errorView,
       textarea(
         list{
           Attrs.class_(
             "w-full h-24 bg-gray-950 border border-gray-800 rounded p-2 font-mono text-[11px] text-gray-400 resize-none focus:border-gray-600 focus:outline-none",
           ),
-          Attrs.placeholder("Paste panic-attack PanLL JSON export here..."),
+          Attrs.placeholder("Paste panic-attack PanLL export JSON here, or use the panic-attacker buttons..."),
           Attrs.value(state.eventChainInput),
           Events.onInput(value => PaneW(UpdateEventChainInput(value))),
         },

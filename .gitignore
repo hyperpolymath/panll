@@ -1,47 +1,56 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: PMPL-1.0-or-later
 
-# Dependencies
+# Node + package managers
 node_modules/
 .pnpm-store/
 
-# ReScript build output
+# Deno
+.deno/
+
+# ReScript generated output (in-source mode)
 lib/
 .merlin
 *.res.js
 *.resi.js
 
-# Tauri
+# Tauri build artifacts
 src-tauri/target/
 src-tauri/WixTools/
 src-tauri/Cargo.lock
 
-# Deno
-.deno/
+# BEAM/Elixir build artifacts
+beam/**/_build/
+beam/**/deps/
+beam/**/.elixir_ls/
+beam/**/erl_crash.dump
 
-# Tailwind output
+# Frontend build artifacts
 public/styles.css
+dist/
+build/
+coverage/
 
-# IDE
-.idea/
-.vscode/
+# Local panic-attacker / PanLL integration artifacts
+panic-attack-*.json
+panll-event-chain-*.json
+*.ctp
+
+# Logs and temporary files
+*.log
+npm-debug.log*
 *.swp
 *.swo
 *~
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
-
-# Environment
+# Environment files
 .env
 .env.local
 .env.*.local
+runtime/.env
+runtime/.env.*
 
-# Build
-dist/
-build/
-coverage/
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

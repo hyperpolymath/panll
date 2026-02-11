@@ -8,6 +8,7 @@ open Model
 
 type payload = {
   summary: option<eventChainSummary>,
+  timeline: option<eventChainTimeline>,
   events: array<eventChainEvent>,
 }
 
@@ -83,6 +84,19 @@ let parse = (raw: string): result<payload, string> => {
     | None => None
     }
 
+    let timeline = switch getField(parsed, "timeline") {
+    | Some(value) =>
+      switch value->JSON.Decode.object {
+      | Some(_) =>
+        Some({
+          durationMs: getFloat(value, "duration_ms", 0.0),
+          events: Int.fromFloat(getFloat(value, "events", 0.0)),
+        })
+      | None => None
+      }
+    | None => None
+    }
+
     let events = switch getArray(parsed, "event_chain") {
     | Some(arr) =>
       arr->Array.map(item => {
@@ -100,7 +114,7 @@ let parse = (raw: string): result<payload, string> => {
     | None => []
     }
 
-    Ok({summary, events})
+    Ok({summary, timeline, events})
   } catch {
   | _ => Error("Invalid event-chain JSON")
   }

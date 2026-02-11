@@ -7,7 +7,6 @@
 
 open Model
 open Msg
-open EventChain
 
 /// Update Pane-L state
 let updatePaneL = (model: model, msg: paneLMsg): model => {
@@ -50,6 +49,25 @@ let updatePaneN = (model: model, msg: paneNMsg): model => {
 }
 
 /// Update Pane-W state
+let applyEventChainContents = (paneW: paneWState, contents: string): paneWState => {
+  let base = {
+    ...paneW,
+    eventChainInput: contents,
+    eventChainError: None,
+  }
+  switch EventChain.parse(contents) {
+  | Ok(payload) => {
+      ...base,
+      eventChain: payload.events,
+      eventChainSummary: payload.summary,
+      eventChainTimeline: payload.timeline,
+      eventChainError: None,
+    }
+  | Error(err) => {...base, eventChainError: Some(err)}
+  }
+}
+
+/// Update Pane-W state
 let updatePaneW = (model: model, msg: paneWMsg): model => {
   let paneW = model.paneW
   let newPaneW = switch msg {
@@ -72,30 +90,49 @@ let updatePaneW = (model: model, msg: paneWMsg): model => {
     | Error(err) => {...paneW, eventChainError: Some(err)}
     }
   | ImportEventChainFile => paneW
-  | EventChainFileLoaded(result) =>
+  | ImportPanicAttackerReportFile => paneW
+  | ImportLatestPanicAttacker => paneW
+  | CheckPanicAttackerCapability => paneW
+  | PanicAttackerReportPathLoaded(_) => paneW
+  | PanicAttackerCapabilityLoaded(result) =>
     switch result {
-    | Ok(contents) => {
-        let base = {
+    | Ok(raw) =>
+      switch PanicAttackerCapability.parse(raw) {
+      | Ok(capability) => {
           ...paneW,
-          eventChainInput: contents,
-          eventChainError: None,
+          panicAttackerMode: capability.mode,
+          panicAttackerBinary: capability.binary,
+          panicAttackerStatusDetail: capability.detail,
         }
-        switch EventChain.parse(contents) {
-        | Ok(payload) => {
-            ...base,
-            eventChain: payload.events,
-            eventChainSummary: payload.summary,
-            eventChainError: None,
-          }
-        | Error(err) => {...base, eventChainError: Some(err)}
+      | Error(err) => {
+          ...paneW,
+          panicAttackerMode: "unavailable",
+          panicAttackerBinary: None,
+          panicAttackerStatusDetail: Some(err),
         }
       }
+    | Error(err) => {
+        ...paneW,
+        panicAttackerMode: "unavailable",
+        panicAttackerBinary: None,
+        panicAttackerStatusDetail: Some(err),
+      }
+    }
+  | EventChainFileLoaded(result) =>
+    switch result {
+    | Ok(contents) => applyEventChainContents(paneW, contents)
+    | Error(err) => {...paneW, eventChainError: Some(err)}
+    }
+  | PanicAttackerImportLoaded(result) =>
+    switch result {
+    | Ok(contents) => applyEventChainContents(paneW, contents)
     | Error(err) => {...paneW, eventChainError: Some(err)}
     }
   | ClearEventChain => {
       ...paneW,
       eventChain: [],
       eventChainSummary: None,
+      eventChainTimeline: None,
       eventChainError: None,
     }
   }
@@ -189,6 +226,7 @@ let shouldAutoSave = (msg: msg): bool => {
   | PaneW(UpdateContent(_))
   | PaneW(ImportEventChain)
   | PaneW(EventChainFileLoaded(_))
+  | PaneW(PanicAttackerImportLoaded(_))
   | PaneW(ClearEventChain)
   | View(SetViewMode(_))
   | View(SetHumidity(_))
@@ -241,6 +279,40 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | PaneN(m) => (updatePaneN(model, m), Tea_Cmd.none)
   | PaneW(ImportEventChainFile) =>
     (model, TauriCmd.openEventChainFile(result => PaneW(EventChainFileLoaded(result))))
+  | PaneW(ImportPanicAttackerReportFile) =>
+    (
+      model,
+      TauriCmd.openPanicAttackerReportFile(result => PaneW(PanicAttackerReportPathLoaded(result))),
+    )
+  | PaneW(PanicAttackerReportPathLoaded(result)) =>
+    switch result {
+    | Ok(reportPath) =>
+      (
+        model,
+        TauriCmd.importPanicAttackerReport(
+          reportPath,
+          importResult => PaneW(PanicAttackerImportLoaded(importResult)),
+        ),
+      )
+    | Error(err) =>
+      (
+        {
+          ...model,
+          paneW: {...model.paneW, eventChainError: Some(err)},
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | PaneW(ImportLatestPanicAttacker) =>
+    (
+      model,
+      TauriCmd.importLatestPanicAttackerReport(result => PaneW(PanicAttackerImportLoaded(result))),
+    )
+  | PaneW(CheckPanicAttackerCapability) =>
+    (
+      model,
+      TauriCmd.getPanicAttackerCapability(result => PaneW(PanicAttackerCapabilityLoaded(result))),
+    )
   | PaneW(m) => (updatePaneW(model, m), Tea_Cmd.none)
   | Vexometer(RequestVexationIndex) =>
     (model, TauriCmd.getVexationIndex(idx => Vexometer(UpdateVexationIndex(idx))))

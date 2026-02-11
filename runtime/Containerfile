@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+#
+# PanLL BEAM runtime on Chainguard.
+# This builds the panll_beam OTP release and runs it on a Chainguard image.
+
+ARG ELIXIR_BUILDER_IMAGE=cgr.dev/chainguard/elixir:latest-dev
+ARG ELIXIR_RUNTIME_IMAGE=cgr.dev/chainguard/elixir:latest
+
+FROM ${ELIXIR_BUILDER_IMAGE} AS build
+WORKDIR /workspace
+ENV MIX_ENV=prod
+
+COPY beam/panll_beam ./beam/panll_beam
+WORKDIR /workspace/beam/panll_beam
+
+RUN mix local.hex --force && \
+    mix local.rebar --force && \
+    mix deps.get --only prod && \
+    mix deps.compile && \
+    mix release
+
+FROM ${ELIXIR_RUNTIME_IMAGE} AS runtime
+WORKDIR /app
+
+ENV MIX_ENV=prod
+ENV PANLL_BEAM_APIS=http,graphql,grpc
+ENV PANLL_BEAM_HTTP_PORT=4100
+ENV PANLL_BEAM_GRAPHQL_PORT=4101
+ENV PANLL_BEAM_GRPC_PORT=50051
+ENV PANLL_BEAM_PORT=4100
+
+COPY --from=build /workspace/beam/panll_beam/_build/prod/rel/panll_beam ./panll_beam
+
+EXPOSE 4100
+EXPOSE 4101
+EXPOSE 50051
+
+ENTRYPOINT ["/app/panll_beam/bin/panll_beam"]
+CMD ["start"]

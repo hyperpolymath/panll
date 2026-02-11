@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+
+= PanLL Runtime Stack (BEAM + Chainguard + Cerro Torre + selur-compose)
+
+This directory wires PanLL into the requested deployment model:
+
+* PanLL service on **BEAM** (`beam/panll_beam`)
+* PanLL runtime image on **Chainguard**
+* Image packaged/verified with **Cerro Torre** (`ct pack`, `ct verify`)
+* Surrounding services modeled in `selur-compose`:
+  * `svalinn`
+  * `vordr`
+  * `selur`
+  * `rokur`
+  * `panll`
+
+== Files
+
+* `Containerfile` - Chainguard-based BEAM runtime image
+* `compose.toml` - selur-compose service graph
+* `env.example` - runtime defaults
+* `scripts/build-pack-verify.sh` - build image + `ct pack` + `ct verify`
+* `scripts/stack-up.sh` - optional build/verify then `selur-compose up`
+* `scripts/stack-down.sh` - `selur-compose down -v`
+
+== Quick Start
+
+[source,bash]
+----
+cp runtime/env.example runtime/.env
+set -a
+source runtime/.env
+set +a
+
+# 1) Build PanLL image and verify .ctp with Cerro Torre
+runtime/scripts/build-pack-verify.sh
+
+# 2) Start surrounding stack
+runtime/scripts/stack-up.sh
+
+# 3) Stop stack
+runtime/scripts/stack-down.sh
+----
+
+== Notes
+
+* `compose.toml` expects `.ctp` bundle references for surrounding services.
+  Replace placeholder image names with your published bundle identifiers.
+* `rokur` is included as a service slot in the topology even if its bundle is
+  not yet published in this environment.

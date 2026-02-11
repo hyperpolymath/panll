@@ -47,7 +47,7 @@ This is not a passive text editor. It is an active, synchronous environment that
 |Runtime|Deno (tests, build orchestration)
 |Testing|Deno.test (33 tests, 719ms)
 |Styling|Tailwind CSS 3.x
-|Middleware|Elixir/BEAM (planned)
+|Middleware|Elixir/BEAM (`beam/panll_beam`) with selectable HTTP, GraphQL, and gRPC APIs
 |Verification|Echidna (planned)
 |===
 
@@ -103,6 +103,25 @@ PanLL can ingest the PanLL event-chain JSON exported by `panic-attack` and
 surface it in Pane-W for MVP timeline review. Paste the JSON export into the
 Event Chain panel and click **Import JSON**, or use **Load File** to open a
 saved export.
+
+== BEAM API Modes
+
+The optional BEAM service (`beam/panll_beam`) supports all three API styles as
+runtime-selectable options:
+
+* **HTTP** via Bandit/Plug (`/healthz`, `/v1/status`)
+* **GraphQL** via Absinthe (`/graphql`, `/graphiql`)
+* **gRPC** via `panll.v1.StatusService/GetStatus`
+
+Select protocols with `PANLL_BEAM_APIS`:
+
+[source,bash]
+----
+# defaults to all in non-test env
+export PANLL_BEAM_APIS="http,graphql,grpc"
+----
+
+For containerized runtime orchestration (Chainguard base + Cerro Torre pack/verify + selur-compose stack), see `runtime/README.adoc`.
 
 == Local Dev Server
 

@@ -1,54 +1,48 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
-# RSR-compliant .gitattributes
+# SPDX-License-Identifier: PMPL-1.0-or-later
 
+# Normalize text files to LF by default
 * text=auto eol=lf
 
-# Source
-*.rs    text eol=lf diff=rust
-*.ex    text eol=lf diff=elixir
-*.exs   text eol=lf diff=elixir
-*.jl    text eol=lf
-*.res   text eol=lf
-*.resi  text eol=lf
-*.ada   text eol=lf diff=ada
-*.adb   text eol=lf diff=ada
-*.ads   text eol=lf diff=ada
-*.hs    text eol=lf
-*.chpl  text eol=lf
-*.scm   text eol=lf
-*.ncl   text eol=lf
-*.nix   text eol=lf
+# Source code
+*.rs text diff=rust
+*.ex text diff=elixir
+*.exs text diff=elixir
+*.res text diff=javascript
+*.resi text diff=javascript
+*.js text diff=javascript
+*.ts text diff=typescript
+*.proto text
+*.graphql text
+*.gql text
+*.sh text
 
-# Docs
-*.md    text eol=lf diff=markdown
-*.adoc  text eol=lf
-*.txt   text eol=lf
+# Config + docs
+*.toml text
+*.json text
+*.yml text
+*.yaml text
+*.md text diff=markdown
+*.adoc text
+*.ncl text
+*.scm text linguist-language=Scheme
 
-# Data
-*.json  text eol=lf
-*.yaml  text eol=lf
-*.yml   text eol=lf
-*.toml  text eol=lf
+# Binary artifacts
+*.wasm binary
+*.beam binary
+*.so binary
+*.dylib binary
+*.dll binary
+*.exe binary
+*.png binary
+*.ico binary
+*.icns binary
+*.ctp binary
 
-# Config
-.gitignore     text eol=lf
-.gitattributes text eol=lf
-justfile       text eol=lf
-Makefile       text eol=lf
-Containerfile  text eol=lf
-
-# Scripts
-*.sh   text eol=lf
-
-# Binary
-*.png   binary
-*.jpg   binary
-*.gif   binary
-*.pdf   binary
-*.woff2 binary
-*.zip   binary
-*.gz    binary
-
-# Lock files
-Cargo.lock  text eol=lf -diff
-flake.lock  text eol=lf -diff
+# Generated files
+*.res.js linguist-generated=true
+*.resi.js linguist-generated=true
+lib/bs/** linguist-generated=true
+deno.lock linguist-generated=true
+package-lock.json linguist-generated=true
+src-tauri/Cargo.lock linguist-generated=true
+**/mix.lock linguist-generated=true

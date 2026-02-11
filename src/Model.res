@@ -87,14 +87,23 @@ type eventChainSummary = {
   robustnessScore: float,
 }
 
+type eventChainTimeline = {
+  durationMs: float,
+  events: int,
+}
+
 type paneWState = {
   content: string,
   topologyView: bool, // Binary Star diagram mode
   lastValidatedOutput: string,
   eventChain: array<eventChainEvent>,
   eventChainSummary: option<eventChainSummary>,
+  eventChainTimeline: option<eventChainTimeline>,
   eventChainInput: string,
   eventChainError: option<string>,
+  panicAttackerMode: string, // unknown | full | fallback | unavailable
+  panicAttackerBinary: option<string>,
+  panicAttackerStatusDetail: option<string>,
 }
 
 /// Vexometer state
@@ -175,8 +184,12 @@ let init = (): model => {
     lastValidatedOutput: "",
     eventChain: [],
     eventChainSummary: None,
+    eventChainTimeline: None,
     eventChainInput: "",
     eventChainError: None,
+    panicAttackerMode: "unknown",
+    panicAttackerBinary: None,
+    panicAttackerStatusDetail: None,
   },
   antiCrash: {
     enabled: true,
