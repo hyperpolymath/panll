@@ -17,6 +17,8 @@
   "imports": {
     "@std/": "jsr:@std/",
     "@tauri-apps/api": "npm:@tauri-apps/api@^2.10.0",
+    "@tauri-apps/plugin-dialog": "npm:@tauri-apps/plugin-dialog",
+    "@tauri-apps/plugin-fs": "npm:@tauri-apps/plugin-fs",
     "rescript/": "npm:/rescript@11.1.4/",
     "@rescript/core/": "npm:/@rescript/core@1.6.1/"
   },

@@ -140,6 +140,16 @@ let updatePaneW = (model: model, msg: paneWMsg): model => {
     | Ok(contents) => applyEventChainContents(paneW, contents)
     | Error(err) => {...paneW, eventChainError: Some(err)}
     }
+  | SecurityTimelineFileLoaded(result) =>
+    switch result {
+    | Ok(path) => {...paneW, securityTimeline: path}
+    | Error(err) => {...paneW, securityError: Some(err)}
+    }
+  | SecurityAmbushResult(result) =>
+    switch result {
+    | Ok(contents) => applyEventChainContents(paneW, contents)
+    | Error(err) => {...paneW, securityError: Some(err)}
+    }
   | ClearEventChain => {
       ...paneW,
       eventChain: [],
@@ -260,7 +270,30 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | Orbital(m) => updateOrbital(model, m)
   | View(m) => updateView(model, m)
   | Feedback(m) => updateFeedback(model, m)
-  | AntiCrash(_) => model // Handled by AntiCrash module
+  | AntiCrash(m) =>
+    switch m {
+    | ValidateToken(_) => model // Command generated below
+    | ValidationPassed(token) => {
+        ...model,
+        paneN: {
+          ...model.paneN,
+          tokens: Array.concat(model.paneN.tokens, [{...token, validated: true}]),
+        },
+        antiCrash: {...model.antiCrash, halted: false},
+      }
+    | ValidationFailed(_token, reason) => {
+        ...model,
+        antiCrash: {
+          ...model.antiCrash,
+          violations: Array.concat(model.antiCrash.violations, [LogicContradiction(reason)]),
+          halted: model.antiCrash.strictMode,
+        },
+      }
+    | RequestOperatorIntervention(_) => {
+        ...model,
+        antiCrash: {...model.antiCrash, halted: true},
+      }
+    }
   | SaveState => {
       // Save current state to storage
       Storage.save(model)
@@ -311,5 +344,68 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
     Storage.save(finalModel)
   }
 
-  (finalModel, Tea_Cmd.none)
+  // Generate commands for backend-tracked events
+  let cmd = switch msg {
+  // Anti-Crash: validate token via backend
+  | AntiCrash(ValidateToken(token)) => {
+      let constraintExprs = Array.map(
+        Array.filter(finalModel.paneL.constraints, c => c.active),
+        c => c.expression,
+      )
+      TauriCmd.validateInference(token.content, constraintExprs, result =>
+        switch result {
+        | Ok(valid) =>
+          valid
+            ? AntiCrash(ValidationPassed(token))
+            : AntiCrash(ValidationFailed(token, "Backend validation rejected token"))
+        | Error(err) => AntiCrash(ValidationFailed(token, err))
+        }
+      )
+    }
+  // Vexometer: record events and request index
+  | Vexometer(RecordCancellation) =>
+    TauriCmd.recordVexationEvent("cancellation", _result => NoOp)
+  | Vexometer(RecordCorrection) =>
+    TauriCmd.recordVexationEvent("correction", _result => NoOp)
+  | Vexometer(RequestVexationIndex) =>
+    TauriCmd.getVexationIndex(idx => Vexometer(UpdateVexationIndex(idx)))
+  // Feedback: submit report to backend
+  | Feedback(SubmitFeedback(_)) =>
+    TauriCmd.submitFeedback(
+      finalModel.paneL.editorContent,
+      finalModel.paneN.monologue,
+      finalModel.paneW.content,
+      Option.getOr(finalModel.feedbackReportType, "FeatureRequest"),
+      result => Feedback(FeedbackSubmissionResult(result)),
+    )
+  // PaneW: file import and panic-attacker integration
+  | PaneW(ImportEventChainFile) =>
+    TauriCmd.openEventChainFile(result => PaneW(EventChainFileLoaded(result)))
+  | PaneW(ImportPanicAttackerReportFile) =>
+    TauriCmd.openPanicAttackerReportFile(result => PaneW(PanicAttackerReportPathLoaded(result)))
+  | PaneW(PanicAttackerReportPathLoaded(Ok(path))) =>
+    TauriCmd.importPanicAttackerReport(path, result => PaneW(PanicAttackerImportLoaded(result)))
+  | PaneW(ImportLatestPanicAttacker) =>
+    TauriCmd.importLatestPanicAttackerReport(result => PaneW(PanicAttackerImportLoaded(result)))
+  | PaneW(CheckPanicAttackerCapability) =>
+    TauriCmd.getPanicAttackerCapability(result => PaneW(PanicAttackerCapabilityLoaded(result)))
+  // PaneW: security tools
+  | PaneW(LoadSecurityTimelineFile) =>
+    TauriCmd.openSecurityTimelineFile(result => PaneW(SecurityTimelineFileLoaded(result)))
+  | PaneW(LaunchSecurityAmbush) =>
+    TauriCmd.runPanicAttackAmbush(
+      finalModel.paneW.securityTarget,
+      Some(finalModel.paneW.securityTimeline)->Option.flatMap(t => t === "" ? None : Some(t)),
+      Some(finalModel.paneW.securityAxes)->Option.flatMap(a => a === "" ? None : Some(a)),
+      finalModel.paneW.securityIntensity,
+      switch Int.fromString(finalModel.paneW.securityDuration) {
+      | Some(d) => d
+      | None => 30
+      },
+      result => PaneW(SecurityAmbushResult(result)),
+    )
+  | _ => Tea_Cmd.none
+  }
+
+  (finalModel, cmd)
 }

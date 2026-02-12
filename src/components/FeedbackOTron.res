@@ -6,7 +6,6 @@
 /// Captures context-aware reports on Agent performance and
 /// enables crowdsourced constraint suggestions.
 
-open Model
 open Msg
 open Tea.Html
 

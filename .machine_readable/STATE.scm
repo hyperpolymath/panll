@@ -19,10 +19,10 @@
 
   (current-position
     (milestone "v0.1.0 - Complete TEA Implementation")
-    (completion-percentage 85)
+    (completion-percentage 90)
     (phase "development")
-    (current-focus "Opus audit fixes: OrbitalSync/Contractiles wired, Storage fixed, all 81 JS tests passing")
-    (status-summary "85% complete - Core systems wired and tested, 81 JS tests + 12 Rust tests, Storage persistence working")
+    (current-focus "Full Tauri command integration, eventChain persistence, AntiCrash model updates, 97 JS tests passing")
+    (status-summary "90% complete - All Tauri commands wired, eventChain persisted, AntiCrash active, 97 JS tests + 12 Rust tests")
 
     (work-completed
       ("Custom TEA implementation with full Model-Update-View cycle")
@@ -220,6 +220,31 @@
        ("Rewrote all 4 failing test files (anti_crash, contractiles, update, storage)")
        ("Key insight: ReScript zero-arg variants compile to STRINGS, not objects")
        ("Result: 81 JS tests passing (was 67/81), 0 failures, 104ms build")))
+
+    ((session-id "2026-02-12-sonnet-integration")
+     (date "2026-02-12")
+     (agent "Claude Sonnet 4.5")
+     (focus "Quick wins + full Tauri integration, eventChain persistence, test coverage")
+     (outcomes
+       ("Fixed 7 Tea_Render.res warnings (unused rec, unused var, addEventListener return)")
+       ("Removed unused open Model in FeedbackOTron.res")
+       ("Fixed TauriCmd.res: @tauri-apps/api/dialog → @tauri-apps/plugin-dialog (Tauri v2)")
+       ("Fixed TauriCmd.res: @tauri-apps/api/fs → @tauri-apps/plugin-fs (Tauri v2)")
+       ("Wired all Tauri commands into update loop cmd switch:")
+       ("  - AntiCrash(ValidateToken) → TauriCmd.validateInference")
+       ("  - Vexometer(RequestVexationIndex) → TauriCmd.getVexationIndex")
+       ("  - PaneW(ImportEventChainFile) → TauriCmd.openEventChainFile")
+       ("  - PaneW(ImportPanicAttackerReportFile) → TauriCmd.openPanicAttackerReportFile")
+       ("  - PaneW(PanicAttackerReportPathLoaded) → TauriCmd.importPanicAttackerReport (chain)")
+       ("  - PaneW(ImportLatestPanicAttacker) → TauriCmd.importLatestPanicAttackerReport")
+       ("  - PaneW(CheckPanicAttackerCapability) → TauriCmd.getPanicAttackerCapability")
+       ("  - PaneW(LoadSecurityTimelineFile) → TauriCmd.openSecurityTimelineFile")
+       ("  - PaneW(LaunchSecurityAmbush) → TauriCmd.runPanicAttackAmbush")
+       ("Added AntiCrash model updates: ValidationPassed adds token, ValidationFailed records violation")
+       ("Added SecurityTimelineFileLoaded + SecurityAmbushResult handlers in updatePaneW")
+       ("Added eventChain/eventChainSummary/eventChainTimeline to persistedState + Storage")
+       ("Added 16 new tests: 5 eventChain persistence + 11 update integration")
+       ("Result: 97 JS tests passing (was 81), 0 failures"))))
 
     ((session-id "2026-02-12-opus-audit")
      (date "2026-02-12")

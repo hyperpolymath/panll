@@ -9,12 +9,12 @@
 external invoke: (string, 'a) => promise<'b> = "invoke"
 
 module Dialog = {
-  @module("@tauri-apps/api/dialog")
+  @module("@tauri-apps/plugin-dialog")
   external openDialog: Js.Json.t => promise<Js.Nullable.t<Js.Json.t>> = "open"
 }
 
 module Fs = {
-  @module("@tauri-apps/api/fs")
+  @module("@tauri-apps/plugin-fs")
   external readTextFile: string => promise<string> = "readTextFile"
 }
 

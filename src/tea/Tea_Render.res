@@ -67,8 +67,7 @@ let rec createElement = (vdom: t<'msg>, state: renderState<'msg>): domElement =>
           let eventHandler = (_: Dom.event) => {
             state.dispatch(handler())
           }
-          el["addEventListener"](name, eventHandler)
-          // Track listener for cleanup
+          el["addEventListener"](name, eventHandler)->ignore
           Array.push(state.listeners, {
             element: el,
             eventName: name,
@@ -76,12 +75,11 @@ let rec createElement = (vdom: t<'msg>, state: renderState<'msg>): domElement =>
           })->ignore
         }
       | EventWithValue(name, handler) => {
-          let eventHandler = (e: Dom.event) => {
-            let value: string = %raw(`e.target.value || ""`)
+          let eventHandler = (_e: Dom.event) => {
+            let value: string = %raw(`_e.target.value || ""`)
             state.dispatch(handler(value))
           }
-          el["addEventListener"](name, eventHandler)
-          // Track listener for cleanup
+          el["addEventListener"](name, eventHandler)->ignore
           Array.push(state.listeners, {
             element: el,
             eventName: name,
@@ -155,7 +153,7 @@ and childPatch<'msg> = {
 }
 
 /// Compare two attribute arrays
-let rec attributesEqual = (a1: array<attribute<'msg>>, a2: array<attribute<'msg>>): bool => {
+let attributesEqual = (a1: array<attribute<'msg>>, a2: array<attribute<'msg>>): bool => {
   if Array.length(a1) !== Array.length(a2) {
     false
   } else {
@@ -245,7 +243,7 @@ let rec applyPatch = (domNode: domElement, patch: patch<'msg>, state: renderStat
             let eventHandler = (_: Dom.event) => {
               state.dispatch(handler())
             }
-            el["addEventListener"](name, eventHandler)
+            el["addEventListener"](name, eventHandler)->ignore
             Array.push(state.listeners, {
               element: domNode,
               eventName: name,
@@ -253,11 +251,11 @@ let rec applyPatch = (domNode: domElement, patch: patch<'msg>, state: renderStat
             })->ignore
           }
         | EventWithValue(name, handler) => {
-            let eventHandler = (e: Dom.event) => {
-              let value: string = %raw(`e.target.value || ""`)
+            let eventHandler = (_e: Dom.event) => {
+              let value: string = %raw(`_e.target.value || ""`)
               state.dispatch(handler(value))
             }
-            el["addEventListener"](name, eventHandler)
+            el["addEventListener"](name, eventHandler)->ignore
             Array.push(state.listeners, {
               element: domNode,
               eventName: name,

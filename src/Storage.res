@@ -18,6 +18,11 @@ type persistedState = {
   neuralTokens: array<neuralToken>,
   worldContent: string,
 
+  // Event chain data (Priority 1 - imported analysis results)
+  eventChain: array<eventChainEvent>,
+  eventChainSummary: option<eventChainSummary>,
+  eventChainTimeline: option<eventChainTimeline>,
+
   // User preferences (Priority 2)
   viewMode: viewMode,
   paneLVisible: bool,
@@ -94,6 +99,9 @@ let extractPersistedState = (model: model): persistedState => {
   editorContent: model.paneL.editorContent,
   neuralTokens: model.paneN.tokens,
   worldContent: model.paneW.content,
+  eventChain: model.paneW.eventChain,
+  eventChainSummary: model.paneW.eventChainSummary,
+  eventChainTimeline: model.paneW.eventChainTimeline,
   viewMode: model.viewMode,
   paneLVisible: model.paneLVisible,
   paneNVisible: model.paneNVisible,
@@ -121,11 +129,54 @@ let toJsonObject = (state: persistedState): JSON.t => {
     d->Dict.set("validated", JSON.Encode.bool(t.validated))
     JSON.Encode.object(d)
   })
+  let eventChainEvents = state.eventChain->Array.map(e => {
+    let d = Dict.make()
+    d->Dict.set("id", JSON.Encode.string(e.id))
+    d->Dict.set("axis", JSON.Encode.string(e.axis))
+    switch e.startMs {
+    | Some(ms) => d->Dict.set("startMs", JSON.Encode.float(ms))
+    | None => ()
+    }
+    d->Dict.set("durationMs", JSON.Encode.float(e.durationMs))
+    d->Dict.set("intensity", JSON.Encode.string(e.intensity))
+    d->Dict.set("status", JSON.Encode.string(e.status))
+    switch e.peakMemory {
+    | Some(mem) => d->Dict.set("peakMemory", JSON.Encode.float(mem))
+    | None => ()
+    }
+    switch e.notes {
+    | Some(n) => d->Dict.set("notes", JSON.Encode.string(n))
+    | None => ()
+    }
+    JSON.Encode.object(d)
+  })
   let root = Dict.make()
   root->Dict.set("constraints", JSON.Encode.array(constraints))
   root->Dict.set("editorContent", JSON.Encode.string(state.editorContent))
   root->Dict.set("neuralTokens", JSON.Encode.array(tokens))
   root->Dict.set("worldContent", JSON.Encode.string(state.worldContent))
+  root->Dict.set("eventChain", JSON.Encode.array(eventChainEvents))
+  switch state.eventChainSummary {
+  | Some(summary) => {
+      let d = Dict.make()
+      d->Dict.set("program", JSON.Encode.string(summary.program))
+      d->Dict.set("weakPoints", JSON.Encode.int(summary.weakPoints))
+      d->Dict.set("criticalWeakPoints", JSON.Encode.int(summary.criticalWeakPoints))
+      d->Dict.set("totalCrashes", JSON.Encode.int(summary.totalCrashes))
+      d->Dict.set("robustnessScore", JSON.Encode.float(summary.robustnessScore))
+      root->Dict.set("eventChainSummary", JSON.Encode.object(d))
+    }
+  | None => ()
+  }
+  switch state.eventChainTimeline {
+  | Some(timeline) => {
+      let d = Dict.make()
+      d->Dict.set("durationMs", JSON.Encode.float(timeline.durationMs))
+      d->Dict.set("events", JSON.Encode.int(timeline.events))
+      root->Dict.set("eventChainTimeline", JSON.Encode.object(d))
+    }
+  | None => ()
+  }
   root->Dict.set("viewMode", JSON.Encode.string(viewModeToString(state.viewMode)))
   root->Dict.set("paneLVisible", JSON.Encode.bool(state.paneLVisible))
   root->Dict.set("paneNVisible", JSON.Encode.bool(state.paneNVisible))
@@ -249,6 +300,67 @@ let load = (): option<model> => {
         | None => []
         }
 
+        // Parse event chain events
+        let eventChain = switch getArray(parsed, "eventChain") {
+        | Some(arr) =>
+          arr->Array.map(item => {
+            {
+              id: getString(item, "id", ""),
+              axis: getString(item, "axis", ""),
+              startMs: switch getField(item, "startMs") {
+              | Some(v) => v->JSON.Decode.float
+              | None => None
+              },
+              durationMs: getFloat(item, "durationMs", 0.0),
+              intensity: getString(item, "intensity", ""),
+              status: getString(item, "status", ""),
+              peakMemory: switch getField(item, "peakMemory") {
+              | Some(v) => v->JSON.Decode.float
+              | None => None
+              },
+              notes: switch getField(item, "notes") {
+              | Some(v) => v->JSON.Decode.string
+              | None => None
+              },
+            }
+          })
+        | None => []
+        }
+
+        // Parse event chain summary
+        let getInt = (obj, field, default) => {
+          switch getField(obj, field) {
+          | Some(value) =>
+            switch value->JSON.Decode.float {
+            | Some(f) => Float.toInt(f)
+            | None => default
+            }
+          | None => default
+          }
+        }
+
+        let eventChainSummary = switch getField(parsed, "eventChainSummary") {
+        | Some(summaryObj) =>
+          Some({
+            program: getString(summaryObj, "program", ""),
+            weakPoints: getInt(summaryObj, "weakPoints", 0),
+            criticalWeakPoints: getInt(summaryObj, "criticalWeakPoints", 0),
+            totalCrashes: getInt(summaryObj, "totalCrashes", 0),
+            robustnessScore: getFloat(summaryObj, "robustnessScore", 0.0),
+          })
+        | None => None
+        }
+
+        // Parse event chain timeline
+        let eventChainTimeline = switch getField(parsed, "eventChainTimeline") {
+        | Some(timelineObj) =>
+          Some({
+            durationMs: getFloat(timelineObj, "durationMs", 0.0),
+            events: getInt(timelineObj, "events", 0),
+          })
+        | None => None
+        }
+
         // Create model with loaded state
         let baseModel = init()
         let loadedModel: model = {
@@ -265,6 +377,9 @@ let load = (): option<model> => {
           paneW: {
             ...baseModel.paneW,
             content: getString(parsed, "worldContent", ""),
+            eventChain: eventChain,
+            eventChainSummary: eventChainSummary,
+            eventChainTimeline: eventChainTimeline,
           },
           viewMode: stringToViewMode(getString(parsed, "viewMode", "DarkStart")),
           paneLVisible: getBool(parsed, "paneLVisible", true),
