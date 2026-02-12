@@ -53,6 +53,8 @@ let renderPaneN = (paneN: paneNState, visible: bool): Tea_Vdom.t<msg> => {
 }
 
 /// Render Pane-W (World/Barycentre) - using full component
+/// This pane draws the central security panel, event chain importer, and
+/// panic-attacker toolset, ensuring the time/space study is visible when dialogs open.
 let renderPaneW = (paneW: paneWState, orbital: orbitalState, visible: bool): Tea_Vdom.t<msg> => {
   if !visible {
     noNode

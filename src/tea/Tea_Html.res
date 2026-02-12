@@ -60,6 +60,13 @@ module Attrs = {
   let checked = Tea_Vdom.checked
   let type_ = Tea_Vdom.type_
   let name = Tea_Vdom.name
+
+  // ARIA accessibility
+  let ariaLabel = Tea_Vdom.ariaLabel
+  let ariaLive = Tea_Vdom.ariaLive
+  let ariaExpanded = Tea_Vdom.ariaExpanded
+  let ariaHidden = Tea_Vdom.ariaHidden
+  let role = Tea_Vdom.role
 }
 
 /// Event helpers module

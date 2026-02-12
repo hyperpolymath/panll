@@ -92,7 +92,7 @@ let renderFeedbackForm = (
     list{Attrs.class_("fixed inset-0 bg-black/80 flex items-center justify-center z-50")},
     list{
       div(
-        list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg w-[500px] max-h-[80vh] overflow-auto")},
+        list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg w-[500px] max-h-[80vh] overflow-auto"), Attrs.role("dialog"), Attrs.ariaLabel("Feedback Form")},
         list{
           // Header
           div(
@@ -130,7 +130,7 @@ let renderFeedbackForm = (
                 list{text("REPORT TYPE")},
               ),
               div(
-                list{Attrs.class_("flex flex-wrap gap-2")},
+                list{Attrs.class_("flex flex-wrap gap-2"), Attrs.role("radiogroup")},
                 reportTypes
                 ->Array.map(rt => renderReportTypeButton(rt, selectedType))
                 ->List.fromArray,

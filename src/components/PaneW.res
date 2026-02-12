@@ -10,6 +10,315 @@ open Model
 open Msg
 open Tea.Html
 
+let renderSecurityTools = (state: paneWState): Tea_Vdom.t<msg> => {
+  let tools = [
+    ("panic-attacker", "panic-attacker"),
+    ("trace-agent", "trace-agent (future)"),
+  ]
+
+  let toolButtons =
+    tools
+    ->Array.map(((toolId, label)) =>
+      button(
+        list{
+          Attrs.class_("w-full text-left px-2 py-1 text-xs text-gray-300 hover:bg-gray-800 rounded"),
+          Events.onClick(PaneW(OpenSecurityDialog(toolId))),
+        },
+        list{text(label)},
+      ),
+    )
+    ->List.fromArray
+
+  let submenu =
+    if !state.securityMenuExpanded {
+      text("")
+    } else {
+      div(
+        list{Attrs.class_("mt-2 bg-gray-900/80 border border-gray-800 rounded p-2 space-y-1"), Attrs.ariaExpanded(state.securityMenuExpanded)},
+        toolButtons,
+      )
+    }
+
+  div(
+    list{Attrs.class_("mt-4 space-y-1")},
+    list{
+      div(
+        list{Attrs.class_("flex items-center gap-2")},
+        list{
+          div(
+            list{Attrs.class_("text-xs text-gray-400 tracking-widest uppercase")},
+            list{text("Security Tools")},
+          ),
+          button(
+            list{
+              Attrs.class_("px-2 py-1 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
+              Events.onClick(PaneW(ToggleSecurityTools)),
+            },
+            list{text(if state.securityMenuExpanded { "Hide" } else { "Show" })},
+          ),
+        },
+      ),
+      submenu,
+    },
+  )
+}
+
+let renderSecurityDialog = (state: paneWState): Tea_Vdom.t<msg> => {
+  if !state.securityDialogOpen {
+    text("")
+  } else {
+    let statusView = switch state.securityStatus {
+    | Some(msg) =>
+      div(
+        list{Attrs.class_("text-xs text-emerald-300")},
+        list{text(msg)},
+      )
+    | None => text("")
+    }
+
+    let errorView = switch state.securityError {
+    | Some(err) =>
+      div(
+        list{Attrs.class_("text-xs text-red-400")},
+        list{text(err)},
+      )
+    | None => text("")
+    }
+
+    let toolName = switch state.securityDialogTool {
+    | Some(tool) => tool
+    | None => "security tool"
+    }
+
+    div(
+      list{
+        Attrs.class_(
+          "fixed inset-0 bg-black/60 z-40 flex items-start justify-center p-6",
+        ),
+      },
+      list{
+        div(
+          list{
+            Attrs.class_("relative w-full max-w-3xl bg-gray-950 border border-gray-800 rounded-lg shadow-2xl p-6 space-y-4"),
+            Attrs.role("dialog"),
+          },
+          list{
+            div(
+              list{Attrs.class_("flex items-center justify-between")},
+              list{
+                div(
+                  list{Attrs.class_("text-xs text-gray-400 uppercase tracking-widest")},
+                  list{text("Security Menu · " ++ toolName)},
+                ),
+                button(
+                  list{
+                    Attrs.class_("text-xs text-gray-300 px-2 py-1 border border-gray-700 rounded"),
+                    Events.onClick(PaneW(CloseSecurityDialog)),
+                  },
+                  list{text("Close")},
+                ),
+              },
+            ),
+            statusView,
+            div(
+              list{Attrs.class_("space-y-1")},
+              list{
+                div(
+                  list{Attrs.class_("text-[11px] text-gray-400")},
+                  list{text("Target program / binary")},
+                ),
+                input(
+                  list{
+                    Attrs.class_("w-full text-xs bg-gray-950 border border-gray-800 rounded px-2 py-1 text-gray-300"),
+                    Attrs.placeholder("/path/to/program"),
+                    Attrs.value(state.securityTarget),
+                    Events.onInput(value => PaneW(SetSecurityTarget(value))),
+                  },
+                  list{},
+                ),
+              },
+            ),
+            div(
+              list{Attrs.class_("space-y-1")},
+              list{
+                div(
+                  list{Attrs.class_("text-[11px] text-gray-400")},
+                  list{text("Timeline file (JSON/YAML)")},
+                ),
+                div(
+                  list{Attrs.class_("flex gap-2")},
+                  list{
+                    input(
+                      list{
+                        Attrs.class_("flex-1 text-xs bg-gray-950 border border-gray-800 rounded px-2 py-1 text-gray-300"),
+                        Attrs.placeholder("timeline.yaml"),
+                        Attrs.value(state.securityTimeline),
+                        Events.onInput(value => PaneW(SetSecurityTimeline(value))),
+                      },
+                      list{},
+                    ),
+                    button(
+                      list{
+                        Attrs.class_(
+                          "px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
+                        ),
+                        Events.onClick(PaneW(LoadSecurityTimelineFile)),
+                      },
+                      list{text("Browse")},
+                    ),
+                  },
+                ),
+              },
+            ),
+            div(
+              list{Attrs.class_("space-y-1")},
+              list{
+                div(
+                  list{Attrs.class_("text-[11px] text-gray-400")},
+                  list{text("Axes")},
+                ),
+                input(
+                  list{
+                    Attrs.class_("w-full text-xs bg-gray-950 border border-gray-800 rounded px-2 py-1 text-gray-300"),
+                    Attrs.placeholder("cpu,memory,concurrency"),
+                    Attrs.value(state.securityAxes),
+                    Events.onInput(value => PaneW(SetSecurityAxes(value))),
+                  },
+                  list{},
+                ),
+              },
+            ),
+            div(
+              list{Attrs.class_("flex gap-2")},
+              list{
+                div(
+                  list{Attrs.class_("flex-1 space-y-1")},
+                  list{
+                    div(
+                      list{Attrs.class_("text-[11px] text-gray-400")},
+                      list{text("Intensity")},
+                    ),
+                    input(
+                      list{
+                        Attrs.class_("w-full text-xs bg-gray-950 border border-gray-800 rounded px-2 py-1 text-gray-300"),
+                        Attrs.placeholder("medium"),
+                        Attrs.value(state.securityIntensity),
+                        Events.onInput(value => PaneW(SetSecurityIntensity(value))),
+                      },
+                      list{},
+                    ),
+                  },
+                ),
+                div(
+                  list{Attrs.class_("flex-1 space-y-1")},
+                  list{
+                    div(
+                      list{Attrs.class_("text-[11px] text-gray-400")},
+                      list{text("Duration (s)")},
+                    ),
+                    input(
+                      list{
+                        Attrs.class_("w-full text-xs bg-gray-950 border border-gray-800 rounded px-2 py-1 text-gray-300"),
+                        Attrs.placeholder("30"),
+                        Attrs.value(state.securityDuration),
+                        Events.onInput(value => PaneW(SetSecurityDuration(value))),
+                      },
+                      list{},
+                    ),
+                  },
+                ),
+              },
+            ),
+            div(
+              list{Attrs.class_("flex items-center gap-3")},
+              list{
+                button(
+                  list{
+                    Attrs.class_(
+                      "px-4 py-2 text-xs bg-emerald-500 hover:bg-emerald-400 rounded text-gray-900 font-semibold",
+                    ),
+                    Events.onClick(PaneW(LaunchSecurityAmbush)),
+                  },
+                  list{text("Launch Ambush")},
+                ),
+                button(
+                  list{
+                    Attrs.class_(
+                      "px-4 py-2 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
+                    ),
+                    Events.onClick(PaneW(ClearEventChain)),
+                  },
+                  list{text("Reset")},
+                ),
+                button(
+                  list{
+                    Attrs.class_(
+                      "px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded text-gray-200",
+                    ),
+                    Events.onClick(PaneW(ToggleSecurityStudyView)),
+                  },
+                  list{text(if state.securityViewActive { "Hide Time/Space View" } else { "Show Time/Space View" })},
+                ),
+              },
+            ),
+            errorView,
+          },
+        ),
+      },
+    )
+  }
+}
+
+let renderSecurityStudyView = (state: paneWState): Tea_Vdom.t<msg> => {
+  if !state.securityViewActive {
+    text("")
+  } else {
+    let timelineInfo = switch state.eventChainTimeline {
+    | Some(timeline) =>
+      "Timeline: "
+      ++ Int.toString(timeline.events)
+      ++ " events · "
+      ++ Float.toString(timeline.durationMs)
+      ++ "ms"
+    | None => "Timeline metadata unavailable"
+    }
+
+    let eventRows =
+      state.eventChain
+      ->Array.map(ev => {
+          div(
+            list{Attrs.class_("text-xs text-gray-300 flex justify-between border-b border-gray-800/60 py-1")},
+            list{
+              div(list{}, list{text(ev.id)}),
+              div(list{}, list{text(ev.axis ++ " · " ++ ev.status)}),
+              div(list{}, list{text(Float.toString(ev.durationMs) ++ "ms")}),
+            },
+          )
+        })
+      ->List.fromArray
+
+    div(
+      list{
+        Attrs.class_("mt-4 p-3 border border-emerald-500/20 rounded bg-emerald-900/30 space-y-2"),
+      },
+      list{
+        div(
+          list{Attrs.class_("text-xs font-semibold text-emerald-300")},
+          list{text("Time/Space Study")},
+        ),
+        div(
+          list{Attrs.class_("text-[11px] text-gray-400")},
+          list{text(timelineInfo)},
+        ),
+        div(
+          list{Attrs.class_("max-h-32 overflow-y-auto")},
+          eventRows,
+        ),
+      },
+    )
+  }
+}
+
 let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
   let eventCount = Array.length(state.eventChain)
   let summaryView = switch state.eventChainSummary {
@@ -184,6 +493,7 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
+      renderSecurityTools(state),
       timelineView,
       div(
         list{Attrs.class_("space-y-1")},
@@ -196,8 +506,8 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
           capabilityDetailView,
         },
       ),
-      errorView,
-      textarea(
+  errorView,
+  textarea(
         list{
           Attrs.class_(
             "w-full h-24 bg-gray-950 border border-gray-800 rounded p-2 font-mono text-[11px] text-gray-400 resize-none focus:border-gray-600 focus:outline-none",
@@ -212,11 +522,11 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("space-y-1")},
         eventRows,
       ),
+      renderSecurityDialog(state),
     },
   )
 }
 
-/// Render the Binary Star topology diagram
 let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
   let stabilityPercent = Int.toString(Int.fromFloat(orbital.stability *. 100.0))
   let divergencePercent = Int.toString(Int.fromFloat(orbital.divergenceLevel *. 100.0))
@@ -419,6 +729,8 @@ let renderContentView = (state: paneWState): Tea_Vdom.t<msg> => {
       ),
 
       renderEventChainPanel(state),
+      renderSecurityStudyView(state),
+      renderSecurityDialog(state),
 
       // Toggle button
       div(
@@ -442,7 +754,7 @@ let renderContentView = (state: paneWState): Tea_Vdom.t<msg> => {
 /// Main Pane-W view
 let view = (state: paneWState, orbital: orbitalState): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900")},
+    list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900"), Attrs.role("region"), Attrs.ariaLabel("Task Barycentre Panel")},
     list{
       // Header
       div(

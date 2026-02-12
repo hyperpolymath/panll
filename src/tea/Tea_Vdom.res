@@ -40,6 +40,13 @@ let checked = (b: bool): attribute<'msg> => Property("checked", b ? "true" : "fa
 let type_ = (t: string): attribute<'msg> => Property("type", t)
 let name = (n: string): attribute<'msg> => Property("name", n)
 
+/// ARIA accessibility attributes
+let ariaLabel = (label: string): attribute<'msg> => Property("aria-label", label)
+let ariaLive = (mode: string): attribute<'msg> => Property("aria-live", mode)
+let ariaExpanded = (b: bool): attribute<'msg> => Property("aria-expanded", b ? "true" : "false")
+let ariaHidden = (b: bool): attribute<'msg> => Property("aria-hidden", b ? "true" : "false")
+let role = (r: string): attribute<'msg> => Property("role", r)
+
 /// Event handlers
 let onClick = (msg: 'msg): attribute<'msg> => Event("click", () => msg)
 let onInput = (handler: string => 'msg): attribute<'msg> => EventWithValue("input", handler)

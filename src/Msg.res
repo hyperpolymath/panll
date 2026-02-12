@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Messages - The communication protocol for TEA updates.
+/// PanLL Messages - the communication protocol for TEA updates.
 ///
-/// All state changes flow through these messages, ensuring the
-/// deterministic "Gravitational Synchronicity" of the Binary Star.
+/// Every user action, backend response, and timer pulse is encoded here so
+/// the Elm-style update loop can deterministically evolve the Binary Star
+/// state machine. Annotating as we grow ensures we keep control of the message
+/// surface as new features arrive.
 
 open Model
 
@@ -24,7 +26,8 @@ type paneNMsg =
   | UpdateMonologue(string)
   | UpdateAgency(agencyState)
 
-/// Messages for Pane-W (World/Barycentre)
+/// Messages for Pane-W (World/Barycentre) – the security and event chain pane that
+/// aggregates panic-attacker data and renders the central canvas.
 type paneWMsg =
   | UpdateContent(string)
   | ToggleTopologyView
@@ -39,6 +42,20 @@ type paneWMsg =
   | PanicAttackerReportPathLoaded(result<string, string>)
   | PanicAttackerImportLoaded(result<string, string>)
   | PanicAttackerCapabilityLoaded(result<string, string>)
+  /// Security menu interactions and panic-attacker command lifecycle
+  | ToggleSecurityTools
+  | OpenSecurityDialog(string)
+  | CloseSecurityDialog
+  | ToggleSecurityStudyView
+  | SetSecurityTarget(string)
+  | SetSecurityTimeline(string)
+  | SetSecurityAxes(string)
+  | SetSecurityIntensity(string)
+  | SetSecurityDuration(string)
+  | LoadSecurityTimelineFile
+  | SecurityTimelineFileLoaded(result<string, string>)
+  | LaunchSecurityAmbush
+  | SecurityAmbushResult(result<string, string>)
   | ClearEventChain
 
 /// Vexometer messages

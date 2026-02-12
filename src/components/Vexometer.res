@@ -74,7 +74,7 @@ let renderExpandedView = (state: vexometerState): Tea_Vdom.t<msg> => {
   let statusText = getStatusText(state.index, state.antiInflammatoryActive, state.inertiaDetected)
 
   div(
-    list{Attrs.class_("fixed bottom-4 right-4 w-64 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl")},
+    list{Attrs.class_("fixed bottom-4 right-4 w-64 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl"), Attrs.role("meter"), Attrs.ariaLabel("Vexation Index"), Attrs.ariaLive("polite")},
     list{
       // Header
       div(

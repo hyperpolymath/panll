@@ -6,9 +6,9 @@
 :icons: font
 
 image:https://img.shields.io/badge/version-v0.1.0--alpha-blue[Version]
-image:https://img.shields.io/badge/completion-95%25-brightgreen[Completion]
+image:https://img.shields.io/badge/completion-80%25-green[Completion]
 image:https://img.shields.io/badge/License-PMPL--1.0-indigo.svg[PMPL-1.0-or-later,link="LICENSE"]
-image:https://img.shields.io/badge/Tests-33%20passing%20(719ms)-brightgreen[Tests]
+image:https://img.shields.io/badge/Tests-36%20passing-brightgreen[Tests]
 image:https://img.shields.io/badge/Coverage-87--91%25-green[Coverage]
 image:https://img.shields.io/badge/RSR-compliant-blue[RSR Compliant]
 
@@ -143,16 +143,18 @@ PMPL-1.0-or-later
 
 == Status
 
-**v0.1.0-alpha** (95% complete)
+**v0.1.0-alpha** (80% complete)
 
 ✅ Complete TEA implementation (Model-Update-View)
 ✅ All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)
 ✅ Tauri 2.0 backend with working commands
-✅ 33 tests passing in 719ms (Deno.test)
+✅ 36 tests passing (Deno.test)
 ✅ npm→Deno migration complete
 ✅ Full ReScript compilation (180ms)
 ✅ Anti-Crash token gating + backend validation hooks
 ✅ Event-chain import from panic-attack (paste + file)
 ✅ Feedback report types wired to backend
+✅ State persistence (localStorage)
+✅ BEAM API scaffold (HTTP/GraphQL/gRPC)
 
 **Next:** v0.1.0 release preparation

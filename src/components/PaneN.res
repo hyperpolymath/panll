@@ -59,7 +59,7 @@ let renderAgencyMonitor = (agency: agencyState): Tea_Vdom.t<msg> => {
             list{text("Autonomy:")},
           ),
           div(
-            list{Attrs.class_("flex-1 h-2 bg-gray-700 rounded overflow-hidden")},
+            list{Attrs.class_("flex-1 h-2 bg-gray-700 rounded overflow-hidden"), Attrs.role("progressbar")},
             list{
               div(
                 list{
@@ -140,7 +140,7 @@ let renderMonologue = (monologue: string, inferenceActive: bool): Tea_Vdom.t<msg
             list{text("INFERENCE MANIFOLD")},
           ),
           div(
-            list{Attrs.class_(`text-xs ${statusClass}`)},
+            list{Attrs.class_(`text-xs ${statusClass}`), Attrs.role("status"), Attrs.ariaLive("polite")},
             list{text(statusText)},
           ),
         },
@@ -160,7 +160,7 @@ let renderMonologue = (monologue: string, inferenceActive: bool): Tea_Vdom.t<msg
 /// Main Pane-N view
 let view = (state: paneNState): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900")},
+    list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900"), Attrs.role("region"), Attrs.ariaLabel("Neural Stream Panel")},
     list{
       // Header
       div(

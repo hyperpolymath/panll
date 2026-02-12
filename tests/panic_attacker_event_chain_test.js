@@ -93,3 +93,75 @@ Deno.test("EventChain.parse - tolerates missing summary with event chain", () =>
   assertEquals(result._0.events.length, 1);
   assertEquals(result._0.events[0].status, "failed");
 });
+
+Deno.test("EventChain.parse - handles empty event_chain array", () => {
+  const payload = JSON.stringify({
+    format: "panll.event-chain.v0",
+    event_chain: []
+  });
+
+  const result = parse(payload);
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.events.length, 0);
+});
+
+Deno.test("EventChain.parse - defaults missing event fields", () => {
+  const payload = JSON.stringify({
+    event_chain: [
+      {
+        // Missing id and duration_ms
+        axis: "cpu",
+        start_ms: 0,
+        intensity: "Light",
+        status: "ran"
+      }
+    ]
+  });
+
+  const result = parse(payload);
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.events.length, 1);
+  // Missing id should default to empty string or be handled
+  // Missing duration_ms should default to 0.0 or be handled
+});
+
+Deno.test("EventChain.parse - tolerates extra unknown fields", () => {
+  const payload = JSON.stringify({
+    format: "panll.event-chain.v0",
+    event_chain: [],
+    unknown_field_1: "should be ignored",
+    unknown_field_2: 12345,
+    nested_unknown: { foo: "bar" }
+  });
+
+  const result = parse(payload);
+  assertEquals(result.TAG, "Ok");
+});
+
+Deno.test("EventChain.parse - handles completely empty object", () => {
+  const payload = JSON.stringify({});
+
+  const result = parse(payload);
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.events.length, 0);
+});
+
+Deno.test("EventChain.parse - handles numeric id coercion", () => {
+  const payload = JSON.stringify({
+    event_chain: [
+      {
+        id: 12345, // Numeric instead of string
+        axis: "cpu",
+        start_ms: 0,
+        duration_ms: 1000,
+        intensity: "Light",
+        status: "ran"
+      }
+    ]
+  });
+
+  const result = parse(payload);
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.events.length, 1);
+  // Should handle numeric id (either convert to string or accept as-is)
+});

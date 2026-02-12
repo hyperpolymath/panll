@@ -48,7 +48,9 @@ let updatePaneN = (model: model, msg: paneNMsg): model => {
   {...model, paneN: newPaneN}
 }
 
-/// Update Pane-W state
+/// Apply panic-attacker/PanLL event-chain JSON into Pane-W state.
+/// This coalesces the parsed payload with the event-chain view, summary, and
+/// timeline metadata so the world pane can visualize time/space studies.
 let applyEventChainContents = (paneW: paneWState, contents: string): paneWState => {
   let base = {
     ...paneW,
@@ -79,6 +81,11 @@ let updatePaneW = (model: model, msg: paneWMsg): model => {
       eventChainInput: input,
       eventChainError: None,
     }
+  | SetSecurityTarget(target) => {...paneW, securityTarget: target}
+  | SetSecurityTimeline(path) => {...paneW, securityTimeline: path}
+  | SetSecurityAxes(axes) => {...paneW, securityAxes: axes}
+  | SetSecurityIntensity(intensity) => {...paneW, securityIntensity: intensity}
+  | SetSecurityDuration(duration) => {...paneW, securityDuration: duration}
   | ImportEventChain =>
     switch EventChain.parse(paneW.eventChainInput) {
     | Ok(payload) => {
@@ -93,6 +100,11 @@ let updatePaneW = (model: model, msg: paneWMsg): model => {
   | ImportPanicAttackerReportFile => paneW
   | ImportLatestPanicAttacker => paneW
   | CheckPanicAttackerCapability => paneW
+  | ToggleSecurityTools => {...paneW, securityMenuExpanded: !paneW.securityMenuExpanded}
+  | OpenSecurityDialog(tool) =>
+    {...paneW, securityDialogOpen: true, securityDialogTool: Some(tool)}
+  | CloseSecurityDialog => {...paneW, securityDialogOpen: false}
+  | ToggleSecurityStudyView => {...paneW, securityViewActive: !paneW.securityViewActive}
   | PanicAttackerReportPathLoaded(_) => paneW
   | PanicAttackerCapabilityLoaded(result) =>
     switch result {
@@ -135,6 +147,7 @@ let updatePaneW = (model: model, msg: paneWMsg): model => {
       eventChainTimeline: None,
       eventChainError: None,
     }
+  | _ => paneW
   }
   {...model, paneW: newPaneW}
 }
@@ -303,6 +316,87 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
         Tea_Cmd.none,
       )
     }
+  | PaneW(LoadSecurityTimelineFile) =>
+    (
+      model,
+      TauriCmd.openSecurityTimelineFile(result => PaneW(SecurityTimelineFileLoaded(result))),
+    )
+  | PaneW(SecurityTimelineFileLoaded(result)) =>
+    let updatedPaneW = switch result {
+    | Ok(path) =>
+      {...model.paneW, securityTimeline: path, securityError: None}
+    | Error(err) =>
+      {...model.paneW, securityError: Some(err)}
+    };
+    ({...model, paneW: updatedPaneW}, Tea_Cmd.none)
+  | PaneW(LaunchSecurityAmbush) => {
+    /* The security dialog runs `panic-attack ambush` through the Tauri backend.
+       We validate the target path, timeline, axes, intensity, and duration before
+       issuing the backend command so the UI remains in sync with the verified CLI. */
+    let target = String.trim(model.paneW.securityTarget);
+    if target === "" {
+      (
+        {
+          ...model,
+          paneW: {...model.paneW, securityStatus: None, securityError: Some("Program path is required")},
+        },
+        Tea_Cmd.none,
+      )
+    } else {
+      let timeline =
+        if model.paneW.securityTimeline === "" {
+          None
+        } else {
+          Some(model.paneW.securityTimeline)
+        };
+      let axes =
+        if model.paneW.securityAxes === "" {
+          None
+        } else {
+          Some(model.paneW.securityAxes)
+        };
+      let durationSecs =
+        switch Int.fromString(model.paneW.securityDuration) {
+        | Some(value) => value
+        | None => 30
+        };
+      (
+        {
+          ...model,
+          paneW: {...model.paneW, securityStatus: Some("Launching ambush..."), securityError: None},
+        },
+        TauriCmd.runPanicAttackAmbush(
+          target,
+          timeline,
+          axes,
+          model.paneW.securityIntensity,
+          durationSecs,
+          result => PaneW(SecurityAmbushResult(result)),
+        ),
+      )
+    }
+  }
+  | PaneW(SecurityAmbushResult(result)) =>
+    /* Once the backend returns the Panic-Attack export (with fallback conversion),
+       we feed the payload into `applyEventChainContents` so the Time/Space view
+       and summary reflect the latest ambush run. */
+    switch result {
+    | Ok(contents) =>
+      let imported =
+        applyEventChainContents(
+          {...model.paneW, securityStatus: Some("Ambush complete"), securityError: None},
+          contents,
+        );
+      ({...model, paneW: imported}, Tea_Cmd.none)
+    | Error(err) =>
+      (
+        {
+          ...model,
+          paneW: {...model.paneW, securityStatus: None, securityError: Some(err)},
+        },
+        Tea_Cmd.none,
+      )
+    }
   | PaneW(ImportLatestPanicAttacker) =>
     (
       model,
@@ -320,7 +414,6 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | Orbital(m) => (updateOrbital(model, m), Tea_Cmd.none)
   | View(m) => (updateView(model, m), Tea_Cmd.none)
   | Feedback(FeedbackSubmitted) => {
-      let report = Option.getOr(model.feedbackPending, "")
       let reportType = Option.getOr(model.feedbackReportType, "General")
       let command =
         TauriCmd.submitFeedback(
@@ -375,10 +468,30 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
     newModel
   }
 
-  // Auto-save state after important changes
-  if shouldAutoSave(msg) {
-    Storage.save(finalModel)
+  // Orbital synchronisation (skip for NoOp and SaveState)
+  let syncedModel = switch msg {
+  | NoOp | SaveState => finalModel
+  | _ => {
+      let (newSyncState, newOrbital) = OrbitalSync.sync(finalModel, finalModel.syncState)
+      let newHumidity = OrbitalSync.getHumidityLevel(finalModel)
+      {...finalModel, syncState: newSyncState, orbital: newOrbital, humidity: newHumidity}
+    }
   }
 
-  (finalModel, command)
+  // Contractile evaluation and adaptation (skip for NoOp and SaveState)
+  let contractedModel = switch msg {
+  | NoOp | SaveState => syncedModel
+  | _ => {
+      let _evaluationResults = Contractiles.evaluateAll(syncedModel, syncedModel.contractiles)
+      let adaptedContractiles = Array.map(syncedModel.contractiles, c => Contractiles.adaptContract(c, syncedModel))
+      {...syncedModel, contractiles: adaptedContractiles}
+    }
+  }
+
+  // Auto-save state after important changes
+  if shouldAutoSave(msg) {
+    Storage.save(contractedModel)
+  }
+
+  (contractedModel, command)
 }

@@ -6,32 +6,9 @@
 /// and Pane-W. Ensures the Binary Star co-orbit maintains gravitational
 /// coherence across all three panes.
 
-open Model
-
-/// Synchronisation event types
-type syncEvent =
-  | SymbolicUpdate(string)   // Change in Pane-L
-  | NeuralUpdate(string)     // Change in Pane-N
-  | WorldUpdate(string)      // Change in Pane-W
-  | CrossPaneLink(string, string) // Link between panes
-
-/// Synchronisation state
-type syncState = {
-  lastSymbolicHash: string,
-  lastNeuralHash: string,
-  lastWorldHash: string,
-  pendingSync: array<syncEvent>,
-  syncLatency: float, // milliseconds
-}
-
-/// Initial sync state
-let init = (): syncState => {
-  lastSymbolicHash: "",
-  lastNeuralHash: "",
-  lastWorldHash: "",
-  pendingSync: [],
-  syncLatency: 0.0,
-}
+// Use Model types to avoid circular dependencies
+type syncEvent = Model.syncEvent
+type syncState = Model.syncState
 
 /// Simple hash function for change detection
 let simpleHash = (content: string): string => {
@@ -48,37 +25,37 @@ let simpleHash = (content: string): string => {
 }
 
 /// Detect changes in Pane-L
-let detectSymbolicChanges = (paneL: paneLState, state: syncState): option<syncEvent> => {
+let detectSymbolicChanges = (paneL: Model.paneLState, state: syncState): option<syncEvent> => {
   let currentHash = simpleHash(paneL.editorContent)
   if currentHash !== state.lastSymbolicHash {
-    Some(SymbolicUpdate(paneL.editorContent))
+    Some(Model.SymbolicUpdate(paneL.editorContent))
   } else {
     None
   }
 }
 
 /// Detect changes in Pane-N
-let detectNeuralChanges = (paneN: paneNState, state: syncState): option<syncEvent> => {
+let detectNeuralChanges = (paneN: Model.paneNState, state: syncState): option<syncEvent> => {
   let currentHash = simpleHash(paneN.monologue)
   if currentHash !== state.lastNeuralHash {
-    Some(NeuralUpdate(paneN.monologue))
+    Some(Model.NeuralUpdate(paneN.monologue))
   } else {
     None
   }
 }
 
 /// Detect changes in Pane-W
-let detectWorldChanges = (paneW: paneWState, state: syncState): option<syncEvent> => {
+let detectWorldChanges = (paneW: Model.paneWState, state: syncState): option<syncEvent> => {
   let currentHash = simpleHash(paneW.content)
   if currentHash !== state.lastWorldHash {
-    Some(WorldUpdate(paneW.content))
+    Some(Model.WorldUpdate(paneW.content))
   } else {
     None
   }
 }
 
 /// Calculate divergence between symbolic and neural content
-let calculateDivergence = (paneL: paneLState, paneN: paneNState): float => {
+let calculateDivergence = (paneL: Model.paneLState, paneN: Model.paneNState): float => {
   // Simple divergence calculation based on content similarity
   // In production, use semantic similarity measures
   let symbolicLen = String.length(paneL.editorContent)
@@ -115,7 +92,7 @@ let getDriftAuraColour = (stability: float): string => {
 }
 
 /// Process synchronisation for the model
-let sync = (model: model, state: syncState): (syncState, orbitalState) => {
+let sync = (model: Model.model, state: syncState): (syncState, Model.orbitalState) => {
   // Detect all changes
   let symbolicChange = detectSymbolicChanges(model.paneL, state)
   let neuralChange = detectNeuralChanges(model.paneN, state)
@@ -127,7 +104,7 @@ let sync = (model: model, state: syncState): (syncState, orbitalState) => {
     ->Array.map(opt => Option.getExn(opt))
 
   // Update hashes
-  let newState = {
+  let newState: Model.syncState = {
     lastSymbolicHash: simpleHash(model.paneL.editorContent),
     lastNeuralHash: simpleHash(model.paneN.monologue),
     lastWorldHash: simpleHash(model.paneW.content),
@@ -140,7 +117,7 @@ let sync = (model: model, state: syncState): (syncState, orbitalState) => {
   let stability = calculateStability(divergence, state.syncLatency)
   let auraColour = getDriftAuraColour(stability)
 
-  let orbital = {
+  let orbital: Model.orbitalState = {
     stability,
     divergenceLevel: divergence,
     driftAuraColour: auraColour,
@@ -151,21 +128,21 @@ let sync = (model: model, state: syncState): (syncState, orbitalState) => {
 
 /// Create a cross-pane link (Circuit Lines feature)
 let createCrossLink = (sourcePane: string, targetPane: string, content: string): syncEvent => {
-  CrossPaneLink(sourcePane ++ ":" ++ content, targetPane)
+  Model.CrossPaneLink(sourcePane ++ ":" ++ content, targetPane)
 }
 
 /// Get Information Humidity level based on model state
-let getHumidityLevel = (model: model): humidityLevel => {
+let getHumidityLevel = (model: Model.model): Model.humidityLevel => {
   let vexation = model.vexometer.index
   let stability = model.orbital.stability
 
   // High stress = Low humidity (shed visual noise)
   // Low stress = High humidity (reveal more detail)
   if vexation > 0.7 || stability < 0.4 {
-    Low
+    Model.Low
   } else if vexation > 0.4 || stability < 0.7 {
-    Medium
+    Model.Medium
   } else {
-    High
+    Model.High
   }
 }

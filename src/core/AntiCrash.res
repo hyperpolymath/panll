@@ -27,16 +27,45 @@ let init = (): antiCrashState => {
 
 /// Check if a token violates type constraints
 let checkTypeConstraints = (token: neuralToken, constraints: array<symbolicConstraint>): option<violationType> => {
-  // TODO: Integrate with Echidna for formal type checking
-  // For now, basic pattern matching
   let activeConstraints = Array.filter(constraints, c => c.active)
 
   let violation = Array.find(activeConstraints, c => {
-    // Check if token content contradicts constraint
-    // This is a placeholder for real symbolic validation
-    String.includes(token.content, "undefined") ||
-    String.includes(token.content, "null") ||
-    String.includes(token.content, "NaN")
+    let expr = c.expression
+
+    // Check forbidden patterns: !contains("pattern")
+    if String.includes(expr, "!contains(") {
+      let pattern = expr
+        ->String.replaceAll("!contains(\"", "")
+        ->String.replaceAll("\")", "")
+        ->String.trim
+
+      if String.includes(token.content, pattern) {
+        true
+      } else {
+        false
+      }
+    }
+    // Check type declarations: type FooBar
+    else if String.startsWith(expr, "type ") {
+      let parts = String.split(expr, " ")
+      if Array.length(parts) >= 2 {
+        switch parts[1] {
+        | Some(typeName) => {
+            let reserved = ["undefined", "null", "NaN", "eval", "function"]
+            Array.includes(reserved, typeName)
+          }
+        | None => false
+        }
+      } else {
+        false
+      }
+    }
+    // Fallback: check for dangerous keywords
+    else {
+      String.includes(token.content, "undefined") ||
+      String.includes(token.content, "null") ||
+      String.includes(token.content, "NaN")
+    }
   })
 
   switch violation {
@@ -68,14 +97,39 @@ let checkSecurityConstraints = (token: neuralToken): option<violationType> => {
 }
 
 /// Check for logical contradictions
-let checkLogicConstraints = (token: neuralToken, _constraints: array<symbolicConstraint>): option<violationType> => {
-  // TODO: Integrate with Echidna for SAT solving
-  // For now, basic contradiction detection
+let checkLogicConstraints = (token: neuralToken, constraints: array<symbolicConstraint>): option<violationType> => {
+  let activeConstraints = Array.filter(constraints, c => c.active)
+
+  // Check for obvious boolean contradictions
   if String.includes(token.content, "true && false") ||
-     String.includes(token.content, "!true && true") {
+     String.includes(token.content, "!true && true") ||
+     String.includes(token.content, "false || false && true") {
     Some(LogicContradiction("Boolean contradiction detected"))
   } else {
-    None
+    // Check if token contradicts any constraint expression
+    let violation = Array.find(activeConstraints, c => {
+      let expr = c.expression
+
+      // Handle equality/inequality constraints
+      if String.includes(expr, "==") {
+        let negated = String.replaceAll(expr, "==", "!=")
+        String.includes(token.content, negated)
+      } else if String.includes(expr, "!=") {
+        let negated = String.replaceAll(expr, "!=", "==")
+        String.includes(token.content, negated)
+      } else if String.includes(expr, ">") || String.includes(expr, "<") {
+        // For boundary checks, look for obvious contradictions
+        // e.g., constraint says "x > 0" but token contains "x = -1"
+        false // Basic implementation - would need symbolic math
+      } else {
+        false
+      }
+    })
+
+    switch violation {
+    | Some(c) => Some(LogicContradiction(`Token contradicts constraint: ${c.expression}`))
+    | None => None
+    }
   }
 }
 
@@ -133,7 +187,7 @@ let processToken = (
         }
         (newState, None)
       }
-    | RequiresReview(reason) => {
+    | RequiresReview(_reason) => {
         let newState = {
           ...state,
           pendingReview: Some(token),

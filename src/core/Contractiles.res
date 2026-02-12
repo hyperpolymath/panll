@@ -1,78 +1,50 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// Contractiles Module - Adaptive State Contracts
+/// Contractiles Module - Model.Adaptive State Contracts
 ///
 /// Defines the elastic, adaptive state-shapes between the Operator
 /// and the Machine. Contractiles enforce boundaries while allowing
 /// for dynamic adjustment based on the co-orbit state.
 
-open Model
-
-/// Contract enforcement level
-type enforcementLevel =
-  | Strict    // Halt on violation
-  | Warn      // Log warning, continue
-  | Adaptive  // Adjust contract based on context
-
-/// Contract status
-type contractStatus =
-  | Satisfied
-  | Violated(string)
-  | Pending
-  | Suspended
-
-/// A contractile definition
-type contractile = {
-  id: string,
-  name: string,
-  description: string,
-  enforcement: enforcementLevel,
-  status: contractStatus,
-  elasticity: float, // 0.0 = rigid, 1.0 = fully elastic
-  lastEvaluated: float,
-}
-
-/// Contractile evaluation result
-type evaluationResult = {
-  contractId: string,
-  status: contractStatus,
-  message: string,
-  adjustmentSuggestion: option<string>,
-}
+// Use Model types to avoid circular dependencies
+type enforcementLevel = Model.enforcementLevel
+type contractStatus = Model.contractStatus
+type contractile = Model.contractile
+type evaluationResult = Model.evaluationResult
 
 /// Built-in contractile: Orbital Stability Bound
-let orbitalStabilityContract = (orbital: orbitalState, threshold: float): contractStatus => {
+let orbitalStabilityContract = (orbital: Model.orbitalState, threshold: float): Model.contractStatus => {
   if orbital.stability >= threshold {
-    Satisfied
+    Model.Satisfied
   } else {
-    Violated(`Orbital stability ${Float.toString(orbital.stability)} below threshold ${Float.toString(threshold)}`)
+    Model.Violated(`Orbital stability ${Float.toString(orbital.stability)} below threshold ${Float.toString(threshold)}`)
   }
 }
 
 /// Built-in contractile: Vexation Ceiling
-let vexationCeilingContract = (vex: vexometerState, ceiling: float): contractStatus => {
+let vexationCeilingContract = (vex: Model.vexometerState, ceiling: float): Model.contractStatus => {
   if vex.index <= ceiling {
-    Satisfied
+    Model.Satisfied
   } else {
-    Violated(`Vexation index ${Float.toString(vex.index)} exceeds ceiling ${Float.toString(ceiling)}`)
+    Model.Violated(`Vexation index ${Float.toString(vex.index)} exceeds ceiling ${Float.toString(ceiling)}`)
   }
 }
 
 /// Built-in contractile: Divergence Limit
-let divergenceLimitContract = (orbital: orbitalState, limit: float): contractStatus => {
+let divergenceLimitContract = (orbital: Model.orbitalState, limit: float): Model.contractStatus => {
   if orbital.divergenceLevel <= limit {
-    Satisfied
+    Model.Satisfied
   } else {
-    Violated(`Divergence level ${Float.toString(orbital.divergenceLevel)} exceeds limit ${Float.toString(limit)}`)
+    Model.Violated(`Divergence level ${Float.toString(orbital.divergenceLevel)} exceeds limit ${Float.toString(limit)}`)
   }
 }
 
 /// Built-in contractile: Autonomy Bound
-let autonomyBoundContract = (agency: agencyState, maxAutonomy: float): contractStatus => {
+let autonomyBoundContract = (agency: Model.agencyState, maxAutonomy: float): Model.contractStatus => {
   if agency.autonomyLevel <= maxAutonomy {
-    Satisfied
+    Model.Satisfied
   } else {
-    Violated(`Autonomy level ${Float.toString(agency.autonomyLevel)} exceeds bound ${Float.toString(maxAutonomy)}`)
+    Model.Violated(`Autonomy level ${Float.toString(agency.autonomyLevel)} exceeds bound ${Float.toString(maxAutonomy)}`)
   }
 }
 
@@ -82,8 +54,8 @@ let defaultContractiles = (): array<contractile> => [
     id: "orbital-stability",
     name: "Orbital Stability Bound",
     description: "Ensures the Binary Star co-orbit remains stable",
-    enforcement: Strict,
-    status: Pending,
+    enforcement: Model.Strict,
+    status: Model.Pending,
     elasticity: 0.2,
     lastEvaluated: 0.0,
   },
@@ -91,8 +63,8 @@ let defaultContractiles = (): array<contractile> => [
     id: "vexation-ceiling",
     name: "Vexation Ceiling",
     description: "Prevents operator friction from exceeding acceptable levels",
-    enforcement: Adaptive,
-    status: Pending,
+    enforcement: Model.Adaptive,
+    status: Model.Pending,
     elasticity: 0.5,
     lastEvaluated: 0.0,
   },
@@ -100,8 +72,8 @@ let defaultContractiles = (): array<contractile> => [
     id: "divergence-limit",
     name: "Divergence Limit",
     description: "Limits drift between symbolic and neural subsystems",
-    enforcement: Warn,
-    status: Pending,
+    enforcement: Model.Warn,
+    status: Model.Pending,
     elasticity: 0.3,
     lastEvaluated: 0.0,
   },
@@ -109,49 +81,50 @@ let defaultContractiles = (): array<contractile> => [
     id: "autonomy-bound",
     name: "Autonomy Bound",
     description: "Constrains the machine's autonomous action level",
-    enforcement: Strict,
-    status: Pending,
+    enforcement: Model.Strict,
+    status: Model.Pending,
     elasticity: 0.4,
     lastEvaluated: 0.0,
   },
 ]
 
 /// Evaluate all contractiles against current model state
-let evaluateAll = (model: model, contractiles: array<contractile>): array<evaluationResult> => {
+let evaluateAll = (model: Model.model, contractiles: array<Model.contractile>): array<Model.evaluationResult> => {
   Array.map(contractiles, c => {
     let status = switch c.id {
     | "orbital-stability" => orbitalStabilityContract(model.orbital, 0.5)
     | "vexation-ceiling" => vexationCeilingContract(model.vexometer, 0.8)
     | "divergence-limit" => divergenceLimitContract(model.orbital, 0.6)
     | "autonomy-bound" => autonomyBoundContract(model.paneN.agency, 0.7)
-    | _ => Pending
+    | _ => Model.Pending
     }
 
     let message = switch status {
-    | Satisfied => "Contract satisfied"
-    | Violated(msg) => msg
-    | Pending => "Awaiting evaluation"
+    | Model.Satisfied => "Contract satisfied"
+    | Model.Violated(msg) => msg
+    | Model.Pending => "Awaiting evaluation"
     | Suspended => "Contract suspended"
     }
 
     // Suggest adjustments for violated contracts with high elasticity
     let suggestion = switch status {
-    | Violated(_) if c.elasticity > 0.3 =>
+    | Model.Violated(_) if c.elasticity > 0.3 =>
       Some("Consider relaxing constraint threshold based on current context")
     | _ => None
     }
 
-    {
+    let result: Model.evaluationResult = {
       contractId: c.id,
       status,
       message,
       adjustmentSuggestion: suggestion,
     }
+    result
   })
 }
 
 /// Apply adaptive adjustments based on elasticity
-let adaptContract = (contractile: contractile, model: model): contractile => {
+let adaptContract = (contractile: Model.contractile, model: Model.model): Model.contractile => {
   // Higher vexation = more elastic contracts
   let vexationFactor = model.vexometer.index
   let adjustedElasticity = contractile.elasticity +. (vexationFactor *. 0.2)

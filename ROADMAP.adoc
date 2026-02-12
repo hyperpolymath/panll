@@ -7,7 +7,7 @@
 
 This roadmap outlines the development plan for **PanLL eNSAID** (Environment for NeSy-Agentic Integrated Development), a neurosymbolic agentic development environment built on The Elm Architecture.
 
-== Current Status: v0.1.0 (2026-02-09) - 95% Complete
+== Current Status: v0.1.0 (2026-02-09) - 80% Complete
 
 ✅ **Complete TEA Implementation**
 
@@ -36,12 +36,12 @@ This roadmap outlines the development plan for **PanLL eNSAID** (Environment for
 
 ==== Must Have
 * [ ] Migration to official rescript-tea (deferred from v0.1.0)
-* [ ] State persistence (localStorage/Tauri)
+* [x] State persistence (localStorage) -- implemented in src/Storage.res
 * [ ] Basic settings management
 * [ ] Polish UI/UX based on user feedback
 
 ==== Should Have
-* [ ] Keyboard shortcuts fully implemented
+* [x] Keyboard shortcuts implemented (Ctrl+Shift+L/N/B/W) -- src/subscriptions/KeyboardFixed.res
 * [ ] Error boundary handling
 * [ ] Loading states and transitions
 * [ ] Accessibility improvements (ARIA labels)

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Model - The unified state of the eNSAID environment.
+/// PanLL Model - the unified state of the eNSAID environment.
 ///
-/// This module defines the "Gravitational Centre" of the Binary Star system,
-/// managing the synchronised state across all three panes.
+/// This module documents the "Gravitational Centre" of the Binary Star system.
+/// Adding annotations here keeps the Pane-L (symbolic), Pane-N (neural), and
+/// Pane-W (world) slices of state easy to understand for newcomers.
 
 /// Constraint types for the Symbolic Mass (Pane-L)
 type symbolicConstraint = {
@@ -68,6 +69,8 @@ type paneNState = {
 }
 
 /// Pane-W: World/Task Barycentre
+/// Events are created from panic-attack/panll exports and feed the Time/Space
+/// study view; each event carries axis/duration/intensity metadata.
 type eventChainEvent = {
   id: string,
   axis: string,
@@ -92,6 +95,10 @@ type eventChainTimeline = {
   events: int,
 }
 
+/// The Pane-W state tracks the world view (content/topology), the imported
+/// panic-attacker event-chain, and the security dialog fields that run ambush
+/// tooling. Keeping these annotations clarifies how the UI state mirrors the
+/// backend command lifecycle.
 type paneWState = {
   content: string,
   topologyView: bool, // Binary Star diagram mode
@@ -104,6 +111,17 @@ type paneWState = {
   panicAttackerMode: string, // unknown | full | fallback | unavailable
   panicAttackerBinary: option<string>,
   panicAttackerStatusDetail: option<string>,
+  securityTarget: string,
+  securityTimeline: string,
+  securityAxes: string,
+  securityIntensity: string,
+  securityDuration: string,
+  securityStatus: option<string>,
+  securityError: option<string>,
+  securityMenuExpanded: bool,
+  securityDialogOpen: bool,
+  securityDialogTool: option<string>,
+  securityViewActive: bool,
 }
 
 /// Vexometer state
@@ -135,6 +153,54 @@ type viewMode =
   | Zen // No sidebars/status
   | DarkStart // Architecture Manifold on idle
 
+/// Synchronisation event types (for OrbitalSync)
+type syncEvent =
+  | SymbolicUpdate(string)   // Change in Pane-L
+  | NeuralUpdate(string)     // Change in Pane-N
+  | WorldUpdate(string)      // Change in Pane-W
+  | CrossPaneLink(string, string) // Link between panes
+
+/// Synchronisation state (for OrbitalSync)
+type syncState = {
+  lastSymbolicHash: string,
+  lastNeuralHash: string,
+  lastWorldHash: string,
+  pendingSync: array<syncEvent>,
+  syncLatency: float, // milliseconds
+}
+
+/// Contract enforcement level (for Contractiles)
+type enforcementLevel =
+  | Strict    // Halt on violation
+  | Warn      // Log warning, continue
+  | Adaptive  // Adjust contract based on context
+
+/// Contract status (for Contractiles)
+type contractStatus =
+  | Satisfied
+  | Violated(string)
+  | Pending
+  | Suspended
+
+/// A contractile definition (for Contractiles)
+type contractile = {
+  id: string,
+  name: string,
+  description: string,
+  enforcement: enforcementLevel,
+  status: contractStatus,
+  elasticity: float, // 0.0 = rigid, 1.0 = fully elastic
+  lastEvaluated: float,
+}
+
+/// Contractile evaluation result (for Contractiles)
+type evaluationResult = {
+  contractId: string,
+  status: contractStatus,
+  message: string,
+  adjustmentSuggestion: option<string>,
+}
+
 /// The complete Model
 type model = {
   // Core panes
@@ -146,6 +212,8 @@ type model = {
   antiCrash: antiCrashState,
   vexometer: vexometerState,
   orbital: orbitalState,
+  syncState: syncState,
+  contractiles: array<contractile>,
   humidity: humidityLevel,
 
   // View state
@@ -190,6 +258,17 @@ let init = (): model => {
     panicAttackerMode: "unknown",
     panicAttackerBinary: None,
     panicAttackerStatusDetail: None,
+    securityTarget: "",
+    securityTimeline: "",
+    securityAxes: "cpu,memory,concurrency",
+    securityIntensity: "medium",
+    securityDuration: "30",
+    securityStatus: None,
+    securityError: None,
+    securityMenuExpanded: false,
+    securityDialogOpen: false,
+    securityDialogTool: None,
+    securityViewActive: false,
   },
   antiCrash: {
     enabled: true,
@@ -210,6 +289,51 @@ let init = (): model => {
     divergenceLevel: 0.0,
     driftAuraColour: "indigo",
   },
+  syncState: {
+    lastSymbolicHash: "",
+    lastNeuralHash: "",
+    lastWorldHash: "",
+    pendingSync: [],
+    syncLatency: 0.0,
+  },
+  contractiles: [
+    {
+      id: "orbital-stability",
+      name: "Orbital Stability Bound",
+      description: "Ensures the Binary Star co-orbit remains stable",
+      enforcement: Strict,
+      status: Pending,
+      elasticity: 0.2,
+      lastEvaluated: 0.0,
+    },
+    {
+      id: "vexation-ceiling",
+      name: "Vexation Ceiling",
+      description: "Prevents operator friction from exceeding acceptable levels",
+      enforcement: Adaptive,
+      status: Pending,
+      elasticity: 0.5,
+      lastEvaluated: 0.0,
+    },
+    {
+      id: "divergence-limit",
+      name: "Divergence Limit",
+      description: "Limits drift between symbolic and neural subsystems",
+      enforcement: Warn,
+      status: Pending,
+      elasticity: 0.3,
+      lastEvaluated: 0.0,
+    },
+    {
+      id: "autonomy-bound",
+      name: "Autonomy Bound",
+      description: "Constrains the machine's autonomous action level",
+      enforcement: Strict,
+      status: Pending,
+      elasticity: 0.4,
+      lastEvaluated: 0.0,
+    },
+  ],
   humidity: Medium,
   viewMode: DarkStart,
   paneLVisible: true,

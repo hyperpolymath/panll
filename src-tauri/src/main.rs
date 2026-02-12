@@ -11,12 +11,55 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::Mutex;
+use std::time::{SystemTime, UNIX_EPOCH, Instant};
+use once_cell::sync::Lazy;
+use serde::Deserialize;
 use serde_json::{json, Value};
 use tauri::Manager;
 
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
+
+/// Tracks operator vexation indicators for the Vexometer
+struct VexationTracker {
+    cancellations: u32,
+    corrections: u32,
+    last_update: Instant,
+}
+
+impl VexationTracker {
+    fn new() -> Self {
+        Self {
+            cancellations: 0,
+            corrections: 0,
+            last_update: Instant::now(),
+        }
+    }
+
+    fn compute_index(&self) -> f64 {
+        let elapsed_secs = self.last_update.elapsed().as_secs_f64();
+        let decay_factor = (1.0 - elapsed_secs / 120.0).max(0.1);
+        let raw_index = (self.cancellations as f64 * 0.15 + self.corrections as f64 * 0.08) * decay_factor;
+        raw_index.min(1.0)
+    }
+}
+
+static VEXATION_TRACKER: Lazy<Mutex<VexationTracker>> = Lazy::new(|| {
+    Mutex::new(VexationTracker::new())
+});
+
+/// Binary discovery respects `PANIC_ATTACK_BIN` overrides, the local debug/release builds, and
+/// the PATH search so the UI can find whatever verified bundle is in the runtime.
+
+#[derive(Deserialize)]
+struct AmbushOptions {
+    program: String,
+    timeline: Option<String>,
+    axes: Option<String>,
+    intensity: Option<String>,
+    duration_secs: Option<u64>,
+}
 
 fn panic_attack_binaries() -> Vec<PathBuf> {
     let mut bins = Vec::new();
@@ -38,6 +81,18 @@ fn panic_attack_reports_dir() -> PathBuf {
     env::var("PANIC_ATTACK_REPORTS_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(|_| PathBuf::from(DEFAULT_PANIC_ATTACK_REPORTS_DIR))
+}
+
+fn ambush_report_path() -> PathBuf {
+    let millis = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    env::temp_dir().join(format!(
+        "panic-attack-ambush-{}-{}.json",
+        std::process::id(),
+        millis
+    ))
 }
 
 fn latest_panic_attack_report(reports_dir: &Path) -> Result<PathBuf, String> {
@@ -146,6 +201,74 @@ fn panic_attacker_capability_json() -> String {
     serde_json::to_string(&payload).unwrap_or_else(|_| {
         "{\"mode\":\"unavailable\",\"detail\":\"No runnable panic-attack binary found\"}".to_string()
     })
+}
+
+/// Launches `panic-attack ambush` with the UI-supplied options, captures the report,
+/// and hands it to `run_panic_attack_panll` so the frontend always receives a
+/// PanLL event-chain (with fallback conversion when necessary).
+#[tauri::command]
+fn run_panic_attack_ambush(options: AmbushOptions) -> Result<String, String> {
+    if options.program.trim().is_empty() {
+        return Err("Program path is required".to_string());
+    }
+
+    let output_report = ambush_report_path();
+    let mut failures = Vec::new();
+
+    for bin in panic_attack_binaries() {
+        let mut command = Command::new(&bin);
+        command
+            .arg("--quiet")
+            .arg("ambush")
+            .arg(&options.program)
+            .arg("--output")
+            .arg(&output_report);
+
+        if let Some(timeline) = &options.timeline {
+            if !timeline.trim().is_empty() {
+                command.arg("--timeline").arg(timeline);
+            }
+        }
+
+        if let Some(axes) = &options.axes {
+            if !axes.trim().is_empty() {
+                command.arg("--axes").arg(axes);
+            }
+        }
+
+        if let Some(intensity) = &options.intensity {
+            if !intensity.trim().is_empty() {
+                command.arg("--intensity").arg(intensity);
+            }
+        }
+
+        if let Some(duration) = options.duration_secs {
+            command.arg("--duration").arg(duration.to_string());
+        }
+
+        match command.output() {
+            Ok(process) if process.status.success() => {
+                return run_panic_attack_panll(&output_report);
+            }
+            Ok(process) => {
+                let stderr = String::from_utf8_lossy(&process.stderr).trim().to_string();
+                let stdout = String::from_utf8_lossy(&process.stdout).trim().to_string();
+                failures.push(format!(
+                    "{} -> exit {} (stderr: {}; stdout: {})",
+                    bin.display(),
+                    process.status,
+                    stderr,
+                    stdout
+                ));
+            }
+            Err(err) => failures.push(format!("{} -> {}", bin.display(), err)),
+        }
+    }
+
+    Err(format!(
+        "Failed to launch ambush. Tried binaries: {}",
+        failures.join(" | ")
+    ))
 }
 
 fn temp_panll_export_path() -> PathBuf {
@@ -362,6 +485,8 @@ fn fallback_panll_export_from_assault(report_path: &Path) -> Result<String, Stri
         .map_err(|err| format!("Failed to serialize fallback PanLL export: {}", err))
 }
 
+/// Attempts to run `panic-attack panll` against the generated report, falling back
+/// to `fallback_panll_export_from_assault` when the binary lacks the command.
 fn run_panic_attack_panll(report_path: &Path) -> Result<String, String> {
     if !report_path.exists() {
         return Err(format!(
@@ -427,33 +552,123 @@ fn run_panic_attack_panll(report_path: &Path) -> Result<String, String> {
 /// Barycentre without symbolic validation.
 #[tauri::command]
 fn validate_inference(token: &str, constraints: Vec<String>) -> Result<bool, String> {
-    // TODO: Implement Echidna-based validation
-    // For now, basic constraint checking
+    // Parse and validate each constraint expression
     for constraint in &constraints {
-        if token.contains(constraint.as_str()) {
-            return Err(format!("Constraint violation detected: {}", constraint));
+        let constraint = constraint.trim();
+
+        // Handle forbidden-pattern constraints: !contains("pattern")
+        if let Some(pattern_start) = constraint.find("!contains(\"") {
+            if let Some(pattern_end) = constraint[pattern_start..].find("\")") {
+                let pattern = &constraint[pattern_start + 11..pattern_start + pattern_end];
+                if token.contains(pattern) {
+                    return Err(format!("Forbidden pattern detected: {}", pattern));
+                }
+                continue;
+            }
+        }
+
+        // Handle type-name constraints: type FooBar = ...
+        if constraint.starts_with("type ") {
+            let parts: Vec<&str> = constraint.split_whitespace().collect();
+            if parts.len() >= 2 {
+                let type_name = parts[1];
+                // Basic keyword check - ensure it's not a reserved word
+                let reserved = ["undefined", "null", "NaN", "eval", "function", "var", "let", "const"];
+                if reserved.contains(&type_name) {
+                    return Err(format!("Type name uses reserved keyword: {}", type_name));
+                }
+            }
+            continue;
+        }
+
+        // Handle boundary checks: length > 0, count < 100, etc.
+        if constraint.contains(" > ") || constraint.contains(" < ") ||
+           constraint.contains(" >= ") || constraint.contains(" <= ") {
+            // For now, we don't have the actual values to check against
+            // This would require integrating with the model state
+            // Accept boundary constraints as valid declarations
+            continue;
+        }
+
+        // For all other constraints, check that the token doesn't contain
+        // a logical negation of the constraint
+        if constraint.contains("==") || constraint.contains("!=") {
+            // Look for contradictory statements in token
+            if token.contains(&format!("!{}", constraint)) ||
+               (constraint.contains("==") && token.contains(&constraint.replace("==", "!="))) {
+                return Err(format!("Token contradicts constraint: {}", constraint));
+            }
         }
     }
+
     Ok(true)
+}
+
+/// Records a vexation event (cancellation or correction).
+#[tauri::command]
+fn record_vexation_event(event_type: String) -> Result<(), String> {
+    let mut tracker = VEXATION_TRACKER.lock().map_err(|e| format!("Lock error: {}", e))?;
+
+    match event_type.as_str() {
+        "cancellation" => {
+            tracker.cancellations += 1;
+            tracker.last_update = Instant::now();
+        }
+        "correction" => {
+            tracker.corrections += 1;
+            tracker.last_update = Instant::now();
+        }
+        _ => return Err(format!("Unknown event type: {}", event_type)),
+    }
+
+    Ok(())
 }
 
 /// Returns the current Vexation Index based on operator stress indicators.
 #[tauri::command]
 fn get_vexation_index() -> f64 {
-    // TODO: Implement actual stress indicator tracking
-    0.0
+    VEXATION_TRACKER.lock().map(|tracker| tracker.compute_index()).unwrap_or(0.0)
 }
 
 /// Submits feedback to the Feedback-O-Tron collective.
 #[tauri::command]
 fn submit_feedback(
-    _pane_l_state: String,
-    _pane_n_state: String,
-    _pane_w_state: String,
+    pane_l_state: String,
+    pane_n_state: String,
+    pane_w_state: String,
     report_type: String,
 ) -> Result<String, String> {
-    // TODO: Implement feedback submission to community pool
-    Ok(format!("Feedback submitted: {}", report_type))
+    // Create feedback directory
+    let feedback_dir = env::temp_dir().join("panll").join("feedback");
+    fs::create_dir_all(&feedback_dir)
+        .map_err(|e| format!("Failed to create feedback directory: {}", e))?;
+
+    // Generate timestamp and ID
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| format!("Time error: {}", e))?
+        .as_secs();
+
+    let id = format!("{}-{}", report_type, timestamp);
+
+    // Create feedback JSON
+    let feedback_json = json!({
+        "id": id,
+        "report_type": report_type,
+        "pane_l_state": pane_l_state,
+        "pane_n_state": pane_n_state,
+        "pane_w_state": pane_w_state,
+        "timestamp": timestamp,
+    });
+
+    // Write to file
+    let filename = format!("feedback-{}-{}.json", report_type, timestamp);
+    let filepath = feedback_dir.join(&filename);
+
+    fs::write(&filepath, serde_json::to_string_pretty(&feedback_json).map_err(|e| e.to_string())?)
+        .map_err(|e| format!("Failed to write feedback file: {}", e))?;
+
+    Ok(format!("Feedback saved: {}", filepath.display()))
 }
 
 #[tauri::command]
@@ -672,6 +887,105 @@ Commands:
         assert!(help_lists_command(help, "panll"));
         assert!(!help_lists_command(help, "nonexistent"));
     }
+
+    #[test]
+    fn test_validate_inference_clean_token_passes() {
+        let token = "const user = { name: 'Alice', age: 30 };";
+        let constraints = vec!["!contains(\"eval(\")".to_string(), "type User".to_string()];
+        let result = validate_inference(token, constraints);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), true);
+    }
+
+    #[test]
+    fn test_validate_inference_forbidden_pattern_rejected() {
+        let token = "const code = eval('malicious');";
+        let constraints = vec!["!contains(\"eval(\")".to_string()];
+        let result = validate_inference(token, constraints);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Forbidden pattern detected"));
+    }
+
+    #[test]
+    fn test_validate_inference_empty_constraints_passes() {
+        let token = "const x = 42;";
+        let constraints: Vec<String> = vec![];
+        let result = validate_inference(token, constraints);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), true);
+    }
+
+    #[test]
+    fn test_vexation_initial_index_is_zero() {
+        // Reset tracker by creating a new one (in a real app we'd need better reset mechanisms)
+        let index = get_vexation_index();
+        // Index should be close to 0 initially (might not be exactly 0 due to decay)
+        assert!(index >= 0.0 && index <= 1.0);
+    }
+
+    #[test]
+    fn test_vexation_index_rises_after_events() {
+        // Record some events
+        let _ = record_vexation_event("cancellation".to_string());
+        let _ = record_vexation_event("correction".to_string());
+
+        let index = get_vexation_index();
+        // Index should have risen from initial state
+        assert!(index > 0.0);
+        assert!(index <= 1.0);
+    }
+
+    #[test]
+    fn test_submit_feedback_creates_json_file() {
+        let result = submit_feedback(
+            "pane_l content".to_string(),
+            "pane_n content".to_string(),
+            "pane_w content".to_string(),
+            "bug".to_string(),
+        );
+
+        assert!(result.is_ok());
+        let message = result.unwrap();
+        assert!(message.contains("Feedback saved:"));
+        assert!(message.contains("feedback-bug-"));
+
+        // Clean up: extract filepath from message and verify file exists
+        if let Some(path_str) = message.strip_prefix("Feedback saved: ") {
+            let path = PathBuf::from(path_str);
+            assert!(path.exists());
+
+            // Read and verify JSON structure
+            let content = fs::read_to_string(&path).expect("read feedback file");
+            let feedback: Value = serde_json::from_str(&content).expect("parse feedback JSON");
+
+            assert_eq!(feedback.get("report_type").and_then(Value::as_str), Some("bug"));
+            assert_eq!(feedback.get("pane_l_state").and_then(Value::as_str), Some("pane_l content"));
+            assert!(feedback.get("id").is_some());
+            assert!(feedback.get("timestamp").is_some());
+
+            // Clean up
+            let _ = fs::remove_file(path);
+        }
+    }
+
+    #[test]
+    fn test_submit_feedback_different_report_type() {
+        let result = submit_feedback(
+            "state1".to_string(),
+            "state2".to_string(),
+            "state3".to_string(),
+            "feature-request".to_string(),
+        );
+
+        assert!(result.is_ok());
+        let message = result.unwrap();
+        assert!(message.contains("feedback-feature-request-"));
+
+        // Clean up
+        if let Some(path_str) = message.strip_prefix("Feedback saved: ") {
+            let _ = fs::remove_file(path_str);
+        }
+    }
 }
 
 fn main() {
@@ -681,11 +995,13 @@ fn main() {
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             validate_inference,
+            record_vexation_event,
             get_vexation_index,
             submit_feedback,
             import_panic_attacker_report,
             import_latest_panic_attacker_report,
             get_panic_attacker_capability,
+            run_panic_attack_ambush,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

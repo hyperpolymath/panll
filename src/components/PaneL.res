@@ -67,7 +67,7 @@ let renderConstraintList = (constraints: array<symbolicConstraint>): Tea_Vdom.t<
         )
       } else {
         div(
-          list{},
+          list{Attrs.role("list")},
           constraints->Array.map(renderConstraint)->List.fromArray,
         )
       },
@@ -92,6 +92,7 @@ let renderEditor = (content: string): Tea_Vdom.t<msg> => {
           Attrs.placeholder("// Define symbolic constraints...\n// e.g., type User = { name: string, age: int }"),
           Attrs.value(content),
           Events.onInput(value => PaneL(UpdateEditorContent(value))),
+          Attrs.ariaLabel("Tractatus Editor"),
         },
         list{},
       ),
@@ -102,7 +103,7 @@ let renderEditor = (content: string): Tea_Vdom.t<msg> => {
 /// Main Pane-L view
 let view = (state: paneLState): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900")},
+    list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900"), Attrs.role("region"), Attrs.ariaLabel("Symbolic Mass Panel")},
     list{
       // Header
       div(

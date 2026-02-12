@@ -3,8 +3,8 @@
 # PanLL BEAM runtime on Chainguard.
 # This builds the panll_beam OTP release and runs it on a Chainguard image.
 
-ARG ELIXIR_BUILDER_IMAGE=cgr.dev/chainguard/elixir:latest-dev
-ARG ELIXIR_RUNTIME_IMAGE=cgr.dev/chainguard/elixir:latest
+ARG ELIXIR_BUILDER_IMAGE=docker.io/elixirlang/elixir:1.19-otp-26
+ARG ELIXIR_RUNTIME_IMAGE=docker.io/elixirlang/elixir:1.19-otp-26
 
 FROM ${ELIXIR_BUILDER_IMAGE} AS build
 WORKDIR /workspace

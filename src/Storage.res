@@ -126,7 +126,7 @@ let extractPersistedState = (model: model): persistedState => {
 }
 
 // Serialize persisted state to JSON string
-let serialize = (state: persistedState): string => {
+let serialize = (_state: persistedState): string => {
   // Use raw JavaScript to stringify
   %raw(`
     JSON.stringify({
