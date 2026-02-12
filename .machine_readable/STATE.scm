@@ -21,8 +21,8 @@
     (milestone "v0.1.0 - Complete TEA Implementation")
     (completion-percentage 80)
     (phase "development")
-    (current-focus "All 19 SONNET-TASKS completed - backend fully implemented, VDOM diffing, ARIA support")
-    (status-summary "80% complete - All P0-P3 tasks done, 12 Rust tests, 45+ JS tests, ARIA accessibility, VDOM diffing")
+    (current-focus "All 19 SONNET-TASKS completed + v0.2.0 persistence work merged")
+    (status-summary "80% complete - All tasks done, state persistence, 12 Rust tests, 45+ JS tests, ARIA, VDOM diffing")
 
     (work-completed
       ("Custom TEA implementation with full Model-Update-View cycle")
