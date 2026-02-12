@@ -250,26 +250,6 @@ let shouldAutoSave = (msg: msg): bool => {
   }
 }
 
-/// Determine if a message should trigger auto-save
-let shouldAutoSave = (msg: msg): bool => {
-  switch msg {
-  | PaneL(AddConstraint(_))
-  | PaneL(RemoveConstraint(_))
-  | PaneL(ToggleConstraint(_))
-  | PaneL(PinConstraint(_))
-  | PaneL(UpdateEditorContent(_))
-  | PaneN(ReceiveToken(_))
-  | PaneN(ClearTokens)
-  | PaneW(UpdateContent(_))
-  | View(SetViewMode(_))
-  | View(SetHumidity(_))
-  | View(TogglePaneL)
-  | View(TogglePaneN)
-  | View(TogglePaneW) => true
-  | _ => false
-  }
-}
-
 /// Main update function
 let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   let newModel = switch msg {
@@ -290,10 +270,40 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   }
 
   // Check for anti-inflammatory triggers
-  let finalModel = if newModel.vexometer.index > 0.7 {
+  let withAntiInflammatory = if newModel.vexometer.index > 0.7 {
     {...newModel, vexometer: {...newModel.vexometer, antiInflammatoryActive: true}}
   } else {
     newModel
+  }
+
+  // Run OrbitalSync: detect pane changes, compute divergence and stability
+  let (newSyncState, newOrbital) = OrbitalSync.sync(
+    withAntiInflammatory,
+    withAntiInflammatory.syncState,
+  )
+  let newHumidity = OrbitalSync.getHumidityLevel(withAntiInflammatory)
+
+  // Evaluate Contractiles against current state
+  let evaluationResults = Contractiles.evaluateAll(
+    withAntiInflammatory,
+    withAntiInflammatory.contractiles,
+  )
+
+  // Update contractile statuses from evaluation and adapt elasticity
+  let updatedContractiles = Array.mapWithIndex(withAntiInflammatory.contractiles, (c, i) => {
+    let evaluated = switch evaluationResults->Array.get(i) {
+    | Some(result) => {...c, status: result.status}
+    | None => c
+    }
+    Contractiles.adaptContract(evaluated, withAntiInflammatory)
+  })
+
+  let finalModel = {
+    ...withAntiInflammatory,
+    syncState: newSyncState,
+    orbital: newOrbital,
+    humidity: newHumidity,
+    contractiles: updatedContractiles,
   }
 
   // Auto-save state after important changes

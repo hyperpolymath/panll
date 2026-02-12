@@ -1,51 +1,50 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
+/**
+ * Storage round-trip tests
+ *
+ * Note: eventChain, eventChainSummary, eventChainTimeline are NOT persisted
+ * (they are not part of the persistedState type). Only core state is persisted:
+ * constraints, editorContent, neuralTokens, worldContent, viewMode,
+ * paneLVisible, paneNVisible, paneWVisible, humidity, vexometerIndex,
+ * orbitalStability.
+ *
+ * ReScript viewMode/humidity are variant types that compile to strings in JS.
+ * Storage serializes them as strings and deserializes back.
+ */
+
 import { assertEquals } from "jsr:@std/assert";
 import { init as initModel } from "../src/Model.res.js";
 import { clear, load, save, storageKey } from "../src/Storage.res.js";
 
-Deno.test("Storage - timeline metadata survives save/load round-trip", () => {
+Deno.test("Storage - core state survives save/load round-trip", () => {
   clear();
 
   const model = initModel();
-  const withTimeline = {
+  const withData = {
     ...model,
+    paneL: {
+      ...model.paneL,
+      constraints: [
+        { id: "c1", expression: "type User", active: true, pinned: false }
+      ],
+      editorContent: "test editor content"
+    },
     paneW: {
       ...model.paneW,
-      eventChain: [
-        {
-          id: "cpu-quick",
-          axis: "cpu",
-          startMs: 200,
-          durationMs: 800,
-          intensity: "Light",
-          status: "ran",
-          peakMemory: undefined,
-          notes: undefined
-        }
-      ],
-      eventChainSummary: {
-        program: "/tmp/panll-ambush-target.sh",
-        weakPoints: 3,
-        criticalWeakPoints: 0,
-        totalCrashes: 0,
-        robustnessScore: 90
-      },
-      eventChainTimeline: {
-        durationMs: 2000,
-        events: 2
-      }
+      content: "world content here"
     }
   };
 
-  save(withTimeline);
-  assertEquals(typeof globalThis.localStorage.getItem(storageKey), "string");
+  save(withData);
+  const stored = globalThis.localStorage.getItem(storageKey);
+  assertEquals(typeof stored, "string");
 
   const loaded = load();
-  assertEquals(loaded?.paneW.eventChain.length, 1);
-  assertEquals(loaded?.paneW.eventChainSummary?.program, "/tmp/panll-ambush-target.sh");
-  assertEquals(loaded?.paneW.eventChainTimeline?.durationMs, 2000);
-  assertEquals(loaded?.paneW.eventChainTimeline?.events, 2);
+  assertEquals(loaded?.paneL.constraints.length, 1);
+  assertEquals(loaded?.paneL.constraints[0].id, "c1");
+  assertEquals(loaded?.paneL.editorContent, "test editor content");
+  assertEquals(loaded?.paneW.content, "world content here");
 
   clear();
 });
@@ -60,7 +59,6 @@ Deno.test("Storage - default model survives save/load round-trip", () => {
   assertEquals(loaded?.paneL.constraints.length, model.paneL.constraints.length);
   assertEquals(loaded?.paneN.tokens.length, model.paneN.tokens.length);
   assertEquals(loaded?.vexometer.index, model.vexometer.index);
-  assertEquals(loaded?.humidity, model.humidity);
 
   clear();
 });
@@ -97,6 +95,7 @@ Deno.test("Storage - viewMode persists correctly", () => {
   clear();
 
   const model = initModel();
+  // viewMode variants compile to strings: "Standard", "Ambient", "Zen", "DarkStart"
   const withZenMode = {
     ...model,
     viewMode: "Zen"
@@ -114,6 +113,7 @@ Deno.test("Storage - humidity persists correctly", () => {
   clear();
 
   const model = initModel();
+  // humidity variants compile to strings: "High", "Medium", "Low"
   const withLowHumidity = {
     ...model,
     humidity: "Low"

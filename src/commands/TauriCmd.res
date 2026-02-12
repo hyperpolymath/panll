@@ -307,6 +307,25 @@ let getPanicAttackerCapability = (tagger: result<string, string> => 'msg): Tea_C
   })
 }
 
+/// Record a vexation event in the backend (cancellation, correction, etc.)
+let recordVexationEvent = (
+  eventType: string,
+  tagger: result<unit, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("record_vexation_event", {"event_type": eventType})
+    ->Promise.then(_result => {
+      callbacks.enqueue(tagger(Ok()))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to record vexation event")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 /// Batch multiple Tauri commands together
 let batch = (commands: list<Tea_Cmd.t<'msg>>): Tea_Cmd.t<'msg> => {
   Tea_Cmd.batch(commands)

@@ -2,6 +2,11 @@
 
 /**
  * Update module tests - TEA update logic
+ *
+ * ReScript variant compilation rules:
+ * - Zero-arg variants in mixed types compile to STRINGS (e.g., "ClearTokens", "NoOp")
+ * - Payload variants compile to objects (e.g., { TAG: "AddConstraint", _0: value })
+ * - Model fields use exact ReScript names (recentCancellations, not cancellations)
  */
 
 import { assertEquals } from "jsr:@std/assert";
@@ -54,7 +59,7 @@ Deno.test("Update.updatePaneN - ReceiveToken adds token to array", () => {
   const model = initModel();
   const initialCount = model.paneN.tokens.length;
 
-  const token = { content: "test", confidence: 0.9, sourcePaneId: "pane-n", inferredType: "code", validated: false };
+  const token = { content: "test", confidence: 0.9, sourcePaneId: "pane-n", inferredType: "code", validated: false, timestamp: 0.0 };
   const msg = { TAG: "PaneN", _0: { TAG: "ReceiveToken", _0: token } };
   const [newModel, _cmd] = Update.update(model, msg);
 
@@ -68,13 +73,14 @@ Deno.test("Update.updatePaneN - ClearTokens empties token array", () => {
     paneN: {
       ...model.paneN,
       tokens: [
-        { content: "a", confidence: 0.9, sourcePaneId: "pane-n", inferredType: "code", validated: false },
-        { content: "b", confidence: 0.8, sourcePaneId: "pane-n", inferredType: "code", validated: false }
+        { content: "a", confidence: 0.9, sourcePaneId: "pane-n", inferredType: "code", validated: false, timestamp: 0.0 },
+        { content: "b", confidence: 0.8, sourcePaneId: "pane-n", inferredType: "code", validated: false, timestamp: 0.0 }
       ]
     }
   };
 
-  const msg = { TAG: "PaneN", _0: { TAG: "ClearTokens" } };
+  // ClearTokens is a zero-arg variant -> compiles to string "ClearTokens"
+  const msg = { TAG: "PaneN", _0: "ClearTokens" };
   const [newModel, _cmd] = Update.update(withTokens, msg);
 
   assertEquals(newModel.paneN.tokens.length, 0);
@@ -82,12 +88,13 @@ Deno.test("Update.updatePaneN - ClearTokens empties token array", () => {
 
 Deno.test("Update.updateVexometer - RecordCancellation increments counter", () => {
   const model = initModel();
-  const initialCount = model.vexometer.cancellations;
+  const initialCount = model.vexometer.recentCancellations;
 
-  const msg = { TAG: "Vexometer", _0: { TAG: "RecordCancellation" } };
+  // RecordCancellation is a zero-arg variant -> string
+  const msg = { TAG: "Vexometer", _0: "RecordCancellation" };
   const [newModel, _cmd] = Update.update(model, msg);
 
-  assertEquals(newModel.vexometer.cancellations, initialCount + 1);
+  assertEquals(newModel.vexometer.recentCancellations, initialCount + 1);
 });
 
 Deno.test("Update.updateVexometer - ResetVexometer resets all fields", () => {
@@ -96,17 +103,18 @@ Deno.test("Update.updateVexometer - ResetVexometer resets all fields", () => {
     ...model,
     vexometer: {
       ...model.vexometer,
-      cancellations: 5,
-      corrections: 3,
+      recentCancellations: 5,
+      recentCorrections: 3,
       index: 0.8
     }
   };
 
-  const msg = { TAG: "Vexometer", _0: { TAG: "ResetVexometer" } };
+  // ResetVexometer is a zero-arg variant -> string
+  const msg = { TAG: "Vexometer", _0: "ResetVexometer" };
   const [newModel, _cmd] = Update.update(withVexation, msg);
 
-  assertEquals(newModel.vexometer.cancellations, 0);
-  assertEquals(newModel.vexometer.corrections, 0);
+  assertEquals(newModel.vexometer.recentCancellations, 0);
+  assertEquals(newModel.vexometer.recentCorrections, 0);
   assertEquals(newModel.vexometer.index, 0.0);
 });
 
@@ -114,20 +122,23 @@ Deno.test("Update.updateView - TogglePaneL flips visibility", () => {
   const model = initModel();
   const initialVisibility = model.paneLVisible;
 
-  const msg = { TAG: "View", _0: { TAG: "TogglePaneL" } };
+  // TogglePaneL is a zero-arg variant -> string
+  const msg = { TAG: "View", _0: "TogglePaneL" };
   const [newModel, _cmd] = Update.update(model, msg);
 
   assertEquals(newModel.paneLVisible, !initialVisibility);
 });
 
-Deno.test("Update - NoOp returns model unchanged", () => {
+Deno.test("Update - NoOp returns model unchanged (except orbital sync)", () => {
   const model = initModel();
 
-  const msg = { TAG: "NoOp" };
-  const [newModel, cmd] = Update.update(model, msg);
+  // NoOp is a zero-arg variant in the top-level msg type -> string
+  const [newModel, _cmd] = Update.update(model, "NoOp");
 
-  assertEquals(newModel, model);
-  assertEquals(cmd.TAG, "none");
+  // Core pane state should be unchanged
+  assertEquals(newModel.paneL, model.paneL);
+  assertEquals(newModel.paneN, model.paneN);
+  assertEquals(newModel.vexometer.index, model.vexometer.index);
 });
 
 Deno.test("Update.shouldAutoSave - returns true for AddConstraint", () => {
@@ -138,8 +149,8 @@ Deno.test("Update.shouldAutoSave - returns true for AddConstraint", () => {
 });
 
 Deno.test("Update.shouldAutoSave - returns false for NoOp", () => {
-  const msg = { TAG: "NoOp" };
-  const result = Update.shouldAutoSave(msg);
+  // NoOp is a zero-arg variant -> string
+  const result = Update.shouldAutoSave("NoOp");
 
   assertEquals(result, false);
 });

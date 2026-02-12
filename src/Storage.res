@@ -103,49 +103,53 @@ let extractPersistedState = (model: model): persistedState => {
   orbitalStability: model.orbital.stability,
 }
 
+// Build a plain JS object from persisted state for JSON serialization
+let toJsonObject = (state: persistedState): JSON.t => {
+  let constraints = state.constraints->Array.map(c => {
+    let d = Dict.make()
+    d->Dict.set("id", JSON.Encode.string(c.id))
+    d->Dict.set("expression", JSON.Encode.string(c.expression))
+    d->Dict.set("active", JSON.Encode.bool(c.active))
+    d->Dict.set("pinned", JSON.Encode.bool(c.pinned))
+    JSON.Encode.object(d)
+  })
+  let tokens = state.neuralTokens->Array.map(t => {
+    let d = Dict.make()
+    d->Dict.set("content", JSON.Encode.string(t.content))
+    d->Dict.set("timestamp", JSON.Encode.float(t.timestamp))
+    d->Dict.set("confidence", JSON.Encode.float(t.confidence))
+    d->Dict.set("validated", JSON.Encode.bool(t.validated))
+    JSON.Encode.object(d)
+  })
+  let root = Dict.make()
+  root->Dict.set("constraints", JSON.Encode.array(constraints))
+  root->Dict.set("editorContent", JSON.Encode.string(state.editorContent))
+  root->Dict.set("neuralTokens", JSON.Encode.array(tokens))
+  root->Dict.set("worldContent", JSON.Encode.string(state.worldContent))
+  root->Dict.set("viewMode", JSON.Encode.string(viewModeToString(state.viewMode)))
+  root->Dict.set("paneLVisible", JSON.Encode.bool(state.paneLVisible))
+  root->Dict.set("paneNVisible", JSON.Encode.bool(state.paneNVisible))
+  root->Dict.set("paneWVisible", JSON.Encode.bool(state.paneWVisible))
+  root->Dict.set("humidity", JSON.Encode.string(humidityToString(state.humidity)))
+  root->Dict.set("vexometerIndex", JSON.Encode.float(state.vexometerIndex))
+  root->Dict.set("orbitalStability", JSON.Encode.float(state.orbitalStability))
+  JSON.Encode.object(root)
+}
+
 // Serialize persisted state to JSON string
 let serialize = (state: persistedState): string => {
-  // Convert variant types to strings first
-  let viewModeStr = viewModeToString(state.viewMode)
-  let humidityStr = humidityToString(state.humidity)
-
-  // Use raw JavaScript to stringify
-  %raw(`
-    JSON.stringify({
-      constraints: state.constraints.map(c => ({
-        id: c.id,
-        expression: c.expression,
-        active: c.active,
-        pinned: c.pinned
-      })),
-      editorContent: state.editorContent,
-      neuralTokens: state.neuralTokens.map(t => ({
-        content: t.content,
-        timestamp: t.timestamp,
-        confidence: t.confidence,
-        validated: t.validated
-      })),
-      worldContent: state.worldContent,
-      viewMode: viewModeStr,
-      paneLVisible: state.paneLVisible,
-      paneNVisible: state.paneNVisible,
-      paneWVisible: state.paneWVisible,
-      humidity: humidityStr,
-      vexometerIndex: state.vexometerIndex,
-      orbitalStability: state.orbitalStability
-    })
-  `)
+  JSON.stringify(toJsonObject(state))
 }
+
+// Raw localStorage helpers that receive values as arguments
+let setItem: (string, string) => unit = %raw(`function(key, value) { localStorage.setItem(key, value) }`)
 
 // Save model to localStorage
 let save = (model: model): unit => {
   try {
     let state = extractPersistedState(model)
     let json = serialize(state)
-
-    // Save to localStorage
-    %raw(`localStorage.setItem(storageKey, json)`)
-
+    setItem(storageKey, json)
     Console.log("State saved to localStorage")
   } catch {
   | exn => Console.error2("Failed to save state:", exn)
@@ -156,7 +160,8 @@ let save = (model: model): unit => {
 let load = (): option<model> => {
   try {
     // Load from localStorage
-    let json: option<string> = %raw(`localStorage.getItem(storageKey)`)
+    let getItem: string => option<string> = %raw(`function(key) { var v = localStorage.getItem(key); return v === null ? undefined : v }`)
+    let json: option<string> = getItem(storageKey)
 
     switch json {
     | None => None
@@ -288,10 +293,13 @@ let load = (): option<model> => {
   }
 }
 
+// Raw localStorage remove helper
+let removeItem: string => unit = %raw(`function(key) { localStorage.removeItem(key) }`)
+
 // Clear persisted state
 let clear = (): unit => {
   try {
-    %raw(`localStorage.removeItem(storageKey)`)
+    removeItem(storageKey)
     Console.log("State cleared from localStorage")
   } catch {
   | exn => Console.error2("Failed to clear state:", exn)
