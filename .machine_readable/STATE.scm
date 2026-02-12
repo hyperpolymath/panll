@@ -50,7 +50,7 @@
        (blocker "rescript-tea@0.16.0 depends on rescript-webapi@0.7.0 (incompatible with ReScript 11.1.4)")
        (rationale "Official rescript-tea not maintained since 2021, requires fork and major update effort")
        (resolution "Keep custom TEA - works perfectly (33 tests, 86.2% coverage), well-tested, documented"))
-      ("Tauri backend command implementation depth"
+      ("Tauri backend FFI implementation"
        (status "next-up")
        (approach "Replace stubbed validation/vexation/feedback logic with real implementations")
        (commands ("validate_inference" "get_vexation_index" "submit_feedback"))

@@ -250,215 +250,43 @@ let shouldAutoSave = (msg: msg): bool => {
   }
 }
 
+/// Determine if a message should trigger auto-save
+let shouldAutoSave = (msg: msg): bool => {
+  switch msg {
+  | PaneL(AddConstraint(_))
+  | PaneL(RemoveConstraint(_))
+  | PaneL(ToggleConstraint(_))
+  | PaneL(PinConstraint(_))
+  | PaneL(UpdateEditorContent(_))
+  | PaneN(ReceiveToken(_))
+  | PaneN(ClearTokens)
+  | PaneW(UpdateContent(_))
+  | View(SetViewMode(_))
+  | View(SetHumidity(_))
+  | View(TogglePaneL)
+  | View(TogglePaneN)
+  | View(TogglePaneW) => true
+  | _ => false
+  }
+}
+
 /// Main update function
 let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
-  let (newModel, command) = switch msg {
-  | PaneL(m) => (updatePaneL(model, m), Tea_Cmd.none)
-  | PaneN(ReceiveToken(token)) => {
-      let (nextAntiCrash, maybeToken) =
-        AntiCrash.processToken(token, model.paneL.constraints, model.antiCrash)
-      let nextPaneN = switch maybeToken {
-      | Some(approved) => {
-          ...model.paneN,
-          tokens: Array.concat(model.paneN.tokens, [approved]),
-        }
-      | None => model.paneN
-      }
-      let updatedModel = {...model, paneN: nextPaneN, antiCrash: nextAntiCrash}
-      let command = switch maybeToken {
-      | Some(approved) =>
-        if model.antiCrash.enabled {
-          let activeConstraints =
-            model.paneL.constraints
-            ->Array.filter(c => c.active)
-            ->Array.map(c => c.expression)
-          TauriCmd.validateInference(
-            approved.content,
-            activeConstraints,
-            result =>
-              switch result {
-              | Ok(true) => AntiCrash(ValidationPassed(approved))
-              | Ok(false) => AntiCrash(ValidationFailed(approved, "Backend validation failed"))
-              | Error(err) => AntiCrash(ValidationFailed(approved, err))
-              },
-          )
-        } else {
-          Tea_Cmd.none
-        }
-      | None => Tea_Cmd.none
-      }
-      (updatedModel, command)
-    }
-  | PaneN(m) => (updatePaneN(model, m), Tea_Cmd.none)
-  | PaneW(ImportEventChainFile) =>
-    (model, TauriCmd.openEventChainFile(result => PaneW(EventChainFileLoaded(result))))
-  | PaneW(ImportPanicAttackerReportFile) =>
-    (
-      model,
-      TauriCmd.openPanicAttackerReportFile(result => PaneW(PanicAttackerReportPathLoaded(result))),
-    )
-  | PaneW(PanicAttackerReportPathLoaded(result)) =>
-    switch result {
-    | Ok(reportPath) =>
-      (
-        model,
-        TauriCmd.importPanicAttackerReport(
-          reportPath,
-          importResult => PaneW(PanicAttackerImportLoaded(importResult)),
-        ),
-      )
-    | Error(err) =>
-      (
-        {
-          ...model,
-          paneW: {...model.paneW, eventChainError: Some(err)},
-        },
-        Tea_Cmd.none,
-      )
-    }
-  | PaneW(LoadSecurityTimelineFile) =>
-    (
-      model,
-      TauriCmd.openSecurityTimelineFile(result => PaneW(SecurityTimelineFileLoaded(result))),
-    )
-  | PaneW(SecurityTimelineFileLoaded(result)) =>
-    let updatedPaneW = switch result {
-    | Ok(path) =>
-      {...model.paneW, securityTimeline: path, securityError: None}
-    | Error(err) =>
-      {...model.paneW, securityError: Some(err)}
-    };
-    ({...model, paneW: updatedPaneW}, Tea_Cmd.none)
-  | PaneW(LaunchSecurityAmbush) => {
-    /* The security dialog runs `panic-attack ambush` through the Tauri backend.
-       We validate the target path, timeline, axes, intensity, and duration before
-       issuing the backend command so the UI remains in sync with the verified CLI. */
-    let target = String.trim(model.paneW.securityTarget);
-    if target === "" {
-      (
-        {
-          ...model,
-          paneW: {...model.paneW, securityStatus: None, securityError: Some("Program path is required")},
-        },
-        Tea_Cmd.none,
-      )
-    } else {
-      let timeline =
-        if model.paneW.securityTimeline === "" {
-          None
-        } else {
-          Some(model.paneW.securityTimeline)
-        };
-      let axes =
-        if model.paneW.securityAxes === "" {
-          None
-        } else {
-          Some(model.paneW.securityAxes)
-        };
-      let durationSecs =
-        switch Int.fromString(model.paneW.securityDuration) {
-        | Some(value) => value
-        | None => 30
-        };
-      (
-        {
-          ...model,
-          paneW: {...model.paneW, securityStatus: Some("Launching ambush..."), securityError: None},
-        },
-        TauriCmd.runPanicAttackAmbush(
-          target,
-          timeline,
-          axes,
-          model.paneW.securityIntensity,
-          durationSecs,
-          result => PaneW(SecurityAmbushResult(result)),
-        ),
-      )
-    }
-  }
-  | PaneW(SecurityAmbushResult(result)) =>
-    /* Once the backend returns the Panic-Attack export (with fallback conversion),
-       we feed the payload into `applyEventChainContents` so the Time/Space view
-       and summary reflect the latest ambush run. */
-    switch result {
-    | Ok(contents) =>
-      let imported =
-        applyEventChainContents(
-          {...model.paneW, securityStatus: Some("Ambush complete"), securityError: None},
-          contents,
-        );
-      ({...model, paneW: imported}, Tea_Cmd.none)
-    | Error(err) =>
-      (
-        {
-          ...model,
-          paneW: {...model.paneW, securityStatus: None, securityError: Some(err)},
-        },
-        Tea_Cmd.none,
-      )
-    }
-  | PaneW(ImportLatestPanicAttacker) =>
-    (
-      model,
-      TauriCmd.importLatestPanicAttackerReport(result => PaneW(PanicAttackerImportLoaded(result))),
-    )
-  | PaneW(CheckPanicAttackerCapability) =>
-    (
-      model,
-      TauriCmd.getPanicAttackerCapability(result => PaneW(PanicAttackerCapabilityLoaded(result))),
-    )
-  | PaneW(m) => (updatePaneW(model, m), Tea_Cmd.none)
-  | Vexometer(RequestVexationIndex) =>
-    (model, TauriCmd.getVexationIndex(idx => Vexometer(UpdateVexationIndex(idx))))
-  | Vexometer(m) => (updateVexometer(model, m), Tea_Cmd.none)
-  | Orbital(m) => (updateOrbital(model, m), Tea_Cmd.none)
-  | View(m) => (updateView(model, m), Tea_Cmd.none)
-  | Feedback(FeedbackSubmitted) => {
-      let reportType = Option.getOr(model.feedbackReportType, "General")
-      let command =
-        TauriCmd.submitFeedback(
-          model.paneL.editorContent,
-          model.paneN.monologue,
-          model.paneW.content,
-          reportType,
-          result => Feedback(FeedbackSubmissionResult(result)),
-        )
-      ({...model, feedbackError: None}, command)
-    }
-  | Feedback(m) => (updateFeedback(model, m), Tea_Cmd.none)
-  | AntiCrash(ValidationPassed(token)) => {
-      let updatedTokens =
-        model.paneN.tokens
-        ->Array.map(t =>
-            t.timestamp === token.timestamp && t.content === token.content
-              ? {...t, validated: true}
-              : t
-          )
-      let updatedPaneN = {...model.paneN, tokens: updatedTokens}
-      ({...model, paneN: updatedPaneN}, Tea_Cmd.none)
-    }
-  | AntiCrash(ValidationFailed(token, reason)) => {
-      let updatedTokens =
-        model.paneN.tokens
-        ->Array.map(t =>
-            t.timestamp === token.timestamp && t.content === token.content
-              ? {...t, validated: false}
-              : t
-          )
-      let updatedPaneN = {...model.paneN, tokens: updatedTokens}
-      let updatedAntiCrash = {
-        ...model.antiCrash,
-        violations: Array.concat(model.antiCrash.violations, [LogicContradiction(reason)]),
-        halted: model.antiCrash.strictMode,
-      }
-      ({...model, paneN: updatedPaneN, antiCrash: updatedAntiCrash}, Tea_Cmd.none)
-    }
-  | AntiCrash(_) => (model, Tea_Cmd.none)
+  let newModel = switch msg {
+  | PaneL(m) => updatePaneL(model, m)
+  | PaneN(m) => updatePaneN(model, m)
+  | PaneW(m) => updatePaneW(model, m)
+  | Vexometer(m) => updateVexometer(model, m)
+  | Orbital(m) => updateOrbital(model, m)
+  | View(m) => updateView(model, m)
+  | Feedback(m) => updateFeedback(model, m)
+  | AntiCrash(_) => model // Handled by AntiCrash module
   | SaveState => {
+      // Save current state to storage
       Storage.save(model)
-      (model, Tea_Cmd.none)
+      model
     }
-  | NoOp => (model, Tea_Cmd.none)
+  | NoOp => model
   }
 
   // Check for anti-inflammatory triggers
@@ -468,30 +296,10 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
     newModel
   }
 
-  // Orbital synchronisation (skip for NoOp and SaveState)
-  let syncedModel = switch msg {
-  | NoOp | SaveState => finalModel
-  | _ => {
-      let (newSyncState, newOrbital) = OrbitalSync.sync(finalModel, finalModel.syncState)
-      let newHumidity = OrbitalSync.getHumidityLevel(finalModel)
-      {...finalModel, syncState: newSyncState, orbital: newOrbital, humidity: newHumidity}
-    }
-  }
-
-  // Contractile evaluation and adaptation (skip for NoOp and SaveState)
-  let contractedModel = switch msg {
-  | NoOp | SaveState => syncedModel
-  | _ => {
-      let _evaluationResults = Contractiles.evaluateAll(syncedModel, syncedModel.contractiles)
-      let adaptedContractiles = Array.map(syncedModel.contractiles, c => Contractiles.adaptContract(c, syncedModel))
-      {...syncedModel, contractiles: adaptedContractiles}
-    }
-  }
-
   // Auto-save state after important changes
   if shouldAutoSave(msg) {
-    Storage.save(contractedModel)
+    Storage.save(finalModel)
   }
 
-  (contractedModel, command)
+  (finalModel, Tea_Cmd.none)
 }
