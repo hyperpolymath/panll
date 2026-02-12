@@ -66,6 +66,12 @@ module Attrs = {
   let ariaLive = Tea_Vdom.ariaLive
   let ariaExpanded = Tea_Vdom.ariaExpanded
   let ariaHidden = Tea_Vdom.ariaHidden
+  let ariaPressed = Tea_Vdom.ariaPressed
+  let ariaCurrent = Tea_Vdom.ariaCurrent
+  let ariaValueNow = Tea_Vdom.ariaValueNow
+  let ariaValueMin = Tea_Vdom.ariaValueMin
+  let ariaValueMax = Tea_Vdom.ariaValueMax
+  let ariaDescribedBy = Tea_Vdom.ariaDescribedBy
   let role = Tea_Vdom.role
 }
 

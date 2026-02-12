@@ -3,7 +3,7 @@
 
 (neurosymbolic
   (version "1.0.0")
-  (last-updated "2026-02-07")
+  (last-updated "2026-02-12")
 
   (overview
     "PanLL is fundamentally a neurosymbolic environment, integrating symbolic constraints "

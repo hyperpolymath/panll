@@ -7,20 +7,25 @@
 
 This roadmap outlines the development plan for **PanLL eNSAID** (Environment for NeSy-Agentic Integrated Development), a neurosymbolic agentic development environment built on The Elm Architecture.
 
-== Current Status: v0.1.0 (2026-02-09) - 80% Complete
+== Current Status: v0.1.0 (2026-02-12) - 92% Complete
 
 ✅ **Complete TEA Implementation**
 
 * Model-Update-View architecture (custom TEA)
 * Command and Subscription management
-* Comprehensive test suite (33 tests, 87-91% coverage, 719ms execution)
+* Comprehensive test suite (97 JS tests via Deno.test + 12 Rust tests via cargo test, 109 total)
 * Modern tooling (Deno.test, Tauri 2.0, ReScript 11.1)
 * npm→Deno migration complete
 * All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)
-* Tauri backend commands working (validate_inference, get_vexation_index, submit_feedback)
+* 8 Tauri backend commands fully implemented (validate_inference, record_vexation_event, get_vexation_index, submit_feedback, import_panic_attacker_report, import_latest_panic_attacker_report, get_panic_attacker_capability, run_panic_attack_ambush)
 * Anti-Crash token gating wired into Pane-N ingestion (backend validation hooks)
-* Event-chain import from panic-attack (paste + file load)
+* Event-chain import from panic-attack (paste + file load) with persistence
+* Security tool integration (panic-attack ambush, timeline import)
 * Feedback report types wired to backend
+* State persistence via localStorage auto-save (Storage.res)
+* ARIA accessibility attributes across all components
+* Keyboard shortcuts wired (Ctrl+Shift+L/N/B/W + vexation polling)
+* Tailwind CSS 4.x build pipeline (Deno)
 * Local dev server wired for Tauri devUrl (serve.sh @ :8000)
 
 == Roadmap
@@ -44,7 +49,7 @@ This roadmap outlines the development plan for **PanLL eNSAID** (Environment for
 * [x] Keyboard shortcuts implemented (Ctrl+Shift+L/N/B/W) -- src/subscriptions/KeyboardFixed.res
 * [ ] Error boundary handling
 * [ ] Loading states and transitions
-* [ ] Accessibility improvements (ARIA labels)
+* [x] Accessibility improvements (ARIA labels) -- comprehensive ARIA across all components
 
 ==== Could Have
 * [ ] Theme support (dark/light modes)
@@ -197,7 +202,7 @@ This roadmap outlines the development plan for **PanLL eNSAID** (Environment for
 * ReScript 11.1.x
 * Tauri 2.x
 * Deno runtime (tests + build)
-* Tailwind CSS 3.x
+* Tailwind CSS 4.x
 * @tauri-apps/api 2.x
 
 === Planned Integrations
@@ -249,6 +254,6 @@ This roadmap outlines the development plan for **PanLL eNSAID** (Environment for
 
 ---
 
-_Last Updated: 2026-02-09_
+_Last Updated: 2026-02-12_
 
 _This roadmap is a living document and will be updated as the project evolves._

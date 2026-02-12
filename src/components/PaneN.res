@@ -30,6 +30,7 @@ let renderOodaPhase = (phase: oodaPhase): Tea_Vdom.t<msg> => {
         list{
           Attrs.class_(`${bgClass} ${textClass} w-8 h-8 rounded flex items-center justify-center text-xs font-bold`),
           Attrs.title(label),
+          Attrs.ariaCurrent(isActive ? "step" : "false"),
         },
         list{text(letter)},
       )
@@ -59,7 +60,14 @@ let renderAgencyMonitor = (agency: agencyState): Tea_Vdom.t<msg> => {
             list{text("Autonomy:")},
           ),
           div(
-            list{Attrs.class_("flex-1 h-2 bg-gray-700 rounded overflow-hidden"), Attrs.role("progressbar")},
+            list{
+              Attrs.class_("flex-1 h-2 bg-gray-700 rounded overflow-hidden"),
+              Attrs.role("progressbar"),
+              Attrs.ariaLabel("Autonomy Level"),
+              Attrs.ariaValueNow(agency.autonomyLevel *. 100.0),
+              Attrs.ariaValueMin(0.0),
+              Attrs.ariaValueMax(100.0),
+            },
             list{
               div(
                 list{
@@ -116,7 +124,7 @@ let renderTokenStream = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
         )
       } else {
         div(
-          list{Attrs.class_("max-h-32 overflow-y-auto")},
+          list{Attrs.class_("max-h-32 overflow-y-auto"), Attrs.role("log"), Attrs.ariaLabel("Token Stream")},
           tokens->Array.map(renderToken)->List.fromArray,
         )
       },

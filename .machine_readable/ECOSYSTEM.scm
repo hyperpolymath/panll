@@ -106,7 +106,13 @@
      (relationship "potential-integration")
      (nature "git-hud (Git HUD overlay) could show PanLL's orbital stability metrics in dashboard")
      (integration-status "future")
-     (notes "Sigma (stability), vexation index as real-time metrics")))
+     (notes "Sigma (stability), vexation index as real-time metrics"))
+
+    ((project "eclexia")
+     (relationship "potential-language-backend")
+     (nature "Eclexia programming language with shadow pricing and carbon-aware scheduling could serve as PanLL's symbolic constraint language")
+     (integration-status "future")
+     (notes "Integration path: Eclexia constraint expressions in Pane-L, shadow-priced inference in Pane-N. Eclexia's formal proofs could power Anti-Crash validation. DB connectors follow Idris2 ABI + Zig FFI pattern. Requires Eclexia runtime stabilisation (currently ~45% complete).")))
 
   (dependencies
     (runtime
@@ -163,29 +169,17 @@
        (criticality "high")))
 
     (dev-dependencies
-      ((name "Vitest")
-       (version "4.0.18")
-       (purpose "Testing framework")
+      ((name "Deno.test")
+       (version "built-in")
+       (purpose "Native test runner (replaced Vitest)")
        (license "MIT")
        (criticality "high"))
 
-      ((name "@vitest/ui")
-       (version "4.0.18")
-       (purpose "Test UI dashboard")
+      ((name "@std/assert")
+       (version "jsr:@std/assert")
+       (purpose "Test assertions (assertEquals, assertExists, etc.)")
        (license "MIT")
-       (criticality "low"))
-
-      ((name "@vitest/coverage-v8")
-       (version "4.0.18")
-       (purpose "Code coverage reporting")
-       (license "MIT")
-       (criticality "medium"))
-
-      ((name "happy-dom")
-       (version "20.5.0")
-       (purpose "DOM simulation for tests")
-       (license "MIT")
-       (criticality "medium"))))
+       (criticality "high"))))
 
   (consumers
     (known-users ())

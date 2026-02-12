@@ -17,6 +17,7 @@ let renderConstraint = (c: symbolicConstraint): Tea_Vdom.t<msg> => {
   div(
     list{
       Attrs.class_(`p-2 mb-2 border ${activeClass} rounded bg-gray-800/50`),
+      Attrs.role("listitem"),
     },
     list{
       div(
@@ -33,6 +34,8 @@ let renderConstraint = (c: symbolicConstraint): Tea_Vdom.t<msg> => {
                 list{
                   Attrs.class_("text-xs text-gray-500 hover:text-indigo-400"),
                   Events.onClick(PaneL(ToggleConstraint(c.id))),
+                  Attrs.ariaPressed(c.active),
+                  Attrs.ariaLabel(c.active ? "Disable constraint " ++ c.id : "Enable constraint " ++ c.id),
                 },
                 list{text(c.active ? "disable" : "enable")},
               ),
@@ -40,6 +43,8 @@ let renderConstraint = (c: symbolicConstraint): Tea_Vdom.t<msg> => {
                 list{
                   Attrs.class_("text-xs text-gray-500 hover:text-amber-400"),
                   Events.onClick(PaneL(PinConstraint(c.id))),
+                  Attrs.ariaPressed(c.pinned),
+                  Attrs.ariaLabel(c.pinned ? "Unpin constraint " ++ c.id : "Pin constraint " ++ c.id),
                 },
                 list{text(c.pinned ? "unpin" : "pin")},
               ),

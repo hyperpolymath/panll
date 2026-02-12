@@ -3,14 +3,14 @@
 
 (agentic
   (version "1.0.0")
-  (last-updated "2026-02-07")
+  (last-updated "2026-02-12")
   (manifest-reference "0-AI-MANIFEST.a2ml")
 
   (migration-notice
-    "⚠️  npm→Deno migration completed (2026-02-07). Some npm commands in this file are outdated."
-    "Current workflow: Use 'deno task test' (not npm run test), 'deno task dev' for development."
-    "ReScript: node_modules/rescript/rescript build"
-    "Tests: deno task test (33 tests, 719ms)")
+    "npm→Deno migration completed. All commands updated below."
+    "ReScript: npx rescript build"
+    "Tests: deno task test (97 JS tests) + cargo test (12 Rust tests, 109 total)"
+    "Dev: deno task dev")
 
   (agent-protocols
     (session-startup
@@ -49,8 +49,8 @@
         "2. Identify affected modules (Model, Msg, Update, View, components)"
         "3. Write tests first (tests/*.test.js)"
         "4. Implement feature in ReScript"
-        "5. Ensure rescript build compiles without errors"
-        "6. Run tests (npm run test)"
+        "5. Ensure npx rescript build compiles without errors"
+        "6. Run tests (deno task test)"
         "7. Update STATE.scm (work-completed, completion-percentage)"
         "8. Update ROADMAP.adoc if milestone changed"))
 
@@ -106,12 +106,13 @@
         "- Doc comments: /// for public functions"))
 
     (tests
-      (framework "Vitest")
+      (framework "Deno.test")
       (conventions
         "- One test file per module (Tea_Cmd.test.js, Tea_App.test.js)"
-        "- describe() blocks for logical grouping"
-        "- test() for individual cases"
-        "- Aim for 95%+ coverage"
+        "- Deno.test() blocks for individual cases"
+        "- assertEquals/assertExists from @std/assert"
+        "- Run with: deno task test (97 JS tests)"
+        "- Rust tests: cargo test in src-tauri/ (12 tests)"
         "- Test pure functions (Model, Update) thoroughly"
         "- Integration tests for Tauri commands")))
 
@@ -179,22 +180,21 @@
 
   (tools-and-workflows
     (build-commands
-      "npm run res:build     - Compile ReScript to JavaScript"
-      "npm run res:watch     - Watch ReScript files, recompile on change"
+      "npx rescript build    - Compile ReScript to JavaScript"
+      "npx rescript build -w - Watch ReScript files, recompile on change"
       "deno task css:build   - Compile Tailwind CSS (minified)"
       "deno task css:watch   - Watch Tailwind, recompile on change"
       "deno task dev         - Run Tailwind watch + Tauri dev"
       "deno task build       - Full production build (CSS + Tauri)")
 
     (test-commands
-      "npm run test          - Run all tests"
-      "npm run test:watch    - Watch mode for tests"
-      "npm run test:ui       - Interactive test UI"
-      "npm run test:coverage - Generate coverage report")
+      "deno task test        - Run all 97 JS tests"
+      "deno task test:watch  - Watch mode for tests"
+      "cargo test            - Run 12 Rust backend tests (in src-tauri/)")
 
     (tauri-commands
-      "npm run tauri:dev     - Run Tauri in development mode"
-      "npm run tauri:build   - Build production Tauri app")
+      "deno task dev         - Run Tauri in development mode"
+      "deno task build       - Build production Tauri app")
 
     (git-workflow
       "1. Create feature branch: git checkout -b feature/description"

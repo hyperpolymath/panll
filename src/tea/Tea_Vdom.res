@@ -45,6 +45,12 @@ let ariaLabel = (label: string): attribute<'msg> => Property("aria-label", label
 let ariaLive = (mode: string): attribute<'msg> => Property("aria-live", mode)
 let ariaExpanded = (b: bool): attribute<'msg> => Property("aria-expanded", b ? "true" : "false")
 let ariaHidden = (b: bool): attribute<'msg> => Property("aria-hidden", b ? "true" : "false")
+let ariaPressed = (b: bool): attribute<'msg> => Property("aria-pressed", b ? "true" : "false")
+let ariaCurrent = (v: string): attribute<'msg> => Property("aria-current", v)
+let ariaValueNow = (v: float): attribute<'msg> => Property("aria-valuenow", Float.toString(v))
+let ariaValueMin = (v: float): attribute<'msg> => Property("aria-valuemin", Float.toString(v))
+let ariaValueMax = (v: float): attribute<'msg> => Property("aria-valuemax", Float.toString(v))
+let ariaDescribedBy = (id: string): attribute<'msg> => Property("aria-describedby", id)
 let role = (r: string): attribute<'msg> => Property("role", r)
 
 /// Event handlers

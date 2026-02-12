@@ -250,6 +250,8 @@ let shouldAutoSave = (msg: msg): bool => {
   | PaneW(ImportEventChain)
   | PaneW(EventChainFileLoaded(_))
   | PaneW(PanicAttackerImportLoaded(_))
+  | PaneW(SecurityAmbushResult(_))
+  | PaneW(SecurityTimelineFileLoaded(_))
   | PaneW(ClearEventChain)
   | View(SetViewMode(_))
   | View(SetHumidity(_))

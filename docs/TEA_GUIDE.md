@@ -122,15 +122,17 @@ Commands are easily testable:
 
 ```javascript
 // SPDX-License-Identifier: PMPL-1.0-or-later
+import { assertEquals } from "@std/assert";
 import { msg, execute } from '../src/tea/Tea_Cmd.res.js';
 
-it('executes Msg command', () => {
-  const dispatch = vi.fn();
+Deno.test('executes Msg command', () => {
+  let dispatched = null;
+  const dispatch = (m) => { dispatched = m; };
   const message = { type: 'TestMsg', value: 42 };
 
   execute(msg(message), dispatch);
 
-  expect(dispatch).toHaveBeenCalledWith(message);
+  assertEquals(dispatched, message);
 });
 ```
 
@@ -234,28 +236,27 @@ Tea_Sub.registration("timer", dispatch => {
 
 ```javascript
 // SPDX-License-Identifier: PMPL-1.0-or-later
-it('prevents memory leaks with timers', () => {
-  return new Promise((resolve) => {
-    const dispatch = vi.fn();
-    let timerFired = false;
+import { assertEquals } from "@std/assert";
 
-    const timerSub = registration('timer', (dispatchFn) => {
-      const timerId = setTimeout(() => {
-        timerFired = true;
-        dispatchFn({ type: 'TimerFired' });
-      }, 50);
-      return () => clearTimeout(timerId);  // Cleanup
-    });
+Deno.test('prevents memory leaks with timers', async () => {
+  let dispatched = false;
+  let timerFired = false;
+  const dispatch = () => { dispatched = true; };
 
-    const cleanup = enable(timerSub, dispatch);
-    cleanup();  // Clean up before timer fires
-
-    setTimeout(() => {
-      expect(timerFired).toBe(false);  // Timer was cancelled
-      expect(dispatch).not.toHaveBeenCalled();
-      resolve();
-    }, 100);
+  const timerSub = registration('timer', (dispatchFn) => {
+    const timerId = setTimeout(() => {
+      timerFired = true;
+      dispatchFn({ type: 'TimerFired' });
+    }, 50);
+    return () => clearTimeout(timerId);  // Cleanup
   });
+
+  const cleanup = enable(timerSub, dispatch);
+  cleanup();  // Clean up before timer fires
+
+  await new Promise(resolve => setTimeout(resolve, 100));
+  assertEquals(timerFired, false);  // Timer was cancelled
+  assertEquals(dispatched, false);
 });
 ```
 
@@ -448,44 +449,39 @@ let app = Tea_App.simpleProgram({
 
 ### Test Coverage
 
-Current test coverage (as of v1.0.0):
-- **Tea_Cmd**: 87% lines, 85.71% branches, 83.33% functions
-- **Tea_Sub**: 91% lines, 92.85% branches, 100% functions
-- **Overall**: 33 passing tests
+Current test suite (as of v0.1.0-alpha):
+- **97 JavaScript tests** via Deno.test (Tea_Cmd, Tea_Sub, Tea_Vdom, Tea_App, Model, Update, View, components)
+- **12 Rust tests** via cargo test (Tauri backend commands)
+- **109 total tests passing**
 
 ### Running Tests
 
 ```bash
-# Run all tests
-npm test
+# Run all JS tests (97 tests)
+deno task test
 
 # Watch mode
-npm run test:watch
+deno task test:watch
 
-# With UI
-npm run test:ui
-
-# With coverage
-npm run test:coverage
+# Run Rust backend tests (12 tests)
+cd src-tauri && cargo test
 ```
 
 ### Test Structure
 
-Tests use vitest + happy-dom:
+Tests use Deno.test with @std/assert:
 
 ```javascript
 // SPDX-License-Identifier: PMPL-1.0-or-later
-import { describe, it, expect } from 'vitest';
+import { assertEquals } from "@std/assert";
 import { update } from '../src/Update.res.js';
 
-describe('Update function', () => {
-  it('increments counter', () => {
-    const model = { count: 0, status: 'Idle' };
-    const [newModel, cmd] = update(model, { type: 'Increment' });
+Deno.test('Update - increments counter', () => {
+  const model = { count: 0, status: 'Idle' };
+  const [newModel, cmd] = update(model, { type: 'Increment' });
 
-    expect(newModel.count).toBe(1);
-    expect(cmd).toBe("None");  // No command
-  });
+  assertEquals(newModel.count, 1);
+  assertEquals(cmd, "None");  // No command
 });
 ```
 
@@ -573,14 +569,14 @@ Tea_Sub.registration("websocket", dispatch => {
 Update is pure - easy to test:
 
 ```javascript
-it('handles error state', () => {
+Deno.test('handles error state', () => {
   const model = { status: 'Loading' };
   const msg = { type: 'Error', error: 'Network failed' };
 
   const [newModel, cmd] = update(model, msg);
 
-  expect(newModel.status).toBe('Error');
-  expect(newModel.error).toBe('Network failed');
+  assertEquals(newModel.status, 'Error');
+  assertEquals(newModel.error, 'Network failed');
 });
 ```
 
@@ -688,4 +684,4 @@ let subscriptions = (model) => {
 
 This documentation is licensed under PMPL-1.0-or-later.
 
-Copyright (c) 2025 Jonathan D.A. Jewell
+Copyright (c) 2026 Jonathan D.A. Jewell

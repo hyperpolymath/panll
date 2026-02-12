@@ -3,7 +3,7 @@
 
 (meta
   (version "1.0.0")
-  (last-updated "2026-02-07")
+  (last-updated "2026-02-12")
   (format-spec "hyperpolymath/rsr-template-repo/spec/META-FORMAT-SPEC.adoc")
 
   (architecture-decisions
@@ -102,7 +102,9 @@
       (decision
         "Use Tauri 2.0 with Rust backend. "
         "Frontend (ReScript/HTML/CSS) runs in webview, backend handles system operations. "
-        "Three Tauri commands: validate_inference, get_vexation_index, submit_feedback.")
+        "Eight Tauri commands: validate_inference, record_vexation_event, get_vexation_index, "
+        "submit_feedback, import_panic_attacker_report, import_latest_panic_attacker_report, "
+        "get_panic_attacker_capability, run_panic_attack_ambush.")
       (consequences
         (positive
           ("Small binary size (~5-10MB vs 50-100MB for Electron)")
@@ -201,7 +203,7 @@
   (development-practices
     (testing-strategy
       "Test-driven development for core logic (Model, Update, Commands, Subscriptions). "
-      "Vitest for unit tests, aiming for 95%+ coverage. "
+      "Deno.test for 97 JavaScript unit tests; cargo test for 12 Rust backend tests (109 total). "
       "Integration tests for Tauri backend commands. "
       "Manual testing for UI/UX flows.")
 
@@ -275,8 +277,9 @@
       "Lazy-load components when possible.")
 
     (accessibility
-      "ARIA labels for all interactive elements. "
-      "Keyboard navigation for all features. "
+      "Comprehensive ARIA attributes across all components (role, ariaLabel, ariaPressed, "
+      "ariaCurrent, ariaValueNow/Min/Max, ariaDescribedBy, ariaLive, ariaExpanded, ariaHidden). "
+      "Keyboard navigation for all features (Ctrl+Shift+L/N/B/W). "
       "High-contrast mode support. "
       "Screen reader compatibility (future).")
 

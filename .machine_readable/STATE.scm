@@ -19,10 +19,10 @@
 
   (current-position
     (milestone "v0.1.0 - Complete TEA Implementation")
-    (completion-percentage 90)
+    (completion-percentage 92)
     (phase "development")
-    (current-focus "Full Tauri command integration, eventChain persistence, AntiCrash model updates, 97 JS tests passing")
-    (status-summary "90% complete - All Tauri commands wired, eventChain persisted, AntiCrash active, 97 JS tests + 12 Rust tests")
+    (current-focus "ARIA accessibility, shouldAutoSave expanded, Tailwind/Tauri verified, Eclexia ecosystem noted")
+    (status-summary "92% complete - Full ARIA coverage, all builds verified (ReScript + Tauri + Tailwind), 97 JS + 12 Rust tests")
 
     (work-completed
       ("Custom TEA implementation with full Model-Update-View cycle")
@@ -245,6 +245,22 @@
        ("Added eventChain/eventChainSummary/eventChainTimeline to persistedState + Storage")
        ("Added 16 new tests: 5 eventChain persistence + 11 update integration")
        ("Result: 97 JS tests passing (was 81), 0 failures"))))
+
+    ((session-id "2026-02-12-sonnet-polish")
+     (date "2026-02-12")
+     (agent "Claude Sonnet 4.5")
+     (focus "ARIA accessibility, shouldAutoSave, build verification, Eclexia ecosystem")
+     (outcomes
+       ("Added 7 new ARIA attr helpers to Tea_Vdom: ariaPressed, ariaCurrent, ariaValueNow/Min/Max, ariaDescribedBy")
+       ("PaneL: role(listitem) on constraints, ariaPressed+ariaLabel on toggle/pin buttons")
+       ("PaneN: ariaCurrent(step) on OODA phases, ariaValueNow/Min/Max on progressbar, role(log) on token stream")
+       ("PaneW: ariaLabel on dialog, all 5 form inputs, event chain textarea, shared world textarea")
+       ("Vexometer: ariaValueNow/Min/Max on both expanded and compact views, role(meter) on compact")
+       ("Added SecurityAmbushResult + SecurityTimelineFileLoaded to shouldAutoSave")
+       ("Fixed SPDX header in input.css: AGPL-3.0 → PMPL-1.0-or-later")
+       ("Added Eclexia as related project in ECOSYSTEM.scm")
+       ("Verified: ReScript build (0 warnings), Tauri cargo build, Tailwind css:build, 97 JS + 12 Rust tests")
+       ("Result: 97 JS tests + 12 Rust tests, all 3 build pipelines verified")))
 
     ((session-id "2026-02-12-opus-audit")
      (date "2026-02-12")

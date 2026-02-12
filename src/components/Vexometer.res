@@ -74,7 +74,15 @@ let renderExpandedView = (state: vexometerState): Tea_Vdom.t<msg> => {
   let statusText = getStatusText(state.index, state.antiInflammatoryActive, state.inertiaDetected)
 
   div(
-    list{Attrs.class_("fixed bottom-4 right-4 w-64 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl"), Attrs.role("meter"), Attrs.ariaLabel("Vexation Index"), Attrs.ariaLive("polite")},
+    list{
+      Attrs.class_("fixed bottom-4 right-4 w-64 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl"),
+      Attrs.role("meter"),
+      Attrs.ariaLabel("Vexation Index"),
+      Attrs.ariaLive("polite"),
+      Attrs.ariaValueNow(state.index *. 100.0),
+      Attrs.ariaValueMin(0.0),
+      Attrs.ariaValueMax(100.0),
+    },
     list{
       // Header
       div(
@@ -174,7 +182,14 @@ let renderCompactView = (state: vexometerState): Tea_Vdom.t<msg> => {
   let barColour = getBarColour(state.index)
 
   div(
-    list{Attrs.class_("fixed bottom-4 right-4 w-32")},
+    list{
+      Attrs.class_("fixed bottom-4 right-4 w-32"),
+      Attrs.role("meter"),
+      Attrs.ariaLabel("Vexation Index"),
+      Attrs.ariaValueNow(state.index *. 100.0),
+      Attrs.ariaValueMin(0.0),
+      Attrs.ariaValueMax(100.0),
+    },
     list{
       div(
         list{Attrs.class_("text-xs text-gray-500 mb-1 flex items-center justify-between")},

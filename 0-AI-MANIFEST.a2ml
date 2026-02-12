@@ -48,15 +48,27 @@ Bot-specific instructions for:
 
 ## REPOSITORY STRUCTURE
 
-<!-- CUSTOMIZE THIS SECTION FOR YOUR REPO -->
-
-This repo contains:
-
 ```
 panll/
 ├── 0-AI-MANIFEST.a2ml         # THIS FILE (start here)
-├── README.md                   # Project overview
-├── [your source files]         # Main code
+├── README.adoc                 # Project overview (AsciiDoc)
+├── ROADMAP.adoc                # Development roadmap
+├── src/                        # ReScript source (TEA architecture)
+│   ├── Model.res               # Application state model
+│   ├── Msg.res                 # Message types (variant sum type)
+│   ├── Update.res              # State transition function
+│   ├── View.res                # Root view renderer
+│   ├── Storage.res             # localStorage persistence
+│   ├── tea/                    # Custom TEA runtime (Cmd, Sub, Vdom, App, Html)
+│   ├── components/             # UI components (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)
+│   ├── commands/               # Command constructors (Tauri bridge)
+│   └── subscriptions/          # Keyboard + polling subscriptions
+├── src-tauri/                  # Rust/Tauri 2.0 backend (8 commands)
+├── tests/                      # Deno.test suite (97 JS tests)
+├── public/                     # Static assets (HTML, CSS)
+├── docs/                       # Developer documentation
+│   └── TEA_GUIDE.md            # TEA architecture guide
+├── beam/                       # Elixir/BEAM API (HTTP, GraphQL, gRPC)
 ├── .machine_readable/          # SCM files (6 files)
 │   ├── STATE.scm
 │   ├── META.scm
@@ -110,7 +122,8 @@ After reading this file, demonstrate understanding by stating:
 ## META
 
 - **Format Version:** 1.0.0
-- **Created:** [DATE]
-- **Maintained By:** [YOUR-NAME/ORG]
+- **Created:** 2026-02-09
+- **Last Updated:** 2026-02-12
+- **Maintained By:** Jonathan D.A. Jewell / hyperpolymath
 - **License:** PMPL-1.0-or-later
 - **Protocol:** https://github.com/hyperpolymath/0-ai-gatekeeper-protocol

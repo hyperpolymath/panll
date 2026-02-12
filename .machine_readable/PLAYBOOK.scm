@@ -3,15 +3,13 @@
 
 (playbook
   (version "1.0.0")
-  (last-updated "2026-02-07")
+  (last-updated "2026-02-12")
 
   (migration-notice
-    "⚠️  npm→Deno migration completed (2026-02-07). Many npm commands in this file are outdated."
-    "CURRENT TEST COMMAND: deno task test (not npm run test)"
-    "CURRENT DEV COMMAND: deno task dev"
-    "ReScript compilation: node_modules/rescript/rescript build (or npm run res:build still works)"
-    "Test results: 33 tests passing in 719ms with Deno.test"
-    "This file will be comprehensively updated in a future session.")
+    "npm→Deno migration completed. All commands in this file have been updated."
+    "ReScript: npx rescript build"
+    "Tests: deno task test (97 JS) + cargo test (12 Rust, 109 total)"
+    "Dev: deno task dev")
 
   (setup-procedures
     (initial-setup
@@ -27,11 +25,12 @@
         "1. Clone repository: git clone https://github.com/hyperpolymath/panll.git"
         "2. cd panll"
         "3. Install npm dependencies: npm install"
-        "4. Compile ReScript: npm run res:build"
+        "4. Compile ReScript: npx rescript build"
         "5. Build Tailwind CSS: deno task css:build"
         "6. Run Tauri dev: deno task dev"
         "7. Verify app launches, three panes visible"
-        "8. Run tests: npm run test (should see 33 passing tests)"))
+        "8. Run tests: deno task test (should see 97 passing JS tests)"
+        "9. Run Rust tests: cd src-tauri && cargo test (12 passing)"))
 
     (updating-dependencies
       "Keeping dependencies up-to-date."
@@ -40,7 +39,7 @@
         "1. Check outdated: npm outdated"
         "2. Update package.json versions"
         "3. npm install"
-        "4. Test: npm run test"
+        "4. Test: deno task test"
         "5. Commit: git commit -m 'chore: update npm dependencies'")
 
       (deno-updates
@@ -51,9 +50,9 @@
 
     (troubleshooting-setup
       ((issue "ReScript compilation fails")
-       (symptoms "npm run res:build errors, .res.js files not generated")
+       (symptoms "npx rescript build errors, .res.js files not generated")
        (diagnosis "Check rescript.json config, ensure @rescript/core installed")
-       (solution "npm run res:clean && npm install && npm run res:build"))
+       (solution "npx rescript clean && npm install && npx rescript build"))
 
       ((issue "Tauri fails to start")
        (symptoms "deno task dev errors, no app window appears")
@@ -61,9 +60,9 @@
        (solution "cargo --version (ensure Rust installed), npm list @tauri-apps/cli"))
 
       ((issue "Tests failing")
-       (symptoms "npm run test shows failures")
-       (diagnosis "Check node_modules, happy-dom version")
-       (solution "npm install && npm run test"))))
+       (symptoms "deno task test shows failures")
+       (diagnosis "Check node_modules, ensure ReScript compiled first")
+       (solution "npx rescript build && deno task test"))))
 
   (development-workflows
     (feature-development
@@ -74,8 +73,8 @@
         "2. Create feature branch: git checkout -b feature/description"
         "3. Write tests first (tests/*.test.js)"
         "4. Implement feature in ReScript (src/*.res)"
-        "5. Compile: npm run res:build"
-        "6. Run tests: npm run test"
+        "5. Compile: npx rescript build"
+        "6. Run tests: deno task test"
         "7. Test manually: deno task dev"
         "8. Update STATE.scm (work-completed, completion-percentage)"
         "9. Update ROADMAP.adoc if milestone affected"
@@ -90,10 +89,10 @@
         "1. Reproduce bug reliably (record steps)"
         "2. Create bug branch: git checkout -b fix/description"
         "3. Add regression test to tests/*.test.js"
-        "4. Run test to confirm it fails: npm run test"
+        "4. Run test to confirm it fails: deno task test"
         "5. Fix bug in src/*.res"
-        "6. Compile: npm run res:build"
-        "7. Run test to confirm it passes: npm run test"
+        "6. Compile: npx rescript build"
+        "7. Run test to confirm it passes: deno task test"
         "8. Test manually: deno task dev"
         "9. Commit: git commit -m 'fix: description'"
         "10. Push and create pull request"))
@@ -102,7 +101,7 @@
       "Refactoring code without changing behaviour."
 
       (workflow
-        "1. Ensure all tests passing: npm run test"
+        "1. Ensure all tests passing: deno task test"
         "2. Create refactor branch: git checkout -b refactor/description"
         "3. Make small, atomic changes"
         "4. Compile and test after each change"
@@ -120,9 +119,9 @@
         "2. Update one module at a time (e.g., App.res)"
         "3. Change imports: open Tea.App → open Tea_App"
         "4. Update command/subscription usage"
-        "5. Compile: npm run res:build"
+        "5. Compile: npx rescript build"
         "6. Fix compilation errors"
-        "7. Test module: npm run test"
+        "7. Test module: deno task test"
         "8. Commit: git commit -m 'refactor: migrate App.res to rescript-tea'"
         "9. Update MIGRATION-TO-RESCRIPT-TEA.md checklist"
         "10. Repeat for next module"))
@@ -147,10 +146,9 @@
       "Running unit tests for ReScript modules."
 
       (commands
-        "npm run test          - Run all tests once"
-        "npm run test:watch    - Watch mode (re-run on file change)"
-        "npm run test:ui       - Interactive test UI in browser"
-        "npm run test:coverage - Generate coverage report")
+        "deno task test        - Run all 97 JS tests"
+        "deno task test:watch  - Watch mode (re-run on file change)"
+        "cargo test            - Run 12 Rust backend tests (in src-tauri/)")
 
       (coverage-targets
         "- v0.1.0: 87-91% (current)"
@@ -195,7 +193,7 @@
       "Creating production releases."
 
       (workflow
-        "1. Ensure all tests passing: npm run test"
+        "1. Ensure all tests passing: deno task test"
         "2. Update version in package.json, Cargo.toml, STATE.scm"
         "3. Update CHANGELOG.md (if exists) or ROADMAP.adoc"
         "4. Build: deno task build"
@@ -211,8 +209,8 @@
 
     (release-checklist
       "Before releasing a version:"
-      "☐ All tests passing (npm run test)"
-      "☐ Coverage meets target (npm run test:coverage)"
+      "☐ All tests passing (deno task test && cargo test)"
+      "☐ Coverage meets target"
       "☐ Manual E2E testing completed"
       "☐ README.adoc updated with new features"
       "☐ ROADMAP.adoc updated (milestone completed)"
@@ -229,7 +227,7 @@
     (backup-and-recovery
       "Development only (no production data). "
       "Git repository is source of truth. "
-      "User data (constraints, tokens) not persisted yet (planned v0.2.0).")
+      "User data persisted via localStorage auto-save (Storage.res).")
 
     (incident-response
       "For critical bugs discovered in released versions:"
@@ -260,21 +258,20 @@
 
   (common-commands
     (build-and-run
-      "npm run res:build     - Compile ReScript"
-      "npm run res:watch     - Watch ReScript files"
+      "npx rescript build    - Compile ReScript"
+      "npx rescript build -w - Watch ReScript files"
       "deno task css:build   - Compile Tailwind CSS"
       "deno task css:watch   - Watch Tailwind CSS"
       "deno task dev         - Run Tauri dev (CSS watch + Tauri)"
       "deno task build       - Production build")
 
     (testing
-      "npm run test          - Run tests"
-      "npm run test:watch    - Watch mode"
-      "npm run test:ui       - Interactive UI"
-      "npm run test:coverage - Coverage report")
+      "deno task test        - Run 97 JS tests"
+      "deno task test:watch  - Watch mode"
+      "cargo test            - Run 12 Rust tests (in src-tauri/)")
 
     (cleanup
-      "npm run res:clean     - Clean ReScript build artifacts"
+      "npx rescript clean    - Clean ReScript build artifacts"
       "rm -rf node_modules   - Remove npm dependencies"
       "rm -rf src-tauri/target - Remove Rust build artifacts")
 
@@ -304,15 +301,15 @@
      (solutions
        "- Check error message, fix syntax"
        "- npm install (ensure deps installed)"
-       "- npm run res:clean && npm install && npm run res:build"))
+       "- npx rescript clean && npm install && npx rescript build"))
 
     ((symptom "Tests failing unexpectedly")
      (possible-causes
        "- Stale .res.js files (out of sync with .res)"
        "- Missing test dependencies"
-       "- Test environment issue (happy-dom)")
+       "- ReScript not compiled")
      (solutions
-       "- npm run res:build (regenerate .res.js)"
+       "- npx rescript build (regenerate .res.js)"
        "- npm install"
        "- Check tests/*.test.js for import errors"))
 
@@ -322,7 +319,7 @@
        "- Tailwind watch not running"
        "- Tauri dev not in watch mode")
      (solutions
-       "- Run npm run res:watch in separate terminal"
+       "- Run npx rescript build -w in separate terminal"
        "- Run deno task css:watch in separate terminal"
        "- Ensure deno task dev running (includes CSS watch)"))
 

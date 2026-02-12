@@ -6,10 +6,9 @@
 :icons: font
 
 image:https://img.shields.io/badge/version-v0.1.0--alpha-blue[Version]
-image:https://img.shields.io/badge/completion-80%25-green[Completion]
+image:https://img.shields.io/badge/completion-92%25-green[Completion]
 image:https://img.shields.io/badge/License-PMPL--1.0-indigo.svg[PMPL-1.0-or-later,link="LICENSE"]
-image:https://img.shields.io/badge/Tests-36%20passing-brightgreen[Tests]
-image:https://img.shields.io/badge/Coverage-87--91%25-green[Coverage]
+image:https://img.shields.io/badge/Tests-109%20passing-brightgreen[Tests]
 image:https://img.shields.io/badge/RSR-compliant-blue[RSR Compliant]
 
 **Environment for NeSy-Agentic Integrated Development**
@@ -45,8 +44,8 @@ This is not a passive text editor. It is an active, synchronous environment that
 |Frontend|ReScript + Custom TEA (The Elm Architecture)
 |Backend|Rust + Tauri 2.0
 |Runtime|Deno (tests, build orchestration)
-|Testing|Deno.test (33 tests, 719ms)
-|Styling|Tailwind CSS 3.x
+|Testing|Deno.test (97 JS tests) + cargo test (12 Rust tests)
+|Styling|Tailwind CSS 4.x
 |Middleware|Elixir/BEAM (`beam/panll_beam`) with selectable HTTP, GraphQL, and gRPC APIs
 |Verification|Echidna (planned)
 |===
@@ -58,12 +57,12 @@ PanLL uses Deno for runtime, testing, and build orchestration. ReScript compilat
 [source,bash]
 ----
 # Compile ReScript modules
-node_modules/rescript/rescript build
+npx rescript build
 
 # Watch ReScript sources during development
-node_modules/rescript/rescript build -w
+npx rescript build -w
 
-# Run tests (33 tests, ~719ms)
+# Run tests (97 JS tests + 12 Rust tests)
 deno task test
 
 # Watch mode for tests
@@ -84,7 +83,7 @@ deno task build
 [source,bash]
 ----
 # 1. Compile ReScript
-node_modules/rescript/rescript build
+npx rescript build
 
 # 2. Run tests to verify
 deno task test
@@ -135,6 +134,7 @@ to satisfy the Tauri `devUrl`.
 |`Ctrl+Shift+L`|Toggle Pane-L (Symbolic Mass)
 |`Ctrl+Shift+N`|Toggle Pane-N (Neural Stream)
 |`Ctrl+Shift+B`|Toggle Pane-W (Task Barycentre)
+|`Ctrl+Shift+W`|Toggle Pane-W (alternate binding)
 |===
 
 == Licence
@@ -143,18 +143,22 @@ PMPL-1.0-or-later
 
 == Status
 
-**v0.1.0-alpha** (80% complete)
+**v0.1.0-alpha** (92% complete)
 
 ✅ Complete TEA implementation (Model-Update-View)
 ✅ All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)
-✅ Tauri 2.0 backend with working commands
-✅ 36 tests passing (Deno.test)
+✅ Tauri 2.0 backend with 8 working commands
+✅ 109 tests passing (97 JS via Deno.test + 12 Rust via cargo test)
 ✅ npm→Deno migration complete
-✅ Full ReScript compilation (180ms)
+✅ Full ReScript compilation (180ms, 0 warnings)
 ✅ Anti-Crash token gating + backend validation hooks
-✅ Event-chain import from panic-attack (paste + file)
+✅ Event-chain import from panic-attack (paste + file) with persistence
+✅ Security tool integration (panic-attack ambush, timeline import)
 ✅ Feedback report types wired to backend
-✅ State persistence (localStorage)
+✅ State persistence (localStorage auto-save)
+✅ ARIA accessibility attributes across all components
+✅ Keyboard shortcuts wired (Ctrl+Shift+L/N/B/W + vexation polling)
+✅ Tailwind CSS 4.x build pipeline (Deno)
 ✅ BEAM API scaffold (HTTP/GraphQL/gRPC)
 
 **Next:** v0.1.0 release preparation
