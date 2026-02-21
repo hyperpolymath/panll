@@ -162,3 +162,8 @@ PMPL-1.0-or-later
 ✅ BEAM API scaffold (HTTP/GraphQL/gRPC)
 
 **Next:** v0.1.0 release preparation
+
+
+== Architecture
+
+See link:TOPOLOGY.md[TOPOLOGY.md] for a visual architecture map and completion dashboard.
