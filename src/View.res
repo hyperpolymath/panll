@@ -28,14 +28,16 @@ let renderDriftAura = (orbital: orbitalState, humidity: humidityLevel): Tea_Vdom
   )
 }
 
-/// Render Pane-L (Symbolic Mass) - using full component
-let renderPaneL = (paneL: paneLState, visible: bool): Tea_Vdom.t<msg> => {
+/// Render Pane-L (Symbolic Mass) - using full component.
+/// Receives proof obligations from VeriSimDB VQL-DT queries to display
+/// as symbolic constraints alongside the constraint editor.
+let renderPaneL = (paneL: paneLState, proofs: array<proofObligation>, visible: bool): Tea_Vdom.t<msg> => {
   if !visible {
     noNode
   } else {
     div(
       list{Attrs.class_("flex-1 overflow-auto")},
-      list{PaneL.view(paneL)},
+      list{PaneL.view(paneL, proofs)},
     )
   }
 }
@@ -55,13 +57,14 @@ let renderPaneN = (paneN: paneNState, visible: bool): Tea_Vdom.t<msg> => {
 /// Render Pane-W (World/Barycentre) - using full component
 /// This pane draws the central security panel, event chain importer, and
 /// panic-attacker toolset, ensuring the time/space study is visible when dialogs open.
-let renderPaneW = (paneW: paneWState, orbital: orbitalState, visible: bool): Tea_Vdom.t<msg> => {
+/// Render Pane-W (World/Barycentre) with VeriSimDB database tools.
+let renderPaneW = (paneW: paneWState, orbital: orbitalState, db: verisimdbState, visible: bool): Tea_Vdom.t<msg> => {
   if !visible {
     noNode
   } else {
     div(
       list{Attrs.class_("flex-1 overflow-auto")},
-      list{PaneW.view(paneW, orbital)},
+      list{PaneW.view(paneW, orbital, db)},
     )
   }
 }
@@ -134,9 +137,9 @@ let view = (model: model): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("flex-1 flex overflow-hidden relative z-10")},
           list{
-            renderPaneL(model.paneL, model.paneLVisible),
+            renderPaneL(model.paneL, model.verisimdb.proofObligations, model.paneLVisible),
             renderPaneN(model.paneN, model.paneNVisible),
-            renderPaneW(model.paneW, model.orbital, model.paneWVisible),
+            renderPaneW(model.paneW, model.orbital, model.verisimdb, model.paneWVisible),
           },
         ),
 

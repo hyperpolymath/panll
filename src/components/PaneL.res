@@ -105,8 +105,73 @@ let renderEditor = (content: string): Tea_Vdom.t<msg> => {
   )
 }
 
+/// Render proof obligations from a VQL-DT query result certificate.
+/// Displays proof type, contract, verification status, and hash for each
+/// obligation the type checker inferred during query execution.
+let renderProofObligations = (proofs: array<proofObligation>): Tea_Vdom.t<msg> => {
+  if Array.length(proofs) === 0 {
+    text("")
+  } else {
+    let rows =
+      proofs
+      ->Array.map(p => {
+        let statusColour = switch p.status {
+        | "verified" => "text-emerald-300"
+        | "failed" => "text-red-400"
+        | _ => "text-amber-300"
+        }
+
+        let hashTruncated =
+          String.length(p.proofHash) > 16
+            ? String.slice(p.proofHash, ~start=0, ~end=16) ++ "..."
+            : p.proofHash
+
+        div(
+          list{Attrs.class_("flex items-center justify-between text-xs border-b border-gray-800/60 py-1")},
+          list{
+            div(
+              list{Attrs.class_("text-indigo-300 font-mono")},
+              list{text(String.toUpperCase(p.proofType))},
+            ),
+            div(
+              list{Attrs.class_("text-gray-400")},
+              list{text(p.contractName)},
+            ),
+            div(
+              list{Attrs.class_(statusColour ++ " font-semibold")},
+              list{text(p.status)},
+            ),
+            div(
+              list{Attrs.class_("text-gray-600 font-mono text-[10px]")},
+              list{text(hashTruncated)},
+            ),
+          },
+        )
+      })
+      ->List.fromArray
+
+    div(
+      list{Attrs.class_("mt-4 p-3 border border-indigo-900/30 rounded bg-indigo-900/20 space-y-2")},
+      list{
+        div(
+          list{Attrs.class_("text-xs text-indigo-400 tracking-widest uppercase")},
+          list{text("PROOF OBLIGATIONS (VQL-DT)")},
+        ),
+        div(
+          list{Attrs.class_("text-[10px] text-gray-500")},
+          list{text(Int.toString(Array.length(proofs)) ++ " proof(s) from last VQL-DT query")},
+        ),
+        div(
+          list{Attrs.class_("space-y-0.5")},
+          rows,
+        ),
+      },
+    )
+  }
+}
+
 /// Main Pane-L view
-let view = (state: paneLState): Tea_Vdom.t<msg> => {
+let view = (state: paneLState, proofs: array<proofObligation>): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900"), Attrs.role("region"), Attrs.ariaLabel("Symbolic Mass Panel")},
     list{
@@ -127,6 +192,9 @@ let view = (state: paneLState): Tea_Vdom.t<msg> => {
 
       // Constraint list
       renderConstraintList(state.constraints),
+
+      // Proof obligations from VQL-DT queries
+      renderProofObligations(proofs),
 
       // Editor
       renderEditor(state.editorContent),

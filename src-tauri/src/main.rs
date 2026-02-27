@@ -988,6 +988,112 @@ Commands:
     }
 }
 
+// ---------------------------------------------------------------------------
+// VeriSimDB integration — connects PanLL to VeriSimDB's VQL query engine
+// ---------------------------------------------------------------------------
+
+/// Default VeriSimDB API endpoint (can be overridden with VERISIMDB_URL env var)
+const DEFAULT_VERISIMDB_URL: &str = "http://localhost:8080/api/v1";
+
+/// Resolve the VeriSimDB API base URL from environment or default.
+fn verisimdb_url() -> String {
+    std::env::var("VERISIMDB_URL").unwrap_or_else(|_| DEFAULT_VERISIMDB_URL.to_string())
+}
+
+/// GET /health — check VeriSimDB connectivity and status.
+#[tauri::command]
+fn verisimdb_health() -> Result<String, String> {
+    let url = format!("{}/health", verisimdb_url());
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("VeriSimDB returned {}: {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Cannot reach VeriSimDB at {}: {}", url, e)),
+    }
+}
+
+/// POST /vql/execute — execute a VQL query and return results as JSON.
+#[tauri::command]
+fn verisimdb_query(query: String) -> Result<String, String> {
+    let url = format!("{}/vql/execute", verisimdb_url());
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    let payload = serde_json::json!({ "query": query });
+
+    match client.post(&url).json(&payload).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("VQL query failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("VQL query request failed: {}", e)),
+    }
+}
+
+/// GET /hexads — list hexad entities with pagination.
+#[tauri::command]
+fn verisimdb_list_hexads(limit: usize, offset: usize) -> Result<String, String> {
+    let url = format!("{}/hexads?limit={}&offset={}", verisimdb_url(), limit, offset);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("List hexads failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("List hexads request failed: {}", e)),
+    }
+}
+
+/// GET /drift/entity/{id} — retrieve drift metrics for a specific entity.
+#[tauri::command]
+fn verisimdb_get_drift(entity_id: String) -> Result<String, String> {
+    let url = format!("{}/drift/entity/{}", verisimdb_url(), entity_id);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Get drift failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Get drift request failed: {}", e)),
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -1002,6 +1108,10 @@ fn main() {
             import_latest_panic_attacker_report,
             get_panic_attacker_capability,
             run_panic_attack_ambush,
+            verisimdb_health,
+            verisimdb_query,
+            verisimdb_list_hexads,
+            verisimdb_get_drift,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

@@ -326,6 +326,82 @@ let recordVexationEvent = (
   })
 }
 
+// ===========================================================================
+// VeriSimDB Database Backend Commands
+// ===========================================================================
+
+/// Check VeriSimDB server health status.
+/// Invokes the `verisimdb_health` Tauri command which hits GET /health.
+let checkVeriSimDBHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("verisimdb_health", ())
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("VeriSimDB health check failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Execute a VQL query against VeriSimDB.
+/// Invokes the `verisimdb_query` Tauri command which POSTs to /vql/execute.
+let queryVeriSimDB = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("verisimdb_query", {"query": query})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("VQL query execution failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// List hexad (octad) entities from VeriSimDB with pagination.
+/// Invokes `verisimdb_list_hexads` which hits GET /hexads?limit=N&offset=M.
+let listHexads = (
+  limit: int,
+  offset: int,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("verisimdb_list_hexads", {"limit": limit, "offset": offset})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to list hexad entities")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Get drift detection status for a specific entity.
+/// Invokes `verisimdb_get_drift` which hits GET /drift/entity/{id}.
+let getDrift = (entityId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("verisimdb_get_drift", {"entity_id": entityId})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Drift status retrieval failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 /// Batch multiple Tauri commands together
 let batch = (commands: list<Tea_Cmd.t<'msg>>): Tea_Cmd.t<'msg> => {
   Tea_Cmd.batch(commands)

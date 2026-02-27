@@ -100,11 +100,27 @@ type antiCrashMsg =
   | ValidationFailed(neuralToken, string)
   | RequestOperatorIntervention(string)
 
+/// VeriSimDB database backend messages — connection lifecycle, VQL query
+/// execution, entity browsing, and drift status retrieval.
+type verisimdbMsg =
+  | CheckHealth
+  | HealthResult(result<string, string>)
+  | SubmitQuery(string)
+  | UpdateQueryInput(string)
+  | QueryResult(result<string, string>)
+  | ListEntities
+  | EntitiesLoaded(result<string, string>)
+  | SelectEntity(string)
+  | DriftLoaded(result<string, string>)
+  | ToggleDbMenu
+  | ClearQueryResult
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
   | PaneN(paneNMsg)
   | PaneW(paneWMsg)
+  | VeriSimDB(verisimdbMsg)
   | Vexometer(vexometerMsg)
   | Orbital(orbitalMsg)
   | View(viewMsg)

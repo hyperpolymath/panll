@@ -201,6 +201,29 @@ type evaluationResult = {
   adjustmentSuggestion: option<string>,
 }
 
+/// Proof obligation from a VQL-DT query result certificate
+type proofObligation = {
+  proofType: string,
+  contractName: string,
+  status: string, // "verified" | "failed" | "pending"
+  proofHash: string,
+}
+
+/// VeriSimDB backend state — tracks connection, query results, entity browsing,
+/// and drift detection for the VeriSimDB database integration.
+type verisimdbState = {
+  connected: bool,
+  endpoint: string,
+  lastQuery: string,
+  queryResult: option<string>,
+  queryError: option<string>,
+  entities: array<string>,
+  selectedEntity: option<string>,
+  driftStatus: option<string>,
+  proofObligations: array<proofObligation>,
+  dbMenuExpanded: bool,
+}
+
 /// The complete Model
 type model = {
   // Core panes
@@ -222,6 +245,9 @@ type model = {
   paneNVisible: bool,
   paneWVisible: bool,
   protocolAnalysisVisible: bool,
+
+  // Database backends
+  verisimdb: verisimdbState,
 
   // Feedback-O-Tron
   feedbackPending: option<string>,
@@ -334,6 +360,18 @@ let init = (): model => {
       lastEvaluated: 0.0,
     },
   ],
+  verisimdb: {
+    connected: false,
+    endpoint: "http://localhost:8080/api/v1",
+    lastQuery: "",
+    queryResult: None,
+    queryError: None,
+    entities: [],
+    selectedEntity: None,
+    driftStatus: None,
+    proofObligations: [],
+    dbMenuExpanded: false,
+  },
   humidity: Medium,
   viewMode: DarkStart,
   paneLVisible: true,

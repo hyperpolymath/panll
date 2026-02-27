@@ -10,6 +10,258 @@ open Model
 open Msg
 open Tea.Html
 
+// ===========================================================================
+// VeriSimDB Database Panel
+// ===========================================================================
+
+/// Connection indicator: green dot when connected, red when disconnected.
+let renderDbConnectionIndicator = (db: verisimdbState): Tea_Vdom.t<msg> => {
+  let dotColour = db.connected ? "bg-emerald-400" : "bg-red-500"
+  let statusText = db.connected ? "Connected" : "Disconnected"
+
+  div(
+    list{Attrs.class_("flex items-center gap-2")},
+    list{
+      div(list{Attrs.class_("w-2 h-2 rounded-full " ++ dotColour)}, list{}),
+      div(
+        list{Attrs.class_("text-[10px] text-gray-400")},
+        list{text(statusText ++ " · " ++ db.endpoint)},
+      ),
+      button(
+        list{
+          Attrs.class_("ml-auto px-2 py-0.5 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
+          Events.onClick(VeriSimDB(CheckHealth)),
+        },
+        list{text("Ping")},
+      ),
+    },
+  )
+}
+
+/// VQL query textarea and execute button.
+let renderVqlQueryArea = (db: verisimdbState): Tea_Vdom.t<msg> => {
+  div(
+    list{Attrs.class_("space-y-2")},
+    list{
+      div(
+        list{Attrs.class_("text-[11px] text-gray-400")},
+        list{text("VQL Query")},
+      ),
+      textarea(
+        list{
+          Attrs.class_(
+            "w-full h-20 bg-gray-950 border border-gray-800 rounded p-2 font-mono text-[11px] text-cyan-200 resize-none focus:border-cyan-600 focus:outline-none",
+          ),
+          Attrs.placeholder("SELECT GRAPH.* FROM HEXAD 'entity-id'"),
+          Attrs.value(db.lastQuery),
+          Events.onInput(value => VeriSimDB(UpdateQueryInput(value))),
+          Attrs.ariaLabel("VQL query input"),
+        },
+        list{},
+      ),
+      div(
+        list{Attrs.class_("flex gap-2")},
+        list{
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-cyan-600 hover:bg-cyan-500 rounded text-gray-900 font-semibold",
+              ),
+              Events.onClick(VeriSimDB(SubmitQuery(db.lastQuery))),
+            },
+            list{text("Execute")},
+          ),
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
+              ),
+              Events.onClick(VeriSimDB(ListEntities)),
+            },
+            list{text("List Entities")},
+          ),
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-gray-900 hover:bg-gray-800 rounded text-gray-400",
+              ),
+              Events.onClick(VeriSimDB(ClearQueryResult)),
+            },
+            list{text("Clear")},
+          ),
+        },
+      ),
+    },
+  )
+}
+
+/// Query result display area — formatted JSON output or error message.
+let renderQueryResult = (db: verisimdbState): Tea_Vdom.t<msg> => {
+  let resultContent = switch (db.queryResult, db.queryError) {
+  | (Some(json), _) =>
+    div(
+      list{
+        Attrs.class_(
+          "p-2 bg-gray-950 border border-cyan-900/40 rounded max-h-40 overflow-y-auto",
+        ),
+      },
+      list{
+        node("pre",
+          list{Attrs.class_("font-mono text-[10px] text-cyan-100 whitespace-pre-wrap")},
+          list{text(json)},
+        ),
+      },
+    )
+  | (None, Some(err)) =>
+    div(
+      list{Attrs.class_("text-xs text-red-400")},
+      list{text(err)},
+    )
+  | (None, None) =>
+    div(
+      list{Attrs.class_("text-[10px] text-gray-600 italic")},
+      list{text("No query results yet.")},
+    )
+  }
+
+  div(
+    list{Attrs.class_("space-y-1")},
+    list{
+      div(
+        list{Attrs.class_("text-[11px] text-gray-400")},
+        list{text("Result")},
+      ),
+      resultContent,
+    },
+  )
+}
+
+/// Entity list sidebar with clickable items that load drift status.
+let renderEntityList = (db: verisimdbState): Tea_Vdom.t<msg> => {
+  if Array.length(db.entities) === 0 {
+    text("")
+  } else {
+    let entityItems =
+      db.entities
+      ->Array.map(entityId => {
+        let isSelected = db.selectedEntity == Some(entityId)
+        let itemClass = isSelected
+          ? "text-xs text-cyan-300 bg-gray-800 px-2 py-1 rounded cursor-pointer"
+          : "text-xs text-gray-400 hover:text-cyan-200 px-2 py-1 rounded cursor-pointer"
+
+        div(
+          list{
+            Attrs.class_(itemClass),
+            Events.onClick(VeriSimDB(SelectEntity(entityId))),
+            Attrs.role("option"),
+          },
+          list{text(entityId)},
+        )
+      })
+      ->List.fromArray
+
+    div(
+      list{Attrs.class_("space-y-1")},
+      list{
+        div(
+          list{Attrs.class_("text-[11px] text-gray-400")},
+          list{text("Entities (" ++ Int.toString(Array.length(db.entities)) ++ ")")},
+        ),
+        div(
+          list{Attrs.class_("max-h-24 overflow-y-auto space-y-0.5"), Attrs.role("listbox")},
+          entityItems,
+        ),
+      },
+    )
+  }
+}
+
+/// Drift status display for the selected entity.
+let renderDriftStatus = (db: verisimdbState): Tea_Vdom.t<msg> => {
+  switch (db.selectedEntity, db.driftStatus) {
+  | (Some(entityId), Some(json)) =>
+    div(
+      list{Attrs.class_("space-y-1")},
+      list{
+        div(
+          list{Attrs.class_("text-[11px] text-gray-400")},
+          list{text("Drift: " ++ entityId)},
+        ),
+        div(
+          list{
+            Attrs.class_(
+              "p-2 bg-gray-950 border border-amber-900/40 rounded max-h-24 overflow-y-auto",
+            ),
+          },
+          list{
+            node("pre",
+              list{Attrs.class_("font-mono text-[10px] text-amber-200 whitespace-pre-wrap")},
+              list{text(json)},
+            ),
+          },
+        ),
+      },
+    )
+  | (Some(_), None) =>
+    div(
+      list{Attrs.class_("text-[10px] text-gray-600 italic")},
+      list{text("Loading drift status...")},
+    )
+  | _ => text("")
+  }
+}
+
+/// The complete VeriSimDB database tools panel, rendered in Pane-W.
+let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
+  let submenu =
+    if !db.dbMenuExpanded {
+      text("")
+    } else {
+      div(
+        list{
+          Attrs.class_(
+            "mt-2 p-3 bg-gray-900/80 border border-cyan-900/30 rounded space-y-3",
+          ),
+          Attrs.ariaExpanded(db.dbMenuExpanded),
+        },
+        list{
+          renderDbConnectionIndicator(db),
+          renderVqlQueryArea(db),
+          renderQueryResult(db),
+          renderEntityList(db),
+          renderDriftStatus(db),
+        },
+      )
+    }
+
+  div(
+    list{Attrs.class_("mt-4 space-y-1")},
+    list{
+      div(
+        list{Attrs.class_("flex items-center gap-2")},
+        list{
+          div(
+            list{Attrs.class_("text-xs text-gray-400 tracking-widest uppercase")},
+            list{text("Database Tools")},
+          ),
+          button(
+            list{
+              Attrs.class_("px-2 py-1 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
+              Events.onClick(VeriSimDB(ToggleDbMenu)),
+            },
+            list{text(if db.dbMenuExpanded { "Hide" } else { "Show" })},
+          ),
+        },
+      ),
+      submenu,
+    },
+  )
+}
+
+// ===========================================================================
+// Security Tools (existing)
+// ===========================================================================
+
 let renderSecurityTools = (state: paneWState): Tea_Vdom.t<msg> => {
   let tools = [
     ("panic-attacker", "panic-attacker"),
@@ -684,7 +936,7 @@ let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
 }
 
 /// Render the code/content view
-let renderContentView = (state: paneWState): Tea_Vdom.t<msg> => {
+let renderContentView = (state: paneWState, db: verisimdbState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("h-full flex flex-col")},
     list{
@@ -736,6 +988,7 @@ let renderContentView = (state: paneWState): Tea_Vdom.t<msg> => {
         },
       ),
 
+      renderDatabaseTools(db),
       renderEventChainPanel(state),
       renderSecurityStudyView(state),
       renderSecurityDialog(state),
@@ -760,7 +1013,7 @@ let renderContentView = (state: paneWState): Tea_Vdom.t<msg> => {
 }
 
 /// Main Pane-W view
-let view = (state: paneWState, orbital: orbitalState): Tea_Vdom.t<msg> => {
+let view = (state: paneWState, orbital: orbitalState, db: verisimdbState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900"), Attrs.role("region"), Attrs.ariaLabel("Task Barycentre Panel")},
     list{
@@ -783,7 +1036,7 @@ let view = (state: paneWState, orbital: orbitalState): Tea_Vdom.t<msg> => {
       if state.topologyView {
         renderTopologyView(orbital)
       } else {
-        renderContentView(state)
+        renderContentView(state, db)
       },
     },
   )

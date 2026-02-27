@@ -66,8 +66,77 @@ let updatePaneW = (model: model, msg: paneWMsg): model => {
   {...model, paneW: newPaneW}
 }
 
+/// STATE TRANSITION: VeriSimDB (Database Backend)
+/// Manages the VeriSimDB connection state, VQL query lifecycle, entity browsing,
+/// and drift detection status. Each message either triggers a Tauri command
+/// (side effect) or updates model state from a command result.
+let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>) => {
+  let db = model.verisimdb
+  switch msg {
+  | CheckHealth => (
+      model,
+      TauriCmd.checkVeriSimDBHealth(result => VeriSimDB(HealthResult(result))),
+    )
+  | HealthResult(result) =>
+    switch result {
+    | Ok(_json) => ({...model, verisimdb: {...db, connected: true, queryError: None}}, Tea_Cmd.none)
+    | Error(err) => ({...model, verisimdb: {...db, connected: false, queryError: Some(err)}}, Tea_Cmd.none)
+    }
+  | SubmitQuery(query) => (
+      {...model, verisimdb: {...db, lastQuery: query, queryResult: None, queryError: None, proofObligations: []}},
+      TauriCmd.queryVeriSimDB(query, result => VeriSimDB(QueryResult(result))),
+    )
+  | UpdateQueryInput(text) => (
+      {...model, verisimdb: {...db, lastQuery: text}},
+      Tea_Cmd.none,
+    )
+  | QueryResult(result) =>
+    switch result {
+    | Ok(json) => ({...model, verisimdb: {...db, queryResult: Some(json), queryError: None}}, Tea_Cmd.none)
+    | Error(err) => ({...model, verisimdb: {...db, queryResult: None, queryError: Some(err)}}, Tea_Cmd.none)
+    }
+  | ListEntities => (
+      model,
+      TauriCmd.listHexads(50, 0, result => VeriSimDB(EntitiesLoaded(result))),
+    )
+  | EntitiesLoaded(result) =>
+    switch result {
+    | Ok(_json) => ({...model, verisimdb: {...db, queryError: None}}, Tea_Cmd.none)
+    | Error(err) => ({...model, verisimdb: {...db, queryError: Some(err)}}, Tea_Cmd.none)
+    }
+  | SelectEntity(entityId) => (
+      {...model, verisimdb: {...db, selectedEntity: Some(entityId)}},
+      TauriCmd.getDrift(entityId, result => VeriSimDB(DriftLoaded(result))),
+    )
+  | DriftLoaded(result) =>
+    switch result {
+    | Ok(json) => ({...model, verisimdb: {...db, driftStatus: Some(json), queryError: None}}, Tea_Cmd.none)
+    | Error(err) => ({...model, verisimdb: {...db, driftStatus: None, queryError: Some(err)}}, Tea_Cmd.none)
+    }
+  | ToggleDbMenu => (
+      {...model, verisimdb: {...db, dbMenuExpanded: !db.dbMenuExpanded}},
+      Tea_Cmd.none,
+    )
+  | ClearQueryResult => (
+      {...model, verisimdb: {...db, queryResult: None, queryError: None, proofObligations: []}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
 /// ORCHESTRATOR: The main entry point for state updates.
 let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
-  // ... [Internal routing logic]
-  (model, Tea_Cmd.none)
+  switch msg {
+  | PaneL(subMsg) => (updatePaneL(model, subMsg), Tea_Cmd.none)
+  | PaneN(subMsg) => (updatePaneN(model, subMsg), Tea_Cmd.none)
+  | PaneW(subMsg) => (updatePaneW(model, subMsg), Tea_Cmd.none)
+  | VeriSimDB(subMsg) => updateVeriSimDB(model, subMsg)
+  | Vexometer(_) => (model, Tea_Cmd.none)
+  | Orbital(_) => (model, Tea_Cmd.none)
+  | View(_) => (model, Tea_Cmd.none)
+  | Feedback(_) => (model, Tea_Cmd.none)
+  | AntiCrash(_) => (model, Tea_Cmd.none)
+  | SaveState => (model, Tea_Cmd.none)
+  | NoOp => (model, Tea_Cmd.none)
+  }
 }
