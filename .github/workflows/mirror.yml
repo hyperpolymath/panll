@@ -43,7 +43,7 @@ jobs:
       - name: Mirror to Bitbucket
         run: |
           ssh-keyscan -t ed25519 bitbucket.org >> ~/.ssh/known_hosts
-          git remote add bitbucket git@bitbucket.org:hyperpolymath/${{ github.event.repository.name }}.git || true
+          git remote add bitbucket git@bitbucket.org:${{ vars.BITBUCKET_ORG }}/${{ github.event.repository.name }}.git || true
           git push --force bitbucket main
 
   mirror-codeberg:
