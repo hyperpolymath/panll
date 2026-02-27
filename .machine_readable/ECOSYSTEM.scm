@@ -112,7 +112,54 @@
      (relationship "potential-language-backend")
      (nature "Eclexia programming language with shadow pricing and carbon-aware scheduling could serve as PanLL's symbolic constraint language")
      (integration-status "future")
-     (notes "Integration path: Eclexia constraint expressions in Pane-L, shadow-priced inference in Pane-N. Eclexia's formal proofs could power Anti-Crash validation. DB connectors follow Idris2 ABI + Zig FFI pattern. Requires Eclexia runtime stabilisation (currently ~45% complete).")))
+     (notes "Integration path: Eclexia constraint expressions in Pane-L, shadow-priced inference in Pane-N. Eclexia's formal proofs could power Anti-Crash validation. DB connectors follow Idris2 ABI + Zig FFI pattern. Requires Eclexia runtime stabilisation (currently ~45% complete)."))
+
+    ((project "verisimdb")
+     (relationship "primary-backend-module")
+     (nature "VeriSimDB is PanLL's first database backend. VQL-DT maps to PanLL's three-pane layout: Pane-L = proof obligations and type constraints, Pane-N = agentic inference ('you need a CITATION proof here'), Pane-W = query results, drift heatmaps, entity explorer. PanLL makes VQL-DT accessible to non-specialist users.")
+     (integration-status "planned")
+     (notes "Anti-Crash circuit breaker validates VQL queries before execution. Vexometer monitors cognitive load during complex VQL-DT sessions. Architecture proven by NQC Web UI (nextgen-databases/nqc/web/) and FormBD Studio (Tauri 2.0 + ReScript proof assistant). This is the neurosymbolic agentic DbVisualizer."))
+
+    ((project "quandledb")
+     (relationship "future-backend-module")
+     (nature "QuandleDB (KQL) as second database backend. PanLL becomes unified interface across VeriSimDB (VQL/VQL-DT), QuandleDB (KQL), and LithoGlyph (GQL).")
+     (integration-status "future")
+     (notes "Builds on NQC Web UI multi-backend pattern (ports 8080/8081/8082). KQL even harder than VQL for newcomers — PanLL essential for adoption."))
+
+    ((project "lithoglyph")
+     (relationship "future-backend-module")
+     (nature "LithoGlyph (GQL) as third database backend. Completes the nextgen-databases trinity in PanLL.")
+     (integration-status "future")
+     (notes "GQL dependent types need same accessibility treatment as VQL-DT."))
+
+    ((project "reposystem")
+     (relationship "infrastructure-management-module")
+     (nature "PanLL as the operational dashboard for the hyperpolymath repo ecosystem. Connects to contractiles, scaffoldia, claim-forge, and the broader repository management infrastructure.")
+     (integration-status "future")
+     (notes "PanLL panels for: repo health monitoring, RSR compliance dashboard, scaffold new repos from templates, manage contractiles/trustfiles. Dogfooding: PanLL manages the ecosystem that PanLL is part of."))
+
+    ((project "gitbot-fleet")
+     (relationship "automation-orchestration-module")
+     (nature "PanLL as command center for gitbot-fleet (rhodibot, echidnabot, sustainabot, glambot, seambot, finishbot). Visualize bot activity, override decisions, review findings.")
+     (integration-status "future")
+     (notes "Anti-Crash validates bot actions before execution. Pane-N shows bot reasoning chains. Extends existing gitbot-fleet → hypatia → verisimdb pipeline with human oversight."))
+
+    ((project "idaptik")
+     (relationship "game-development-module")
+     (nature "PanLL as development environment for IDApTIK game. Level architect integration via VeriSimDB, emulator/simulator panels for game testing.")
+     (integration-status "future")
+     (notes "Already uses VeriSimDB for level data persistence. PanLL provides: level editor panel, game state inspector, A2ML data viewer, sync server monitor."))
+
+    ;; TODO (2026-02-27): COMPREHENSIVE MODULE AUDIT NEEDED
+    ;; The projects listed above were identified ad-hoc during a VeriSimDB session.
+    ;; Many more hyperpolymath projects likely map to PanLL modules — airie (network
+    ;; analysis/simulation/emulation), proven (BGP/crypto), stapeln (containers),
+    ;; ambientops, and others. A dedicated session should systematically walk the
+    ;; full ~265 repo ecosystem and map each candidate to PanLL's three-pane model
+    ;; (Pane-L constraints, Pane-N agent reasoning, Pane-W results/visualisation).
+    ;; This will also identify which projects are pure backends vs which need their
+    ;; own PanLL panels, and prevent duplication or missed integrations.
+    )
 
   (dependencies
     (runtime

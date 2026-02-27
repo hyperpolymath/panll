@@ -155,12 +155,16 @@
        ("Remove custom src/tea/ directory")))
 
     ((action 2)
-     (title "Create RSR-compliant .machine_readable/ SCM files")
+     (title "VeriSimDB backend module — VQL-DT interface")
      (priority "high")
-     (estimated-effort "2-4 hours")
+     (estimated-effort "2-3 weeks")
      (steps
-       ("Create STATE.scm" "Create META.scm" "Create ECOSYSTEM.scm"
-        "Create AGENTIC.scm" "Create NEUROSYM.scm" "Create PLAYBOOK.scm")))
+       ("Define PanLL ↔ VeriSimDB communication protocol (HTTP to Rust API + Elixir orchestration)")
+       ("Implement Pane-L VQL-DT proof obligation display (type constraints, proof status)")
+       ("Implement Pane-N agentic inference stream for VQL (suggest proofs, explain drift)")
+       ("Implement Pane-W query result viewer (entity explorer, drift heatmaps)")
+       ("Wire Anti-Crash to validate VQL queries before execution")
+       ("Wire Vexometer to track VQL-DT cognitive load")))
 
     ((action 3)
      (title "Document npm→Deno migration strategy")
