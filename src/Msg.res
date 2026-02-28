@@ -126,12 +126,49 @@ type verisimdbMsg =
   | FetchOrchStatus
   | OrchStatusLoaded(result<string, string>)
 
+/// ECHIDNA theorem prover backend messages — connection lifecycle, prover
+/// catalog browsing, proof submission/verification, interactive sessions
+/// (Phase 2 stub), tactic suggestions (Phase 2 stub), theorem search,
+/// and UI state toggles.
+type echidnaMsg =
+  // Connection lifecycle
+  | CheckHealth
+  | HealthOk(string)
+  | HealthError(string)
+  // Prover catalog
+  | ListProvers
+  | ProversLoaded(result<string, string>)
+  // Proof submission and verification
+  | SubmitProof
+  | ProofResult(result<string, string>)
+  | SubmitVerify
+  | VerifyResult(result<string, string>)
+  // Theorem search
+  | SearchTheorems(string)
+  | SearchResult(result<string, string>)
+  // Interactive sessions (Phase 2 — stub)
+  | CreateSession
+  | SessionCreated(result<string, string>)
+  | ApplyTactic(string)
+  | TacticApplied(result<string, string>)
+  | GetSessionState
+  | SessionStateLoaded(result<string, string>)
+  // Tactic suggestions (Phase 2 — stub)
+  | RequestTacticSuggestions
+  | TacticSuggestionsLoaded(result<string, string>)
+  // UI state
+  | ToggleMenu
+  | UpdateProofInput(string)
+  | SelectProver(option<string>)
+  | ClearProofResult
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
   | PaneN(paneNMsg)
   | PaneW(paneWMsg)
   | VeriSimDB(verisimdbMsg)
+  | Echidna(echidnaMsg)
   | Vexometer(vexometerMsg)
   | Orbital(orbitalMsg)
   | View(viewMsg)

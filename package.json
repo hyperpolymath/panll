@@ -26,6 +26,7 @@
   "author": "Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>",
   "license": "PMPL-1.0-or-later",
   "dependencies": {
+    "@rescript/runtime": "^12.2.0",
     "@tauri-apps/plugin-dialog": "^2.6.0",
     "@tauri-apps/plugin-fs": "^2.4.5",
     "rescript-tea": "^0.16.0",

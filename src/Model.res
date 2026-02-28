@@ -260,6 +260,98 @@ type verisimdbState = {
   orchStatus: option<string>,
 }
 
+/// ECHIDNA trust level — maps to the prover dispatch's multi-solver confidence.
+/// Level 1 (lowest) is a single unverified solver; Level 5 is cross-checked
+/// formal proof with no axiom risks.
+type echidnaTrustLevel =
+  | TrustLevel1 // Unverified / single solver, high axiom risk
+  | TrustLevel2 // Single solver, no dangerous axioms
+  | TrustLevel3 // Multiple solvers agree
+  | TrustLevel4 // Cross-checked, no axiom issues
+  | TrustLevel5 // Full formal proof, cross-checked, certificate issued
+
+/// Axiom danger classification — used by the axiom report to flag risky
+/// assumptions in proof obligations (e.g., believe_me, Admitted, sorry).
+type axiomDangerLevel =
+  | Safe    // No concerns
+  | Noted   // Informational (e.g., standard library axioms)
+  | Warning // Potentially unsound (e.g., functional extensionality)
+  | Reject  // Proof-breaking (e.g., believe_me, Admitted)
+
+/// Portfolio confidence — aggregate confidence across multiple provers.
+/// Cross-checked means multiple independent solvers agree on the result.
+type portfolioConfidence =
+  | CrossChecked   // Multiple solvers independently agree
+  | SingleSolver   // Only one solver produced a result
+  | Inconclusive   // Solvers disagree or partial results
+  | AllTimedOut     // Every solver timed out
+
+/// A prover registered in the ECHIDNA prover catalog.
+/// Tier indicates the solver family (e.g., SMT, ATP, ITP, tactic engine).
+type echidnaProver = {
+  name: string,
+  tier: string,
+  complexity: string,
+}
+
+/// A single axiom usage entry from the axiom report — flags whether
+/// the proof relies on dangerous assumptions.
+type axiomUsage = {
+  axiomName: string,
+  dangerLevel: axiomDangerLevel,
+  description: string,
+}
+
+/// The structured result of an ECHIDNA dispatch (proof submission).
+/// Contains verification status, trust assessment, prover telemetry,
+/// axiom risk report, and optional certificate hash.
+type echidnaDispatchResult = {
+  verified: bool,
+  trustLevel: echidnaTrustLevel,
+  proversUsed: array<string>,
+  proofTimeMs: float,
+  goalsRemaining: int,
+  axiomReport: array<axiomUsage>,
+  certificateHash: option<string>,
+  message: string,
+  crossChecked: portfolioConfidence,
+}
+
+/// A tactic suggestion from the ECHIDNA ML advisor.
+/// Phase 2 — type defined now, handler returns model unchanged.
+type echidnaTacticSuggestion = {
+  tactic: string,
+  confidence: float,
+  aspectTags: array<string>,
+  description: string,
+}
+
+/// Interactive proof session state.
+/// Phase 2 — type defined now, handler returns model unchanged.
+type echidnaSessionState = {
+  sessionId: string,
+  goals: array<string>,
+  complete: bool,
+  tacticsApplied: array<string>,
+}
+
+/// ECHIDNA backend state — tracks connection, prover catalog, proof lifecycle,
+/// interactive session (Phase 2), and tactic suggestions (Phase 2).
+type echidnaState = {
+  connected: bool,
+  endpoint: string,
+  version: option<string>,
+  provers: array<echidnaProver>,
+  lastProofResult: option<echidnaDispatchResult>,
+  proofError: option<string>,
+  proofLoading: bool,
+  session: option<echidnaSessionState>,
+  tacticSuggestions: array<echidnaTacticSuggestion>,
+  selectedProver: option<string>,
+  proofInput: string,
+  menuExpanded: bool,
+}
+
 /// The complete Model
 type model = {
   // Core panes
@@ -284,6 +376,9 @@ type model = {
 
   // Database backends
   verisimdb: verisimdbState,
+
+  // Theorem prover backend
+  echidna: echidnaState,
 
   // Feedback-O-Tron
   feedbackPending: option<string>,
@@ -413,6 +508,20 @@ let init = (): model => {
     telemetry: None,
     telemetryVisible: false,
     orchStatus: None,
+  },
+  echidna: {
+    connected: false,
+    endpoint: "http://localhost:8080/api",
+    version: None,
+    provers: [],
+    lastProofResult: None,
+    proofError: None,
+    proofLoading: false,
+    session: None,
+    tacticSuggestions: [],
+    selectedProver: None,
+    proofInput: "",
+    menuExpanded: false,
   },
   humidity: Medium,
   viewMode: DarkStart,

@@ -1310,6 +1310,177 @@ fn verisimdb_get_entity(entity_id: String) -> Result<String, String> {
     }
 }
 
+// ===========================================================================
+// ECHIDNA Theorem Prover Backend
+// ===========================================================================
+
+const DEFAULT_ECHIDNA_URL: &str = "http://localhost:8080/api";
+
+/// Resolve the ECHIDNA API base URL from environment or default.
+/// Override with ECHIDNA_URL env var for non-default deployments.
+fn echidna_url() -> String {
+    std::env::var("ECHIDNA_URL").unwrap_or_else(|_| DEFAULT_ECHIDNA_URL.to_string())
+}
+
+/// GET /health — check ECHIDNA prover connectivity and version.
+/// Returns JSON with `status` and `version` fields on success.
+#[tauri::command]
+fn echidna_health() -> Result<String, String> {
+    let url = format!("{}/health", echidna_url());
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("ECHIDNA returned {}: {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Cannot reach ECHIDNA at {}: {}", url, e)),
+    }
+}
+
+/// GET /provers — list available theorem provers with tier and complexity.
+/// Returns a JSON array of `{name, tier, complexity}` objects.
+#[tauri::command]
+fn echidna_list_provers() -> Result<String, String> {
+    let url = format!("{}/provers", echidna_url());
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("List provers failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("List provers request failed: {}", e)),
+    }
+}
+
+/// POST /prove — submit proof content with an optional prover selection.
+/// Sends `{content, prover?}` and returns the dispatch result JSON with
+/// verification status, trust level, axiom report, and certificate hash.
+#[tauri::command]
+fn echidna_prove(content: String, prover: Option<String>) -> Result<String, String> {
+    let url = format!("{}/prove", echidna_url());
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    let mut payload = serde_json::json!({ "content": content });
+    if let Some(p) = prover {
+        payload["prover"] = serde_json::Value::String(p);
+    }
+
+    match client.post(&url).json(&payload).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Proof submission failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Proof submission request failed: {}", e)),
+    }
+}
+
+/// POST /verify — verify proof content without specifying a prover.
+/// Returns JSON with `{valid, goals_remaining, tactics_used}`.
+#[tauri::command]
+fn echidna_verify(content: String) -> Result<String, String> {
+    let url = format!("{}/verify", echidna_url());
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    let payload = serde_json::json!({ "content": content });
+
+    match client.post(&url).json(&payload).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Verification failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Verification request failed: {}", e)),
+    }
+}
+
+/// GET /search?q=... — search the ECHIDNA theorem library.
+/// The query is manually percent-encoded to avoid adding a url-encoding crate.
+/// Returns JSON with `{results, count}`.
+#[tauri::command]
+fn echidna_search_theorems(query: String) -> Result<String, String> {
+    // Manual percent-encoding for the search query (no new crate dependency).
+    let encoded: String = query
+        .chars()
+        .map(|c| match c {
+            'A'..='Z' | 'a'..='z' | '0'..='9' | '-' | '_' | '.' | '~' => c.to_string(),
+            ' ' => "+".to_string(),
+            _ => format!("%{:02X}", c as u32),
+        })
+        .collect();
+    let url = format!("{}/search?q={}", echidna_url(), encoded);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Theorem search failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Theorem search request failed: {}", e)),
+    }
+}
+
+#[cfg(test)]
+mod echidna_tests {
+    use super::*;
+
+    #[test]
+    fn echidna_url_defaults_without_env() {
+        // Clear the env var to ensure default is returned.
+        std::env::remove_var("ECHIDNA_URL");
+        assert_eq!(echidna_url(), DEFAULT_ECHIDNA_URL);
+    }
+
+    #[test]
+    fn echidna_url_respects_env_override() {
+        let custom = "http://prover.local:9090/api";
+        std::env::set_var("ECHIDNA_URL", custom);
+        assert_eq!(echidna_url(), custom);
+        // Clean up so other tests aren't affected.
+        std::env::remove_var("ECHIDNA_URL");
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -1332,6 +1503,11 @@ fn main() {
             verisimdb_get_entity,
             verisimdb_telemetry,
             verisimdb_orch_status,
+            echidna_health,
+            echidna_list_provers,
+            echidna_prove,
+            echidna_verify,
+            echidna_search_theorems,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

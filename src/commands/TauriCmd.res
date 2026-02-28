@@ -477,6 +477,109 @@ let getOrchStatus = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> =>
   })
 }
 
+// ===========================================================================
+// ECHIDNA Theorem Prover Backend Commands
+// ===========================================================================
+
+/// Check ECHIDNA prover health status.
+/// Invokes the `echidna_health` Tauri command which hits GET /health.
+let checkEchidnaHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("echidna_health", ())
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("ECHIDNA health check failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// List available provers from the ECHIDNA catalog.
+/// Invokes `echidna_list_provers` which hits GET /provers.
+let listEchidnaProvers = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("echidna_list_provers", ())
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("ECHIDNA prover listing failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Submit proof content to ECHIDNA with an optional prover selection.
+/// Invokes `echidna_prove` which POSTs to /prove.
+let echidnaProve = (
+  content: string,
+  prover: option<string>,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    let payload = Js.Dict.fromArray([
+      ("content", Js.Json.string(content)),
+      ("prover", optionToJson(prover)),
+    ])
+    invoke("echidna_prove", Js.Json.object_(payload))
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("ECHIDNA proof submission failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Submit content for verification to ECHIDNA.
+/// Invokes `echidna_verify` which POSTs to /verify.
+let echidnaVerify = (
+  content: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("echidna_verify", {"content": content})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("ECHIDNA verification failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Search the ECHIDNA theorem library by query string.
+/// Invokes `echidna_search_theorems` which hits GET /search?q=...
+let echidnaSearchTheorems = (
+  query: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("echidna_search_theorems", {"query": query})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("ECHIDNA theorem search failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 /// Batch multiple Tauri commands together
 let batch = (commands: list<Tea_Cmd.t<'msg>>): Tea_Cmd.t<'msg> => {
   Tea_Cmd.batch(commands)

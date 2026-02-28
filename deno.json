@@ -20,7 +20,8 @@
     "@tauri-apps/plugin-dialog": "npm:@tauri-apps/plugin-dialog",
     "@tauri-apps/plugin-fs": "npm:@tauri-apps/plugin-fs",
     "rescript/": "npm:/rescript@11.1.4/",
-    "@rescript/core/": "npm:/@rescript/core@1.6.1/"
+    "@rescript/core/": "npm:/@rescript/core@1.6.1/",
+    "@rescript/runtime/": "npm:/@rescript/runtime@12.2.0/"
   },
   "compilerOptions": {
     "strict": true,

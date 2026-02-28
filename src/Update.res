@@ -714,6 +714,357 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
 }
 
 // ===========================================================================
+// ECHIDNA Parsers
+// ===========================================================================
+
+/// Parse the ECHIDNA version string from a health check JSON response.
+/// Expected shape: `{ "status": "ok", "version": "0.4.2" }`.
+let parseEchidnaVersion = (json: string): option<string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) =>
+      switch Dict.get(obj, "version") {
+      | Some(v) =>
+        switch JSON.Classify.classify(v) {
+        | String(s) => Some(s)
+        | _ => None
+        }
+      | None => None
+      }
+    | _ => None
+    }
+  } catch {
+  | _ => None
+  }
+}
+
+/// Parse the ECHIDNA prover catalog from a list provers JSON response.
+/// Expected shape: `[{ "name": "z3", "tier": "SMT", "complexity": "NP" }, ...]`
+/// or `{ "provers": [...] }` wrapper.
+let parseEchidnaProvers = (json: string): array<echidnaProver> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    // Helper to extract a prover record from a JSON object.
+    let parseProver = (obj: Dict.t<JSON.t>): option<echidnaProver> => {
+      let getStr = (key: string): string =>
+        switch Dict.get(obj, key) {
+        | Some(v) =>
+          switch JSON.Classify.classify(v) {
+          | String(s) => s
+          | _ => ""
+          }
+        | None => ""
+        }
+      let name = getStr("name")
+      if name === "" {
+        None
+      } else {
+        Some({name, tier: getStr("tier"), complexity: getStr("complexity")})
+      }
+    }
+    // Try direct array first, then check for { "provers": [...] } wrapper.
+    switch JSON.Classify.classify(parsed) {
+    | Array(arr) =>
+      arr->Array.filterMap(item =>
+        switch JSON.Classify.classify(item) {
+        | Object(obj) => parseProver(obj)
+        | _ => None
+        }
+      )
+    | Object(obj) =>
+      switch Dict.get(obj, "provers") {
+      | Some(v) =>
+        switch JSON.Classify.classify(v) {
+        | Array(arr) =>
+          arr->Array.filterMap(item =>
+            switch JSON.Classify.classify(item) {
+            | Object(o) => parseProver(o)
+            | _ => None
+            }
+          )
+        | _ => []
+        }
+      | None => []
+      }
+    | _ => []
+    }
+  } catch {
+  | _ => []
+  }
+}
+
+/// Parse an ECHIDNA dispatch result from a proof/verify JSON response.
+/// Maps trust_level integers (1-5) to the echidnaTrustLevel variant,
+/// parses the axiom report, and extracts prover telemetry.
+let parseEchidnaDispatchResult = (json: string): option<echidnaDispatchResult> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let getStr = (key: string): string =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | String(s) => s
+            | _ => ""
+            }
+          | None => ""
+          }
+        let getBool = (key: string): bool =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Bool(b) => b
+            | _ => false
+            }
+          | None => false
+          }
+        let getFloat = (key: string): float =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Number(n) => n
+            | _ => 0.0
+            }
+          | None => 0.0
+          }
+        let getInt = (key: string): int =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Number(n) => Float.toInt(n)
+            | _ => 0
+            }
+          | None => 0
+          }
+
+        // Parse trust_level integer to variant
+        let trustLevel = switch getInt("trust_level") {
+        | 1 => TrustLevel1
+        | 2 => TrustLevel2
+        | 3 => TrustLevel3
+        | 4 => TrustLevel4
+        | 5 => TrustLevel5
+        | _ => TrustLevel1
+        }
+
+        // Parse provers_used string array
+        let proversUsed = switch Dict.get(obj, "provers_used") {
+        | Some(v) =>
+          switch JSON.Classify.classify(v) {
+          | Array(arr) =>
+            arr->Array.filterMap(item =>
+              switch JSON.Classify.classify(item) {
+              | String(s) => Some(s)
+              | _ => None
+              }
+            )
+          | _ => []
+          }
+        | None => []
+        }
+
+        // Parse axiom_report array
+        let axiomReport = switch Dict.get(obj, "axiom_report") {
+        | Some(v) =>
+          switch JSON.Classify.classify(v) {
+          | Array(arr) =>
+            arr->Array.filterMap(item =>
+              switch JSON.Classify.classify(item) {
+              | Object(axiomObj) => {
+                  let aGetStr = (key: string): string =>
+                    switch Dict.get(axiomObj, key) {
+                    | Some(av) =>
+                      switch JSON.Classify.classify(av) {
+                      | String(s) => s
+                      | _ => ""
+                      }
+                    | None => ""
+                    }
+                  let dangerLevel = switch aGetStr("danger_level") {
+                  | "safe" => Safe
+                  | "noted" => Noted
+                  | "warning" => Warning
+                  | "reject" => Reject
+                  | _ => Noted
+                  }
+                  Some({
+                    axiomName: aGetStr("axiom_name"),
+                    dangerLevel,
+                    description: aGetStr("description"),
+                  })
+                }
+              | _ => None
+              }
+            )
+          | _ => []
+          }
+        | None => []
+        }
+
+        // Parse cross_checked string to variant
+        let crossChecked = switch getStr("cross_checked") {
+        | "cross_checked" => CrossChecked
+        | "single_solver" => SingleSolver
+        | "inconclusive" => Inconclusive
+        | "all_timed_out" => AllTimedOut
+        | _ => SingleSolver
+        }
+
+        // Parse optional certificate hash
+        let certificateHash = switch Dict.get(obj, "certificate_hash") {
+        | Some(v) =>
+          switch JSON.Classify.classify(v) {
+          | String(s) => Some(s)
+          | _ => None
+          }
+        | None => None
+        }
+
+        Some({
+          verified: getBool("verified"),
+          trustLevel,
+          proversUsed,
+          proofTimeMs: getFloat("proof_time_ms"),
+          goalsRemaining: getInt("goals_remaining"),
+          axiomReport,
+          certificateHash,
+          message: getStr("message"),
+          crossChecked,
+        })
+      }
+    | _ => None
+    }
+  } catch {
+  | _ => None
+  }
+}
+
+// ===========================================================================
+// ECHIDNA Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: ECHIDNA (Theorem Prover Backend)
+/// Manages the ECHIDNA connection state, prover catalog, proof submission lifecycle,
+/// theorem search, and UI toggles. Interactive sessions and tactic suggestions
+/// are Phase 2 stubs — their handlers return the model unchanged.
+let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => {
+  let ec = model.echidna
+  switch msg {
+  // --- Connection lifecycle ---
+  | CheckHealth => (
+      model,
+      TauriCmd.checkEchidnaHealth(result =>
+        switch result {
+        | Ok(json) => Echidna(HealthOk(json))
+        | Error(err) => Echidna(HealthError(err))
+        }
+      ),
+    )
+  | HealthOk(json) =>
+    let version = parseEchidnaVersion(json)
+    ({...model, echidna: {...ec, connected: true, version, proofError: None}}, Tea_Cmd.none)
+  | HealthError(err) => (
+      {...model, echidna: {...ec, connected: false, version: None, proofError: Some(err)}},
+      Tea_Cmd.none,
+    )
+
+  // --- Prover catalog ---
+  | ListProvers => (
+      model,
+      TauriCmd.listEchidnaProvers(result => Echidna(ProversLoaded(result))),
+    )
+  | ProversLoaded(result) =>
+    switch result {
+    | Ok(json) =>
+      let provers = parseEchidnaProvers(json)
+      ({...model, echidna: {...ec, provers, proofError: None}}, Tea_Cmd.none)
+    | Error(err) => ({...model, echidna: {...ec, proofError: Some(err)}}, Tea_Cmd.none)
+    }
+
+  // --- Proof submission ---
+  | SubmitProof => (
+      {...model, echidna: {...ec, proofLoading: true, proofError: None, lastProofResult: None}},
+      TauriCmd.echidnaProve(ec.proofInput, ec.selectedProver, result =>
+        Echidna(ProofResult(result))
+      ),
+    )
+  | ProofResult(result) =>
+    switch result {
+    | Ok(json) =>
+      let parsed = parseEchidnaDispatchResult(json)
+      (
+        {...model, echidna: {...ec, lastProofResult: parsed, proofLoading: false, proofError: None}},
+        Tea_Cmd.none,
+      )
+    | Error(err) => (
+        {...model, echidna: {...ec, proofLoading: false, proofError: Some(err), lastProofResult: None}},
+        Tea_Cmd.none,
+      )
+    }
+
+  // --- Verification ---
+  | SubmitVerify => (
+      {...model, echidna: {...ec, proofLoading: true, proofError: None, lastProofResult: None}},
+      TauriCmd.echidnaVerify(ec.proofInput, result => Echidna(VerifyResult(result))),
+    )
+  | VerifyResult(result) =>
+    switch result {
+    | Ok(json) =>
+      let parsed = parseEchidnaDispatchResult(json)
+      (
+        {...model, echidna: {...ec, lastProofResult: parsed, proofLoading: false, proofError: None}},
+        Tea_Cmd.none,
+      )
+    | Error(err) => (
+        {...model, echidna: {...ec, proofLoading: false, proofError: Some(err), lastProofResult: None}},
+        Tea_Cmd.none,
+      )
+    }
+
+  // --- Theorem search ---
+  | SearchTheorems(query) => (
+      model,
+      TauriCmd.echidnaSearchTheorems(query, result => Echidna(SearchResult(result))),
+    )
+  | SearchResult(_result) =>
+    // Search results display is Phase 2 — for now just clear errors.
+    ({...model, echidna: {...ec, proofError: None}}, Tea_Cmd.none)
+
+  // --- Interactive sessions (Phase 2 stubs) ---
+  | CreateSession => (model, Tea_Cmd.none)
+  | SessionCreated(_result) => (model, Tea_Cmd.none)
+  | ApplyTactic(_tactic) => (model, Tea_Cmd.none)
+  | TacticApplied(_result) => (model, Tea_Cmd.none)
+  | GetSessionState => (model, Tea_Cmd.none)
+  | SessionStateLoaded(_result) => (model, Tea_Cmd.none)
+
+  // --- Tactic suggestions (Phase 2 stubs) ---
+  | RequestTacticSuggestions => (model, Tea_Cmd.none)
+  | TacticSuggestionsLoaded(_result) => (model, Tea_Cmd.none)
+
+  // --- UI state ---
+  | ToggleMenu => (
+      {...model, echidna: {...ec, menuExpanded: !ec.menuExpanded}},
+      Tea_Cmd.none,
+    )
+  | UpdateProofInput(text) => (
+      {...model, echidna: {...ec, proofInput: text}},
+      Tea_Cmd.none,
+    )
+  | SelectProver(prover) => (
+      {...model, echidna: {...ec, selectedProver: prover}},
+      Tea_Cmd.none,
+    )
+  | ClearProofResult => (
+      {...model, echidna: {...ec, lastProofResult: None, proofError: None}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+// ===========================================================================
 // Cognitive Governance Sub-Updaters
 // ===========================================================================
 
@@ -955,6 +1306,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | PaneN(subMsg) => (updatePaneN(model, subMsg), Tea_Cmd.none)
   | PaneW(subMsg) => updatePaneW(model, subMsg)
   | VeriSimDB(subMsg) => updateVeriSimDB(model, subMsg)
+  | Echidna(subMsg) => updateEchidna(model, subMsg)
   | Vexometer(subMsg) => updateVexometer(model, subMsg)
   | Orbital(subMsg) => updateOrbital(model, subMsg)
   | View(subMsg) => updateView(model, subMsg)

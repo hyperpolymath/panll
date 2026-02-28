@@ -42,14 +42,14 @@ let renderPaneL = (paneL: paneLState, proofs: array<proofObligation>, visible: b
   }
 }
 
-/// Render Pane-N (Neural Stream) - using full component
-let renderPaneN = (paneN: paneNState, visible: bool): Tea_Vdom.t<msg> => {
+/// Render Pane-N (Neural Stream) with ECHIDNA theorem prover panel - using full component
+let renderPaneN = (paneN: paneNState, echidna: echidnaState, visible: bool): Tea_Vdom.t<msg> => {
   if !visible {
     noNode
   } else {
     div(
       list{Attrs.class_("flex-1 overflow-auto")},
-      list{PaneN.view(paneN)},
+      list{PaneN.view(paneN, echidna)},
     )
   }
 }
@@ -138,7 +138,7 @@ let view = (model: model): Tea_Vdom.t<msg> => {
           list{Attrs.class_("flex-1 flex overflow-hidden relative z-10")},
           list{
             renderPaneL(model.paneL, model.verisimdb.proofObligations, model.paneLVisible),
-            renderPaneN(model.paneN, model.paneNVisible),
+            renderPaneN(model.paneN, model.echidna, model.paneNVisible),
             renderPaneW(model.paneW, model.orbital, model.verisimdb, model.paneWVisible),
           },
         ),

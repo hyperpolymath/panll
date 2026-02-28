@@ -1,0 +1,218 @@
+SPDX-License-Identifier: PMPL-1.0-or-later
+
+PanLL eNSAID — Systems Architecture (v0.3.0 Phase 1)
+=====================================================
+
+1. HIGH-LEVEL SYSTEM ARCHITECTURE
+===================================
+
+                          +-----------------------------+
+                          |        PanLL Frontend       |
+                          |    (ReScript + TEA + JSX)   |
+                          |                             |
+                          |  +-------+ +------+ +----+  |
+                          |  |Pane-L | |Pane-N| |Pane|  |
+                          |  |Symbol.| |Neural| | -W |  |
+                          |  |Constr.| |Stream| |World|  |
+                          |  |       | |ECHID.| |Sec. |  |
+                          |  +---+---+ +--+---+ +-+--+  |
+                          |      |        |       |     |
+                          |  +---+--------+-------+--+  |
+                          |  |     TEA Update Loop     |  |
+                          |  | Model -> Msg -> Update  |  |
+                          |  +----------+-----------+  |  |
+                          |             |              |  |
+                          |  +----------+----------+   |  |
+                          |  |    TauriCmd.res      |   |  |
+                          |  | (invoke wrappers)    |   |  |
+                          +--+----------+----------+---+
+                                        |
+                              Tauri IPC Bridge
+                                        |
+                          +-------------+-------------+
+                          |    Tauri Rust Backend      |
+                          |       (main.rs)            |
+                          |                            |
+                          | +--------+ +--------+      |
+                          | |panic-  | |VexTrak.| ...  |
+                          | |attack  | |tracker |      |
+                          | +--------+ +--------+      |
+                          |                            |
+                          | reqwest::blocking HTTP     |
+                          +---+--------+--------+------+
+                              |        |        |
+              +---------------+   +----+----+   +---------------+
+              |                   |         |                   |
+    +---------v--------+ +-------v-------+ +--------v---------+
+    |   VeriSimDB      | |   ECHIDNA     | |  panic-attack    |
+    |  :8080/api/v1    | |  :8080/api    | |  CLI binary      |
+    |                  | |               | |                   |
+    | Rust core        | | Theorem       | | Robustness        |
+    | + Elixir orch    | | prover        | | testing engine    |
+    |   (:4080)        | | dispatch      | |                   |
+    +------------------+ +---------------+ +-------------------+
+
+2. FRONTEND SUBSYSTEM ARCHITECTURE (ReScript TEA)
+==================================================
+
+     +-----------------------------------------------------------+
+     |                     App.res (entrypoint)                   |
+     |  Tea.App.standardProgram({ model, update, view, ... })    |
+     +-----------------------------------------------------------+
+                    |              |             |
+          +---------+     +-------+------+      +--------+
+          |               |              |               |
+     +----v----+    +-----v-----+   +----v----+    +-----v------+
+     |Model.res|    |  Msg.res  |   |Update.  |    |  View.res  |
+     |         |    |           |   |  res    |    |            |
+     | Types:  |    | Messages: |   | Routes: |    | Renders:   |
+     | model   |    | paneLMsg  |   | PaneL   |    | PaneL      |
+     | paneL   |    | paneNMsg  |   | PaneN   |    | PaneN      |
+     | paneN   |    | paneWMsg  |   | PaneW   |    |  +ECHIDNA  |
+     | paneW   |    | verisimdb |   | VSimDB  |    | PaneW      |
+     | verisim |    | echidna   |   | ECHIDNA |    | Vexometer  |
+     | echidna |    | vexometer |   | Vexo    |    | Feedback   |
+     | vexo    |    | orbital   |   | Orbital |    |            |
+     | orbital |    | view      |   | View    |    |            |
+     | sync    |    | feedback  |   | Feedbk  |    |            |
+     | contrac |    | antiCrash |   | AntiCr  |    |            |
+     +---------+    +-----------+   +---------+    +------------+
+                                         |
+                                    +----v------+
+                                    |TauriCmd.  |
+                                    |   res     |
+                                    |           |
+                                    | Commands: |
+                                    | validate  |
+                                    | vexation  |
+                                    | feedback  |
+                                    | eventChn  |
+                                    | panicAtk  |
+                                    | verisimdb |
+                                    | echidna   |
+                                    +-----------+
+
+3. PANE-N SUBSYSTEM (with ECHIDNA)
+===================================
+
+     +---------------------------------------------+
+     |              Pane-N Component                |
+     |                                             |
+     |  +---------------------------------------+  |
+     |  |          Neural Stream                |  |
+     |  |  +--------+  +----------+  +-------+  |  |
+     |  |  | OODA   |  | Token    |  | Mono- |  |  |
+     |  |  | Phase  |  | Stream   |  | logue |  |  |
+     |  |  +--------+  +----------+  +-------+  |  |
+     |  +---------------------------------------+  |
+     |                                             |
+     |  +---------------------------------------+  |
+     |  |        ECHIDNA Prover Panel           |  |
+     |  |                                       |  |
+     |  |  [*] Connected v0.4.2     [Ping]      |  |
+     |  |                                       |  |
+     |  |  PROVERS            [List] [Refresh]  |  |
+     |  |  +----------------------------------+ |  |
+     |  |  | > z3    [SMT]  NP               | |  |
+     |  |  |   cvc5  [SMT]  PSPACE           | |  |
+     |  |  |   e     [ATP]  FO               | |  |
+     |  |  +----------------------------------+ |  |
+     |  |                                       |  |
+     |  |  PROOF INPUT                          |  |
+     |  |  +----------------------------------+ |  |
+     |  |  | theorem add_comm :              | |  |
+     |  |  |   forall a b, a + b = b + a     | |  |
+     |  |  +----------------------------------+ |  |
+     |  |  [Prove]  [Verify]                    |  |
+     |  |                                       |  |
+     |  |  VERIFIED          [Trust 4]          |  |
+     |  |  Provers: z3, cvc5                    |  |
+     |  |  Time: 42.5ms    Goals: 0             |  |
+     |  |  cert: sha256:abc123...               |  |
+     |  |                                       |  |
+     |  |  AXIOM REPORT                         |  |
+     |  |  i funext - Functional extensionality |  |
+     |  |                          [Clear]      |  |
+     |  +---------------------------------------+  |
+     +---------------------------------------------+
+
+4. DATA FLOW: Proof Submission
+===============================
+
+  User types proof    Frontend dispatches     Tauri IPC         Rust backend
+  in textarea         SubmitProof msg         invoke()          echidna_prove()
+       |                    |                    |                    |
+       v                    v                    v                    v
+  +----------+     +---------------+     +-----------+     +------------------+
+  | proofInput| --> | updateEchidna | --> | TauriCmd. | --> | POST /api/prove  |
+  | in model  |     | sets loading  |     | echidna   |     | to ECHIDNA :8080 |
+  +----------+     +---------------+     | Prove()   |     +--------+---------+
+                                         +-----------+              |
+                                                                    v
+  UI renders          Frontend updates      Tauri IPC          ECHIDNA returns
+  proof result        model from JSON       callback           dispatch result
+       |                    |                    |                    |
+       v                    v                    v                    v
+  +----------+     +---------------+     +-----------+     +------------------+
+  | PaneN    | <-- | parseEchidna  | <-- | ProofResu | <-- | { verified: true |
+  | renders  |     | DispatchResult|     | lt(Ok(js))  |   |   trust_level: 4 |
+  | result   |     | sets result   |     +-----------+     |   provers: [...] |
+  +----------+     +---------------+                       |   axiom_report.. |
+                                                           +------------------+
+
+5. TRUST LEVEL HIERARCHY
+==========================
+
+  Level 1  [RED]     Single unverified solver, high axiom risk
+  Level 2  [ORANGE]  Single solver, no dangerous axioms
+  Level 3  [YELLOW]  Multiple solvers agree
+  Level 4  [GREEN]   Cross-checked, no axiom issues
+  Level 5  [BRIGHT]  Full formal proof, cross-checked, certificate issued
+
+  Axiom Danger:
+    Safe    [dim]    No concerns
+    Noted   [blue]   Standard library axioms (informational)
+    Warning [yellow] Potentially unsound (funext, propext)
+    Reject  [red]    Proof-breaking (believe_me, Admitted, sorry)
+
+6. BACKEND SERVICES MAP
+=========================
+
+  Service        Port   Proto   Status    Purpose
+  -------------- ------ ------- --------- -------------------------
+  VeriSimDB      8080   REST    Phase 1   Octad database (Rust core)
+  VeriSimDB Orch 4080   REST    Phase 1   Elixir orchestration layer
+  ECHIDNA        8080   REST    Phase 1   Theorem prover dispatch
+  panic-attack   CLI    --      Phase 1   Robustness testing engine
+
+  Note: VeriSimDB and ECHIDNA both default to :8080 — in practice,
+  override one via ECHIDNA_URL or VERISIMDB_URL env var.
+
+7. PHASE ROADMAP
+=================
+
+  Phase 1 (v0.3.0) - THIS RELEASE
+  --------------------------------
+  [x] Health check + version display
+  [x] Prover catalog listing
+  [x] Proof submission with optional prover selection
+  [x] Verification endpoint
+  [x] Theorem search
+  [x] Trust level badge (5-tier)
+  [x] Axiom report with danger classification
+  [x] Certificate hash display
+  [x] UI: collapsible panel, connection indicator, proof input
+
+  Phase 2 (v0.4.0) - PLANNED
+  ---------------------------
+  [ ] Interactive proof sessions (create/apply/state/tree)
+  [ ] Tactic suggestions with ML confidence scores
+  [ ] Session state management
+  [ ] Streaming proof updates
+
+  Phase 3 (v0.5.0) - PLANNED
+  ---------------------------
+  [ ] Cross-pane flow: Pane-L constraints -> proof obligations -> Pane-W certs
+  [ ] ECHIDNA state persistence
+  [ ] GraphQL migration for complex queries
+  [ ] Unified Elixir core (VeriSimDB + ECHIDNA + panic-attack)
