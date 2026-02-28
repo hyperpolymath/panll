@@ -5,19 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PanLL - eNSAID (Environment for NeSy-Agentic Integrated Development)</title>
 
-  <!-- Import map: resolve bare npm specifiers emitted by ReScript and Tauri -->
-  <script type="importmap">
-  {
-    "imports": {
-      "@rescript/core/":       "/node_modules/@rescript/core/",
-      "@rescript/runtime/":    "/node_modules/@rescript/runtime/",
-      "@tauri-apps/api/":      "/node_modules/@tauri-apps/api/",
-      "@tauri-apps/plugin-dialog": "/node_modules/@tauri-apps/plugin-dialog/dist-js/index.js",
-      "@tauri-apps/plugin-fs":     "/node_modules/@tauri-apps/plugin-fs/dist-js/index.js"
-    }
-  }
-  </script>
-
   <!-- Compiled Tailwind CSS (built from src/styles/input.css via tailwind.config.js) -->
   <link rel="stylesheet" href="styles.css">
 
@@ -34,13 +21,8 @@
   <!-- TEA app mount point -->
   <div id="app"></div>
 
-  <!-- Load the compiled ReScript application -->
-  <script type="module">
-    // Import the main application (auto-starts on import)
-    import '../src/App.res.js';
-
-    console.log('PanLL eNSAID loaded - TEA app should be mounted to #app');
-  </script>
+  <!-- Load the bundled ReScript application (built by scripts/bundle.ts) -->
+  <script type="module" src="app.bundle.js"></script>
 
   <noscript>
     <div style="padding: 2rem; text-align: center;">

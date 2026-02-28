@@ -5,6 +5,8 @@
   "tasks": {
     "dev": "cargo tauri dev",
     "build": "cargo tauri build",
+    "bundle": "DENO_NO_PACKAGE_JSON=1 deno run -A scripts/bundle.ts",
+    "bundle:watch": "DENO_NO_PACKAGE_JSON=1 deno run -A scripts/bundle.ts --watch",
     "css:build": "./node_modules/.bin/tailwindcss -i ./src/styles/input.css -o ./public/styles.css --minify",
     "css:watch": "./node_modules/.bin/tailwindcss -i ./src/styles/input.css -o ./public/styles.css --watch",
     "serve:dev": "deno run --allow-net=127.0.0.1:8000 --allow-read=. scripts/dev-server.ts",

@@ -26,6 +26,8 @@ beam/**/erl_crash.dump
 
 # Frontend build artifacts
 public/styles.css
+public/app.bundle.js
+public/app.bundle.js.map
 dist/
 build/
 coverage/
