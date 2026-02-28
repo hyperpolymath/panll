@@ -137,7 +137,9 @@ Deno.test("Update - anti-inflammatory activates at high vexation", () => {
     },
   };
 
-  const [newModel, _cmd] = Update.update(model, "NoOp");
+  // Use a real message (not NoOp) so contractile post-processing runs.
+  const msg = { TAG: "View", _0: { TAG: "SetHumidity", _0: "Medium" } };
+  const [newModel, _cmd] = Update.update(model, msg);
 
   assertEquals(newModel.vexometer.antiInflammatoryActive, true);
 });
@@ -151,7 +153,9 @@ Deno.test("Update - anti-inflammatory stays inactive at low vexation", () => {
     },
   };
 
-  const [newModel, _cmd] = Update.update(model, "NoOp");
+  // Use a real message (not NoOp) so contractile post-processing runs.
+  const msg = { TAG: "View", _0: { TAG: "SetHumidity", _0: "Medium" } };
+  const [newModel, _cmd] = Update.update(model, msg);
 
   assertEquals(newModel.vexometer.antiInflammatoryActive, false);
 });

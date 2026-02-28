@@ -1527,8 +1527,9 @@ let updateAntiCrash = (model: model, msg: antiCrashMsg): (model, Tea_Cmd.t<msg>)
       ({...model, antiCrash: newAntiCrash, paneN: newPaneN}, Tea_Cmd.none)
     }
   | ValidationPassed(token) => {
-      // Token has already been validated externally — add directly.
-      let newPaneN = {...model.paneN, tokens: Array.concat(model.paneN.tokens, [token])}
+      // Token has already been validated externally — mark as validated and add.
+      let validatedToken = {...token, validated: true}
+      let newPaneN = {...model.paneN, tokens: Array.concat(model.paneN.tokens, [validatedToken])}
       ({...model, paneN: newPaneN}, Tea_Cmd.none)
     }
   | ValidationFailed(_token, reason) => {
@@ -1587,6 +1588,13 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
 
   let newModel = {...model, contractiles: updatedContractiles}
 
+  // Auto-activate anti-inflammatory when vexation index exceeds threshold (0.7).
+  let antiInflammatoryActive = newModel.vexometer.index > 0.7
+  let newModel = {
+    ...newModel,
+    vexometer: {...newModel.vexometer, antiInflammatoryActive},
+  }
+
   // If a Strict contractile is violated, halt neural inference.
   if hasStrictViolation {
     ({...newModel, paneN: {...newModel.paneN, inferenceActive: false}}, cmd)
@@ -1598,6 +1606,16 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
 // ===========================================================================
 // Main Orchestrator
 // ===========================================================================
+
+/// Determines whether a message should trigger an auto-save.
+/// Returns false for NoOp and SaveState (no state change), true for everything else.
+let shouldAutoSave = (msg: msg): bool => {
+  switch msg {
+  | NoOp => false
+  | SaveState => false
+  | _ => true
+  }
+}
 
 /// ORCHESTRATOR: The main entry point for state updates.
 /// Routes each message to its domain-specific sub-updater, then applies
