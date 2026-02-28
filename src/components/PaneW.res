@@ -176,30 +176,125 @@ let renderEntityList = (db: verisimdbState): Tea_Vdom.t<msg> => {
   }
 }
 
+/// Render a single drift bar for a modality.
+/// Shows modality name and a coloured bar proportional to the drift score.
+/// Colour transitions: green (0.0) -> amber (0.3) -> red (0.7+).
+let renderDriftBar = (modality: string, score: float): Tea_Vdom.t<msg> => {
+  let widthPercent = Int.toString(Int.fromFloat(score *. 100.0))
+  let barColour = if score >= 0.7 {
+    "bg-red-500"
+  } else if score >= 0.3 {
+    "bg-amber-400"
+  } else {
+    "bg-emerald-400"
+  }
+
+  div(
+    list{Attrs.class_("flex items-center gap-2")},
+    list{
+      div(
+        list{Attrs.class_("w-16 text-[10px] text-gray-400 font-mono text-right")},
+        list{text(modality)},
+      ),
+      div(
+        list{Attrs.class_("flex-1 h-2 bg-gray-800 rounded-full overflow-hidden")},
+        list{
+          div(
+            list{
+              Attrs.class_("h-full rounded-full " ++ barColour),
+              Attrs.style("width", widthPercent ++ "%"),
+              Attrs.role("progressbar"),
+              Attrs.ariaValueNow(score),
+              Attrs.ariaValueMin(0.0),
+              Attrs.ariaValueMax(1.0),
+              Attrs.ariaLabel(modality ++ " drift score"),
+            },
+            list{},
+          ),
+        },
+      ),
+      div(
+        list{Attrs.class_("w-8 text-[10px] text-gray-500 font-mono")},
+        list{text(Float.toFixed(score, ~digits=2))},
+      ),
+    },
+  )
+}
+
+/// Drift heatmap: visual representation of drift across all 8 octad modalities.
+/// Renders as a vertical bar chart with colour-coded severity indicators.
+let renderDriftHeatmap = (scores: driftScores): Tea_Vdom.t<msg> => {
+  div(
+    list{Attrs.class_("space-y-1")},
+    list{
+      renderDriftBar("GRAPH", scores.graph),
+      renderDriftBar("VECTOR", scores.vector),
+      renderDriftBar("TENSOR", scores.tensor),
+      renderDriftBar("SEMANTIC", scores.semantic),
+      renderDriftBar("DOCUMENT", scores.document),
+      renderDriftBar("TEMPORAL", scores.temporal),
+      renderDriftBar("PROV", scores.provenance),
+      renderDriftBar("SPATIAL", scores.spatial),
+    },
+  )
+}
+
 /// Drift status display for the selected entity.
+/// Shows a drift heatmap when structured scores are available, with a
+/// normalise button for entities above the warning threshold.
 let renderDriftStatus = (db: verisimdbState): Tea_Vdom.t<msg> => {
   switch (db.selectedEntity, db.driftStatus) {
-  | (Some(entityId), Some(json)) =>
+  | (Some(entityId), Some(_json)) =>
+    let heatmapView = switch db.driftScores {
+    | Some(scores) => renderDriftHeatmap(scores)
+    | None =>
+      // Fallback to raw JSON if parsing failed
+      div(
+        list{
+          Attrs.class_(
+            "p-2 bg-gray-950 border border-amber-900/40 rounded max-h-24 overflow-y-auto",
+          ),
+        },
+        list{
+          node("pre",
+            list{Attrs.class_("font-mono text-[10px] text-amber-200 whitespace-pre-wrap")},
+            list{text(switch db.driftStatus { | Some(j) => j | None => "" })},
+          ),
+        },
+      )
+    }
+
+    let isNormalising = db.normalisingEntity == Some(entityId)
+    let normaliseButton = button(
+      list{
+        Attrs.class_(
+          if isNormalising {
+            "px-2 py-0.5 text-[10px] bg-gray-700 rounded text-gray-500 cursor-not-allowed"
+          } else {
+            "px-2 py-0.5 text-[10px] bg-amber-600 hover:bg-amber-500 rounded text-gray-900 font-semibold"
+          },
+        ),
+        Events.onClick(
+          if isNormalising { VeriSimDB(ClearQueryResult) } else { VeriSimDB(TriggerNormalise(entityId)) },
+        ),
+      },
+      list{text(if isNormalising { "Normalising..." } else { "Normalise" })},
+    )
+
     div(
-      list{Attrs.class_("space-y-1")},
+      list{Attrs.class_("space-y-2")},
       list{
         div(
-          list{Attrs.class_("text-[11px] text-gray-400")},
-          list{text("Drift: " ++ entityId)},
-        ),
-        div(
+          list{Attrs.class_("flex items-center justify-between")},
           list{
-            Attrs.class_(
-              "p-2 bg-gray-950 border border-amber-900/40 rounded max-h-24 overflow-y-auto",
+            div(
+              list{Attrs.class_("text-[11px] text-gray-400")},
+              list{text("Drift: " ++ entityId)},
             ),
-          },
-          list{
-            node("pre",
-              list{Attrs.class_("font-mono text-[10px] text-amber-200 whitespace-pre-wrap")},
-              list{text(json)},
-            ),
+            normaliseButton,
           },
         ),
+        heatmapView,
       },
     )
   | (Some(_), None) =>
@@ -208,6 +303,191 @@ let renderDriftStatus = (db: verisimdbState): Tea_Vdom.t<msg> => {
       list{text("Loading drift status...")},
     )
   | _ => text("")
+  }
+}
+
+/// Telemetry dashboard panel — shows aggregate product development metrics.
+/// Displays modality usage heatmap, query pattern distribution, performance,
+/// drift frequency, and VQL-DT proof adoption. All data is aggregate-only.
+let renderTelemetryPanel = (db: verisimdbState): Tea_Vdom.t<msg> => {
+  if !db.telemetryVisible {
+    text("")
+  } else {
+    switch db.telemetry {
+    | None =>
+      div(
+        list{Attrs.class_("mt-2 p-3 bg-gray-900/80 border border-emerald-900/30 rounded space-y-2")},
+        list{
+          div(
+            list{Attrs.class_("text-[10px] text-gray-500 italic")},
+            list{text("No telemetry data. Click 'Fetch Telemetry' to load product insights.")},
+          ),
+          div(
+            list{Attrs.class_("text-[9px] text-gray-600")},
+            list{text("Aggregate metrics only. No query content or entity data is captured.")},
+          ),
+          button(
+            list{
+              Attrs.class_("px-2 py-1 text-[10px] bg-emerald-700 hover:bg-emerald-600 rounded text-gray-100"),
+              Events.onClick(VeriSimDB(FetchTelemetry)),
+            },
+            list{text("Fetch Telemetry")},
+          ),
+        },
+      )
+    | Some(snapshot) =>
+      let modalityBars =
+        snapshot.modalityHeatmap
+        ->Array.map(((name, pct)) => {
+          let widthPct = Int.toString(Int.fromFloat(pct))
+          let barColour = if pct >= 30.0 {
+            "bg-emerald-400"
+          } else if pct >= 10.0 {
+            "bg-cyan-400"
+          } else {
+            "bg-gray-600"
+          }
+
+          div(
+            list{Attrs.class_("flex items-center gap-2")},
+            list{
+              div(
+                list{Attrs.class_("w-16 text-[10px] text-gray-400 font-mono text-right")},
+                list{text(name)},
+              ),
+              div(
+                list{Attrs.class_("flex-1 h-2 bg-gray-800 rounded-full overflow-hidden")},
+                list{
+                  div(
+                    list{
+                      Attrs.class_("h-full rounded-full " ++ barColour),
+                      Attrs.style("width", widthPct ++ "%"),
+                    },
+                    list{},
+                  ),
+                },
+              ),
+              div(
+                list{Attrs.class_("w-10 text-[10px] text-gray-500 font-mono")},
+                list{text(Float.toFixed(pct, ~digits=1) ++ "%")},
+              ),
+            },
+          )
+        })
+        ->List.fromArray
+
+      let patternRows =
+        snapshot.queryPatterns
+        ->Array.map(((pattern, count)) =>
+          div(
+            list{Attrs.class_("flex justify-between text-[10px]")},
+            list{
+              div(list{Attrs.class_("text-cyan-300 font-mono")}, list{text(pattern)}),
+              div(list{Attrs.class_("text-gray-500")}, list{text(Int.toString(count))}),
+            },
+          )
+        )
+        ->List.fromArray
+
+      div(
+        list{Attrs.class_("mt-2 p-3 bg-gray-900/80 border border-emerald-900/30 rounded space-y-3")},
+        list{
+          // Privacy notice
+          div(
+            list{Attrs.class_("text-[9px] text-gray-600 italic")},
+            list{text(snapshot.privacyNotice)},
+          ),
+
+          // Modality usage heatmap
+          div(
+            list{Attrs.class_("space-y-1")},
+            list{
+              div(
+                list{Attrs.class_("text-[11px] text-gray-400")},
+                list{text("Modality Usage")},
+              ),
+              div(list{Attrs.class_("space-y-1")}, modalityBars),
+            },
+          ),
+
+          // Query patterns
+          div(
+            list{Attrs.class_("space-y-1")},
+            list{
+              div(
+                list{Attrs.class_("text-[11px] text-gray-400")},
+                list{text("Query Patterns")},
+              ),
+              div(list{Attrs.class_("space-y-0.5")}, patternRows),
+            },
+          ),
+
+          // Performance + drift summary
+          div(
+            list{Attrs.class_("grid grid-cols-3 gap-2 text-center")},
+            list{
+              div(
+                list{},
+                list{
+                  div(
+                    list{Attrs.class_("text-lg font-light text-cyan-300")},
+                    list{text(Float.toFixed(snapshot.avgQueryDurationMs, ~digits=1) ++ "ms")},
+                  ),
+                  div(
+                    list{Attrs.class_("text-[9px] text-gray-500")},
+                    list{text("Avg Query")},
+                  ),
+                },
+              ),
+              div(
+                list{},
+                list{
+                  div(
+                    list{Attrs.class_("text-lg font-light text-amber-300")},
+                    list{text(Int.toString(snapshot.driftDetectedCount))},
+                  ),
+                  div(
+                    list{Attrs.class_("text-[9px] text-gray-500")},
+                    list{text("Drift Events")},
+                  ),
+                },
+              ),
+              div(
+                list{},
+                list{
+                  div(
+                    list{Attrs.class_("text-lg font-light text-emerald-300")},
+                    list{text(Float.toFixed(snapshot.normaliseSuccessRate, ~digits=0) ++ "%")},
+                  ),
+                  div(
+                    list{Attrs.class_("text-[9px] text-gray-500")},
+                    list{text("Normalise OK")},
+                  ),
+                },
+              ),
+            },
+          ),
+
+          // Refresh button
+          div(
+            list{Attrs.class_("flex justify-between items-center")},
+            list{
+              div(
+                list{Attrs.class_("text-[9px] text-gray-600")},
+                list{text("Generated: " ++ snapshot.generatedAt)},
+              ),
+              button(
+                list{
+                  Attrs.class_("px-2 py-0.5 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
+                  Events.onClick(VeriSimDB(FetchTelemetry)),
+                },
+                list{text("Refresh")},
+              ),
+            },
+          ),
+        },
+      )
+    }
   }
 }
 
@@ -230,6 +510,24 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
           renderQueryResult(db),
           renderEntityList(db),
           renderDriftStatus(db),
+          // Telemetry section with toggle
+          div(
+            list{Attrs.class_("flex items-center gap-2 mt-2")},
+            list{
+              div(
+                list{Attrs.class_("text-[11px] text-gray-400")},
+                list{text("Product Telemetry")},
+              ),
+              button(
+                list{
+                  Attrs.class_("px-2 py-0.5 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
+                  Events.onClick(VeriSimDB(ToggleTelemetryPanel)),
+                },
+                list{text(if db.telemetryVisible { "Hide" } else { "Show" })},
+              ),
+            },
+          ),
+          renderTelemetryPanel(db),
         },
       )
     }

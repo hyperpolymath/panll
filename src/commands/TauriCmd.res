@@ -402,6 +402,64 @@ let getDrift = (entityId: string, tagger: result<string, string> => 'msg): Tea_C
   })
 }
 
+/// Trigger normalisation (self-repair) for a drifted entity.
+/// Invokes `verisimdb_normalise` which POSTs to /normalizer/trigger/{id}.
+let triggerNormalise = (
+  entityId: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("verisimdb_normalise", {"entity_id": entityId})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Normalisation failed for " ++ entityId)))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Load full entity detail (all modality data) for a specific hexad.
+/// Invokes `verisimdb_get_entity` which hits GET /hexads/{id}.
+let getEntityDetail = (
+  entityId: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("verisimdb_get_entity", {"entity_id": entityId})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Entity detail retrieval failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Fetch product telemetry from VeriSimDB.
+/// Invokes `verisimdb_telemetry` which hits GET /telemetry.
+/// Returns aggregate-only metrics — no query content, entity data, or PII.
+let getTelemetry = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("verisimdb_telemetry", ())
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Telemetry fetch failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 /// Batch multiple Tauri commands together
 let batch = (commands: list<Tea_Cmd.t<'msg>>): Tea_Cmd.t<'msg> => {
   Tea_Cmd.batch(commands)

@@ -1071,6 +1071,67 @@ fn verisimdb_list_hexads(limit: usize, offset: usize) -> Result<String, String> 
     }
 }
 
+/// GET /telemetry — fetch product telemetry report from the Elixir orchestration API.
+///
+/// Connects to the orchestration layer (default port 4080) rather than the Rust
+/// core (port 8080). The telemetry report contains aggregate-only product metrics:
+/// modality heatmap, query patterns, drift frequency, proof type usage, etc.
+/// No PII, no query content, no entity data — only counters and distributions.
+///
+/// Override the orchestration URL with the VERISIMDB_ORCH_URL env var.
+#[tauri::command]
+fn verisimdb_telemetry() -> Result<String, String> {
+    let base = std::env::var("VERISIMDB_ORCH_URL")
+        .unwrap_or_else(|_| "http://localhost:4080".to_string());
+    let url = format!("{}/telemetry", base);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Telemetry request failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!(
+            "Cannot reach VeriSimDB orchestration at {}: {}. \
+             Is the Elixir orchestration layer running?",
+            url, e
+        )),
+    }
+}
+
+/// GET /status — fetch orchestration status (consensus, federation, telemetry).
+#[tauri::command]
+fn verisimdb_orch_status() -> Result<String, String> {
+    let base = std::env::var("VERISIMDB_ORCH_URL")
+        .unwrap_or_else(|_| "http://localhost:4080".to_string());
+    let url = format!("{}/status", base);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Orchestration status failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Cannot reach orchestration at {}: {}", url, e)),
+    }
+}
+
 /// GET /drift/entity/{id} — retrieve drift metrics for a specific entity.
 #[tauri::command]
 fn verisimdb_get_drift(entity_id: String) -> Result<String, String> {
@@ -1112,6 +1173,8 @@ fn main() {
             verisimdb_query,
             verisimdb_list_hexads,
             verisimdb_get_drift,
+            verisimdb_telemetry,
+            verisimdb_orch_status,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

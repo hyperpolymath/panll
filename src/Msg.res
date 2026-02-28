@@ -101,7 +101,9 @@ type antiCrashMsg =
   | RequestOperatorIntervention(string)
 
 /// VeriSimDB database backend messages — connection lifecycle, VQL query
-/// execution, entity browsing, and drift status retrieval.
+/// execution, entity browsing, drift status retrieval, normalisation,
+/// entity detail loading, and opt-in telemetry retrieval for product
+/// development insights.
 type verisimdbMsg =
   | CheckHealth
   | HealthResult(result<string, string>)
@@ -114,6 +116,13 @@ type verisimdbMsg =
   | DriftLoaded(result<string, string>)
   | ToggleDbMenu
   | ClearQueryResult
+  | TriggerNormalise(string)
+  | NormaliseResult(result<string, string>)
+  | LoadEntityDetail(string)
+  | EntityDetailLoaded(result<string, string>)
+  | FetchTelemetry
+  | TelemetryLoaded(result<string, string>)
+  | ToggleTelemetryPanel
 
 /// The unified message type
 type msg =
