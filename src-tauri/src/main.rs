@@ -1185,6 +1185,59 @@ fn verisimdb_get_drift(entity_id: String) -> Result<String, String> {
     }
 }
 
+/// POST /normalizer/trigger/{id} — trigger normalisation (self-repair) for a drifted entity.
+///
+/// VeriSimDB normalisation re-aligns an entity's modality vectors after drift is detected.
+/// The normaliser recalculates consistency scores, re-validates proofs, and updates the
+/// entity's hexad representation. Returns the normalisation result as JSON.
+#[tauri::command]
+fn verisimdb_normalise(entity_id: String) -> Result<String, String> {
+    let url = format!("{}/normalizer/trigger/{}", verisimdb_url(), entity_id);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.post(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Normalisation failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Normalisation request failed: {}", e)),
+    }
+}
+
+/// GET /hexads/{id} — retrieve full entity detail (all modality data) for a specific hexad.
+///
+/// Returns the complete hexad representation including all six modality vectors,
+/// consistency scores, proof attachments, and drift history for the given entity.
+#[tauri::command]
+fn verisimdb_get_entity(entity_id: String) -> Result<String, String> {
+    let url = format!("{}/hexads/{}", verisimdb_url(), entity_id);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Get entity failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Get entity request failed: {}", e)),
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -1203,6 +1256,8 @@ fn main() {
             verisimdb_query,
             verisimdb_list_hexads,
             verisimdb_get_drift,
+            verisimdb_normalise,
+            verisimdb_get_entity,
             verisimdb_telemetry,
             verisimdb_orch_status,
         ])
