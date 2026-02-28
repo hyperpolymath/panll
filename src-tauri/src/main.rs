@@ -631,6 +631,14 @@ fn get_vexation_index() -> f64 {
 }
 
 /// Submits feedback to the Feedback-O-Tron collective.
+///
+/// Appends one NDJSON line to `/tmp/panll/feedback/feedback.ndjson`.
+/// NDJSON (Newline-Delimited JSON) is used instead of one-file-per-submission
+/// because feedback is an append-only log:
+///   - Crash-safe: a partial write loses one line, not the entire history
+///   - Searchable: `grep "bug" feedback.ndjson` finds all bug reports
+///   - Countable: `wc -l feedback.ndjson` gives the total instantly
+///   - No orphaned files to clean up
 #[tauri::command]
 fn submit_feedback(
     pane_l_state: String,
@@ -638,12 +646,10 @@ fn submit_feedback(
     pane_w_state: String,
     report_type: String,
 ) -> Result<String, String> {
-    // Create feedback directory
     let feedback_dir = env::temp_dir().join("panll").join("feedback");
     fs::create_dir_all(&feedback_dir)
         .map_err(|e| format!("Failed to create feedback directory: {}", e))?;
 
-    // Generate timestamp and ID
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_err(|e| format!("Time error: {}", e))?
@@ -651,7 +657,6 @@ fn submit_feedback(
 
     let id = format!("{}-{}", report_type, timestamp);
 
-    // Create feedback JSON
     let feedback_json = json!({
         "id": id,
         "report_type": report_type,
@@ -661,14 +666,22 @@ fn submit_feedback(
         "timestamp": timestamp,
     });
 
-    // Write to file
-    let filename = format!("feedback-{}-{}.json", report_type, timestamp);
-    let filepath = feedback_dir.join(&filename);
+    // Serialize as a single compact line (no pretty-printing — NDJSON requires one object per line).
+    let mut line = serde_json::to_string(&feedback_json).map_err(|e| e.to_string())?;
+    line.push('\n');
 
-    fs::write(&filepath, serde_json::to_string_pretty(&feedback_json).map_err(|e| e.to_string())?)
-        .map_err(|e| format!("Failed to write feedback file: {}", e))?;
+    // Append to the NDJSON log file. OpenOptions ensures atomic append on POSIX.
+    let filepath = feedback_dir.join("feedback.ndjson");
+    use std::io::Write;
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&filepath)
+        .map_err(|e| format!("Failed to open feedback log: {}", e))?;
+    file.write_all(line.as_bytes())
+        .map_err(|e| format!("Failed to append feedback: {}", e))?;
 
-    Ok(format!("Feedback saved: {}", filepath.display()))
+    Ok(format!("Feedback appended: {}", filepath.display()))
 }
 
 #[tauri::command]
@@ -936,7 +949,14 @@ Commands:
     }
 
     #[test]
-    fn test_submit_feedback_creates_json_file() {
+    fn test_submit_feedback_appends_ndjson() {
+        let feedback_path = env::temp_dir().join("panll").join("feedback").join("feedback.ndjson");
+        let lines_before = if feedback_path.exists() {
+            fs::read_to_string(&feedback_path).unwrap_or_default().lines().count()
+        } else {
+            0
+        };
+
         let result = submit_feedback(
             "pane_l content".to_string(),
             "pane_n content".to_string(),
@@ -946,30 +966,36 @@ Commands:
 
         assert!(result.is_ok());
         let message = result.unwrap();
-        assert!(message.contains("Feedback saved:"));
-        assert!(message.contains("feedback-bug-"));
+        assert!(message.contains("Feedback appended:"));
+        assert!(message.contains("feedback.ndjson"));
 
-        // Clean up: extract filepath from message and verify file exists
-        if let Some(path_str) = message.strip_prefix("Feedback saved: ") {
-            let path = PathBuf::from(path_str);
-            assert!(path.exists());
+        // Verify the file grew (other parallel tests may also append, so use >=).
+        let content = fs::read_to_string(&feedback_path).expect("read feedback log");
+        let lines: Vec<&str> = content.lines().collect();
+        assert!(lines.len() > lines_before, "file should have grown");
 
-            // Read and verify JSON structure
-            let content = fs::read_to_string(&path).expect("read feedback file");
-            let feedback: Value = serde_json::from_str(&content).expect("parse feedback JSON");
+        // Find our specific entry by its unique pane_l_state value.
+        let our_line = lines.iter().find(|line| line.contains("pane_l content"))
+            .expect("our feedback entry should be in the log");
+        let feedback: Value = serde_json::from_str(our_line).expect("parse NDJSON line");
+        assert_eq!(feedback.get("report_type").and_then(Value::as_str), Some("bug"));
+        assert_eq!(feedback.get("pane_l_state").and_then(Value::as_str), Some("pane_l content"));
+        assert!(feedback.get("id").is_some());
+        assert!(feedback.get("timestamp").is_some());
 
-            assert_eq!(feedback.get("report_type").and_then(Value::as_str), Some("bug"));
-            assert_eq!(feedback.get("pane_l_state").and_then(Value::as_str), Some("pane_l content"));
-            assert!(feedback.get("id").is_some());
-            assert!(feedback.get("timestamp").is_some());
-
-            // Clean up
-            let _ = fs::remove_file(path);
-        }
+        // Verify it's compact (no embedded newlines within the JSON object).
+        assert!(!our_line.contains('\n'));
     }
 
     #[test]
     fn test_submit_feedback_different_report_type() {
+        let feedback_path = env::temp_dir().join("panll").join("feedback").join("feedback.ndjson");
+        let lines_before = if feedback_path.exists() {
+            fs::read_to_string(&feedback_path).unwrap_or_default().lines().count()
+        } else {
+            0
+        };
+
         let result = submit_feedback(
             "state1".to_string(),
             "state2".to_string(),
@@ -979,12 +1005,16 @@ Commands:
 
         assert!(result.is_ok());
         let message = result.unwrap();
-        assert!(message.contains("feedback-feature-request-"));
+        assert!(message.contains("feedback.ndjson"));
 
-        // Clean up
-        if let Some(path_str) = message.strip_prefix("Feedback saved: ") {
-            let _ = fs::remove_file(path_str);
-        }
+        // Verify the file grew and our entry is present.
+        let content = fs::read_to_string(&feedback_path).expect("read feedback log");
+        let lines: Vec<&str> = content.lines().collect();
+        assert!(lines.len() > lines_before, "file should have grown");
+        let our_line = lines.iter().find(|line| line.contains("\"state1\""))
+            .expect("our feedback entry should be in the log");
+        let last: Value = serde_json::from_str(our_line).expect("parse NDJSON line");
+        assert_eq!(last.get("report_type").and_then(Value::as_str), Some("feature-request"));
     }
 }
 
