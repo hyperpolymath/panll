@@ -146,14 +146,16 @@ type echidnaMsg =
   // Theorem search
   | SearchTheorems(string)
   | SearchResult(result<string, string>)
-  // Interactive sessions (Phase 2 — stub)
+  // Interactive sessions
   | CreateSession
   | SessionCreated(result<string, string>)
-  | ApplyTactic(string)
+  | ApplyTactic(string, array<string>)
   | TacticApplied(result<string, string>)
   | GetSessionState
   | SessionStateLoaded(result<string, string>)
-  // Tactic suggestions (Phase 2 — stub)
+  | CancelSession
+  | UpdateTacticInput(string)
+  // Tactic suggestions
   | RequestTacticSuggestions
   | TacticSuggestionsLoaded(result<string, string>)
   // UI state

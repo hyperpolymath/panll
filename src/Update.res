@@ -942,13 +942,217 @@ let parseEchidnaDispatchResult = (json: string): option<echidnaDispatchResult> =
 }
 
 // ===========================================================================
+// ECHIDNA Session & Tactic Parsers
+// ===========================================================================
+
+/// Parse a proof status string from ECHIDNA's ProofResponse into the variant type.
+let parseProofStatus = (s: string): echidnaProofStatus => {
+  switch s {
+  | "pending" => Pending
+  | "in_progress" => InProgress
+  | "success" => ProofSuccess
+  | "failed" => ProofFailed
+  | "timeout" => ProofTimeout
+  | "error" => ProofError
+  | _ => Pending
+  }
+}
+
+/// Parse an ECHIDNA ProofResponse JSON into echidnaSessionState.
+/// Expected shape: `{ "id": "...", "prover": "...", "goal": "...",
+///   "status": "in_progress", "goals": [...], "proof_script": [...],
+///   "complete": false, "tactics_applied": [...],
+///   "time_elapsed": 1.23, "error_message": null }`
+let parseEchidnaSession = (json: string): option<echidnaSessionState> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let getStr = (key: string): string =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | String(s) => s
+            | _ => ""
+            }
+          | None => ""
+          }
+        let getBool = (key: string): bool =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Bool(b) => b
+            | _ => false
+            }
+          | None => false
+          }
+        let getStrArray = (key: string): array<string> =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Array(arr) =>
+              arr->Array.filterMap(item =>
+                switch JSON.Classify.classify(item) {
+                | String(s) => Some(s)
+                | _ => None
+                }
+              )
+            | _ => []
+            }
+          | None => []
+          }
+        let getOptFloat = (key: string): option<float> =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Number(n) => Some(n)
+            | _ => None
+            }
+          | None => None
+          }
+        let getOptStr = (key: string): option<string> =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | String(s) => Some(s)
+            | _ => None
+            }
+          | None => None
+          }
+
+        let sessionId = getStr("id")
+        if sessionId === "" {
+          None
+        } else {
+          Some({
+            sessionId,
+            prover: getStr("prover"),
+            goal: getStr("goal"),
+            status: parseProofStatus(getStr("status")),
+            goals: getStrArray("goals"),
+            proofScript: getStrArray("proof_script"),
+            complete: getBool("complete"),
+            tacticsApplied: getStrArray("tactics_applied"),
+            timeElapsed: getOptFloat("time_elapsed"),
+            errorMessage: getOptStr("error_message"),
+          })
+        }
+      }
+    | _ => None
+    }
+  } catch {
+  | _ => None
+  }
+}
+
+/// Parse a TacticResponse JSON into (success, updated session state).
+/// Expected shape: `{ "success": true, "proof_state": { ...ProofResponse... } }`
+let parseTacticResponse = (json: string): option<(bool, echidnaSessionState)> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let success = switch Dict.get(obj, "success") {
+        | Some(v) =>
+          switch JSON.Classify.classify(v) {
+          | Bool(b) => b
+          | _ => false
+          }
+        | None => false
+        }
+        // The proof_state is embedded as a nested object — re-stringify it
+        // so we can reuse parseEchidnaSession.
+        switch Dict.get(obj, "proof_state") {
+        | Some(proofState) =>
+          let stateJson = JSON.stringify(proofState)
+          switch parseEchidnaSession(stateJson) {
+          | Some(session) => Some((success, session))
+          | None => None
+          }
+        | None => None
+        }
+      }
+    | _ => None
+    }
+  } catch {
+  | _ => None
+  }
+}
+
+/// Parse tactic suggestions JSON into an array of echidnaTacticSuggestion.
+/// Expected shape: `[{ "name": "intro", "args": ["x"], "description": "...",
+///   "confidence": 0.85 }, ...]`
+let parseTacticSuggestions = (json: string): array<echidnaTacticSuggestion> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Array(arr) =>
+      arr->Array.filterMap(item =>
+        switch JSON.Classify.classify(item) {
+        | Object(obj) => {
+            let getStr = (key: string): string =>
+              switch Dict.get(obj, key) {
+              | Some(v) =>
+                switch JSON.Classify.classify(v) {
+                | String(s) => s
+                | _ => ""
+                }
+              | None => ""
+              }
+            let getFloat = (key: string): float =>
+              switch Dict.get(obj, key) {
+              | Some(v) =>
+                switch JSON.Classify.classify(v) {
+                | Number(n) => n
+                | _ => 0.0
+                }
+              | None => 0.0
+              }
+            let getStrArray = (key: string): array<string> =>
+              switch Dict.get(obj, key) {
+              | Some(v) =>
+                switch JSON.Classify.classify(v) {
+                | Array(a) =>
+                  a->Array.filterMap(i =>
+                    switch JSON.Classify.classify(i) {
+                    | String(s) => Some(s)
+                    | _ => None
+                    }
+                  )
+                | _ => []
+                }
+              | None => []
+              }
+            let name = getStr("name")
+            if name === "" {
+              None
+            } else {
+              Some({
+                tactic: name,
+                args: getStrArray("args"),
+                confidence: getFloat("confidence"),
+                aspectTags: getStrArray("aspect_tags"),
+                description: getStr("description"),
+              })
+            }
+          }
+        | _ => None
+        }
+      )
+    | _ => []
+    }
+  } catch {
+  | _ => []
+  }
+}
+
+// ===========================================================================
 // ECHIDNA Sub-Updater
 // ===========================================================================
 
 /// STATE TRANSITION: ECHIDNA (Theorem Prover Backend)
 /// Manages the ECHIDNA connection state, prover catalog, proof submission lifecycle,
-/// theorem search, and UI toggles. Interactive sessions and tactic suggestions
-/// are Phase 2 stubs — their handlers return the model unchanged.
+/// theorem search, interactive proof sessions, tactic suggestions, and UI toggles.
 let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => {
   let ec = model.echidna
   switch msg {
@@ -1032,17 +1236,122 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     // Search results display is Phase 2 — for now just clear errors.
     ({...model, echidna: {...ec, proofError: None}}, Tea_Cmd.none)
 
-  // --- Interactive sessions (Phase 2 stubs) ---
-  | CreateSession => (model, Tea_Cmd.none)
-  | SessionCreated(_result) => (model, Tea_Cmd.none)
-  | ApplyTactic(_tactic) => (model, Tea_Cmd.none)
-  | TacticApplied(_result) => (model, Tea_Cmd.none)
-  | GetSessionState => (model, Tea_Cmd.none)
-  | SessionStateLoaded(_result) => (model, Tea_Cmd.none)
+  // --- Interactive sessions ---
+  | CreateSession => {
+      let prover = switch ec.selectedProver {
+      | Some(p) => p
+      | None => "auto"
+      }
+      (
+        {...model, echidna: {...ec, sessionLoading: true, proofError: None}},
+        TauriCmd.createEchidnaSession(ec.proofInput, prover, result =>
+          Echidna(SessionCreated(result))
+        ),
+      )
+    }
+  | SessionCreated(result) =>
+    switch result {
+    | Ok(json) =>
+      let session = parseEchidnaSession(json)
+      switch session {
+      | Some(s) => (
+          {...model, echidna: {...ec, session: Some(s), sessionLoading: false, proofError: None}},
+          // Auto-request tactic suggestions after session creation
+          TauriCmd.suggestEchidnaTactics(s.sessionId, 5, result =>
+            Echidna(TacticSuggestionsLoaded(result))
+          ),
+        )
+      | None => (
+          {...model, echidna: {...ec, sessionLoading: false, proofError: Some("Failed to parse session response")}},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(err) => (
+        {...model, echidna: {...ec, sessionLoading: false, proofError: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+  | ApplyTactic(name, args) =>
+    switch ec.session {
+    | Some(s) => (
+        model,
+        TauriCmd.applyEchidnaTactic(s.sessionId, name, args, result =>
+          Echidna(TacticApplied(result))
+        ),
+      )
+    | None => (model, Tea_Cmd.none)
+    }
+  | TacticApplied(result) =>
+    switch result {
+    | Ok(json) =>
+      switch parseTacticResponse(json) {
+      | Some((_success, updatedSession)) => (
+          {...model, echidna: {...ec, session: Some(updatedSession), proofError: None}},
+          // Auto-request fresh suggestions after tactic application
+          TauriCmd.suggestEchidnaTactics(updatedSession.sessionId, 5, result =>
+            Echidna(TacticSuggestionsLoaded(result))
+          ),
+        )
+      | None => (
+          {...model, echidna: {...ec, proofError: Some("Failed to parse tactic response")}},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(err) => (
+        {...model, echidna: {...ec, proofError: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+  | GetSessionState =>
+    switch ec.session {
+    | Some(s) => (
+        model,
+        TauriCmd.getEchidnaSession(s.sessionId, result =>
+          Echidna(SessionStateLoaded(result))
+        ),
+      )
+    | None => (model, Tea_Cmd.none)
+    }
+  | SessionStateLoaded(result) =>
+    switch result {
+    | Ok(json) =>
+      let session = parseEchidnaSession(json)
+      switch session {
+      | Some(s) => ({...model, echidna: {...ec, session: Some(s), proofError: None}}, Tea_Cmd.none)
+      | None => ({...model, echidna: {...ec, proofError: Some("Failed to parse session state")}}, Tea_Cmd.none)
+      }
+    | Error(err) => ({...model, echidna: {...ec, proofError: Some(err)}}, Tea_Cmd.none)
+    }
+  | CancelSession => (
+      {...model, echidna: {...ec, session: None, tacticSuggestions: [], sessionLoading: false, tacticInput: "", proofError: None}},
+      Tea_Cmd.none,
+    )
+  | UpdateTacticInput(text) => (
+      {...model, echidna: {...ec, tacticInput: text}},
+      Tea_Cmd.none,
+    )
 
-  // --- Tactic suggestions (Phase 2 stubs) ---
-  | RequestTacticSuggestions => (model, Tea_Cmd.none)
-  | TacticSuggestionsLoaded(_result) => (model, Tea_Cmd.none)
+  // --- Tactic suggestions ---
+  | RequestTacticSuggestions =>
+    switch ec.session {
+    | Some(s) => (
+        model,
+        TauriCmd.suggestEchidnaTactics(s.sessionId, 5, result =>
+          Echidna(TacticSuggestionsLoaded(result))
+        ),
+      )
+    | None => (model, Tea_Cmd.none)
+    }
+  | TacticSuggestionsLoaded(result) =>
+    switch result {
+    | Ok(json) =>
+      let suggestions = parseTacticSuggestions(json)
+      ({...model, echidna: {...ec, tacticSuggestions: suggestions}}, Tea_Cmd.none)
+    | Error(_err) => (
+        {...model, echidna: {...ec, tacticSuggestions: []}},
+        Tea_Cmd.none,
+      )
+    }
 
   // --- UI state ---
   | ToggleMenu => (

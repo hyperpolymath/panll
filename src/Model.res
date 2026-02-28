@@ -318,25 +318,43 @@ type echidnaDispatchResult = {
 }
 
 /// A tactic suggestion from the ECHIDNA ML advisor.
-/// Phase 2 — type defined now, handler returns model unchanged.
+/// Includes tactic name, arguments, confidence score, aspect tags, and description.
+/// The ML advisor (Julia :8090) or prover fallback populates these.
 type echidnaTacticSuggestion = {
   tactic: string,
+  args: array<string>,
   confidence: float,
   aspectTags: array<string>,
   description: string,
 }
 
-/// Interactive proof session state.
-/// Phase 2 — type defined now, handler returns model unchanged.
+/// ECHIDNA proof session status — maps to the ProofResponse status field
+/// from the ECHIDNA REST API (/api/v1/proofs).
+type echidnaProofStatus =
+  | Pending       // Session created, awaiting first tactic
+  | InProgress    // Tactics being applied, goals remaining
+  | ProofSuccess  // All goals discharged
+  | ProofFailed   // Proof attempt failed
+  | ProofTimeout  // Solver timed out
+  | ProofError    // Internal error during proof
+
+/// Interactive proof session state — mirrors ECHIDNA's ProofResponse.
+/// Tracks session identity, prover, goals, applied tactics, and timing.
 type echidnaSessionState = {
   sessionId: string,
+  prover: string,
+  goal: string,
+  status: echidnaProofStatus,
   goals: array<string>,
+  proofScript: array<string>,
   complete: bool,
   tacticsApplied: array<string>,
+  timeElapsed: option<float>,
+  errorMessage: option<string>,
 }
 
 /// ECHIDNA backend state — tracks connection, prover catalog, proof lifecycle,
-/// interactive session (Phase 2), and tactic suggestions (Phase 2).
+/// interactive session, and tactic suggestions.
 type echidnaState = {
   connected: bool,
   endpoint: string,
@@ -350,6 +368,8 @@ type echidnaState = {
   selectedProver: option<string>,
   proofInput: string,
   menuExpanded: bool,
+  tacticInput: string,
+  sessionLoading: bool,
 }
 
 /// The complete Model
@@ -511,7 +531,7 @@ let init = (): model => {
   },
   echidna: {
     connected: false,
-    endpoint: "http://localhost:8080/api",
+    endpoint: "http://localhost:8000/api/v1",
     version: None,
     provers: [],
     lastProofResult: None,
@@ -522,6 +542,8 @@ let init = (): model => {
     selectedProver: None,
     proofInput: "",
     menuExpanded: false,
+    tacticInput: "",
+    sessionLoading: false,
   },
   humidity: Medium,
   viewMode: DarkStart,

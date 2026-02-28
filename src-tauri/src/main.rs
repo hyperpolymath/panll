@@ -1314,7 +1314,7 @@ fn verisimdb_get_entity(entity_id: String) -> Result<String, String> {
 // ECHIDNA Theorem Prover Backend
 // ===========================================================================
 
-const DEFAULT_ECHIDNA_URL: &str = "http://localhost:8080/api";
+const DEFAULT_ECHIDNA_URL: &str = "http://localhost:8000/api/v1";
 
 /// Resolve the ECHIDNA API base URL from environment or default.
 /// Override with ECHIDNA_URL env var for non-default deployments.
@@ -1460,6 +1460,118 @@ fn echidna_search_theorems(query: String) -> Result<String, String> {
     }
 }
 
+/// POST /proofs — create a new interactive proof session.
+/// Sends `{"goal": goal, "prover": prover}` and returns the ProofResponse JSON
+/// with session ID, initial goals, and status (201 Created).
+#[tauri::command]
+fn echidna_create_session(goal: String, prover: String) -> Result<String, String> {
+    let url = format!("{}/proofs", echidna_url());
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    let payload = json!({ "goal": goal, "prover": prover });
+
+    match client.post(&url).json(&payload).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Session creation failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Session creation request failed: {}", e)),
+    }
+}
+
+/// GET /proofs/{id} — retrieve the current state of a proof session.
+/// Returns the ProofResponse JSON with goals, status, and applied tactics.
+#[tauri::command]
+fn echidna_get_session(session_id: String) -> Result<String, String> {
+    let url = format!("{}/proofs/{}", echidna_url(), session_id);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Get session failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Get session request failed: {}", e)),
+    }
+}
+
+/// POST /proofs/{id}/tactics — apply a tactic to an active proof session.
+/// Sends `{"name": name, "args": args}` and returns the TacticResponse JSON
+/// with success flag and updated proof state.
+#[tauri::command]
+fn echidna_apply_tactic(
+    session_id: String,
+    name: String,
+    args: Vec<String>,
+) -> Result<String, String> {
+    let url = format!("{}/proofs/{}/tactics", echidna_url(), session_id);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    let payload = json!({ "name": name, "args": args });
+
+    match client.post(&url).json(&payload).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Apply tactic failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Apply tactic request failed: {}", e)),
+    }
+}
+
+/// GET /proofs/{id}/tactics/suggest?limit=N — request ML-powered tactic suggestions.
+/// The ML advisor (Julia :8090) generates suggestions with confidence scores,
+/// falling back to prover heuristics if the advisor is unavailable.
+#[tauri::command]
+fn echidna_suggest_tactics(session_id: String, limit: usize) -> Result<String, String> {
+    let url = format!(
+        "{}/proofs/{}/tactics/suggest?limit={}",
+        echidna_url(),
+        session_id,
+        limit
+    );
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    match client.get(&url).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let body = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(body)
+            } else {
+                Err(format!("Tactic suggestions failed ({}): {}", status, body))
+            }
+        }
+        Err(e) => Err(format!("Tactic suggestions request failed: {}", e)),
+    }
+}
+
 #[cfg(test)]
 mod echidna_tests {
     use super::*;
@@ -1478,6 +1590,47 @@ mod echidna_tests {
         assert_eq!(echidna_url(), custom);
         // Clean up so other tests aren't affected.
         std::env::remove_var("ECHIDNA_URL");
+    }
+
+    #[test]
+    fn echidna_session_url_construction() {
+        std::env::remove_var("ECHIDNA_URL");
+        let base = echidna_url();
+        let session_url = format!("{}/proofs/{}", base, "test-session-123");
+        assert_eq!(
+            session_url,
+            "http://localhost:8000/api/v1/proofs/test-session-123"
+        );
+
+        let tactic_url = format!("{}/proofs/{}/tactics", base, "sess-abc");
+        assert_eq!(
+            tactic_url,
+            "http://localhost:8000/api/v1/proofs/sess-abc/tactics"
+        );
+
+        let suggest_url = format!(
+            "{}/proofs/{}/tactics/suggest?limit={}",
+            base, "sess-abc", 5
+        );
+        assert_eq!(
+            suggest_url,
+            "http://localhost:8000/api/v1/proofs/sess-abc/tactics/suggest?limit=5"
+        );
+    }
+
+    #[test]
+    fn echidna_prover_serialisation() {
+        let payload = json!({ "goal": "forall x, x + 0 = x", "prover": "lean4" });
+        let obj = payload.as_object().unwrap();
+        assert_eq!(obj.get("goal").unwrap().as_str().unwrap(), "forall x, x + 0 = x");
+        assert_eq!(obj.get("prover").unwrap().as_str().unwrap(), "lean4");
+
+        let tactic_payload = json!({ "name": "intro", "args": ["x", "y"] });
+        let tobj = tactic_payload.as_object().unwrap();
+        assert_eq!(tobj.get("name").unwrap().as_str().unwrap(), "intro");
+        let args = tobj.get("args").unwrap().as_array().unwrap();
+        assert_eq!(args.len(), 2);
+        assert_eq!(args[0].as_str().unwrap(), "x");
     }
 }
 
@@ -1508,6 +1661,10 @@ fn main() {
             echidna_prove,
             echidna_verify,
             echidna_search_theorems,
+            echidna_create_session,
+            echidna_get_session,
+            echidna_apply_tactic,
+            echidna_suggest_tactics,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

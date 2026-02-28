@@ -468,9 +468,301 @@ let renderProofResult = (result: echidnaDispatchResult): Tea_Vdom.t<msg> => {
   )
 }
 
+// ===========================================================================
+// ECHIDNA Interactive Session UI
+// ===========================================================================
+
+/// Render session controls — "Start Session" button when no session is active,
+/// "Cancel" button when a session is running. Disabled during loading.
+let renderSessionControls = (echidna: echidnaState): Tea_Vdom.t<msg> => {
+  switch echidna.session {
+  | None =>
+    div(
+      list{Attrs.class_("flex gap-2 mt-2")},
+      list{
+        button(
+          list{
+            Attrs.class_(
+              "text-xs px-3 py-1 bg-indigo-700 hover:bg-indigo-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed",
+            ),
+            Attrs.disabled(
+              echidna.sessionLoading || echidna.proofInput === "",
+            ),
+            Attrs.ariaLabel("Start Proof Session"),
+            Events.onClick(Echidna(CreateSession)),
+          },
+          list{
+            text(echidna.sessionLoading ? "Creating..." : "Start Session"),
+          },
+        ),
+      },
+    )
+  | Some(_session) =>
+    div(
+      list{Attrs.class_("flex gap-2 mt-2")},
+      list{
+        button(
+          list{
+            Attrs.class_(
+              "text-xs px-3 py-1 bg-red-700 hover:bg-red-600 text-white rounded",
+            ),
+            Attrs.ariaLabel("Cancel Session"),
+            Events.onClick(Echidna(CancelSession)),
+          },
+          list{text("Cancel Session")},
+        ),
+        button(
+          list{
+            Attrs.class_(
+              "text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded",
+            ),
+            Attrs.ariaLabel("Refresh Session State"),
+            Events.onClick(Echidna(GetSessionState)),
+          },
+          list{text("Refresh")},
+        ),
+      },
+    )
+  }
+}
+
+/// Render session status header — session ID (truncated), prover, status badge,
+/// and elapsed time.
+let renderSessionStatus = (session: echidnaSessionState): Tea_Vdom.t<msg> => {
+  let (statusText, statusColour) = switch session.status {
+  | Pending => ("PENDING", "bg-gray-600 text-gray-200")
+  | InProgress => ("IN PROGRESS", "bg-blue-700 text-blue-200")
+  | ProofSuccess => ("SUCCESS", "bg-green-700 text-green-200")
+  | ProofFailed => ("FAILED", "bg-red-700 text-red-200")
+  | ProofTimeout => ("TIMEOUT", "bg-yellow-700 text-yellow-200")
+  | ProofError => ("ERROR", "bg-red-800 text-red-200")
+  }
+
+  let truncatedId = if String.length(session.sessionId) > 12 {
+    String.slice(session.sessionId, ~start=0, ~end=12) ++ "..."
+  } else {
+    session.sessionId
+  }
+
+  let timeText = switch session.timeElapsed {
+  | Some(t) => Float.toFixedWithPrecision(t, ~digits=1) ++ "s"
+  | None => "-"
+  }
+
+  div(
+    list{Attrs.class_("p-2 bg-gray-800/50 rounded mb-2")},
+    list{
+      div(
+        list{Attrs.class_("flex items-center justify-between mb-1")},
+        list{
+          div(
+            list{Attrs.class_("text-xs text-gray-400")},
+            list{text("Session: " ++ truncatedId)},
+          ),
+          span(
+            list{
+              Attrs.class_(`text-xs px-2 py-0.5 rounded font-bold ${statusColour}`),
+              Attrs.ariaLabel("Proof status: " ++ statusText),
+            },
+            list{text(statusText)},
+          ),
+        },
+      ),
+      div(
+        list{Attrs.class_("flex items-center gap-3 text-xs text-gray-400")},
+        list{
+          div(list{}, list{text("Prover: " ++ session.prover)}),
+          div(list{}, list{text("Time: " ++ timeText)}),
+        },
+      ),
+      switch session.errorMessage {
+      | Some(err) =>
+        div(
+          list{Attrs.class_("text-xs text-red-400 mt-1")},
+          list{text(err)},
+        )
+      | None => noNode
+      },
+    },
+  )
+}
+
+/// Render the current goal list — numbered, first goal highlighted as "active".
+let renderGoalList = (goals: array<string>): Tea_Vdom.t<msg> => {
+  if Array.length(goals) === 0 {
+    div(
+      list{Attrs.class_("text-xs text-emerald-400 italic mb-2")},
+      list{text("All goals discharged")},
+    )
+  } else {
+    div(
+      list{Attrs.class_("mb-2")},
+      list{
+        div(
+          list{Attrs.class_("text-xs text-gray-500 mb-1")},
+          list{text("GOALS (" ++ Int.toString(Array.length(goals)) ++ ")")},
+        ),
+        div(
+          list{
+            Attrs.class_("max-h-24 overflow-y-auto"),
+            Attrs.role("list"),
+            Attrs.ariaLabel("Proof Goals"),
+          },
+          goals
+          ->Array.mapWithIndex((goal, idx) => {
+            let isActive = idx === 0
+            let bgClass = isActive
+              ? "bg-indigo-900/30 border-indigo-500"
+              : "bg-gray-800/30 border-gray-700"
+            div(
+              list{
+                Attrs.class_(`text-xs p-1.5 border-l-2 ${bgClass} mb-0.5 font-mono`),
+                Attrs.role("listitem"),
+              },
+              list{
+                text(Int.toString(idx + 1) ++ ". " ++ goal),
+              },
+            )
+          })
+          ->List.fromArray,
+        ),
+      },
+    )
+  }
+}
+
+/// Render a manual tactic input field with an "Apply" button.
+/// Disabled when no session is active.
+let renderTacticInput = (echidna: echidnaState): Tea_Vdom.t<msg> => {
+  let hasSession = switch echidna.session {
+  | Some(_) => true
+  | None => false
+  }
+
+  div(
+    list{Attrs.class_("mb-2")},
+    list{
+      div(
+        list{Attrs.class_("text-xs text-gray-500 mb-1")},
+        list{text("TACTIC INPUT")},
+      ),
+      div(
+        list{Attrs.class_("flex gap-1")},
+        list{
+          input(
+            list{
+              Attrs.class_(
+                "flex-1 bg-gray-800/50 rounded px-2 py-1 text-xs text-gray-200 border border-gray-700 focus:border-indigo-500 focus:outline-none font-mono",
+              ),
+              Attrs.placeholder("e.g., intro x"),
+              Attrs.value(echidna.tacticInput),
+              Attrs.disabled(!hasSession),
+              Attrs.ariaLabel("Manual tactic input"),
+              Events.onInput(text => Echidna(UpdateTacticInput(text))),
+            },
+            list{},
+          ),
+          button(
+            list{
+              Attrs.class_(
+                "text-xs px-3 py-1 bg-indigo-700 hover:bg-indigo-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed",
+              ),
+              Attrs.disabled(!hasSession || echidna.tacticInput === ""),
+              Attrs.ariaLabel("Apply Tactic"),
+              Events.onClick(Echidna(ApplyTactic(echidna.tacticInput, []))),
+            },
+            list{text("Apply")},
+          ),
+        },
+      ),
+    },
+  )
+}
+
+/// Render the tactic suggestion ribbon — horizontal scrollable row of clickable chips
+/// sorted by confidence (descending). Each chip shows "tactic (confidence%)".
+/// Clicking a chip dispatches ApplyTactic with the tactic name and args.
+let renderTacticSuggestionRibbon = (suggestions: array<echidnaTacticSuggestion>): Tea_Vdom.t<msg> => {
+  if Array.length(suggestions) === 0 {
+    noNode
+  } else {
+    // Sort by confidence descending
+    let sorted = Array.copy(suggestions)
+    sorted->Array.sort((a, b) => Float.compare(b.confidence, a.confidence))
+
+    div(
+      list{Attrs.class_("mb-2")},
+      list{
+        div(
+          list{Attrs.class_("text-xs text-gray-500 mb-1")},
+          list{text("SUGGESTED TACTICS")},
+        ),
+        div(
+          list{
+            Attrs.class_("flex gap-1 overflow-x-auto pb-1"),
+            Attrs.role("list"),
+            Attrs.ariaLabel("Tactic Suggestions"),
+          },
+          sorted
+          ->Array.map(suggestion => {
+            let pct = Int.toString(Int.fromFloat(suggestion.confidence *. 100.0))
+            button(
+              list{
+                Attrs.class_(
+                  "text-xs px-2 py-1 bg-indigo-900/50 hover:bg-indigo-800/70 text-indigo-300 rounded whitespace-nowrap border border-indigo-700/50 cursor-pointer",
+                ),
+                Attrs.title(suggestion.description),
+                Attrs.role("listitem"),
+                Attrs.ariaLabel(suggestion.tactic ++ " (" ++ pct ++ "% confidence)"),
+                Events.onClick(Echidna(ApplyTactic(suggestion.tactic, suggestion.args))),
+              },
+              list{text(suggestion.tactic ++ " (" ++ pct ++ "%)")},
+            )
+          })
+          ->List.fromArray,
+        ),
+      },
+    )
+  }
+}
+
+/// Render the proof script — a scrollable list of applied tactics (proof history).
+/// Displayed in monospace font with sequential numbering.
+let renderProofScript = (script: array<string>): Tea_Vdom.t<msg> => {
+  if Array.length(script) === 0 {
+    noNode
+  } else {
+    div(
+      list{Attrs.class_("mb-2")},
+      list{
+        div(
+          list{Attrs.class_("text-xs text-gray-500 mb-1")},
+          list{text("PROOF SCRIPT")},
+        ),
+        div(
+          list{
+            Attrs.class_("max-h-20 overflow-y-auto bg-gray-800/30 rounded p-1.5"),
+            Attrs.role("log"),
+            Attrs.ariaLabel("Proof Script"),
+          },
+          script
+          ->Array.mapWithIndex((step, idx) =>
+            div(
+              list{Attrs.class_("text-xs text-gray-300 font-mono py-0.5")},
+              list{text(Int.toString(idx + 1) ++ ". " ++ step)},
+            )
+          )
+          ->List.fromArray,
+        ),
+      },
+    )
+  }
+}
+
 /// Render the complete ECHIDNA panel — a collapsible container that
 /// composes the connection indicator, prover catalog, proof input,
-/// and proof result into a coherent proving workbench.
+/// session controls, interactive session UI, and proof result into
+/// a coherent proving workbench.
 let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("mt-4 border-t border-gray-700 pt-3"), Attrs.role("region"), Attrs.ariaLabel("ECHIDNA Theorem Prover")},
@@ -503,6 +795,22 @@ let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
           list{
             renderProverCatalog(echidna),
             renderProofInput(echidna),
+            renderSessionControls(echidna),
+            // Interactive session UI (visible when session is active)
+            switch echidna.session {
+            | Some(session) =>
+              div(
+                list{Attrs.class_("mt-2"), Attrs.role("region"), Attrs.ariaLabel("Interactive Proof Session")},
+                list{
+                  renderSessionStatus(session),
+                  renderGoalList(session.goals),
+                  renderTacticSuggestionRibbon(echidna.tacticSuggestions),
+                  renderTacticInput(echidna),
+                  renderProofScript(session.proofScript),
+                },
+              )
+            | None => noNode
+            },
             // Error display
             switch echidna.proofError {
             | Some(err) =>

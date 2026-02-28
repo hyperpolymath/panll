@@ -154,3 +154,345 @@ Deno.test("ECHIDNA: ClearProofResult resets result and error", () => {
   assertEquals(newModel.echidna.lastProofResult, undefined);
   assertEquals(newModel.echidna.proofError, undefined);
 });
+
+// ===========================================================================
+// Phase 2: Interactive Sessions & Tactic Suggestions
+// ===========================================================================
+
+Deno.test("ECHIDNA: CreateSession sets sessionLoading=true", () => {
+  const model = initModel();
+  // Set proof input so session creation has a goal
+  const withInput = {
+    ...model,
+    echidna: { ...model.echidna, proofInput: "forall x, x + 0 = x" },
+  };
+  const msg = echidnaMsg("CreateSession");
+  const [newModel, _cmd] = Update.update(withInput, msg);
+
+  assertEquals(newModel.echidna.sessionLoading, true);
+  assertEquals(newModel.echidna.proofError, undefined);
+});
+
+Deno.test("ECHIDNA: SessionCreated(Ok) parses session state", () => {
+  const model = initModel();
+  const json = JSON.stringify({
+    id: "sess-abc-123",
+    prover: "lean4",
+    goal: "forall x, x + 0 = x",
+    status: "in_progress",
+    goals: ["x + 0 = x", "0 + x = x"],
+    proof_script: [],
+    complete: false,
+    tactics_applied: [],
+    time_elapsed: 0.5,
+    error_message: null,
+  });
+  const withLoading = {
+    ...model,
+    echidna: { ...model.echidna, sessionLoading: true },
+  };
+  const msg = echidnaMsg({ TAG: "SessionCreated", _0: { TAG: "Ok", _0: json } });
+  const [newModel, _cmd] = Update.update(withLoading, msg);
+
+  assertEquals(newModel.echidna.sessionLoading, false);
+  assertEquals(newModel.echidna.session.sessionId, "sess-abc-123");
+  assertEquals(newModel.echidna.session.prover, "lean4");
+  assertEquals(newModel.echidna.session.goals.length, 2);
+  assertEquals(newModel.echidna.session.goals[0], "x + 0 = x");
+  assertEquals(newModel.echidna.session.status, "InProgress");
+  assertEquals(newModel.echidna.session.complete, false);
+  assertEquals(newModel.echidna.session.timeElapsed, 0.5);
+  assertEquals(newModel.echidna.proofError, undefined);
+});
+
+Deno.test("ECHIDNA: SessionCreated(Error) sets proofError and clears sessionLoading", () => {
+  const model = initModel();
+  const withLoading = {
+    ...model,
+    echidna: { ...model.echidna, sessionLoading: true },
+  };
+  const msg = echidnaMsg({
+    TAG: "SessionCreated",
+    _0: { TAG: "Error", _0: "Prover not available" },
+  });
+  const [newModel, _cmd] = Update.update(withLoading, msg);
+
+  assertEquals(newModel.echidna.sessionLoading, false);
+  assertEquals(newModel.echidna.proofError, "Prover not available");
+  assertEquals(newModel.echidna.session, undefined);
+});
+
+Deno.test("ECHIDNA: ApplyTactic dispatches without model change", () => {
+  const model = initModel();
+  const withSession = {
+    ...model,
+    echidna: {
+      ...model.echidna,
+      session: {
+        sessionId: "sess-xyz",
+        prover: "z3",
+        goal: "P -> P",
+        status: "InProgress",
+        goals: ["P -> P"],
+        proofScript: [],
+        complete: false,
+        tacticsApplied: [],
+        timeElapsed: 0.0,
+        errorMessage: undefined,
+      },
+    },
+  };
+  // ApplyTactic has two payload args: name, args
+  const msg = echidnaMsg({ TAG: "ApplyTactic", _0: "intro", _1: ["h"] });
+  const [newModel, _cmd] = Update.update(withSession, msg);
+
+  // Model unchanged on dispatch — only issues a command
+  assertEquals(newModel.echidna.session.sessionId, "sess-xyz");
+  assertEquals(newModel.echidna.session.goals.length, 1);
+});
+
+Deno.test("ECHIDNA: TacticApplied(Ok) updates session goals and proofScript", () => {
+  const model = initModel();
+  const withSession = {
+    ...model,
+    echidna: {
+      ...model.echidna,
+      session: {
+        sessionId: "sess-xyz",
+        prover: "z3",
+        goal: "P -> P",
+        status: "InProgress",
+        goals: ["P -> P"],
+        proofScript: [],
+        complete: false,
+        tacticsApplied: [],
+        timeElapsed: 0.0,
+        errorMessage: undefined,
+      },
+    },
+  };
+  const json = JSON.stringify({
+    success: true,
+    proof_state: {
+      id: "sess-xyz",
+      prover: "z3",
+      goal: "P -> P",
+      status: "in_progress",
+      goals: ["P"],
+      proof_script: ["intro h"],
+      complete: false,
+      tactics_applied: ["intro h"],
+      time_elapsed: 1.2,
+      error_message: null,
+    },
+  });
+  const msg = echidnaMsg({ TAG: "TacticApplied", _0: { TAG: "Ok", _0: json } });
+  const [newModel, _cmd] = Update.update(withSession, msg);
+
+  assertEquals(newModel.echidna.session.goals.length, 1);
+  assertEquals(newModel.echidna.session.goals[0], "P");
+  assertEquals(newModel.echidna.session.proofScript.length, 1);
+  assertEquals(newModel.echidna.session.proofScript[0], "intro h");
+  assertEquals(newModel.echidna.proofError, undefined);
+});
+
+Deno.test("ECHIDNA: TacticApplied(Error) sets proofError", () => {
+  const model = initModel();
+  const withSession = {
+    ...model,
+    echidna: {
+      ...model.echidna,
+      session: {
+        sessionId: "sess-xyz",
+        prover: "z3",
+        goal: "P -> P",
+        status: "InProgress",
+        goals: ["P -> P"],
+        proofScript: [],
+        complete: false,
+        tacticsApplied: [],
+        timeElapsed: 0.0,
+        errorMessage: undefined,
+      },
+    },
+  };
+  const msg = echidnaMsg({
+    TAG: "TacticApplied",
+    _0: { TAG: "Error", _0: "Tactic failed: no such tactic" },
+  });
+  const [newModel, _cmd] = Update.update(withSession, msg);
+
+  assertEquals(newModel.echidna.proofError, "Tactic failed: no such tactic");
+});
+
+Deno.test("ECHIDNA: GetSessionState dispatches without model change", () => {
+  const model = initModel();
+  const withSession = {
+    ...model,
+    echidna: {
+      ...model.echidna,
+      session: {
+        sessionId: "sess-xyz",
+        prover: "z3",
+        goal: "P -> P",
+        status: "InProgress",
+        goals: ["P"],
+        proofScript: ["intro h"],
+        complete: false,
+        tacticsApplied: ["intro h"],
+        timeElapsed: 1.0,
+        errorMessage: undefined,
+      },
+    },
+  };
+  const msg = echidnaMsg("GetSessionState");
+  const [newModel, _cmd] = Update.update(withSession, msg);
+
+  // No model change on dispatch
+  assertEquals(newModel.echidna.session.sessionId, "sess-xyz");
+});
+
+Deno.test("ECHIDNA: SessionStateLoaded(Ok) updates session", () => {
+  const model = initModel();
+  const withSession = {
+    ...model,
+    echidna: {
+      ...model.echidna,
+      session: {
+        sessionId: "sess-xyz",
+        prover: "z3",
+        goal: "P -> P",
+        status: "InProgress",
+        goals: ["P -> P"],
+        proofScript: [],
+        complete: false,
+        tacticsApplied: [],
+        timeElapsed: 0.0,
+        errorMessage: undefined,
+      },
+    },
+  };
+  const json = JSON.stringify({
+    id: "sess-xyz",
+    prover: "z3",
+    goal: "P -> P",
+    status: "success",
+    goals: [],
+    proof_script: ["intro h", "exact h"],
+    complete: true,
+    tactics_applied: ["intro h", "exact h"],
+    time_elapsed: 2.3,
+    error_message: null,
+  });
+  const msg = echidnaMsg({ TAG: "SessionStateLoaded", _0: { TAG: "Ok", _0: json } });
+  const [newModel, _cmd] = Update.update(withSession, msg);
+
+  assertEquals(newModel.echidna.session.complete, true);
+  assertEquals(newModel.echidna.session.goals.length, 0);
+  assertEquals(newModel.echidna.session.proofScript.length, 2);
+  assertEquals(newModel.echidna.session.status, "ProofSuccess");
+});
+
+Deno.test("ECHIDNA: RequestTacticSuggestions dispatches without model change", () => {
+  const model = initModel();
+  const withSession = {
+    ...model,
+    echidna: {
+      ...model.echidna,
+      session: {
+        sessionId: "sess-xyz",
+        prover: "z3",
+        goal: "P -> P",
+        status: "InProgress",
+        goals: ["P"],
+        proofScript: [],
+        complete: false,
+        tacticsApplied: [],
+        timeElapsed: 0.0,
+        errorMessage: undefined,
+      },
+    },
+  };
+  const msg = echidnaMsg("RequestTacticSuggestions");
+  const [newModel, _cmd] = Update.update(withSession, msg);
+
+  // No model change on dispatch
+  assertEquals(newModel.echidna.tacticSuggestions.length, 0);
+});
+
+Deno.test("ECHIDNA: TacticSuggestionsLoaded(Ok) populates suggestions with name and confidence", () => {
+  const model = initModel();
+  const json = JSON.stringify([
+    { name: "intro", args: ["x"], description: "Introduce hypothesis", confidence: 0.92, aspect_tags: ["basic"] },
+    { name: "apply", args: [], description: "Apply a lemma", confidence: 0.78, aspect_tags: [] },
+  ]);
+  const msg = echidnaMsg({ TAG: "TacticSuggestionsLoaded", _0: { TAG: "Ok", _0: json } });
+  const [newModel, _cmd] = Update.update(model, msg);
+
+  assertEquals(newModel.echidna.tacticSuggestions.length, 2);
+  assertEquals(newModel.echidna.tacticSuggestions[0].tactic, "intro");
+  assertEquals(newModel.echidna.tacticSuggestions[0].confidence, 0.92);
+  assertEquals(newModel.echidna.tacticSuggestions[0].args.length, 1);
+  assertEquals(newModel.echidna.tacticSuggestions[0].args[0], "x");
+  assertEquals(newModel.echidna.tacticSuggestions[1].tactic, "apply");
+  assertEquals(newModel.echidna.tacticSuggestions[1].confidence, 0.78);
+});
+
+Deno.test("ECHIDNA: TacticSuggestionsLoaded(Error) clears suggestions", () => {
+  const model = initModel();
+  const withSuggestions = {
+    ...model,
+    echidna: {
+      ...model.echidna,
+      tacticSuggestions: [{ tactic: "old", args: [], confidence: 0.5, aspectTags: [], description: "" }],
+    },
+  };
+  const msg = echidnaMsg({
+    TAG: "TacticSuggestionsLoaded",
+    _0: { TAG: "Error", _0: "ML advisor unavailable" },
+  });
+  const [newModel, _cmd] = Update.update(withSuggestions, msg);
+
+  assertEquals(newModel.echidna.tacticSuggestions.length, 0);
+});
+
+Deno.test("ECHIDNA: CancelSession clears session state", () => {
+  const model = initModel();
+  const withSession = {
+    ...model,
+    echidna: {
+      ...model.echidna,
+      session: {
+        sessionId: "sess-xyz",
+        prover: "z3",
+        goal: "P -> P",
+        status: "InProgress",
+        goals: ["P"],
+        proofScript: ["intro h"],
+        complete: false,
+        tacticsApplied: ["intro h"],
+        timeElapsed: 1.0,
+        errorMessage: undefined,
+      },
+      tacticSuggestions: [{ tactic: "exact", args: ["h"], confidence: 0.95, aspectTags: [], description: "" }],
+      tacticInput: "some tactic",
+      sessionLoading: true,
+    },
+  };
+  const msg = echidnaMsg("CancelSession");
+  const [newModel, _cmd] = Update.update(withSession, msg);
+
+  assertEquals(newModel.echidna.session, undefined);
+  assertEquals(newModel.echidna.tacticSuggestions.length, 0);
+  assertEquals(newModel.echidna.tacticInput, "");
+  assertEquals(newModel.echidna.sessionLoading, false);
+  assertEquals(newModel.echidna.proofError, undefined);
+});
+
+Deno.test("ECHIDNA: UpdateTacticInput sets tacticInput text", () => {
+  const model = initModel();
+  const msg = echidnaMsg({ TAG: "UpdateTacticInput", _0: "intro x" });
+  const [newModel, _cmd] = Update.update(model, msg);
+
+  assertEquals(newModel.echidna.tacticInput, "intro x");
+});

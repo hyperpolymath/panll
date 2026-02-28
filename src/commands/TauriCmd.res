@@ -580,6 +580,99 @@ let echidnaSearchTheorems = (
   })
 }
 
+// ===========================================================================
+// ECHIDNA Interactive Session Commands
+// ===========================================================================
+
+/// Create a new proof session on ECHIDNA with a goal and prover.
+/// Invokes `echidna_create_session` which POSTs to /proofs.
+let createEchidnaSession = (
+  goal: string,
+  prover: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("echidna_create_session", {"goal": goal, "prover": prover})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("ECHIDNA session creation failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Retrieve the current state of a proof session.
+/// Invokes `echidna_get_session` which hits GET /proofs/{id}.
+let getEchidnaSession = (
+  sessionId: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("echidna_get_session", {"session_id": sessionId})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("ECHIDNA get session failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Apply a tactic to an active proof session.
+/// Invokes `echidna_apply_tactic` which POSTs to /proofs/{id}/tactics.
+let applyEchidnaTactic = (
+  sessionId: string,
+  name: string,
+  args: array<string>,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    let payload = Js.Dict.fromArray([
+      ("session_id", Js.Json.string(sessionId)),
+      ("name", Js.Json.string(name)),
+      ("args", Js.Json.stringArray(args)),
+    ])
+    invoke("echidna_apply_tactic", Js.Json.object_(payload))
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("ECHIDNA apply tactic failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Request ML-powered tactic suggestions for the current proof state.
+/// Invokes `echidna_suggest_tactics` which hits GET /proofs/{id}/tactics/suggest?limit=N.
+let suggestEchidnaTactics = (
+  sessionId: string,
+  limit: int,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("echidna_suggest_tactics", {"session_id": sessionId, "limit": limit})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("ECHIDNA tactic suggestions failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 /// Batch multiple Tauri commands together
 let batch = (commands: list<Tea_Cmd.t<'msg>>): Tea_Cmd.t<'msg> => {
   Tea_Cmd.batch(commands)
