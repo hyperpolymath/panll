@@ -123,6 +123,8 @@ type verisimdbMsg =
   | FetchTelemetry
   | TelemetryLoaded(result<string, string>)
   | ToggleTelemetryPanel
+  | FetchOrchStatus
+  | OrchStatusLoaded(result<string, string>)
 
 /// The unified message type
 type msg =

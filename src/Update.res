@@ -701,6 +701,15 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       {...model, verisimdb: {...db, telemetryVisible: !db.telemetryVisible}},
       Tea_Cmd.none,
     )
+  | FetchOrchStatus => (
+      model,
+      TauriCmd.getOrchStatus(result => VeriSimDB(OrchStatusLoaded(result))),
+    )
+  | OrchStatusLoaded(result) =>
+    switch result {
+    | Ok(json) => ({...model, verisimdb: {...db, orchStatus: Some(json), queryError: None}}, Tea_Cmd.none)
+    | Error(err) => ({...model, verisimdb: {...db, orchStatus: None, queryError: Some(err)}}, Tea_Cmd.none)
+    }
   }
 }
 

@@ -582,11 +582,43 @@ fn validate_inference(token: &str, constraints: Vec<String>) -> Result<bool, Str
         }
 
         // Handle boundary checks: length > 0, count < 100, etc.
+        // Validates constraint syntax: LHS must be a valid identifier, operator
+        // must be a comparison, RHS must be a valid number. Runtime value checking
+        // happens in the ReScript AntiCrash module which has access to model state.
         if constraint.contains(" > ") || constraint.contains(" < ") ||
            constraint.contains(" >= ") || constraint.contains(" <= ") {
-            // For now, we don't have the actual values to check against
-            // This would require integrating with the model state
-            // Accept boundary constraints as valid declarations
+            // Split on the operator to validate both sides
+            let operators = [" >= ", " <= ", " > ", " < "];
+            let mut validated = false;
+            for op in &operators {
+                if let Some(pos) = constraint.find(op) {
+                    let lhs = constraint[..pos].trim();
+                    let rhs = constraint[pos + op.len()..].trim();
+
+                    // LHS must be a valid identifier (alphanumeric + underscores, not starting with digit)
+                    if lhs.is_empty() || lhs.starts_with(|c: char| c.is_ascii_digit()) ||
+                       !lhs.chars().all(|c| c.is_alphanumeric() || c == '_') {
+                        return Err(format!(
+                            "Invalid boundary constraint: '{}' is not a valid identifier in '{}'",
+                            lhs, constraint
+                        ));
+                    }
+
+                    // RHS must be a valid number (integer or float, optionally negative)
+                    if rhs.parse::<f64>().is_err() {
+                        return Err(format!(
+                            "Invalid boundary constraint: '{}' is not a valid number in '{}'",
+                            rhs, constraint
+                        ));
+                    }
+
+                    validated = true;
+                    break;
+                }
+            }
+            if !validated {
+                return Err(format!("Malformed boundary constraint: {}", constraint));
+            }
             continue;
         }
 
@@ -926,6 +958,46 @@ Commands:
         let result = validate_inference(token, constraints);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), true);
+    }
+
+    #[test]
+    fn test_validate_inference_valid_boundary_passes() {
+        let token = "const x = 42;";
+        let constraints = vec![
+            "length > 0".to_string(),
+            "count < 100".to_string(),
+            "score >= -1.5".to_string(),
+            "max_depth <= 999".to_string(),
+        ];
+        let result = validate_inference(token, constraints);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_inference_invalid_boundary_rhs_rejected() {
+        let token = "const x = 42;";
+        let constraints = vec!["length > \"invalid\"".to_string()];
+        let result = validate_inference(token, constraints);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("not a valid number"));
+    }
+
+    #[test]
+    fn test_validate_inference_invalid_boundary_lhs_rejected() {
+        let token = "const x = 42;";
+        let constraints = vec!["123bad > 5".to_string()];
+        let result = validate_inference(token, constraints);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("not a valid identifier"));
+    }
+
+    #[test]
+    fn test_validate_inference_boundary_special_chars_rejected() {
+        let token = "const x = 42;";
+        let constraints = vec!["foo-bar > 5".to_string()];
+        let result = validate_inference(token, constraints);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("not a valid identifier"));
     }
 
     #[test]

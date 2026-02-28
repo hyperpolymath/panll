@@ -257,6 +257,7 @@ type verisimdbState = {
   entityDetail: option<string>,
   telemetry: option<telemetrySnapshot>,
   telemetryVisible: bool,
+  orchStatus: option<string>,
 }
 
 /// The complete Model
@@ -411,6 +412,7 @@ let init = (): model => {
     entityDetail: None,
     telemetry: None,
     telemetryVisible: false,
+    orchStatus: None,
   },
   humidity: Medium,
   viewMode: DarkStart,

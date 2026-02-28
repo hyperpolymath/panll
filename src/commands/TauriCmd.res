@@ -460,6 +460,23 @@ let getTelemetry = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => 
   })
 }
 
+/// Fetch orchestration status (consensus, federation, telemetry) from VeriSimDB.
+/// Invokes `verisimdb_orch_status` which hits GET /status on the Elixir layer.
+let getOrchStatus = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("verisimdb_orch_status", ())
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Orchestration status fetch failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 /// Batch multiple Tauri commands together
 let batch = (commands: list<Tea_Cmd.t<'msg>>): Tea_Cmd.t<'msg> => {
   Tea_Cmd.batch(commands)
