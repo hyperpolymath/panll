@@ -132,6 +132,12 @@ PanLL is **not** a generic IDE, framework, or platform. It is a personal neurosy
 * Allow approval/rejection of proposed rules from Pane-W
 * Rationale: Bot orchestration is a core part of the development workflow — it belongs in the workbench.
 
+===== Pane module interface contract
+* Extract the common pattern from existing pane modules (panic-attack, VeriSimDB, reposystem, protocol-squisher) into a documented contract
+* Define what every pane module must provide: a Tauri command (Rust), a message type (ReScript), an update handler, a view function, and a VeriSimDB hexad schema
+* Publish as typed ReScript interface + Rust trait — not a tool yet, just the specification
+* Rationale: By v0.3.0 there are 6+ working modules. That is enough to extract the real pattern from facts, not assumptions. This contract is the foundation for the Pane Studio in v0.5.0.
+
 ==== Should Have
 
 * Reasoning trace visualization (show which prover solved what, with what axioms)
@@ -204,6 +210,13 @@ PanLL is **not** a generic IDE, framework, or platform. It is a personal neurosy
 * Attach provenance records to VeriSimDB hexads
 * Rationale: IP protection for work created in PanLL.
 
+===== Pane Studio (scaffoldia profile)
+* Build a pane module scaffolder that generates all artifacts for a new module: ReScript component, Tauri command, message types, update handler, VeriSimDB hexad schema, and test stubs
+* Implemented as a scaffoldia profile — not a separate tool. `scaffoldia generate --profile panll-pane --name my-module` produces a working module skeleton that compiles and renders immediately.
+* Uses the pane module interface contract (defined in v0.3.0) as the generation target
+* Includes MiniKanren constraints from scaffoldia to validate module structure (e.g., "every module that writes to Pane-W must define at least one event-chain parser")
+* Rationale: By v0.5.0, 8+ modules have been built by hand. The pattern is proven. Scaffoldia already solves composable template generation — a PanLL profile is a natural extension, not a new tool. This becomes the plugin system foundation for v1.0.0.
+
 ==== Should Have
 
 * Scaffoldia integration (generate new repo structures from Pane-W)
@@ -228,7 +241,7 @@ PanLL is **not** a generic IDE, framework, or platform. It is a personal neurosy
 
 ==== Should Have
 
-* Plugin system for third-party pane modules
+* Plugin system for third-party pane modules (built on Pane Studio from v0.5.0 — third parties run `scaffoldia generate --profile panll-pane` and get a working module skeleton)
 * Multi-platform builds (Linux primary, macOS, Windows via Tauri)
 * Headless mode for CI/CD integration (constraint check + ECHIDNA verification as pipeline gate)
 
