@@ -5,7 +5,7 @@
   "identifier": "com.hyperpolymath.panll",
   "build": {
     "frontendDist": "../public",
-    "devUrl": "http://localhost:8000",
+    "devUrl": "http://localhost:8000/public/",
     "beforeDevCommand": "deno task css:watch & deno task serve:dev",
     "beforeBuildCommand": "deno task css:build"
   },
