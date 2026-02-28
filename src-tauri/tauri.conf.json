@@ -28,17 +28,7 @@
       "csp": null
     }
   },
-  "plugins": {
-    "fs": {
-      "scope": {
-        "allow": ["$HOME/**", "$DOCUMENT/**", "$DESKTOP/**"],
-        "deny": []
-      }
-    },
-    "dialog": {
-      "open": true
-    }
-  },
+  "plugins": {},
   "bundle": {
     "active": true,
     "targets": [
