@@ -1577,17 +1577,15 @@ mod echidna_tests {
     use super::*;
 
     #[test]
-    fn echidna_url_defaults_without_env() {
-        // Clear the env var to ensure default is returned.
+    fn echidna_url_default_and_override() {
+        // Run both checks sequentially to avoid env var race with parallel tests.
         std::env::remove_var("ECHIDNA_URL");
         assert_eq!(echidna_url(), DEFAULT_ECHIDNA_URL);
-    }
 
-    #[test]
-    fn echidna_url_respects_env_override() {
         let custom = "http://prover.local:9090/api";
         std::env::set_var("ECHIDNA_URL", custom);
         assert_eq!(echidna_url(), custom);
+
         // Clean up so other tests aren't affected.
         std::env::remove_var("ECHIDNA_URL");
     }
