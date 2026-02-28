@@ -1664,13 +1664,7 @@ fn main() {
             echidna_apply_tactic,
             echidna_suggest_tactics,
         ])
-        .setup(|app| {
-            #[cfg(debug_assertions)]
-            {
-                if let Some(window) = app.get_webview_window("main") {
-                    window.open_devtools();
-                }
-            }
+        .setup(|_app| {
             Ok(())
         })
         .run(tauri::generate_context!())
