@@ -72,7 +72,10 @@ let renderPaneW = (paneW: paneWState, orbital: orbitalState, db: verisimdbState,
 /// Render the Dark Start architecture manifold
 let renderDarkStart = (): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("fixed inset-0 bg-gray-950 flex items-center justify-center")},
+    list{
+      Attrs.class_("fixed inset-0 bg-gray-950 flex items-center justify-center cursor-pointer"),
+      Events.onClick(View(SetViewMode(Standard))),
+    },
     list{
       div(
         list{Attrs.class_("text-center")},
@@ -114,6 +117,10 @@ let renderDarkStart = (): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("mt-12 text-gray-600 text-sm")},
             list{text("eNSAID Environment")},
+          ),
+          div(
+            list{Attrs.class_("mt-6 text-gray-700 text-xs animate-pulse")},
+            list{text("Click anywhere to enter")},
           ),
         },
       ),
