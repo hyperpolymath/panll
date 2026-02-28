@@ -241,6 +241,20 @@
       "npm:@tauri-apps/plugin-dialog@*",
       "npm:@tauri-apps/plugin-fs@*",
       "npm:rescript@11.1.4"
-    ]
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:@rescript/core@^1.6.1",
+        "npm:@rescript/runtime@^12.2.0",
+        "npm:@tauri-apps/api@^2.10.0",
+        "npm:@tauri-apps/cli@2",
+        "npm:@tauri-apps/plugin-dialog@^2.6.0",
+        "npm:@tauri-apps/plugin-fs@^2.4.5",
+        "npm:rescript-tea@0.16",
+        "npm:rescript-webapi@0.10",
+        "npm:rescript@^11.1.4",
+        "npm:tailwindcss@^3.4.19"
+      ]
+    }
   }
 }

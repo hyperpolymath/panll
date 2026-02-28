@@ -16,7 +16,6 @@ use std::time::{SystemTime, UNIX_EPOCH, Instant};
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use tauri::Manager;
 
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
