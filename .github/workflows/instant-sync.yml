@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # Instant Forge Sync - Triggers propagation to all forges on push/release
+#
+# This workflow dispatches to .git-private-farm for centralised propagation.
+# If FARM_DISPATCH_TOKEN is not configured, the workflow succeeds as a no-op
+# (mirror.yml handles direct SSH mirroring independently).
 name: Instant Sync
 
 on:
@@ -14,9 +18,19 @@ permissions:
 jobs:
   dispatch:
     runs-on: ubuntu-latest
-    if: ${{ secrets.FARM_DISPATCH_TOKEN != '' }}
     steps:
+      - name: Check dispatch token
+        id: check
+        run: |
+          if [ -n "${{ secrets.FARM_DISPATCH_TOKEN }}" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::FARM_DISPATCH_TOKEN not set — skipping farm dispatch (mirror.yml handles sync)"
+          fi
+
       - name: Trigger Propagation
+        if: steps.check.outputs.has_token == 'true'
         uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697 # v3
         with:
           token: ${{ secrets.FARM_DISPATCH_TOKEN }}
@@ -31,4 +45,5 @@ jobs:
             }
 
       - name: Confirm
+        if: steps.check.outputs.has_token == 'true'
         run: echo "::notice::Propagation triggered for ${{ github.event.repository.name }}"
