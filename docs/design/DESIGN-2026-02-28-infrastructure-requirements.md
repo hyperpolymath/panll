@@ -1,0 +1,514 @@
+# DESIGN: PanLL Infrastructure Requirements — Accessibility, i18n, Interoperability
+
+**Date:** 2026-02-28
+**Repo:** panll
+**Author:** Jonathan D.A. Jewell
+**Status:** Architectural requirements (binding on all future implementation)
+
+## Context
+
+PanLL is a workbench for formal methods, database design, language design, and
+protocol engineering. These disciplines are inherently international, academic, and
+collaborative. The tool must be accessible, translatable, and interoperable with the
+research ecosystem from the start — not as afterthoughts.
+
+This document establishes infrastructure requirements that apply across all features
+and all discipline layouts. These are not "nice to haves" — they are architectural
+constraints.
+
+## Design Questions (from session dialogue)
+
+> "Can we add interoperability with Zotero and also make sure it has the full suite
+> of accessibility features across the board, and stuff that is going to support
+> Pandoc, agrep, internationalisation, OCR and so on in its design?"
+
+---
+
+## 1. Accessibility (WCAG 2.3 — Binding Commitment)
+
+### Target Conformance
+
+| Level | Commitment | Notes                                           |
+|-------|------------|-------------------------------------------------|
+| A     | Mandatory  | Every feature must pass before merge             |
+| AA    | Target     | Default standard for all new work                |
+| AAA   | Best-effort| Where achievable without hampering functionality |
+
+**Trustfile implication:** The PanLL Trustfile (when created) must declare WCAG 2.3 AA
+as the accessibility commitment. CI should enforce automated checks.
+
+### Requirements by Category
+
+#### Perceivable (WCAG Principle 1)
+
+| Requirement                  | WCAG    | PanLL Application                          |
+|------------------------------|---------|----------------------------------------------|
+| Text alternatives            | 1.1.1 A | All icons, glyphs, proof pipeline stages     |
+| Captions for audio           | 1.2.2 A | Voice collaboration transcription            |
+| Audio description            | 1.2.5 AA| Proof pipeline state narration               |
+| Colour not sole indicator    | 1.4.1 A | Green/amber/red + icons + text labels        |
+| Contrast ratio 4.5:1         | 1.4.3 AA| All text including proof notation            |
+| Contrast ratio 3:1 (large)   | 1.4.3 AA| Headers, block labels, toolbar buttons       |
+| Resize to 200%               | 1.4.4 AA| All panes reflow without horizontal scroll   |
+| Reflow at 400%               | 1.4.10 AA| Single-column layout at 400% zoom           |
+| Text spacing adjustable      | 1.4.12 AA| No clipping when line-height/spacing changed |
+| Non-text contrast 3:1        | 1.4.11 AA| Pipeline connectors, block borders, charts   |
+
+**Proof pipeline specifics:**
+- Green/amber/red stages must ALSO show: checkmark/clock/cross icons
+- Screen reader: "Goal 1: solved. Goal 2: in progress. Goal 3: pending."
+- Logical symbols (∀, ∃, →) must have aria-labels ("for all", "there exists",
+  "implies")
+- Drift heatmap must have text-mode alternative (table of values)
+
+#### Operable (WCAG Principle 2)
+
+| Requirement                  | WCAG     | PanLL Application                         |
+|------------------------------|----------|---------------------------------------------|
+| Keyboard accessible          | 2.1.1 A  | Every feature usable without mouse          |
+| No keyboard traps            | 2.1.2 A  | Escape always exits modals/menus            |
+| Focus order logical          | 2.4.3 A  | Tab order follows pane flow (L → N → W)     |
+| Focus visible                | 2.4.7 AA | 2px solid outline on focused elements       |
+| Skip to content              | 2.4.1 A  | Skip links for each pane                    |
+| Pointer cancellation         | 2.5.2 A  | Drag-drop has up-event cancellation          |
+| Dragging alternative         | 2.5.7 AA | Block palette: keyboard select + Enter       |
+| Timing adjustable            | 2.2.1 A  | No auto-dismiss toasts; user controls timing |
+| Reduced motion               | 2.3.3 AAA| Respect `prefers-reduced-motion`             |
+
+**Proof pipeline specifics:**
+- Arrow keys navigate between pipeline stages
+- Enter applies selected tactic or expands goal details
+- Tab moves between the palette, pipeline, and goal display
+- Drag-and-drop blocks have keyboard alternative: select block with Enter, Tab to
+  target stage, Enter to place
+- The Blockly-style palette is navigable with arrow keys (category → block → apply)
+
+#### Understandable (WCAG Principle 3)
+
+| Requirement                  | WCAG     | PanLL Application                         |
+|------------------------------|----------|---------------------------------------------|
+| Language of page             | 3.1.1 A  | `lang` attribute on root element            |
+| Language of parts            | 3.1.2 AA | Proof notation in `lang="x-math"`           |
+| On focus no change           | 3.2.1 A  | Layout switching requires explicit action    |
+| Consistent navigation        | 3.2.3 AA | Toolbar position stable across layouts       |
+| Error identification         | 3.3.1 A  | Proof errors identified in text, not colour  |
+| Error suggestion             | 3.3.3 AA | Linter suggests corrections with description |
+| Labels or instructions       | 3.3.2 A  | Goal input, tactic input, query input        |
+
+#### Robust (WCAG Principle 4)
+
+| Requirement                  | WCAG     | PanLL Application                         |
+|------------------------------|----------|---------------------------------------------|
+| Valid HTML                    | 4.1.1 A  | Clean semantic HTML from Tea_Html            |
+| Name, role, value            | 4.1.2 A  | ARIA roles on all custom widgets             |
+| Status messages               | 4.1.3 AA | `aria-live` for proof state changes          |
+
+### Implementation Approach
+
+**Existing foundation:** Tea_Vdom already has 10 ARIA attribute functions. These
+must be used consistently across ALL components — the gap between "functions exist"
+and "functions are applied" must be closed.
+
+**Testing:**
+- Automated: axe-core via Playwright in CI (catches ~30-40% of issues)
+- Manual: screen reader testing with NVDA (Windows), Orca (Linux), VoiceOver (macOS)
+- Keyboard: every feature must be testable with keyboard-only navigation
+
+**CSS requirements:**
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --border-width: 2px;
+    --focus-outline: 3px solid;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  /* dark mode variables */
+}
+```
+
+---
+
+## 2. Internationalisation (i18n)
+
+### Current State
+
+META.scm documents: English-only for v0.x, i18n framework planned for v1.0,
+RTL support as future work.
+
+### Architecture
+
+**Framework:** Project Fluent (`.ftl` files)
+
+Why Fluent over gettext/ICU:
+- Designed for modern UIs (not printf-style interpolation)
+- Handles plurals, gender, and grammatical cases cleanly
+- Mozilla-backed, used in Firefox (proven at scale)
+- ReScript bindings feasible (FFI to `@fluent/bundle`)
+
+**File structure:**
+```
+locales/
+├── en/                    # English (source)
+│   ├── app.ftl            # Core UI strings
+│   ├── proofs.ftl         # Proof-specific terminology
+│   ├── database.ftl       # Database-specific terminology
+│   ├── protocols.ftl      # Protocol-specific terminology
+│   └── accessibility.ftl  # Screen reader announcements
+├── fr/
+├── de/
+├── ja/
+├── ar/                    # RTL
+├── zh-Hans/
+└── ...
+```
+
+**Example Fluent file (`locales/en/proofs.ftl`):**
+```fluent
+proof-goal-solved = Goal { $number } solved
+proof-goals-remaining = { $count ->
+    [one] { $count } goal remaining
+   *[other] { $count } goals remaining
+}
+proof-status-success = Proof complete — all goals discharged
+proof-status-failed = Proof failed at goal { $goal }
+tactic-suggestion = Suggested tactic: { $name } (confidence { $confidence })
+```
+
+**Localisation of mathematical notation:** Mathematical symbols (∀, ∃, →, ∧, ∨) are
+universal and do NOT get translated. But their spoken/screen-reader forms DO:
+
+| Symbol | English          | French            | German            |
+|--------|------------------|-------------------|-------------------|
+| ∀      | for all          | pour tout         | für alle          |
+| ∃      | there exists     | il existe         | es existiert      |
+| →      | implies          | implique          | impliziert        |
+| ∧      | and              | et                | und               |
+| ∨      | or               | ou                | oder              |
+
+### RTL Support
+
+Arabic, Hebrew, Farsi, Urdu require right-to-left layout. Critically, mixed-direction
+content is common in proofs (RTL prose + LTR mathematical notation):
+
+```html
+<div dir="rtl" lang="ar">
+  <!-- Arabic prose flows right-to-left -->
+  نثبت أن <span dir="ltr" lang="x-math">∀ n : ℕ, n + 0 = n</span>
+  <!-- Math stays left-to-right -->
+</div>
+```
+
+PanLL's pane system must handle `dir="rtl"` on the root and use logical CSS
+properties (`inline-start`/`inline-end` instead of `left`/`right`).
+
+---
+
+## 3. Zotero Integration
+
+### Why Zotero
+
+Proofs cite papers. Database schemas reference standards. Protocols reference RFCs.
+Zotero is the dominant open-source reference manager in academia. Integration means
+users don't need to leave PanLL to find or cite a reference.
+
+### Integration Points
+
+| Feature                  | Mechanism                    | Notes                       |
+|--------------------------|------------------------------|-----------------------------|
+| Search user's library    | Zotero Web API (v3)          | Read-only, API key auth     |
+| Insert citation          | CSL-JSON → formatted cite    | Into proof comments/docs    |
+| Link theorem to paper    | Attach Zotero item key       | "This lemma from [Smith24]" |
+| Browse collections       | Zotero API `/collections`    | Filtered by discipline      |
+| Export bibliography       | CSL-JSON → Pandoc → BibTeX   | For paper writing            |
+| Local Zotero (optional)  | Zotero local API (port 23119)| No cloud dependency         |
+
+### Zotero API Details
+
+**Authentication:** API key (per-user, stored in PanLL config)
+
+**Key endpoints:**
+
+```
+GET /users/{userId}/items?q={searchTerm}      # Search library
+GET /users/{userId}/items/{itemKey}            # Get item details
+GET /users/{userId}/collections                # List collections
+GET /users/{userId}/items/{itemKey}/children   # Attachments (PDFs)
+```
+
+**CSL-JSON** is the interchange format — Zotero exports it, Pandoc consumes it,
+and PanLL can render formatted citations from it.
+
+### Local-First Design
+
+Zotero 7 exposes a local HTTP API on port 23119 (when Zotero is running). PanLL
+should prefer the local API (no network dependency, faster) and fall back to the
+web API. This aligns with PanLL's offline-first principle.
+
+```
+1. Try localhost:23119 (Zotero desktop running locally)
+2. Fall back to api.zotero.org (cloud, requires API key)
+3. Fall back to manual BibTeX/CSL-JSON file import
+```
+
+---
+
+## 4. Pandoc Integration
+
+### Why Pandoc
+
+PanLL produces proof scripts, design documents, query results, protocol specs. These
+need to be exportable in multiple formats for papers, reports, presentations, and
+archival. Pandoc is the universal document converter.
+
+### Export Targets
+
+| Format       | Use Case                                    |
+|--------------|---------------------------------------------|
+| LaTeX/PDF    | Academic papers, proof appendices            |
+| HTML         | Web publishing, sharing                      |
+| Markdown     | GitHub/GitLab documentation                  |
+| AsciiDoc     | RSR documentation standard                   |
+| DOCX         | Collaboration with Word users                |
+| EPUB         | Long-form documentation                      |
+| Typst        | Modern alternative to LaTeX                  |
+| Djot         | Lightweight markup (hyperpolymath standard)  |
+
+### Integration Approach
+
+**Pandoc as Tauri sidecar or Deno subprocess:**
+
+```
+PanLL proof script / document
+    │
+    ▼
+  Internal representation (Pandoc AST JSON)
+    │
+    ▼
+  pandoc --from json --to {format} --citeproc --bibliography refs.json
+    │
+    ▼
+  Output file (PDF, HTML, DOCX, etc.)
+```
+
+**`--citeproc`** handles Zotero citations automatically — CSL-JSON from Zotero →
+Pandoc citeproc → formatted bibliography in output.
+
+**Custom Pandoc filters** (Lua) for PanLL-specific content:
+- Proof pipeline → LaTeX `proof` environment
+- Tactic sequences → `lstlisting` with Coq/Lean syntax
+- Trust level badges → coloured boxes in PDF
+- ECHIDNA dispatch results → formatted tables
+
+### Pandoc AST as Intermediate Representation
+
+Rather than building format-specific exporters for each output type, PanLL should
+produce Pandoc AST JSON as its universal export format. This means:
+- One export path, many output formats
+- New formats added by installing Pandoc writers (no PanLL code changes)
+- Community can write custom Pandoc filters for domain-specific rendering
+
+---
+
+## 5. Fuzzy Search (agrep / Approximate Matching)
+
+### Why Fuzzy Search
+
+Users mistype tactic names. Theorem names are long and easy to get wrong.
+Database entity names have variations. Protocol state names may be remembered
+imprecisely. Exact search fails silently; fuzzy search finds what you meant.
+
+**Accessibility connection:** Users with motor impairments, dyslexia, or who are
+typing in a non-native language benefit enormously from approximate matching.
+
+### Implementation
+
+**Algorithm:** Levenshtein distance with BK-tree index for fast lookup
+
+**Where fuzzy search applies:**
+
+| Context                | Search corpus              | Threshold |
+|------------------------|----------------------------|-----------|
+| Tactic name input      | Prover's tactic catalog    | Edit distance ≤ 2 |
+| Theorem search         | Mathlib / theorem corpus   | Edit distance ≤ 3 |
+| Entity name lookup     | VeriSimDB entity list      | Edit distance ≤ 2 |
+| Protocol state search  | State machine state names  | Edit distance ≤ 2 |
+| Command palette        | All PanLL commands         | Subsequence match  |
+
+**Behaviour:**
+```
+User types: "inducton"
+Fuzzy match: "induction" (distance 1)
+UI shows: "induction" with subtle correction indicator
+
+User types: "Nat.add_como"
+Fuzzy match: "Nat.add_comm" (distance 2)
+UI shows: "Did you mean Nat.add_comm?"
+```
+
+**ReScript implementation:** Pure ReScript Levenshtein function (~30 lines). No
+external dependency needed for the core algorithm. For large corpora (Mathlib's
+100k+ theorems), a BK-tree or trigram index for sub-millisecond lookup.
+
+---
+
+## 6. OCR (Optical Character Recognition)
+
+### Why OCR
+
+Researchers work with papers (PDF), textbooks (scanned), handwritten notes
+(whiteboard photos), and legacy documents. Importing proof goals, theorem
+statements, or protocol specs from these sources should be seamless.
+
+**Mathematical OCR** is a specific sub-problem — standard OCR (Tesseract) handles
+prose well but struggles with mathematical notation. Specialised tools exist.
+
+### Integration Approach
+
+| Source           | Tool                        | Output              |
+|------------------|-----------------------------|----------------------|
+| PDF (digital)    | Pandoc / pdftotext           | Structured text      |
+| PDF (scanned)    | Tesseract OCR + layout       | Raw text + positions |
+| Mathematical     | Mathpix / InftyReader / Nougat | LaTeX notation    |
+| Handwritten      | Mathpix or MyScript          | LaTeX notation       |
+| Whiteboard photo | Tesseract + preprocessing    | Raw text             |
+
+**Workflow:**
+```
+1. User imports image/PDF into PanLL (drag-drop or file picker)
+2. PanLL detects content type (prose, math, mixed)
+3. For math: send to math-OCR engine → LaTeX output
+4. Convert LaTeX to PanLL-Universal or prover syntax
+5. User reviews and corrects in the syntax editor
+6. Corrected text becomes proof goal or constraint
+```
+
+**Local-first:** Tesseract runs locally (no cloud dependency). For mathematical OCR,
+Nougat (Meta's open-source scientific document OCR) runs locally on GPU. Mathpix is
+cloud-based and optional.
+
+**Accessibility note:** OCR also enables PanLL to describe images to screen reader
+users — "This image contains the formula: for all n, n + 0 = n."
+
+---
+
+## 7. Cross-Cutting Concerns
+
+### Offline-First Principle
+
+Every feature in this document must work offline except where network access is
+inherently required:
+
+| Feature          | Offline?  | Notes                                   |
+|------------------|-----------|-----------------------------------------|
+| Accessibility    | Yes       | Fully local                             |
+| i18n             | Yes       | Locale files bundled                    |
+| Zotero (local)   | Yes       | localhost:23119                         |
+| Zotero (cloud)   | No        | Requires api.zotero.org                 |
+| Pandoc export    | Yes       | Pandoc binary bundled or local install  |
+| Fuzzy search     | Yes       | Pure ReScript, no network               |
+| OCR (Tesseract)  | Yes       | Local binary                            |
+| OCR (Nougat)     | Yes       | Local model                             |
+| OCR (Mathpix)    | No        | Cloud API                               |
+| Collaboration    | No        | Requires Phoenix server                 |
+
+### Trustfile Obligations
+
+When the PanLL Trustfile is created, it must declare:
+
+```
+(accessibility
+  (standard "WCAG 2.3")
+  (conformance-level "AA")
+  (target-level "AAA where feasible")
+  (testing "automated axe-core + manual screen reader")
+  (policy "no feature ships without A compliance"))
+
+(internationalisation
+  (framework "Project Fluent")
+  (source-language "en")
+  (rtl-support "planned v1.0")
+  (math-notation "universal, not translated"))
+
+(interoperability
+  (citation-manager "Zotero API v3 + local API")
+  (document-export "Pandoc AST JSON")
+  (search "fuzzy Levenshtein, edit distance ≤ 3")
+  (ocr "Tesseract local + Nougat for math"))
+```
+
+### Performance Budget
+
+Infrastructure features must not degrade the core experience:
+
+| Feature          | Budget                        |
+|------------------|-------------------------------|
+| Fuzzy search     | < 10ms for 10k-item corpus    |
+| i18n string lookup| < 1ms per string              |
+| ARIA attribute render | negligible (HTML attrs)   |
+| Pandoc export    | < 5s for typical proof doc    |
+| OCR              | < 30s for a page of math      |
+| Zotero search    | < 2s (local), < 5s (cloud)    |
+
+---
+
+## Implementation Priority
+
+| Feature          | Priority | Phase        | Dependency            |
+|------------------|----------|--------------|-----------------------|
+| ARIA pass (close gap) | P0  | Immediate    | Existing components   |
+| `prefers-reduced-motion` | P0 | Immediate | CSS only              |
+| `prefers-contrast` | P0     | Immediate    | CSS only              |
+| Keyboard navigation audit | P0 | Immediate | Existing components   |
+| Fuzzy search     | P1       | Next sprint  | Pure ReScript         |
+| Pandoc export    | P1       | Next sprint  | Pandoc binary         |
+| Fluent i18n setup| P2       | v1.0 prep    | @fluent/bundle FFI    |
+| Zotero local API | P2       | v1.0 prep    | HTTP client           |
+| OCR (Tesseract)  | P3       | v1.0+        | Tesseract binary      |
+| OCR (math/Nougat)| P3       | v1.0+        | GPU, model download   |
+| RTL layout       | P3       | v1.0+        | Fluent + CSS logical  |
+
+---
+
+## Open Questions
+
+1. **Should PanLL bundle Pandoc, or require it as a system dependency?** Bundling adds
+   ~80 MB to the Tauri binary but eliminates "install Pandoc first" friction.
+
+2. **Should fuzzy search be a standalone ReScript module publishable to the ecosystem?**
+   Other hyperpolymath tools (ReScript Evangeliser, NQC) could use it.
+
+3. **Is Nougat (Meta's math OCR) the right choice, or should we wait for better open
+   models?** Nougat is good but requires a GPU for reasonable speed.
+
+4. **Should Zotero integration be a PanLL core feature or a plugin?** Core means
+   everyone gets it; plugin means non-academics don't pay the code size cost.
+
+5. **Which screen readers should be the primary test targets?** Orca (Linux) is
+   most relevant for the Fedora user base; NVDA (Windows) has the largest user base;
+   VoiceOver (macOS) is required for Apple accessibility compliance.
+
+---
+
+## References
+
+- WCAG 2.3: https://www.w3.org/TR/WCAG23/
+- Project Fluent: https://projectfluent.org/
+- Zotero Web API v3: https://www.zotero.org/support/dev/web_api/v3/start
+- Zotero Local API: https://www.zotero.org/support/dev/client_coding/connector_http_server
+- Pandoc: https://pandoc.org/
+- Nougat (Meta): https://github.com/facebookresearch/nougat
+- axe-core: https://github.com/dequelabs/axe-core
+- Companion docs:
+  - `DESIGN-2026-02-28-echidna-proof-ux.md`
+  - `DESIGN-2026-02-28-discipline-layouts.md`
+  - `DESIGN-2026-02-28-collaboration.md`
+  - `DESIGN-2026-02-28-slm-heutagogy.md`
