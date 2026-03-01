@@ -11,6 +11,7 @@ type rec attribute<'msg> =
   | Style(string, string)
   | Event(string, unit => 'msg)
   | EventWithValue(string, string => 'msg)
+  | EventWithKey(string, string => option<'msg>)
 
 /// Virtual DOM node type
 type rec t<'msg> =
@@ -39,6 +40,7 @@ let disabled = (b: bool): attribute<'msg> => Property("disabled", b ? "true" : "
 let checked = (b: bool): attribute<'msg> => Property("checked", b ? "true" : "false")
 let type_ = (t: string): attribute<'msg> => Property("type", t)
 let name = (n: string): attribute<'msg> => Property("name", n)
+let tabIndex = (i: int): attribute<'msg> => Property("tabindex", Int.toString(i))
 
 /// ARIA accessibility attributes
 let ariaLabel = (label: string): attribute<'msg> => Property("aria-label", label)
@@ -61,6 +63,7 @@ let onMouseEnter = (msg: 'msg): attribute<'msg> => Event("mouseenter", () => msg
 let onMouseLeave = (msg: 'msg): attribute<'msg> => Event("mouseleave", () => msg)
 let onFocus = (msg: 'msg): attribute<'msg> => Event("focus", () => msg)
 let onBlur = (msg: 'msg): attribute<'msg> => Event("blur", () => msg)
+let onKeyDown = (handler: string => option<'msg>): attribute<'msg> => EventWithKey("keydown", handler)
 
 /// Map the message type of a virtual DOM node
 let rec map = (vdom: t<'a>, f: 'a => 'b): t<'b> => {
@@ -80,5 +83,12 @@ and mapAttr = (attr: attribute<'a>, f: 'a => 'b): attribute<'b> => {
   | Style(k, v) => Style(k, v)
   | Event(name, handler) => Event(name, () => f(handler()))
   | EventWithValue(name, handler) => EventWithValue(name, v => f(handler(v)))
+  | EventWithKey(name, handler) =>
+    EventWithKey(name, key =>
+      switch handler(key) {
+      | Some(msg) => Some(f(msg))
+      | None => None
+      }
+    )
   }
 }

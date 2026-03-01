@@ -4,7 +4,7 @@
 (state
   (metadata
     (version "1.0.0")
-    (last-updated "2026-02-12")
+    (last-updated "2026-03-01")
     (format-spec "hyperpolymath/rsr-template-repo/spec/STATE-FORMAT-SPEC.adoc"))
 
   (project-context
@@ -19,10 +19,10 @@
 
   (current-position
     (milestone "v0.1.0 - Complete TEA Implementation")
-    (completion-percentage 92)
+    (completion-percentage 95)
     (phase "development")
-    (current-focus "ARIA accessibility, shouldAutoSave expanded, Tailwind/Tauri verified, Eclexia ecosystem noted")
-    (status-summary "92% complete - Full ARIA coverage, all builds verified (ReScript + Tauri + Tailwind), 97 JS + 12 Rust tests")
+    (current-focus "VAB panel with KSP aesthetics, BuckleScript removal, A2ML/K9/i18n/document capabilities")
+    (status-summary "95% complete - VAB panel (KSP-themed, 111 components), BuckleScript fully removed, 23 capability categories, panic-attack assail clean")
 
     (work-completed
       ("Custom TEA implementation with full Model-Update-View cycle")
@@ -40,7 +40,19 @@
       ("AI manifest (0-AI-MANIFEST.a2ml) created for RSR compliance")
       ("npm→Deno migration complete (tests, dependencies, Tauri CLI via npx)")
       ("Vitest dependencies removed, pure Deno test infrastructure")
-      ("rescript-tauri prepared for future migration (built and symlinked)"))
+      ("rescript-tauri prepared for future migration (built and symlinked)")
+      ("VAB (Verified Assembly Building) panel — KSP-themed visual server composer (111 components)")
+      ("VabModel.res: leaf type module (vabCategory, vabComponent, vabWarning, capabilityStatus, vabState)")
+      ("VabCatalog.res: hardcoded catalog of 111 proven-servers components (8 core + 94 protocols + 6 connectors + 3 extras)")
+      ("VabEngine.res: dependency checking + capability computation (23 categories)")
+      ("Vab.res: KSP VAB-inspired UI — green toolbar, orange accents, industrial rack, staging numbers, LEDs")
+      ("BuckleScript removal: all Js.* patterns replaced with modern ReScript (JSON.*, Nullable.*, Dict.*, Math.*)")
+      ("A2ML, K9 contractiles, document server components added to catalog")
+      ("23 capability categories including i18n, document formats, A2ML, K9")
+      ("PaneN deprecation fix: Float.toFixedWithPrecision → Float.toFixed")
+      ("KSP aesthetic CSS: 25+ custom classes (vab-toolbar, vab-rack, vab-stage, vab-led-*, vab-bolt, etc.)")
+      ("panic-attack assail: 4 critical (main.rs unwraps), 8 high, 0 tainted paths, 0 cross-lang vulns"))
+
 
     (work-in-progress
       ("Migration from custom TEA to official rescript-tea@0.16.0"
@@ -190,6 +202,28 @@
        ("Implement FeedbackOTron submission form"))))
 
   (session-history
+    ((session-id "2026-03-01-opus-vab")
+     (date "2026-03-01")
+     (agent "Claude Opus 4.6")
+     (focus "VAB panel implementation, KSP aesthetic redesign, BuckleScript removal, catalog expansion")
+     (outcomes
+       ("Created VAB (Verified Assembly Building) panel — KSP VAB-inspired server component composer")
+       ("VabModel.res: 8 types (vabCategory 11 variants, vabComponent record, vabWarning 4 variants, capabilityStatus, vabState)")
+       ("VabCatalog.res: 111 components (8 core + 94 protocols + 6 connectors + proven-a2ml + proven-docserver + proven-k9)")
+       ("VabEngine.res: checkDependencies + computeCapabilities (23 capability categories)")
+       ("Vab.res: Full KSP aesthetic — green toolbar, orange accents, industrial steel rack, staging numbers, bolt decorations, LEDs")
+       ("25+ custom CSS classes in input.css: vab-toolbar, vab-sidebar, vab-rack, vab-stage, vab-led-*, vab-bolt, etc.")
+       ("Wired into TEA: Model (include VabModel + vab field), Msg (vabMsg 9 variants), Update (updateVab), View (overlay)")
+       ("BuckleScript fully removed: Js.Json.* → JSON.*, Js.Nullable.* → Nullable.*, Js.Dict.* → Dict.*, Js.Math.* → Math.*")
+       ("Files cleaned: TauriCmd.res, Tauri.res, Contractiles.res, OrbitalSync.res")
+       ("PaneN.res: Float.toFixedWithPrecision → Float.toFixed (deprecation fix)")
+       ("A2ML manifest engine, K9 contractile engine, document server added to catalog")
+       ("4 new capability categories: AI manifests (A2ML), K9 contractiles, Internationalisation, Document formats")
+       ("Ctrl+Shift+V toggle, Escape to close, keyboard accessibility")
+       ("panic-attack assail: 4 critical (Rust unwraps), 8 high, 0 tainted paths")
+       ("All docs updated: design doc, AI manifest, STATE.scm")
+       ("Build: ReScript 0 errors 0 warnings, Tailwind built, JS bundled")))
+
     ((session-id "2026-02-12-sonnet-implementation")
      (date "2026-02-12")
      (agent "Claude Sonnet 4.5")

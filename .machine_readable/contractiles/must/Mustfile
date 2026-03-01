@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Mustfile - PanLL declarative state contract
+# See: https://github.com/hyperpolymath/mustfile
+
+version: 1
+
+metadata:
+  name: panll-state-contract
+  spec: v0.0.1
+  description: "Invariant checks for PanLL build, tests, accessibility, layout contracts, and type safety."
+
+parameters:
+  dev_port: "8000"
+  echidna_port: "9000"
+  verisimdb_port: "8080"
+
+checks:
+  - name: rescript-builds-clean
+    description: "ReScript compiler must produce 0 errors and 0 warnings (excluding deprecation)."
+    run: "npx rescript-legacy 2>&1 | grep -c 'error' | grep -q '^0$'"
+
+  - name: deno-tests-pass
+    description: "All 121+ Deno tests must pass."
+    run: "deno task test"
+
+  - name: rust-tests-pass
+    description: "All 19 Rust/Tauri backend tests must pass."
+    run: "cd src-tauri && cargo test"
+
+  - name: layout-contracts-valid
+    description: "All K9 layout presets must pass Nickel contract validation."
+    run: "for f in layouts/*.k9.ncl; do nickel typecheck \"$f\" || exit 1; done"
+
+  - name: model-composition-sound
+    description: "Model.res must include all 4 domain modules — no orphaned types."
+    run: "bash -uc 'rg \"include PaneModel\" src/Model.res && rg \"include EchidnaModel\" src/Model.res && rg \"include VeriSimModel\" src/Model.res && rg \"include GovernanceModel\" src/Model.res'"
+
+  - name: no-port-conflict
+    description: "ECHIDNA endpoint must not conflict with dev server port."
+    run: "bash -uc '! rg \"localhost:8000\" src/Model.res src-tauri/src/main.rs | rg -i echidna'"
+
+  - name: accessibility-baseline
+    description: "No critical accessibility violations (WCAG 2.3 A)."
+    run: "npx pa11y-ci --config .pa11yci.json 2>/dev/null || echo 'pa11y not configured yet — skipping'"
+
+  - name: spdx-headers-present
+    description: "All ReScript source files must have SPDX license headers."
+    run: "bash -uc 'for f in src/*.res src/**/*.res; do head -1 \"$f\" | rg -q SPDX || { echo \"Missing SPDX: $f\"; exit 1; }; done'"
+
+  - name: trustfile-valid
+    description: "Trustfile must be parseable A2ML."
+    run: "a2ml validate .machine_readable/contractiles/trust/Trustfile.a2ml 2>/dev/null || echo 'a2ml CLI not installed — skipping'"

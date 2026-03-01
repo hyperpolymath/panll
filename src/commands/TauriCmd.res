@@ -10,7 +10,7 @@ external invoke: (string, 'a) => promise<'b> = "invoke"
 
 module Dialog = {
   @module("@tauri-apps/plugin-dialog")
-  external openDialog: Js.Json.t => promise<Js.Nullable.t<Js.Json.t>> = "open"
+  external openDialog: JSON.t => promise<Nullable.t<JSON.t>> = "open"
 }
 
 module Fs = {
@@ -18,18 +18,19 @@ module Fs = {
   external readTextFile: string => promise<string> = "readTextFile"
 }
 
-let decodeDialogPath = (value: Js.Json.t): option<string> => {
-  switch Js.Json.decodeString(value) {
-  | Some(path) => Some(path)
-  | None =>
-    switch Js.Json.decodeArray(value) {
-    | Some(arr) =>
-      switch Array.get(arr, 0) {
-      | Some(item) => Js.Json.decodeString(item)
-      | None => None
+let decodeDialogPath = (value: JSON.t): option<string> => {
+  switch JSON.Classify.classify(value) {
+  | String(path) => Some(path)
+  | Array(arr) =>
+    switch Array.get(arr, 0) {
+    | Some(item) =>
+      switch JSON.Classify.classify(item) {
+      | String(s) => Some(s)
+      | _ => None
       }
     | None => None
     }
+  | _ => None
   }
 }
 
@@ -56,7 +57,7 @@ let validateInference = (
 /// Open a timeline specification file for Security Ambush runs
 let openSecurityTimelineFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let options: Js.Json.t =
+    let options: JSON.t =
       %raw(`({
         multiple: false,
         filters: [
@@ -65,7 +66,7 @@ let openSecurityTimelineFile = (tagger: result<string, string> => 'msg): Tea_Cmd
       })`)
     Dialog.openDialog(options)
     ->Promise.then(result => {
-      switch Js.Nullable.toOption(result) {
+      switch Nullable.toOption(result) {
       | None => {
           callbacks.enqueue(tagger(Error("No timeline selected")))
           Promise.resolve()
@@ -141,14 +142,14 @@ let submitFeedback = (
 /// Open and read a PanLL event-chain JSON file
 let openEventChainFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let options: Js.Json.t =
+    let options: JSON.t =
       %raw(`({
         multiple: false,
         filters: [{ name: "PanLL Event Chain", extensions: ["json"] }]
       })`)
     Dialog.openDialog(options)
     ->Promise.then(result => {
-      switch Js.Nullable.toOption(result) {
+      switch Nullable.toOption(result) {
       | None => {
           callbacks.enqueue(tagger(Error("No file selected")))
           Promise.resolve()
@@ -183,14 +184,14 @@ let openEventChainFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'ms
 /// Open a panic-attacker assault report JSON file and return the chosen path.
 let openPanicAttackerReportFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let options: Js.Json.t =
+    let options: JSON.t =
       %raw(`({
         multiple: false,
         filters: [{ name: "panic-attacker Assault Report", extensions: ["json"] }]
       })`)
     Dialog.openDialog(options)
     ->Promise.then(result => {
-      switch Js.Nullable.toOption(result) {
+      switch Nullable.toOption(result) {
       | None => {
           callbacks.enqueue(tagger(Error("No panic-attacker report selected")))
           Promise.resolve()
@@ -236,10 +237,10 @@ let importPanicAttackerReport = (
   })
 }
 
-let optionToJson = (value: option<string>): Js.Json.t =>
+let optionToJson = (value: option<string>): JSON.t =>
   switch value {
-  | Some(v) => Js.Json.string(v)
-  | None => Js.Json.null
+  | Some(v) => JSON.Encode.string(v)
+  | None => JSON.Encode.null
   }
 
 /// Invokes the backend `run_panic_attack_ambush` command and funnels the JSON
@@ -253,15 +254,15 @@ let runPanicAttackAmbush = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let payload = Js.Dict.fromArray([
-      ("program", Js.Json.string(program)),
+    let payload = Dict.fromArray([
+      ("program", JSON.Encode.string(program)),
       ("timeline", optionToJson(timeline)),
       ("axes", optionToJson(axes)),
-      ("intensity", Js.Json.string(intensity)),
-      ("duration_secs", Js.Json.number(float_of_int(durationSecs))),
+      ("intensity", JSON.Encode.string(intensity)),
+      ("duration_secs", JSON.Encode.int(durationSecs)),
     ])
 
-    invoke("run_panic_attack_ambush", Js.Json.object_(payload))
+    invoke("run_panic_attack_ambush", JSON.Encode.object(payload))
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -523,11 +524,11 @@ let echidnaProve = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let payload = Js.Dict.fromArray([
-      ("content", Js.Json.string(content)),
+    let payload = Dict.fromArray([
+      ("content", JSON.Encode.string(content)),
       ("prover", optionToJson(prover)),
     ])
-    invoke("echidna_prove", Js.Json.object_(payload))
+    invoke("echidna_prove", JSON.Encode.object(payload))
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -634,12 +635,12 @@ let applyEchidnaTactic = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let payload = Js.Dict.fromArray([
-      ("session_id", Js.Json.string(sessionId)),
-      ("name", Js.Json.string(name)),
-      ("args", Js.Json.stringArray(args)),
+    let payload = Dict.fromArray([
+      ("session_id", JSON.Encode.string(sessionId)),
+      ("name", JSON.Encode.string(name)),
+      ("args", JSON.Encode.array(Array.map(args, JSON.Encode.string))),
     ])
-    invoke("echidna_apply_tactic", Js.Json.object_(payload))
+    invoke("echidna_apply_tactic", JSON.Encode.object(payload))
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()

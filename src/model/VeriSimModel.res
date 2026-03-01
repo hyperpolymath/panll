@@ -1,0 +1,70 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+
+/// PanLL VeriSimDB Types — Database backend state.
+///
+/// VeriSimDB is the versioned temporal multi-modal database that PanLL
+/// integrates for entity browsing, drift detection, normalisation, and
+/// telemetry. These types represent the connection lifecycle, query
+/// results, drift scoring across all eight modalities, and opt-in
+/// product development telemetry.
+///
+/// This module has NO dependencies on other PanLL modules.
+
+/// Proof obligation from a VQL-DT query result certificate
+type proofObligation = {
+  proofType: string,
+  contractName: string,
+  status: string, // "verified" | "failed" | "pending"
+  proofHash: string,
+}
+
+/// Parsed drift scores for each modality — used by the drift heatmap.
+/// Each score is 0.0 (no drift) to 1.0 (maximum drift).
+type driftScores = {
+  graph: float,
+  vector: float,
+  tensor: float,
+  semantic: float,
+  document: float,
+  temporal: float,
+  provenance: float,
+  spatial: float,
+}
+
+/// Telemetry snapshot — aggregate product development metrics from a database
+/// backend. No query content, entity data, or PII — only counters and rates.
+/// This data helps understand how the database is used and where to focus
+/// development effort. Users can also see this to understand their own workload.
+type telemetrySnapshot = {
+  generatedAt: string,
+  modalityHeatmap: array<(string, float)>,
+  queryPatterns: array<(string, int)>,
+  avgQueryDurationMs: float,
+  driftDetectedCount: int,
+  normaliseSuccessRate: float,
+  proofTypeUsage: array<(string, int)>,
+  entityCount: int,
+  privacyNotice: string,
+}
+
+/// VeriSimDB backend state — tracks connection, query results, entity browsing,
+/// drift detection, normalisation, and telemetry for the VeriSimDB database
+/// integration. The telemetry field is opt-in and shows aggregate-only metrics.
+type verisimdbState = {
+  connected: bool,
+  endpoint: string,
+  lastQuery: string,
+  queryResult: option<string>,
+  queryError: option<string>,
+  entities: array<string>,
+  selectedEntity: option<string>,
+  driftStatus: option<string>,
+  driftScores: option<driftScores>,
+  proofObligations: array<proofObligation>,
+  dbMenuExpanded: bool,
+  normalisingEntity: option<string>,
+  entityDetail: option<string>,
+  telemetry: option<telemetrySnapshot>,
+  telemetryVisible: bool,
+  orchStatus: option<string>,
+}

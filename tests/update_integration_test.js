@@ -27,6 +27,7 @@ const makeToken = (content, confidence = 0.95) => ({
 
 Deno.test("Update - AntiCrash ValidationPassed adds validated token to paneN", () => {
   const model = initModel();
+  const initialCount = model.paneN.tokens.length;
   const token = makeToken("safe output");
 
   const msg = {
@@ -37,7 +38,7 @@ Deno.test("Update - AntiCrash ValidationPassed adds validated token to paneN", (
   const [newModel, _cmd] = Update.update(model, msg);
   const lastToken = newModel.paneN.tokens[newModel.paneN.tokens.length - 1];
 
-  assertEquals(newModel.paneN.tokens.length, 1);
+  assertEquals(newModel.paneN.tokens.length, initialCount + 1);
   assertEquals(lastToken.content, "safe output");
   assertEquals(lastToken.validated, true);
   assertEquals(newModel.antiCrash.halted, false);
@@ -45,6 +46,7 @@ Deno.test("Update - AntiCrash ValidationPassed adds validated token to paneN", (
 
 Deno.test("Update - AntiCrash ValidationFailed records violation", () => {
   const model = initModel();
+  const initialCount = model.paneN.tokens.length;
   const token = makeToken("bad output");
 
   const msg = {
@@ -54,7 +56,7 @@ Deno.test("Update - AntiCrash ValidationFailed records violation", () => {
 
   const [newModel, _cmd] = Update.update(model, msg);
 
-  assertEquals(newModel.paneN.tokens.length, 0); // Token not added
+  assertEquals(newModel.paneN.tokens.length, initialCount); // Token not added
   assertEquals(newModel.antiCrash.violations.length, 1);
   // strictMode is true by default, so should be halted
   assertEquals(newModel.antiCrash.halted, true);

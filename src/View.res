@@ -74,7 +74,10 @@ let renderDarkStart = (): Tea_Vdom.t<msg> => {
   div(
     list{
       Attrs.class_("fixed inset-0 bg-gray-950 flex items-center justify-center cursor-pointer"),
+      Attrs.role("button"),
+      Attrs.ariaLabel("Enter eNSAID environment"),
       Events.onClick(View(SetViewMode(Standard))),
+      KeyboardUtil.onEnterOrSpace(View(SetViewMode(Standard))),
     },
     list{
       div(
@@ -159,6 +162,13 @@ let view = (model: model): Tea_Vdom.t<msg> => {
           model.feedbackError,
           model.feedbackReportType,
         ),
+
+        // VAB (Verified Assembly Building) - full-screen overlay
+        if model.vab.visible {
+          Vab.view(model.vab)
+        } else {
+          noNode
+        },
       },
     )
   }

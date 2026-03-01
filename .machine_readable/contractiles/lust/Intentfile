@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Intentfile - PanLL declared future intent
+
+version: 1
+
+future:
+  proof-ux:
+    - "Visual proof builder — CI/CD pipeline-style view for assembling proof chains."
+    - "Switchable syntax linter — Coq, Lean, Isabelle, PanLL-Universal notation."
+    - "Progressive sophistication — Visual → Syntax → Logic → REPL levels."
+    - "Blockly-style visual tactic composer with constraint propagation."
+
+  slm-integration:
+    - "Two-layer LoRA SLM — frozen base + plastic adapter for prover-directed learning."
+    - "Overnight heutagogy — SLM trains against ECHIDNA proofs during idle time."
+    - "DeepProbLog integration — logical constraints on SLM training objectives."
+
+  collaboration:
+    - "Phoenix Channels shared proof state — real-time co-editing via Elixir/OTP."
+    - "Contextual chat — comments attached to proof goals, entities, protocol states."
+    - "Ambient voice — Opus codec, push-to-talk, no ceremony."
+    - "Optional video — 720p, bandwidth-adaptive, never competes with proof engine."
+
+  discipline-layouts:
+    - "Global viewshift dropdown — instant layout switching."
+    - "Community layout contributions — K9 Yard-level .k9.ncl presets."
+    - "Project-scoped auto-switching — VeriSimDB project → Database Design layout."
+    - "Layout preview thumbnails in dropdown."
+
+  persistence:
+    - "Migrate from localStorage to VeriSimDB-backed state persistence."
+    - "Temporal versioning — roll back to any previous session state."
+    - "Cross-device sync via Elixir collaboration server."
+
+  accessibility:
+    - "WCAG 2.3 AA across all components."
+    - "Project Fluent i18n with RTL support."
+    - "OCR integration (Tesseract + Nougat) for handwritten proof import."
+    - "Pandoc AST export for proof documents."
+    - "Zotero integration for theorem/paper citation management."
+
+  infrastructure:
+    - "Fuzzy search (Levenshtein/agrep) across proof libraries."
+    - "IANA MIME type registration for A2ML and K9-SVC."
+    - "Formal verification of Anti-Crash soundness (Idris2 proofs)."
+    - "Cross-pollination with ReScript Evangeliser progressive sophistication."

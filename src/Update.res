@@ -1604,6 +1604,59 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
 }
 
 // ===========================================================================
+// VAB Sub-Updater
+// ===========================================================================
+
+/// Helper: recompute VAB warnings and capabilities after an assembly change.
+/// Called after every add/remove/clear operation to keep the status bar current.
+let recomputeVabStatus = (vab: vabState): vabState => {
+  let warnings = VabEngine.checkDependencies(vab.server.components, vab.catalog)
+  let capabilities = VabEngine.computeCapabilities(vab.server.components, vab.catalog, warnings)
+  {...vab, warnings, capabilities}
+}
+
+/// STATE TRANSITION: VAB (Verified Assembly Building)
+/// Handles server composition: category browsing, component add/remove,
+/// server naming, filter/sort, and assembly management. After every
+/// assembly-modifying action, recomputes dependency warnings and capabilities.
+let updateVab = (model: model, msg: vabMsg): model => {
+  let vab = model.vab
+  let newVab = switch msg {
+  | ToggleVab => {...vab, visible: !vab.visible}
+  | SelectCategory(cat) => {...vab, selectedCategory: cat}
+  | AddComponent(id) => {
+      // Only add if not already present
+      let alreadyPresent = Array.some(vab.server.components, c => c === id)
+      if alreadyPresent {
+        vab
+      } else {
+        let server = {
+          ...vab.server,
+          components: Array.concat(vab.server.components, [id]),
+        }
+        recomputeVabStatus({...vab, server})
+      }
+    }
+  | RemoveComponent(id) => {
+      let server = {
+        ...vab.server,
+        components: Array.filter(vab.server.components, c => c !== id),
+      }
+      recomputeVabStatus({...vab, server})
+    }
+  | RenameServer(name) => {...vab, server: {...vab.server, name}}
+  | ClearAssembly => {
+      let server = {...vab.server, components: []}
+      recomputeVabStatus({...vab, server})
+    }
+  | SetFilterText(text) => {...vab, filterText: text}
+  | SetSortBy(sort) => {...vab, sortBy: sort}
+  | HoverComponent(id) => {...vab, hoveredComponent: id}
+  }
+  {...model, vab: newVab}
+}
+
+// ===========================================================================
 // Main Orchestrator
 // ===========================================================================
 
@@ -1639,6 +1692,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | View(subMsg) => updateView(model, subMsg)
   | Feedback(subMsg) => updateFeedback(model, subMsg)
   | AntiCrash(subMsg) => updateAntiCrash(model, subMsg)
+  | Vab(subMsg) => (updateVab(model, subMsg), Tea_Cmd.none)
   | SaveState => {
       // Imperative: persist current state to localStorage.
       Storage.save(model)

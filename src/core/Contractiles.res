@@ -130,7 +130,7 @@ let adaptContract = (contractile: Model.contractile, model: Model.model): Model.
   let adjustedElasticity = contractile.elasticity +. (vexationFactor *. 0.2)
 
   // Clamp elasticity to [0.0, 1.0]
-  let clampedElasticity = Js.Math.min_float(1.0, Js.Math.max_float(0.0, adjustedElasticity))
+  let clampedElasticity = Math.min(1.0, Math.max(0.0, adjustedElasticity))
 
   {...contractile, elasticity: clampedElasticity}
 }

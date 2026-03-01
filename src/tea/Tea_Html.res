@@ -60,6 +60,7 @@ module Attrs = {
   let checked = Tea_Vdom.checked
   let type_ = Tea_Vdom.type_
   let name = Tea_Vdom.name
+  let tabIndex = Tea_Vdom.tabIndex
 
   // ARIA accessibility
   let ariaLabel = Tea_Vdom.ariaLabel
@@ -84,6 +85,7 @@ module Events = {
   let onMouseLeave = Tea_Vdom.onMouseLeave
   let onFocus = Tea_Vdom.onFocus
   let onBlur = Tea_Vdom.onBlur
+  let onKeyDown = Tea_Vdom.onKeyDown
 }
 
 /// Map the message type of a virtual DOM tree

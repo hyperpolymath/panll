@@ -1313,7 +1313,7 @@ fn verisimdb_get_entity(entity_id: String) -> Result<String, String> {
 // ECHIDNA Theorem Prover Backend
 // ===========================================================================
 
-const DEFAULT_ECHIDNA_URL: &str = "http://localhost:8000/api/v1";
+const DEFAULT_ECHIDNA_URL: &str = "http://localhost:9000/api/v1";
 
 /// Resolve the ECHIDNA API base URL from environment or default.
 /// Override with ECHIDNA_URL env var for non-default deployments.
@@ -1596,13 +1596,13 @@ mod echidna_tests {
         let session_url = format!("{}/proofs/{}", base, "test-session-123");
         assert_eq!(
             session_url,
-            "http://localhost:8000/api/v1/proofs/test-session-123"
+            "http://localhost:9000/api/v1/proofs/test-session-123"
         );
 
         let tactic_url = format!("{}/proofs/{}/tactics", base, "sess-abc");
         assert_eq!(
             tactic_url,
-            "http://localhost:8000/api/v1/proofs/sess-abc/tactics"
+            "http://localhost:9000/api/v1/proofs/sess-abc/tactics"
         );
 
         let suggest_url = format!(
@@ -1611,7 +1611,7 @@ mod echidna_tests {
         );
         assert_eq!(
             suggest_url,
-            "http://localhost:8000/api/v1/proofs/sess-abc/tactics/suggest?limit=5"
+            "http://localhost:9000/api/v1/proofs/sess-abc/tactics/suggest?limit=5"
         );
     }
 

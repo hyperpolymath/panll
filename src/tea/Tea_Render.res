@@ -86,6 +86,24 @@ let rec createElement = (vdom: t<'msg>, state: renderState<'msg>): domElement =>
             handler: eventHandler,
           })->ignore
         }
+      | EventWithKey(name, handler) => {
+          let eventHandler = (_e: Dom.event) => {
+            let key: string = %raw(`_e.key || ""`)
+            switch handler(key) {
+            | Some(msg) => {
+                let _: unit = %raw(`_e.preventDefault()`)
+                state.dispatch(msg)
+              }
+            | None => ()
+            }
+          }
+          el["addEventListener"](name, eventHandler)->ignore
+          Array.push(state.listeners, {
+            element: el,
+            eventName: name,
+            handler: eventHandler,
+          })->ignore
+        }
       }
     })
 
@@ -163,6 +181,7 @@ let attributesEqual = (a1: array<attribute<'msg>>, a2: array<attribute<'msg>>): 
       | (Style(k1, v1), Some(Style(k2, v2))) => k1 === k2 && v1 === v2
       | (Event(n1, _), Some(Event(n2, _))) => n1 === n2 // Compare event names only
       | (EventWithValue(n1, _), Some(EventWithValue(n2, _))) => n1 === n2
+      | (EventWithKey(n1, _), Some(EventWithKey(n2, _))) => n1 === n2
       | _ => false
       }
     })
@@ -254,6 +273,24 @@ let rec applyPatch = (domNode: domElement, patch: patch<'msg>, state: renderStat
             let eventHandler = (_e: Dom.event) => {
               let value: string = %raw(`_e.target.value || ""`)
               state.dispatch(handler(value))
+            }
+            el["addEventListener"](name, eventHandler)->ignore
+            Array.push(state.listeners, {
+              element: domNode,
+              eventName: name,
+              handler: eventHandler,
+            })->ignore
+          }
+        | EventWithKey(name, handler) => {
+            let eventHandler = (_e: Dom.event) => {
+              let key: string = %raw(`_e.key || ""`)
+              switch handler(key) {
+              | Some(msg) => {
+                  let _: unit = %raw(`_e.preventDefault()`)
+                  state.dispatch(msg)
+                }
+              | None => ()
+              }
             }
             el["addEventListener"](name, eventHandler)->ignore
             Array.push(state.listeners, {

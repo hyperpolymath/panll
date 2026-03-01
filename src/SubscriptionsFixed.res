@@ -19,6 +19,7 @@ let subscriptions = (model: model): Tea_Sub.t<msg> => {
         | "L" => View(TogglePaneL)
         | "N" => View(TogglePaneN)
         | "B" | "W" => View(TogglePaneW)
+        | "V" => Vab(ToggleVab) // Toggle VAB panel
         | _ => NoOp
         }
       } else {

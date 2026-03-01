@@ -14,7 +14,8 @@
     "test:watch": "deno test --no-check --watch --allow-read --allow-env tests/",
     "test:coverage": "deno test --no-check --coverage=coverage/ tests/ && deno coverage coverage/",
     "lint": "deno lint scripts/",
-    "fmt": "deno fmt scripts/"
+    "fmt": "deno fmt scripts/",
+    "mock:echidna": "deno run --allow-net=127.0.0.1:9000 scripts/mock-echidna.ts"
   },
   "imports": {
     "@std/": "jsr:@std/",

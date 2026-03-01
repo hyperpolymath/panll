@@ -69,7 +69,7 @@ let calculateDivergence = (paneL: Model.paneLState, paneN: Model.paneNState): fl
     // Calculate difference ratio
     let diff = Int.toFloat(abs(symbolicLen - neuralLen))
     let maxLen = Int.toFloat(max(symbolicLen, neuralLen))
-    Js.Math.min_float(1.0, diff /. maxLen)
+    Math.min(1.0, diff /. maxLen)
   }
 }
 
@@ -77,9 +77,9 @@ let calculateDivergence = (paneL: Model.paneLState, paneN: Model.paneNState): fl
 let calculateStability = (divergence: float, latency: float): float => {
   // Stability decreases with divergence and latency
   let divergencePenalty = divergence *. 0.6
-  let latencyPenalty = Js.Math.min_float(0.4, latency /. 1000.0) // Normalize latency to 0-0.4
+  let latencyPenalty = Math.min(0.4, latency /. 1000.0) // Normalize latency to 0-0.4
 
-  Js.Math.max_float(0.0, 1.0 -. divergencePenalty -. latencyPenalty)
+  Math.max(0.0, 1.0 -. divergencePenalty -. latencyPenalty)
 }
 
 /// Determine drift aura colour based on stability

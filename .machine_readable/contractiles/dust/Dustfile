@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Dustfile - PanLL recovery and rollback semantics
+
+version: 1
+
+recovery:
+  state-persistence:
+    - name: localstorage-corruption
+      path: "localStorage(panll_state_v1)"
+      reversible: true
+      handler: "Storage.clear() — resets to Model.init() default state"
+      notes: "If persisted state becomes corrupt, the app falls back to init() automatically."
+
+    - name: verisimdb-migration-failure
+      event: "schema.migration.failure"
+      undo: "VeriSimDB temporal rollback to previous snapshot"
+      notes: "VeriSimDB's versioned persistence allows point-in-time recovery."
+
+  proof-sessions:
+    - name: echidna-session-crash
+      event: "echidna.session.error"
+      undo: "Session state cached in model; re-create session from cached goal/prover"
+      notes: "ECHIDNA sessions are stateless from PanLL's perspective — the model holds all state."
+
+    - name: tactic-undo
+      event: "user.undo-tactic"
+      undo: "Pop last entry from proofScript and tacticsApplied arrays"
+      notes: "Each tactic application is recorded; undo reverses the last step."
+
+  layout-presets:
+    - name: layout-corruption
+      path: "layouts/*.k9.ncl"
+      rollback: "git checkout HEAD~1 -- layouts/"
+      notes: "Layout presets are pure config files under version control."
+
+  model-modules:
+    - name: model-regression
+      path: "src/model/*.res"
+      rollback: "git checkout HEAD~1 -- src/model/ src/Model.res"
+      notes: "Domain modules are type-checked — regressions are caught at compile time."
+
+  dust-events:
+    - name: anti-crash-halt-log
+      source: "model.antiCrash.violations"
+      transform: "Log violation chain for post-mortem analysis"
+      notes: "Anti-Crash halt events are recorded in the model; halts are clearable by operator."

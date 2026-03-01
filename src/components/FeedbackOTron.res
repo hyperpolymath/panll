@@ -107,6 +107,7 @@ let renderFeedbackForm = (
                   button(
                     list{
                       Attrs.class_("text-gray-500 hover:text-gray-300"),
+                      Attrs.ariaLabel("Close feedback form"),
                       Events.onClick(Feedback(CancelFeedback)),
                     },
                     list{text("×")},

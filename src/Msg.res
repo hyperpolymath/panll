@@ -164,6 +164,19 @@ type echidnaMsg =
   | SelectProver(option<string>)
   | ClearProofResult
 
+/// VAB (Verified Assembly Building) messages — server component assembly,
+/// category navigation, dependency-driven recomputation, and assembly management.
+type vabMsg =
+  | ToggleVab
+  | SelectCategory(vabCategory)
+  | AddComponent(string)
+  | RemoveComponent(string)
+  | RenameServer(string)
+  | ClearAssembly
+  | SetFilterText(string)
+  | SetSortBy(vabSortBy)
+  | HoverComponent(option<string>)
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -176,5 +189,6 @@ type msg =
   | View(viewMsg)
   | Feedback(feedbackMsg)
   | AntiCrash(antiCrashMsg)
+  | Vab(vabMsg)
   | SaveState // Persist current state to storage
   | NoOp

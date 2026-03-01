@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= PanLL Discipline Layout Presets
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:description: K9-SVC layout presets for PanLL's global viewshift dropdown.
+
+== What Are These?
+
+Layout presets configure which panes, sub-panels, and tools are visible,
+sized, and prioritised for a given discipline. They are the "recipes"
+behind PanLL's global viewshift dropdown.
+
+Each preset is a https://github.com/hyperpolymath/k9-svc[K9 Self-Validating Component]
+at *Yard* security level — pure Nickel configuration with contracts, no I/O.
+
+== Core Presets
+
+[cols="1,2,1,1,1"]
+|===
+| Preset | File | Pane-L | Pane-N | Pane-W
+
+| Logic & Proofs
+| `logic-and-proofs.k9.ncl`
+| 35%
+| 25%
+| 40%
+
+| Database Design
+| `database-design.k9.ncl`
+| 30%
+| 20%
+| 50%
+
+| Language Design
+| `language-design.k9.ncl`
+| 40%
+| 25%
+| 35%
+
+| Protocol Design
+| `protocol-design.k9.ncl`
+| 35%
+| 25%
+| 40%
+|===
+
+== Contract Enforcement
+
+The `pedigree-layout.ncl` schema enforces:
+
+* Pane sizes *must* sum to exactly 100
+* Panel visibility is one of `Expanded`, `Collapsed`, or `Hidden`
+* Default provers are from the known ECHIDNA catalog
+* All fields are typed (Nickel rejects malformed presets at evaluation time)
+
+== Validating a Preset
+
+[source,bash]
+----
+nickel typecheck layouts/logic-and-proofs.k9.ncl
+nickel export layouts/logic-and-proofs.k9.ncl --format json
+----
+
+== Creating a Custom Layout
+
+. Copy an existing preset
+. Modify pane sizes (must sum to 100)
+. Change panel visibility and prover priority
+. Run `nickel typecheck` to validate
+
+Community-contributed presets are welcome — submit a PR with your `.k9.ncl`
+file and it will be validated against the pedigree schema automatically.
+
+== Design Reference
+
+See `docs/design/DESIGN-2026-02-28-discipline-layouts.md` for the full
+design rationale including the relationship to progressive sophistication
+levels and the cross-product of layout (WHAT) vs. sophistication (HOW).

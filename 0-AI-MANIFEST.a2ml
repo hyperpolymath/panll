@@ -1,129 +1,239 @@
-# ⚠️ STOP - CRITICAL READING REQUIRED
+; SPDX-License-Identifier: PMPL-1.0-or-later
+; SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+;
+; 0-AI-MANIFEST.a2ml — Universal AI entry point for PanLL
+; Media-Type: application/a2ml
 
-**THIS FILE MUST BE READ FIRST BY ALL AI AGENTS**
+; ⚠️  THIS FILE MUST BE READ FIRST BY ALL AI AGENTS
 
-## WHAT IS THIS?
+(manifest
+  (identity
+    (name "PanLL")
+    (full-name "PanLL eNSAID — Neurosymbolic AI Development Environment")
+    (version "0.1.0-alpha")
+    (repo "https://github.com/hyperpolymath/panll")
+    (license "PMPL-1.0-or-later")
+    (author "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"))
 
-This is the AI manifest for **panll**. It declares:
-- Canonical file locations (where things MUST be, and nowhere else)
-- Critical invariants (rules that must NEVER be violated)
-- Repository structure and organization
+  (purpose
+    "Three-pane neurosymbolic workbench built on the Binary Star co-orbit
+     model. Pane-L (Symbolic) holds formal constraints and the proof editor.
+     Pane-N (Neural) streams inference tokens with the ECHIDNA theorem prover
+     advisor. Pane-W (World) hosts the task barycentre, VeriSimDB database
+     tools, and panic-attacker security analysis. The environment enforces
+     cognitive governance through Anti-Crash validation, Vexometer operator
+     friction tracking, Orbital synchronisation, and elastic Contractiles.")
 
-## CANONICAL LOCATIONS (UNIVERSAL RULE)
+  ;; ===================================================================
+  ;; CANONICAL LOCATIONS — these are non-negotiable
+  ;; ===================================================================
 
-### Machine-Readable Metadata: `.machine_readable/` ONLY
+  (canonical-locations
+    ;; AI and agent instructions
+    (ai-manifest     "0-AI-MANIFEST.a2ml"         "THIS FILE — read first")
+    (ai-instructions ".claude/CLAUDE.md"           "Claude-specific patterns")
 
-These 6 SCM files MUST exist in `.machine_readable/` directory ONLY:
-1. **STATE.scm** - Project state, progress, blockers
-2. **META.scm** - Architecture decisions, governance
-3. **ECOSYSTEM.scm** - Position in ecosystem, relationships
-4. **AGENTIC.scm** - AI agent interaction patterns
-5. **NEUROSYM.scm** - Neurosymbolic integration config
-6. **PLAYBOOK.scm** - Operational runbook
+    ;; Machine-readable checkpoint files (ONLY in .machine_readable/)
+    (state           ".machine_readable/STATE.scm")
+    (meta            ".machine_readable/META.scm")
+    (ecosystem       ".machine_readable/ECOSYSTEM.scm")
+    (agentic         ".machine_readable/AGENTIC.scm")
+    (neurosym        ".machine_readable/NEUROSYM.scm")
+    (playbook        ".machine_readable/PLAYBOOK.scm")
 
-**CRITICAL:** If ANY of these files exist in the root directory, this is an ERROR.
+    ;; Source code — ReScript TEA architecture
+    (model-root      "src/Model.res"               "Composition root — includes domain modules")
+    (model-panes     "src/model/PaneModel.res"      "Pane-L/N/W state types")
+    (model-echidna   "src/model/EchidnaModel.res"   "ECHIDNA prover types")
+    (model-verisim   "src/model/VeriSimModel.res"    "VeriSimDB database types")
+    (model-governance "src/model/GovernanceModel.res" "AntiCrash, Vexometer, Orbital, Contractiles")
+    (model-vab       "src/model/VabModel.res"        "VAB (Verified Assembly Building) state types")
+    (vab-catalog     "src/core/VabCatalog.res"        "108+3 proven-servers component catalog")
+    (vab-engine      "src/core/VabEngine.res"         "Dependency checking + capability computation")
+    (vab-component   "src/components/Vab.res"         "KSP-inspired VAB panel view (TEA)")
+    (messages        "src/Msg.res"                  "TEA message variants")
+    (update-engine   "src/Update.res"               "State transition kernel (1656 lines)")
+    (view-root       "src/View.res"                 "Root view renderer")
+    (storage         "src/Storage.res"              "localStorage persistence")
 
-### Bot Directives: `.bot_directives/` ONLY
+    ;; Infrastructure
+    (tauri-backend   "src-tauri/src/main.rs"        "Rust/Tauri 2.0 backend commands")
+    (tauri-config    "src-tauri/tauri.conf.json"    "Tauri configuration")
+    (elixir-backend  "beam/"                        "Elixir/BEAM API layer")
+    (mock-echidna    "scripts/mock-echidna.ts"      "Mock ECHIDNA REST server (port 9000)")
 
-Bot-specific instructions for:
-- rhodibot - Git operations
-- echidnabot - Code quality
-- sustainabot - Dependency updates
-- glambot - Documentation
-- seambot - Integration
-- finishbot - Task completion
+    ;; Build and test
+    (rescript-config "rescript.json"                "ReScript compiler config")
+    (deno-config     "deno.json"                    "Deno tasks and import map")
+    (tests           "tests/"                       "Deno.test suite (121 tests)")
 
-### Agent Instructions
+    ;; Design documentation
+    (design-docs     "docs/design/"                 "Session design documents (dated)")
+    (tea-guide       "docs/TEA_GUIDE.md"            "TEA architecture guide")
 
-- `.claude/CLAUDE.md` - Claude-specific patterns (if exists)
-- `0-AI-MANIFEST.a2ml` - THIS FILE (universal entry point)
+    ;; Security and trust
+    (security        ".well-known/security.txt")
+    (bot-directives  ".bot_directives/"             "Bot-specific instructions"))
 
-## CORE INVARIANTS
+  ;; ===================================================================
+  ;; TECH STACK
+  ;; ===================================================================
 
-1. **No SCM duplication** - Root must NOT contain STATE.scm, META.scm, etc.
-2. **Single source of truth** - `.machine_readable/` is authoritative
-3. **No stale metadata** - If root SCMs exist, they are OUT OF DATE
-4. **License consistency** - All code PMPL-1.0-or-later unless platform requires MPL-2.0
-5. **Author attribution** - Always "Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"
+  (tech-stack
+    (primary    "ReScript"      "Tauri 2.0 (Rust)")
+    (secondary  "Elixir/OTP"    "Deno")
+    (runtime    "Tauri webview"  "BEAM/OTP")
+    (styling    "Tailwind CSS")
+    (testing    "Deno.test")
+    (backend-provers "ECHIDNA REST API on port 9000")
+    (backend-db      "VeriSimDB REST API on port 8080"))
 
-## REPOSITORY STRUCTURE
+  ;; ===================================================================
+  ;; ARCHITECTURE — The Binary Star Co-Orbit
+  ;; ===================================================================
 
-```
-panll/
-├── 0-AI-MANIFEST.a2ml         # THIS FILE (start here)
-├── README.adoc                 # Project overview (AsciiDoc)
-├── ROADMAP.adoc                # Development roadmap
-├── src/                        # ReScript source (TEA architecture)
-│   ├── Model.res               # Application state model
-│   ├── Msg.res                 # Message types (variant sum type)
-│   ├── Update.res              # State transition function
-│   ├── View.res                # Root view renderer
-│   ├── Storage.res             # localStorage persistence
-│   ├── tea/                    # Custom TEA runtime (Cmd, Sub, Vdom, App, Html)
-│   ├── components/             # UI components (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)
-│   ├── commands/               # Command constructors (Tauri bridge)
-│   └── subscriptions/          # Keyboard + polling subscriptions
-├── src-tauri/                  # Rust/Tauri 2.0 backend (8 commands)
-├── tests/                      # Deno.test suite (97 JS tests)
-├── public/                     # Static assets (HTML, CSS)
-├── docs/                       # Developer documentation
-│   └── TEA_GUIDE.md            # TEA architecture guide
-├── beam/                       # Elixir/BEAM API (HTTP, GraphQL, gRPC)
-├── .machine_readable/          # SCM files (6 files)
-│   ├── STATE.scm
-│   ├── META.scm
-│   ├── ECOSYSTEM.scm
-│   ├── AGENTIC.scm
-│   ├── NEUROSYM.scm
-│   └── PLAYBOOK.scm
-└── .bot_directives/            # Bot instructions
-```
+  (architecture
+    (paradigm "Elm Architecture (TEA) — Model/Msg/Update/View/Subscriptions")
 
-## SESSION STARTUP CHECKLIST
+    (model-structure
+      (description "Model.res is a composition root that includes 4 domain modules")
+      (modules
+        (PaneModel      "Pane-L/N/W types, neuralToken, symbolicConstraint, eventChain")
+        (EchidnaModel   "Trust levels, axiom danger, provers, sessions, dispatch results")
+        (VeriSimModel   "Proof obligations, drift scores, telemetry, database state")
+        (GovernanceModel "AntiCrash, Vexometer, Orbital, Contractiles, sync events")
+        (VabModel       "VAB (Verified Assembly Building) types — vabComponent, vabWarning, capabilityStatus, vabState"))
+      (dependency-order "PaneModel → EchidnaModel → VeriSimModel → GovernanceModel → VabModel → Model")
+      (constraint "GovernanceModel depends on PaneModel for neuralToken only")
+      (constraint "VabModel is a leaf module — VabCatalog and VabEngine use VabModel directly to avoid cycles"))
 
-✅ Read THIS file (0-AI-MANIFEST.a2ml) first
-✅ Understand canonical locations (.machine_readable/, .bot_directives/)
-✅ Know the invariants (no SCM duplication, etc.)
-✅ Check for MCP enforcement (if applicable)
-✅ Read `.machine_readable/STATE.scm` for current status
-✅ Read `.machine_readable/AGENTIC.scm` for interaction patterns
 
-## LIFECYCLE HOOKS
+    (panes
+      (pane-L "Symbolic Mass — formal constraints, proof editor, symbolic notation")
+      (pane-N "Neural Stream — inference tokens, ECHIDNA advisor, agency monitor")
+      (pane-W "World Barycentre — task canvas, security tools, VeriSimDB, event chain"))
 
-### on-enter (Session Start)
+    (cognitive-governance
+      (anti-crash     "Circuit breaker — validates all neural tokens against symbolic constraints")
+      (vexometer      "Operator friction tracking — 0.0 (calm) to 1.0 (frustrated)")
+      (orbital-sync   "Cross-pane synchronisation — stability, divergence, drift aura")
+      (contractiles   "Elastic state contracts — orbital stability, vexation ceiling, divergence limit, autonomy bound")
+      (humidity       "Information density — High (detail) / Medium / Low (shed noise)"))
 
-When starting a new session:
+    (backends
+      (echidna
+        (description "Multi-solver theorem prover dispatch")
+        (endpoint "http://localhost:9000/api/v1")
+        (mock "scripts/mock-echidna.ts — standalone Deno mock server")
+        (capabilities "health, provers, prove, verify, search, sessions, tactics, suggestions"))
+      (verisimdb
+        (description "8-modality versioned database")
+        (endpoint "http://localhost:8080/api/v1")
+        (capabilities "query, entities, drift, normalise, telemetry, orchestrator"))))
 
-1. Read and acknowledge this manifest
-2. Log session start (optional but recommended)
-   - Format: `[YYYY-MM-DD HH:MM:SS] Session started: [agent-name]`
-   - Location: `.machine_readable/session-log.txt`
-3. Read `.machine_readable/STATE.scm`
-4. Check for blockers
-5. State understanding of canonical locations
+  ;; ===================================================================
+  ;; CRITICAL INVARIANTS
+  ;; ===================================================================
 
-### on-exit (Session End)
+  (critical-invariants
+    ;; File organisation
+    (rule "SCM files ONLY in .machine_readable/ — NEVER in root directory")
+    (rule "Bot directives ONLY in .bot_directives/")
+    (rule "Model types in src/model/ domain modules — Model.res only composes via include")
 
-When ending a session:
+    ;; Architecture
+    (rule "TEA pattern: Model → Msg → Update → View — no MVC, no Redux")
+    (rule "All state lives in Model.model — no global mutable state")
+    (rule "Anti-Crash validates ALL neural tokens — no inference bypasses the circuit breaker")
+    (rule "Contractiles evaluate after EVERY state-modifying update")
 
-1. Update `.machine_readable/STATE.scm` if changes made
-2. Log session end (optional but recommended)
-   - Format: `[YYYY-MM-DD HH:MM:SS] Session ended: [summary]`
-   - Location: `.machine_readable/session-log.txt`
-3. Document new blockers
-4. Summarize outcomes
+    ;; Ports and services
+    (rule "Dev server: port 8000 (Tauri devUrl)")
+    (rule "ECHIDNA: port 9000 (avoids dev server conflict)")
+    (rule "VeriSimDB: port 8080")
 
-## ATTESTATION PROOF
+    ;; Code quality
+    (rule "License: PMPL-1.0-or-later on all source files")
+    (rule "Author: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>")
+    (rule "No TypeScript — ReScript only")
+    (rule "No npm/bun — Deno only")
+    (rule "WCAG 2.3 A minimum, AA target, AAA best-effort"))
 
-After reading this file, demonstrate understanding by stating:
+  ;; ===================================================================
+  ;; RELATED PROJECTS
+  ;; ===================================================================
 
-**"I have read the AI manifest. SCM files are located in `.machine_readable/` ONLY, bot directives in `.bot_directives/`, and I will not create duplicate files in the root directory."**
+  (related-projects
+    (echidna     "Theorem prover dispatch engine — PanLL's primary proof backend")
+    (verisimdb   "8-modality database — entity browsing, drift, normalisation in Pane-W")
+    (panic-attack "Security analysis — event chain data imported into Pane-W")
+    (hypatia     "Neurosymbolic CI/CD — scans PanLL repo for quality")
+    (gitbot-fleet "Bot orchestration — rhodibot, echidnabot, sustainabot, glambot, seambot, finishbot")
+    (contractiles "Elastic contract framework — cognitive governance engine")
+    (k9-svc      "Self-validating components — layout presets and community extensions")
+    (rescript-evangeliser "Pedagogy/heutagogy tool — cross-pollinates progressive sophistication design"))
 
-## META
+  ;; ===================================================================
+  ;; REPOSITORY STRUCTURE
+  ;; ===================================================================
 
-- **Format Version:** 1.0.0
-- **Created:** 2026-02-09
-- **Last Updated:** 2026-02-12
-- **Maintained By:** Jonathan D.A. Jewell / hyperpolymath
-- **License:** PMPL-1.0-or-later
-- **Protocol:** https://github.com/hyperpolymath/0-ai-gatekeeper-protocol
+  (structure
+    "panll/
+     ├── 0-AI-MANIFEST.a2ml         # THIS FILE — universal entry point
+     ├── src/                        # ReScript source (TEA architecture)
+     │   ├── Model.res               # Composition root (includes domain modules)
+     │   ├── model/                  # Domain type modules
+     │   │   ├── PaneModel.res       #   Pane-L/N/W state types
+     │   │   ├── EchidnaModel.res    #   ECHIDNA theorem prover types
+     │   │   ├── VeriSimModel.res    #   VeriSimDB database types
+     │   │   └── GovernanceModel.res #   Cognitive governance types
+     │   ├── Msg.res                 # TEA message variants
+     │   ├── Update.res              # State transition kernel
+     │   ├── View.res                # Root view renderer
+     │   ├── App.res                 # Application entry point
+     │   ├── Storage.res             # Persistence layer
+     │   ├── tea/                    # Custom TEA runtime
+     │   ├── components/             # PaneL, PaneN, PaneW, Vexometer, FeedbackOTron
+     │   ├── core/                   # AntiCrash, OrbitalSync, Contractiles, EventChain
+     │   ├── commands/               # Tauri bridge commands
+     │   ├── bindings/               # FFI bindings (Tauri)
+     │   ├── modules/                # Module registry
+     │   └── subscriptions/          # Keyboard + polling subscriptions
+     ├── src-tauri/                  # Rust/Tauri 2.0 backend
+     ├── beam/                       # Elixir/BEAM API layer
+     ├── scripts/                    # Development tools (mock-echidna.ts)
+     ├── tests/                      # Deno.test suite (121 tests)
+     ├── docs/                       # Documentation and design docs
+     │   └── design/                 # Session design documents (dated)
+     ├── public/                     # Static assets
+     ├── .machine_readable/          # SCM checkpoint files (7 files)
+     └── .bot_directives/            # Bot-specific instructions")
+
+  ;; ===================================================================
+  ;; SESSION LIFECYCLE
+  ;; ===================================================================
+
+  (lifecycle
+    (on-enter
+      (step "Read THIS file (0-AI-MANIFEST.a2ml) first")
+      (step "Acknowledge canonical locations and invariants")
+      (step "Read .machine_readable/STATE.scm for current status")
+      (step "Read .machine_readable/ECOSYSTEM.scm for project relationships")
+      (step "Check for blockers before starting work"))
+
+    (on-exit
+      (step "Update .machine_readable/STATE.scm if changes were made")
+      (step "Document new blockers or completed milestones")
+      (step "Summarise outcomes for session continuity")))
+
+  ;; ===================================================================
+  ;; FORMAT META
+  ;; ===================================================================
+
+  (format-meta
+    (version "2.0.0")
+    (media-type "application/a2ml")
+    (created "2026-02-09")
+    (last-updated "2026-03-01")
+    (maintained-by "Jonathan D.A. Jewell / hyperpolymath")
+    (protocol "https://github.com/hyperpolymath/0-ai-gatekeeper-protocol")))

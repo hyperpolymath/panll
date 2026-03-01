@@ -264,7 +264,9 @@ let renderProverCatalog = (echidna: echidnaState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_(`flex items-center gap-2 p-1.5 border-l-2 ${bgClass} mb-0.5 cursor-pointer hover:bg-gray-700/50`),
                 Attrs.role("listitem"),
+                Attrs.tabIndex(0),
                 Events.onClick(Echidna(SelectProver(isSelected ? None : Some(prover.name)))),
+                KeyboardUtil.onEnterOrSpace(Echidna(SelectProver(isSelected ? None : Some(prover.name)))),
               },
               list{
                 div(
@@ -369,7 +371,7 @@ let renderAxiomReport = (axioms: array<axiomUsage>): Tea_Vdom.t<msg> => {
     noNode
   } else {
     div(
-      list{Attrs.class_("mt-2")},
+      list{Attrs.class_("mt-2"), Attrs.role("region"), Attrs.ariaLabel("Axiom Report")},
       list{
         div(
           list{Attrs.class_("text-xs text-gray-500 mb-1")},
@@ -458,6 +460,7 @@ let renderProofResult = (result: echidnaDispatchResult): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_("text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 rounded"),
+              Attrs.ariaLabel("Clear proof result"),
               Events.onClick(Echidna(ClearProofResult)),
             },
             list{text("Clear")},
@@ -545,7 +548,7 @@ let renderSessionStatus = (session: echidnaSessionState): Tea_Vdom.t<msg> => {
   }
 
   let timeText = switch session.timeElapsed {
-  | Some(t) => Float.toFixedWithPrecision(t, ~digits=1) ++ "s"
+  | Some(t) => Float.toFixed(t, ~digits=1) ++ "s"
   | None => "-"
   }
 

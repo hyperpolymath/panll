@@ -1,0 +1,305 @@
+---
+### [META]
+id: "did:web:panll.hyperpolymath.com"
+version: "2026.2.28-alpha"
+context:
+  - "https://a2ml.org/ns/v2"
+  - "https://leanprover-community.github.io/lean4"
+  - "https://hypatia.scans/ns/v1"
+  - "https://w3id.org/security/v4"
+  - "https://w3id.org/transparency/v1"
+meta:
+  generated: "2026-02-28T00:00:00Z"
+  expires: "2027-02-28T00:00:00Z"
+  signature:
+    algorithm: "Ed448+Dilithium5"
+    value: |
+      -----BEGIN HYBRID SIGNATURE-----
+      PENDING_SIGNATURE_GENERATION
+      -----END HYBRID SIGNATURE-----
+    signedBy: "did:web:panll.hyperpolymath.com#primary-sig"
+    proof: "proofs/meta.lean"
+  fallbackSignature:
+    algorithm: "SPHINCS+"
+    value: |
+      -----BEGIN SPHINCS+ SIGNATURE-----
+      PENDING_FALLBACK_SIGNATURE
+      -----END SPHINCS+ SIGNATURE-----
+  integrity:
+    sha3-512: "PENDING_SHA3_512"
+    shake256: "PENDING_SHAKE256"
+  ci_cd:
+    github_actions: "https://github.com/hyperpolymath/panll/blob/main/.github/workflows/trustfile.yml"
+    gitbot_fleet: "https://gitbot-fleet.hyperpolymath.com/hooks/panll"
+    hypatia_scan: "https://hypatia.scans/repos/panll"
+  automation:
+    hashing: ["SHA3-512", "SHAKE256", "BLAKE3"]
+    diffing: "alert-on-unexpected-changes"
+    integrity: ["lean-proof-validity", "layout-contract-validity"]
+
+---
+### [THREAT_MODEL]
+adversaries:
+  - type: "APT"
+    mitigations:
+      - "ECHIDNA formal verification → No unproven assertions."
+      - "Anti-Crash circuit breaker → No unvalidated neural tokens reach output."
+      - "Contractiles governance → Autonomous actions bounded by operator consent."
+  - type: "Ransomware"
+    mitigations:
+      - "VeriSimDB versioned persistence → Temporal rollback to any point."
+      - "K9 layout presets at Yard level → No I/O, pure configuration."
+      - "Tauri sandboxed webview → No arbitrary filesystem access."
+  - type: "Quantum Adversary"
+    mitigations:
+      - "Kyber1024 + Dilithium5 → PQ-resistant crypto for deployment."
+      - "SPHINCS+ fallback → Crypto agility."
+      - "GitBot-Fleet → Automated key rotation."
+  - type: "Adversarial ML"
+    mitigations:
+      - "Anti-Crash validates ALL neural tokens against symbolic constraints."
+      - "Trust levels (1-5) require cross-checked multi-solver agreement."
+      - "Axiom danger classification rejects believe_me/Admitted/sorry."
+      - "SLM heutagogy layer is frozen during inference; training is offline only."
+
+---
+### [ACCESSIBILITY]
+standard: "WCAG 2.3"
+minimum_level: "A"
+target_level: "AA"
+aspirational_level: "AAA"
+requirements:
+  keyboard:
+    - "All interactive elements reachable via Tab"
+    - "Buttons activate on Enter/Space (WAI-ARIA pattern)"
+    - "Dialogs dismiss on Escape"
+    - "Focus indicators visible (2px solid indigo outline)"
+  visual:
+    - "prefers-reduced-motion: disable animations and transitions"
+    - "prefers-contrast: thicker borders and outlines"
+    - "Minimum contrast ratio 4.5:1 (AA) for normal text"
+    - "Minimum contrast ratio 3:1 (AA) for large text"
+  semantic:
+    - "All buttons have accessible names (ariaLabel or visible text)"
+    - "All form inputs have associated labels"
+    - "Landmark roles on major page regions"
+    - "Live regions for dynamic content updates (proof results, token stream)"
+  internationalisation:
+    framework: "Project Fluent"
+    default_locale: "en-GB"
+    rtl_support: true
+ci_cd:
+  tool: "axe-core + pa11y"
+  frequency: "on-push"
+  threshold: "zero violations at target level"
+
+---
+### [TRUSTFILE]
+issuer: "did:web:panll.hyperpolymath.com"
+keys:
+  - id: "#primary-sig"
+    type: "HybridKey2024"
+    classical:
+      algorithm: "Ed448"
+      publicKeyJwk:
+        kty: "OKP"
+        crv: "Ed448"
+        x: "PENDING_ED448_PUBLIC_KEY"
+    postQuantum:
+      algorithm: "Dilithium5"
+      publicKeyJwk:
+        kty: "OKP"
+        crv: "Dilithium5"
+        x: "PENDING_DILITHIUM5_PUBLIC_KEY"
+    fallback:
+      algorithm: "SPHINCS+"
+      publicKeyJwk:
+        kty: "OKP"
+        crv: "SPHINCS+"
+        x: "PENDING_SPHINCS_PLUS_PUBLIC_KEY"
+    usage: ["authentication", "assertion"]
+    security:
+      proof: "proofs/crypto-hybrid-key.lean"
+      hypatia: "scan-keys"
+      ci_cd: "rotate-keys-on-compromise"
+algorithms:
+  hashing: ["SHA3-512", "SHAKE256", "BLAKE3"]
+  kdf: "HKDF-SHAKE512"
+  rng: "ChaCha20-DRBG"
+  security:
+    proof: "proofs/crypto-algorithms.lean"
+policies:
+  echidna:
+    description: "All proofs must achieve TrustLevel3+ (multiple solvers agree)"
+    rego: |
+      package trustfile.echidna
+      default allow = false
+      allow {
+        input.trust_level >= 3
+        input.axiom_report_clean
+        not input.axiom_has_reject_level
+      }
+    ci_cd: "validate-proof-trust-on-submit"
+  anti_crash:
+    description: "No neural token reaches output without symbolic validation"
+    rego: |
+      package trustfile.anti_crash
+      default allow = false
+      allow {
+        input.token.validated == true
+        not input.state.halted
+      }
+    ci_cd: "verify-anti-crash-invariant"
+  layout_presets:
+    description: "All K9 layout presets must pass Nickel contract validation"
+    rego: |
+      package trustfile.layouts
+      default allow = false
+      allow {
+        input.pane_sizes_sum == 100
+        input.security_level == "Yard"
+      }
+    ci_cd: "nickel-typecheck-on-push"
+fallbacks:
+  signatures: ["Ed448+Dilithium5", "SPHINCS+"]
+  keyExchange: ["Kyber1024-X25519", "X25519"]
+
+---
+### [CI_CD]
+github_actions:
+  name: "Trustfile Validation"
+  on: ["push", "pull_request"]
+  jobs:
+    validate:
+      runs-on: "ubuntu-latest"
+      steps:
+        - uses: "actions/checkout@v4"
+        - name: "Validate A2ML Trustfile"
+          run: "a2ml validate .machine_readable/contractiles/trust/Trustfile.a2ml"
+        - name: "ReScript Build"
+          run: "npx rescript-legacy"
+        - name: "Deno Tests"
+          run: "deno task test"
+        - name: "Rust Tests"
+          run: "cd src-tauri && cargo test"
+        - name: "Nickel Layout Contracts"
+          run: |
+            for f in layouts/*.k9.ncl; do
+              nickel typecheck "$f"
+            done
+        - name: "Hypatia Scan"
+          run: "hypatia scan --config hypatia.yml"
+        - name: "Accessibility Audit"
+          run: "npx pa11y-ci --config .pa11yci.json"
+gitbot_fleet:
+  hooks:
+    - type: "pre-commit"
+      script: "a2ml validate .machine_readable/contractiles/trust/Trustfile.a2ml"
+    - type: "post-merge"
+      script: "gitbot-fleet diff --file .machine_readable/contractiles/trust/Trustfile.a2ml"
+hypatia:
+  config: "hypatia.yml"
+  scans:
+    - type: "code-quality"
+      frequency: "on-push"
+    - type: "accessibility"
+      frequency: "weekly"
+    - type: "crypto"
+      frequency: "weekly"
+
+---
+### [FORMAL_VERIFICATION]
+theorems:
+  - name: "anti_crash_soundness"
+    description: "All neural tokens are validated against symbolic constraints before reaching Pane-W output."
+    status: "pending"
+    ci_cd: "reprove-on-anti-crash-change"
+  - name: "contractile_evaluation_completeness"
+    description: "All four built-in contractiles (orbital stability, vexation ceiling, divergence limit, autonomy bound) are evaluated after every state-modifying update."
+    status: "pending"
+    ci_cd: "reprove-on-contractile-change"
+  - name: "pane_size_invariant"
+    description: "Layout preset pane sizes always sum to exactly 100."
+    status: "proven"
+    tool: "Nickel contracts (PaneSizesSum100)"
+    ci_cd: "nickel-typecheck-on-push"
+  - name: "echidna_trust_monotonicity"
+    description: "Trust level cannot decrease without an explicit axiom risk detection event."
+    status: "pending"
+    ci_cd: "reprove-on-echidna-change"
+
+---
+### [CONTAINER_SUPPLY_CHAIN]
+overview: |
+  PanLL is a Tauri desktop application. Container supply-chain verification
+  applies to the Elixir collaboration server (beam/) and the mock ECHIDNA
+  development server (scripts/mock-echidna.ts).
+
+runtime:
+  engine: "Podman"
+  policy: "Rootless containers only. Never Docker."
+  socket: "${XDG_RUNTIME_DIR}/podman/podman.sock"
+
+base_images:
+  provider: "Chainguard"
+  registry: "cgr.dev/chainguard/"
+  allowed:
+    - "cgr.dev/chainguard/wolfi-base:latest"
+    - "cgr.dev/chainguard/static:latest"
+  policy: "Only Chainguard images permitted as base. Rebuilt daily, CVE-free."
+
+verified_bundles:
+  format: ".ctp"
+  tool: "cerro-torre"
+  operations:
+    pack: "ct pack <image> -o <bundle.ctp>"
+    sign: "cerro-sign sign <bundle.ctp> --key-id <key>"
+    verify: "ct verify <bundle.ctp>"
+
+gateway:
+  tool: "svalinn"
+  capabilities:
+    - "JWT/OAuth2 authentication"
+    - "Rate limiting (per-client, per-endpoint)"
+    - "Container trust enforcement (.ctp signature verification)"
+    - "CORS policy enforcement"
+
+monitoring:
+  tool: "vordr"
+  capabilities:
+    - "Health endpoint monitoring"
+    - "Container crash detection"
+    - "Resource usage thresholds"
+
+deployment:
+  tool: "k9-svc"
+  trust_level: "Hunt"
+  description: |
+    K9 deployment components at Hunt trust level for the collaboration
+    server. Layout presets remain at Yard level (pure config, no I/O).
+
+---
+### [SIGNATURE_BLOCK]
+primary:
+  algorithm: "Ed448+Dilithium5"
+  signature: |
+    -----BEGIN HYBRID SIGNATURE-----
+    PENDING_PRIMARY_SIGNATURE
+    -----END HYBRID SIGNATURE-----
+  signedBy: "did:web:panll.hyperpolymath.com#primary-sig"
+fallback:
+  algorithm: "SPHINCS+"
+  signature: |
+    -----BEGIN SPHINCS+ SIGNATURE-----
+    PENDING_FALLBACK_SIGNATURE
+    -----END SPHINCS+ SIGNATURE-----
+
+---
+### [DEPLOYMENT]
+1. Generate cryptographic keys (Ed448, Dilithium5, SPHINCS+).
+2. Replace all PENDING_* placeholders with actual values.
+3. Run formal verification proofs.
+4. Generate integrity hashes (SHA3-512, SHAKE256).
+5. Sign the Trustfile.
+6. Validate: a2ml validate .machine_readable/contractiles/trust/Trustfile.a2ml
+7. Commit and push.
