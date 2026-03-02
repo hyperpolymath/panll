@@ -31,6 +31,8 @@ type panelId =
   | PanelWorkspace
   | PanelCapture
   | PanelSecurity
+  | PanelMigration
+  | PanelPanicAttack
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

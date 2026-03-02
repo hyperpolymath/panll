@@ -131,6 +131,18 @@ include WorkspaceModel
 /// keybindingsState) for the customisable keyboard shortcut system.
 include KeybindingsModel
 
+/// Re-export Migration types (migrationVersionBracket, migrationConfigFormat,
+/// migrationRepoSummary, migrationSession, migrationSubmission, migrationConstraint,
+/// migrationObligation, mergeResolution, migrationCategory, migrationState) for the
+/// ReScript Migration Observatory panel — health tracking, session observation,
+/// submission queue, and merge conflict resolution timeline.
+include MigrationModel
+
+/// Re-export PanicAttack types (weakPointSeverity, weakPointCategory, weakPoint,
+/// scanSummary, scanReport, panicCategory, panicAttackState) for the stress
+/// testing and logic-based bug signature detection panel.
+include PanicAttackModel
+
 /// Re-export Capture types (captureFormat, captureEntry, recordingState, demoStep,
 /// demoPackage, comparisonMode, panelClone, captureCategory, captureState) for
 /// the panel capture, recording, and demo/teaching system (DD-022).
@@ -242,6 +254,12 @@ type model = {
 
   // Security — redaction, vault, 2FA, Trustfile enforcement (DD-026/027)
   security: securityState,
+
+  // Migration Observatory — ReScript migration health, sessions, submissions
+  migration: migrationState,
+
+  // panic-attack — stress testing and weak point analysis
+  panicAttack: panicAttackState,
 
   // Undo/Redo — ring buffer of model snapshots
   undoStack: array<string>,
@@ -483,6 +501,8 @@ let init = (): model => {
   capture: CaptureEngine.defaultState,
   statusBar: StatusBarEngine.defaultState,
   security: SecurityEngine.defaultState,
+  migration: MigrationEngine.defaultState,
+  panicAttack: PanicAttackModel.init,
   undoStack: [],
   redoStack: [],
   humidity: Medium,

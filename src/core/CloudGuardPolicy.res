@@ -262,7 +262,7 @@ let auditSettings = (
   }
 
   {
-    timestamp: "now", // TODO: use Date.now() ISO 8601
+    timestamp: Date.now()->Date.fromTime->Date.toISOString
     domains: [domain],
     findings: CloudGuardEngine.sortFindingsBySeverity(findings.contents),
     passed: passedCount,
@@ -297,7 +297,7 @@ let auditMultipleDomains = (
   }
 
   {
-    timestamp: "now",
+    timestamp: Date.now()->Date.fromTime->Date.toISOString,
     domains,
     findings: CloudGuardEngine.sortFindingsBySeverity(allFindings.contents),
     passed: totalPassed.contents,

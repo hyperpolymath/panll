@@ -320,6 +320,47 @@ let downloadConfig = (
 /// Apply the standard hardening settings to a zone.
 /// This is the "Harden" button — applies SSL/TLS, HSTS, headers, etc.
 /// Returns JSON with status and number of settings updated.
+/// Compute a diff between current live settings and a saved configuration.
+/// Returns JSON with the list of changed, added, and removed settings.
+let computeDiff = (
+  zoneId: string,
+  savedConfigId: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("cloudguard_compute_diff", {"zone_id": zoneId, "config_id": savedConfigId})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to compute config diff")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// List all saved configurations for a zone.
+/// Returns JSON array of saved config metadata (id, name, timestamp).
+let listSavedConfigs = (
+  zoneId: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("cloudguard_list_saved_configs", {"zone_id": zoneId})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to list saved configs")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 let hardenZone = (
   zoneId: string,
   tagger: result<string, string> => 'msg,

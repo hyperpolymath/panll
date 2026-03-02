@@ -696,6 +696,91 @@ type securityMsg =
   /// Set security category tab.
   | SetSecurityCategory(securityCategory)
 
+/// Migration Observatory messages — migration health, sessions, submissions, merges.
+type migrationMsg =
+  /// Load migration data from panic-attack / feedback-o-tron.
+  | LoadMigrationData
+  /// Migration data loaded successfully.
+  | MigrationDataLoaded(result<string, string>)
+  /// Set migration category tab.
+  | SetMigrationCategory(migrationCategory)
+  /// Set report type selection.
+  | SetMigrationReportType(migrationReportType)
+  /// Filter repos by text.
+  | SetMigrationFilter(string)
+  /// Begin a new migration observation session.
+  | BeginObservation(string, string)
+  /// Observation session started.
+  | ObservationStarted(result<string, string>)
+  /// End current observation session.
+  | EndObservation(string)
+  /// Observation session ended.
+  | ObservationEnded(result<string, string>)
+  /// Approve a submission in the review queue.
+  | ApproveSubmission(string)
+  /// Reject a submission in the review queue.
+  | RejectSubmission(string)
+  /// Submit all approved submissions.
+  | SubmitApproved
+  /// Submissions sent.
+  | SubmissionsResult(result<string, string>)
+  /// Begin merge resolution.
+  | BeginMergeResolution(string, string)
+  /// Merge resolution started.
+  | MergeResolutionStarted(result<string, string>)
+  /// Rollback a merge session.
+  | RollbackMerge(string)
+  /// Accept a merge session.
+  | AcceptMerge(string)
+  /// Refresh migration health data.
+  | RefreshMigrationHealth
+
+/// panic-attack panel messages — scanning, report management, filtering,
+/// comparison, and capability probing for the stress testing panel.
+type panicAttackMsg =
+  /// Probe whether panic-attack binary is available.
+  | CheckCapability
+  /// Capability probe result.
+  | CapabilityLoaded(result<string, string>)
+  /// Set the target path for scanning.
+  | SetTargetPath(string)
+  /// Run a static analysis scan (assail).
+  | RunAssail
+  /// Assail scan result.
+  | AssailResult(result<string, string>)
+  /// Run a full assault (static + stress).
+  | RunAssault
+  /// Assault result.
+  | AssaultResult(result<string, string>)
+  /// Load saved reports list.
+  | LoadReports
+  /// Reports list loaded.
+  | ReportsLoaded(result<string, string>)
+  /// View a specific report.
+  | ViewReport(string)
+  /// Report loaded.
+  | ReportLoaded(result<string, string>)
+  /// Compare two reports.
+  | CompareReports(string, string)
+  /// Comparison result.
+  | ComparisonLoaded(result<string, string>)
+  /// Export report as SARIF.
+  | ExportSarif(string)
+  /// SARIF export result.
+  | SarifExported(result<string, string>)
+  /// Export report as PanLL event chain.
+  | ExportEventChain(string)
+  /// Event chain export result.
+  | EventChainExported(result<string, string>)
+  /// Set the active category filter.
+  | SetPanicCategory(PanicAttackModel.panicCategory)
+  /// Set the text filter.
+  | SetPanicFilter(string)
+  /// Toggle report diff view.
+  | ToggleDiffView
+  /// Dismiss error.
+  | DismissError
+
 /// Keybindings messages — rebinding, recording, reset.
 type keybindingsMsg =
   /// Start recording a new keybinding for an action.
@@ -743,6 +828,8 @@ type msg =
   | Capture(captureMsg) // Screenshots, recordings, demos (DD-022)
   | Security(securityMsg) // Redaction, vault, 2FA, Trustfile (DD-026/027)
   | Keybindings(keybindingsMsg) // Keyboard shortcut management
+  | Migration(migrationMsg) // ReScript Migration Observatory
+  | PanicAttack(panicAttackMsg) // Stress testing and bug detection
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

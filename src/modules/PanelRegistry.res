@@ -182,6 +182,24 @@ let allPanels: array<panelMeta> = [
     connectionStatus: ServiceConnected, // Local + vault CLI, always available
     hasBackend: true, // Redaction regex + vault I/O via Tauri
   },
+  {
+    id: PanelMigration,
+    name: "Migration",
+    shortName: "Mig",
+    description: "ReScript Migration Observatory — health tracking, sessions, submissions, merge resolver",
+    icon: "migration",
+    connectionStatus: ServiceDisconnected, // Connects to feedback-o-tron MCP + panic-attack
+    hasBackend: true, // panic-attack CLI + feedback-o-tron MCP server
+  },
+  {
+    id: PanelPanicAttack,
+    name: "panic-attack",
+    shortName: "PA",
+    description: "Stress testing and logic-based bug signature detection — 47 languages, 20 categories",
+    icon: "zap",
+    connectionStatus: ServiceDisconnected, // Probes for local panic-attack binary
+    hasBackend: true, // Invokes panic-attack CLI via Tauri
+  },
 ]
 
 /// Look up panel metadata by ID.

@@ -156,6 +156,8 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelWorkspace) => Workspace.view(model.workspace, model.keybindings)
   | Some(PanelCapture) => Capture.view(model.capture)
   | Some(PanelSecurity) => Security.view(model.security)
+  | Some(PanelMigration) => Migration.view(model.migration)
+  | Some(PanelPanicAttack) => PanicAttack.view(model.panicAttack, dispatch)
   // Panels not yet implemented — show a labelled placeholder overlay so the
   // panel switcher works end-to-end before each module is wired in.
   | Some(panelId) => {
