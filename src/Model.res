@@ -49,6 +49,42 @@ include FarmModel
 /// plazaCategory, plazaState) for the Palimpsest Plaza licensing panel.
 include PlazaModel
 
+/// Re-export Reposystem types for RSR compliance auditing.
+include ReposystemModel
+
+/// Re-export Aerie types for network diagnostics and BGP forensics.
+include AerieModel
+
+/// Re-export Interfaces types for ABI/FFI inventory.
+include InterfacesModel
+
+/// Re-export Playgrounds types for code sandbox and NQC console.
+include PlaygroundsModel
+
+/// Re-export Hypatia types (neuralNetId, neuralNetStatus, neuralNetState,
+/// scanResult, pipelineStage, learningCycle, hypatiaCategory, hypatiaState)
+/// for the neurosymbolic CI/CD intelligence panel.
+include HypatiaModel
+
+/// Re-export Fleet types (botId, botStatus, botState, safetyTier, fleetFinding,
+/// fleetHealth, fleetCategory, fleetState) for the Gitbot-Fleet panel.
+include FleetModel
+
+/// Re-export Minter types (panelBackendKind, accessibilityLevel, minterCapability,
+/// nameValidation, minterForm, mintResult, minterState) for the Panel Minter
+/// wizard that generates new panel modules with accessibility baked in.
+include MinterModel
+
+/// Re-export Provenance types (trustLevel, provenanceRegion, provenanceSummary,
+/// fileProvenance, accessibilityPalette, provenanceState) for the Qubes-style
+/// code trust surface that is always visible as an ambient layer.
+include ProvenanceModel
+
+/// Re-export Watcher types (watchEventKind, watchEvent, watcherState) for
+/// the filesystem observation infrastructure that feeds events into the TEA
+/// loop. Every panel can react to relevant file changes.
+include WatcherModel
+
 /// Re-export Panel Switcher types (panelId, connectionStatus, panelMeta,
 /// panelSwitcherState) for the unified panel navigation system that replaces
 /// ad-hoc `visible: bool` toggles on individual overlays.
@@ -94,6 +130,33 @@ type model = {
 
   // Palimpsest Plaza — PMPL licensing adoption and governance
   plaza: plazaState,
+
+  // Reposystem — RSR compliance across 265+ repos
+  reposystem: reposystemState,
+
+  // Aerie — network diagnostics, speed tests, BGP forensics
+  aerie: aerieState,
+
+  // Interfaces — Idris2 ABI + Zig FFI inventory + binding coverage
+  interfaces: interfacesState,
+
+  // Playgrounds — code sandbox + NQC console + tutorials
+  playgrounds: playgroundsState,
+
+  // Hypatia — neurosymbolic CI/CD intelligence (5 neural networks, 298+ repos)
+  hypatia: hypatiaState,
+
+  // Gitbot-Fleet — 6-bot orchestration and dispatch dashboard
+  fleet: fleetState,
+
+  // Panel Minter — create new panel modules with accessibility by default
+  minter: minterState,
+
+  // Provenance Map — Qubes-style code trust surface (always visible, ambient)
+  provenance: provenanceState,
+
+  // Watcher — filesystem observation infrastructure (feeds all panels)
+  watcher: watcherState,
 
   // Panel Switcher — unified panel navigation (replaces ad-hoc visible toggles)
   panelSwitcher: panelSwitcherState,
@@ -308,6 +371,21 @@ let init = (): model => {
     activeCategory: Dashboard,
     filterText: "",
     selectedRepo: None,
+  },
+  reposystem: ReposystemEngine.defaultState,
+  aerie: AerieEngine.defaultState,
+  interfaces: InterfacesEngine.defaultState,
+  playgrounds: PlaygroundsEngine.defaultState,
+  hypatia: HypatiaEngine.defaultState,
+  fleet: FleetEngine.defaultState,
+  minter: MinterEngine.defaultState,
+  provenance: ProvenanceEngine.defaultState,
+  watcher: {
+    running: false,
+    watchedPaths: [],
+    eventCount: 0,
+    recentEvents: [],
+    error: None,
   },
   panelSwitcher: PanelRegistry.init,
   humidity: Medium,

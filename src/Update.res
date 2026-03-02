@@ -2321,6 +2321,633 @@ let updatePanelSwitcher = (model: model, msg: panelSwitcherMsg): (model, Tea_Cmd
   }
 }
 
+// ===========================================================================
+// Reposystem Sub-Updater
+// ===========================================================================
+
+let updateReposystem = (model: model, msg: reposystemMsg): (model, Tea_Cmd.t<msg>) => {
+  let rsr = model.reposystem
+  switch msg {
+  | ScanAll => (
+      {...model, reposystem: {...rsr, loading: true, error: None}},
+      ReposystemCmd.scanAll(result => Reposystem(ScanAllLoaded(result))),
+    )
+  | ScanAllLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      switch ReposystemEngine.parseAudits(jsonStr) {
+      | Ok(audits) => {
+          let stats = ReposystemEngine.computeStats(audits)
+          ({...model, reposystem: {...rsr, loaded: true, loading: false, audits, stats: Some(stats)}}, Tea_Cmd.none)
+        }
+      | Error(e) => ({...model, reposystem: {...rsr, loading: false, error: Some(e)}}, Tea_Cmd.none)
+      }
+    | Error(e) => ({...model, reposystem: {...rsr, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | SetRsrCategory(cat) => ({...model, reposystem: {...rsr, activeCategory: cat}}, Tea_Cmd.none)
+  | SetRsrFilter(text) => ({...model, reposystem: {...rsr, filterText: text}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// Aerie Sub-Updater
+// ===========================================================================
+
+let updateAerie = (model: model, msg: aerieMsg): (model, Tea_Cmd.t<msg>) => {
+  let aer = model.aerie
+  switch msg {
+  | LoadAerie => (
+      {...model, aerie: {...aer, loading: true, error: None}},
+      AerieCmd.fetchLatency(result => Aerie(LatencyLoaded(result))),
+    )
+  | LatencyLoaded(result) =>
+    switch result {
+    | Ok(_jsonStr) => ({...model, aerie: {...aer, loaded: true, loading: false}}, Tea_Cmd.none)
+    | Error(e) => ({...model, aerie: {...aer, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | SpeedTestLoaded(result) =>
+    switch result {
+    | Ok(_jsonStr) => ({...model, aerie: {...aer, loaded: true, loading: false}}, Tea_Cmd.none)
+    | Error(e) => ({...model, aerie: {...aer, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | SetAerieCategory(cat) => ({...model, aerie: {...aer, activeCategory: cat}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// Interfaces Sub-Updater
+// ===========================================================================
+
+let updateInterfaces = (model: model, msg: interfacesMsg): (model, Tea_Cmd.t<msg>) => {
+  let iface = model.interfaces
+  switch msg {
+  | ScanInterfaces => (
+      {...model, interfaces: {...iface, loading: true, error: None}},
+      InterfacesCmd.scanInterfaces(result => Interfaces(InterfacesLoaded(result))),
+    )
+  | InterfacesLoaded(result) =>
+    switch result {
+    | Ok(_jsonStr) => ({...model, interfaces: {...iface, loaded: true, loading: false}}, Tea_Cmd.none)
+    | Error(e) => ({...model, interfaces: {...iface, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | SetIfaceCategory(cat) => ({...model, interfaces: {...iface, activeCategory: cat}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// Playgrounds Sub-Updater
+// ===========================================================================
+
+let updatePlaygrounds = (model: model, msg: playgroundsMsg): (model, Tea_Cmd.t<msg>) => {
+  let pg = model.playgrounds
+  switch msg {
+  | SetPlayCategory(cat) => ({...model, playgrounds: {...pg, activeCategory: cat}}, Tea_Cmd.none)
+  | SetLanguage(lang) => ({...model, playgrounds: {...pg, activeLanguage: lang}}, Tea_Cmd.none)
+  | UpdateCode(code) => ({...model, playgrounds: {...pg, editorContent: code}}, Tea_Cmd.none)
+  | Execute => (
+      {...model, playgrounds: {...pg, executing: true, error: None}},
+      PlaygroundsCmd.executeQuery(
+        PlaygroundsEngine.languageLabel(pg.activeLanguage),
+        pg.editorContent,
+        result => Playgrounds(ExecuteResult(result)),
+      ),
+    )
+  | ExecuteResult(result) =>
+    switch result {
+    | Ok(_jsonStr) => (
+        {
+          ...model,
+          playgrounds: {
+            ...pg,
+            executing: false,
+            lastResult: Some({success: true, data: Some(_jsonStr), error: None, durationMs: 0.0, rowCount: 0}),
+          },
+        },
+        Tea_Cmd.none,
+      )
+    | Error(e) => (
+        {
+          ...model,
+          playgrounds: {
+            ...pg,
+            executing: false,
+            lastResult: Some({success: false, data: None, error: Some(e), durationMs: 0.0, rowCount: 0}),
+          },
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | LoadSnippet(snippetId) => {
+      let snippet = pg.snippets->Array.find(s => s.id === snippetId)
+      switch snippet {
+      | Some(s) => ({...model, playgrounds: {...pg, editorContent: s.code, activeLanguage: s.language}}, Tea_Cmd.none)
+      | None => (model, Tea_Cmd.none)
+      }
+    }
+  }
+}
+
+// ===========================================================================
+// Hypatia Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: Hypatia (neurosymbolic scanner)
+///
+/// Handles loading network status, scan results, category navigation,
+/// and text filtering. The backend is an Elixir Phoenix API.
+let updateHypatia = (model: model, msg: hypatiaMsg): (model, Tea_Cmd.t<msg>) => {
+  let hyp = model.hypatia
+  switch msg {
+  | LoadHypatia => (
+      {...model, hypatia: {...hyp, loading: true, error: None}},
+      Tea_Cmd.batch(list{
+        HypatiaCmd.fetchNetworks(result => Hypatia(NetworksLoaded(result))),
+        HypatiaCmd.fetchScans(result => Hypatia(ScansLoaded(result))),
+      }),
+    )
+  | NetworksLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      switch HypatiaEngine.parseNetworks(jsonStr) {
+      | Ok(networks) => (
+          {
+            ...model,
+            hypatia: {
+              ...hyp,
+              loaded: true,
+              loading: false,
+              error: None,
+              networks,
+            },
+          },
+          Tea_Cmd.none,
+        )
+      | Error(e) => (
+          {...model, hypatia: {...hyp, loading: false, error: Some(e)}},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(e) => (
+        {...model, hypatia: {...hyp, loading: false, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | ScansLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      switch HypatiaEngine.parseScans(jsonStr) {
+      | Ok(scans) => {
+          let quarantined = scans->Array.reduce(0, (acc, s) => acc + s.quarantineCount)
+          (
+            {
+              ...model,
+              hypatia: {
+                ...hyp,
+                loaded: true,
+                loading: false,
+                scans,
+                totalRepos: Array.length(scans),
+                quarantinedCount: quarantined,
+              },
+            },
+            Tea_Cmd.none,
+          )
+        }
+      | Error(e) => (
+          {...model, hypatia: {...hyp, loading: false, error: Some(e)}},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(e) => (
+        {...model, hypatia: {...hyp, loading: false, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | SetHypatiaCategory(cat) => (
+      {...model, hypatia: {...hyp, activeCategory: cat}},
+      Tea_Cmd.none,
+    )
+  | SetHypatiaFilter(text) => (
+      {...model, hypatia: {...hyp, filterText: text}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+// ===========================================================================
+// Fleet Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: Gitbot-Fleet (6-bot orchestration)
+///
+/// Handles fleet loading, bot status parsing, findings parsing, category
+/// navigation, and text filtering. The fleet backend is an Axum API at :8080.
+let updateFleet = (model: model, msg: fleetMsg): (model, Tea_Cmd.t<msg>) => {
+  let fleet = model.fleet
+  switch msg {
+  | LoadFleet => (
+      {...model, fleet: {...fleet, loading: true, error: None}},
+      Tea_Cmd.batch(list{
+        FleetCmd.fetchBots(result => Fleet(BotsLoaded(result))),
+        FleetCmd.fetchFindings(result => Fleet(FindingsLoaded(result))),
+      }),
+    )
+  | BotsLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      switch FleetEngine.parseBots(jsonStr) {
+      | Ok(bots) => {
+          let health = FleetEngine.computeHealth(bots, fleet.findings)
+          (
+            {
+              ...model,
+              fleet: {
+                ...fleet,
+                loaded: true,
+                loading: false,
+                error: None,
+                bots,
+                health: Some(health),
+              },
+            },
+            Tea_Cmd.none,
+          )
+        }
+      | Error(e) => (
+          {...model, fleet: {...fleet, loading: false, error: Some(e)}},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(e) => (
+        {...model, fleet: {...fleet, loading: false, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | FindingsLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      switch FleetEngine.parseFindings(jsonStr) {
+      | Ok(findings) => {
+          let health = FleetEngine.computeHealth(fleet.bots, findings)
+          (
+            {
+              ...model,
+              fleet: {
+                ...fleet,
+                loaded: true,
+                loading: false,
+                findings,
+                health: Some(health),
+              },
+            },
+            Tea_Cmd.none,
+          )
+        }
+      | Error(e) => (
+          {...model, fleet: {...fleet, loading: false, error: Some(e)}},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(e) => (
+        {...model, fleet: {...fleet, loading: false, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | SetFleetCategory(cat) => (
+      {...model, fleet: {...fleet, activeCategory: cat}},
+      Tea_Cmd.none,
+    )
+  | SetFleetFilter(text) => (
+      {...model, fleet: {...fleet, filterText: text}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+// ===========================================================================
+// Minter Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: Panel Minter (panel creation wizard)
+///
+/// Handles all minterMsg variants: form field updates, wizard navigation,
+/// minting execution, and result handling. Most messages are pure state
+/// updates; ExecuteMint dispatches a Tauri command via MinterCmd.
+let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
+  let minter = model.minter
+  let form = minter.form
+  switch msg {
+  | SetPanelName(name) => {
+      let validation = MinterEngine.validateName(name)
+      (
+        {
+          ...model,
+          minter: {
+            ...minter,
+            form: {...form, panelName: name, nameValidation: validation},
+          },
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | SetShortName(v) => (
+      {...model, minter: {...minter, form: {...form, shortName: v}}},
+      Tea_Cmd.none,
+    )
+  | SetDescription(v) => (
+      {...model, minter: {...minter, form: {...form, description: v}}},
+      Tea_Cmd.none,
+    )
+  | SetIcon(v) => (
+      {...model, minter: {...minter, form: {...form, icon: v}}},
+      Tea_Cmd.none,
+    )
+  | SetBackendKind(kind) => (
+      {...model, minter: {...minter, form: {...form, backendKind: kind}}},
+      Tea_Cmd.none,
+    )
+  | SetAccessibility(level) => (
+      {...model, minter: {...minter, form: {...form, accessibility: level}}},
+      Tea_Cmd.none,
+    )
+  | SetEndpoint(v) => (
+      {...model, minter: {...minter, form: {...form, endpoint: v}}},
+      Tea_Cmd.none,
+    )
+  | AddCapability => {
+      let newCap: minterCapability = {id: "", label: ""}
+      (
+        {
+          ...model,
+          minter: {
+            ...minter,
+            form: {
+              ...form,
+              capabilities: Array.concat(form.capabilities, [newCap]),
+            },
+          },
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | RemoveCapability(idx) => {
+      let caps = form.capabilities->Array.filterWithIndex((_c, i) => i !== idx)
+      (
+        {
+          ...model,
+          minter: {...minter, form: {...form, capabilities: caps}},
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | NextStep => {
+      let next = minter.wizardStep + 1
+      let clamped = next > 3 ? 3 : next
+      ({...model, minter: {...minter, wizardStep: clamped}}, Tea_Cmd.none)
+    }
+  | PrevStep => {
+      let prev = minter.wizardStep - 1
+      let clamped = prev < 0 ? 0 : prev
+      ({...model, minter: {...minter, wizardStep: clamped}}, Tea_Cmd.none)
+    }
+  | ExecuteMint => {
+      let capsJson =
+        form.capabilities
+        ->Array.map(c => `{"id":"${c.id}","label":"${c.label}"}`)
+        ->Array.join(",")
+      let capsStr = `[${capsJson}]`
+      (
+        {...model, minter: {...minter, minting: true, error: None}},
+        MinterCmd.mintPanel(
+          form.panelName,
+          form.shortName,
+          form.description,
+          form.icon,
+          MinterEngine.backendKindLabel(form.backendKind),
+          MinterEngine.accessibilityLabel(form.accessibility),
+          capsStr,
+          form.endpoint,
+          result => Minter(MintResult(result)),
+        ),
+      )
+    }
+  | MintResult(result) => {
+      let summary = MinterEngine.fileSummary(form)
+      let allPaths = summary->Array.map(((path, _desc)) => path)
+      // First entries are created files, last 6 are patches to existing files.
+      let numPatches = 6
+      let numCreated = Array.length(allPaths) - numPatches
+      let created = allPaths->Array.slice(~start=0, ~end=numCreated)
+      let patched = allPaths->Array.slice(~start=numCreated, ~end=Array.length(allPaths))
+      switch result {
+      | Ok(_jsonStr) => (
+          {
+            ...model,
+            minter: {
+              ...minter,
+              minting: false,
+              error: None,
+              lastResult: Some({
+                success: true,
+                filesCreated: created,
+                filesPatched: patched,
+                warnings: [],
+                error: None,
+              }),
+            },
+          },
+          Tea_Cmd.none,
+        )
+      | Error(e) => (
+          {
+            ...model,
+            minter: {
+              ...minter,
+              minting: false,
+              error: Some(e),
+              lastResult: Some({
+                success: false,
+                filesCreated: [],
+                filesPatched: [],
+                warnings: [],
+                error: Some(e),
+              }),
+            },
+          },
+          Tea_Cmd.none,
+        )
+      }
+    }
+  | ResetMinter => (
+      {...model, minter: MinterEngine.defaultState},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+// ===========================================================================
+// Provenance Sub-Updater (Core Infrastructure)
+// ===========================================================================
+
+/// STATE TRANSITION: Provenance Map (code trust surface)
+///
+/// Handles file analysis requests, result parsing, palette switching,
+/// hostile UX toggling, and per-region acknowledgement. The provenance
+/// map is ambient — it doesn't occupy a panel slot.
+let updateProvenance = (model: model, msg: provenanceMsg): (model, Tea_Cmd.t<msg>) => {
+  let prov = model.provenance
+  switch msg {
+  | AnalyseFile(repoPath, filePath) => (
+      {...model, provenance: {...prov, loading: true, error: None}},
+      ProvenanceCmd.analyseFile(repoPath, filePath, result => Provenance(AnalysisResult(result))),
+    )
+  | AnalysisResult(result) =>
+    switch result {
+    | Ok(_jsonStr) =>
+      // TODO: Parse blame regions from JSON. For now, mark as loaded.
+      ({...model, provenance: {...prov, loading: false, error: None}}, Tea_Cmd.none)
+    | Error(e) => (
+        {...model, provenance: {...prov, loading: false, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | UnsoundScanResult(result) =>
+    switch result {
+    | Ok(_jsonStr) =>
+      // TODO: Parse unsound marker counts and update active file's summary.
+      (model, Tea_Cmd.none)
+    | Error(e) => (
+        {...model, provenance: {...prov, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | SetPalette(palette) => (
+      {...model, provenance: {...prov, palette}},
+      Tea_Cmd.none,
+    )
+  | ToggleHostileUx => (
+      {...model, provenance: {...prov, hostileUxSuppressed: !prov.hostileUxSuppressed}},
+      Tea_Cmd.none,
+    )
+  | AcknowledgeRegion(_filePath, _startLine) =>
+    // TODO: Find the region in activeFile and set acknowledged = true.
+    (model, Tea_Cmd.none)
+  | SetEnabled(enabled) => (
+      {...model, provenance: {...prov, enabled}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+// ===========================================================================
+// Watcher Sub-Updater (Core Infrastructure)
+// ===========================================================================
+
+/// STATE TRANSITION: Watcher (filesystem observation)
+///
+/// Handles watcher lifecycle (start/stop/status) and incoming filesystem events.
+/// FileEvent is the key message — it carries a `watchEvent` that panels can
+/// react to. The watcher maintains a ring buffer of the last 50 events so
+/// panels opened after events occur can still see recent activity.
+let updateWatcher = (model: model, msg: watcherMsg): (model, Tea_Cmd.t<msg>) => {
+  let w = model.watcher
+  switch msg {
+  | StartWatcher(paths) => (
+      {...model, watcher: {...w, error: None}},
+      WatcherCmd.start(paths, result => Watcher(WatcherResult(result))),
+    )
+  | StopWatcher => (
+      model,
+      WatcherCmd.stop(result => Watcher(WatcherResult(result))),
+    )
+  | RequestStatus => (
+      model,
+      WatcherCmd.status(result => Watcher(StatusLoaded(result))),
+    )
+  | WatcherResult(result) =>
+    switch result {
+    | Ok(_json) => (
+        {...model, watcher: {...w, running: true, error: None}},
+        Tea_Cmd.none,
+      )
+    | Error(e) => (
+        {...model, watcher: {...w, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | StatusLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        // Parse the status JSON to update watcher state.
+        // The Rust side returns { running, watched_paths, event_count }.
+        try {
+          let json = JSON.parseExn(jsonStr)
+          switch JSON.Classify.classify(json) {
+          | JSON.Classify.Object(dict) => {
+              let running = switch dict->Dict.get("running") {
+              | Some(v) =>
+                switch JSON.Classify.classify(v) {
+                | JSON.Classify.Bool(b) => b
+                | _ => false
+                }
+              | None => false
+              }
+              let eventCount = switch dict->Dict.get("event_count") {
+              | Some(v) =>
+                switch JSON.Classify.classify(v) {
+                | JSON.Classify.Number(n) => Float.toInt(n)
+                | _ => 0
+                }
+              | None => 0
+              }
+              (
+                {
+                  ...model,
+                  watcher: {
+                    ...w,
+                    running,
+                    eventCount,
+                    error: None,
+                  },
+                },
+                Tea_Cmd.none,
+              )
+            }
+          | _ => (model, Tea_Cmd.none)
+          }
+        } catch {
+        | _ => (model, Tea_Cmd.none)
+        }
+      }
+    | Error(e) => (
+        {...model, watcher: {...w, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | FileEvent(event) => {
+      // Add to ring buffer (keep last 50 events).
+      let maxEvents = 50
+      let updated = Array.concat(w.recentEvents, [event])
+      let trimmed = if Array.length(updated) > maxEvents {
+        updated->Array.sliceToEnd(~start=Array.length(updated) - maxEvents)
+      } else {
+        updated
+      }
+      (
+        {
+          ...model,
+          watcher: {
+            ...w,
+            eventCount: w.eventCount + 1,
+            recentEvents: trimmed,
+          },
+        },
+        Tea_Cmd.none,
+      )
+    }
+  }
+}
+
 /// Determines whether a message should trigger an auto-save.
 /// Returns false for NoOp and SaveState (no state change), true for everything else.
 let shouldAutoSave = (msg: msg): bool => {
@@ -2357,6 +2984,15 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | CloudGuard(subMsg) => updateCloudGuard(model, subMsg)
   | Farm(subMsg) => updateFarm(model, subMsg)
   | Plaza(subMsg) => updatePlaza(model, subMsg)
+  | Hypatia(subMsg) => updateHypatia(model, subMsg)
+  | Fleet(subMsg) => updateFleet(model, subMsg)
+  | Reposystem(subMsg) => updateReposystem(model, subMsg)
+  | Aerie(subMsg) => updateAerie(model, subMsg)
+  | Interfaces(subMsg) => updateInterfaces(model, subMsg)
+  | Playgrounds(subMsg) => updatePlaygrounds(model, subMsg)
+  | Minter(subMsg) => updateMinter(model, subMsg)
+  | Provenance(subMsg) => updateProvenance(model, subMsg)
+  | Watcher(subMsg) => updateWatcher(model, subMsg)
   | PanelSwitcher(subMsg) => updatePanelSwitcher(model, subMsg)
   | SaveState => {
       // Imperative: persist current state to localStorage.

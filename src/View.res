@@ -141,6 +141,14 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelCloudGuard) => CloudGuard.view(model.cloudguard)
   | Some(PanelFarm) => Farm.view(model.farm)
   | Some(PanelPlaza) => Plaza.view(model.plaza)
+  | Some(PanelHypatia) => Hypatia.view(model.hypatia)
+  | Some(PanelFleet) => Fleet.view(model.fleet)
+  | Some(PanelReposystem) => Reposystem.view(model.reposystem)
+  | Some(PanelDatabases) => Vab.view(model.vab) // Databases extends VeriSimDB — full panel coming
+  | Some(PanelAerie) => Aerie.view(model.aerie)
+  | Some(PanelInterfaces) => Interfaces.view(model.interfaces)
+  | Some(PanelPlaygrounds) => Playgrounds.view(model.playgrounds)
+  | Some(PanelMinter) => Minter.view(model.minter)
   // Panels not yet implemented — show a labelled placeholder overlay so the
   // panel switcher works end-to-end before each module is wired in.
   | Some(panelId) => {
@@ -187,6 +195,9 @@ let view = (model: model): Tea_Vdom.t<msg> => {
       list{
         // Ambient substrate - Orbital Drift Aura
         renderDriftAura(model.orbital, model.humidity),
+
+        // Code Provenance Map — Qubes-style trust surface (always visible)
+        Provenance.view(model.provenance),
 
         // Main three-pane layout (padded right for the panel bar)
         div(

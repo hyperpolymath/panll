@@ -52,6 +52,13 @@ mod farm;
 /// Plaza — Palimpsest License adoption and compliance module.
 mod plaza;
 
+/// Minter — Panel creation wizard, generates accessible panel modules from templates.
+mod minter;
+
+/// Watcher — Filesystem observation infrastructure (notify/inotify/FSEvents).
+/// Debounced event stream feeds the TEA loop so every panel can react to file changes.
+mod watcher;
+
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
 
@@ -1722,6 +1729,15 @@ fn main() {
             plaza::commands::plaza_scan_repo,
             plaza::commands::plaza_adoption_stats,
             plaza::commands::plaza_check_compatibility,
+            // Minter — Panel creation wizard
+            minter::commands::minter_validate_name,
+            minter::commands::minter_mint_panel,
+            // Watcher — Filesystem observation
+            watcher::commands::watcher_start,
+            watcher::commands::watcher_stop,
+            watcher::commands::watcher_add_path,
+            watcher::commands::watcher_remove_path,
+            watcher::commands::watcher_status,
         ])
         .setup(|_app| {
             Ok(())

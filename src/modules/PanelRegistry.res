@@ -110,6 +110,15 @@ let allPanels: array<panelMeta> = [
     connectionStatus: ServiceConnected, // Local scanning, always available
     hasBackend: false, // Filesystem scanning + CLI tools
   },
+  {
+    id: PanelMinter,
+    name: "Minter",
+    shortName: "Mint",
+    description: "Panel creation wizard — generate accessible panel modules from templates",
+    icon: "wand",
+    connectionStatus: ServiceConnected, // Local generation, always available
+    hasBackend: true, // Tauri backend generates files and patches wiring
+  },
 ]
 
 /// Look up panel metadata by ID.

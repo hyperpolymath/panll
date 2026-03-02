@@ -264,6 +264,132 @@ type plazaMsg =
   /// Update the text filter.
   | SetPlazaFilter(string)
 
+/// Hypatia neurosymbolic scanner messages — network status, scan results,
+/// learning cycle, quarantine, and category navigation.
+type hypatiaMsg =
+  /// Load all Hypatia data (networks + scans).
+  | LoadHypatia
+  /// Neural network states loaded.
+  | NetworksLoaded(result<string, string>)
+  /// Scan results loaded.
+  | ScansLoaded(result<string, string>)
+  /// Change the active category tab.
+  | SetHypatiaCategory(hypatiaCategory)
+  /// Update the scan results text filter.
+  | SetHypatiaFilter(string)
+
+/// Gitbot-Fleet panel messages — bot status, findings queue, dispatch,
+/// and safety triangle navigation.
+type fleetMsg =
+  /// Load all fleet data (bots + findings).
+  | LoadFleet
+  /// Bot status loaded from fleet API.
+  | BotsLoaded(result<string, string>)
+  /// Findings loaded from fleet API.
+  | FindingsLoaded(result<string, string>)
+  /// Change the active category tab.
+  | SetFleetCategory(fleetCategory)
+  /// Update the findings text filter.
+  | SetFleetFilter(string)
+
+/// Reposystem RSR compliance messages.
+type reposystemMsg =
+  | ScanAll
+  | ScanAllLoaded(result<string, string>)
+  | SetRsrCategory(reposystemCategory)
+  | SetRsrFilter(string)
+
+/// Aerie network diagnostics messages.
+type aerieMsg =
+  | LoadAerie
+  | LatencyLoaded(result<string, string>)
+  | SpeedTestLoaded(result<string, string>)
+  | SetAerieCategory(aerieCategory)
+
+/// Interfaces ABI/FFI inventory messages.
+type interfacesMsg =
+  | ScanInterfaces
+  | InterfacesLoaded(result<string, string>)
+  | SetIfaceCategory(interfacesCategory)
+
+/// Playgrounds code sandbox messages.
+type playgroundsMsg =
+  | SetPlayCategory(playgroundsCategory)
+  | SetLanguage(playgroundLanguage)
+  | UpdateCode(string)
+  | Execute
+  | ExecuteResult(result<string, string>)
+  | LoadSnippet(string)
+
+/// Panel Minter messages — wizard state transitions for creating new panel
+/// modules with accessibility and proof hooks baked in by default.
+type minterMsg =
+  /// Update the panel name (triggers live PascalCase validation).
+  | SetPanelName(string)
+  /// Update the short name (panel bar label, max ~8 chars).
+  | SetShortName(string)
+  /// Update the one-line description.
+  | SetDescription(string)
+  /// Update the icon identifier.
+  | SetIcon(string)
+  /// Select the backend kind (NoBackend, FilesystemBackend, HttpBackend, DatabaseBackend).
+  | SetBackendKind(panelBackendKind)
+  /// Select the accessibility level (Standard or Enhanced).
+  | SetAccessibility(accessibilityLevel)
+  /// Update the endpoint URL (relevant for HTTP/Database backends).
+  | SetEndpoint(string)
+  /// Add a new empty capability declaration.
+  | AddCapability
+  /// Remove a capability by index.
+  | RemoveCapability(int)
+  /// Advance to the next wizard step.
+  | NextStep
+  /// Go back to the previous wizard step.
+  | PrevStep
+  /// Trigger the minting operation via Tauri backend.
+  | ExecuteMint
+  /// Result of the minting operation (success or error).
+  | MintResult(result<string, string>)
+  /// Reset the minter to its initial state for another panel.
+  | ResetMinter
+
+/// Provenance Map messages — code trust surface lifecycle.
+/// The provenance map is ambient (always visible), not a panel overlay.
+/// These messages handle file analysis, palette switching, and hostile UX.
+type provenanceMsg =
+  /// Analyse a file's provenance via git blame.
+  | AnalyseFile(string, string) // repoPath, filePath
+  /// Blame analysis result.
+  | AnalysisResult(result<string, string>)
+  /// Unsound marker scan result.
+  | UnsoundScanResult(result<string, string>)
+  /// Switch the accessibility palette.
+  | SetPalette(accessibilityPalette)
+  /// Toggle hostile UX suppression (the "pull the battery" action).
+  | ToggleHostileUx
+  /// Acknowledge a specific unreviewed AI region (dismiss its warning).
+  | AcknowledgeRegion(string, int) // filePath, startLine
+  /// Enable or disable the provenance overlay entirely.
+  | SetEnabled(bool)
+
+/// Watcher messages — filesystem observation infrastructure.
+/// The watcher runs in a Rust background thread and emits events via the
+/// Tauri event bus. These messages handle lifecycle (start/stop/status)
+/// and incoming filesystem events that panels can react to.
+type watcherMsg =
+  /// Start watching the given paths.
+  | StartWatcher(array<string>)
+  /// Stop the filesystem watcher.
+  | StopWatcher
+  /// Request current watcher status.
+  | RequestStatus
+  /// Watcher lifecycle result (start/stop/add/remove responses).
+  | WatcherResult(result<string, string>)
+  /// Status response from the backend.
+  | StatusLoaded(result<string, string>)
+  /// A filesystem event arrived from the Rust watcher.
+  | FileEvent(watchEvent)
+
 /// Panel switcher messages — unified panel navigation replacing ad-hoc
 /// `visible: bool` toggles on individual overlays. The panel bar dispatches
 /// these when the operator clicks an icon.
@@ -291,6 +417,15 @@ type msg =
   | CloudGuard(cloudguardMsg) // Cloudflare domain security management
   | Farm(farmMsg) // Git-Private-Farm repo inventory
   | Plaza(plazaMsg) // Palimpsest Plaza PMPL licensing
+  | Hypatia(hypatiaMsg) // Hypatia neurosymbolic scanner
+  | Fleet(fleetMsg) // Gitbot-Fleet orchestration
+  | Reposystem(reposystemMsg) // RSR compliance auditing
+  | Aerie(aerieMsg) // Network diagnostics
+  | Interfaces(interfacesMsg) // ABI/FFI inventory
+  | Playgrounds(playgroundsMsg) // Code sandbox
+  | Minter(minterMsg) // Panel Minter wizard
+  | Provenance(provenanceMsg) // Code trust surface (core infrastructure)
+  | Watcher(watcherMsg) // Filesystem observation (core infrastructure)
   | PanelSwitcher(panelSwitcherMsg) // Panel navigation and health checks
   | SaveState // Persist current state to storage
   | NoOp
