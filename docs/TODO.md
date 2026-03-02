@@ -209,6 +209,20 @@ Each item scored on three axes (1-5 each, max combined = 15):
   - Gamification dashboard: personal development trajectory, improvement trends, skill heat map
   - Privacy-first: individual data visible only to the developer (admin sees aggregates only)
 
+## Sprint 6 — "Dogfood Mode" (Self-Hosting & Internal Tool Tracking)
+
+- [ ] **Dogfood Manager infrastructure** — Score: 3+3+5 = 11
+  - Dogfood folder on Desktop (or configurable path): drop tools/libraries to make available
+  - PanLL detects available dogfood candidates and suggests them when reaching for externals
+  - Dashboard: which of your own tools are being used in PanLL, which are gathering dust
+  - Tracks: "using rustls directly — proven-servers has a TLS component, dogfood?"
+  - CRG-driven policy: grade D+ = suggest, grade E = warn, grade X/F = ban (unless override)
+  - Insist mode: "Stapeln MUST be used for container isolation" (enforced, not just suggested)
+  - Ban mode: "Eclexia runtime is CRG X — not ready for production panels" (blocks with reason)
+  - Override with explicit acknowledgment: "I know this is grade E, proceeding anyway" (logged)
+  - Feeds Code MRI timeline: "switched from SQLite to VeriSimDB on March 5 — track impact"
+  - Connects to Provisioner: dogfood policies per panel, per isolation tier
+
 ## Deferred (Noted, Not Scheduled)
 
 - [ ] **Valence Shell integration** — CLI tool switchable with bash
