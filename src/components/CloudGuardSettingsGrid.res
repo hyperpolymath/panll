@@ -192,13 +192,32 @@ let renderNumberInput = (
   )
 }
 
+/// Render an exception indicator badge showing that this setting has a
+/// per-domain override. Displays the override reason on hover via title attr.
+let renderExceptionBadge = (
+  exception: domainException,
+): Tea_Vdom.t<msg> => {
+  span(
+    list{
+      Attrs.class_("text-xs text-yellow-400 font-medium px-1.5 py-0.5 border border-yellow-500/30 rounded ml-2"),
+      Attrs.title(`Exception: ${exception.reason}`),
+    },
+    list{text("EXC")},
+  )
+}
+
 /// Render a single setting row, choosing the appropriate input type.
 /// Unavailable settings are rendered greyed-out with a plan badge.
-let renderSettingRow = (setting: cfSetting): Tea_Vdom.t<msg> => {
+/// If an exception exists for the current domain, shows a yellow "EXC" badge.
+let renderSettingRow = (
+  setting: cfSetting,
+  exception: option<domainException>,
+): Tea_Vdom.t<msg> => {
   // Check availability from catalog
   let catalogEntry = CloudGuardCatalog.findById(setting.id)
 
-  switch catalogEntry {
+  // The core row content depends on availability and value type
+  let rowContent = switch catalogEntry {
   | None => renderToggle(setting) // Fallback to toggle for unknown settings
   | Some(entry) =>
     switch entry.availability {
@@ -239,14 +258,30 @@ let renderSettingRow = (setting: cfSetting): Tea_Vdom.t<msg> => {
       }
     }
   }
+
+  // Wrap with exception badge if this setting has a per-domain override
+  switch exception {
+  | None => rowContent
+  | Some(exc) =>
+    div(
+      list{Attrs.class_("relative")},
+      list{
+        rowContent,
+        renderExceptionBadge(exc),
+      },
+    )
+  }
 }
 
 /// Render the settings grid for a given category.
 /// Shows all settings in the category, filtered by search text.
+/// Exceptions are used to show per-domain override indicators on individual rows.
 let view = (
   settings: array<cfSetting>,
   activeCategory: settingCategory,
   settingFilter: string,
+  exceptions: array<domainException>,
+  currentDomain: option<string>,
 ): Tea_Vdom.t<msg> => {
   // Filter settings to the active category
   let categorySettings = settings->Array.filter(s => s.category === activeCategory)
@@ -277,7 +312,17 @@ let view = (
       } else {
         div(
           list{Attrs.class_("divide-y divide-gray-800/50")},
-          filteredSettings->Array.map(renderSettingRow)->List.fromArray,
+          filteredSettings
+          ->Array.map(setting => {
+            // Look up per-domain exception for this setting
+            let exception = switch currentDomain {
+            | Some(domain) =>
+              CloudGuardEngine.findException(exceptions, domain, setting.id)
+            | None => None
+            }
+            renderSettingRow(setting, exception)
+          })
+          ->List.fromArray,
         )
       },
     },

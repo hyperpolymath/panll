@@ -290,6 +290,30 @@ let enableDnssec = (
 }
 
 // ============================================================================
+// Offline config — download/upload zone configurations
+// ============================================================================
+
+/// Download the offline configuration for a zone (settings + DNS records).
+/// Saves to ~/.config/cloudguard/configs/{domain}.json and returns the path.
+let downloadConfig = (
+  zoneId: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("cloudguard_download_config", {"zone_id": zoneId})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to download config")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+// ============================================================================
 // Hardening — one-click security defaults
 // ============================================================================
 

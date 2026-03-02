@@ -399,16 +399,53 @@ let view = (state: cloudguardState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex-1 flex overflow-hidden")},
         list{
-          // Settings grid (left/main)
+          // Main content (left) — DNS editor for DNS tab, settings grid otherwise
           div(
             list{Attrs.class_("flex-1 overflow-y-auto px-4 py-2")},
             list{
-              CloudGuardSettingsGrid.view(state.settings, state.activeCategory, state.settingFilter),
+              {
+                let currentDomain = switch Array.get(state.selectedZoneIds, 0) {
+                | Some(zoneId) =>
+                  switch state.zones->Array.find(z => z.id === zoneId) {
+                  | Some(zone) => Some(zone.name)
+                  | None => None
+                  }
+                | None => None
+                }
+                switch state.activeCategory {
+                | Dns =>
+                  // DNS tab shows the inline record editor
+                  CloudGuardDnsEditor.view(
+                    state.dnsRecords,
+                    state.dnsEditingId,
+                    Array.length(state.selectedZoneIds) > 0,
+                    state.loading,
+                  )
+                | Pages =>
+                  // Pages tab shows the Pages setup component
+                  CloudGuardPagesSetup.view(
+                    state.pagesProjects,
+                    currentDomain,
+                    state.loading,
+                  )
+                | _ =>
+                  // All other tabs show the settings toggle grid
+                  CloudGuardSettingsGrid.view(
+                    state.settings,
+                    state.activeCategory,
+                    state.settingFilter,
+                    state.exceptions,
+                    currentDomain,
+                  )
+                }
+              },
             },
           ),
-          // Audit side panel (right)
+          // Side panel (right) — audit results or diff viewer
           if state.showAudit {
             renderAuditPanel(state.auditResult, state.loading)
+          } else if state.showDiff {
+            CloudGuardDiffViewer.view(state.configDiff, state.loading)
           } else {
             noNode
           },

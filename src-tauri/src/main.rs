@@ -1679,6 +1679,7 @@ fn main() {
             cloudguard::commands::cloudguard_get_dnssec,
             cloudguard::commands::cloudguard_enable_dnssec,
             cloudguard::commands::cloudguard_harden_zone,
+            cloudguard::commands::cloudguard_download_config,
         ])
         .setup(|_app| {
             Ok(())

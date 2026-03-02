@@ -282,3 +282,17 @@ pub fn cloudguard_harden_zone(zone_id: String) -> Result<String, String> {
     });
     Ok(result.to_string())
 }
+
+/// Download the offline configuration for a zone. Fetches settings and DNS
+/// records, saves them to `~/.config/cloudguard/configs/{domain}.json`,
+/// and returns the file path and metadata.
+#[tauri::command]
+pub fn cloudguard_download_config(zone_id: String) -> Result<String, String> {
+    let path = super::config::download_zone_config(&zone_id)?;
+    let result = json!({
+        "status": "downloaded",
+        "zone_id": zone_id,
+        "path": path,
+    });
+    Ok(result.to_string())
+}

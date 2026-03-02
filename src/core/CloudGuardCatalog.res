@@ -346,6 +346,221 @@ let networkSettings: array<catalogEntry> = [
 ]
 
 // ============================================================================
+// Bot defense settings
+// ============================================================================
+
+/// Bot management and defense settings.
+let botDefenseSettings: array<catalogEntry> = [
+  {
+    id: "browser_check",
+    label: "Browser Integrity Check",
+    description: "Evaluate HTTP headers from visitors' browsers for threats. Blocks bad bots and scrapers.",
+    category: BotDefense,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("on"),
+  },
+  {
+    id: "challenge_ttl",
+    label: "Challenge Passage TTL",
+    description: "How long a visitor who passed a bot challenge can access your site before re-challenge.",
+    category: BotDefense,
+    availability: Available,
+    valueType: "number",
+    options: None,
+    defaultValue: IntValue(1800),
+  },
+  {
+    id: "security_level",
+    label: "Bot Challenge Threshold",
+    description: "Threat score threshold for issuing bot challenges. Higher levels = more aggressive filtering.",
+    category: BotDefense,
+    availability: Available,
+    valueType: "select",
+    options: Some(["off", "essentially_off", "low", "medium", "high", "under_attack"]),
+    defaultValue: StringValue("medium"),
+  },
+  {
+    id: "bot_management",
+    label: "Bot Management (Super Bot Fight Mode)",
+    description: "Enterprise-grade bot management with ML-based classification. Requires Bot Management add-on.",
+    category: BotDefense,
+    availability: Unavailable(Enterprise),
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("on"),
+  },
+]
+
+// ============================================================================
+// DNS info settings (informational — actual records managed via DnsEditor)
+// ============================================================================
+
+/// DNS-related informational settings. Actual DNS record CRUD happens via
+/// the CloudGuardDnsEditor component; these are zone-level DNS behaviours.
+let dnsInfoSettings: array<catalogEntry> = [
+  {
+    id: "cname_flattening",
+    label: "CNAME Flattening",
+    description: "Flatten CNAME records at the zone apex to return A/AAAA records directly. Required for root domain CNAMEs.",
+    category: Dns,
+    availability: Available,
+    valueType: "select",
+    options: Some(["flatten_at_root", "flatten_all"]),
+    defaultValue: StringValue("flatten_at_root"),
+  },
+  {
+    id: "flatten_all_cnames",
+    label: "Flatten All CNAMEs",
+    description: "Flatten ALL CNAME records, not just apex. Hides CNAME targets from DNS queries.",
+    category: Dns,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("off"),
+  },
+]
+
+// ============================================================================
+// Email security settings (informational — actual records via DnsEditor)
+// ============================================================================
+
+/// Email security configuration indicators. The real SPF/DMARC/DKIM records
+/// are DNS TXT records managed via CloudGuardDnsEditor, but these entries
+/// provide status visibility and quick-setup templates.
+let emailSecSettings: array<catalogEntry> = [
+  {
+    id: "email_spf",
+    label: "SPF Record",
+    description: "Sender Policy Framework — declares which mail servers can send on behalf of your domain. Prevents spoofing.",
+    category: EmailSec,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("on"),
+  },
+  {
+    id: "email_dmarc",
+    label: "DMARC Policy",
+    description: "Domain-based Message Authentication — tells receivers how to handle SPF/DKIM failures. Policy: reject recommended.",
+    category: EmailSec,
+    availability: Available,
+    valueType: "select",
+    options: Some(["none", "quarantine", "reject"]),
+    defaultValue: StringValue("reject"),
+  },
+  {
+    id: "email_dkim",
+    label: "DKIM Signing",
+    description: "DomainKeys Identified Mail — cryptographic signature on outbound email. Proves authenticity.",
+    category: EmailSec,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("on"),
+  },
+  {
+    id: "email_mta_sts",
+    label: "MTA-STS",
+    description: "SMTP MTA Strict Transport Security — forces TLS for inbound mail delivery. Prevents downgrade attacks.",
+    category: EmailSec,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("on"),
+  },
+  {
+    id: "email_tlsrpt",
+    label: "TLS-RPT",
+    description: "TLS Reporting — receive reports about TLS failures in email delivery to your domain.",
+    category: EmailSec,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("on"),
+  },
+  {
+    id: "email_caa",
+    label: "CAA Records",
+    description: "Certificate Authority Authorization — restricts which CAs can issue certificates for your domain.",
+    category: EmailSec,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("on"),
+  },
+]
+
+// ============================================================================
+// Pages settings (Cloudflare Pages / GitHub Pages integration)
+// ============================================================================
+
+/// Cloudflare Pages project management settings. These are informational
+/// indicators; actual Pages CRUD happens via the CloudGuardPagesSetup component.
+let pagesSettings: array<catalogEntry> = [
+  {
+    id: "pages_project",
+    label: "Pages Project",
+    description: "Cloudflare Pages deployment project connected to a GitHub repository.",
+    category: Pages,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("off"),
+  },
+  {
+    id: "pages_custom_domain",
+    label: "Custom Domain Binding",
+    description: "Bind a custom domain to your Pages project with automatic CNAME and SSL.",
+    category: Pages,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("off"),
+  },
+  {
+    id: "pages_headers",
+    label: "Security Headers (_headers file)",
+    description: "Deploy security headers via _headers file — free, no Workers needed. CSP, X-Frame-Options, etc.",
+    category: Pages,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("on"),
+  },
+]
+
+// ============================================================================
+// DNSSEC settings
+// ============================================================================
+
+/// DNSSEC settings. DNSSEC is a zone-level toggle managed via the CF API.
+/// DS record propagation to the registrar is a separate step.
+let dnssecSettings: array<catalogEntry> = [
+  {
+    id: "dnssec",
+    label: "DNSSEC",
+    description: "DNS Security Extensions — cryptographically signs DNS records to prevent spoofing and cache poisoning.",
+    category: Dnssec,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("on"),
+  },
+  {
+    id: "dnssec_ds_record",
+    label: "DS Record at Registrar",
+    description: "DS (Delegation Signer) record must be added at your domain registrar to complete the DNSSEC chain of trust.",
+    category: Dnssec,
+    availability: Available,
+    valueType: "toggle",
+    options: None,
+    defaultValue: StringValue("on"),
+  },
+]
+
+// ============================================================================
 // Aggregate catalog
 // ============================================================================
 
@@ -354,8 +569,13 @@ let allSettings: array<catalogEntry> = Array.flat([
   sslTlsSettings,
   headerSettings,
   wafSettings,
+  botDefenseSettings,
+  dnsInfoSettings,
+  emailSecSettings,
   performanceSettings,
   networkSettings,
+  pagesSettings,
+  dnssecSettings,
 ])
 
 /// Find a catalog entry by its CF setting ID.
@@ -395,8 +615,13 @@ let categoryCounts = (): array<(settingCategory, int)> => {
     (SslTls, Array.length(sslTlsSettings)),
     (Headers, Array.length(headerSettings)),
     (Waf, Array.length(wafSettings)),
+    (BotDefense, Array.length(botDefenseSettings)),
+    (Dns, Array.length(dnsInfoSettings)),
+    (EmailSec, Array.length(emailSecSettings)),
     (Performance, Array.length(performanceSettings)),
     (Network, Array.length(networkSettings)),
+    (Pages, Array.length(pagesSettings)),
+    (Dnssec, Array.length(dnssecSettings)),
   ]
 }
 
