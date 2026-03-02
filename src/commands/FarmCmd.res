@@ -9,6 +9,14 @@
 /// Pattern: `commandName(args..., tagger) => Tea_Cmd.t<'msg>`
 /// where `tagger: result<string, string> => 'msg` wraps the result into
 /// the panel's message type.
+///
+/// ON THE COMMAND PATTERN: Every Tauri call goes through `Tea_Cmd.call` which
+/// hands us a `callbacks` object with `.enqueue`. This is TEA's answer to the
+/// "where do side effects go?" question. In React, you'd `useEffect` with an
+/// async function, manage loading/error states manually, worry about cleanup
+/// on unmount, and pray the dependency array is correct. Here: the command
+/// returns a tagged Result, the Update switch arm handles both cases, done.
+/// No effect cleanup, no stale closures, no forgotten error boundaries.
 
 @module("@tauri-apps/api/core")
 external invoke: (string, 'a) => promise<'b> = "invoke"

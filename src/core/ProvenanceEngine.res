@@ -5,6 +5,16 @@
 /// Derives trust levels from git blame data, computes summaries, manages
 /// the accessibility palette colour mappings, and determines when hostile
 /// UX should activate. All functions are pure — no side effects.
+///
+/// DESIGN NOTE: The trust colour mapping below covers 4 palettes × 5 trust
+/// levels = 20 colour combinations, all expressed as a pure function from
+/// `(trustLevel, accessibilityPalette) => (bgClass, textClass, borderClass)`.
+/// In a dynamically typed language, this would be a nested dictionary lookup
+/// with runtime KeyError risk. Here, the compiler proves exhaustiveness: every
+/// palette/level combination has a defined mapping, and adding a new trust level
+/// forces you to define its colours for ALL four palettes before the code
+/// compiles. This matters because accessibility palette bugs are invisible to
+/// most developers — they only surface for users who need them most.
 
 open ProvenanceModel
 

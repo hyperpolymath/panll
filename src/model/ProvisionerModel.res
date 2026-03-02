@@ -11,6 +11,16 @@
 ///   Native   — runs in PanLL process (core 13, trusted panels)
 ///   Standard — Alpine + Podman container (community panels)
 ///   Hardened — Stapeln + Chainguard pod (enterprise, untrusted)
+///
+/// ON EXHAUSTIVE ISOLATION: The `panelIsolation` variant below has exactly three
+/// constructors. Every `switch` on isolation tier in the codebase MUST handle all
+/// three — the compiler enforces this. When we eventually add a fourth tier (say,
+/// `RemoteHost` for distributed panels), the compiler will flag every location
+/// that needs updating. In Python or Go, this would be a string enum that silently
+/// falls through to a default case, and you'd discover the missing handler in
+/// production. ReScript doesn't have a `default` case for variants — you handle
+/// everything or you don't compile. That's the difference between "type-safe" as
+/// marketing and type-safe as engineering practice.
 
 /// Panel isolation tier — determines how a panel runs.
 type panelIsolation =

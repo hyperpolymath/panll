@@ -6,6 +6,17 @@
 //! emits `watcher://event` Tauri events that the ReScript TEA loop subscribes
 //! to. Commands are designed to be safe to call multiple times (idempotent
 //! start/stop) and to survive the watched directory not existing yet.
+//!
+//! We use `notify` (https://docs.rs/notify) which wraps inotify/FSEvents/
+//! ReadDirectoryChangesW per-platform behind a unified API. The alternative
+//! in Go (`fsnotify`) has a long history of goroutine leaks on recursive
+//! watches and platform-specific edge cases that silently drop events. Rust's
+//! ownership model means the watcher thread cleans up deterministically when
+//! stopped — no finalizer, no GC delay, no leaked file descriptors. The
+//! `Arc<Mutex<WatcherState>>` below looks verbose, but the compiler proves
+//! at compile time that no two threads access state simultaneously. Try
+//! getting that guarantee from a Go `sync.Mutex` — you'll get a runtime
+//! panic if you're lucky, a silent data race if you're not.
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};

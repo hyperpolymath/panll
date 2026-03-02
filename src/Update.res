@@ -15,6 +15,17 @@
 ///
 /// DESIGN: Sub-updaters are pure — commands represent deferred side effects.
 /// The only imperative call is `Storage.save()` in the SaveState handler.
+///
+/// WHY TEA OVER REACT HOOKS: This file is ~2,900 lines managing 14 panels. In a
+/// React hooks architecture, that's 14 custom hooks with useEffect dependency
+/// arrays, stale closure bugs, and "why did this re-render?" debugging sessions.
+/// In TEA, every state transition is a pure function: `(model, msg) => (model, cmd)`.
+/// No effect timing surprises, no dependency arrays to get wrong, no cleanup
+/// functions to forget. When a panel update causes unexpected behaviour, you read
+/// the switch arm — the entire state change is right there, not spread across
+/// three hooks in different files. The trade-off is more explicit boilerplate; the
+/// payoff is that 2,900 lines of state management has zero race conditions by
+/// construction. See https://guide.elm-lang.org/architecture/
 
 open Model
 open Msg

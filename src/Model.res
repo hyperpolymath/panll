@@ -15,6 +15,18 @@
 ///   VeriSimModel    ← no deps (leaf)
 ///   GovernanceModel ← PaneModel (for neuralToken in antiCrashState)
 ///   Model           ← all four (this file)
+///
+/// NOTE ON TYPE COMPOSITION: This `model` record contains 18 domain slices,
+/// each with its own variant types and records. ReScript's `include` mechanism
+/// re-exports all constructors — so `Installed`, `Native`, `Verified` etc. are
+/// usable without qualification throughout the codebase. In TypeScript, this
+/// would require either string literal unions (no exhaustiveness checking beyond
+/// what the IDE approximates) or a maze of discriminated unions with manual type
+/// guards. Here, the compiler enforces exhaustive matching on every `switch` —
+/// add a new variant to any model and the compiler tells you every place in
+/// 26,000+ lines that needs updating. That's not "nice to have" type safety;
+/// it's the difference between refactoring with confidence and refactoring with
+/// prayer. See https://rescript-lang.org/docs/manual/latest/variant
 
 /// Re-export Pane-L, Pane-N, Pane-W state types and their supporting types
 /// (symbolicConstraint, neuralToken, oodaPhase, agencyState, eventChain*).

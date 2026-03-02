@@ -39,15 +39,41 @@ This is not a passive text editor. It is an active, synchronous environment that
 
 == Technical Stack
 
-[cols="1,2"]
+[cols="1,2,2"]
 |===
-|Frontend|ReScript + Custom TEA (The Elm Architecture)
-|Backend|Rust + Tauri 2.0
-|Runtime|Deno (tests, build orchestration)
-|Testing|Deno.test (97 JS tests) + cargo test (12 Rust tests)
-|Styling|Tailwind CSS 4.x
-|Middleware|Elixir/BEAM (`beam/panll_beam`) with selectable HTTP, GraphQL, and gRPC APIs
-|Verification|Echidna (planned)
+|Layer|Choice|Why This
+
+|Frontend
+|ReScript + TEA (The Elm Architecture)
+|Actually type-safe — no `any` escape hatch, exhaustive pattern matching on every variant, and the compiler catches state bugs that TypeScript structurally cannot. We tried TypeScript early on; the `as` casts and `Partial<T>` workarounds in a 14-panel stateful app were untenable. See https://rescript-lang.org/docs/manual/latest/overview[ReScript docs] for the sound type system that made this possible.
+
+|Backend
+|Rust + Tauri 2.0
+|5 MB binary vs 100+ MB Electron. No garbage collector pauses during real-time panel updates. The `notify` crate handles filesystem watching across Linux/macOS/Windows without the cross-platform pain that Go's `fsnotify` brings (goroutine leak on recursive watches, anyone?). See https://v2.tauri.app/start/[Tauri v2].
+
+|Runtime
+|Deno (tests, build orchestration)
+|No `node_modules` black hole — URL imports, built-in TypeScript support for glue code, secure-by-default permissions model. npm is only used for the ReScript compiler itself (pending upstream Deno support). See https://deno.com[Deno].
+
+|Testing
+|Deno.test (97 JS) + cargo test (12 Rust)
+|Built into the runtime, no test framework dependency to manage. Jest/Vitest config files are their own maintenance burden; Deno.test just works.
+
+|Styling
+|Tailwind CSS 4.x
+|Utility-first, purged in production. Keeps panel styling consistent across 14 overlays without CSS specificity wars.
+
+|Middleware
+|Elixir/BEAM (`beam/panll_beam`)
+|BEAM's "let it crash" supervision trees are exactly right for a multi-panel environment where individual backend connections can fail without taking down the whole surface. We evaluated Go for this layer — the error handling verbosity and lack of pattern matching made the routing logic twice as long and half as readable.
+
+|Verification
+|Idris2 ABI (planned) + Echidna
+|Dependent types prove interface correctness at compile time — not "we hope the types are right" but "the compiler won't let you ship wrong types." See https://www.idris-lang.org[Idris2].
+
+|Data Processing
+|Julia (batch scripts, analysis)
+|When you need actual numeric performance without fighting Python's GIL or rewriting everything in C extensions. Multiple dispatch means the same function signature handles different data shapes without the class hierarchy gymnastics that Python's duck typing hides until runtime. See https://julialang.org[Julia].
 |===
 
 == Development

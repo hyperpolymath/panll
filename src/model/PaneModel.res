@@ -10,6 +10,16 @@
 ///
 /// This module has NO dependencies on other PanLL modules — it is the leaf
 /// of the type dependency graph.
+///
+/// ON VARIANT TYPES: Each OODA phase below (`Observe | Orient | Decide | Act`)
+/// is a ReScript variant — a tagged union the compiler understands structurally.
+/// In TypeScript you'd write `type OodaPhase = "observe" | "orient" | ...` which
+/// looks similar, but the compiler can't enforce exhaustive matching (you need a
+/// manual `default: throw` or `satisfies never` trick that's easy to forget, and
+/// which won't catch new additions at compile time across files). ReScript's
+/// `switch` on variants is exhaustive by default — miss a case, get a compile
+/// error. At 14 panels with dozens of variant types each, this single property
+/// has prevented more bugs than any linter rule could.
 
 /// Constraint types for the Symbolic Mass (Pane-L)
 type symbolicConstraint = {

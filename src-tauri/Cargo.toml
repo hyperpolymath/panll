@@ -1,4 +1,13 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
+#
+# Tauri 2.0 backend — Rust gives us ~5 MB release binaries (vs 100+ MB for
+# Electron), zero GC pauses during real-time panel updates, and fearless
+# concurrency for the filesystem watcher. We evaluated Go for this layer early
+# on — the error handling verbosity (`if err != nil` on every third line) and
+# the lack of algebraic types made the Tauri command routing logic painful to
+# maintain. Rust's `match` on Result/Option with exhaustive checking is the
+# same philosophy as the ReScript frontend: the compiler catches what humans
+# miss. See https://v2.tauri.app/start/
 
 [package]
 name = "panll"

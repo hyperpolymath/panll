@@ -1,3 +1,50 @@
+<!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
+
+# Contributing to PanLL
+
+## Why These Tools?
+
+Before you dive in, it helps to understand _why_ PanLL uses the stack it does.
+These aren't arbitrary preferences — they're lessons learned from building a
+14-panel stateful application.
+
+**ReScript instead of TypeScript** — PanLL has 26,000+ lines of state management
+across 14 panels. TypeScript's structural type system means `any` leaks are
+always one cast away, and discriminated unions require manual type guards that
+are easy to forget. ReScript's sound type system means if it compiles, the types
+are correct — no escape hatches, no `as unknown as`, no runtime type errors.
+Exhaustive pattern matching on variant types caught dozens of "missing case" bugs
+during the panel expansion. See [rescript-lang.org](https://rescript-lang.org).
+
+**Rust + Tauri instead of Electron** — PanLL's release binary is ~5 MB. An
+equivalent Electron app would be 100+ MB (shipping an entire Chromium). The Rust
+backend also means filesystem watching, git blame parsing, and HTTP clients run
+with no garbage collector pauses — important when 14 panels are subscribed to
+live events. We evaluated Go for the backend; the `if err != nil` boilerplate on
+every function call made the command routing code twice as long.
+
+**Deno instead of npm/Node** — No `node_modules` directory (1,200+ transitive
+deps for a typical Node project). Built-in test runner. Secure-by-default
+permissions. npm is only used for the ReScript compiler itself.
+
+**Elixir/BEAM for middleware** — BEAM's supervision trees mean a crashing backend
+connection restarts itself without taking down the whole panel surface. Pattern
+matching on messages is the same philosophy as ReScript's TEA on the frontend.
+
+**Julia for data processing** — When batch analysis needs actual numeric
+performance. Python's GIL means "import numpy and pray"; Julia's multiple
+dispatch compiles to LLVM native code for every combination of argument types.
+
+If you're coming from TypeScript/React, the biggest mental shift is TEA (The Elm
+Architecture): state changes are pure functions, side effects are commands, and
+the compiler enforces exhaustiveness everywhere. It's more explicit than hooks,
+but after the first day you'll wonder why you ever tolerated `useEffect`.
+
+---
+
+## Getting Started
+
+```bash
 # Clone the repository
 git clone https://github.com/hyperpolymath/panll.git
 cd panll
