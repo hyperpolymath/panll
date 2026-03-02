@@ -177,6 +177,55 @@ type vabMsg =
   | SetSortBy(vabSortBy)
   | HoverComponent(option<string>)
 
+/// CloudGuard Cloudflare domain security management messages — connection
+/// lifecycle, zone listing, settings read/write, DNS records, DNSSEC,
+/// hardening operations, audit, and UI state toggling.
+type cloudguardMsg =
+  // Connection lifecycle
+  | VerifyToken
+  | TokenVerified(result<string, string>)
+  // Zone listing
+  | FetchZones
+  | ZonesLoaded(result<string, string>)
+  // Zone selection (multi-select domain ribbon)
+  | ToggleZoneSelection(string)
+  | SelectAllZones
+  | DeselectAllZones
+  // Settings read/write
+  | FetchSettings(string)
+  | SettingsLoaded(result<string, string>)
+  | ToggleSetting(string)
+  | UpdateSettingValue(string, string)
+  | PushChanges
+  | ChangesPushed(result<string, string>)
+  // DNS records
+  | FetchDnsRecords(string)
+  | DnsRecordsLoaded(result<string, string>)
+  | DeleteDnsRecord(string, string)
+  | DnsRecordDeleted(result<string, string>)
+  // DNSSEC
+  | FetchDnssec(string)
+  | DnssecLoaded(result<string, string>)
+  | EnableDnssec(string)
+  | DnssecEnabled(result<string, string>)
+  // Hardening
+  | HardenSelected
+  | HardenZone(string)
+  | ZoneHardened(result<string, string>)
+  // Audit
+  | RunAudit
+  | AuditComplete(result<string, string>)
+  // Offline config
+  | DownloadConfig
+  | ConfigDownloaded(result<string, string>)
+  // UI state
+  | ToggleCloudGuard
+  | SetCategory(settingCategory)
+  | SetFilterText(string)
+  | SetSettingFilter(string)
+  | ToggleAuditPanel
+  | ToggleDiffPanel
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -190,5 +239,6 @@ type msg =
   | Feedback(feedbackMsg)
   | AntiCrash(antiCrashMsg)
   | Vab(vabMsg)
+  | CloudGuard(cloudguardMsg) // Cloudflare domain security management
   | SaveState // Persist current state to storage
   | NoOp

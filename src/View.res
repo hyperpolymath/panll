@@ -169,6 +169,13 @@ let view = (model: model): Tea_Vdom.t<msg> => {
         } else {
           noNode
         },
+
+        // CloudGuard (Cloudflare Domain Security) - full-screen overlay
+        if model.cloudguard.visible {
+          CloudGuard.view(model.cloudguard)
+        } else {
+          noNode
+        },
       },
     )
   }

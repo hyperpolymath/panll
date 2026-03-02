@@ -36,6 +36,11 @@ include GovernanceModel
 /// warnings, capabilities, assembly state) for the server composer panel.
 include VabModel
 
+/// Re-export CloudGuard types (zones, settings, DNS records, audit findings,
+/// plan tiers, policy constraints, diff entries) for the Cloudflare domain
+/// security management panel.
+include CloudGuardModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -67,6 +72,9 @@ type model = {
 
   // VAB (Verified Assembly Building)
   vab: vabState,
+
+  // CloudGuard (Cloudflare domain security management)
+  cloudguard: cloudguardState,
 
   // Feedback-O-Tron
   feedbackPending: option<string>,
@@ -232,6 +240,28 @@ let init = (): model => {
     warnings: [],
     capabilities: VabEngine.computeCapabilities([], VabCatalog.allComponents, []),
     hoveredComponent: None,
+  },
+  cloudguard: {
+    connection: Disconnected,
+    loading: false,
+    error: None,
+    zones: [],
+    selectedZoneIds: [],
+    settings: [],
+    dnsRecords: [],
+    pagesProjects: [],
+    auditResult: None,
+    constraints: [],
+    exceptions: [],
+    configDiff: None,
+    bulkProgress: None,
+    visible: false,
+    activeCategory: SslTls,
+    filterText: "",
+    settingFilter: "",
+    showDiff: false,
+    showAudit: true,
+    dnsEditingId: None,
   },
   humidity: Medium,
   viewMode: DarkStart,

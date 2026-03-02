@@ -1657,6 +1657,302 @@ let updateVab = (model: model, msg: vabMsg): model => {
 }
 
 // ===========================================================================
+// ===========================================================================
+// CloudGuard Sub-Updater
+// ===========================================================================
+
+/// Handles all CloudGuard (Cloudflare domain security management) messages.
+/// Connection lifecycle, zone listing, settings read/write, DNS records,
+/// DNSSEC, hardening operations, audit, and UI state toggling.
+let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg>) => {
+  let cg = model.cloudguard
+  switch msg {
+  // -- Connection lifecycle --
+  | VerifyToken => (
+      {...model, cloudguard: {...cg, connection: Connecting, loading: true}},
+      CloudGuardCmd.verifyToken(result => CloudGuard(TokenVerified(result))),
+    )
+  | TokenVerified(result) =>
+    switch result {
+    | Ok(json) => (
+        {...model, cloudguard: {...cg, connection: Connected(json), loading: false, error: None}},
+        // Auto-fetch zones after successful connection
+        CloudGuardCmd.listZones(result => CloudGuard(ZonesLoaded(result))),
+      )
+    | Error(err) => (
+        {...model, cloudguard: {...cg, connection: ConnectionError(err), loading: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+
+  // -- Zone listing --
+  | FetchZones => (
+      {...model, cloudguard: {...cg, loading: true}},
+      CloudGuardCmd.listZones(result => CloudGuard(ZonesLoaded(result))),
+    )
+  | ZonesLoaded(result) =>
+    switch result {
+    | Ok(_json) =>
+      // TODO: Parse zone JSON array into cfZone records (Phase 2 — proper JSON parsing)
+      ({...model, cloudguard: {...cg, loading: false, error: None}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+
+  // -- Zone selection (multi-select domain ribbon) --
+  | ToggleZoneSelection(zoneId) => {
+      let newSelected = if Array.includes(cg.selectedZoneIds, zoneId) {
+        cg.selectedZoneIds->Array.filter(id => id !== zoneId)
+      } else {
+        Array.concat(cg.selectedZoneIds, [zoneId])
+      }
+      ({...model, cloudguard: {...cg, selectedZoneIds: newSelected}}, Tea_Cmd.none)
+    }
+  | SelectAllZones => {
+      let allIds = cg.zones->Array.map(z => z.id)
+      ({...model, cloudguard: {...cg, selectedZoneIds: allIds}}, Tea_Cmd.none)
+    }
+  | DeselectAllZones => (
+      {...model, cloudguard: {...cg, selectedZoneIds: []}},
+      Tea_Cmd.none,
+    )
+
+  // -- Settings read/write --
+  | FetchSettings(zoneId) => (
+      {...model, cloudguard: {...cg, loading: true}},
+      CloudGuardCmd.getSettings(zoneId, result => CloudGuard(SettingsLoaded(result))),
+    )
+  | SettingsLoaded(result) =>
+    switch result {
+    | Ok(_json) =>
+      // TODO: Parse settings JSON into cfSetting records (Phase 2)
+      ({...model, cloudguard: {...cg, loading: false}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+  | ToggleSetting(settingId) => {
+      let newSettings = cg.settings->Array.map(s => {
+        if s.id === settingId {
+          let newValue = switch s.value {
+          | StringValue("on") => StringValue("off")
+          | StringValue("off") => StringValue("on")
+          | BoolValue(b) => BoolValue(!b)
+          | other => other
+          }
+          {...s, value: newValue, modified: true}
+        } else {
+          s
+        }
+      })
+      ({...model, cloudguard: {...cg, settings: newSettings}}, Tea_Cmd.none)
+    }
+  | UpdateSettingValue(settingId, value) => {
+      let newSettings = cg.settings->Array.map(s => {
+        if s.id === settingId {
+          {...s, value: StringValue(value), modified: true}
+        } else {
+          s
+        }
+      })
+      ({...model, cloudguard: {...cg, settings: newSettings}}, Tea_Cmd.none)
+    }
+  | PushChanges => {
+      // Collect modified settings and push them
+      let _modified = cg.settings->Array.filter(s => s.modified)
+      // TODO: Build JSON payload and call updateSettingsBatch (Phase 2)
+      ({...model, cloudguard: {...cg, loading: true}}, Tea_Cmd.none)
+    }
+  | ChangesPushed(result) =>
+    switch result {
+    | Ok(_json) => ({...model, cloudguard: {...cg, loading: false}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+
+  // -- DNS records --
+  | FetchDnsRecords(zoneId) => (
+      {...model, cloudguard: {...cg, loading: true}},
+      CloudGuardCmd.listDnsRecords(zoneId, result => CloudGuard(DnsRecordsLoaded(result))),
+    )
+  | DnsRecordsLoaded(result) =>
+    switch result {
+    | Ok(_json) =>
+      // TODO: Parse DNS records JSON (Phase 3)
+      ({...model, cloudguard: {...cg, loading: false}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+  | DeleteDnsRecord(zoneId, recordId) => (
+      {...model, cloudguard: {...cg, loading: true}},
+      CloudGuardCmd.deleteDnsRecord(zoneId, recordId, result => CloudGuard(DnsRecordDeleted(result))),
+    )
+  | DnsRecordDeleted(result) =>
+    switch result {
+    | Ok(_json) => ({...model, cloudguard: {...cg, loading: false}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+
+  // -- DNSSEC --
+  | FetchDnssec(zoneId) => (
+      {...model, cloudguard: {...cg, loading: true}},
+      CloudGuardCmd.getDnssec(zoneId, result => CloudGuard(DnssecLoaded(result))),
+    )
+  | DnssecLoaded(result) =>
+    switch result {
+    | Ok(_json) => ({...model, cloudguard: {...cg, loading: false}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+  | EnableDnssec(zoneId) => (
+      {...model, cloudguard: {...cg, loading: true}},
+      CloudGuardCmd.enableDnssec(zoneId, result => CloudGuard(DnssecEnabled(result))),
+    )
+  | DnssecEnabled(result) =>
+    switch result {
+    | Ok(_json) => ({...model, cloudguard: {...cg, loading: false}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+
+  // -- Hardening --
+  | HardenSelected => {
+      // Harden first selected zone; subsequent zones handled by ZoneHardened
+      switch Array.get(cg.selectedZoneIds, 0) {
+      | Some(firstZone) => (
+          {...model, cloudguard: {
+            ...cg,
+            loading: true,
+            bulkProgress: Some({
+              total: Array.length(cg.selectedZoneIds),
+              completed: 0,
+              failed: 0,
+              currentDomain: cg.zones->Array.find(z => z.id === firstZone)->Option.map(z => z.name),
+              startedAt: "",
+              errors: [],
+            }),
+          }},
+          CloudGuardCmd.hardenZone(firstZone, result => CloudGuard(ZoneHardened(result))),
+        )
+      | None => (model, Tea_Cmd.none)
+      }
+    }
+  | HardenZone(zoneId) => (
+      {...model, cloudguard: {...cg, loading: true}},
+      CloudGuardCmd.hardenZone(zoneId, result => CloudGuard(ZoneHardened(result))),
+    )
+  | ZoneHardened(result) => {
+      let progress = switch cg.bulkProgress {
+      | Some(p) =>
+        switch result {
+        | Ok(_) => Some({...p, completed: p.completed + 1})
+        | Error(err) => Some({
+            ...p,
+            completed: p.completed + 1,
+            failed: p.failed + 1,
+            errors: Array.concat(p.errors, [("unknown", err)]),
+          })
+        }
+      | None => None
+      }
+      // Check if there are more zones to harden
+      let nextIndex = switch progress {
+      | Some(p) => p.completed
+      | None => 0
+      }
+      let cmd = if nextIndex < Array.length(cg.selectedZoneIds) {
+        switch Array.get(cg.selectedZoneIds, nextIndex) {
+        | Some(nextZone) =>
+          CloudGuardCmd.hardenZone(nextZone, result => CloudGuard(ZoneHardened(result)))
+        | None => Tea_Cmd.none
+        }
+      } else {
+        Tea_Cmd.none // All done
+      }
+      let isDone = nextIndex >= Array.length(cg.selectedZoneIds)
+      (
+        {...model, cloudguard: {...cg, bulkProgress: progress, loading: !isDone}},
+        cmd,
+      )
+    }
+
+  // -- Audit --
+  | RunAudit => (
+      {...model, cloudguard: {...cg, loading: true, showAudit: true}},
+      Tea_Cmd.none, // TODO: Backend audit command (Phase 4)
+    )
+  | AuditComplete(result) =>
+    switch result {
+    | Ok(_json) => ({...model, cloudguard: {...cg, loading: false}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+
+  // -- Offline config --
+  | DownloadConfig => (
+      {...model, cloudguard: {...cg, loading: true}},
+      Tea_Cmd.none, // TODO: Config download command (Phase 5)
+    )
+  | ConfigDownloaded(result) =>
+    switch result {
+    | Ok(_json) => ({...model, cloudguard: {...cg, loading: false}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
+    }
+
+  // -- UI state --
+  | ToggleCloudGuard => {
+      let newVisible = !cg.visible
+      let cmd = if newVisible && cg.connection === Disconnected {
+        // Auto-connect when opening the panel
+        CloudGuardCmd.verifyToken(result => CloudGuard(TokenVerified(result)))
+      } else {
+        Tea_Cmd.none
+      }
+      ({...model, cloudguard: {...cg, visible: newVisible}}, cmd)
+    }
+  | SetCategory(cat) => (
+      {...model, cloudguard: {...cg, activeCategory: cat}},
+      Tea_Cmd.none,
+    )
+  | SetFilterText(text) => (
+      {...model, cloudguard: {...cg, filterText: text}},
+      Tea_Cmd.none,
+    )
+  | SetSettingFilter(text) => (
+      {...model, cloudguard: {...cg, settingFilter: text}},
+      Tea_Cmd.none,
+    )
+  | ToggleAuditPanel => (
+      {...model, cloudguard: {...cg, showAudit: !cg.showAudit}},
+      Tea_Cmd.none,
+    )
+  | ToggleDiffPanel => (
+      {...model, cloudguard: {...cg, showDiff: !cg.showDiff}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+// ===========================================================================
 // Main Orchestrator
 // ===========================================================================
 
@@ -1693,6 +1989,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | Feedback(subMsg) => updateFeedback(model, subMsg)
   | AntiCrash(subMsg) => updateAntiCrash(model, subMsg)
   | Vab(subMsg) => (updateVab(model, subMsg), Tea_Cmd.none)
+  | CloudGuard(subMsg) => updateCloudGuard(model, subMsg)
   | SaveState => {
       // Imperative: persist current state to localStorage.
       Storage.save(model)

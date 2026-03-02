@@ -17,6 +17,9 @@ use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde_json::{json, Value};
 
+/// CloudGuard — Cloudflare domain security management module.
+mod cloudguard;
+
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
 
@@ -1662,6 +1665,20 @@ fn main() {
             echidna_get_session,
             echidna_apply_tactic,
             echidna_suggest_tactics,
+            // CloudGuard — Cloudflare domain security management
+            cloudguard::commands::cloudguard_verify_token,
+            cloudguard::commands::cloudguard_list_zones,
+            cloudguard::commands::cloudguard_get_zone,
+            cloudguard::commands::cloudguard_get_settings,
+            cloudguard::commands::cloudguard_update_setting,
+            cloudguard::commands::cloudguard_update_settings_batch,
+            cloudguard::commands::cloudguard_list_dns_records,
+            cloudguard::commands::cloudguard_create_dns_record,
+            cloudguard::commands::cloudguard_update_dns_record,
+            cloudguard::commands::cloudguard_delete_dns_record,
+            cloudguard::commands::cloudguard_get_dnssec,
+            cloudguard::commands::cloudguard_enable_dnssec,
+            cloudguard::commands::cloudguard_harden_zone,
         ])
         .setup(|_app| {
             Ok(())
