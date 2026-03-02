@@ -106,28 +106,24 @@ let securityLabel = (record: cfDnsRecord): option<string> => {
 // Table header
 // ============================================================================
 
-/// Render the DNS records table header row.
+/// Render the DNS records table header row (div-based flex layout since
+/// Tea_Html does not provide th/thead/tr elements).
 let renderTableHeader = (): Tea_Vdom.t<msg> => {
   let headerCell = (label: string, width: string) =>
-    th(
+    div(
       list{Attrs.class_(`text-left text-xs text-gray-500 font-medium py-2 px-2 ${width}`)},
       list{text(label)},
     )
 
-  thead(
-    list{Attrs.class_("border-b border-gray-800")},
+  div(
+    list{Attrs.class_("flex border-b border-gray-800")},
     list{
-      tr(
-        list{},
-        list{
-          headerCell("Type", "w-16"),
-          headerCell("Name", "w-48"),
-          headerCell("Content", ""),
-          headerCell("TTL", "w-16"),
-          headerCell("Proxy", "w-14"),
-          headerCell("", "w-20"), // Actions column
-        },
-      ),
+      headerCell("Type", "w-16"),
+      headerCell("Name", "w-48"),
+      headerCell("Content", "flex-1"),
+      headerCell("TTL", "w-16"),
+      headerCell("Proxy", "w-14"),
+      headerCell("", "w-20"),
     },
   )
 }
@@ -144,15 +140,15 @@ let renderRecordRow = (
   let editingClass = isEditing ? " bg-gray-800/80 ring-1 ring-indigo-500/50" : ""
   let secLabel = securityLabel(record)
 
-  tr(
+  div(
     list{
-      Attrs.class_(`hover:bg-gray-800/30 transition-colors${editingClass}`),
+      Attrs.class_(`flex hover:bg-gray-800/30 transition-colors${editingClass}`),
       Attrs.ariaLabel(`DNS record ${recordTypeLabel(record.recordType)} ${record.name}`),
     },
     list{
       // Type badge
-      td(
-        list{Attrs.class_("py-1.5 px-2")},
+      div(
+        list{Attrs.class_("py-1.5 px-2 w-16")},
         list{
           span(
             list{
@@ -165,8 +161,8 @@ let renderRecordRow = (
         },
       ),
       // Name
-      td(
-        list{Attrs.class_("py-1.5 px-2")},
+      div(
+        list{Attrs.class_("py-1.5 px-2 w-48")},
         list{
           div(
             list{Attrs.class_("flex items-center gap-1.5")},
@@ -189,8 +185,8 @@ let renderRecordRow = (
         },
       ),
       // Content (truncated for long TXT records)
-      td(
-        list{Attrs.class_("py-1.5 px-2")},
+      div(
+        list{Attrs.class_("py-1.5 px-2 flex-1")},
         list{
           div(
             list{
@@ -202,13 +198,13 @@ let renderRecordRow = (
         },
       ),
       // TTL
-      td(
-        list{Attrs.class_("py-1.5 px-2 text-xs text-gray-500")},
+      div(
+        list{Attrs.class_("py-1.5 px-2 w-16 text-xs text-gray-500")},
         list{text(if record.ttl === 1 { "Auto" } else { Int.toString(record.ttl) })},
       ),
       // Proxied status
-      td(
-        list{Attrs.class_("py-1.5 px-2")},
+      div(
+        list{Attrs.class_("py-1.5 px-2 w-14")},
         list{
           switch record.recordType {
           | A | AAAA | CNAME =>
@@ -233,8 +229,8 @@ let renderRecordRow = (
         },
       ),
       // Actions
-      td(
-        list{Attrs.class_("py-1.5 px-2")},
+      div(
+        list{Attrs.class_("py-1.5 px-2 w-20")},
         list{
           div(
             list{Attrs.class_("flex items-center gap-1")},
@@ -435,11 +431,11 @@ let view = (
         div(
           list{Attrs.class_("flex-1 overflow-y-auto")},
           list{
-            table(
+            div(
               list{Attrs.class_("w-full text-left")},
               list{
                 renderTableHeader(),
-                tbody(
+                div(
                   list{},
                   records
                   ->Array.map(record => {

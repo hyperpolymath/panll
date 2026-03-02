@@ -427,7 +427,7 @@ let isSettingEnabled = (v: settingValue): bool => {
 let evaluateSetting = (
   domain: string,
   setting: cfSetting,
-  constraint: policyConstraint,
+  rule: policyConstraint,
 ): option<auditFinding> => {
   let currentStr = settingValueToString(setting.value)
   let expectedStr = settingValueToString(setting.defaultValue)
@@ -447,8 +447,8 @@ let evaluateSetting = (
       domain,
       settingId: setting.id,
       category: setting.category,
-      severity: constraint.severity,
-      message: `${constraint.expression}: expected ${expectedStr}, got ${currentStr}`,
+      severity: rule.severity,
+      message: `${rule.expression}: expected ${expectedStr}, got ${currentStr}`,
       currentValue: currentStr,
       expectedValue: expectedStr,
       autoFixable: setting.editable,
@@ -465,8 +465,8 @@ let computeComplianceScore = (
   let passed = ref(0)
   let failed = ref(0)
 
-  Array.forEach(constraints, constraint => {
-    let matchingSetting = Array.find(settings, s => s.id === constraint.id)
+  Array.forEach(constraints, rule => {
+    let matchingSetting = Array.find(settings, s => s.id === rule.id)
     switch matchingSetting {
     | Some(setting) => {
         let currentStr = settingValueToString(setting.value)

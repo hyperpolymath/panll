@@ -44,6 +44,18 @@ let nav = (attrs, children) => node("nav", attrs, children)
 let section = (attrs, children) => node("section", attrs, children)
 let article = (attrs, children) => node("article", attrs, children)
 let aside = (attrs, children) => node("aside", attrs, children)
+let select = (attrs, children) => node("select", attrs, children)
+let option' = (attrs, children) => node("option", attrs, children)
+let table = (attrs, children) => node("table", attrs, children)
+let thead = (attrs, children) => node("thead", attrs, children)
+let tbody = (attrs, children) => node("tbody", attrs, children)
+let tr = (attrs, children) => node("tr", attrs, children)
+let th = (attrs, children) => node("th", attrs, children)
+let td = (attrs, children) => node("td", attrs, children)
+let pre = (attrs, children) => node("pre", attrs, children)
+let code = (attrs, children) => node("code", attrs, children)
+let strong = (attrs, children) => node("strong", attrs, children)
+let em = (attrs, children) => node("em", attrs, children)
 
 /// Attribute helpers module
 module Attrs = {
@@ -73,7 +85,12 @@ module Attrs = {
   let ariaValueMin = Tea_Vdom.ariaValueMin
   let ariaValueMax = Tea_Vdom.ariaValueMax
   let ariaDescribedBy = Tea_Vdom.ariaDescribedBy
+  let ariaChecked = Tea_Vdom.ariaChecked
+  let ariaSelected = Tea_Vdom.ariaSelected
   let role = Tea_Vdom.role
+  let selected = Tea_Vdom.selected
+  let noProp = Tea_Vdom.noProp
+  let prop = Tea_Vdom.prop
 }
 
 /// Event helpers module
@@ -85,6 +102,7 @@ module Events = {
   let onMouseLeave = Tea_Vdom.onMouseLeave
   let onFocus = Tea_Vdom.onFocus
   let onBlur = Tea_Vdom.onBlur
+  let onChange = Tea_Vdom.onChange
   let onKeyDown = Tea_Vdom.onKeyDown
 }
 

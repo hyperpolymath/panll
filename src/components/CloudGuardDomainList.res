@@ -90,7 +90,7 @@ let renderFilterInput = (filterText: string): Tea_Vdom.t<msg> => {
         list{Attrs.class_("text-xs text-gray-500")},
         list{text("Filter:")},
       ),
-      input'(
+      input(
         list{
           Attrs.class_("bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-300 w-40 focus:border-indigo-500 focus:outline-none"),
           Attrs.type_("text"),
@@ -173,7 +173,7 @@ let view = (
           Attrs.class_("flex flex-wrap gap-1.5 max-h-20 overflow-y-auto"),
           Attrs.role("listbox"),
           Attrs.ariaLabel("Domains"),
-          Attrs.ariaMultiselectable("true"),
+          Attrs.prop("aria-multiselectable", "true"),
         },
         filteredZones
         ->Array.map(zone => {

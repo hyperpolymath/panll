@@ -64,32 +64,32 @@ let renderDiffEntry = (entry: configDiffEntry): Tea_Vdom.t<msg> => {
     ""
   }
 
-  tr(
-    list{Attrs.class_(`hover:bg-gray-800/30${rowBg}`)},
+  div(
+    list{Attrs.class_(`flex hover:bg-gray-800/30${rowBg}`)},
     list{
       // Setting ID
-      td(
-        list{Attrs.class_("py-1.5 px-2 text-sm text-gray-300 font-mono")},
+      div(
+        list{Attrs.class_("py-1.5 px-2 text-sm text-gray-300 font-mono flex-1")},
         list{text(entry.settingId)},
       ),
       // Offline value
-      td(
-        list{Attrs.class_(`py-1.5 px-2 text-sm font-mono ${valueClass(entry.offlineValue, entry.policyValue)}`)},
+      div(
+        list{Attrs.class_(`py-1.5 px-2 text-sm font-mono w-28 ${valueClass(entry.offlineValue, entry.policyValue)}`)},
         list{text(offlineDisplay)},
       ),
       // Live value
-      td(
-        list{Attrs.class_(`py-1.5 px-2 text-sm font-mono ${valueClass(entry.liveValue, entry.policyValue)}`)},
+      div(
+        list{Attrs.class_(`py-1.5 px-2 text-sm font-mono w-28 ${valueClass(entry.liveValue, entry.policyValue)}`)},
         list{text(liveDisplay)},
       ),
       // Policy value
-      td(
-        list{Attrs.class_("py-1.5 px-2 text-sm font-mono text-gray-500")},
+      div(
+        list{Attrs.class_("py-1.5 px-2 text-sm font-mono w-28 text-gray-500")},
         list{text(policyDisplay)},
       ),
       // Status indicator
-      td(
-        list{Attrs.class_("py-1.5 px-2")},
+      div(
+        list{Attrs.class_("py-1.5 px-2 w-20")},
         list{
           if isConflict {
             span(
@@ -117,27 +117,22 @@ let renderDiffEntry = (entry: configDiffEntry): Tea_Vdom.t<msg> => {
 // Table header
 // ============================================================================
 
-/// Render the diff table header.
+/// Render the diff table header as a flex row.
 let renderDiffHeader = (): Tea_Vdom.t<msg> => {
-  let headerCell = (label: string) =>
-    th(
-      list{Attrs.class_("text-left text-xs text-gray-500 font-medium py-2 px-2")},
+  let headerCell = (label: string, extraClass: string) =>
+    div(
+      list{Attrs.class_(`text-left text-xs text-gray-500 font-medium py-2 px-2 ${extraClass}`)},
       list{text(label)},
     )
 
-  thead(
-    list{Attrs.class_("border-b border-gray-800")},
+  div(
+    list{Attrs.class_("flex border-b border-gray-800")},
     list{
-      tr(
-        list{},
-        list{
-          headerCell("Setting"),
-          headerCell("Offline"),
-          headerCell("Live"),
-          headerCell("Policy"),
-          headerCell("Status"),
-        },
-      ),
+      headerCell("Setting", "flex-1"),
+      headerCell("Offline", "w-28"),
+      headerCell("Live", "w-28"),
+      headerCell("Policy", "w-28"),
+      headerCell("Status", "w-20"),
     },
   )
 }
@@ -263,11 +258,11 @@ let viewExpanded = (
     div(
       list{Attrs.class_("flex-1 overflow-y-auto")},
       list{
-        table(
+        div(
           list{Attrs.class_("w-full text-left")},
           list{
             renderDiffHeader(),
-            tbody(
+            div(
               list{},
               diff.entries
               ->Array.map(renderDiffEntry)

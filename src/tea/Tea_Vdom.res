@@ -26,6 +26,10 @@ let node = (tag: string, attrs: list<attribute<'msg>>, children: list<t<'msg>>):
   Element(tag, List.toArray(attrs), List.toArray(children))
 }
 
+/// A no-op attribute that renders nothing — use where a conditional
+/// attribute is needed but the else branch has no attribute to apply.
+let noProp: attribute<'msg> = Property("", "")
+
 /// Attribute constructors
 let class_ = (name: string): attribute<'msg> => Property("class", name)
 let id = (name: string): attribute<'msg> => Property("id", name)
@@ -53,7 +57,13 @@ let ariaValueNow = (v: float): attribute<'msg> => Property("aria-valuenow", Floa
 let ariaValueMin = (v: float): attribute<'msg> => Property("aria-valuemin", Float.toString(v))
 let ariaValueMax = (v: float): attribute<'msg> => Property("aria-valuemax", Float.toString(v))
 let ariaDescribedBy = (id: string): attribute<'msg> => Property("aria-describedby", id)
+let ariaChecked = (b: bool): attribute<'msg> => Property("aria-checked", b ? "true" : "false")
+let ariaSelected = (b: bool): attribute<'msg> => Property("aria-selected", b ? "true" : "false")
 let role = (r: string): attribute<'msg> => Property("role", r)
+let selected = (b: bool): attribute<'msg> => Property("selected", b ? "true" : "false")
+
+/// Generic property setter for attributes not covered by named helpers.
+let prop = (key: string, value: string): attribute<'msg> => Property(key, value)
 
 /// Event handlers
 let onClick = (msg: 'msg): attribute<'msg> => Event("click", () => msg)
@@ -63,6 +73,7 @@ let onMouseEnter = (msg: 'msg): attribute<'msg> => Event("mouseenter", () => msg
 let onMouseLeave = (msg: 'msg): attribute<'msg> => Event("mouseleave", () => msg)
 let onFocus = (msg: 'msg): attribute<'msg> => Event("focus", () => msg)
 let onBlur = (msg: 'msg): attribute<'msg> => Event("blur", () => msg)
+let onChange = (handler: string => 'msg): attribute<'msg> => EventWithValue("change", handler)
 let onKeyDown = (handler: string => option<'msg>): attribute<'msg> => EventWithKey("keydown", handler)
 
 /// Map the message type of a virtual DOM node

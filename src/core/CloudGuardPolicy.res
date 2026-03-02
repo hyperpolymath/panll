@@ -195,8 +195,8 @@ let evaluateSettingAgainstPolicy = (
 ): option<auditFinding> => {
   switch findConstraint(setting.id) {
   | None => None // No constraint for this setting — passes by default
-  | Some(constraint) =>
-    if !constraint.enabled {
+  | Some(rule) =>
+    if !rule.enabled {
       None // Constraint disabled — passes
     } else {
       let currentStr = CloudGuardEngine.settingValueToString(setting.value)
@@ -216,8 +216,8 @@ let evaluateSettingAgainstPolicy = (
           domain,
           settingId: setting.id,
           category: setting.category,
-          severity: constraint.severity,
-          message: `${constraint.expression}: expected ${expectedStr}, got ${currentStr}`,
+          severity: rule.severity,
+          message: `${rule.expression}: expected ${expectedStr}, got ${currentStr}`,
           currentValue: currentStr,
           expectedValue: expectedStr,
           autoFixable: setting.editable,

@@ -56,7 +56,7 @@ let renderToggle = (
             `relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${bgClass}`,
           ),
           Attrs.role("switch"),
-          Attrs.ariaChecked(Bool.toString(isOn)),
+          Attrs.ariaChecked(isOn),
           Attrs.ariaLabel(`Toggle ${setting.label}`),
           Events.onClick(CloudGuard(ToggleSetting(setting.id))),
         },
@@ -176,7 +176,7 @@ let renderNumberInput = (
           ),
         },
       ),
-      input'(
+      input(
         list{
           Attrs.class_(
             "bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200 w-24 focus:border-indigo-500 focus:outline-none",
@@ -195,12 +195,12 @@ let renderNumberInput = (
 /// Render an exception indicator badge showing that this setting has a
 /// per-domain override. Displays the override reason on hover via title attr.
 let renderExceptionBadge = (
-  exception: domainException,
+  domainExc: domainException,
 ): Tea_Vdom.t<msg> => {
   span(
     list{
       Attrs.class_("text-xs text-yellow-400 font-medium px-1.5 py-0.5 border border-yellow-500/30 rounded ml-2"),
-      Attrs.title(`Exception: ${exception.reason}`),
+      Attrs.title(`Exception: ${domainExc.reason}`),
     },
     list{text("EXC")},
   )
@@ -211,7 +211,7 @@ let renderExceptionBadge = (
 /// If an exception exists for the current domain, shows a yellow "EXC" badge.
 let renderSettingRow = (
   setting: cfSetting,
-  exception: option<domainException>,
+  domainExc: option<domainException>,
 ): Tea_Vdom.t<msg> => {
   // Check availability from catalog
   let catalogEntry = CloudGuardCatalog.findById(setting.id)
@@ -260,7 +260,7 @@ let renderSettingRow = (
   }
 
   // Wrap with exception badge if this setting has a per-domain override
-  switch exception {
+  switch domainExc {
   | None => rowContent
   | Some(exc) =>
     div(
@@ -315,12 +315,12 @@ let view = (
           filteredSettings
           ->Array.map(setting => {
             // Look up per-domain exception for this setting
-            let exception = switch currentDomain {
+            let domainExc = switch currentDomain {
             | Some(domain) =>
               CloudGuardEngine.findException(exceptions, domain, setting.id)
             | None => None
             }
-            renderSettingRow(setting, exception)
+            renderSettingRow(setting, domainExc)
           })
           ->List.fromArray,
         )

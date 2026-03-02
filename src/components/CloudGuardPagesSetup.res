@@ -141,7 +141,7 @@ let renderHeadersTemplate = (currentDomain: option<string>): Tea_Vdom.t<msg> => 
       // Template preview
       pre(
         list{
-          Attrs.class_("text-xs text-gray-400 bg-gray-900 rounded p-2 overflow-x-auto max-h-40 font-mono"),
+          Attrs.class_("text-xs text-gray-400 bg-gray-900 rounded p-2 overflow-x-auto max-h-40 font-mono whitespace-pre"),
         },
         list{text(securityHeadersTemplate(domain))},
       ),
