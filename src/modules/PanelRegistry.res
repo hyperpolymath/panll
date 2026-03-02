@@ -128,6 +128,60 @@ let allPanels: array<panelMeta> = [
     connectionStatus: ServiceConnected, // Local state management, always available
     hasBackend: false, // Configuration is local; container ops handled by Stapeln/Podman
   },
+  {
+    id: PanelVoiceTag,
+    name: "Code MRI",
+    shortName: "MRI",
+    description: "Voice-activated code annotation — tags stored as portable .mri.json sidecars",
+    icon: "mic",
+    connectionStatus: ServiceConnected, // Local filesystem I/O, always available
+    hasBackend: false, // Reads/writes .mri.json sidecar files, no HTTP service
+  },
+  {
+    id: PanelAi,
+    name: "AI",
+    shortName: "AI",
+    description: "Multi-provider AI neural interface — Claude, Gemini, Mistral, GPT, local models",
+    icon: "brain-circuit",
+    connectionStatus: ServiceDisconnected, // Connects to external AI providers
+    hasBackend: true, // HTTP calls to AI provider APIs
+  },
+  {
+    id: PanelRepoLoader,
+    name: "Repo Loader",
+    shortName: "Repo",
+    description: "Repository scanner and panel configuration — load a repo, configure panels",
+    icon: "folder-open",
+    connectionStatus: ServiceConnected, // Local filesystem scanning, always available
+    hasBackend: true, // Scans filesystem and reads manifests via Tauri
+  },
+  {
+    id: PanelWorkspace,
+    name: "Workspace",
+    shortName: "WS",
+    description: "Panel arrangements, groups, sessions, modes, and configurator",
+    icon: "layout",
+    connectionStatus: ServiceConnected, // Local state management, always available
+    hasBackend: true, // System info queries via Tauri
+  },
+  {
+    id: PanelCapture,
+    name: "Capture",
+    shortName: "Cap",
+    description: "Screenshots, recordings, demos, panel cloning, and comparison views",
+    icon: "camera",
+    connectionStatus: ServiceConnected, // Local file I/O, always available
+    hasBackend: true, // File saving via Tauri
+  },
+  {
+    id: PanelSecurity,
+    name: "Security",
+    shortName: "Sec",
+    description: "Secrets redaction, vault, 2FA, Trustfile enforcement, shoulder-safe mode",
+    icon: "lock",
+    connectionStatus: ServiceConnected, // Local + vault CLI, always available
+    hasBackend: true, // Redaction regex + vault I/O via Tauri
+  },
 ]
 
 /// Look up panel metadata by ID.

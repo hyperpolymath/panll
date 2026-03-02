@@ -381,6 +381,41 @@ type provisionerMsg =
   /// Save the custom portfolio.
   | SaveCustomPortfolio
 
+/// Code MRI VoiceTag messages — tag CRUD, voice input lifecycle, file I/O,
+/// and filter controls. VoiceTag is an ambient annotation system (Layer 0)
+/// that stores tags as portable `.mri.json` sidecar files.
+type voiceTagMsg =
+  /// Load tags from the .mri.json sidecar for the current file.
+  | LoadFileTags
+  /// Tags loaded from disk (or error).
+  | TagsLoaded(result<string, string>)
+  /// Tags saved to disk (or error).
+  | TagsSaved(result<string, string>)
+  /// Sidecar deleted (or error).
+  | SidecarDeleted(result<string, string>)
+  /// Project scan result (list of all .mri.json files).
+  | ProjectScanned(result<string, string>)
+  /// Select a tag by ID (for voice reference or click).
+  | SelectTag(option<int>)
+  /// Delete a tag by ID.
+  | DeleteTagById(int)
+  /// Resolve a tag by ID.
+  | ResolveTagById(int)
+  /// Set the type filter.
+  | SetFilterType(option<mriTagType>)
+  /// Toggle showing resolved tags.
+  | ToggleShowResolved
+  /// Start voice recognition.
+  | StartVoice
+  /// Stop voice recognition.
+  | StopVoice
+  /// Voice transcript received from Web Speech API.
+  | VoiceTranscript(string)
+  /// Voice recognition error.
+  | VoiceError(string)
+  /// Set current file path (when user opens a file).
+  | SetCurrentFile(string)
+
 /// Provenance Map messages — code trust surface lifecycle.
 /// The provenance map is ambient (always visible), not a panel overlay.
 /// These messages handle file analysis, palette switching, and hostile UX.
@@ -418,6 +453,82 @@ type watcherMsg =
   /// A filesystem event arrived from the Rust watcher.
   | FileEvent(watchEvent)
 
+/// AI panel messages — multi-provider neural interface for sending messages,
+/// managing providers, building context, and controlling the conversation.
+type aiMsg =
+  /// Send a message to the current provider (or broadcast to all enabled).
+  | SendMessage
+  /// Message response received from a provider.
+  | MessageReceived(result<string, string>)
+  /// Update the input text field.
+  | SetAiInput(string)
+  /// Switch the active category tab.
+  | SetAiCategory(aiCategory)
+  /// Toggle broadcast mode (send to multiple providers simultaneously).
+  | ToggleBroadcast
+  /// Check provider health/auth status.
+  | CheckProvider(aiProviderId)
+  /// Provider health check result.
+  | ProviderChecked(aiProviderId, result<string, string>)
+  /// Change the selected model for a provider.
+  | SetAiModel(aiProviderId, string)
+  /// Model change confirmed.
+  | ModelSet(result<string, string>)
+  /// Change a provider's precedence ranking.
+  | SetAiPriority(aiProviderId, int)
+  /// Priority change confirmed.
+  | PrioritySet(result<string, string>)
+  /// Enable or disable a provider (mute/unmute).
+  | ToggleAiProvider(aiProviderId)
+  /// Provider toggle confirmed.
+  | ProviderToggled(result<string, string>)
+  /// Clear the conversation history.
+  | ClearAiHistory
+  /// History cleared confirmed.
+  | HistoryCleared(result<string, string>)
+  /// Build context from a loaded repo.
+  | BuildContext(string)
+  /// Context built.
+  | ContextBuilt(result<string, string>)
+  /// Load provider state from disk.
+  | LoadProviderState
+  /// Provider state loaded.
+  | ProviderStateLoaded(result<string, string>)
+  /// Update the system prompt override.
+  | SetSystemPrompt(string)
+  /// Mark a provider as quota-exhausted (429 received).
+  | MarkQuotaExhausted(aiProviderId)
+
+/// Repo Loader messages — repository scanning, panel configuration,
+/// directory picking, and recent repo management.
+type repoLoaderMsg =
+  /// Open directory picker to select a repo.
+  | PickRepoDirectory
+  /// Directory picked (or cancelled).
+  | DirectoryPicked(result<string, string>)
+  /// Scan a repo by path.
+  | ScanRepo(string)
+  /// Scan result received.
+  | ScanResult(result<string, string>)
+  /// Toggle a panel suggestion's enabled state.
+  | ToggleSuggestion(string)
+  /// Save panel configuration to PANELS.a2ml.
+  | SavePanels
+  /// Panels saved.
+  | PanelsSaved(result<string, string>)
+  /// Load recent repos list.
+  | LoadRecent
+  /// Recent repos loaded.
+  | RecentLoaded(result<string, string>)
+  /// Search the git-private-farm.
+  | SearchFarm(string)
+  /// Farm search results.
+  | FarmSearchResult(result<string, string>)
+  /// Update the search text.
+  | SetRepoSearchText(string)
+  /// Switch category tab.
+  | SetRepoCategory(repoLoaderCategory)
+
 /// Panel switcher messages — unified panel navigation replacing ad-hoc
 /// `visible: bool` toggles on individual overlays. The panel bar dispatches
 /// these when the operator clicks an icon.
@@ -428,6 +539,175 @@ type panelSwitcherMsg =
   | ClosePanels
   /// Health check result for a panel's backend service.
   | HealthCheckResult(panelId, result<string, string>)
+
+/// Workspace messages — panel groups, arrangements, sessions, modes,
+/// protection levels, execution modes, checkpoints (DD-022–DD-027).
+type workspaceMsg =
+  /// Set the workspace mode (Rhodium, Everything, Code, Bespoke).
+  | SetWorkspaceMode(workspaceMode)
+  /// Cycle to the next workspace mode.
+  | CycleWorkspaceMode
+  /// Set session protection level.
+  | SetProtection(sessionProtection)
+  /// Set execution mode (Live, DryRun, Simulation, Emulation).
+  | SetExecutionMode(executionMode)
+  /// Create a panel group.
+  | CreateGroup(string, string, array<string>)
+  /// Disband a panel group.
+  | DisbandGroup(string)
+  /// Lock/unlock a group's arrangement.
+  | ToggleGroupLock(string)
+  /// Toggle group visibility.
+  | ToggleGroupVisibility(string)
+  /// Push a group to back.
+  | PushToBack(string)
+  /// Pull a group to front.
+  | PullToFront(string)
+  /// Save current layout as a named arrangement.
+  | SaveArrangement(string, string)
+  /// Load a saved arrangement by ID.
+  | LoadArrangement(string)
+  /// Delete a saved arrangement.
+  | DeleteArrangement(string)
+  /// Arrangements loaded from disk.
+  | ArrangementsLoaded(result<string, string>)
+  /// Create a new session.
+  | CreateSession(string, string)
+  /// Fork the current session.
+  | ForkSession(string, string)
+  /// Delete a session.
+  | DeleteSession(string)
+  /// Switch active session.
+  | SwitchSession(string)
+  /// Sessions loaded from disk.
+  | SessionsLoaded(result<string, string>)
+  /// Add a checkpoint to the current session.
+  | AddCheckpoint(string, string)
+  /// System info loaded (CPU, memory, disk).
+  | SystemInfoLoaded(result<string, string>)
+  /// Open/close the configurator.
+  | ToggleConfigurator
+  /// Switch configurator tab.
+  | SetConfiguratorTab(configuratorTab)
+  /// View repo metadata item.
+  | ViewMetadata(repoMetadataItem)
+  /// Close metadata viewer.
+  | CloseMetadata
+  /// Metadata content loaded.
+  | MetadataLoaded(result<string, string>)
+  /// Reset a single panel to its default state.
+  | ResetPanel(string)
+  /// Reset all panels to defaults.
+  | ResetAllPanels
+
+/// Capture messages — screenshots, recordings, demos, cloning (DD-022).
+type captureMsg =
+  /// Take a screenshot of a panel.
+  | CaptureScreenshot(string)
+  /// Screenshot saved to disk.
+  | ScreenshotSaved(result<string, string>)
+  /// Start recording a panel.
+  | StartRecording(string)
+  /// Stop recording.
+  | StopRecording
+  /// Pause/resume recording.
+  | TogglePauseRecording
+  /// Print the active panel.
+  | PrintPanel(string)
+  /// Print result.
+  | PrintResult(result<string, string>)
+  /// Toggle capture selection for a panel (multi-panel capture).
+  | ToggleCaptureSelection(string)
+  /// Clear capture selection.
+  | ClearCaptureSelection
+  /// Capture all selected panels.
+  | CaptureSelected
+  /// Capture full environment.
+  | CaptureFullEnvironment
+  /// Toggle capture bar visibility.
+  | ToggleCaptureBar
+  /// Clone a panel's state.
+  | ClonePanel(string)
+  /// Remove a clone.
+  | RemoveClone(string)
+  /// Enter comparison mode.
+  | SetComparison(comparisonMode)
+  /// Exit comparison mode.
+  | ExitComparison
+  /// Start demo playback.
+  | StartDemo(string)
+  /// Stop demo playback.
+  | StopDemo
+  /// Next demo step.
+  | NextDemoStep
+  /// Previous demo step.
+  | PrevDemoStep
+  /// Save a demo package.
+  | SaveDemo
+  /// Demo saved to disk.
+  | DemoSaved(result<string, string>)
+  /// Load demos from disk.
+  | LoadDemos
+  /// Demos loaded.
+  | DemosLoaded(result<string, string>)
+  /// Set capture category tab.
+  | SetCaptureCategory(captureCategory)
+  /// Remove a capture entry.
+  | RemoveCapture(string)
+
+/// Security messages — redaction, vault, 2FA, Trustfile (DD-026/027).
+type securityMsg =
+  /// Toggle a redaction pattern's enabled state.
+  | TogglePattern(string)
+  /// Add a custom redaction pattern.
+  | AddPattern(redactionPattern)
+  /// Remove a custom pattern.
+  | RemovePattern(string)
+  /// Set the redaction mode.
+  | SetRedactionMode(redactionMode)
+  /// Request text redaction via backend.
+  | RedactText(string, string)
+  /// Redaction result from backend.
+  | RedactionResult(result<string, string>)
+  /// Store a secret in the vault.
+  | VaultStore(string, string)
+  /// Vault store result.
+  | VaultStoreResult(result<string, string>)
+  /// Retrieve a secret from the vault.
+  | VaultRetrieve(string)
+  /// Vault retrieve result.
+  | VaultRetrieveResult(result<string, string>)
+  /// List vault keys.
+  | VaultList
+  /// Vault list result.
+  | VaultListResult(result<string, string>)
+  /// Submit TOTP code for 2FA.
+  | SubmitTotp(string)
+  /// 2FA verification result.
+  | TotpResult(result<string, string>)
+  /// Update TOTP input field.
+  | SetTotpInput(string)
+  /// Load Trustfile from repo.
+  | LoadTrustfile(string)
+  /// Trustfile loaded.
+  | TrustfileLoaded(result<string, string>)
+  /// Toggle shoulder-safe mode.
+  | ToggleShoulderSafe
+  /// Set security category tab.
+  | SetSecurityCategory(securityCategory)
+
+/// Keybindings messages — rebinding, recording, reset.
+type keybindingsMsg =
+  /// Start recording a new keybinding for an action.
+  | StartRecording(keybindingAction)
+  /// A key was pressed while recording.
+  | RecordKey(keyChord)
+  /// Cancel recording.
+  | CancelRecording
+  /// Reset a single binding to default.
+  | ResetBinding(keybindingAction)
+  /// Reset all bindings to defaults.
+  | ResetAllBindings
 
 /// The unified message type
 type msg =
@@ -453,8 +733,17 @@ type msg =
   | Playgrounds(playgroundsMsg) // Code sandbox
   | Minter(minterMsg) // Panel Minter wizard
   | Provisioner(provisionerMsg) // Portfolio bundles, config, isolation
+  | VoiceTag(voiceTagMsg) // Code MRI Layer 0 — voice-activated annotation
   | Provenance(provenanceMsg) // Code trust surface (core infrastructure)
   | Watcher(watcherMsg) // Filesystem observation (core infrastructure)
+  | Ai(aiMsg) // Multi-provider AI neural interface
+  | RepoLoader(repoLoaderMsg) // Repository scanner and panel configuration
   | PanelSwitcher(panelSwitcherMsg) // Panel navigation and health checks
+  | Workspace(workspaceMsg) // Workspace management layer (DD-022–DD-027)
+  | Capture(captureMsg) // Screenshots, recordings, demos (DD-022)
+  | Security(securityMsg) // Redaction, vault, 2FA, Trustfile (DD-026/027)
+  | Keybindings(keybindingsMsg) // Keyboard shortcut management
+  | Undo // Undo last significant action
+  | Redo // Redo last undone action
   | SaveState // Persist current state to storage
   | NoOp

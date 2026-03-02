@@ -2956,6 +2956,288 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
 }
 
 // ===========================================================================
+// VoiceTag Sub-Updater (Code MRI Layer 0)
+// ===========================================================================
+
+/// STATE TRANSITION: VoiceTag (Code MRI Layer 0 — voice-activated annotation)
+///
+/// Handles tag CRUD operations, voice input lifecycle, file I/O for .mri.json
+/// sidecars, filter state, and voice command parsing. Tags are stored as
+/// portable .mri.json sidecar files alongside source files — any tool can
+/// consume them without PanLL installed.
+let updateVoiceTag = (model: model, msg: voiceTagMsg): (model, Tea_Cmd.t<msg>) => {
+  let vt = model.voiceTag
+  switch msg {
+  | LoadFileTags =>
+    switch vt.currentFile {
+    | Some(filePath) => (
+        {...model, voiceTag: {...vt, error: None}},
+        VoiceTagCmd.loadTags(filePath, result => VoiceTag(TagsLoaded(result))),
+      )
+    | None => (
+        {...model, voiceTag: {...vt, error: Some("No file selected")}},
+        Tea_Cmd.none,
+      )
+    }
+  | TagsLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        // Parse the .mri.json content. For now, extract tags array from JSON.
+        // Full parsing deferred to when we have proper JSON codec — store raw.
+        try {
+          let parsed = JSON.parseExn(jsonStr)
+          switch JSON.Classify.classify(parsed) {
+          | JSON.Classify.Object(dict) => {
+              let tags = switch dict->Dict.get("tags") {
+              | Some(tagsJson) =>
+                switch JSON.Classify.classify(tagsJson) {
+                | JSON.Classify.Array(arr) =>
+                  arr->Array.mapWithIndex((json, idx) => {
+                    // Minimal tag parsing — extract what we can from each JSON object
+                    switch JSON.Classify.classify(json) {
+                    | JSON.Classify.Object(tagDict) => {
+                        let getStr = (key: string): string =>
+                          switch tagDict->Dict.get(key) {
+                          | Some(v) =>
+                            switch JSON.Classify.classify(v) {
+                            | JSON.Classify.String(s) => s
+                            | _ => ""
+                            }
+                          | None => ""
+                          }
+                        let getInt = (key: string): int =>
+                          switch tagDict->Dict.get(key) {
+                          | Some(v) =>
+                            switch JSON.Classify.classify(v) {
+                            | JSON.Classify.Number(n) => Float.toInt(n)
+                            | _ => 0
+                            }
+                          | None => 0
+                          }
+                        let getBool = (key: string): bool =>
+                          switch tagDict->Dict.get(key) {
+                          | Some(v) =>
+                            switch JSON.Classify.classify(v) {
+                            | JSON.Classify.Bool(b) => b
+                            | _ => false
+                            }
+                          | None => false
+                          }
+                        let getOptStr = (key: string): option<string> =>
+                          switch tagDict->Dict.get(key) {
+                          | Some(v) =>
+                            switch JSON.Classify.classify(v) {
+                            | JSON.Classify.String(s) => Some(s)
+                            | JSON.Classify.Null => None
+                            | _ => None
+                            }
+                          | None => None
+                          }
+                        let tag: mriTag = {
+                          id: getInt("id") > 0 ? getInt("id") : idx + 1,
+                          startLine: getInt("startLine"),
+                          endLine: getInt("endLine"),
+                          tagType: VoiceTagEngine.tagTypeFromString(getStr("tagType")),
+                          message: getOptStr("message"),
+                          attribution: {
+                            agent: getStr("agent") === "" ? "human" : getStr("agent"),
+                            method: VoiceTagEngine.methodFromString(getStr("method")),
+                            timestamp: switch tagDict->Dict.get("timestamp") {
+                            | Some(v) =>
+                              switch JSON.Classify.classify(v) {
+                              | JSON.Classify.Number(n) => n
+                              | _ => 0.0
+                              }
+                            | None => 0.0
+                            },
+                            sessionId: None,
+                          },
+                          codeAuthor: None,
+                          resolved: getBool("resolved"),
+                          resolvedBy: None,
+                        }
+                        tag
+                      }
+                    | _ => {
+                        let fallback: mriTag = {
+                          id: idx + 1,
+                          startLine: 0,
+                          endLine: 0,
+                          tagType: Note,
+                          message: Some("(malformed tag)"),
+                          attribution: {agent: "unknown", method: Import("parse-error"), timestamp: 0.0, sessionId: None},
+                          codeAuthor: None,
+                          resolved: false,
+                          resolvedBy: None,
+                        }
+                        fallback
+                      }
+                    }
+                  })
+                | _ => []
+                }
+              | None => []
+              }
+              let summary = VoiceTagEngine.computeSummary(tags)
+              (
+                {
+                  ...model,
+                  voiceTag: {
+                    ...vt,
+                    tags,
+                    summary,
+                    error: None,
+                  },
+                },
+                Tea_Cmd.none,
+              )
+            }
+          | _ => ({...model, voiceTag: {...vt, tags: [], error: None}}, Tea_Cmd.none)
+          }
+        } catch {
+        | _ => (
+            {...model, voiceTag: {...vt, error: Some("Failed to parse .mri.json")}},
+            Tea_Cmd.none,
+          )
+        }
+      }
+    | Error(e) => (
+        {...model, voiceTag: {...vt, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | TagsSaved(result) =>
+    switch result {
+    | Ok(_) => ({...model, voiceTag: {...vt, error: None}}, Tea_Cmd.none)
+    | Error(e) => ({...model, voiceTag: {...vt, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | SidecarDeleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, voiceTag: {...vt, error: None}}, Tea_Cmd.none)
+    | Error(e) => ({...model, voiceTag: {...vt, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | ProjectScanned(result) =>
+    switch result {
+    | Ok(_jsonStr) =>
+      // TODO: Parse scan results and populate a project-wide tag summary.
+      (model, Tea_Cmd.none)
+    | Error(e) => ({...model, voiceTag: {...vt, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | SelectTag(id) => (
+      {...model, voiceTag: {...vt, selectedTagId: id}},
+      Tea_Cmd.none,
+    )
+  | DeleteTagById(id) => {
+      let newTags = VoiceTagEngine.removeTag(vt.tags, id)
+      let newSummary = VoiceTagEngine.computeSummary(newTags)
+      let newModel = {
+        ...model,
+        voiceTag: {...vt, tags: newTags, summary: newSummary, selectedTagId: None},
+      }
+      // Auto-save after deletion. If no tags remain, delete the sidecar.
+      switch vt.currentFile {
+      | Some(filePath) =>
+        if Array.length(newTags) === 0 {
+          (newModel, VoiceTagCmd.deleteSidecar(filePath, result => VoiceTag(SidecarDeleted(result))))
+        } else {
+          // Serialise and save — simplified JSON output for now.
+          let json = `{"version":"1.0","sourceFile":"${filePath}","tags":[],"lastModified":${Float.toString(Date.now())}}`
+          (newModel, VoiceTagCmd.saveTags(filePath, json, result => VoiceTag(TagsSaved(result))))
+        }
+      | None => (newModel, Tea_Cmd.none)
+      }
+    }
+  | ResolveTagById(id) => {
+      let newTags = VoiceTagEngine.resolveTag(vt.tags, id, "human")
+      let newSummary = VoiceTagEngine.computeSummary(newTags)
+      (
+        {...model, voiceTag: {...vt, tags: newTags, summary: newSummary}},
+        Tea_Cmd.none,
+      )
+    }
+  | SetFilterType(filterType) => (
+      {...model, voiceTag: {...vt, filterType}},
+      Tea_Cmd.none,
+    )
+  | ToggleShowResolved => (
+      {...model, voiceTag: {...vt, showResolved: !vt.showResolved}},
+      Tea_Cmd.none,
+    )
+  | StartVoice => (
+      {...model, voiceTag: {...vt, voice: VoiceListening, error: None}},
+      Tea_Cmd.none,
+    )
+  | StopVoice => (
+      {...model, voiceTag: {...vt, voice: VoiceOff}},
+      Tea_Cmd.none,
+    )
+  | VoiceTranscript(transcript) => {
+      // Parse the voice command and apply it.
+      let cmd = VoiceTagEngine.parseVoiceCommand(transcript)
+      switch cmd {
+      | VoiceTagEngine.TagRange(startLine, endLine, tagType, message) => {
+          let newTag = VoiceTagEngine.createTagWithAttribution(
+            vt.tags, startLine, endLine, tagType, message, "human", Voice,
+          )
+          let newTags = VoiceTagEngine.addTag(vt.tags, newTag)
+          let newSummary = VoiceTagEngine.computeSummary(newTags)
+          (
+            {...model, voiceTag: {...vt, tags: newTags, summary: newSummary, voice: VoiceOff}},
+            Tea_Cmd.none,
+          )
+        }
+      | VoiceTagEngine.TagSelection(tagType, message) => {
+          // Tag at line 1 (no selection context available — future: use editor selection).
+          let newTag = VoiceTagEngine.createTagWithAttribution(
+            vt.tags, 1, 1, tagType, message, "human", Voice,
+          )
+          let newTags = VoiceTagEngine.addTag(vt.tags, newTag)
+          let newSummary = VoiceTagEngine.computeSummary(newTags)
+          (
+            {...model, voiceTag: {...vt, tags: newTags, summary: newSummary, voice: VoiceOff}},
+            Tea_Cmd.none,
+          )
+        }
+      | VoiceTagEngine.DeleteTag(id) => {
+          let newTags = VoiceTagEngine.removeTag(vt.tags, id)
+          let newSummary = VoiceTagEngine.computeSummary(newTags)
+          ({...model, voiceTag: {...vt, tags: newTags, summary: newSummary, voice: VoiceOff}}, Tea_Cmd.none)
+        }
+      | VoiceTagEngine.ResolveTag(id) => {
+          let newTags = VoiceTagEngine.resolveTag(vt.tags, id, "human")
+          let newSummary = VoiceTagEngine.computeSummary(newTags)
+          ({...model, voiceTag: {...vt, tags: newTags, summary: newSummary, voice: VoiceOff}}, Tea_Cmd.none)
+        }
+      | VoiceTagEngine.ShowTag(id) => (
+          {...model, voiceTag: {...vt, selectedTagId: Some(id), voice: VoiceOff}},
+          Tea_Cmd.none,
+        )
+      | VoiceTagEngine.ShowAll(maybeType) => (
+          {...model, voiceTag: {...vt, filterType: maybeType, voice: VoiceOff}},
+          Tea_Cmd.none,
+        )
+      | VoiceTagEngine.EditTag(_) | VoiceTagEngine.WhoWroteLine(_)
+      | VoiceTagEngine.AttributeHuman | VoiceTagEngine.AttributeAi(_) =>
+        // These commands need editor integration — stub for now.
+        ({...model, voiceTag: {...vt, voice: VoiceOff}}, Tea_Cmd.none)
+      | VoiceTagEngine.VoiceUnrecognised(raw) => (
+          {...model, voiceTag: {...vt, voice: VoiceError(`Unrecognised: "${raw}"`)}},
+          Tea_Cmd.none,
+        )
+      }
+    }
+  | VoiceError(err) => (
+      {...model, voiceTag: {...vt, voice: VoiceError(err)}},
+      Tea_Cmd.none,
+    )
+  | SetCurrentFile(filePath) => (
+      {...model, voiceTag: {...vt, currentFile: Some(filePath), tags: [], summary: VoiceTagEngine.emptySummary, error: None}},
+      VoiceTagCmd.loadTags(filePath, result => VoiceTag(TagsLoaded(result))),
+    )
+  }
+}
+
+// ===========================================================================
 // Provenance Sub-Updater (Core Infrastructure)
 // ===========================================================================
 
@@ -3118,6 +3400,421 @@ let updateWatcher = (model: model, msg: watcherMsg): (model, Tea_Cmd.t<msg>) => 
   }
 }
 
+// ===========================================================================
+// AI Sub-Updater (Multi-Provider Neural Interface)
+// ===========================================================================
+
+/// STATE TRANSITION: AI (multi-provider neural interface)
+///
+/// Handles message sending to AI providers, provider management (enable/disable,
+/// model selection, priority), system prompt context building, and conversation
+/// state. Provider precedence with automatic 429 fallthrough ensures continuous
+/// service even when a provider's quota is exhausted.
+let updateAi = (model: model, msg: aiMsg): (model, Tea_Cmd.t<msg>) => {
+  let ai = model.ai
+  switch msg {
+  | SendMessage => {
+      if ai.inputText === "" {
+        (model, Tea_Cmd.none)
+      } else {
+        // Create the user message.
+        let userMsg: aiMessage = {
+          role: User,
+          content: ai.inputText,
+          provider: None,
+          model: None,
+          inputTokens: 0,
+          outputTokens: 0,
+          timestamp: Date.now(),
+        }
+        let newMessages = Array.concat(ai.messages, [userMsg])
+        // Select provider by priority.
+        let selectedProvider = AiEngine.selectProvider(ai.providers)
+        let providerId = switch selectedProvider {
+        | Some(p) => Some(AiEngine.providerIdToString(p.id))
+        | None => None
+        }
+        // Build history as a simple JSON array for the Tauri backend.
+        // We pass an empty array; the backend rebuilds from the request.
+        let history: array<JSON.t> = []
+        (
+          {
+            ...model,
+            ai: {
+              ...ai,
+              messages: newMessages,
+              inputText: "",
+              loading: true,
+              error: None,
+            },
+          },
+          AiCmd.sendMessage(
+            userMsg.content,
+            history,
+            ai.systemPrompt,
+            providerId,
+            ai.broadcastMode,
+            result => Ai(MessageReceived(result)),
+          ),
+        )
+      }
+    }
+  | MessageReceived(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        switch AiEngine.parseMessageResponse(jsonStr) {
+        | Ok(aiMessage) => (
+            {
+              ...model,
+              ai: {
+                ...ai,
+                messages: Array.concat(ai.messages, [aiMessage]),
+                loading: false,
+                error: None,
+                totalInputTokens: ai.totalInputTokens + aiMessage.inputTokens,
+                totalOutputTokens: ai.totalOutputTokens + aiMessage.outputTokens,
+              },
+            },
+            Tea_Cmd.none,
+          )
+        | Error("quota_exhausted") => {
+            // Mark provider as exhausted and auto-retry with next provider.
+            let exhaustedProvider = AiEngine.selectProvider(ai.providers)
+            switch exhaustedProvider {
+            | Some(p) => {
+                let newProviders = ai.providers->Array.map(pc =>
+                  if pc.id === p.id {
+                    {...pc, quotaExhausted: true}
+                  } else {
+                    pc
+                  }
+                )
+                let newStatuses = ai.providerStatuses->Array.map(((id, status)) =>
+                  if id === p.id {
+                    (id, (QuotaExhausted: aiProviderStatus))
+                  } else {
+                    (id, status)
+                  }
+                )
+                (
+                  {
+                    ...model,
+                    ai: {
+                      ...ai,
+                      providers: newProviders,
+                      providerStatuses: newStatuses,
+                      loading: false,
+                      error: Some(`${AiEngine.providerShortLabel(p.id)} quota exhausted — falling through to next provider`),
+                    },
+                  },
+                  Tea_Cmd.none,
+                )
+              }
+            | None => (
+                {...model, ai: {...ai, loading: false, error: Some("All providers exhausted")}},
+                Tea_Cmd.none,
+              )
+            }
+          }
+        | Error(e) => (
+            {...model, ai: {...ai, loading: false, error: Some(e)}},
+            Tea_Cmd.none,
+          )
+        }
+      }
+    | Error(e) => (
+        {...model, ai: {...ai, loading: false, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | SetAiInput(text) => ({...model, ai: {...ai, inputText: text}}, Tea_Cmd.none)
+  | SetAiCategory(cat) => ({...model, ai: {...ai, activeCategory: cat}}, Tea_Cmd.none)
+  | ToggleBroadcast => ({...model, ai: {...ai, broadcastMode: !ai.broadcastMode}}, Tea_Cmd.none)
+  | CheckProvider(id) => {
+      let newStatuses = ai.providerStatuses->Array.map(((pid, status)) =>
+        if pid === id { (pid, (Checking: aiProviderStatus)) } else { (pid, status) }
+      )
+      (
+        {...model, ai: {...ai, providerStatuses: newStatuses}},
+        AiCmd.checkProvider(AiEngine.providerIdToString(id), result =>
+          Ai(ProviderChecked(id, result))
+        ),
+      )
+    }
+  | ProviderChecked(id, result) => {
+      let newStatus = switch result {
+      | Ok(jsonStr) => {
+          try {
+            let parsed = JSON.parseExn(jsonStr)
+            switch JSON.Classify.classify(parsed) {
+            | Object(obj) =>
+              switch Dict.get(obj, "status") {
+              | Some(v) =>
+                switch JSON.Classify.classify(v) {
+                | String("ready") => (Ready: aiProviderStatus)
+                | String("no_key") => NoKey
+                | String("disabled") => Disabled
+                | String("error") => {
+                    let detail = switch Dict.get(obj, "detail") {
+                    | Some(d) =>
+                      switch JSON.Classify.classify(d) {
+                      | String(s) => s
+                      | _ => "Unknown error"
+                      }
+                    | None => "Unknown error"
+                    }
+                    AiProviderError(detail)
+                  }
+                | _ => AiProviderError("Unknown status")
+                }
+              | None => AiProviderError("Missing status")
+              }
+            | _ => AiProviderError("Invalid response")
+            }
+          } catch {
+          | _ => AiProviderError("Parse error")
+          }
+        }
+      | Error(e) => AiProviderError(e)
+      }
+      let newStatuses = ai.providerStatuses->Array.map(((pid, status)) =>
+        if pid === id { (pid, newStatus) } else { (pid, status) }
+      )
+      ({...model, ai: {...ai, providerStatuses: newStatuses}}, Tea_Cmd.none)
+    }
+  | SetAiModel(id, newModel) => {
+      let newProviders = ai.providers->Array.map(p =>
+        if p.id === id { {...p, selectedModel: newModel} } else { p }
+      )
+      (
+        {...model, ai: {...ai, providers: newProviders}},
+        AiCmd.setModel(AiEngine.providerIdToString(id), newModel, result =>
+          Ai(ModelSet(result))
+        ),
+      )
+    }
+  | ModelSet(_result) => (model, Tea_Cmd.none)
+  | SetAiPriority(id, priority) => {
+      let newProviders = ai.providers->Array.map(p =>
+        if p.id === id { {...p, priority} } else { p }
+      )
+      (
+        {...model, ai: {...ai, providers: newProviders}},
+        AiCmd.setPriority(AiEngine.providerIdToString(id), priority, result =>
+          Ai(PrioritySet(result))
+        ),
+      )
+    }
+  | PrioritySet(_result) => (model, Tea_Cmd.none)
+  | ToggleAiProvider(id) => {
+      let newProviders = ai.providers->Array.map(p =>
+        if p.id === id { {...p, enabled: !p.enabled} } else { p }
+      )
+      let newStatuses = ai.providerStatuses->Array.map(((pid, status)) =>
+        if pid === id {
+          let provider = newProviders->Array.find(p => p.id === id)
+          let isEnabled = switch provider {
+          | Some(p) => p.enabled
+          | None => false
+          }
+          (pid, isEnabled ? (Ready: aiProviderStatus) : Disabled)
+        } else {
+          (pid, status)
+        }
+      )
+      (
+        {...model, ai: {...ai, providers: newProviders, providerStatuses: newStatuses}},
+        AiCmd.toggleProvider(AiEngine.providerIdToString(id), result =>
+          Ai(ProviderToggled(result))
+        ),
+      )
+    }
+  | ProviderToggled(_result) => (model, Tea_Cmd.none)
+  | ClearAiHistory => (
+      {
+        ...model,
+        ai: {
+          ...ai,
+          messages: [],
+          totalInputTokens: 0,
+          totalOutputTokens: 0,
+          error: None,
+        },
+      },
+      AiCmd.clearHistory(result => Ai(HistoryCleared(result))),
+    )
+  | HistoryCleared(_result) => (model, Tea_Cmd.none)
+  | BuildContext(repoPath) => (
+      model,
+      AiCmd.buildContext(repoPath, result => Ai(ContextBuilt(result))),
+    )
+  | ContextBuilt(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        try {
+          let parsed = JSON.parseExn(jsonStr)
+          switch JSON.Classify.classify(parsed) {
+          | Object(obj) =>
+            switch Dict.get(obj, "context") {
+            | Some(v) =>
+              switch JSON.Classify.classify(v) {
+              | String(ctx) => (
+                  {
+                    ...model,
+                    ai: {
+                      ...ai,
+                      autoContext: ctx,
+                      systemPrompt: ai.systemPrompt ++ "\n\n" ++ ctx,
+                    },
+                  },
+                  Tea_Cmd.none,
+                )
+              | _ => (model, Tea_Cmd.none)
+              }
+            | None => (model, Tea_Cmd.none)
+            }
+          | _ => (model, Tea_Cmd.none)
+          }
+        } catch {
+        | _ => (model, Tea_Cmd.none)
+        }
+      }
+    | Error(_) => (model, Tea_Cmd.none)
+    }
+  | LoadProviderState => (model, AiCmd.getState(result => Ai(ProviderStateLoaded(result))))
+  | ProviderStateLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      switch AiEngine.parseProviderState(jsonStr) {
+      | Ok(providers) => ({...model, ai: {...ai, providers}}, Tea_Cmd.none)
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    | Error(_) => (model, Tea_Cmd.none)
+    }
+  | SetSystemPrompt(prompt) => ({...model, ai: {...ai, systemPrompt: prompt}}, Tea_Cmd.none)
+  | MarkQuotaExhausted(id) => {
+      let newProviders = ai.providers->Array.map(p =>
+        if p.id === id { {...p, quotaExhausted: true} } else { p }
+      )
+      let newStatuses = ai.providerStatuses->Array.map(((pid, status)) =>
+        if pid === id { (pid, (QuotaExhausted: aiProviderStatus)) } else { (pid, status) }
+      )
+      ({...model, ai: {...ai, providers: newProviders, providerStatuses: newStatuses}}, Tea_Cmd.none)
+    }
+  }
+}
+
+// ===========================================================================
+// Repo Loader Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: Repo Loader (repository scanning, panel configuration)
+///
+/// Handles directory picking, repo scanning, panel suggestion management,
+/// PANELS.a2ml saving, recent repo tracking, and farm search. When a repo
+/// is loaded, dispatches Ai(BuildContext) to give the AI panel repo awareness.
+let updateRepoLoader = (model: model, msg: repoLoaderMsg): (model, Tea_Cmd.t<msg>) => {
+  let rl = model.repoLoader
+  switch msg {
+  | PickRepoDirectory => (
+      model,
+      RepoLoaderCmd.pickDirectory(result => RepoLoader(DirectoryPicked(result))),
+    )
+  | DirectoryPicked(result) =>
+    switch result {
+    | Ok(path) => (
+        {...model, repoLoader: {...rl, scanning: true, error: None}},
+        RepoLoaderCmd.scan(path, result => RepoLoader(ScanResult(result))),
+      )
+    | Error(e) => ({...model, repoLoader: {...rl, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | ScanRepo(path) => (
+      {...model, repoLoader: {...rl, scanning: true, error: None}},
+      RepoLoaderCmd.scan(path, result => RepoLoader(ScanResult(result))),
+    )
+  | ScanResult(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      switch RepoLoaderEngine.parseScanResult(jsonStr) {
+      | Ok((repo, suggestions)) => (
+          {
+            ...model,
+            repoLoader: {
+              ...rl,
+              currentRepo: Some(repo),
+              suggestions,
+              scanning: false,
+              activeCategory: Configure,
+              saved: false,
+              error: None,
+            },
+          },
+          // Push context to AI panel.
+          Tea_Cmd.msg(Ai(BuildContext(repo.path))),
+        )
+      | Error(e) => (
+          {...model, repoLoader: {...rl, scanning: false, error: Some(e)}},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(e) => (
+        {...model, repoLoader: {...rl, scanning: false, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | ToggleSuggestion(panelName) => {
+      let newSuggestions = rl.suggestions->Array.map(s =>
+        if s.panelName === panelName { {...s, enabled: !s.enabled} } else { s }
+      )
+      ({...model, repoLoader: {...rl, suggestions: newSuggestions, saved: false}}, Tea_Cmd.none)
+    }
+  | SavePanels =>
+    switch rl.currentRepo {
+    | Some(repo) => {
+        // Serialise enabled suggestions as a JSON string for the backend.
+        let enabledPanels = rl.suggestions->Array.filter(s => s.enabled)
+        let jsonEntries = enabledPanels->Array.map(s => {
+          `{"name":"${s.panelName}","enabled":true,"priority":"${s.priority}"}`
+        })
+        let jsonStr = "[" ++ Array.join(jsonEntries, ",") ++ "]"
+        (
+          model,
+          RepoLoaderCmd.savePanels(repo.path, jsonStr, result =>
+            RepoLoader(PanelsSaved(result))
+          ),
+        )
+      }
+    | None => ({...model, repoLoader: {...rl, error: Some("No repo loaded")}}, Tea_Cmd.none)
+    }
+  | PanelsSaved(result) =>
+    switch result {
+    | Ok(_) => ({...model, repoLoader: {...rl, saved: true, error: None}}, Tea_Cmd.none)
+    | Error(e) => ({...model, repoLoader: {...rl, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | LoadRecent => (
+      model,
+      RepoLoaderCmd.listRecent(result => RepoLoader(RecentLoaded(result))),
+    )
+  | RecentLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        let paths = RepoLoaderEngine.parseRecentPaths(jsonStr)
+        ({...model, repoLoader: {...rl, recentPaths: paths}}, Tea_Cmd.none)
+      }
+    | Error(_) => (model, Tea_Cmd.none)
+    }
+  | SearchFarm(query) => (
+      model,
+      RepoLoaderCmd.searchFarm(query, result => RepoLoader(FarmSearchResult(result))),
+    )
+  | FarmSearchResult(_result) =>
+    // Farm search results are displayed directly — handled in UI.
+    (model, Tea_Cmd.none)
+  | SetRepoSearchText(text) => ({...model, repoLoader: {...rl, searchText: text}}, Tea_Cmd.none)
+  | SetRepoCategory(cat) => ({...model, repoLoader: {...rl, activeCategory: cat}}, Tea_Cmd.none)
+  }
+}
+
 /// Determines whether a message should trigger an auto-save.
 /// Returns false for NoOp and SaveState (no state change), true for everything else.
 let shouldAutoSave = (msg: msg): bool => {
@@ -3125,6 +3822,294 @@ let shouldAutoSave = (msg: msg): bool => {
   | NoOp => false
   | SaveState => false
   | _ => true
+  }
+}
+
+// ===========================================================================
+// Workspace Sub-Updater (DD-022–DD-027)
+// ===========================================================================
+
+/// STATE TRANSITION: Workspace — modes, groups, arrangements, sessions,
+/// protection, execution mode, checkpoints, metadata viewer.
+let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>) => {
+  let ws = model.workspace
+  switch msg {
+  | SetWorkspaceMode(mode) => ({...model, workspace: {...ws, mode}}, Tea_Cmd.none)
+  | CycleWorkspaceMode => ({...model, workspace: {...ws, mode: WorkspaceEngine.cycleMode(ws.mode)}}, Tea_Cmd.none)
+  | SetProtection(p) => ({...model, workspace: {...ws, protection: p}}, Tea_Cmd.none)
+  | SetExecutionMode(m) => ({...model, workspace: {...ws, executionMode: m}}, Tea_Cmd.none)
+  | CreateGroup(id, name, panelIds) =>
+    ({...model, workspace: {...ws, groups: WorkspaceEngine.createGroup(ws.groups, id, name, panelIds)}}, Tea_Cmd.none)
+  | DisbandGroup(id) =>
+    ({...model, workspace: {...ws, groups: WorkspaceEngine.disbandGroup(ws.groups, id)}}, Tea_Cmd.none)
+  | ToggleGroupLock(id) => {
+      let hasGroup = Array.find(ws.groups, g => g.id === id)
+      switch hasGroup {
+      | Some(g) =>
+        let newGroups = if g.locked {
+          WorkspaceEngine.unlockGroup(ws.groups, id)
+        } else {
+          WorkspaceEngine.lockGroup(ws.groups, id)
+        }
+        ({...model, workspace: {...ws, groups: newGroups}}, Tea_Cmd.none)
+      | None => (model, Tea_Cmd.none)
+      }
+    }
+  | ToggleGroupVisibility(id) =>
+    ({...model, workspace: {...ws, groups: WorkspaceEngine.toggleGroupVisibility(ws.groups, id)}}, Tea_Cmd.none)
+  | PushToBack(id) =>
+    ({...model, workspace: {...ws, groups: WorkspaceEngine.pushToBack(ws.groups, id)}}, Tea_Cmd.none)
+  | PullToFront(id) =>
+    ({...model, workspace: {...ws, groups: WorkspaceEngine.pullToFront(ws.groups, id)}}, Tea_Cmd.none)
+  | SaveArrangement(_id, _name) =>
+    // TODO: gather current positions and save via WorkspaceCmd
+    (model, Tea_Cmd.none)
+  | LoadArrangement(id) =>
+    ({...model, workspace: {...ws, activeArrangementId: Some(id)}}, Tea_Cmd.none)
+  | DeleteArrangement(id) =>
+    ({...model, workspace: {...ws, arrangements: WorkspaceEngine.deleteArrangement(ws.arrangements, id)}}, Tea_Cmd.none)
+  | ArrangementsLoaded(_result) =>
+    // TODO: parse JSON and merge with built-in arrangements
+    (model, Tea_Cmd.none)
+  | CreateSession(_id, _name) =>
+    // TODO: create session with current context
+    (model, Tea_Cmd.none)
+  | ForkSession(_newId, _newName) =>
+    // TODO: fork from active session
+    (model, Tea_Cmd.none)
+  | DeleteSession(id) =>
+    ({...model, workspace: {...ws, sessions: WorkspaceEngine.deleteSession(ws.sessions, id)}}, Tea_Cmd.none)
+  | SwitchSession(id) =>
+    ({...model, workspace: {...ws, activeSessionId: Some(id)}}, Tea_Cmd.none)
+  | SessionsLoaded(_result) =>
+    // TODO: parse JSON and populate sessions
+    (model, Tea_Cmd.none)
+  | AddCheckpoint(_id, _label) =>
+    // TODO: create checkpoint in active session
+    (model, Tea_Cmd.none)
+  | SystemInfoLoaded(result) => {
+      switch result {
+      | Ok(_jsonStr) =>
+        // TODO: parse SystemInfo JSON and update statusBar.systemInfo
+        (model, Tea_Cmd.none)
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    }
+  | ToggleConfigurator =>
+    ({...model, workspace: {...ws, configuratorOpen: !ws.configuratorOpen}}, Tea_Cmd.none)
+  | SetConfiguratorTab(tab) =>
+    ({...model, workspace: {...ws, configuratorTab: tab}}, Tea_Cmd.none)
+  | ViewMetadata(item) =>
+    ({...model, workspace: {...ws, viewingMetadata: Some(item)}}, Tea_Cmd.none)
+  | CloseMetadata =>
+    ({...model, workspace: {...ws, viewingMetadata: None, metadataContent: None}}, Tea_Cmd.none)
+  | MetadataLoaded(result) => {
+      switch result {
+      | Ok(content) =>
+        ({...model, workspace: {...ws, metadataContent: Some(content)}}, Tea_Cmd.none)
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    }
+  | ResetPanel(_panelId) =>
+    // TODO: reset individual panel to its defaultState
+    (model, Tea_Cmd.none)
+  | ResetAllPanels =>
+    // TODO: reset all panels to defaults, preserving user config
+    (model, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// Capture Sub-Updater (DD-022)
+// ===========================================================================
+
+/// STATE TRANSITION: Capture — screenshots, recordings, demos, cloning, comparison.
+let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => {
+  let cap = model.capture
+  switch msg {
+  | CaptureScreenshot(_panelId) =>
+    // TODO: invoke html2canvas in JS, send base64 to CaptureCmd.saveScreenshot
+    (model, Tea_Cmd.none)
+  | ScreenshotSaved(_result) =>
+    // TODO: parse result JSON and add to captures gallery
+    (model, Tea_Cmd.none)
+  | StartRecording(panelId) =>
+    ({...model, capture: CaptureEngine.startRecording(cap, panelId, 0.0)}, Tea_Cmd.none)
+  | StopRecording =>
+    ({...model, capture: CaptureEngine.stopRecording(cap)}, Tea_Cmd.none)
+  | TogglePauseRecording =>
+    ({...model, capture: switch cap.recording {
+    | Recording(_, _) => CaptureEngine.pauseRecording(cap, 0.0)
+    | Paused(_, _) => CaptureEngine.resumeRecording(cap, 0.0)
+    | NotRecording => cap
+    }}, Tea_Cmd.none)
+  | PrintPanel(panelId) =>
+    (model, CaptureCmd.printPanel(panelId))
+  | PrintResult(_result) => (model, Tea_Cmd.none)
+  | ToggleCaptureSelection(panelId) =>
+    ({...model, capture: CaptureEngine.toggleCaptureSelection(cap, panelId)}, Tea_Cmd.none)
+  | ClearCaptureSelection =>
+    ({...model, capture: CaptureEngine.clearSelection(cap)}, Tea_Cmd.none)
+  | CaptureSelected =>
+    // TODO: capture all selected panels as composite
+    (model, Tea_Cmd.none)
+  | CaptureFullEnvironment =>
+    // TODO: capture entire PanLL window
+    (model, Tea_Cmd.none)
+  | ToggleCaptureBar =>
+    ({...model, capture: {...cap, captureBarVisible: !cap.captureBarVisible}}, Tea_Cmd.none)
+  | ClonePanel(_panelId) =>
+    // TODO: snapshot panel state and create a panelClone
+    (model, Tea_Cmd.none)
+  | RemoveClone(cloneId) =>
+    ({...model, capture: CaptureEngine.removeClone(cap, cloneId)}, Tea_Cmd.none)
+  | SetComparison(mode) =>
+    ({...model, capture: {...cap, comparison: mode}}, Tea_Cmd.none)
+  | ExitComparison =>
+    ({...model, capture: CaptureEngine.exitComparison(cap)}, Tea_Cmd.none)
+  | StartDemo(demoId) =>
+    ({...model, capture: CaptureEngine.startDemo(cap, demoId)}, Tea_Cmd.none)
+  | StopDemo =>
+    ({...model, capture: CaptureEngine.stopDemo(cap)}, Tea_Cmd.none)
+  | NextDemoStep =>
+    ({...model, capture: CaptureEngine.nextDemoStep(cap)}, Tea_Cmd.none)
+  | PrevDemoStep =>
+    ({...model, capture: CaptureEngine.prevDemoStep(cap)}, Tea_Cmd.none)
+  | SaveDemo =>
+    // TODO: serialise active demo and call CaptureCmd.saveDemo
+    (model, Tea_Cmd.none)
+  | DemoSaved(_result) => (model, Tea_Cmd.none)
+  | LoadDemos => (model, CaptureCmd.loadDemos())
+  | DemosLoaded(_result) =>
+    // TODO: parse result and populate state.demos
+    (model, Tea_Cmd.none)
+  | SetCaptureCategory(cat) =>
+    ({...model, capture: {...cap, activeCategory: cat}}, Tea_Cmd.none)
+  | RemoveCapture(captureId) =>
+    ({...model, capture: CaptureEngine.removeCapture(cap, captureId)}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// Security Sub-Updater (DD-026/027)
+// ===========================================================================
+
+/// STATE TRANSITION: Security — redaction, vault, 2FA, Trustfile, shoulder-safe.
+let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) => {
+  let sec = model.security
+  switch msg {
+  | TogglePattern(id) =>
+    ({...model, security: SecurityEngine.togglePattern(sec, id)}, Tea_Cmd.none)
+  | AddPattern(pattern) =>
+    ({...model, security: SecurityEngine.addPattern(sec, pattern)}, Tea_Cmd.none)
+  | RemovePattern(id) =>
+    ({...model, security: SecurityEngine.removePattern(sec, id)}, Tea_Cmd.none)
+  | SetRedactionMode(mode) =>
+    ({...model, security: SecurityEngine.setRedactionMode(sec, mode)}, Tea_Cmd.none)
+  | RedactText(text, panelId) => {
+      let patternsJson = "[]" // TODO: serialise active patterns
+      (model, SecurityCmd.redactText(text, panelId, patternsJson))
+    }
+  | RedactionResult(_result) =>
+    // TODO: parse result and update detectedSecrets
+    (model, Tea_Cmd.none)
+  | VaultStore(key, value) =>
+    (model, SecurityCmd.vaultStore(key, value))
+  | VaultStoreResult(result) => {
+      switch result {
+      | Ok(_) => ({...model, security: {...sec, error: None}}, Tea_Cmd.none)
+      | Error(e) => ({...model, security: {...sec, error: Some(e)}}, Tea_Cmd.none)
+      }
+    }
+  | VaultRetrieve(key) =>
+    (model, SecurityCmd.vaultRetrieve(key))
+  | VaultRetrieveResult(result) => {
+      switch result {
+      | Ok(_value) =>
+        // Value is used by the caller, not stored in frontend state.
+        ({...model, security: {...sec, error: None}}, Tea_Cmd.none)
+      | Error(e) => ({...model, security: {...sec, error: Some(e)}}, Tea_Cmd.none)
+      }
+    }
+  | VaultList =>
+    (model, SecurityCmd.vaultList())
+  | VaultListResult(result) => {
+      switch result {
+      | Ok(_jsonStr) =>
+        // TODO: parse vault keys JSON and update vaultKeys
+        ({...model, security: {...sec, vaultStatus: VaultUnlocked}}, Tea_Cmd.none)
+      | Error(e) => ({...model, security: {...sec, error: Some(e), vaultStatus: VaultError(e)}}, Tea_Cmd.none)
+      }
+    }
+  | SubmitTotp(_code) =>
+    // TODO: verify TOTP via backend, update twoFactorStatus
+    (model, Tea_Cmd.none)
+  | TotpResult(result) => {
+      switch result {
+      | Ok(_) =>
+        ({...model, security: {...sec, twoFactorStatus: TwoFactorAuthenticated(0.0)}}, Tea_Cmd.none)
+      | Error(e) => ({...model, security: {...sec, error: Some(e)}}, Tea_Cmd.none)
+      }
+    }
+  | SetTotpInput(input) =>
+    ({...model, security: {...sec, totpInput: input}}, Tea_Cmd.none)
+  | LoadTrustfile(repoPath) =>
+    (model, SecurityCmd.loadTrustfile(repoPath))
+  | TrustfileLoaded(result) => {
+      switch result {
+      | Ok(_jsonStr) =>
+        // TODO: parse Trustfile JSON and apply via SecurityEngine.applyTrustfile
+        (model, Tea_Cmd.none)
+      | Error(e) => ({...model, security: {...sec, error: Some(e)}}, Tea_Cmd.none)
+      }
+    }
+  | ToggleShoulderSafe =>
+    ({...model, security: SecurityEngine.toggleShoulderSafe(sec)}, Tea_Cmd.none)
+  | SetSecurityCategory(cat) =>
+    ({...model, security: {...sec, activeCategory: cat}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// Keybindings Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: Keybindings — recording, rebinding, reset.
+let updateKeybindings = (model: model, msg: keybindingsMsg): model => {
+  let kb = model.keybindings
+  switch msg {
+  | StartRecording(action) =>
+    {...model, keybindings: {...kb, recording: true, recordingAction: Some(action)}}
+  | RecordKey(chord) =>
+    switch kb.recordingAction {
+    | Some(action) => {
+        let newBindings = KeybindingsEngine.rebind(kb.bindings, action, chord)
+        let conflicts = KeybindingsEngine.detectConflicts(newBindings)
+        {...model, keybindings: {
+          bindings: newBindings,
+          recording: false,
+          recordingAction: None,
+          conflicts,
+        }}
+      }
+    | None => {...model, keybindings: {...kb, recording: false, recordingAction: None}}
+    }
+  | CancelRecording =>
+    {...model, keybindings: {...kb, recording: false, recordingAction: None}}
+  | ResetBinding(action) => {
+      let newBindings = KeybindingsEngine.resetBinding(kb.bindings, action)
+      let conflicts = KeybindingsEngine.detectConflicts(newBindings)
+      {...model, keybindings: {...kb, bindings: newBindings, conflicts}}
+    }
+  | ResetAllBindings => {
+      let newBindings = KeybindingsEngine.resetAll()
+      {...model, keybindings: {
+        bindings: newBindings,
+        recording: false,
+        recordingAction: None,
+        conflicts: [],
+      }}
+    }
   }
 }
 
@@ -3162,9 +4147,26 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | Playgrounds(subMsg) => updatePlaygrounds(model, subMsg)
   | Minter(subMsg) => updateMinter(model, subMsg)
   | Provisioner(subMsg) => updateProvisioner(model, subMsg)
+  | VoiceTag(subMsg) => updateVoiceTag(model, subMsg)
   | Provenance(subMsg) => updateProvenance(model, subMsg)
   | Watcher(subMsg) => updateWatcher(model, subMsg)
+  | Ai(subMsg) => updateAi(model, subMsg)
+  | RepoLoader(subMsg) => updateRepoLoader(model, subMsg)
   | PanelSwitcher(subMsg) => updatePanelSwitcher(model, subMsg)
+  | Workspace(subMsg) => updateWorkspace(model, subMsg)
+  | Capture(subMsg) => updateCapture(model, subMsg)
+  | Security(subMsg) => updateSecurity(model, subMsg)
+  | Keybindings(subMsg) => (updateKeybindings(model, subMsg), Tea_Cmd.none)
+  | Undo => {
+      // Pop from undo stack, push current to redo.
+      // For now, undo/redo stacks store serialised JSON strings.
+      // Full snapshot undo is a future enhancement.
+      (model, Tea_Cmd.none)
+    }
+  | Redo => {
+      // Pop from redo stack, push current to undo.
+      (model, Tea_Cmd.none)
+    }
   | SaveState => {
       // Imperative: persist current state to localStorage.
       Storage.save(model)

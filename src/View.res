@@ -150,6 +150,12 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelPlaygrounds) => Playgrounds.view(model.playgrounds)
   | Some(PanelMinter) => Minter.view(model.minter)
   | Some(PanelProvisioner) => Provisioner.view(model.provisioner)
+  | Some(PanelVoiceTag) => VoiceTag.view(model.voiceTag)
+  | Some(PanelAi) => Ai.view(model.ai)
+  | Some(PanelRepoLoader) => RepoLoader.view(model.repoLoader)
+  | Some(PanelWorkspace) => Workspace.view(model.workspace, model.keybindings)
+  | Some(PanelCapture) => Capture.view(model.capture)
+  | Some(PanelSecurity) => Security.view(model.security)
   // Panels not yet implemented — show a labelled placeholder overlay so the
   // panel switcher works end-to-end before each module is wired in.
   | Some(panelId) => {
@@ -204,9 +210,30 @@ let view = (model: model): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("flex-1 flex overflow-hidden relative z-10 pr-12")},
           list{
-            renderPaneL(model.paneL, model.verisimdb.proofObligations, model.paneLVisible),
-            renderPaneN(model.paneN, model.echidna, model.paneNVisible),
-            renderPaneW(model.paneW, model.orbital, model.verisimdb, model.paneWVisible),
+            // Pane-L with capture bar
+            div(
+              list{Attrs.class_("flex-1 overflow-auto relative")},
+              list{
+                renderPaneL(model.paneL, model.verisimdb.proofObligations, model.paneLVisible),
+                CaptureBar.view("paneL", false, model.capture.captureBarVisible && model.paneLVisible),
+              },
+            ),
+            // Pane-N with capture bar
+            div(
+              list{Attrs.class_("flex-1 overflow-auto relative")},
+              list{
+                renderPaneN(model.paneN, model.echidna, model.paneNVisible),
+                CaptureBar.view("paneN", false, model.capture.captureBarVisible && model.paneNVisible),
+              },
+            ),
+            // Pane-W with capture bar
+            div(
+              list{Attrs.class_("flex-1 overflow-auto relative")},
+              list{
+                renderPaneW(model.paneW, model.orbital, model.verisimdb, model.paneWVisible),
+                CaptureBar.view("paneW", false, model.capture.captureBarVisible && model.paneWVisible),
+              },
+            ),
           },
         ),
 
@@ -226,6 +253,9 @@ let view = (model: model): Tea_Vdom.t<msg> => {
 
         // Panel switcher bar — vertical icon strip on right edge (z-50 over overlays)
         PanelSwitcher.view(model.panelSwitcher),
+
+        // Status bar — configurable bottom bar with system info widgets (DD-025)
+        StatusBar.view(model),
       },
     )
   }

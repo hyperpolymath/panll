@@ -25,6 +25,12 @@ type panelId =
   | PanelPlaza
   | PanelMinter
   | PanelProvisioner
+  | PanelVoiceTag
+  | PanelAi
+  | PanelRepoLoader
+  | PanelWorkspace
+  | PanelCapture
+  | PanelSecurity
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

@@ -92,10 +92,25 @@ include MinterModel
 /// for the portfolio bundling, panel configuration, and installation system.
 include ProvisionerModel
 
+/// Re-export VoiceTag types (mriTagType, mriInputMethod, mriAttribution,
+/// mriCodeAuthor, mriTag, mriFileSummary, mriFile, voiceState, voiceTagState)
+/// for the Code MRI Layer 0 annotation system. Tags are stored as portable
+/// `.mri.json` sidecars — standalone-first, no PanLL dependency required.
+include VoiceTagModel
+
 /// Re-export Provenance types (trustLevel, provenanceRegion, provenanceSummary,
 /// fileProvenance, accessibilityPalette, provenanceState) for the Qubes-style
 /// code trust surface that is always visible as an ambient layer.
 include ProvenanceModel
+
+/// Re-export AI types (aiProviderId, aiProviderConfig, aiProviderStatus,
+/// aiMessage, aiCategory, aiState) for the multi-provider AI neural interface
+/// panel that speaks to Anthropic, Google, Mistral, OpenAI, and local models.
+include AiModel
+
+/// Re-export Repo Loader types (repoInfo, panelSuggestion, repoLoaderCategory,
+/// repoLoaderState) for the repository scanning and panel configuration panel.
+include RepoLoaderModel
 
 /// Re-export Watcher types (watchEventKind, watchEvent, watcherState) for
 /// the filesystem observation infrastructure that feeds events into the TEA
@@ -106,6 +121,29 @@ include WatcherModel
 /// panelSwitcherState) for the unified panel navigation system that replaces
 /// ad-hoc `visible: bool` toggles on individual overlays.
 include PanelSwitcherModel
+
+/// Re-export Workspace types (workspaceMode, sessionProtection, executionMode,
+/// panelGroup, arrangement, session, checkpoint, polyTool, configuratorTab,
+/// workspaceState) for the workspace management layer (DD-022–DD-027).
+include WorkspaceModel
+
+/// Re-export Keybindings types (modifier, keyChord, keybindingAction, keybinding,
+/// keybindingsState) for the customisable keyboard shortcut system.
+include KeybindingsModel
+
+/// Re-export Capture types (captureFormat, captureEntry, recordingState, demoStep,
+/// demoPackage, comparisonMode, panelClone, captureCategory, captureState) for
+/// the panel capture, recording, and demo/teaching system (DD-022).
+include CaptureModel
+
+/// Re-export Status Bar types (widgetPosition, widgetKind, statusWidget, systemInfo,
+/// statusBarState) for the configurable status bar widget system (DD-025).
+include StatusBarModel
+
+/// Re-export Security types (redactionMode, redactionPattern, detectedSecret,
+/// vaultStatus, vaultKey, twoFactorStatus, securityLevel, trustfilePolicy,
+/// securityCategory, securityState) for secrets, vault, 2FA, Trustfile (DD-026/027).
+include SecurityModel
 
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
@@ -172,14 +210,42 @@ type model = {
   // Provisioner — portfolio bundles, panel config, isolation tiers
   provisioner: provisionerState,
 
+  // Code MRI VoiceTag — voice-activated annotation system (Layer 0)
+  voiceTag: voiceTagState,
+
   // Provenance Map — Qubes-style code trust surface (always visible, ambient)
   provenance: provenanceState,
 
   // Watcher — filesystem observation infrastructure (feeds all panels)
   watcher: watcherState,
 
+  // AI — multi-provider neural interface (Claude, Gemini, Mistral, GPT, local)
+  ai: aiState,
+
+  // Repo Loader — repository scanner and panel configuration wizard
+  repoLoader: repoLoaderState,
+
   // Panel Switcher — unified panel navigation (replaces ad-hoc visible toggles)
   panelSwitcher: panelSwitcherState,
+
+  // Workspace — panel arrangements, groups, sessions, modes (DD-022–DD-027)
+  workspace: workspaceState,
+
+  // Keybindings — customisable keyboard shortcuts
+  keybindings: keybindingsState,
+
+  // Capture — screenshots, recordings, demos, cloning (DD-022)
+  capture: captureState,
+
+  // Status Bar — configurable bottom bar with system info widgets (DD-025)
+  statusBar: statusBarState,
+
+  // Security — redaction, vault, 2FA, Trustfile enforcement (DD-026/027)
+  security: securityState,
+
+  // Undo/Redo — ring buffer of model snapshots
+  undoStack: array<string>,
+  redoStack: array<string>,
 
   // Feedback-O-Tron
   feedbackPending: option<string>,
@@ -400,6 +466,7 @@ let init = (): model => {
   fleet: FleetEngine.defaultState,
   minter: MinterEngine.defaultState,
   provisioner: ProvisionerEngine.defaultState,
+  voiceTag: VoiceTagEngine.defaultState,
   provenance: ProvenanceEngine.defaultState,
   watcher: {
     running: false,
@@ -408,7 +475,16 @@ let init = (): model => {
     recentEvents: [],
     error: None,
   },
+  ai: AiEngine.defaultState,
+  repoLoader: RepoLoaderEngine.defaultState,
   panelSwitcher: PanelRegistry.init,
+  workspace: WorkspaceEngine.defaultState,
+  keybindings: KeybindingsEngine.defaultState,
+  capture: CaptureEngine.defaultState,
+  statusBar: StatusBarEngine.defaultState,
+  security: SecurityEngine.defaultState,
+  undoStack: [],
+  redoStack: [],
   humidity: Medium,
   viewMode: DarkStart,
   paneLVisible: true,

@@ -49,6 +49,9 @@ mod cloudguard;
 /// Farm — Git-Private-Farm repo inventory module.
 mod farm;
 
+/// VoiceTag — Code MRI Layer 0 sidecar file I/O module.
+mod voicetag;
+
 /// Plaza — Palimpsest License adoption and compliance module.
 mod plaza;
 
@@ -58,6 +61,24 @@ mod minter;
 /// Watcher — Filesystem observation infrastructure (notify/inotify/FSEvents).
 /// Debounced event stream feeds the TEA loop so every panel can react to file changes.
 mod watcher;
+
+/// AI — Multi-provider AI neural interface (Anthropic, Google, Mistral, OpenAI, local).
+/// Provider-agnostic HTTP clients with automatic 429 fallthrough and quota tracking.
+mod ai;
+
+/// Repo Loader — Repository scanning and panel configuration.
+/// Reads manifests (0-AI-MANIFEST.a2ml, PANELS.a2ml), detects languages,
+/// and suggests which PanLL panels to activate.
+mod repoloader;
+
+/// Workspace — Panel arrangements, groups, sessions, and system info (DD-024/025).
+mod workspace;
+
+/// Capture — Screenshots, recordings, and demo packages (DD-022).
+mod capture;
+
+/// Security — Redaction, vault, 2FA, and Trustfile enforcement (DD-026/027).
+mod security;
 
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
@@ -1732,12 +1753,51 @@ fn main() {
             // Minter — Panel creation wizard
             minter::commands::minter_validate_name,
             minter::commands::minter_mint_panel,
+            // VoiceTag — Code MRI Layer 0 sidecar file I/O
+            voicetag::commands::voicetag_load,
+            voicetag::commands::voicetag_save,
+            voicetag::commands::voicetag_delete,
+            voicetag::commands::voicetag_scan,
             // Watcher — Filesystem observation
             watcher::commands::watcher_start,
             watcher::commands::watcher_stop,
             watcher::commands::watcher_add_path,
             watcher::commands::watcher_remove_path,
             watcher::commands::watcher_status,
+            // AI — Multi-provider neural interface
+            ai::commands::ai_send_message,
+            ai::commands::ai_check_provider,
+            ai::commands::ai_set_model,
+            ai::commands::ai_set_priority,
+            ai::commands::ai_toggle_provider,
+            ai::commands::ai_clear_history,
+            ai::commands::ai_build_context,
+            ai::commands::ai_get_state,
+            // Repo Loader — Repository scanning and panel configuration
+            repoloader::commands::repoloader_scan,
+            repoloader::commands::repoloader_save_panels,
+            repoloader::commands::repoloader_list_recent,
+            repoloader::commands::repoloader_search_farm,
+            // Workspace — Arrangements, sessions, system info (DD-024/025)
+            workspace::commands::save_arrangement,
+            workspace::commands::load_arrangements,
+            workspace::commands::delete_arrangement,
+            workspace::commands::save_session,
+            workspace::commands::load_sessions,
+            workspace::commands::delete_session,
+            workspace::sysinfo::get_system_info,
+            // Capture — Screenshots, recordings, demos (DD-022)
+            capture::commands::save_screenshot,
+            capture::commands::print_panel,
+            capture::commands::save_demo,
+            capture::commands::load_demos,
+            capture::commands::delete_demo,
+            // Security — Redaction, vault, 2FA, Trustfile (DD-026/027)
+            security::commands::redact_text,
+            security::commands::vault_store,
+            security::commands::vault_retrieve,
+            security::commands::vault_list,
+            security::commands::load_trustfile,
         ])
         .setup(|_app| {
             Ok(())
