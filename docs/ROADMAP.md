@@ -100,6 +100,19 @@ Priority scoring: **C** = Complexity (1--5), **E** = Effort (sessions), **V** = 
 | 18 | Valence Shell integration | 3 | 3 | 2 | 0.22 | CLI tool switchable with bash. Interesting for power users, not critical for Alpha. |
 | 19 | Micropatching + reversibility | 4 | 4 | 2 | 0.13 | Undo system for config changes. Important eventually, deferred. |
 
+### Sprint 5 — "Code MRI" (Mutual Recognition & Integrity)
+
+Code MRI is the development transparency system — Turnitin for code, but collaborative not adversarial. See DD-016 in DESIGN-DECISIONS.md.
+
+| # | Item | C | E | V | Score | Description |
+|---|------|---|---|---|-------|-------------|
+| 20 | VoiceTag (Layer 0) | 3 | 2 | 5 | 0.83 | Voice/keyboard annotation on code regions. Numbered tags, attribution, simple grammar. Entry point to the full MRI system. (Also in Sprint 2 as it extends Provenance.) |
+| 21 | Blake3 Provenance Chain (Layer 1) | 3 | 3 | 4 | 0.44 | Tamper-resistant attribution hashes per code region. Import/export carry provenance. |
+| 22 | VeriSimDB Development Timeline (Layer 2) | 4 | 4 | 5 | 0.31 | Development-as-time-series. Timeline scrubber, snapshot rollback, "end credits" documentary view. Dogfoods VeriSimDB. |
+| 23 | Pattern Diagnostics & Gamification (Layer 3) | 3 | 3 | 4 | 0.44 | AI bullshit detector, efficiency patterns, victory conditions, badges. Admin enforcement for education. |
+| 24 | Attribution-to-Licensing Link (Layer 4) | 2 | 2 | 3 | 0.75 | Auto-generate PMPL/MPL attribution from provenance chains. Machine-verifiable license compliance. |
+| 25 | Metrics & Learning Panel | 3 | 3 | 4 | 0.44 | ML-driven pattern identification from Code MRI data. Recommends support for struggling developers, suggests task reassignment based on strengths. Connects to Hypatia's neural networks for higher-order pattern detection. |
+
 ### Future / Community Contributed
 
 - Game panels: Godot, Unity, Unreal Engine, IDApTIK level architect
@@ -118,7 +131,9 @@ Priority scoring: **C** = Complexity (1--5), **E** = Effort (sessions), **V** = 
 | v0.3.0-alpha | Q2 2026 | Sprint 2 complete, Farm + Fleet backends live, Provenance real | At least 2 backends return real data |
 | v0.4.0-beta | Q3 2026 | Sprint 3 complete, Hypatia + Aerie live, NQC in Playgrounds | 5+ backends connected, cross-panel bus working |
 | v0.5.0-beta | Q4 2026 | Sprint 4 started, Odds & Sods, Wharf, Stapeln pods | Community contribution path documented |
-| v1.0.0 | 2027 | eNSAID spec v1.0, all core panels CRG Grade B+, stable API | Field-proven with real users |
+| v0.6.0-beta | Q1 2027 | Sprint 5: Code MRI Layers 0-1 (VoiceTag + Blake3 chain) | Voice annotation working, provenance tamper-resistant |
+| v0.7.0-beta | Q2 2027 | Sprint 5: Code MRI Layers 2-4 (Timeline + Diagnostics + Licensing) | VeriSimDB timeline scrubber, admin enforcement mode |
+| v1.0.0 | H2 2027 | eNSAID spec v1.0, all core panels CRG Grade B+, stable API | Field-proven with real users |
 
 ---
 

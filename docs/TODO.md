@@ -88,6 +88,18 @@ Each item scored on three axes (1-5 each, max combined = 15):
   - Feed aggregated friction signals into Vexometer
   - Store feedback history for trend analysis
 
+- [ ] **Code MRI Layer 0: VoiceTag** — Score: 5+3+5 = 13
+  - Core tag model: numbered annotations on code regions (file, startLine, endLine, tagType, author attribution)
+  - Tag types: TODO, FIXME, REFACTOR, NOTE, QUESTION, WARN, REVIEW
+  - Attribution per tag: who created it (human-voice, human-keyboard, ai-agent), which AI, timestamp
+  - Voice input via Web Speech API (browser-native, no external service)
+  - Simple grammar: "line 24 to 34 tag todo", "edit tag 3", "delete tag 7", "who wrote line 50"
+  - Keyboard/mouse fallback: select text → right-click → tag
+  - Authorship chain on tagged code: "written by human → refactored by Claude → tagged FIXME by human voice"
+  - Tag persistence (save/load alongside file, .voicetag.json sidecar or VeriSimDB)
+  - Numbered tags per file for voice reference: "show tag 3", "resolve tag 7"
+  - Integration: Provenance Map reads tags, Vexometer counts unresolved FIXMEs as friction
+
 ## Sprint 3 — "Make It Complete" (Remaining Backends)
 
 - [ ] **Rust backend: Hypatia** — Score: 5+3+5 = 13
@@ -151,6 +163,51 @@ Each item scored on three axes (1-5 each, max combined = 15):
   - Syntax-aware editing with formal verification hooks
   - Dependent type checking integration
   - Long-term — requires language runtimes to stabilise
+
+## Sprint 5 — "Code MRI" (Mutual Recognition & Integrity)
+
+- [ ] **Code MRI Layer 1: Blake3 Provenance Chain** — Score: 5+3+5 = 13
+  - Blake3 hash per code region: content + author + timestamp + parent hash
+  - Import provenance: code from external sources carries its attribution chain
+  - Export provenance: PanLL markings travel with exported code
+  - Tamper detection: strip attribution → hash mismatch → instantly visible
+  - Integration: extends Provenance Map trust levels with cryptographic verification
+
+- [ ] **Code MRI Layer 2: VeriSimDB Development Timeline** — Score: 5+3+5 = 13
+  - Development-as-time-series database (dogfood VeriSimDB as analytics backend)
+  - Stored metrics per snapshot: LOC, dangling TODOs/FIXMEs, open VoiceTags, library count,
+    failed type checks, panic-attack findings, AI attribution %, Vexometer readings
+  - Timeline scrubber UI: slide through project history, see state at any point
+  - Active rollback to any snapshot state within the database
+  - "End credits" documentary view: accelerated replay of development process
+
+- [ ] **Code MRI Layer 3: Pattern Diagnostics & Gamification** — Score: 3+3+3 = 9
+  - Derive development patterns from timeline data
+  - "Bullshit detector": AI session with high tag density / low resolution rate flagged
+  - Efficiency patterns: "human writes boilerplate manually — slower, zero FIXMEs"
+  - Victory conditions: all TODOs resolved, zero panic-attack findings, Vexometer < 0.3
+  - Badges/streaks (diagnostic, not patronising): "longest FIXME-free run", "most tags resolved"
+  - Admin enforcement mode: universities require attribution tracking on all submissions
+  - Team training: review development patterns to improve workflow and spot inefficiencies
+
+- [ ] **Code MRI Layer 4: Attribution-to-Licensing Link** — Score: 3+3+3 = 9
+  - Auto-generate PMPL/MPL attribution sections from Blake3 provenance chains
+  - Per-line attribution: "Lines 1-50: J.D.A. Jewell. Lines 51-80: Claude Opus (AI-assisted, human-reviewed)"
+  - Import attribution: "Lines 81-120: from proven-servers (PMPL-1.0-or-later)"
+  - Makes source-available license requirements trivially machine-verifiable
+  - Links to Palimpsest Plaza for ecosystem-wide license compliance dashboard
+
+- [ ] **Code MRI Metrics & Learning Panel** — Score: 3+3+5 = 11
+  - ML-driven pattern identification from Code MRI timeline data
+  - Uses Hypatia's neural networks for higher-order pattern detection across projects
+  - Identify struggling developers and offer direct support (not punishment — WokeLang philosophy)
+  - Match people to tasks they're good at or enjoy more (reassignment suggestions)
+  - "30 tags in, AI was bullshitting" diagnostic → recommend human review
+  - "This developer excels at algorithmic work but hates boilerplate" → suggest AI pairing for setup
+  - Team-level patterns: "Team velocity spikes when X pairs with Y on Z-type tasks"
+  - Admin mode for education: instructors see student development patterns, offer targeted help
+  - Gamification dashboard: personal development trajectory, improvement trends, skill heat map
+  - Privacy-first: individual data visible only to the developer (admin sees aggregates only)
 
 ## Deferred (Noted, Not Scheduled)
 

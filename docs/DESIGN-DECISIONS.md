@@ -283,4 +283,53 @@ Combined score guides priority: must+corrective+systems = 15 (do immediately), l
 
 ---
 
+## DD-016: Code MRI — Mutual Recognition & Integrity
+
+**Date:** 2026-03-02
+**Status:** Accepted
+**Context:** The Provenance Map shows who wrote code (passive, read-only). Developers need to actively annotate, attribute, and track the development process over time — for transparency, education, diagnostics, and licensing compliance.
+
+**Decision:** Build Code MRI as a four-layer system integrated into PanLL core:
+
+**Layer 0 — VoiceTag (Input)**
+Interactive annotation on code regions. Voice-activated (Web Speech API, browser-native) but also works via keyboard/mouse. Simple grammar: "line 24 to 34 tag todo", "delete tag 7", "who wrote line 50", "attribute ai claude". Tags are numbered per file. Every tag records who created it (human voice, human keyboard, AI agent, which AI).
+
+**Layer 1 — Blake3 Provenance Chain (Tamper Resistance)**
+Every code region gets a Blake3 hash covering: content + author + timestamp + parent hash. Imported code carries its provenance chain. Exported code includes PanLL markings. Strip attribution? Hash mismatch — instantly detectable. This is the Turnitin model flipped: collaborative attribution, not adversarial plagiarism detection.
+
+**Layer 2 — VeriSimDB Development Timeline (Time Machine)**
+Development-as-time-series database. Stores snapshots of: lines of code, dangling TODOs/FIXMEs, open tags, libraries in use, failed type checks, panic-attack findings, AI attribution percentage, Vexometer readings, tag resolution time. Scrub a timeline slider to see the project state at any point — like the end credits of a worldbuilder documentary. Active rollback to any state within the database.
+
+**Layer 3 — Pattern Diagnostics & Gamification**
+Derive development patterns from timeline data: "this developer writes boilerplate manually — slower but zero FIXMEs", "this AI session left 12 unresolved tags — bullshit detector", "velocity increased 40% after switching to ReScript." Victory conditions: all TODOs resolved, zero panic-attack findings, Vexometer below threshold. Badges, streaks, diagnostic not patronising. Admin enforcement mode for education (universities can require attribution tracking on all submissions).
+
+**Layer 4 — Attribution-to-Licensing Link**
+PMPL (based on MPL) requires source attribution. Blake3 provenance chains auto-generate license attribution sections: "Lines 1-50: Jonathan D.A. Jewell. Lines 51-80: Claude Opus 4.6 (AI-assisted, human-reviewed). Lines 81-120: imported from proven-servers (PMPL-1.0-or-later)." Makes source-available requirements trivially verifiable.
+
+**The MRI Metaphor:**
+- Sees inside without being invasive (reads blame/tags, doesn't change code)
+- Shows layers at different resolutions (file → region → line)
+- Diagnostic (reveals patterns invisible to reading)
+- Non-destructive (code not altered by scanning)
+- Used by professionals to make better decisions
+
+**Consequences:**
+- VoiceTag (Layer 0) is the thin end of the wedge — buildable now, proves the concept
+- Blake3 chain (Layer 1) extends existing Provenance Map infrastructure
+- VeriSimDB timeline (Layer 2) dogfoods VeriSimDB as development analytics backend
+- Diagnostics (Layer 3) feeds Hypatia (pattern analysis) and Vexometer (friction)
+- License link (Layer 4) makes PMPL compliance automatic, not manual
+- Admin mode makes PanLL viable for educational institutions (Turnitin for code, but honest)
+- Import/export of provenance markings makes attribution portable across projects
+
+**Integration with existing PanLL:**
+- Provenance Map → Blake3 chain (extends trust levels with tamper resistance)
+- Watcher → VoiceTag (file changes trigger tag review prompts)
+- VeriSimDB → Timeline (dogfood the database as development analytics store)
+- Hypatia → Diagnostics (pattern analysis on development behaviour, not just code)
+- Vexometer → Diagnostics (friction history is a timeline metric)
+- Provisioner → Admin mode (configurable per panel, enforceable per organisation)
+
+---
+
 *Design decisions are numbered sequentially. Superseded decisions retain their number with status changed to "Superseded by DD-XXX".*
