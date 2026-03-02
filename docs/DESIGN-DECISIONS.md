@@ -332,4 +332,67 @@ PMPL (based on MPL) requires source attribution. Blake3 provenance chains auto-g
 
 ---
 
+## DD-017: Care-On / Eco-Mode Tags and Adaptive Constraint Sensitivity
+
+**Date:** 2026-03-02
+**Status:** Accepted
+**Context:** Code regions have different resource, ecological, and safety profiles. Developers need a way to mark regions as resource-sensitive and have the system adapt its behaviour accordingly — including adjusting the sensitivity of tools like panic-attack.
+
+**Decision:** Extend VoiceTag with modal tags that change system behaviour, not just annotate:
+
+**Tag modes:**
+- `care-on` — Mark a region as requiring extra scrutiny. Raises panic-attack sensitivity, increases type checking strictness, flags to agents as "handle with care." For safety-critical code, security-sensitive sections, or areas with known fragility.
+- `eco-mode` — Mark a region as ecologically/resource non-viable. Flags excessive allocation, energy-intensive loops, or computationally wasteful patterns. Agents prioritise these for optimisation. The triaxial framework scores eco-tagged regions higher on the `must × corrective × systems` axis automatically.
+- `burden` — Mark a constraint that is burdening the system. When panic-attack or type checking generates too much noise in a region, `burden` says "I know this is a problem but the fix requires a serious rewrite — deprioritise alerts here until the rewrite is scheduled."
+
+**How it works with the triaxial framework:**
+1. Tags create triaxial scoring adjustments automatically: `eco-mode` bumps scope to `must`, maintenance to `corrective`, audit to `systems` (max priority)
+2. `burden` tags lower the audit axis to `effects` (acknowledged, not ignored — just deprioritised)
+3. `care-on` tags bump the audit axis to `systems` (full scrutiny)
+4. The priority queue rebalances: eco-risk regions float to the top, burdened constraints sink to the backlog with visibility
+
+**Adaptive sensitivity:**
+- panic-attack findings in `care-on` regions: severity bumped one level (medium → high)
+- panic-attack findings in `burden` regions: severity lowered one level (high → medium) with "[burden acknowledged]" annotation
+- Agent behaviour: when operating in `eco-mode` regions, agents optimise for resource efficiency first, features second
+- Constraint tuning: if a type check or linter rule generates >N findings in a `burden` region, auto-suppress with a visible "[N suppressed, burden tag active]" counter
+
+**Consequences:**
+- Resource constraints become first-class development concerns, not afterthoughts
+- Developers can tune system sensitivity per region without global config changes
+- The triaxial framework adapts automatically — no manual re-scoring needed
+- All tag changes are logged in Code MRI timeline (visible, auditable, reversible)
+- Cheap to implement: just additional tag types in VoiceTag + policy rules in the matching engine
+
+---
+
+## DD-018: Dogfood Mode — Self-Hosting Policy Engine
+
+**Date:** 2026-03-02
+**Status:** Accepted
+**Context:** The hyperpolymath ecosystem has 265+ repos of its own tooling. PanLL should actively suggest using own tools where external alternatives are currently used, with policy enforcement based on tool readiness.
+
+**Decision:** A dogfood management system with CRG-grade-driven policy:
+
+**Mechanism:**
+- Dogfood folder (configurable, default `~/Desktop/dogfood/` or per-project `.dogfood/`): drop manifests describing available internal tools
+- Matching engine: watches imports/dependencies, suggests dogfood candidates when external alternatives detected
+- Dashboard panel: which own tools are in use, which are gathering dust, usage trends over time
+
+**Policy levels (driven by CRG grade):**
+- Grade D+ (Alpha): **Suggest** — "proven-servers has a TLS component, you're using rustls directly"
+- Grade E (Minimal): **Warn** — "QuandleDB is CRG E, proceed with caution"
+- Grade X/F (Untested/Harmful): **Ban** — "Eclexia runtime is not ready, blocked unless override"
+- Admin override: "I know this is grade E, proceeding anyway" (logged, visible in Code MRI)
+- **Insist**: configurable per tool — "Stapeln MUST be used for container isolation" (no override)
+
+**Consequences:**
+- D→C grade transition requires actual dogfooding — this system tracks it
+- Feeds Code MRI timeline: "switched from SQLite to VeriSimDB on March 5"
+- Connects to Provisioner: dogfood policies per panel, per isolation tier
+- Custom dashboards: teams build their own metrics ("Mike's Refactor Index")
+- Research value: how developers adopt their own tools, where friction appears
+
+---
+
 *Design decisions are numbered sequentially. Superseded decisions retain their number with status changed to "Superseded by DD-XXX".*
