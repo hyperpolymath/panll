@@ -1,0 +1,8 @@
+= Licensing Folder
+
+Store repository licensing/supporting legal texts here.
+
+Conventions:
+
+* Keep root `LICENSE` for forge license scanners.
+* Place extended licensing context and exhibits in this directory.

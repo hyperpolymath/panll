@@ -1,0 +1,116 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-FileCopyrightText: {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}})
+//
+// ============================================================================
+// AI-NATIVE INSTALLATION SECTION — paste into your README.adoc
+//
+// Place this section AFTER badges and BEFORE your first content section
+// (e.g., before "== Overview" or "== What This Is").
+//
+// After pasting, fill in every [TODO-AI-INSTALL] marker.
+// finishbot checks these are complete before release.
+//
+// Then fill in the full recipe in docs/AI_INSTALLATION_GUIDE.adoc
+// ============================================================================
+
+== AI-Assisted Installation (Recommended)
+
+=== Just Say It
+
+**You don't need to read this README.** Just say this to any AI assistant:
+
+[source,text]
+----
+Set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}
+----
+
+**The URL is the spec.** The AI fetches this repo, reads the installation guide inside it, and handles everything. You answer a few questions and confirm the privacy notice. No commands to type, no installers to figure out, no docs to read.
+
+Any AI that can read a URL and run commands (or generate commands for you to paste) can do this. The guide inside the repo tells the AI everything.
+
+The AI handles:
+
+// [TODO-AI-INSTALL] Replace this list with what your project's AI setup actually does.
+// Examples from real repos:
+//   neurophone: "Installing Termux, Rust, building for your hardware, downloading the LLM model"
+//   feedback-o-tron: "Installing Elixir, building the CLI, walking through credential setup"
+// Delete this comment block and replace:
+
+* [TODO-AI-INSTALL: What the AI does during setup -- 4-6 bullet points]
+
+=== Other Ways to Say It
+
+If your AI already knows about {{PROJECT_NAME}} (web search, training data), shorter versions work:
+
+// [TODO-AI-INSTALL] Replace with natural-language variations specific to your project.
+// Delete this comment block and replace:
+
+* "[TODO-AI-INSTALL: Short version without URL]"
+* "[TODO-AI-INSTALL: Version mentioning specific use case]"
+
+If it doesn't know the project, just include the URL:
+
+* "Set up https://{{FORGE}}/{{OWNER}}/{{REPO}} on my machine"
+
+=== What You'll Be Asked
+
+Your AI will ask you:
+
+// [TODO-AI-INSTALL] Same questions as in the AI_INSTALLATION_GUIDE.adoc.
+// Delete this comment block and replace:
+
+1. **[TODO-AI-INSTALL: Question 1]**
+2. **[TODO-AI-INSTALL: Question 2]**
+3. **Privacy confirmation** -- what the tool does and how your data is handled
+
+That's it. Everything else is automatic.
+
+=== Privacy & Security Notice
+
+[IMPORTANT]
+====
+// [TODO-AI-INSTALL] Same privacy notice as in the AI_INSTALLATION_GUIDE.adoc.
+// Delete this comment block and replace:
+
+**What {{PROJECT_NAME}} does:**
+
+* [TODO-AI-INSTALL: What it does]
+
+**What {{PROJECT_NAME}} does NOT do:**
+
+* [TODO-AI-INSTALL: What it does NOT do]
+
+**You control everything.** Uninstall anytime.
+====
+
+=== After Install
+
+// [TODO-AI-INSTALL] Brief post-install usage example.
+// Delete this comment block and replace:
+
+[source,bash]
+----
+# [TODO-AI-INSTALL: Example first command after install]
+----
+
+=== Uninstall
+
+Tell your AI: "Remove {{PROJECT_NAME}} from my system"
+
+=== Troubleshooting
+
+// [TODO-AI-INSTALL] 3-5 most common issues. Keep brief -- the AI
+// can read the full troubleshooting in the installation guide.
+// Delete this comment block and replace:
+
+[cols="1,3"]
+|===
+|Problem |Solution
+
+|[TODO-AI-INSTALL]
+|[TODO-AI-INSTALL]
+|===
+
+For manual installation without AI assistance, see the <<getting-started,Getting Started>> section below.
+
+'''

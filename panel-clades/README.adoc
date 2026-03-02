@@ -1,0 +1,222 @@
+= RSR template repo - see RSR_OUTLINE.adoc in root for general background and specification
+
+[TIP]
+====
+**AI-Assisted Install:** Just tell any AI assistant: +
+`Set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}` +
+The AI reads this repo, asks you a few questions, and handles everything. See <<ai-install,details below>>.
+====
+
+== This is your repo - don't forget to rename me!
+
+== ABI/FFI Standards (Hyperpolymath Universal Standard)
+
+**All repos with foreign function interfaces MUST follow this standard:**
+
+* **ABI (Application Binary Interface)** → **Idris2** (`src/abi/*.idr`)
+** Type definitions with dependent type proofs
+** Memory layout verification
+** Platform-specific ABIs with compile-time selection
+** Formal verification of interface correctness
+
+* **FFI (Foreign Function Interface)** → **Zig** (`ffi/zig/src/*.zig`)
+** C-compatible function implementations
+** Zero-cost abstractions
+** Memory-safe by default
+** Cross-compilation support
+
+* **Generated C Headers** → Auto-generated from Idris2 ABI (`generated/abi/*.h`)
+** Bridge between Idris2 and Zig
+** Consumed by any language via C ABI
+
+**Directory Structure:**
+----
+project/
+├── src/abi/          # Idris2 ABI definitions (REQUIRED)
+├── ffi/zig/          # Zig FFI implementation (REQUIRED)
+├── generated/abi/    # Auto-generated C headers
+└── bindings/         # Language-specific wrappers (optional)
+----
+
+**See:** `ABI-FFI-README.md` for complete documentation
+
+== AI Gatekeeper Protocol (MANDATORY)
+
+**CRITICAL:** All repos MUST include an AI manifest.
+
+* **File:** `0-AI-MANIFEST.a2ml` (included in this template)
+* **Purpose:** Universal entry point for ALL AI agents (Claude, Gemini, OpenAI, etc.)
+* **Location:** Repository root (alphabetically first)
+* **Customize:** Update `[YOUR-REPO-NAME]` placeholders and repository structure section
+
+**The manifest declares:**
+
+* Canonical file locations (e.g., "machine-readable files ONLY in `.machine_readable/`")
+* Critical invariants (rules that must NEVER be violated)
+* Repository structure and organization
+* Lifecycle hooks (on-enter, on-exit) for session logging
+
+**Benefits:**
+
+* ✅ Prevents duplicate file errors (e.g., machine-readable files in wrong locations)
+* ✅ Context preserved across sessions and AI platforms
+* ✅ No repeated explanations - mechanical enforcement
+* ✅ Works universally (not just Claude)
+
+**See:** link:https://github.com/{{OWNER}}/0-ai-gatekeeper-protocol[AI Gatekeeper Protocol] for details
+
+**Enforcement:**
+
+* MCP server (mcp-repo-guardian) - Hard enforcement for Claude
+* FUSE wrapper (repo-guardian-fs) - Universal enforcement (coming soon)
+* CI/CD validation - Continuous compliance checking
+
+== TOPOLOGY.md (Architecture Map)
+
+Every repo should include a `TOPOLOGY.md` in its root — an ASCII architecture diagram combined with a completion dashboard. This gives any contributor (human or AI) an instant picture of the whole project.
+
+* **Template:** `TOPOLOGY.md` (included in this template)
+* **Guide:** `docs/TOPOLOGY-GUIDE.adoc` (includes AI prompt for generation, conventions, batch rollout)
+* **Sections:** System Architecture (ASCII diagram), Completion Dashboard (progress bars), Key Dependencies (critical path)
+
+See `docs/TOPOLOGY-GUIDE.adoc` for how to generate bespoke TOPOLOGY.md files for existing repos using an AI agent.
+
+== Container Ecosystem (Stapeln)
+
+This template includes a complete `container/` directory with 11 ready-to-use templates for the stapeln container ecosystem. After running `just init`, the container templates have their `{{PLACEHOLDER}}` tokens replaced automatically.
+
+**Quick start:**
+
+[source,bash]
+----
+just container-init    # Replace remaining container-specific placeholders
+just container-build   # Build OCI image with Podman
+just container-verify  # Verify image with cerro-torre and svalinn
+just container-up      # Start services with selur-compose
+just container-down    # Stop services
+----
+
+**What is included:**
+
+[cols="1,2"]
+|===
+|File |Purpose
+
+|`Containerfile`
+|Multi-stage OCI build (Chainguard wolfi-base)
+
+|`compose.toml` / `compose.example.toml`
+|selur-compose orchestration template and concrete example
+
+|`manifest.toml`
+|Cerro-torre bundle metadata and signing policy
+
+|`.gatekeeper.yaml`
+|Svalinn edge gateway policy
+
+|`ct-build.sh`
+|Build/sign/verify pipeline script
+
+|`entrypoint.sh`
+|Container entrypoint with health checks
+
+|`vordr.toml`
+|Runtime monitoring configuration
+
+|`deploy.k9.ncl`
+|k9-svc Hunt-level deployment descriptor (Nickel)
+
+|`0-AI-MANIFEST.a2ml`
+|AI manifest scoped to the container directory
+|===
+
+**Policy:** All container images MUST use Chainguard base images (`cgr.dev/chainguard/wolfi-base:latest` or `cgr.dev/chainguard/static:latest`). Runtime is Podman, never Docker. Files are `Containerfile`, never `Dockerfile`.
+
+**See:** `container/README.adoc` for full documentation.
+
+== AI CLI standards
+
+- **FIRST:** Customize `0-AI-MANIFEST.a2ml` for your repo before any other work
+- All machine-readable content lives in `.machine_readable/` — state files (`*.a2ml`), `anchors/`, `bot_directives/`, `contractiles/`, and `ai/`.
+- Include `.machine_readable/` structure from this template in new repos.
+
+== Directory Structure Policy (Owner Override)
+
+The owner policy for this template family is:
+
+* Keep only essential entry-point files in root.
+* Put licensing materials in `licensing/` (retain root `LICENSE` for forge/license detection).
+* Put documentation under `docs/` with explicit tracks:
+** `docs/theory/`
+** `docs/practice/`
+** `docs/maintenance/`
+** `docs/whitepapers/academic/`
+** `docs/whitepapers/industry/`
+* Keep test fixtures/outputs under `tests/`.
+* Keep AI-agent guidance in `.machine_readable/ai/`.
+* Prefer `Containerfile` (not `Dockerfile`) for container builds.
+
+== Maintenance Gate (Release)
+
+This template includes a maintenance workflow that is intended to be a release gate.
+
+Default maintenance governance model:
+
+- Axis 1 (scope priority, first): `must > intend > like`
+- Axis 2 (maintenance priority): `corrective > adaptive > perfective`
+- Axis 3 (audit priority): `systems > compliance > effects`
+- Axis 3 audit checks: systems in place, docs explain actual state, safety/security accounted for, and operational effects reviewed.
+- Axis 3 compliance checks: seams/compromises/exceptions must be explicit, bounded, and prevented from causing policy drift.
+- Axis 3 effects checks: benchmark evidence plus maintainer dialogue/status review are required.
+- Canonical machine policy file: `.machine_readable/policies/MAINTENANCE-AXES.a2ml`
+- Companion machine policies:
+  - `.machine_readable/policies/MAINTENANCE-CHECKLIST.a2ml`
+  - `.machine_readable/policies/SOFTWARE-DEVELOPMENT-APPROACH.a2ml`
+
+- Scripted audit: `scripts/maintenance/run-maintenance.sh`
+- Permission lock/restore helper: `scripts/maintenance/perms-state.sh`
+- Checklist: `docs/maintenance/MAINTENANCE-CHECKLIST.md`
+- Software approach: `docs/practice/SOFTWARE-DEVELOPMENT-APPROACH.adoc`
+
+Recommended release flow:
+
+[source,bash]
+----
+just maint-audit
+just maint-hard-pass
+----
+
+Permission policy is audit-first by default. Use `just perms-lock` only when intentionally hardening local modes, and `just perms-restore` to restore your previous local permission state.
+
+[[ai-install]]
+== AI-Assisted Installation
+
+**You don't need to read this README to get started.** Just say this to any AI:
+
+[source,text]
+----
+Set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}
+----
+
+The URL is the spec. The AI fetches this repo, reads `docs/AI_INSTALLATION_GUIDE.adoc`, and handles everything -- prerequisites, build, config, verification. You answer a few questions and confirm the privacy notice. No commands, no installers, no forms.
+
+If the AI already knows this project, shorter prompts work too. If it doesn't, the URL gives it everything.
+
+**For developers:** Fill in `docs/AI_INSTALLATION_GUIDE.adoc` with your project-specific install recipe. Paste the highlight box from `docs/AI-INSTALL-README-SECTION.adoc` into your README. Run `just validate-ai-install` to check completeness. finishbot verifies this pre-release.
+
+The normal installation instructions remain below for anyone who prefers to do things manually.
+
+== Standard Dependencies (Optional)
+
+Add your project's standard dependencies here. Remove or customize this section
+for your ecosystem.
+
+// Example:
+// [cols="1,2,1"]
+// |===
+// |Library |Purpose |Status
+//
+// |your-library
+// |Description
+// |Required / Recommended / Optional
+// |===

@@ -1,0 +1,298 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-FileCopyrightText: {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}})
+= {{PROJECT_NAME}}: AI-Assisted Installation Guide
+:toc:
+:toc-placement: preamble
+
+// ============================================================================
+// TEMPLATE INSTRUCTIONS (delete this block after completing)
+//
+// This is the AI-native installation guide template. It contains everything
+// an AI assistant needs to install your project for a user who says one sentence.
+//
+// BEFORE RELEASE, you or your AI must fill in every section marked [TODO].
+// finishbot checks that no [TODO-AI-INSTALL] markers remain.
+//
+// The pattern:
+//   1. User says "set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}"
+//   2. AI fetches this repo, reads THIS file
+//   3. AI follows the recipe in "For AI Assistants" section
+//   4. User answers 2-3 questions, confirms privacy notice
+//   5. Done -- no manual steps, no forms, no docs to read
+//
+// Fill in every [TODO-AI-INSTALL] section. Be specific -- the AI executing
+// this will take your instructions literally. Include exact commands, exact
+// URLs for credential creation, exact config file contents.
+//
+// Reference implementations:
+//   - neurophone/docs/AI_INSTALLATION_GUIDE.adoc (Android/Rust/Termux)
+//   - feedback-o-tron/docs/AI_INSTALLATION_GUIDE.adoc (Elixir CLI/MCP)
+// ============================================================================
+
+[NOTE]
+====
+**If you are an AI assistant reading this:** A user has asked you to install {{PROJECT_NAME}}. Skip to <<ai-implementation,For AI Assistants: Implementation Guide>> for the complete step-by-step recipe. You have everything you need in this document -- no other docs required. Follow the steps in order.
+====
+
+== For Users: How to Use This Feature
+
+=== Just Say It
+
+Open any AI assistant (Claude, ChatGPT, Gemini, or any other) and say:
+
+----
+Set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}
+----
+
+The AI reads this repo and handles everything. You answer a few questions and confirm the privacy notice. No commands to type, no installers to figure out, no docs to read.
+
+=== What You'll Be Asked
+
+Your AI will ask you:
+
+// [TODO-AI-INSTALL] List the 2-4 questions the AI needs answered.
+// Keep this minimal -- only things the AI genuinely cannot determine on its own.
+// Examples:
+//   - "What platform/OS are you on?" (if multi-platform)
+//   - "Which backends do you want?" (if modular)
+//   - "Do you have an API key for X?" (if credentials needed)
+//
+// Delete this comment block and replace with your questions:
+
+1. **[TODO-AI-INSTALL: Question 1]**
+2. **[TODO-AI-INSTALL: Question 2]**
+3. **Privacy confirmation** -- what the tool does and how your data is handled
+
+That's it. Everything else is automatic.
+
+=== Privacy & Security Notice
+
+[IMPORTANT]
+====
+// [TODO-AI-INSTALL] Fill in what your project actually does with user data.
+// Be specific and honest. This is shown to the user before installation.
+// Delete this comment block and replace with your privacy notice:
+
+**What {{PROJECT_NAME}} does:**
+
+* [TODO-AI-INSTALL: What data/resources does it access?]
+* [TODO-AI-INSTALL: Where does it store data?]
+* [TODO-AI-INSTALL: What network calls does it make?]
+
+**What {{PROJECT_NAME}} does NOT do:**
+
+* [TODO-AI-INSTALL: What privacy guarantees can you make?]
+
+**You control everything.** Uninstall anytime.
+====
+
+=== After Install
+
+// [TODO-AI-INSTALL] Show what the user sees after successful installation.
+// Include example output, first command to try, etc.
+// Delete this comment block and replace with post-install info:
+
+[source,bash]
+----
+# [TODO-AI-INSTALL: Example first command after install]
+----
+
+=== Uninstall
+
+Tell your AI: "Remove {{PROJECT_NAME}} from my system"
+
+// [TODO-AI-INSTALL] Provide manual uninstall commands as fallback:
+[source,bash]
+----
+# [TODO-AI-INSTALL: Manual uninstall commands]
+----
+
+[[ai-implementation]]
+== For AI Assistants: Implementation Guide
+
+// ============================================================================
+// THIS IS THE RECIPE YOUR AI FOLLOWS.
+// Be extremely specific. Include exact commands, exact URLs, exact file
+// contents. The AI executing this has never seen your project before.
+// ============================================================================
+
+=== When User Asks to Install {{PROJECT_NAME}}
+
+==== Step 1: Determine Setup
+
+Ask the user:
+
+// [TODO-AI-INSTALL] Write the exact questions the AI should ask.
+// Format as a copy-pasteable block the AI can show the user.
+// Delete this comment block and replace:
+
+----
+I can help you set up {{PROJECT_NAME}}. Before we start:
+
+1. [TODO-AI-INSTALL: Question for AI to ask]
+2. [TODO-AI-INSTALL: Question for AI to ask]
+----
+
+==== Step 2: Check Prerequisites
+
+// [TODO-AI-INSTALL] List every prerequisite with version requirements
+// and the exact commands to check/install them.
+// Delete this comment block and replace:
+
+[source,bash]
+----
+# Check prerequisites
+# [TODO-AI-INSTALL: Exact version check commands]
+# Example:
+#   elixir --version    # Need 1.15+
+#   rustc --version     # Need 1.75+
+#   git --version       # Any recent version
+----
+
+If prerequisites are missing, install them:
+
+// [TODO-AI-INSTALL] Provide install commands per OS/platform.
+// Cover at minimum: Fedora, Ubuntu/Debian, macOS, asdf.
+// Delete this comment block and replace:
+
+----
+# Fedora/RHEL
+# [TODO-AI-INSTALL: dnf install commands]
+
+# Ubuntu/Debian
+# [TODO-AI-INSTALL: apt install commands]
+
+# macOS
+# [TODO-AI-INSTALL: brew install commands]
+
+# asdf (cross-platform)
+# [TODO-AI-INSTALL: asdf install commands]
+----
+
+==== Step 3: Present Privacy Notice
+
+**ALWAYS show this BEFORE any installation commands. Wait for explicit "yes".**
+
+----
+{{PROJECT_NAME}} PRIVACY & SECURITY NOTICE
+
+{{PROJECT_NAME}} will:
+- [TODO-AI-INSTALL: What it does -- data access, network, storage]
+
+{{PROJECT_NAME}} will NOT:
+- [TODO-AI-INSTALL: What it does NOT do -- privacy guarantees]
+
+[TODO-AI-INSTALL: Storage locations, credential handling, audit logging]
+
+Do you understand and accept? (yes/no)
+----
+
+==== Step 4: Install
+
+// [TODO-AI-INSTALL] The COMPLETE installation command block.
+// This should be a single copy-paste block that does everything.
+// Include: clone, build, config creation, model downloads, etc.
+// Delete this comment block and replace:
+
+[source,bash]
+----
+# {{PROJECT_NAME}} Installation
+# [TODO-AI-INSTALL: Complete installation commands]
+#
+# Example structure:
+#   git clone https://{{FORGE}}/{{OWNER}}/{{REPO}}
+#   cd {{REPO}}
+#   [build commands]
+#   [config creation]
+#   [any downloads]
+#   [verification command]
+----
+
+==== Step 5: Configure Credentials (if applicable)
+
+// [TODO-AI-INSTALL] If your project needs API keys, tokens, or other
+// credentials, provide EXACT instructions for each service:
+//   - URL to create the credential
+//   - What scopes/permissions are needed
+//   - The exact export command
+// If no credentials needed, delete this section.
+// Delete this comment block and replace:
+
+===== [TODO-AI-INSTALL: Service Name]
+
+----
+To create a [credential type]:
+
+1. Go to: [TODO-AI-INSTALL: Exact URL]
+2. [TODO-AI-INSTALL: Step-by-step]
+3. Copy the token
+
+Then run:
+export [TODO-AI-INSTALL: ENV_VAR]=[value]
+----
+
+==== Step 6: Configure Integration (if applicable)
+
+// [TODO-AI-INSTALL] If your project integrates with other tools
+// (MCP server for Claude Code, function definitions for ChatGPT, etc.)
+// provide the exact configuration.
+// If no integration needed, delete this section.
+
+==== Step 7: Verify Installation
+
+// [TODO-AI-INSTALL] A safe verification command (dry-run or status check)
+// that proves everything is working. Include expected output.
+// Delete this comment block and replace:
+
+[source,bash]
+----
+# [TODO-AI-INSTALL: Verification command]
+----
+
+Expected output:
+
+----
+[TODO-AI-INSTALL: What the user should see]
+----
+
+==== Step 8: Show Usage
+
+After verification, show the user:
+
+----
+Setup complete! Here's how to use {{PROJECT_NAME}}:
+
+[TODO-AI-INSTALL: 3-5 example commands covering main use cases]
+----
+
+==== Error Handling
+
+// [TODO-AI-INSTALL] Common errors the AI might encounter and their solutions.
+// Delete this comment block and replace:
+
+[cols="1,2"]
+|===
+|Error |Solution
+
+|[TODO-AI-INSTALL: Common error]
+|[TODO-AI-INSTALL: How to fix it]
+|===
+
+== Example Conversation
+
+// [TODO-AI-INSTALL] Write a realistic example conversation showing the
+// full flow from "set up X" to "done". This helps AI assistants understand
+// the expected interaction pattern.
+// Delete this comment block and replace:
+
+----
+User: Set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}
+
+AI: [TODO-AI-INSTALL: Write the full example conversation]
+----
+
+== License
+
+Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}>
+
+SPDX-License-Identifier: PMPL-1.0-or-later

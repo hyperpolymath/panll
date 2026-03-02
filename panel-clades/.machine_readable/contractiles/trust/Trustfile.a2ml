@@ -1,0 +1,82 @@
+# SPDX-License-Identifier: PMLP-1.0-or-later
+# =============================================================================
+# A2ML Trustfile Template (Cyber-Resilient Baseline)
+# Replace all {{PLACEHOLDERS}} for each derived repository.
+# =============================================================================
+
+---
+### [META]
+id: "did:web:{{DOMAIN}}"
+version: "{{TRUSTFILE_VERSION}}"
+context:
+  - "https://a2ml.org/ns/v2"
+  - "https://leanprover-community.github.io/lean4"
+  - "https://hypatia.scans/ns/v1"
+  - "https://w3id.org/security/v4"
+meta:
+  generated: "{{GENERATED_AT}}"
+  expires: "{{EXPIRES_AT}}"
+  signature:
+    algorithm: "Ed448+Dilithium5"
+    value: "{{PRIMARY_SIGNATURE}}"
+    signedBy: "did:web:{{DOMAIN}}#primary-sig"
+  fallbackSignature:
+    algorithm: "SPHINCS+"
+    value: "{{FALLBACK_SIGNATURE}}"
+  integrity:
+    sha3-512: "{{SHA3_512}}"
+    shake256: "{{SHAKE256}}"
+    zonemd: "{{ZONEMD}}"
+
+---
+### [TRUSTFILE]
+issuer: "did:web:{{DOMAIN}}"
+keys:
+  - id: "#primary-sig"
+    type: "HybridKey2024"
+    classical:
+      algorithm: "Ed448"
+      publicKeyJwk:
+        kty: "OKP"
+        crv: "Ed448"
+        x: "{{ED448_PUBLIC_KEY}}"
+    postQuantum:
+      algorithm: "Dilithium5"
+      publicKeyJwk:
+        kty: "OKP"
+        crv: "Dilithium5"
+        x: "{{DILITHIUM5_PUBLIC_KEY}}"
+    fallback:
+      algorithm: "SPHINCS+"
+      publicKeyJwk:
+        kty: "OKP"
+        crv: "SPHINCS+"
+        x: "{{SPHINCS_PLUS_PUBLIC_KEY}}"
+
+algorithms:
+  hashing: ["SHA3-512", "SHAKE256", "BLAKE3"]
+  kdf: "HKDF-SHAKE512"
+  rng: "ChaCha20-DRBG"
+
+---
+### [CI_CD]
+github_actions:
+  workflow: ".github/workflows/trustfile.yml"
+  checks:
+    - "a2ml validate {{TRUSTFILE_PATH}}"
+    - "lake build && lake exectest"
+    - "hypatia scan --config hypatia.yml"
+
+gitbot_fleet:
+  hooks:
+    - type: "pre-commit"
+      script: "a2ml validate {{TRUSTFILE_PATH}}"
+    - type: "post-merge"
+      script: "gitbot-fleet diff --file {{TRUSTFILE_PATH}}"
+
+---
+### [DEPLOYMENT]
+steps:
+  - "Replace all placeholders."
+  - "Generate proofs and signatures."
+  - "Validate trustfile and commit."

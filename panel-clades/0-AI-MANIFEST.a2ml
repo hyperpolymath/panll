@@ -1,0 +1,171 @@
+# ⚠️ STOP - CRITICAL READING REQUIRED
+
+**THIS FILE MUST BE READ FIRST BY ALL AI AGENTS**
+
+## WHAT IS THIS?
+
+This is the AI manifest for **[YOUR-REPO-NAME]**. It declares:
+- Canonical file locations (where things MUST be, and nowhere else)
+- Critical invariants (rules that must NEVER be violated)
+- Repository structure and organization
+
+## CANONICAL LOCATIONS (UNIVERSAL RULE)
+
+### Machine-Readable Metadata: `.machine_readable/` ONLY
+
+These 6 a2ml files MUST exist in `.machine_readable/` directory ONLY:
+1. **STATE.a2ml** - Project state, progress, blockers
+2. **META.a2ml** - Architecture decisions, governance
+3. **ECOSYSTEM.a2ml** - Position in ecosystem, relationships
+4. **AGENTIC.a2ml** - AI agent interaction patterns
+5. **NEUROSYM.a2ml** - Neurosymbolic integration config
+6. **PLAYBOOK.a2ml** - Operational runbook
+
+**CRITICAL:** If ANY of these files exist in the root directory, this is an ERROR.
+
+### Anchor File: `.machine_readable/anchors/ANCHOR.a2ml` ONLY
+
+Canonical authority and semantic-boundary declaration MUST exist at:
+
+` .machine_readable/anchors/ANCHOR.a2ml `
+
+Do not place `ANCHOR.a2ml` at repository root.
+
+### Maintenance Policies: `.machine_readable/policies/` ONLY
+
+Canonical maintenance/governance files MUST exist under:
+
+` .machine_readable/policies/ `
+
+Minimum required files:
+- `MAINTENANCE-AXES.a2ml`
+- `MAINTENANCE-CHECKLIST.a2ml`
+- `SOFTWARE-DEVELOPMENT-APPROACH.a2ml`
+
+Do not place maintenance policy files in repository root.
+
+### Bot Directives: `.machine_readable/bot_directives/` ONLY
+
+Bot-specific instructions for your automated agents. Example roles:
+- git-ops-bot - Git operations
+- quality-bot - Code quality
+- deps-bot - Dependency updates
+- docs-bot - Documentation
+- integration-bot - Integration
+- completion-bot - Task completion
+
+### Contractiles: `.machine_readable/contractiles/` ONLY
+
+Policy enforcement contracts:
+- k9 - Operational constraints (Nickel)
+- dust - Rollback and recovery semantics
+- lust - Future intent and roadmap direction
+- must - Required invariants and validations
+- trust - Cryptographic verification (Haskell)
+
+### Agent Instructions
+
+- `.claude/CLAUDE.md` - Claude-specific patterns (if exists)
+- `0-AI-MANIFEST.a2ml` - THIS FILE (universal entry point)
+
+## CORE INVARIANTS
+
+1. **No state file duplication** - Root must NOT contain STATE.a2ml, META.a2ml, etc.
+2. **Single source of truth** - `.machine_readable/` is authoritative
+3. **No stale metadata** - If root state files exist, they are OUT OF DATE
+4. **License consistency** - All code PMPL-1.0-or-later unless platform requires MPL-2.0
+5. **Author attribution** - Always "{{AUTHOR}} <{{AUTHOR_EMAIL}}>"
+6. **Container images** - MUST use Chainguard base (`cgr.dev/chainguard/wolfi-base:latest` or `cgr.dev/chainguard/static:latest`)
+7. **Container runtime** - Podman, never Docker. Files are `Containerfile`, never `Dockerfile`
+8. **Container orchestration** - `selur-compose`, never `docker-compose`
+
+## REPOSITORY STRUCTURE
+
+<!-- CUSTOMIZE THIS SECTION FOR YOUR REPO -->
+
+This repo contains:
+
+```
+[YOUR-REPO-NAME]/
+├── 0-AI-MANIFEST.a2ml         # THIS FILE (start here)
+├── README.md                   # Project overview
+├── [your source files]         # Main code
+├── container/                  # Stapeln container ecosystem templates
+│   ├── compose.toml            # selur-compose orchestration
+│   ├── compose.example.toml    # Concrete multi-service example
+│   ├── Containerfile           # Multi-stage OCI build
+│   ├── manifest.toml           # Cerro-torre bundle metadata
+│   ├── .gatekeeper.yaml        # Svalinn edge gateway policy
+│   ├── ct-build.sh             # Build/sign/verify pipeline
+│   ├── entrypoint.sh           # Container entrypoint
+│   ├── vordr.toml              # Runtime monitoring
+│   ├── deploy.k9.ncl           # k9-svc Hunt-level deployment
+│   ├── 0-AI-MANIFEST.a2ml      # AI manifest for container dir
+│   └── README.adoc             # Container directory documentation
+└── .machine_readable/          # ALL machine-readable content
+    ├── STATE.a2ml              # Project state, progress, blockers
+    ├── META.a2ml               # Architecture decisions, governance
+    ├── ECOSYSTEM.a2ml          # Ecosystem position, relationships
+    ├── AGENTIC.a2ml            # AI agent interaction patterns
+    ├── NEUROSYM.a2ml           # Neurosymbolic integration config
+    ├── PLAYBOOK.a2ml           # Operational runbook
+    ├── anchors/                # Canonical authority declarations
+    │   └── ANCHOR.a2ml         # Upstream anchor and policy boundary
+    ├── policies/               # Canonical governance policies
+    │   ├── MAINTENANCE-AXES.a2ml
+    │   ├── MAINTENANCE-CHECKLIST.a2ml
+    │   └── SOFTWARE-DEVELOPMENT-APPROACH.a2ml
+    ├── bot_directives/         # Per-bot rules and constraints
+    └── contractiles/           # Policy enforcement contracts (k9, dust, lust, must, trust)
+```
+
+## SESSION STARTUP CHECKLIST
+
+✅ Read THIS file (0-AI-MANIFEST.a2ml) first
+✅ Understand canonical location: `.machine_readable/` (state, anchors, bots, contractiles)
+✅ Know the invariants (no state file duplication, etc.)
+✅ Check for MCP enforcement (if applicable)
+✅ Read `.machine_readable/policies/MAINTENANCE-AXES.a2ml` for axis ordering and audit expectations
+✅ Read `.machine_readable/policies/MAINTENANCE-CHECKLIST.a2ml` for maintenance baseline controls
+✅ Read `.machine_readable/policies/SOFTWARE-DEVELOPMENT-APPROACH.a2ml` for execution sequence
+✅ Read `.machine_readable/STATE.a2ml` for current status
+✅ Read `.machine_readable/AGENTIC.a2ml` for interaction patterns
+
+## LIFECYCLE HOOKS
+
+### on-enter (Session Start)
+
+When starting a new session:
+
+1. Read and acknowledge this manifest
+2. Log session start (optional but recommended)
+   - Format: `[YYYY-MM-DD HH:MM:SS] Session started: [agent-name]`
+   - Location: `.machine_readable/session-log.txt`
+3. Read `.machine_readable/STATE.a2ml`
+4. Check for blockers
+5. State understanding of canonical locations
+
+### on-exit (Session End)
+
+When ending a session:
+
+1. Update `.machine_readable/STATE.a2ml` if changes made
+2. Log session end (optional but recommended)
+   - Format: `[YYYY-MM-DD HH:MM:SS] Session ended: [summary]`
+   - Location: `.machine_readable/session-log.txt`
+3. Document new blockers
+4. Summarize outcomes
+
+## ATTESTATION PROOF
+
+After reading this file, demonstrate understanding by stating:
+
+**"I have read the AI manifest. All machine-readable content (state files, anchors, policies, bot directives, contractiles) is located in `.machine_readable/` ONLY, and I will not create duplicate files in the root directory."**
+
+## META
+
+- **Format Version:** 1.0.0
+- **Created:** [DATE]
+- **Maintained By:** [YOUR-NAME/ORG]
+- **License:** PMPL-1.0-or-later
+- **Protocol:** https://github.com/{{OWNER}}/0-ai-gatekeeper-protocol
