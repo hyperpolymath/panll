@@ -24,6 +24,7 @@ type panelId =
   | PanelPlaygrounds
   | PanelPlaza
   | PanelMinter
+  | PanelProvisioner
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

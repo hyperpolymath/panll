@@ -353,6 +353,34 @@ type minterMsg =
   /// Reset the minter to its initial state for another panel.
   | ResetMinter
 
+/// Provisioner messages — portfolio bundling, panel configuration,
+/// installation lifecycle, and isolation tier management.
+type provisionerMsg =
+  /// Switch category tab.
+  | SetProvCategory(provisionerCategory)
+  /// Update filter text.
+  | SetProvFilter(string)
+  /// Install all panels in a portfolio.
+  | InstallPortfolio(string)
+  /// Install a single panel.
+  | InstallPanel(string)
+  /// Remove a single panel (clean uninstall for pods).
+  | RemovePanel(string)
+  /// Installation result for a panel.
+  | InstallResult(string, result<string, string>)
+  /// Removal result for a panel.
+  | RemoveResult(string, result<string, string>)
+  /// Toggle a panel's enabled state.
+  | TogglePanelEnabled(string)
+  /// Set a panel's isolation tier.
+  | SetPanelIsolation(string, panelIsolation)
+  /// Update custom portfolio name.
+  | SetCustomName(string)
+  /// Toggle a panel in/out of the custom portfolio.
+  | ToggleCustomPanel(string)
+  /// Save the custom portfolio.
+  | SaveCustomPortfolio
+
 /// Provenance Map messages — code trust surface lifecycle.
 /// The provenance map is ambient (always visible), not a panel overlay.
 /// These messages handle file analysis, palette switching, and hostile UX.
@@ -424,6 +452,7 @@ type msg =
   | Interfaces(interfacesMsg) // ABI/FFI inventory
   | Playgrounds(playgroundsMsg) // Code sandbox
   | Minter(minterMsg) // Panel Minter wizard
+  | Provisioner(provisionerMsg) // Portfolio bundles, config, isolation
   | Provenance(provenanceMsg) // Code trust surface (core infrastructure)
   | Watcher(watcherMsg) // Filesystem observation (core infrastructure)
   | PanelSwitcher(panelSwitcherMsg) // Panel navigation and health checks

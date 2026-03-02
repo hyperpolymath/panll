@@ -119,6 +119,15 @@ let allPanels: array<panelMeta> = [
     connectionStatus: ServiceConnected, // Local generation, always available
     hasBackend: true, // Tauri backend generates files and patches wiring
   },
+  {
+    id: PanelProvisioner,
+    name: "Provisioner",
+    shortName: "Prov",
+    description: "Portfolio bundles, panel configuration, and isolation tier management",
+    icon: "package",
+    connectionStatus: ServiceConnected, // Local state management, always available
+    hasBackend: false, // Configuration is local; container ops handled by Stapeln/Podman
+  },
 ]
 
 /// Look up panel metadata by ID.

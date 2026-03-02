@@ -149,6 +149,7 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelInterfaces) => Interfaces.view(model.interfaces)
   | Some(PanelPlaygrounds) => Playgrounds.view(model.playgrounds)
   | Some(PanelMinter) => Minter.view(model.minter)
+  | Some(PanelProvisioner) => Provisioner.view(model.provisioner)
   // Panels not yet implemented — show a labelled placeholder overlay so the
   // panel switcher works end-to-end before each module is wired in.
   | Some(panelId) => {

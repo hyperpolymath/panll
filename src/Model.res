@@ -75,6 +75,11 @@ include FleetModel
 /// wizard that generates new panel modules with accessibility baked in.
 include MinterModel
 
+/// Re-export Provisioner types (panelIsolation, panelInstallStatus, panelConfig,
+/// portfolio, portfolioInstallProgress, provisionerCategory, provisionerState)
+/// for the portfolio bundling, panel configuration, and installation system.
+include ProvisionerModel
+
 /// Re-export Provenance types (trustLevel, provenanceRegion, provenanceSummary,
 /// fileProvenance, accessibilityPalette, provenanceState) for the Qubes-style
 /// code trust surface that is always visible as an ambient layer.
@@ -151,6 +156,9 @@ type model = {
 
   // Panel Minter — create new panel modules with accessibility by default
   minter: minterState,
+
+  // Provisioner — portfolio bundles, panel config, isolation tiers
+  provisioner: provisionerState,
 
   // Provenance Map — Qubes-style code trust surface (always visible, ambient)
   provenance: provenanceState,
@@ -379,6 +387,7 @@ let init = (): model => {
   hypatia: HypatiaEngine.defaultState,
   fleet: FleetEngine.defaultState,
   minter: MinterEngine.defaultState,
+  provisioner: ProvisionerEngine.defaultState,
   provenance: ProvenanceEngine.defaultState,
   watcher: {
     running: false,
