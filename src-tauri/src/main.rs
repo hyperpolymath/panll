@@ -17,8 +17,40 @@ use once_cell::sync::Lazy;
 use serde::Deserialize;
 use serde_json::{json, Value};
 
+/// Generic health check — used by the panel switcher to probe any HTTP service.
+/// Makes a GET request to the given endpoint and returns the response body on
+/// success or an error string on failure. Each panel calls this with its own
+/// service URL so the panel bar can show connection dots (green/red/yellow).
+#[tauri::command]
+async fn health_check(endpoint: String) -> Result<String, String> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .build()
+        .map_err(|e| format!("HTTP client error: {e}"))?;
+
+    let resp = client
+        .get(&endpoint)
+        .send()
+        .await
+        .map_err(|e| format!("Request failed: {e}"))?;
+
+    if resp.status().is_success() {
+        resp.text()
+            .await
+            .map_err(|e| format!("Body read error: {e}"))
+    } else {
+        Err(format!("HTTP {}", resp.status()))
+    }
+}
+
 /// CloudGuard — Cloudflare domain security management module.
 mod cloudguard;
+
+/// Farm — Git-Private-Farm repo inventory module.
+mod farm;
+
+/// Plaza — Palimpsest License adoption and compliance module.
+mod plaza;
 
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
@@ -1640,6 +1672,8 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
+            // Generic health check for panel switcher connection dots
+            health_check,
             validate_inference,
             record_vexation_event,
             get_vexation_index,
@@ -1680,6 +1714,14 @@ fn main() {
             cloudguard::commands::cloudguard_enable_dnssec,
             cloudguard::commands::cloudguard_harden_zone,
             cloudguard::commands::cloudguard_download_config,
+            // Farm — Git-Private-Farm repo inventory
+            farm::commands::farm_list_repos,
+            farm::commands::farm_get_repo,
+            farm::commands::farm_get_stats,
+            // Plaza — Palimpsest License adoption and compliance
+            plaza::commands::plaza_scan_repo,
+            plaza::commands::plaza_adoption_stats,
+            plaza::commands::plaza_check_compatibility,
         ])
         .setup(|_app| {
             Ok(())

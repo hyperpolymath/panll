@@ -131,6 +131,51 @@ let renderDarkStart = (): Tea_Vdom.t<msg> => {
   )
 }
 
+/// Render the active panel overlay based on the panel switcher state.
+/// Each panel module renders as a full-screen overlay on top of the core
+/// three-panel layout. Panels not yet implemented show a placeholder.
+let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
+  switch model.panelSwitcher.activePanel {
+  | None => noNode
+  | Some(PanelVab) => Vab.view(model.vab)
+  | Some(PanelCloudGuard) => CloudGuard.view(model.cloudguard)
+  | Some(PanelFarm) => Farm.view(model.farm)
+  | Some(PanelPlaza) => Plaza.view(model.plaza)
+  // Panels not yet implemented — show a labelled placeholder overlay so the
+  // panel switcher works end-to-end before each module is wired in.
+  | Some(panelId) => {
+      let name = PanelRegistry.panelName(panelId)
+      div(
+        list{
+          Attrs.class_("fixed inset-0 bg-gray-950/95 z-40 flex items-center justify-center"),
+        },
+        list{
+          div(
+            list{Attrs.class_("text-center")},
+            list{
+              div(
+                list{Attrs.class_("text-2xl font-light text-gray-400 mb-4")},
+                list{text(name)},
+              ),
+              div(
+                list{Attrs.class_("text-sm text-gray-600")},
+                list{text("Panel module not yet connected")},
+              ),
+              button(
+                list{
+                  Attrs.class_("mt-6 px-4 py-2 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition-colors"),
+                  Events.onClick(PanelSwitcher(ClosePanels)),
+                },
+                list{text("Close")},
+              ),
+            },
+          ),
+        },
+      )
+    }
+  }
+}
+
 /// Main view function
 let view = (model: model): Tea_Vdom.t<msg> => {
   // Dark Start mode - show architecture manifold
@@ -143,9 +188,9 @@ let view = (model: model): Tea_Vdom.t<msg> => {
         // Ambient substrate - Orbital Drift Aura
         renderDriftAura(model.orbital, model.humidity),
 
-        // Main three-pane layout
+        // Main three-pane layout (padded right for the panel bar)
         div(
-          list{Attrs.class_("flex-1 flex overflow-hidden relative z-10")},
+          list{Attrs.class_("flex-1 flex overflow-hidden relative z-10 pr-12")},
           list{
             renderPaneL(model.paneL, model.verisimdb.proofObligations, model.paneLVisible),
             renderPaneN(model.paneN, model.echidna, model.paneNVisible),
@@ -163,19 +208,12 @@ let view = (model: model): Tea_Vdom.t<msg> => {
           model.feedbackReportType,
         ),
 
-        // VAB (Verified Assembly Building) - full-screen overlay
-        if model.vab.visible {
-          Vab.view(model.vab)
-        } else {
-          noNode
-        },
+        // Active panel overlay — replaces ad-hoc visible checks on VAB/CloudGuard.
+        // The panel switcher routes to the correct module's view or a placeholder.
+        renderActivePanel(model),
 
-        // CloudGuard (Cloudflare Domain Security) - full-screen overlay
-        if model.cloudguard.visible {
-          CloudGuard.view(model.cloudguard)
-        } else {
-          noNode
-        },
+        // Panel switcher bar — vertical icon strip on right edge (z-50 over overlays)
+        PanelSwitcher.view(model.panelSwitcher),
       },
     )
   }

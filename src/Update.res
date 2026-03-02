@@ -2127,6 +2127,200 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
 // Main Orchestrator
 // ===========================================================================
 
+// ===========================================================================
+// Farm Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: Git-Private-Farm (repo inventory)
+///
+/// Handles loading the manifest, parsing the inventory, and UI state changes
+/// (category, filter, sort). The backend reads local JSON — no HTTP service.
+let updateFarm = (model: model, msg: farmMsg): (model, Tea_Cmd.t<msg>) => {
+  let farm = model.farm
+  switch msg {
+  | LoadRepos => (
+      {...model, farm: {...farm, loading: true, error: None}},
+      FarmCmd.listRepos(result => Farm(ReposLoaded(result))),
+    )
+  | ReposLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      switch FarmEngine.parseInventory(jsonStr) {
+      | Ok(repos) => (
+          {
+            ...model,
+            farm: {
+              ...farm,
+              loaded: true,
+              loading: false,
+              error: None,
+              repos,
+              totalRepos: Array.length(repos),
+              unhealthyCount: repos->Array.filter(r =>
+                switch r.healthScore {
+                | Some(s) => s < 0.5
+                | None => false
+                }
+              )->Array.length,
+            },
+          },
+          Tea_Cmd.none,
+        )
+      | Error(e) => (
+          {...model, farm: {...farm, loading: false, error: Some(e)}},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(e) => (
+        {...model, farm: {...farm, loading: false, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | SetFarmCategory(cat) => (
+      {...model, farm: {...farm, activeCategory: cat}},
+      Tea_Cmd.none,
+    )
+  | SetFarmFilter(text) => (
+      {...model, farm: {...farm, filterText: text}},
+      Tea_Cmd.none,
+    )
+  | SetFarmSort(sort) => (
+      {...model, farm: {...farm, sortBy: sort}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+// ===========================================================================
+// Plaza Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: Palimpsest Plaza (PMPL licensing)
+///
+/// Handles adoption stats loading, repo scanning, and UI state changes.
+/// The backend scans the local filesystem for SPDX headers and LICENSE files.
+let updatePlaza = (model: model, msg: plazaMsg): (model, Tea_Cmd.t<msg>) => {
+  let plaza = model.plaza
+  switch msg {
+  | LoadAdoptionStats => (
+      {...model, plaza: {...plaza, loading: true, error: None}},
+      PlazaCmd.adoptionStats(result => Plaza(AdoptionStatsLoaded(result))),
+    )
+  | AdoptionStatsLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      switch PlazaEngine.parseAdoptionStats(jsonStr) {
+      | Ok(stats) => (
+          {
+            ...model,
+            plaza: {
+              ...plaza,
+              loaded: true,
+              loading: false,
+              error: None,
+              stats: Some(stats),
+            },
+          },
+          Tea_Cmd.none,
+        )
+      | Error(e) => (
+          {...model, plaza: {...plaza, loading: false, error: Some(e)}},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(e) => (
+        {...model, plaza: {...plaza, loading: false, error: Some(e)}},
+        Tea_Cmd.none,
+      )
+    }
+  | ScanRepo(repoName) => (
+      {...model, plaza: {...plaza, loading: true}},
+      PlazaCmd.scanRepo(repoName, result => Plaza(RepoScanned(result))),
+    )
+  | RepoScanned(_result) => (
+      // TODO: Parse scan result and add to audits array.
+      {...model, plaza: {...plaza, loading: false}},
+      Tea_Cmd.none,
+    )
+  | SetPlazaCategory(cat) => (
+      {...model, plaza: {...plaza, activeCategory: cat}},
+      Tea_Cmd.none,
+    )
+  | SetPlazaFilter(text) => (
+      {...model, plaza: {...plaza, filterText: text}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+// ===========================================================================
+// Panel Switcher Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: Panel Switcher (unified panel navigation)
+///
+/// Handles panel toggle, close, and health check results. Updates the
+/// `panelSwitcher` state and the `connectionStatus` of individual panels
+/// in the registry. Also bridges to legacy `visible` fields on VAB and
+/// CloudGuard so existing code continues to work during migration.
+let updatePanelSwitcher = (model: model, msg: panelSwitcherMsg): (model, Tea_Cmd.t<msg>) => {
+  let ps = model.panelSwitcher
+  switch msg {
+  | TogglePanel(id) => {
+      // Toggle: if already active, close; otherwise open the requested panel.
+      let newActive = ps.activePanel === Some(id) ? None : Some(id)
+      // Bridge to legacy visible fields for VAB and CloudGuard.
+      let newVab = {...model.vab, visible: newActive === Some(PanelVab)}
+      let newCg = {...model.cloudguard, visible: newActive === Some(PanelCloudGuard)}
+      // Auto-load Farm inventory when opening the panel for the first time.
+      let farmCmd = if newActive === Some(PanelFarm) && !model.farm.loaded && !model.farm.loading {
+        FarmCmd.listRepos(result => Farm(ReposLoaded(result)))
+      } else {
+        Tea_Cmd.none
+      }
+      // Auto-connect CloudGuard when opening.
+      let cgCmd = if newActive === Some(PanelCloudGuard) && model.cloudguard.connection === Disconnected {
+        CloudGuardCmd.verifyToken(result => CloudGuard(TokenVerified(result)))
+      } else {
+        Tea_Cmd.none
+      }
+      (
+        {
+          ...model,
+          panelSwitcher: {...ps, activePanel: newActive},
+          vab: newVab,
+          cloudguard: newCg,
+        },
+        Tea_Cmd.batch(list{farmCmd, cgCmd}),
+      )
+    }
+  | ClosePanels => {
+      let newVab = {...model.vab, visible: false}
+      let newCg = {...model.cloudguard, visible: false}
+      (
+        {
+          ...model,
+          panelSwitcher: {...ps, activePanel: None},
+          vab: newVab,
+          cloudguard: newCg,
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | HealthCheckResult(panelId, result) => {
+      // Update the connectionStatus of the panel that was checked.
+      let newStatus = switch result {
+      | Ok(_) => ServiceConnected
+      | Error(e) => ServiceError(e)
+      }
+      let newPanels = ps.panels->Array.map(p =>
+        p.id === panelId ? {...p, connectionStatus: newStatus} : p
+      )
+      ({...model, panelSwitcher: {...ps, panels: newPanels}}, Tea_Cmd.none)
+    }
+  }
+}
+
 /// Determines whether a message should trigger an auto-save.
 /// Returns false for NoOp and SaveState (no state change), true for everything else.
 let shouldAutoSave = (msg: msg): bool => {
@@ -2161,6 +2355,9 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | AntiCrash(subMsg) => updateAntiCrash(model, subMsg)
   | Vab(subMsg) => (updateVab(model, subMsg), Tea_Cmd.none)
   | CloudGuard(subMsg) => updateCloudGuard(model, subMsg)
+  | Farm(subMsg) => updateFarm(model, subMsg)
+  | Plaza(subMsg) => updatePlaza(model, subMsg)
+  | PanelSwitcher(subMsg) => updatePanelSwitcher(model, subMsg)
   | SaveState => {
       // Imperative: persist current state to localStorage.
       Storage.save(model)

@@ -41,6 +41,19 @@ include VabModel
 /// security management panel.
 include CloudGuardModel
 
+/// Re-export Farm types (farmRepo, farmPriority, farmCategory, farmSortBy,
+/// farmState) for the Git-Private-Farm panel — repo inventory and health.
+include FarmModel
+
+/// Re-export Plaza types (complianceLevel, complianceAudit, adoptionStats,
+/// plazaCategory, plazaState) for the Palimpsest Plaza licensing panel.
+include PlazaModel
+
+/// Re-export Panel Switcher types (panelId, connectionStatus, panelMeta,
+/// panelSwitcherState) for the unified panel navigation system that replaces
+/// ad-hoc `visible: bool` toggles on individual overlays.
+include PanelSwitcherModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -75,6 +88,15 @@ type model = {
 
   // CloudGuard (Cloudflare domain security management)
   cloudguard: cloudguardState,
+
+  // Git-Private-Farm — repo inventory and health dashboard
+  farm: farmState,
+
+  // Palimpsest Plaza — PMPL licensing adoption and governance
+  plaza: plazaState,
+
+  // Panel Switcher — unified panel navigation (replaces ad-hoc visible toggles)
+  panelSwitcher: panelSwitcherState,
 
   // Feedback-O-Tron
   feedbackPending: option<string>,
@@ -263,6 +285,31 @@ let init = (): model => {
     showAudit: true,
     dnsEditingId: None,
   },
+  farm: {
+    loaded: false,
+    loading: false,
+    error: None,
+    repos: [],
+    selectedRepoNames: [],
+    activeCategory: AllRepos,
+    filterText: "",
+    sortBy: SortByName,
+    totalRepos: 0,
+    unhealthyCount: 0,
+  },
+  plaza: {
+    loaded: false,
+    loading: false,
+    error: None,
+    stats: None,
+    audits: [],
+    signatures: [],
+    compatibilityResults: [],
+    activeCategory: Dashboard,
+    filterText: "",
+    selectedRepo: None,
+  },
+  panelSwitcher: PanelRegistry.init,
   humidity: Medium,
   viewMode: DarkStart,
   paneLVisible: true,

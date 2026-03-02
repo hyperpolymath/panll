@@ -305,12 +305,13 @@ pub fn evaluate_constraints(
             .unwrap_or(0)
     );
 
+    let failed = findings.len() as u32;
     AuditResult {
         domain: domain.to_string(),
         timestamp,
         findings,
         passed,
-        failed: findings.len() as u32,
+        failed,
         score,
     }
 }

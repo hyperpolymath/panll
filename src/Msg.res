@@ -234,6 +234,47 @@ type cloudguardMsg =
   | ToggleAuditPanel
   | ToggleDiffPanel
 
+/// Git-Private-Farm panel messages — repo inventory loading, filtering,
+/// and category navigation. The farm backend reads local JSON, no HTTP.
+type farmMsg =
+  /// Trigger loading the repo inventory from farm-manifest.json.
+  | LoadRepos
+  /// Repo inventory loaded (or failed).
+  | ReposLoaded(result<string, string>)
+  /// Change the active category tab.
+  | SetFarmCategory(farmCategory)
+  /// Update the text filter for repo search.
+  | SetFarmFilter(string)
+  /// Change the sort order.
+  | SetFarmSort(farmSortBy)
+
+/// Palimpsest Plaza panel messages — PMPL licensing adoption, compliance
+/// scanning, and governance. The plaza backend scans local filesystem.
+type plazaMsg =
+  /// Load adoption statistics across the ecosystem.
+  | LoadAdoptionStats
+  /// Adoption stats loaded (or failed).
+  | AdoptionStatsLoaded(result<string, string>)
+  /// Scan a specific repo for compliance.
+  | ScanRepo(string)
+  /// Repo scan result.
+  | RepoScanned(result<string, string>)
+  /// Change the active category tab.
+  | SetPlazaCategory(plazaCategory)
+  /// Update the text filter.
+  | SetPlazaFilter(string)
+
+/// Panel switcher messages — unified panel navigation replacing ad-hoc
+/// `visible: bool` toggles on individual overlays. The panel bar dispatches
+/// these when the operator clicks an icon.
+type panelSwitcherMsg =
+  /// Toggle a panel: opens it if closed, closes if already active.
+  | TogglePanel(panelId)
+  /// Close whatever panel is currently active (Escape key handler).
+  | ClosePanels
+  /// Health check result for a panel's backend service.
+  | HealthCheckResult(panelId, result<string, string>)
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -248,5 +289,8 @@ type msg =
   | AntiCrash(antiCrashMsg)
   | Vab(vabMsg)
   | CloudGuard(cloudguardMsg) // Cloudflare domain security management
+  | Farm(farmMsg) // Git-Private-Farm repo inventory
+  | Plaza(plazaMsg) // Palimpsest Plaza PMPL licensing
+  | PanelSwitcher(panelSwitcherMsg) // Panel navigation and health checks
   | SaveState // Persist current state to storage
   | NoOp
