@@ -1,0 +1,52 @@
+= TSDM Panel Clade
+:toc:
+
+== What is this?
+
+This directory defines the **TSDM (Triaxial Software Development Methodology)**
+panel clade for PanLL. A clade is a taxonomic unit — it declares what a panel
+_is_, what it _can do_, and how other panels should _interact_ with it.
+
+== Files
+
+[cols="1,3"]
+|===
+| File | Purpose
+
+| `TSDM.a2ml`
+| Machine-readable clade definition — traits, axes, tiers, consumers, integration points
+
+| `TSDM.adoc`
+| Human-readable reference document — full explanation of the methodology with examples
+
+| `README.adoc`
+| This file — directory overview
+|===
+
+== Quick Reference
+
+* **Axis 1 (Scope):** must > intend > like
+* **Axis 2 (Maintenance):** corrective > adaptive > perfective
+* **Axis 3 (Audit):** systems > compliance > effects
+* **Then:** cleanup/finish-off + maintainer dialogue
+
+See `TSDM.adoc` for the full explanation.
+
+== PanLL Integration
+
+The TSDM panel in PanLL (`PanelTsdm`) is a **directive panel** — it doesn't
+scan or build anything itself. Instead, users customise the axis ordering
+and tier priorities, and other panels read those preferences when presenting
+work items.
+
+=== Panel Files (in PanLL src/)
+
+* `src/model/TsdmModel.res` — state types and init
+* `src/commands/TsdmCmd.res` — Tauri command wrappers (persistence)
+* `src/modules/TsdmModule.res` — capability declarations
+* `src/components/Tsdm.res` — Tea_Html view with drag-reorder controls
+
+=== Consumer Panels
+
+Panels that read TSDM directives: panic-attack, Mass Panic, Migration,
+Reposystem, Farm, Fleet, Hypatia, Databases.

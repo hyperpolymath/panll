@@ -200,6 +200,24 @@ let allPanels: array<panelMeta> = [
     connectionStatus: ServiceDisconnected, // Probes for local panic-attack binary
     hasBackend: true, // Invokes panic-attack CLI via Tauri
   },
+  {
+    id: PanelMassPanic,
+    name: "Mass Panic",
+    shortName: "MP",
+    description: "Organisation-scale batch scanning — assemblyline + BLAKE3 + verisimdb + delta",
+    icon: "zap-off",
+    connectionStatus: ServiceDisconnected, // Probes for panic-attack binary
+    hasBackend: true, // Invokes panic-attack assemblyline via Tauri
+  },
+  {
+    id: PanelTsdm,
+    name: "TSDM",
+    shortName: "TSD",
+    description: "Triaxial Software Development Methodology — directive panel for priority ordering across all panels",
+    icon: "compass",
+    connectionStatus: ServiceConnected, // Pure client-side state, always available
+    hasBackend: false, // Directive state is local; optional verisimdb persistence
+  },
 ]
 
 /// Look up panel metadata by ID.

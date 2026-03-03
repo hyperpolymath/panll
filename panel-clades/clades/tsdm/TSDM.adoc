@@ -1,0 +1,174 @@
+= Triaxial Software Development Methodology (TSDM)
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc: left
+:toclevels: 3
+:icons: font
+:source-highlighter: rouge
+
+== Overview
+
+TSDM is a three-axis methodology for structuring software development work.
+Every piece of work passes through three axes in order, each with its own
+internal priority ranking. After all three axes, a cleanup/finish-off phase
+runs, followed by mandatory maintainer dialogue.
+
+The methodology is designed to prevent the common failure modes of ad-hoc
+development: scope creep, deferred maintenance accumulating into crisis,
+and audits happening only when something has already gone wrong.
+
+[TIP]
+====
+**Quick version:** Scope it (what matters?), maintain it (fix what's broken
+before improving what works), audit it (is everything actually working?),
+then clean up and talk to the maintainer.
+====
+
+== The Three Axes
+
+=== Axis 1: Scope
+
+*Priority:* `must > intend > like`
+
+Axis 1 determines _what work needs doing_ and classifies it into three tiers:
+
+[cols="1,3"]
+|===
+| Tier | Meaning
+
+| **must**
+| Non-negotiable. Broken functionality, security issues, blockers. If this
+  isn't done, the project cannot proceed.
+
+| **intend**
+| Planned work that moves the project towards its stated goals. Roadmap
+  items, milestone features, tracked improvements.
+
+| **like**
+| Nice-to-have. Quality-of-life improvements, cosmetic changes, speculative
+  features. Only attempted after must and intend are clear.
+|===
+
+Axis 1 reads from:
+
+* README, roadmap, status documents, CI/security docs
+* Marker scans: `TODO`, `FIXME`, `XXX`, `HACK`, `STUB`, `PARTIAL`
+* Idris2 unsoundness scan: `believe_me`, `assert_total`
+* Documentation honesty checks (does the docs match the code?)
+
+The output is a **scoped work assembly** — a prioritised list of work items
+classified into must/intend/like buckets.
+
+=== Axis 2: Maintenance
+
+*Priority:* `corrective > adaptive > perfective`
+
+Axis 2 determines _in what order_ to address the scoped work:
+
+[cols="1,3"]
+|===
+| Tier | Meaning
+
+| **corrective**
+| Fix defects, regressions, safety and security failures first. If something
+  is broken, fix it before improving anything.
+
+| **adaptive**
+| Reconcile scope changes, remove stale references, cull obsolete work.
+  After corrective fixes, align the codebase with its current reality.
+
+| **perfective**
+| Quality improvements derived from the honest Axis 1 state. Only after
+  corrective and adaptive work is complete can you meaningfully improve
+  code quality, performance, or clarity.
+|===
+
+=== Axis 3: Audit
+
+*Priority:* `systems > compliance > effects`
+
+Axis 3 verifies that everything is actually working:
+
+[cols="1,3"]
+|===
+| Tier | Meaning
+
+| **systems**
+| Required systems are present and operating. CI passes, dependencies
+  resolve, builds succeed, tests run.
+
+| **compliance**
+| Exceptions, seams, and compromises are explicit, bounded, and
+  drift-resistant. No hidden technical debt.
+
+| **effects**
+| Benchmark and operational impact evidence is captured and reviewed.
+  Changes are measured, not assumed.
+|===
+
+*Compliance tooling:* `panic-attack` (static analysis across 47 languages) +
+*Effects tooling:* sustainabot-guided ecological checking
+
+== Cleanup and Finish-Off
+
+After the three axes, a cleanup phase runs:
+
+. **Root cleanup** — reduce root clutter to required control/entry files
+. **Stale work cull** — archive or remove superseded work
+. **Docs sync** — synchronise human and machine documentation
+. **Compliance audit** — run with evidence capture
+. **Effects audit** — run with evidence capture
+. **Release summary** — produce must/should/could summary
+. **Next actions** — generate corrective/adaptive/perfective next steps
+
+== Collaboration Rule
+
+Every cycle ends with explicit maintainer dialogue covering:
+
+* **What changed** — factual summary of modifications
+* **Why** — rationale and trade-offs
+* **Remaining risks** — honest assessment of what's still vulnerable
+
+This dialogue is _mandatory_, not optional. It catches misunderstandings
+early and creates an auditable record of decisions.
+
+== Customisation
+
+The TSDM panel in PanLL allows users to:
+
+* **Reorder axes** — e.g. put Audit before Maintenance for security-first work
+* **Reorder tiers** — e.g. put `adaptive` before `corrective` when reconciling a major refactor
+* **Toggle cleanup steps** — disable steps that don't apply to the current session
+* **Filter work items** — by axis, tier, source panel, or search text
+* **Lock the directive** — prevent accidental reordering mid-session
+
+Other panels read the active TSDM directive to sort and present their work
+items in the user's preferred order. This means changing your TSDM
+preferences ripples across _all_ panels simultaneously.
+
+== Machine-Readable Format
+
+The canonical machine-readable sources are:
+
+* **Clade definition:** `panel-clades/clades/tsdm/TSDM.a2ml`
+* **Policy:** `.machine_readable/policies/SOFTWARE-DEVELOPMENT-APPROACH.a2ml`
+* **Maintenance axes:** `.machine_readable/policies/MAINTENANCE-AXES.a2ml`
+
+The clade definition (`TSDM.a2ml`) is the most detailed — it includes trait
+declarations, consumer panel lists, and integration points. The policy files
+are the governance layer that mandates TSDM usage across all repos.
+
+== History
+
+* **2026-02-24:** First machine-readable a2ml specification
+* **2026-03-02:** Panel clade definition and PanLL panel created
+* **Origin:** Developed by Jonathan D.A. Jewell as a general-purpose
+  software maintenance framework, formalised into the RSR template repo's
+  maintenance gate, then elevated to a PanLL directive panel.
+
+== Author
+
+**Jonathan D.A. Jewell** <j.d.a.jewell@open.ac.uk>
+
+== License
+
+PMPL-1.0-or-later

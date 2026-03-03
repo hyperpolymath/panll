@@ -121,7 +121,7 @@ let roleLabel = (role: aiRole): string => {
 let formatTokens = (count: int): string => {
   if count >= 1000 {
     let k = Int.toFloat(count) /. 1000.0
-    Float.toFixedWithPrecision(k, ~digits=1) ++ "k"
+    Float.toFixed(k, ~digits=1) ++ "k"
   } else {
     Int.toString(count)
   }

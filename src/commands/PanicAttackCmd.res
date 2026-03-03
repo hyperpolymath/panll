@@ -14,7 +14,7 @@ let checkCapability = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("check_panic_attacker_capability", {})
+    invoke("check_panic_attacker_capability", Dict.make())
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -111,7 +111,7 @@ let listReports = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("panic_attack_list_reports", {})
+    invoke("panic_attack_list_reports", Dict.make())
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()

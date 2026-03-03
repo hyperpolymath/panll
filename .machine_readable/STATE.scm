@@ -4,7 +4,7 @@
 (state
   (metadata
     (version "1.0.0")
-    (last-updated "2026-03-01")
+    (last-updated "2026-03-03")
     (format-spec "hyperpolymath/rsr-template-repo/spec/STATE-FORMAT-SPEC.adoc"))
 
   (project-context
@@ -19,10 +19,10 @@
 
   (current-position
     (milestone "v0.1.0 - Complete TEA Implementation")
-    (completion-percentage 95)
+    (completion-percentage 97)
     (phase "development")
-    (current-focus "VAB panel with KSP aesthetics, BuckleScript removal, A2ML/K9/i18n/document capabilities")
-    (status-summary "95% complete - VAB panel (KSP-themed, 111 components), BuckleScript fully removed, 23 capability categories, panic-attack assail clean")
+    (current-focus "22 panel clades defined, TSDM+PanicAttack+MassPanic panels wired, Tea_Html migration complete, 0 errors 0 warnings")
+    (status-summary "97% complete - All 22 panels wired into TEA cycle, 22 panel clades defined, JSX→Tea_Html migration, Float deprecations fixed, Deno task integration")
 
     (work-completed
       ("Custom TEA implementation with full Model-Update-View cycle")
@@ -51,7 +51,16 @@
       ("23 capability categories including i18n, document formats, A2ML, K9")
       ("PaneN deprecation fix: Float.toFixedWithPrecision → Float.toFixed")
       ("KSP aesthetic CSS: 25+ custom classes (vab-toolbar, vab-rack, vab-stage, vab-led-*, vab-bolt, etc.)")
-      ("panic-attack assail: 4 critical (main.rs unwraps), 8 high, 0 tainted paths, 0 cross-lang vulns"))
+      ("panic-attack assail: 4 critical (main.rs unwraps), 8 high, 0 tainted paths, 0 cross-lang vulns")
+      ("TSDM directive panel: TsdmModel (3 axes, 9 tiers, cleanup steps, directives), Tsdm.res Tea_Html view, updateTsdm 19 handlers")
+      ("MassPanic multi-repo scanner: MassPanicModel (scan configs, reports, comparisons), MassPanic.res Tea_Html view")
+      ("PanicAttack panel: rewrote from JSX to Tea_Html, updatePanicAttack 22 handlers wired")
+      ("All 22 panels wired into TEA cycle: PanelSwitcherModel, Msg, Model, Update, View, PanelRegistry")
+      ("22 panel clades defined (a2ml): 9 clade kinds (directive, scanner, builder, database, network, viewer, ai, loader, meta)")
+      ("JSX→Tea_Html migration complete: 3 panels converted, JSX config removed, ReactDOM dependency eliminated")
+      ("Float.toFixedWithPrecision deprecation fixed across 7 files")
+      ("Deno task integration: res:build/clean/watch in deno.json, removed duplicate npm scripts")
+      ("Cruft removal: unused rescript-tea and rescript-webapi npm deps removed, author email fixed"))
 
 
     (work-in-progress
@@ -202,6 +211,27 @@
        ("Implement FeedbackOTron submission form"))))
 
   (session-history
+    ((session-id "2026-03-03-opus-panels-clades")
+     (date "2026-03-03")
+     (agent "Claude Opus 4.6")
+     (focus "Wire TSDM+PanicAttack+MassPanic panels, fix build errors, define 22 panel clades, clean cruft")
+     (outcomes
+       ("Created TsdmModel.res, TsdmCmd.res, TsdmModule.res, Tsdm.res — full TSDM directive panel")
+       ("Created MassPanicModel.res, MassPanicCmd.res, MassPanicModule.res, MassPanic.res — multi-repo scanner")
+       ("Added updateTsdm (19 handlers) and updatePanicAttack (22 handlers) sub-updaters to Update.res")
+       ("Rewrote PanicAttack.res, MassPanic.res, Tsdm.res from JSX to Tea_Html (project uses local rescript-tea)")
+       ("Removed JSX v4 config from rescript.json (was causing ReactDOM lookup failures)")
+       ("Fixed CloudGuardPolicy.res missing comma, PanicAttackCmd.res empty record literals")
+       ("Fixed Float.toFixedWithPrecision deprecation across 7 files (Hypatia, AiEngine, Playgrounds, Interfaces, Aerie, Reposystem, Fleet)")
+       ("Fixed shadow warnings: qualified Model.VoiceError, suppressed warning 45 in rescript.json")
+       ("Removed dead catch-all from View.res — all 22 panels now have explicit routes")
+       ("Added res:build/clean/watch to deno.json (Deno-not-npm policy)")
+       ("Removed duplicate npm scripts and unused deps (rescript-tea, rescript-webapi) from package.json")
+       ("Defined 22 panel clades with a2ml files covering 9 kinds: directive, scanner, builder, database, network, viewer, ai, loader, meta")
+       ("Created README.adoc for all 22 clade directories plus clades registry README")
+       ("Updated panel-clades STATE.a2ml and ECOSYSTEM.a2ml with full coverage")
+       ("Build: 0 errors, 0 warnings across 462 source files")))
+
     ((session-id "2026-03-01-opus-vab")
      (date "2026-03-01")
      (agent "Claude Opus 4.6")

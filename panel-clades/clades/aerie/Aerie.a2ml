@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Aerie Panel Clade — Network Diagnostics and BGP Forensics
+
+[clade-metadata]
+id = "aerie"
+name = "Aerie"
+short-name = "Net"
+version = "1.0.0"
+kind = "network"
+icon = "network"
+description = "Network diagnostics and BGP forensics — traceroute, latency, packet analysis."
+
+[clade-traits]
+has-backend = true           # Network probing via Tauri backend
+has-scanning = true          # Probes network paths, measures latency
+has-persistence = true       # Saves diagnostic results
+has-work-items = true        # Network issues as TSDM work items
+has-priority-ordering = false
+has-customisation = true     # Target host, probe count, protocol selection
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "Traceroute",              # Hop-by-hop network path visualisation
+  "LatencyMeasurement",      # Round-trip time and jitter analysis
+  "PacketLossDetection",     # Identify lossy network segments
+  "BGPForensics",            # BGP route analysis and anomaly detection
+  "DNSProbing",              # DNS resolution diagnostics
+]
+
+[clade-panel-integration]
+panel-id = "PanelAerie"
+model-module = "AerieModel"
+component-module = "Aerie"
+command-module = "AerieCmd"
+module-module = "AerieModule"

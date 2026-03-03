@@ -111,7 +111,7 @@ let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
                     | Some(result) =>
                       if result.success {
                         div(list{}, list{
-                          div(list{Attrs.class_("text-green-400 mb-1")}, list{text(`OK (${Float.toFixedWithPrecision(result.durationMs, ~digits=1)}ms, ${Int.toString(result.rowCount)} rows)`)}),
+                          div(list{Attrs.class_("text-green-400 mb-1")}, list{text(`OK (${Float.toFixed(result.durationMs, ~digits=1)}ms, ${Int.toString(result.rowCount)} rows)`)}),
                           switch result.data {
                           | Some(data) => pre(list{Attrs.class_("text-gray-300 whitespace-pre-wrap")}, list{text(data)})
                           | None => noNode

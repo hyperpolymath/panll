@@ -1,0 +1,177 @@
+= Panel Clades Registry
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+:toc:
+
+== What are clades?
+
+A **clade** is a taxonomic unit that defines what a PanLL panel _is_. Each
+clade declares traits (capabilities), data shapes, interaction patterns, and
+relationships to other clades. Panels inherit behaviour from their clade,
+and users can customise how clades interact.
+
+== Clade Kinds
+
+[cols="1,3"]
+|===
+| Kind | Description
+
+| **directive**
+| Controls how other panels present and sequence work. Does not scan or build.
+
+| **scanner**
+| Analyses code, repos, or systems and produces findings.
+
+| **builder**
+| Constructs, compiles, or assembles artifacts.
+
+| **database**
+| Manages data stores and query interfaces.
+
+| **network**
+| Monitors or manages network infrastructure.
+
+| **viewer**
+| Displays information without modifying state.
+
+| **ai**
+| Multi-provider neural interface for agentic reasoning.
+
+| **loader**
+| Scans and configures panels from repository structure.
+
+| **meta**
+| Governance, compliance, and licensing hub.
+|===
+
+== Registry
+
+[cols="1,1,1,3"]
+|===
+| Clade | Kind | Short Name | Description
+
+| `tsdm/`
+| directive
+| TSDM
+| Triaxial Software Development Methodology — three-axis priority ordering
+
+| `workspace/`
+| directive
+| WS
+| Panel arrangements, groups, sessions, modes, and configurator
+
+| `security/`
+| directive
+| Sec
+| Secrets redaction, vault, 2FA, Trustfile enforcement, shoulder-safe mode
+
+| `provisioner/`
+| directive
+| Prov
+| Infrastructure provisioner — Stapeln containers, Wolfi, Chainguard
+
+| `panic-attack/`
+| scanner
+| PA
+| Rust SAST — taint analysis, event chains, SARIF export
+
+| `mass-panic/`
+| scanner
+| MP
+| Multi-repo parallel scanner — orchestrates panic-attack at scale
+
+| `hypatia/`
+| scanner
+| Hyp
+| Neurosymbolic CI/CD intelligence — scan findings, confidence, advisories
+
+| `reposystem/`
+| scanner
+| Repo
+| RSR compliance dashboard — 265-repo overview, workflow health, scorecard
+
+| `vab/`
+| builder
+| VAB
+| Verified Assembly Building — KSP-inspired visual server composer
+
+| `minter/`
+| builder
+| Mint
+| Asset minter — SBOM generation, provenance signing, release artifacts
+
+| `cloudguard/`
+| network
+| CG
+| Cloud security posture — policy engine, drift detection, multi-cloud
+
+| `aerie/`
+| network
+| Aerie
+| BGP forensics, route analysis, network topology visualisation
+
+| `fleet/`
+| network
+| Fleet
+| Gitbot fleet orchestration — rhodibot, echidnabot, sustainabot, et al.
+
+| `databases/`
+| database
+| DB
+| VeriSimDB, QuandleDB, LithoGlyph — query interface and schema viewer
+
+| `playgrounds/`
+| database
+| Play
+| Interactive query sandbox — VQL-DT, GQL-DT, KQL-DT testing
+
+| `farm/`
+| viewer
+| Farm
+| Server farm dashboard — container status, resource utilisation, health
+
+| `interfaces/`
+| viewer
+| Ifc
+| API triple viewer — REST, gRPC, GraphQL endpoint browser
+
+| `voicetag/`
+| viewer
+| VT
+| Accessibility voice tagging — screen reader integration, ARIA management
+
+| `capture/`
+| viewer
+| Cap
+| Screenshot and recording capture — Spectacle integration, annotation
+
+| `migration/`
+| viewer
+| Mig
+| Language migration tracker — ReScript, Deno, Rust conversion progress
+
+| `ai/`
+| ai
+| AI
+| Multi-provider neural interface — Claude, Gemini, Mistral, GPT, local
+
+| `repoloader/`
+| loader
+| Repo
+| Repository scanner and panel configuration — load a repo, configure panels
+
+| `plaza/`
+| meta
+| PMPL
+| Palimpsest Plaza — PMPL license adoption, compliance, and governance hub
+|===
+
+== Adding a new clade
+
+. Create a directory under `clades/` named after the clade (lowercase, hyphenated)
+. Add `<CLADE-NAME>.a2ml` — machine-readable clade definition with traits
+. Add `README.adoc` — directory overview
+. Optionally add `<CLADE-NAME>.adoc` — human-readable reference documentation
+. Update this registry table
+. Create corresponding panel files in PanLL `src/` (model, cmd, module, component)
+. Wire into PanLL (PanelSwitcherModel, Msg, Model, Update, View, PanelRegistry)

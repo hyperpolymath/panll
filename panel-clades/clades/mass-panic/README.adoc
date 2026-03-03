@@ -1,0 +1,34 @@
+= Mass Panic Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+== What is this?
+
+This directory defines the **Mass Panic** panel clade for PanLL.
+Multi-repo parallel scanner — orchestrates panic-attack across repositories at scale.
+
+== Files
+
+[cols="1,3"]
+|===
+| File | Purpose
+
+| `MassPanic.a2ml`
+| Machine-readable clade definition -- traits, capabilities, integration points
+
+| `README.adoc`
+| This file -- directory overview
+|===
+
+== Clade Kind
+
+**scanner**
+
+== PanLL Integration
+
+=== Panel Files (in PanLL src/)
+
+* `src/model/MassPanicModel.res` -- state types and init
+* `src/commands/MassPanicCmd.res` -- Tauri command wrappers
+* `src/modules/MassPanicModule.res` -- capability declarations
+* `src/components/MassPanic.res` -- Tea_Html view

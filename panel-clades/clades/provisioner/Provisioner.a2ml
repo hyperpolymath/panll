@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Provisioner Panel Clade — Portfolio Bundles and Panel Configuration
+
+[clade-metadata]
+id = "provisioner"
+name = "Provisioner"
+short-name = "Prov"
+version = "1.0.0"
+kind = "directive"
+icon = "package"
+description = "Portfolio bundles, panel configuration, and isolation tier management."
+
+[clade-traits]
+has-backend = false
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = true
+has-customisation = true
+is-directive = true
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "PortfolioBundles",
+  "PanelConfiguration",
+  "IsolationTiers",
+  "BundleExportImport",
+]
+
+[clade-panel-integration]
+panel-id = "PanelProvisioner"
+model-module = "ProvisionerModel"
+component-module = "Provisioner"
+command-module = "ProvisionerCmd"
+module-module = "ProvisionerModule"

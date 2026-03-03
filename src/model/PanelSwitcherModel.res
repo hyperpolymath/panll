@@ -33,6 +33,8 @@ type panelId =
   | PanelSecurity
   | PanelMigration
   | PanelPanicAttack
+  | PanelMassPanic
+  | PanelTsdm
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

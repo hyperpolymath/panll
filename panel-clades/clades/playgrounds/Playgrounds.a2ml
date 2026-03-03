@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Playgrounds Panel Clade — Code Sandbox, NQC Console, Tutorials
+
+[clade-metadata]
+id = "playgrounds"
+name = "Playgrounds"
+short-name = "Play"
+version = "1.0.0"
+kind = "database"
+icon = "terminal"
+description = "Code sandbox, NQC console, tutorials — interactive query and experimentation."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "NQCConsole",
+  "CodeSandbox",
+  "TutorialRunner",
+  "DatabaseProxy",
+]
+
+[clade-panel-integration]
+panel-id = "PanelPlaygrounds"
+model-module = "PlaygroundsModel"
+component-module = "Playgrounds"
+command-module = "PlaygroundsCmd"
+module-module = "PlaygroundsModule"

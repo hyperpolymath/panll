@@ -3,11 +3,6 @@
   "version": "0.1.0",
   "description": "PanLL eNSAID - Environment for NeSy-Agentic Integrated Development",
   "type": "module",
-  "scripts": {
-    "res:build": "rescript build",
-    "res:watch": "rescript build -w",
-    "res:clean": "rescript clean"
-  },
   "devDependencies": {
     "@rescript/core": "^1.6.1",
     "@tauri-apps/api": "^2.10.0",
@@ -23,13 +18,11 @@
     "rescript",
     "tauri"
   ],
-  "author": "Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>",
+  "author": "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
   "license": "PMPL-1.0-or-later",
   "dependencies": {
     "@rescript/runtime": "^12.2.0",
     "@tauri-apps/plugin-dialog": "^2.6.0",
-    "@tauri-apps/plugin-fs": "^2.4.5",
-    "rescript-tea": "^0.16.0",
-    "rescript-webapi": "^0.10.0"
+    "@tauri-apps/plugin-fs": "^2.4.5"
   }
 }

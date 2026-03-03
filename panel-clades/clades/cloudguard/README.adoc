@@ -1,0 +1,34 @@
+= CloudGuard Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+== What is this?
+
+This directory defines the **CloudGuard** panel clade for PanLL.
+Cloud security posture — policy engine, drift detection, multi-cloud management.
+
+== Files
+
+[cols="1,3"]
+|===
+| File | Purpose
+
+| `CloudGuard.a2ml`
+| Machine-readable clade definition -- traits, capabilities, integration points
+
+| `README.adoc`
+| This file -- directory overview
+|===
+
+== Clade Kind
+
+**network**
+
+== PanLL Integration
+
+=== Panel Files (in PanLL src/)
+
+* `src/model/CloudGuardModel.res` -- state types and init
+* `src/commands/CloudGuardCmd.res` -- Tauri command wrappers
+* `src/modules/CloudGuardModule.res` -- capability declarations
+* `src/components/CloudGuard.res` -- Tea_Html view

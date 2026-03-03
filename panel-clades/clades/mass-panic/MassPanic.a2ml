@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Mass Panic Panel Clade — Organisation-Scale Batch Scanning
+
+[clade-metadata]
+id = "mass-panic"
+name = "Mass Panic"
+short-name = "MP"
+version = "2.1.0"
+kind = "scanner"
+icon = "zap-off"
+description = "Organisation-scale batch scanning — assemblyline + BLAKE3 + verisimdb + delta."
+
+[clade-traits]
+has-backend = true           # Invokes panic-attack assemblyline via Tauri
+has-scanning = true          # Core trait: batch scans entire repo directories
+has-persistence = true       # verisimdb hexad persistence + BLAKE3 cache
+has-work-items = true        # Aggregate findings feed into TSDM
+has-priority-ordering = false
+has-customisation = true     # Incremental mode, notification, filter, sort
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "AssemblylineScanning",    # Parallel batch scanning across repos
+  "IncrementalBlake3",       # BLAKE3 content fingerprinting for skip-unchanged
+  "VerisimDBPersistence",    # Store results as verisimdb hexads
+  "DeltaReporting",          # Compare runs, show regressions/improvements
+  "NotificationPipeline",    # Generate notifications for critical findings
+  "RepoDiscovery",           # Auto-discover repos in a directory
+  "CacheManagement",         # Manage incremental scan cache
+]
+
+[clade-panel-integration]
+panel-id = "PanelMassPanic"
+model-module = "MassPanicModel"
+component-module = "MassPanic"
+command-module = "MassPanicCmd"
+module-module = "MassPanicModule"
+
+[clade-related]
+parent = "panic-attacker"
+sibling = "panic-attack"

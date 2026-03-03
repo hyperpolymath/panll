@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Databases Panel Clade — VeriSimDB, QuandleDB, LithoGlyph Management
+
+[clade-metadata]
+id = "databases"
+name = "Databases"
+short-name = "DB"
+version = "1.0.0"
+kind = "database"
+icon = "database"
+description = "VeriSimDB, QuandleDB, LithoGlyph management — query, browse, hexad inspection."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "VeriSimDBQueries",
+  "QuandleDBQueries",
+  "LithoGlyphQueries",
+  "HexadInspection",
+  "SchemaExploration",
+]
+
+[clade-panel-integration]
+panel-id = "PanelDatabases"
+model-module = "DatabasesModel"
+component-module = "Databases"

@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# VAB Panel Clade — Verified Assembly Building
+
+[clade-metadata]
+id = "vab"
+name = "VAB"
+short-name = "VAB"
+version = "1.0.0"
+kind = "builder"
+icon = "rocket"
+description = "Verified Assembly Building — KSP-inspired visual composer for proven-servers components."
+
+[clade-traits]
+has-backend = false          # Local catalog, no HTTP service
+has-scanning = false
+has-persistence = true       # Saves server assemblies
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Component selection, assembly naming, staging
+is-directive = false
+is-readonly = false          # Users actively compose server assemblies
+
+[clade-capabilities]
+capabilities = [
+  "ComponentCatalog",        # Browse proven-servers components by category
+  "VisualAssembly",          # Drag-and-drop assembly of server components
+  "DependencyValidation",    # Show missing deps ("no TLS component")
+  "CapabilityEnumeration",   # Show CAN/CANNOT lists per assembly
+  "StagingIndicators",       # KSP-style staging for deployment order
+  "PortConflictDetection",   # Detect overlapping port bindings
+]
+
+[clade-panel-integration]
+panel-id = "PanelVab"
+model-module = "VabModel"
+component-module = "Vab"
+command-module = "VabCmd"
+module-module = "VabModule"
+
+[clade-related]
+upstream = "proven-servers"  # Component source catalog

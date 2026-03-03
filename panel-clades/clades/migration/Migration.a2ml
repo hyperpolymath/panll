@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Migration Panel Clade — ReScript Migration Observatory
+
+[clade-metadata]
+id = "migration"
+name = "Migration"
+short-name = "Mig"
+version = "1.0.0"
+kind = "viewer"
+icon = "migration"
+description = "ReScript Migration Observatory — health tracking, sessions, submissions, merge resolver."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "MigrationHealthTracking",
+  "SessionManagement",
+  "SubmissionApproval",
+  "MergeConflictResolver",
+  "FeedbackOTronIntegration",
+  "PanicAttackIntegration",
+]
+
+[clade-panel-integration]
+panel-id = "PanelMigration"
+model-module = "MigrationModel"
+component-module = "Migration"
+command-module = "MigrationCmd"
+module-module = "MigrationModule"

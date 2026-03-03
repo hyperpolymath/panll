@@ -35,10 +35,10 @@ let renderBindingRow = (binding: bindingCoverage): Tea_Vdom.t<msg> => {
     list{
       div(list{Attrs.class_("w-24 text-sm text-gray-300 text-right")}, list{text(binding.language)}),
       div(list{Attrs.class_("flex-1 bg-gray-800 rounded-full h-3")}, list{
-        div(list{Attrs.class_(`${covColor} h-full rounded-full transition-all`), Attrs.prop("style", `width: ${Float.toFixedWithPrecision(binding.coverage, ~digits=0)}%`)}, list{}),
+        div(list{Attrs.class_(`${covColor} h-full rounded-full transition-all`), Attrs.prop("style", `width: ${Float.toFixed(binding.coverage, ~digits=0)}%`)}, list{}),
       }),
       div(list{Attrs.class_("w-20 text-xs text-gray-400 text-right")}, list{text(`${Int.toString(binding.boundCount)}/${Int.toString(binding.totalCount)}`)}),
-      div(list{Attrs.class_("w-14 text-xs text-gray-500")}, list{text(`${Float.toFixedWithPrecision(binding.coverage, ~digits=0)}%`)}),
+      div(list{Attrs.class_("w-14 text-xs text-gray-500")}, list{text(`${Float.toFixed(binding.coverage, ~digits=0)}%`)}),
     },
   )
 }
@@ -96,8 +96,8 @@ let view = (iface: interfacesState): Tea_Vdom.t<msg> => {
                 div(list{Attrs.class_("flex gap-6 text-sm")}, list{
                   div(list{Attrs.class_("text-gray-400")}, list{text(`${Int.toString(Array.length(iface.abiDefs))} ABI modules`)}),
                   div(list{Attrs.class_("text-gray-400")}, list{text(`${Int.toString(InterfacesEngine.totalAbiExports(iface.abiDefs))} exports`)}),
-                  div(list{Attrs.class_("text-gray-400")}, list{text(`${Float.toFixedWithPrecision(InterfacesEngine.verificationRate(iface.abiDefs) *. 100.0, ~digits=0)}% verified`)}),
-                  div(list{Attrs.class_("text-gray-400")}, list{text(`${Float.toFixedWithPrecision(InterfacesEngine.avgCoverage(iface.bindings), ~digits=0)}% avg binding coverage`)}),
+                  div(list{Attrs.class_("text-gray-400")}, list{text(`${Float.toFixed(InterfacesEngine.verificationRate(iface.abiDefs) *. 100.0, ~digits=0)}% verified`)}),
+                  div(list{Attrs.class_("text-gray-400")}, list{text(`${Float.toFixed(InterfacesEngine.avgCoverage(iface.bindings), ~digits=0)}% avg binding coverage`)}),
                 }),
                 div(list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4")}, list{
                   div(list{Attrs.class_("text-sm font-medium text-gray-300 mb-3")}, list{text("Binding Coverage by Language")}),

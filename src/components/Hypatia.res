@@ -19,9 +19,9 @@ let renderNetGauge = (net: neuralNetState): Tea_Vdom.t<msg> => {
   let label = HypatiaEngine.netLabel(net.id)
   let desc = HypatiaEngine.netDescription(net.id)
   let dotColor = HypatiaEngine.netStatusColor(net.status)
-  let confPct = Float.toFixedWithPrecision(net.confidence *. 100.0, ~digits=0)
+  let confPct = Float.toFixed(net.confidence *. 100.0, ~digits=0)
   // Gauge bar width as percentage
-  let barWidth = Float.toFixedWithPrecision(net.confidence *. 100.0, ~digits=0)
+  let barWidth = Float.toFixed(net.confidence *. 100.0, ~digits=0)
   let barColor = if net.confidence > 0.8 {
     "bg-green-500"
   } else if net.confidence > 0.5 {
@@ -119,7 +119,7 @@ let renderScanRow = (scan: scanResult): Tea_Vdom.t<msg> => {
       // Risk score
       span(
         list{Attrs.class_(`text-xs ${riskClass} w-16 text-right`)},
-        list{text(`${Float.toFixedWithPrecision(scan.riskScore *. 100.0, ~digits=0)}%`)},
+        list{text(`${Float.toFixed(scan.riskScore *. 100.0, ~digits=0)}%`)},
       ),
       // Finding count
       span(
@@ -151,7 +151,7 @@ let renderLearningCycle = (cycle: learningCycle): Tea_Vdom.t<msg> => {
   } else {
     0.0
   }
-  let pctStr = Float.toFixedWithPrecision(progress, ~digits=0)
+  let pctStr = Float.toFixed(progress, ~digits=0)
 
   div(
     list{
@@ -257,7 +257,7 @@ let view = (hypatia: hypatiaState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("text-xs text-emerald-400 ml-2")},
                 list{
                   text(
-                    `${Float.toFixedWithPrecision(HypatiaEngine.avgConfidence(hypatia.networks) *. 100.0, ~digits=0)}% ensemble confidence`,
+                    `${Float.toFixed(HypatiaEngine.avgConfidence(hypatia.networks) *. 100.0, ~digits=0)}% ensemble confidence`,
                   ),
                 },
               ),

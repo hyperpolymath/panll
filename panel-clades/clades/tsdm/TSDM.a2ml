@@ -1,0 +1,100 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# TSDM Panel Clade — Triaxial Software Development Methodology
+#
+# This is a DIRECTIVE clade: it does not scan or build anything itself.
+# Instead, it defines the priority ordering that other panels follow when
+# presenting and sequencing work items. Users customise axis ordering,
+# tier priorities, and cleanup steps through this panel.
+
+[clade-metadata]
+id = "tsdm"
+name = "Triaxial Software Development Methodology"
+short-name = "TSDM"
+version = "1.0.0"
+kind = "directive"  # directive | scanner | builder | database | network | viewer
+icon = "compass"
+description = "Three-axis methodology: Scope → Maintenance → Audit. Defines priority ordering across all panels."
+
+[clade-traits]
+# What this clade IS and CAN DO — other panels query these traits.
+has-backend = false          # No Tauri backend needed — pure client-side state
+has-scanning = false         # Does not scan code
+has-persistence = true       # Saves directive preferences (localStorage + verisimdb)
+has-work-items = true        # Aggregates classified work items from other panels
+has-priority-ordering = true # Core trait: defines how work is ordered
+has-customisation = true     # Users can reorder axes, tiers, cleanup steps
+is-directive = true          # This panel directs OTHER panels' behaviour
+is-readonly = false          # Users actively modify orderings
+
+[clade-axes]
+# The three axes and their default internal orderings.
+# Users can reorder both the axes themselves and the tiers within each axis.
+
+[clade-axes.axis-1]
+id = "scope"
+default-position = 1
+tiers = ["must", "intend", "like"]
+inputs = ["readme", "roadmap", "status-docs", "ci-and-security-docs"]
+marker-scan = ["TODO", "FIXME", "XXX", "HACK", "STUB", "PARTIAL"]
+idris-unsound-scan = ["believe_me", "assert_total"]
+output = "scoped-work-assembly"
+
+[clade-axes.axis-2]
+id = "maintenance"
+default-position = 2
+tiers = ["corrective", "adaptive", "perfective"]
+corrective = "defect, regression, safety, and security fixes"
+adaptive = "scope reconciliation, stale-reference removal, obsolete-work culling"
+perfective = "quality improvements derived from Axis 1 honest state"
+
+[clade-axes.axis-3]
+id = "audit"
+default-position = 3
+tiers = ["systems", "compliance", "effects"]
+systems = "required systems present and operating"
+compliance = "exceptions explicit, bounded, and drift-resistant"
+effects = "benchmark/operational impact evidence captured and reviewed"
+compliance-tooling = "panic-attack"
+effects-tooling = "sustainabot"
+
+[clade-cleanup]
+# Cleanup/finish-off phase — runs after all three axes.
+steps = [
+  "root-cleanup",
+  "stale-work-cull",
+  "docs-sync-human-machine",
+  "compliance-audit",
+  "effects-audit",
+  "release-summary",
+  "next-actions",
+]
+release-summary-tiers = ["must", "should", "could"]
+next-actions-tiers = ["corrective", "adaptive", "perfective"]
+
+[clade-collaboration]
+# Maintainer dialogue is mandatory at cycle end.
+required = true
+topics = ["what changed", "why", "remaining risks"]
+
+[clade-panel-integration]
+# How this clade maps to a PanLL panel.
+panel-id = "PanelTsdm"
+model-module = "TsdmModel"
+component-module = "Tsdm"
+command-module = "TsdmCmd"
+module-module = "TsdmModule"
+
+[clade-consumers]
+# Panels that should read TSDM directives when presenting work.
+panels = [
+  "PanelPanicAttack",
+  "PanelMassPanic",
+  "PanelMigration",
+  "PanelReposystem",
+  "PanelFarm",
+  "PanelFleet",
+  "PanelHypatia",
+  "PanelDatabases",
+]

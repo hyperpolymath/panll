@@ -20,9 +20,7 @@
     "-open RescriptCore"
   ],
   "warnings": {
-    "error": "+101-33-44"
-  },
-  "jsx": {
-    "version": 4
+    "error": "+101-33-44",
+    "number": "-45"
   }
 }

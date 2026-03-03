@@ -1,26 +1,45 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
-# Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}>
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# ECOSYSTEM.a2ml — Project ecosystem position
-# Relationships, dependencies, integration points.
+# ECOSYSTEM.a2ml — Panel-clades ecosystem position
 
 [metadata]
-version = "0.1.0"
-last-updated = "{{CURRENT_DATE}}"
+version = "0.2.0"
+last-updated = "2026-03-03"
 
 [project]
-name = "{{PROJECT_NAME}}"
-purpose = "{{PROJECT_PURPOSE}}"
-role = "{{PROJECT_ROLE}}"  # e.g. ffi-infrastructure, cli-tool, library, service
+name = "panel-clades"
+purpose = "Taxonomic registry of PanLL panel types — clade definitions with trait hierarchies and directive panels for workflow customisation"
+role = "panel-taxonomy"
 
 [position-in-ecosystem]
-tier = "infrastructure"  # 1 | 2 | infrastructure
+tier = "infrastructure"
+
+[panel-coverage]
+total-panels = 22
+total-clades = 22
+clade-kinds = ["directive", "scanner", "builder", "database", "network", "viewer", "ai", "loader", "meta"]
 
 [related-projects]
-# relationship types: sibling-standard, dependency, dependent, inspiration, potential-consumer
-# - { name = "language-bridges", relationship = "sibling-standard" }
-# - { name = "hypatia", relationship = "potential-consumer" }
+projects = [
+  { name = "panll", relationship = "parent", notes = "Panel-clades lives inside PanLL as a subdirectory" },
+  { name = "panic-attack", relationship = "consumer", notes = "Scanner clade — Rust SAST with taint analysis and event chains" },
+  { name = "mass-panic", relationship = "consumer", notes = "Scanner clade — multi-repo parallel orchestrator for panic-attack" },
+  { name = "hypatia", relationship = "consumer", notes = "Scanner clade — neurosymbolic CI/CD intelligence" },
+  { name = "sustainabot", relationship = "consumer", notes = "TSDM effects axis uses sustainabot for ecological checking" },
+  { name = "gitbot-fleet", relationship = "consumer", notes = "Fleet clade — bots read clade directives to sequence work" },
+  { name = "proven-servers", relationship = "consumer", notes = "VAB clade composes proven-servers components visually" },
+  { name = "verisimdb", relationship = "consumer", notes = "Databases clade — VQL-DT query interface" },
+  { name = "quandledb", relationship = "consumer", notes = "Databases clade — GQL-DT query interface" },
+  { name = "lithoglyph", relationship = "consumer", notes = "Databases clade — KQL-DT query interface" },
+  { name = "rsr-template-repo", relationship = "sibling-standard", notes = "RSR template includes TSDM policies; clades formalise them as panel-level directives" },
+]
 
 [integration-points]
-# External systems this project connects to
-# - { system = "gitbot-fleet", direction = "outbound", protocol = "repository_dispatch" }
+integrations = [
+  { system = "PanLL PanelRegistry", direction = "outbound", protocol = "ReScript module import" },
+  { system = "PanLL PanelSwitcherModel", direction = "outbound", protocol = "ReScript variant types" },
+  { system = "panic-attack", direction = "outbound", protocol = "CLI invocation via Tauri" },
+  { system = "sustainabot", direction = "outbound", protocol = "CLI/API guidance" },
+  { system = "proven-servers", direction = "inbound", protocol = "Component catalog (VabCatalog.res)" },
+]

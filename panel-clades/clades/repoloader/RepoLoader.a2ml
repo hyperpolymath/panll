@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Repo Loader Panel Clade — Repository Scanner and Panel Configuration
+
+[clade-metadata]
+id = "repoloader"
+name = "Repo Loader"
+short-name = "Repo"
+version = "1.0.0"
+kind = "loader"
+icon = "folder-open"
+description = "Repository scanner and panel configuration — load a repo, configure panels."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "RepoScanning",
+  "ManifestReading",
+  "PanelAutoConfiguration",
+  "DirectoryBrowsing",
+]
+
+[clade-panel-integration]
+panel-id = "PanelRepoLoader"
+model-module = "RepoLoaderModel"
+component-module = "RepoLoader"
+command-module = "RepoLoaderCmd"
+module-module = "RepoLoaderModule"

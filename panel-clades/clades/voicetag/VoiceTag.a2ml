@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Code MRI Panel Clade — Voice-Activated Code Annotation
+
+[clade-metadata]
+id = "voicetag"
+name = "Code MRI"
+short-name = "MRI"
+version = "1.0.0"
+kind = "viewer"
+icon = "mic"
+description = "Voice-activated code annotation — tags stored as portable .mri.json sidecars."
+
+[clade-traits]
+has-backend = false
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "VoiceRecognition",
+  "CodeAnnotation",
+  "SidecarStorage",
+  "TagBrowsing",
+]
+
+[clade-panel-integration]
+panel-id = "PanelVoiceTag"
+model-module = "VoiceTagModel"
+component-module = "VoiceTag"
+command-module = "VoiceTagCmd"
+module-module = "VoiceTagModule"
+engine-module = "VoiceTagEngine"

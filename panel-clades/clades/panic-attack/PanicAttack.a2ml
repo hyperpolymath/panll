@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# panic-attack Panel Clade — Stress Testing and Weak Point Analysis
+
+[clade-metadata]
+id = "panic-attack"
+name = "panic-attack"
+short-name = "PA"
+version = "2.0.0"
+kind = "scanner"
+icon = "zap"
+description = "Stress testing and logic-based bug signature detection — 47 languages, 20 categories."
+
+[clade-traits]
+has-backend = true           # Invokes panic-attack CLI via Tauri
+has-scanning = true          # Core trait: scans code for weak points
+has-persistence = true       # Saves reports as JSON, optional verisimdb hexads
+has-work-items = true        # Findings feed into TSDM work items
+has-priority-ordering = false
+has-customisation = true     # Configurable target, severity filter, category filter
+is-directive = false
+is-readonly = false          # Users trigger scans and export reports
+
+[clade-capabilities]
+capabilities = [
+  "StaticAnalysis",          # assail — pattern-based scanning across 47 languages
+  "StressTesting",           # assault — static + runtime stress testing
+  "SeverityClassification",  # 5-tier severity: Critical, High, Medium, Low, Info
+  "CategoryDetection",       # 20+ weak point categories (unsafe code, panic paths, etc.)
+  "ReportManagement",        # Save, load, compare, export reports
+  "SarifExport",             # Export to SARIF for GitHub Security tab
+  "EventChainExport",        # Export to PanLL event chain model
+]
+
+[clade-categories]
+# The 20+ weak point categories scanned
+categories = [
+  "unsafe-code", "panic-path", "command-injection", "unsafe-deserialization",
+  "dom-injection", "hardcoded-secret", "path-traversal", "insecure-protocol",
+  "atom-exhaustion", "unsafe-ffi", "resource-leak", "deadlock-potential",
+  "race-condition", "error-handling", "memory-management", "type-unsafety",
+  "exception-handling", "concurrency-issues", "deprecated-apis",
+  "missing-validation", "dynamic-code-execution", "excessive-permissions",
+  "unchecked-error",
+]
+
+[clade-panel-integration]
+panel-id = "PanelPanicAttack"
+model-module = "PanicAttackModel"
+component-module = "PanicAttack"
+command-module = "PanicAttackCmd"
+module-module = "PanicAttackModule"
+
+[clade-related]
+parent = "panic-attacker"    # External CLI tool this panel wraps
+sibling = "mass-panic"       # Organisation-scale variant

@@ -143,6 +143,16 @@ include MigrationModel
 /// testing and logic-based bug signature detection panel.
 include PanicAttackModel
 
+/// Re-export MassPanic types (repoScanStatus, repoResult, assemblylineSummary,
+/// deltaEntry, repoSortMode, repoFilterMode, storageTarget, massPanicState) for
+/// the organisation-scale batch scanning panel (assemblyline + BLAKE3 + verisimdb).
+include MassPanicModel
+
+/// Re-export TSDM types (scopeTier, maintenanceTier, auditTier, cleanupStep,
+/// dialogueTopic, axisId, tsdmWorkItem, auditTooling, tsdmState) for the
+/// Triaxial Software Development Methodology directive panel.
+include TsdmModel
+
 /// Re-export Capture types (captureFormat, captureEntry, recordingState, demoStep,
 /// demoPackage, comparisonMode, panelClone, captureCategory, captureState) for
 /// the panel capture, recording, and demo/teaching system (DD-022).
@@ -260,6 +270,12 @@ type model = {
 
   // panic-attack — stress testing and weak point analysis
   panicAttack: panicAttackState,
+
+  // mass-panic — organisation-scale batch scanning (assemblyline + BLAKE3 + verisimdb)
+  massPanic: massPanicState,
+
+  // TSDM — triaxial software development methodology directive
+  tsdm: tsdmState,
 
   // Undo/Redo — ring buffer of model snapshots
   undoStack: array<string>,
@@ -503,6 +519,8 @@ let init = (): model => {
   security: SecurityEngine.defaultState,
   migration: MigrationEngine.defaultState,
   panicAttack: PanicAttackModel.init,
+  massPanic: MassPanicModel.init,
+  tsdm: TsdmModel.init,
   undoStack: [],
   redoStack: [],
   humidity: Medium,

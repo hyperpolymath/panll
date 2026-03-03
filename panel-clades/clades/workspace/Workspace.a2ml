@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Workspace Panel Clade — Panel Arrangements and Session Management
+
+[clade-metadata]
+id = "workspace"
+name = "Workspace"
+short-name = "WS"
+version = "1.0.0"
+kind = "directive"
+icon = "layout"
+description = "Panel arrangements, groups, sessions, modes, and configurator."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = true
+has-customisation = true
+is-directive = true
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "PanelArrangements",
+  "SessionSaveRestore",
+  "WorkspaceModes",
+  "PanelGrouping",
+  "SystemInfoQueries",
+  "KeybindingConfiguration",
+]
+
+[clade-panel-integration]
+panel-id = "PanelWorkspace"
+model-module = "WorkspaceModel"
+component-module = "Workspace"
+command-module = "WorkspaceCmd"
+module-module = "WorkspaceModule"

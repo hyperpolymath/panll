@@ -262,7 +262,7 @@ let auditSettings = (
   }
 
   {
-    timestamp: Date.now()->Date.fromTime->Date.toISOString
+    timestamp: Date.now()->Date.fromTime->Date.toISOString,
     domains: [domain],
     findings: CloudGuardEngine.sortFindingsBySeverity(findings.contents),
     passed: passedCount,

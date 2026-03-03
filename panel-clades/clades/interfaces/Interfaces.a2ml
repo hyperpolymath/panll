@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Interfaces Panel Clade — Language Bridges, ABI/FFI Inventory
+
+[clade-metadata]
+id = "interfaces"
+name = "Interfaces"
+short-name = "FFI"
+version = "1.0.0"
+kind = "viewer"
+icon = "bridge"
+description = "Language bridges, ABI/FFI inventory — Idris2 ABI definitions and Zig FFI implementations."
+
+[clade-traits]
+has-backend = false
+has-scanning = true
+has-persistence = false
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "ABIInventory",
+  "FFIInventory",
+  "BindingStatus",
+  "LanguageBridgeMap",
+]
+
+[clade-panel-integration]
+panel-id = "PanelInterfaces"
+model-module = "InterfacesModel"
+component-module = "Interfaces"
+command-module = "InterfacesCmd"
+module-module = "InterfacesModule"

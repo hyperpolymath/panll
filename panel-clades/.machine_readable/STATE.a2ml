@@ -1,64 +1,61 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
-# Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}>
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# STATE.a2ml — Project state checkpoint (META-TEMPLATE)
-#
-# This is the STATE file for rsr-template-repo itself.
-# When consumed by a new project, replace {{PLACEHOLDER}} tokens
-# and customize sections below for the target project.
+# STATE.a2ml — Project state checkpoint for panel-clades
 
 [metadata]
-project = "rsr-template-repo"
+project = "panel-clades"
 version = "0.2.0"
-last-updated = "2026-02-28"
-status = "active"  # active | paused | archived
+last-updated = "2026-03-03"
+status = "active"
 
 [project-context]
-name = "rsr-template-repo"
-purpose = "Canonical RSR-compliant repository template providing scaffolding for all hyperpolymath projects — including CI/CD, AI manifests, ABI/FFI standards, container ecosystem, and governance infrastructure."
-completion-percentage = 95
+name = "panel-clades"
+purpose = "Taxonomic registry of PanLL panel types — clade definitions, trait hierarchies, and directive panels. Each clade declares what a panel IS (capabilities, data shapes, interaction patterns) so panels can inherit behaviour and users can customise ordering/priority."
+completion-percentage = 55
 
 [position]
-phase = "maintenance"      # design | implementation | testing | maintenance | archived
-maturity = "production"    # experimental | alpha | beta | production | lts
+phase = "implementation"
+maturity = "alpha"
 
 [route-to-mvp]
 milestones = [
-  { name = "Phase 0: Core scaffolding (justfile, CI/CD, .machine_readable)", completion = 100 },
-  { name = "Phase 1: ABI/FFI standard (Idris2/Zig templates)", completion = 100 },
-  { name = "Phase 1b: AI Gatekeeper Protocol (0-AI-MANIFEST.a2ml)", completion = 100 },
-  { name = "Phase 1c: TOPOLOGY.md standard and guide", completion = 100 },
-  { name = "Phase 1d: Maintenance gate (axes, checklist, approach)", completion = 100 },
-  { name = "Phase 1e: Trustfile / contractiles", completion = 100 },
-  { name = "Phase 2: Container ecosystem templates (stapeln)", completion = 100 },
-  { name = "Phase 3: Multi-forge sync hardening", completion = 0 },
-  { name = "Phase 4: Nix/Guix reproducible shells", completion = 50 },
+  { name = "Phase 0: Repo scaffolding from RSR template", completion = 100 },
+  { name = "Phase 1: TSDM directive clade (first clade)", completion = 100 },
+  { name = "Phase 2: All 22 panel clade definitions", completion = 100 },
+  { name = "Phase 3: Clade inheritance engine in PanLL", completion = 0 },
+  { name = "Phase 4: User-facing clade browser panel", completion = 0 },
+]
+
+[completed-work]
+items = [
+  "TSDM directive clade — full a2ml + adoc + README",
+  "22 panel clade a2ml definitions covering all PanLL panels",
+  "22 clade README.adoc files",
+  "Clades registry README with full kind taxonomy",
+  "9 clade kinds defined: directive, scanner, builder, database, network, viewer, ai, loader, meta",
+  "Clade trait schema: has-backend, has-scanning, has-persistence, has-work-items, has-priority-ordering, has-customisation, is-directive, is-readonly",
+  "Panel integration metadata: panel-id, model-module, component-module, command-module, module-module, engine-module",
 ]
 
 [blockers-and-issues]
-# No active blockers
+# None
 
 [critical-next-actions]
 actions = [
-  "Container templates complete — test with `just container-init`",
-  "Validate container templates across wolfi-base and static Chainguard images",
-  "Harden multi-forge sync for GitLab/Bitbucket mirroring edge cases",
-  "Expand Nix/Guix development shell templates",
+  "Implement clade inheritance engine — panels inherit traits from clades at startup",
+  "Create clade browser panel — UI for exploring and customising clades",
+  "Wire clade traits into PanelRegistry for runtime capability queries",
+  "Add clade-level permission system (which clades can cross-reference)",
 ]
 
 [maintenance-status]
 last-run-utc = "never"
 last-report = "reports/maintenance/latest.json"
-last-result = "unknown"  # unknown | pass | warn | fail
+last-result = "unknown"
 open-warnings = 0
 open-failures = 0
 
 [ecosystem]
-part-of = ["RSR Framework", "stapeln ecosystem"]
-depends-on = ["stapeln", "selur-compose", "cerro-torre", "svalinn", "vordr", "k9-svc"]
-
-# ---------------------------------------------------------------------------
-# NOTE FOR CONSUMERS: When using this template to create a new repo, reset
-# the fields above to your project's values and replace all {{PLACEHOLDER}}
-# tokens. The milestones above describe the TEMPLATE's evolution, not yours.
-# ---------------------------------------------------------------------------
+part-of = ["PanLL", "RSR Framework"]
+depends-on = ["panll", "panic-attack", "sustainabot"]

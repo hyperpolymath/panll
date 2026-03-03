@@ -3221,13 +3221,13 @@ let updateVoiceTag = (model: model, msg: voiceTagMsg): (model, Tea_Cmd.t<msg>) =
         // These commands need editor integration — stub for now.
         ({...model, voiceTag: {...vt, voice: VoiceOff}}, Tea_Cmd.none)
       | VoiceTagEngine.VoiceUnrecognised(raw) => (
-          {...model, voiceTag: {...vt, voice: VoiceError(`Unrecognised: "${raw}"`)}},
+          {...model, voiceTag: {...vt, voice: Model.VoiceError(`Unrecognised: "${raw}"`)}},
           Tea_Cmd.none,
         )
       }
     }
   | VoiceError(err) => (
-      {...model, voiceTag: {...vt, voice: VoiceError(err)}},
+      {...model, voiceTag: {...vt, voice: Model.VoiceError(err)}},
       Tea_Cmd.none,
     )
   | SetCurrentFile(filePath) => (
@@ -4204,6 +4204,360 @@ let updateMigration = (model: model, msg: migrationMsg): (model, Tea_Cmd.t<msg>)
   }
 }
 
+// ===========================================================================
+// Panic-Attack Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: Panic-Attack (stress testing and weak point analysis).
+/// Handles capability probing, assail/assault scans, report management,
+/// SARIF export, event-chain export, and category/filter state.
+let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.t<msg>) => {
+  let pa = model.panicAttack
+  switch subMsg {
+  | CheckCapability =>
+    (
+      {...model, panicAttack: {...pa, mode: "checking"}},
+      PanicAttackCmd.checkCapability(result => PanicAttack(CapabilityLoaded(result))),
+    )
+  | CapabilityLoaded(Ok(json)) =>
+    // TODO: Parse JSON to extract mode and version.
+    ({...model, panicAttack: {...pa, mode: "full", version: Some(json)}}, Tea_Cmd.none)
+  | CapabilityLoaded(Error(_err)) =>
+    ({...model, panicAttack: {...pa, mode: "unavailable"}}, Tea_Cmd.none)
+  | SetTargetPath(path) =>
+    ({...model, panicAttack: {...pa, targetPath: path}}, Tea_Cmd.none)
+  | RunAssail =>
+    (
+      {...model, panicAttack: {...pa, scanning: true, lastError: None}},
+      PanicAttackCmd.assail(pa.targetPath, result => PanicAttack(AssailResult(result))),
+    )
+  | AssailResult(Ok(_json)) =>
+    // TODO: Parse JSON into findings array and summary.
+    ({...model, panicAttack: {...pa, scanning: false}}, Tea_Cmd.none)
+  | AssailResult(Error(err)) =>
+    ({...model, panicAttack: {...pa, scanning: false, lastError: Some(err)}}, Tea_Cmd.none)
+  | RunAssault =>
+    (
+      {...model, panicAttack: {...pa, scanning: true, lastError: None}},
+      PanicAttackCmd.assault(pa.targetPath, result => PanicAttack(AssaultResult(result))),
+    )
+  | AssaultResult(Ok(_json)) =>
+    // TODO: Parse JSON into findings array and summary.
+    ({...model, panicAttack: {...pa, scanning: false}}, Tea_Cmd.none)
+  | AssaultResult(Error(err)) =>
+    ({...model, panicAttack: {...pa, scanning: false, lastError: Some(err)}}, Tea_Cmd.none)
+  | LoadReports =>
+    (model, PanicAttackCmd.listReports(result => PanicAttack(ReportsLoaded(result))))
+  | ReportsLoaded(Ok(_json)) =>
+    // TODO: Parse JSON into reports array.
+    (model, Tea_Cmd.none)
+  | ReportsLoaded(Error(err)) =>
+    ({...model, panicAttack: {...pa, lastError: Some(err)}}, Tea_Cmd.none)
+  | ViewReport(path) =>
+    (model, PanicAttackCmd.viewReport(path, result => PanicAttack(ReportLoaded(result))))
+  | ReportLoaded(Ok(_json)) =>
+    // TODO: Parse and display report.
+    (model, Tea_Cmd.none)
+  | ReportLoaded(Error(err)) =>
+    ({...model, panicAttack: {...pa, lastError: Some(err)}}, Tea_Cmd.none)
+  | CompareReports(left, right) =>
+    (
+      model,
+      PanicAttackCmd.diffReports(left, right, result =>
+        PanicAttack(ComparisonLoaded(result))
+      ),
+    )
+  | ComparisonLoaded(Ok(_json)) =>
+    // TODO: Parse and display comparison.
+    (model, Tea_Cmd.none)
+  | ComparisonLoaded(Error(err)) =>
+    ({...model, panicAttack: {...pa, lastError: Some(err)}}, Tea_Cmd.none)
+  | ExportSarif(path) =>
+    (
+      model,
+      PanicAttackCmd.exportSarif(path, result => PanicAttack(SarifExported(result))),
+    )
+  | SarifExported(Ok(_path)) =>
+    (model, Tea_Cmd.none)
+  | SarifExported(Error(err)) =>
+    ({...model, panicAttack: {...pa, lastError: Some(err)}}, Tea_Cmd.none)
+  | ExportEventChain(path) =>
+    (
+      model,
+      PanicAttackCmd.exportEventChain(path, result =>
+        PanicAttack(EventChainExported(result))
+      ),
+    )
+  | EventChainExported(Ok(_path)) =>
+    (model, Tea_Cmd.none)
+  | EventChainExported(Error(err)) =>
+    ({...model, panicAttack: {...pa, lastError: Some(err)}}, Tea_Cmd.none)
+  | SetPanicCategory(cat) =>
+    ({...model, panicAttack: {...pa, activeCategory: cat}}, Tea_Cmd.none)
+  | SetPanicFilter(filterText) =>
+    ({...model, panicAttack: {...pa, filterText}}, Tea_Cmd.none)
+  | ToggleDiffView =>
+    ({...model, panicAttack: {...pa, showDiff: !pa.showDiff}}, Tea_Cmd.none)
+  | DismissError =>
+    ({...model, panicAttack: {...pa, lastError: None}}, Tea_Cmd.none)
+  }
+}
+
+// Mass Panic Sub-Updater
+// ===========================================================================
+
+/// STATE TRANSITION: Mass Panic (organisation-scale batch scanning).
+/// Handles assemblyline scanning, repo discovery, incremental BLAKE3,
+/// verisimdb persistence, delta reporting, and notification generation.
+let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<msg>) => {
+  let mp = model.massPanic
+  switch subMsg {
+  | SetReposDirectory(dir) =>
+    ({...model, massPanic: {...mp, reposDirectory: dir}}, Tea_Cmd.none)
+  | DiscoverRepos =>
+    (
+      {...model, massPanic: {...mp, loading: true, lastError: None}},
+      MassPanicCmd.discoverRepos(mp.reposDirectory, result =>
+        MassPanic(ReposDiscovered(result))
+      ),
+    )
+  | ReposDiscovered(Ok(_json)) =>
+    // TODO: Parse JSON into repoResult array with Queued status.
+    // For now, clear loading state — parsing will be wired when backend is built.
+    ({...model, massPanic: {...mp, loading: false}}, Tea_Cmd.none)
+  | ReposDiscovered(Error(err)) =>
+    ({...model, massPanic: {...mp, loading: false, lastError: Some(err)}}, Tea_Cmd.none)
+  | RunAssemblyline =>
+    let storePath = switch mp.storage {
+    | Filesystem(p) => Some(p)
+    | VerisimDB(p) => Some(p)
+    | NoStorage => None
+    }
+    (
+      {
+        ...model,
+        massPanic: {
+          ...mp,
+          scanning: true,
+          progress: 0.0,
+          currentRepo: None,
+          lastError: None,
+        },
+      },
+      MassPanicCmd.runAssemblyline(
+        mp.reposDirectory,
+        mp.incremental,
+        mp.cachePath,
+        storePath,
+        mp.minFindings,
+        result => MassPanic(AssemblylineResult(result)),
+      ),
+    )
+  | RunSelected =>
+    // Same as RunAssemblyline but for selected repos only.
+    // Backend filters by selection indices.
+    let storePath = switch mp.storage {
+    | Filesystem(p) => Some(p)
+    | VerisimDB(p) => Some(p)
+    | NoStorage => None
+    }
+    (
+      {
+        ...model,
+        massPanic: {
+          ...mp,
+          scanning: true,
+          progress: 0.0,
+          currentRepo: None,
+          lastError: None,
+        },
+      },
+      MassPanicCmd.runAssemblyline(
+        mp.reposDirectory,
+        mp.incremental,
+        mp.cachePath,
+        storePath,
+        mp.minFindings,
+        result => MassPanic(AssemblylineResult(result)),
+      ),
+    )
+  | AssemblylineResult(Ok(_json)) =>
+    // TODO: Parse JSON into repoResults + summary.
+    ({...model, massPanic: {...mp, scanning: false, progress: 1.0}}, Tea_Cmd.none)
+  | AssemblylineResult(Error(err)) =>
+    (
+      {...model, massPanic: {...mp, scanning: false, lastError: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | PollProgress =>
+    (model, MassPanicCmd.getProgress(result => MassPanic(ProgressUpdate(result))))
+  | ProgressUpdate(Ok(_json)) =>
+    // TODO: Parse progress JSON and update progress/currentRepo.
+    (model, Tea_Cmd.none)
+  | ProgressUpdate(Error(_)) =>
+    // Silently ignore progress poll failures.
+    (model, Tea_Cmd.none)
+  | ToggleIncremental =>
+    ({...model, massPanic: {...mp, incremental: !mp.incremental}}, Tea_Cmd.none)
+  | ToggleNotify =>
+    ({...model, massPanic: {...mp, notifyEnabled: !mp.notifyEnabled}}, Tea_Cmd.none)
+  | SetFilterMode(mode) =>
+    ({...model, massPanic: {...mp, filterMode: mode}}, Tea_Cmd.none)
+  | SetSortMode(mode) =>
+    ({...model, massPanic: {...mp, sortMode: mode}}, Tea_Cmd.none)
+  | SetSearchText(text) =>
+    ({...model, massPanic: {...mp, searchText: text}}, Tea_Cmd.none)
+  | ToggleRepoSelection(index) => {
+      let selected = if mp.selectedRepos->Array.includes(index) {
+        mp.selectedRepos->Array.filter(i => i !== index)
+      } else {
+        mp.selectedRepos->Array.concat([index])
+      }
+      ({...model, massPanic: {...mp, selectedRepos: selected, selectAll: false}}, Tea_Cmd.none)
+    }
+  | ToggleSelectAll => {
+      let newSelectAll = !mp.selectAll
+      let selected = if newSelectAll {
+        Array.fromInitializer(~length=Array.length(mp.repoResults), i => i)
+      } else {
+        []
+      }
+      (
+        {...model, massPanic: {...mp, selectAll: newSelectAll, selectedRepos: selected}},
+        Tea_Cmd.none,
+      )
+    }
+  | ToggleDelta =>
+    ({...model, massPanic: {...mp, showDelta: !mp.showDelta}}, Tea_Cmd.none)
+  | LoadDelta =>
+    // TODO: Find latest two report paths and invoke diff.
+    ({...model, massPanic: {...mp, loading: true}}, Tea_Cmd.none)
+  | DeltaLoaded(Ok(_json)) =>
+    // TODO: Parse delta JSON into deltaEntry array.
+    ({...model, massPanic: {...mp, loading: false}}, Tea_Cmd.none)
+  | DeltaLoaded(Error(err)) =>
+    ({...model, massPanic: {...mp, loading: false, lastError: Some(err)}}, Tea_Cmd.none)
+  | GenerateNotification =>
+    // TODO: Wire to notification pipeline.
+    ({...model, massPanic: {...mp, loading: true}}, Tea_Cmd.none)
+  | NotificationGenerated(Ok(_md)) =>
+    ({...model, massPanic: {...mp, loading: false}}, Tea_Cmd.none)
+  | NotificationGenerated(Error(err)) =>
+    ({...model, massPanic: {...mp, loading: false, lastError: Some(err)}}, Tea_Cmd.none)
+  | DismissMassPanicError =>
+    ({...model, massPanic: {...mp, lastError: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Swap two adjacent elements in an array (for TSDM reordering).
+/// Returns the array unchanged if the swap is out of bounds.
+let swapAt = (arr: array<'a>, i: int): array<'a> => {
+  let len = Array.length(arr)
+  if i < 0 || i + 1 >= len {
+    arr
+  } else {
+    let copy = Array.copy(arr)
+    let tmp = copy->Array.getUnsafe(i)
+    copy->Array.setUnsafe(i, copy->Array.getUnsafe(i + 1))
+    copy->Array.setUnsafe(i + 1, tmp)
+    copy
+  }
+}
+
+/// Sub-updater: TSDM directive panel — triaxial priority ordering.
+let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
+  let ts = model.tsdm
+  switch subMsg {
+  | MoveAxisUp(idx) =>
+    if idx <= 0 {
+      (model, Tea_Cmd.none)
+    } else {
+      ({...model, tsdm: {...ts, axisOrder: swapAt(ts.axisOrder, idx - 1)}}, Tea_Cmd.none)
+    }
+  | MoveAxisDown(idx) =>
+    ({...model, tsdm: {...ts, axisOrder: swapAt(ts.axisOrder, idx)}}, Tea_Cmd.none)
+  | MoveScopeTierUp(idx) =>
+    if idx <= 0 {
+      (model, Tea_Cmd.none)
+    } else {
+      ({...model, tsdm: {...ts, scopeOrder: swapAt(ts.scopeOrder, idx - 1)}}, Tea_Cmd.none)
+    }
+  | MoveScopeTierDown(idx) =>
+    ({...model, tsdm: {...ts, scopeOrder: swapAt(ts.scopeOrder, idx)}}, Tea_Cmd.none)
+  | MoveMaintenanceTierUp(idx) =>
+    if idx <= 0 {
+      (model, Tea_Cmd.none)
+    } else {
+      (
+        {
+          ...model,
+          tsdm: {...ts, maintenanceOrder: swapAt(ts.maintenanceOrder, idx - 1)},
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | MoveMaintenanceTierDown(idx) =>
+    (
+      {
+        ...model,
+        tsdm: {...ts, maintenanceOrder: swapAt(ts.maintenanceOrder, idx)},
+      },
+      Tea_Cmd.none,
+    )
+  | MoveAuditTierUp(idx) =>
+    if idx <= 0 {
+      (model, Tea_Cmd.none)
+    } else {
+      ({...model, tsdm: {...ts, auditOrder: swapAt(ts.auditOrder, idx - 1)}}, Tea_Cmd.none)
+    }
+  | MoveAuditTierDown(idx) =>
+    ({...model, tsdm: {...ts, auditOrder: swapAt(ts.auditOrder, idx)}}, Tea_Cmd.none)
+  | ToggleCleanupStep(step) =>
+    let isEnabled = ts.cleanupEnabled->Array.some(s => s === step)
+    let newEnabled = if isEnabled {
+      ts.cleanupEnabled->Array.filter(s => s !== step)
+    } else {
+      ts.cleanupEnabled->Array.concat([step])
+    }
+    ({...model, tsdm: {...ts, cleanupEnabled: newEnabled}}, Tea_Cmd.none)
+  | SetAxisFilter(filter) =>
+    ({...model, tsdm: {...ts, axisFilter: filter}}, Tea_Cmd.none)
+  | SetTsdmSearch(text) =>
+    ({...model, tsdm: {...ts, searchText: text}}, Tea_Cmd.none)
+  | ToggleShowCompleted =>
+    ({...model, tsdm: {...ts, showCompleted: !ts.showCompleted}}, Tea_Cmd.none)
+  | ToggleLock =>
+    ({...model, tsdm: {...ts, locked: !ts.locked}}, Tea_Cmd.none)
+  | ResetToDefaults =>
+    ({...model, tsdm: TsdmModel.init}, Tea_Cmd.none)
+  | SaveDirective =>
+    // TODO: Persist directive to filesystem via Tauri.
+    (model, Tea_Cmd.none)
+  | DirectiveSaved(Ok(_path)) =>
+    (model, Tea_Cmd.none)
+  | DirectiveSaved(Error(err)) =>
+    ({...model, tsdm: {...ts, lastError: Some(err)}}, Tea_Cmd.none)
+  | LoadDirective =>
+    // TODO: Load directive from filesystem via Tauri.
+    (model, Tea_Cmd.none)
+  | DirectiveLoaded(Ok(_json)) =>
+    // TODO: Deserialise JSON into tsdmState fields.
+    (model, Tea_Cmd.none)
+  | DirectiveLoaded(Error(err)) =>
+    ({...model, tsdm: {...ts, lastError: Some(err)}}, Tea_Cmd.none)
+  | CollectWorkItems =>
+    // TODO: Aggregate work items from all consumer panels.
+    (model, Tea_Cmd.none)
+  | WorkItemsCollected(Ok(_json)) =>
+    // TODO: Deserialise work items array from JSON.
+    (model, Tea_Cmd.none)
+  | WorkItemsCollected(Error(err)) =>
+    ({...model, tsdm: {...ts, lastError: Some(err)}}, Tea_Cmd.none)
+  | DismissTsdmError =>
+    ({...model, tsdm: {...ts, lastError: None}}, Tea_Cmd.none)
+  }
+}
+
 /// ORCHESTRATOR: The main entry point for state updates.
 /// Routes each message to its domain-specific sub-updater, then applies
 /// contractile evaluation as a post-processing cognitive governance step.
@@ -4249,6 +4603,9 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | Security(subMsg) => updateSecurity(model, subMsg)
   | Keybindings(subMsg) => (updateKeybindings(model, subMsg), Tea_Cmd.none)
   | Migration(subMsg) => updateMigration(model, subMsg)
+  | PanicAttack(subMsg) => updatePanicAttack(model, subMsg)
+  | MassPanic(subMsg) => updateMassPanic(model, subMsg)
+  | Tsdm(subMsg) => updateTsdm(model, subMsg)
   | Undo => {
       // Pop from undo stack, push current to redo.
       // For now, undo/redo stacks store serialised JSON strings.

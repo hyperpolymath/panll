@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Reposystem Panel Clade — RSR Compliance and Template Management
+
+[clade-metadata]
+id = "reposystem"
+name = "Reposystem"
+short-name = "RSR"
+version = "1.0.0"
+kind = "scanner"
+icon = "layers"
+description = "RSR compliance and template management — filesystem scanning for repo health."
+
+[clade-traits]
+has-backend = false          # Filesystem scanning, no HTTP service
+has-scanning = true          # Core trait: scans repos for RSR compliance
+has-persistence = false      # Results are ephemeral per-scan
+has-work-items = true        # Compliance gaps as TSDM work items
+has-priority-ordering = false
+has-customisation = true     # Filter by compliance category, search
+is-directive = false
+is-readonly = true           # Read-only scanning, no mutations
+
+[clade-capabilities]
+capabilities = [
+  "RSRComplianceAudit",     # Check repos against RSR template requirements
+  "TemplateComparison",     # Compare repo against rsr-template-repo
+  "FilePresenceCheck",      # Verify required files (STATE.scm, SECURITY.md, etc.)
+  "WorkflowValidation",     # Check GitHub Actions workflows
+  "LicenseVerification",    # Verify PMPL-1.0-or-later headers
+]
+
+[clade-panel-integration]
+panel-id = "PanelReposystem"
+model-module = "ReposystemModel"
+component-module = "Reposystem"
+command-module = "ReposystemCmd"
+module-module = "ReposystemModule"

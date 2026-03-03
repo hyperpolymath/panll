@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Minter Panel Clade — Panel Creation Wizard
+
+[clade-metadata]
+id = "minter"
+name = "Minter"
+short-name = "Mint"
+version = "1.0.0"
+kind = "builder"
+icon = "wand"
+description = "Panel creation wizard — generate accessible panel modules from templates."
+
+[clade-traits]
+has-backend = true           # Tauri backend generates files and patches wiring
+has-scanning = false
+has-persistence = true       # Generates files on disk
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Panel name, kind, capabilities, icon selection
+is-directive = false
+is-readonly = false          # Creates new panel modules
+
+[clade-capabilities]
+capabilities = [
+  "PanelTemplateGeneration", # Generate Model, Cmd, Module, View from templates
+  "WiringPatch",             # Auto-patch PanelSwitcherModel, Msg, Model, Update, View
+  "AccessibilityDefaults",   # Generate ARIA attributes and keyboard nav
+  "CladeGeneration",         # Generate clade a2ml + adoc alongside panel code
+  "IconSelection",           # Browse and select panel icons
+]
+
+[clade-panel-integration]
+panel-id = "PanelMinter"
+model-module = "MinterModel"
+component-module = "Minter"
+command-module = "MinterCmd"
+module-module = "MinterModule"

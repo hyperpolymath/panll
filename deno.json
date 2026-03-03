@@ -15,7 +15,10 @@
     "test:coverage": "deno test --no-check --coverage=coverage/ tests/ && deno coverage coverage/",
     "lint": "deno lint scripts/",
     "fmt": "deno fmt scripts/",
-    "mock:echidna": "deno run --allow-net=127.0.0.1:9000 scripts/mock-echidna.ts"
+    "mock:echidna": "deno run --allow-net=127.0.0.1:9000 scripts/mock-echidna.ts",
+    "res:build": "$HOME/.asdf/installs/nodejs/25.6.1/bin/node ./node_modules/.bin/rescript build",
+    "res:clean": "$HOME/.asdf/installs/nodejs/25.6.1/bin/node ./node_modules/.bin/rescript clean",
+    "res:watch": "$HOME/.asdf/installs/nodejs/25.6.1/bin/node ./node_modules/.bin/rescript build -w"
   },
   "imports": {
     "@std/": "jsr:@std/",

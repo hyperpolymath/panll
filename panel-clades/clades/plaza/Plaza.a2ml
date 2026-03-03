@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Palimpsest Plaza Panel Clade — PMPL License Governance Hub
+
+[clade-metadata]
+id = "plaza"
+name = "Palimpsest Plaza"
+short-name = "PMPL"
+version = "1.0.0"
+kind = "meta"
+icon = "scroll"
+description = "PMPL license adoption, compliance, and governance hub."
+
+[clade-traits]
+has-backend = false
+has-scanning = true
+has-persistence = false
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "LicenseAdoption",
+  "ComplianceScanning",
+  "GovernanceDashboard",
+  "CompatibilityChecker",
+  "EthicalUseGuidelines",
+  "ProvenanceSignatures",
+]
+
+[clade-categories]
+categories = ["dashboard", "compliance", "provenance", "compatibility", "ethical-use", "governance", "adopt"]
+
+[clade-panel-integration]
+panel-id = "PanelPlaza"
+model-module = "PlazaModel"
+component-module = "Plaza"
+command-module = "PlazaCmd"
+module-module = "PlazaModule"
+engine-module = "PlazaEngine"

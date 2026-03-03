@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# CloudGuard Panel Clade — Cloudflare Domain Security Management
+
+[clade-metadata]
+id = "cloudguard"
+name = "CloudGuard"
+short-name = "CG"
+version = "1.0.0"
+kind = "network"
+icon = "shield"
+description = "Cloudflare domain security management — zone auditing, policy enforcement, settings grid."
+
+[clade-traits]
+has-backend = true           # Connects to Cloudflare API via Tauri
+has-scanning = true          # Audits zone settings against security policy
+has-persistence = true       # Caches zone data, saves audit reports
+has-work-items = true        # Policy violations as TSDM work items
+has-priority-ordering = false
+has-customisation = true     # Zone selection, policy threshold, filter
+is-directive = false
+is-readonly = false          # Can push settings changes to Cloudflare
+
+[clade-capabilities]
+capabilities = [
+  "ZoneManagement",          # List, select, filter Cloudflare zones
+  "SecurityPolicyAudit",     # Audit zone settings against CloudGuardPolicy
+  "SettingsGrid",            # Visual grid of security settings with toggles
+  "DomainRibbon",            # Horizontal scrollable domain selector
+  "AuditScoring",            # Per-domain security score (0-100%)
+  "BulkAudit",               # Audit multiple domains in one pass
+]
+
+[clade-panel-integration]
+panel-id = "PanelCloudGuard"
+model-module = "CloudGuardModel"
+component-module = "CloudGuard"
+command-module = "CloudGuardCmd"
+module-module = "CloudGuardModule"
+engine-module = "CloudGuardEngine"
+policy-module = "CloudGuardPolicy"

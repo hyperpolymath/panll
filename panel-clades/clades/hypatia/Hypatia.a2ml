@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Hypatia Panel Clade — Neurosymbolic CI/CD Intelligence
+
+[clade-metadata]
+id = "hypatia"
+name = "Hypatia"
+short-name = "Hyp"
+version = "1.0.0"
+kind = "scanner"
+icon = "brain"
+description = "Neurosymbolic CI/CD intelligence — neural network ensemble for security scanning."
+
+[clade-traits]
+has-backend = true           # Connects to Hypatia scanning infrastructure
+has-scanning = true          # Core trait: neural + symbolic security analysis
+has-persistence = true       # Learning cycles, scan history
+has-work-items = true        # Security findings as TSDM work items
+has-priority-ordering = false
+has-customisation = true     # Network selection, confidence thresholds
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "NeuralNetworkEnsemble",  # Multiple neural nets with confidence scoring
+  "LearningCycles",         # Iterative improvement across scan runs
+  "ConfidenceGauges",       # Per-network confidence percentage gauges
+  "SecurityScanning",       # CI/CD pipeline security analysis
+  "RiskScoring",            # Per-repo risk scores
+]
+
+[clade-panel-integration]
+panel-id = "PanelHypatia"
+model-module = "HypatiaModel"
+component-module = "Hypatia"
+command-module = "HypatiaCmd"
+module-module = "HypatiaModule"
+engine-module = "HypatiaEngine"

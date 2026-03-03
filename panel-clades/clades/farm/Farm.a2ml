@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Farm Panel Clade — Repository Admin Registry and Maintenance Hub
+
+[clade-metadata]
+id = "farm"
+name = "Farm"
+short-name = "Farm"
+version = "1.0.0"
+kind = "viewer"
+icon = "barn"
+description = "Repository admin registry and maintenance hub — inventory from farm-manifest.json."
+
+[clade-traits]
+has-backend = false
+has-scanning = true
+has-persistence = false
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "RepoInventory",
+  "CategoryFiltering",
+  "ForgeTracking",
+  "HealthStatus",
+  "EnrollmentAudit",
+]
+
+[clade-panel-integration]
+panel-id = "PanelFarm"
+model-module = "FarmModel"
+component-module = "Farm"
+command-module = "FarmCmd"
+module-module = "FarmModule"
+engine-module = "FarmEngine"

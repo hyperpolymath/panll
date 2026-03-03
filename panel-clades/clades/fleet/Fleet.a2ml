@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Fleet Panel Clade — Gitbot Fleet Orchestration and Dispatch
+
+[clade-metadata]
+id = "fleet"
+name = "Fleet"
+short-name = "Fleet"
+version = "1.0.0"
+kind = "network"
+icon = "bots"
+description = "Gitbot fleet orchestration and dispatch — rhodibot, echidnabot, sustainabot, glambot, seambot, finishbot."
+
+[clade-traits]
+has-backend = true           # Connects to gitbot-fleet dispatch service
+has-scanning = true          # Bots scan repos for issues and generate findings
+has-persistence = true       # Findings history, dispatch logs
+has-work-items = true        # Bot findings as TSDM work items
+has-priority-ordering = false
+has-customisation = true     # Bot selection, confidence threshold, filter
+is-directive = false
+is-readonly = false          # Users dispatch bots and approve fixes
+
+[clade-capabilities]
+capabilities = [
+  "BotDispatch",             # Send bots to target repos
+  "FindingsAggregation",     # Aggregate findings from all fleet bots
+  "ConfidenceThresholds",    # robot-repo-automaton confidence filtering
+  "FleetStatus",             # Real-time status of dispatched bots
+  "AutofixApproval",         # Review and approve automated fixes
+  "BotConfiguration",        # Configure per-bot behaviour
+]
+
+[clade-bots]
+bots = [
+  "rhodibot",                # RSR compliance enforcement
+  "echidnabot",              # Formal verification auditing
+  "sustainabot",             # Sustainability and effects measurement
+  "glambot",                 # Code quality and style
+  "seambot",                 # Integration seam detection
+  "finishbot",               # Incomplete work detection
+]
+
+[clade-panel-integration]
+panel-id = "PanelFleet"
+model-module = "FleetModel"
+component-module = "Fleet"
+command-module = "FleetCmd"
+module-module = "FleetModule"

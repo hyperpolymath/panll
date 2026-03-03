@@ -13,7 +13,7 @@ open Tea.Html
 /// Render a compliance rate bar for a single RSR requirement.
 let renderRequirementBar = (req: rsrRequirement, rate: float, count: int, total: int): Tea_Vdom.t<msg> => {
   let label = ReposystemEngine.requirementLabel(req)
-  let pct = Float.toFixedWithPrecision(rate *. 100.0, ~digits=1)
+  let pct = Float.toFixed(rate *. 100.0, ~digits=1)
   let barColor = if rate > 0.9 {
     "bg-green-500"
   } else if rate > 0.5 {
@@ -59,7 +59,7 @@ let renderRequirementBar = (req: rsrRequirement, rate: float, count: int, total:
 
 /// Render a repo compliance row.
 let renderRepoRow = (audit: repoCompliance): Tea_Vdom.t<msg> => {
-  let scorePct = Float.toFixedWithPrecision(audit.score *. 100.0, ~digits=0)
+  let scorePct = Float.toFixed(audit.score *. 100.0, ~digits=0)
   let scoreColor = if audit.score >= 1.0 {
     "text-green-400"
   } else if audit.score > 0.6 {
@@ -190,7 +190,7 @@ let view = (rsr: reposystemState): Tea_Vdom.t<msg> => {
                           list{Attrs.class_("flex gap-6 text-sm")},
                           list{
                             div(list{Attrs.class_("text-gray-400")}, list{text(`${Int.toString(stats.totalRepos)} repos audited`)}),
-                            div(list{Attrs.class_("text-gray-400")}, list{text(`${Float.toFixedWithPrecision(stats.avgScore *. 100.0, ~digits=1)}% avg compliance`)}),
+                            div(list{Attrs.class_("text-gray-400")}, list{text(`${Float.toFixed(stats.avgScore *. 100.0, ~digits=1)}% avg compliance`)}),
                             div(list{Attrs.class_("text-green-400")}, list{text(`${Int.toString(stats.fullyCompliant)} fully compliant`)}),
                           },
                         ),

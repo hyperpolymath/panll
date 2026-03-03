@@ -16,20 +16,20 @@ let renderLatencyCard = (result: latencyResult): Tea_Vdom.t<msg> => {
     list{
       Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4"),
       Attrs.role("article"),
-      Attrs.ariaLabel(`${result.endpoint}: ${Float.toFixedWithPrecision(result.rttMs, ~digits=1)}ms`),
+      Attrs.ariaLabel(`${result.endpoint}: ${Float.toFixed(result.rttMs, ~digits=1)}ms`),
     },
     list{
       div(list{Attrs.class_("text-xs text-gray-500 truncate mb-1")}, list{text(result.endpoint)}),
       div(
         list{Attrs.class_(`text-2xl font-light ${color}`)},
-        list{text(`${Float.toFixedWithPrecision(result.rttMs, ~digits=1)}ms`)},
+        list{text(`${Float.toFixed(result.rttMs, ~digits=1)}ms`)},
       ),
       div(list{Attrs.class_("flex justify-between text-xs text-gray-500 mt-2")}, list{
         span(list{}, list{text(quality)}),
-        span(list{}, list{text(`jitter: ${Float.toFixedWithPrecision(result.jitterMs, ~digits=1)}ms`)}),
+        span(list{}, list{text(`jitter: ${Float.toFixed(result.jitterMs, ~digits=1)}ms`)}),
       }),
       if result.packetLoss > 0.0 {
-        div(list{Attrs.class_("text-xs text-red-400 mt-1")}, list{text(`${Float.toFixedWithPrecision(result.packetLoss, ~digits=1)}% loss`)})
+        div(list{Attrs.class_("text-xs text-red-400 mt-1")}, list{text(`${Float.toFixed(result.packetLoss, ~digits=1)}% loss`)})
       } else { noNode },
     },
   )
@@ -85,7 +85,7 @@ let view = (aerie: aerieState): Tea_Vdom.t<msg> => {
               div(list{Attrs.class_("space-y-6")}, list{
                 div(list{Attrs.class_("flex gap-4 text-sm text-gray-400")}, list{
                   text(`${Int.toString(Array.length(aerie.probes))} probes`),
-                  text(`avg: ${Float.toFixedWithPrecision(AerieEngine.avgLatency(aerie.latencyResults), ~digits=1)}ms`),
+                  text(`avg: ${Float.toFixed(AerieEngine.avgLatency(aerie.latencyResults), ~digits=1)}ms`),
                 }),
                 div(
                   list{Attrs.class_("grid grid-cols-4 gap-3"), Attrs.role("list"), Attrs.ariaLabel("Latency measurements")},
@@ -97,12 +97,12 @@ let view = (aerie: aerieState): Tea_Vdom.t<msg> => {
                 aerie.speedTests->Array.map(st =>
                   div(list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4 flex justify-between")}, list{
                     div(list{}, list{
-                      div(list{Attrs.class_("text-green-400 text-lg")}, list{text(`${Float.toFixedWithPrecision(st.downloadMbps, ~digits=1)} Mbps down`)}),
-                      div(list{Attrs.class_("text-blue-400 text-sm")}, list{text(`${Float.toFixedWithPrecision(st.uploadMbps, ~digits=1)} Mbps up`)}),
+                      div(list{Attrs.class_("text-green-400 text-lg")}, list{text(`${Float.toFixed(st.downloadMbps, ~digits=1)} Mbps down`)}),
+                      div(list{Attrs.class_("text-blue-400 text-sm")}, list{text(`${Float.toFixed(st.uploadMbps, ~digits=1)} Mbps up`)}),
                     }),
                     div(list{Attrs.class_("text-right")}, list{
                       div(list{Attrs.class_("text-xs text-gray-500")}, list{text(st.serverLocation)}),
-                      div(list{Attrs.class_("text-xs text-gray-600")}, list{text(`${Float.toFixedWithPrecision(st.pingMs, ~digits=0)}ms ping`)}),
+                      div(list{Attrs.class_("text-xs text-gray-600")}, list{text(`${Float.toFixed(st.pingMs, ~digits=0)}ms ping`)}),
                     }),
                   })
                 )->List.fromArray,

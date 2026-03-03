@@ -68,7 +68,7 @@ let renderBotCard = (bot: botState): Tea_Vdom.t<msg> => {
       // Confidence threshold
       div(
         list{Attrs.class_("mt-2 text-xs text-gray-500")},
-        list{text(`Threshold: ${Float.toFixedWithPrecision(bot.confidenceThreshold, ~digits=0)}%`)},
+        list{text(`Threshold: ${Float.toFixed(bot.confidenceThreshold, ~digits=0)}%`)},
       ),
     },
   )
@@ -220,7 +220,7 @@ let renderFinding = (finding: fleetFinding): Tea_Vdom.t<msg> => {
       // Confidence
       span(
         list{Attrs.class_("text-xs text-gray-400 w-16 text-right")},
-        list{text(`${Float.toFixedWithPrecision(finding.confidence *. 100.0, ~digits=0)}%`)},
+        list{text(`${Float.toFixed(finding.confidence *. 100.0, ~digits=0)}%`)},
       ),
       // Assigned bot
       span(
@@ -260,7 +260,7 @@ let renderDashboard = (fleet: fleetState): Tea_Vdom.t<msg> => {
             ),
             div(
               list{Attrs.class_("text-gray-400")},
-              list{text(`Avg confidence: ${Float.toFixedWithPrecision(health.avgConfidence *. 100.0, ~digits=0)}%`)},
+              list{text(`Avg confidence: ${Float.toFixed(health.avgConfidence *. 100.0, ~digits=0)}%`)},
             ),
           },
         )

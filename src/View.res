@@ -157,39 +157,9 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelCapture) => Capture.view(model.capture)
   | Some(PanelSecurity) => Security.view(model.security)
   | Some(PanelMigration) => Migration.view(model.migration)
-  | Some(PanelPanicAttack) => PanicAttack.view(model.panicAttack, dispatch)
-  // Panels not yet implemented — show a labelled placeholder overlay so the
-  // panel switcher works end-to-end before each module is wired in.
-  | Some(panelId) => {
-      let name = PanelRegistry.panelName(panelId)
-      div(
-        list{
-          Attrs.class_("fixed inset-0 bg-gray-950/95 z-40 flex items-center justify-center"),
-        },
-        list{
-          div(
-            list{Attrs.class_("text-center")},
-            list{
-              div(
-                list{Attrs.class_("text-2xl font-light text-gray-400 mb-4")},
-                list{text(name)},
-              ),
-              div(
-                list{Attrs.class_("text-sm text-gray-600")},
-                list{text("Panel module not yet connected")},
-              ),
-              button(
-                list{
-                  Attrs.class_("mt-6 px-4 py-2 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition-colors"),
-                  Events.onClick(PanelSwitcher(ClosePanels)),
-                },
-                list{text("Close")},
-              ),
-            },
-          ),
-        },
-      )
-    }
+  | Some(PanelPanicAttack) => PanicAttack.view(model.panicAttack)
+  | Some(PanelMassPanic) => MassPanic.view(model.massPanic)
+  | Some(PanelTsdm) => Tsdm.view(model.tsdm)
   }
 }
 

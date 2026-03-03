@@ -1,0 +1,34 @@
+= VAB Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+== What is this?
+
+This directory defines the **VAB** panel clade for PanLL.
+Verified Assembly Building — KSP-inspired visual server component composer.
+
+== Files
+
+[cols="1,3"]
+|===
+| File | Purpose
+
+| `Vab.a2ml`
+| Machine-readable clade definition -- traits, capabilities, integration points
+
+| `README.adoc`
+| This file -- directory overview
+|===
+
+== Clade Kind
+
+**builder**
+
+== PanLL Integration
+
+=== Panel Files (in PanLL src/)
+
+* `src/model/VabModel.res` -- state types and init
+* `src/commands/VabCmd.res` -- Tauri command wrappers
+* `src/modules/VabModule.res` -- capability declarations
+* `src/components/Vab.res` -- Tea_Html view

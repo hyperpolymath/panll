@@ -781,6 +781,98 @@ type panicAttackMsg =
   /// Dismiss error.
   | DismissError
 
+/// Mass-panic panel messages — assemblyline batch scanning, repo discovery,
+/// incremental BLAKE3, verisimdb persistence, delta reporting, notifications.
+type massPanicMsg =
+  /// Set the repos directory path.
+  | SetReposDirectory(string)
+  /// Discover repos in the directory.
+  | DiscoverRepos
+  /// Repos discovered.
+  | ReposDiscovered(result<string, string>)
+  /// Run assemblyline on all repos.
+  | RunAssemblyline
+  /// Run assemblyline on selected repos only.
+  | RunSelected
+  /// Assemblyline scan result.
+  | AssemblylineResult(result<string, string>)
+  /// Poll scan progress.
+  | PollProgress
+  /// Progress update received.
+  | ProgressUpdate(result<string, string>)
+  /// Toggle incremental scanning (BLAKE3).
+  | ToggleIncremental
+  /// Toggle notification generation.
+  | ToggleNotify
+  /// Set filter mode.
+  | SetFilterMode(MassPanicModel.repoFilterMode)
+  /// Set sort mode.
+  | SetSortMode(MassPanicModel.repoSortMode)
+  /// Set search text.
+  | SetSearchText(string)
+  /// Toggle repo selection by index.
+  | ToggleRepoSelection(int)
+  /// Toggle select all.
+  | ToggleSelectAll
+  /// Toggle delta comparison view.
+  | ToggleDelta
+  /// Load delta comparison between latest two runs.
+  | LoadDelta
+  /// Delta loaded.
+  | DeltaLoaded(result<string, string>)
+  /// Generate notification summary.
+  | GenerateNotification
+  /// Notification generated.
+  | NotificationGenerated(result<string, string>)
+  /// Dismiss error.
+  | DismissMassPanicError
+
+/// TSDM directive panel messages — axis reordering, tier customisation,
+/// cleanup configuration, work item aggregation, and directive persistence.
+type tsdmMsg =
+  /// Move an axis up in execution order.
+  | MoveAxisUp(int)
+  /// Move an axis down in execution order.
+  | MoveAxisDown(int)
+  /// Move a scope tier up in priority.
+  | MoveScopeTierUp(int)
+  /// Move a scope tier down in priority.
+  | MoveScopeTierDown(int)
+  /// Move a maintenance tier up in priority.
+  | MoveMaintenanceTierUp(int)
+  /// Move a maintenance tier down in priority.
+  | MoveMaintenanceTierDown(int)
+  /// Move an audit tier up in priority.
+  | MoveAuditTierUp(int)
+  /// Move an audit tier down in priority.
+  | MoveAuditTierDown(int)
+  /// Toggle a cleanup step on/off.
+  | ToggleCleanupStep(TsdmModel.cleanupStep)
+  /// Set axis filter for work items view.
+  | SetAxisFilter(option<TsdmModel.axisId>)
+  /// Set search text.
+  | SetTsdmSearch(string)
+  /// Toggle show completed items.
+  | ToggleShowCompleted
+  /// Lock/unlock the directive.
+  | ToggleLock
+  /// Reset all orderings to defaults.
+  | ResetToDefaults
+  /// Save directive to persistent storage.
+  | SaveDirective
+  /// Directive saved result.
+  | DirectiveSaved(result<string, string>)
+  /// Load directive from persistent storage.
+  | LoadDirective
+  /// Directive loaded result.
+  | DirectiveLoaded(result<string, string>)
+  /// Collect work items from consumer panels.
+  | CollectWorkItems
+  /// Work items collected result.
+  | WorkItemsCollected(result<string, string>)
+  /// Dismiss error.
+  | DismissTsdmError
+
 /// Keybindings messages — rebinding, recording, reset.
 type keybindingsMsg =
   /// Start recording a new keybinding for an action.
@@ -830,6 +922,8 @@ type msg =
   | Keybindings(keybindingsMsg) // Keyboard shortcut management
   | Migration(migrationMsg) // ReScript Migration Observatory
   | PanicAttack(panicAttackMsg) // Stress testing and bug detection
+  | MassPanic(massPanicMsg) // Organisation-scale batch scanning
+  | Tsdm(tsdmMsg) // TSDM directive — triaxial priority ordering
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

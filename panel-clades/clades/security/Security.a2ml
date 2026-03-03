@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Security Panel Clade — Secrets, Vault, 2FA, Trustfile Enforcement
+
+[clade-metadata]
+id = "security"
+name = "Security"
+short-name = "Sec"
+version = "1.0.0"
+kind = "directive"
+icon = "lock"
+description = "Secrets redaction, vault, 2FA, Trustfile enforcement, shoulder-safe mode."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = true
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "SecretsRedaction",
+  "VaultManagement",
+  "TwoFactorAuth",
+  "TrustfileEnforcement",
+  "ShoulderSafeMode",
+  "RedactionPatterns",
+]
+
+[clade-panel-integration]
+panel-id = "PanelSecurity"
+model-module = "SecurityModel"
+component-module = "Security"
+command-module = "SecurityCmd"
+module-module = "SecurityModule"
