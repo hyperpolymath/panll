@@ -7,8 +7,8 @@
     "build": "cargo tauri build",
     "bundle": "DENO_NO_PACKAGE_JSON=1 deno run -A scripts/bundle.ts",
     "bundle:watch": "DENO_NO_PACKAGE_JSON=1 deno run -A scripts/bundle.ts --watch",
-    "css:build": "$HOME/.asdf/installs/nodejs/25.6.1/bin/node ./node_modules/.bin/tailwindcss -i ./src/styles/input.css -o ./public/styles.css --minify",
-    "css:watch": "$HOME/.asdf/installs/nodejs/25.6.1/bin/node ./node_modules/.bin/tailwindcss -i ./src/styles/input.css -o ./public/styles.css --watch",
+    "css:build": "deno run -A npm:tailwindcss -i ./src/styles/input.css -o ./public/styles.css --minify",
+    "css:watch": "deno run -A npm:tailwindcss -i ./src/styles/input.css -o ./public/styles.css --watch",
     "serve:dev": "deno run --allow-net=127.0.0.1:8000 --allow-read=. scripts/dev-server.ts",
     "test": "deno test --no-check --allow-read --allow-env tests/",
     "test:watch": "deno test --no-check --watch --allow-read --allow-env tests/",
@@ -16,18 +16,18 @@
     "lint": "deno lint scripts/",
     "fmt": "deno fmt scripts/",
     "mock:echidna": "deno run --allow-net=127.0.0.1:9000 scripts/mock-echidna.ts",
-    "res:build": "$HOME/.asdf/installs/nodejs/25.6.1/bin/node ./node_modules/.bin/rescript build",
-    "res:clean": "$HOME/.asdf/installs/nodejs/25.6.1/bin/node ./node_modules/.bin/rescript clean",
-    "res:watch": "$HOME/.asdf/installs/nodejs/25.6.1/bin/node ./node_modules/.bin/rescript build -w"
+    "res:build": "deno run -A npm:rescript build",
+    "res:clean": "deno run -A npm:rescript clean",
+    "res:watch": "deno run -A npm:rescript build -w"
   },
   "imports": {
     "@std/": "jsr:@std/",
     "@tauri-apps/api": "npm:@tauri-apps/api@^2.10.0",
     "@tauri-apps/plugin-dialog": "npm:@tauri-apps/plugin-dialog",
     "@tauri-apps/plugin-fs": "npm:@tauri-apps/plugin-fs",
-    "rescript/": "npm:/rescript@11.1.4/",
-    "@rescript/core/": "npm:/@rescript/core@1.6.1/",
-    "@rescript/runtime/": "npm:/@rescript/runtime@12.2.0/"
+    "rescript": "^12.0.0",
+    "@rescript/core": "npm:@rescript/core@1.6.1",
+    "@rescript/runtime": "npm:@rescript/runtime@12.2.0/"
   },
   "compilerOptions": {
     "strict": true,
