@@ -222,6 +222,30 @@ let parseRepoFromJson = (json: JSON.t): option<farmRepo> => {
         primary: name === "github",
       }: farmForge))
 
+      let enrollment: enrollmentTier = switch Dict.get(obj, "enrollment") {
+      | Some(v) =>
+        switch JSON.Classify.classify(v) {
+        | Object(enrollObj) => {
+            let getEnrollBool = (key: string): bool =>
+              switch Dict.get(enrollObj, key) {
+              | Some(bv) =>
+                switch JSON.Classify.classify(bv) {
+                | Bool(b) => b
+                | _ => false
+                }
+              | None => false
+              }
+            {
+              farm: getEnrollBool("farm"),
+              hypatia: getEnrollBool("hypatia"),
+              fleet: getEnrollBool("fleet"),
+            }
+          }
+        | _ => {farm: true, hypatia: false, fleet: false}
+        }
+      | None => {farm: true, hypatia: false, fleet: false}
+      }
+
       Some({
         name: getString("name"),
         description: getString("description"),
@@ -230,7 +254,7 @@ let parseRepoFromJson = (json: JSON.t): option<farmRepo> => {
         forges,
         autoPropagation: getBool("auto_propagate"),
         group: getOptString("group"),
-        enrollment: {farm: true, hypatia: false, fleet: false},
+        enrollment,
         healthScore: None,
         hasDependabotAlerts: false,
       })

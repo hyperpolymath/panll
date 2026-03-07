@@ -206,7 +206,7 @@ let renderLearningCycle = (cycle: learningCycle): Tea_Vdom.t<msg> => {
 // ============================================================================
 
 let renderTabs = (active: hypatiaCategory): Tea_Vdom.t<msg> => {
-  let tabs: array<hypatiaCategory> = [HypatiaDashboard, HypatiaScans, HypatiaQuarantine, HypatiaNeural]
+  let tabs: array<hypatiaCategory> = [HypatiaDashboard, HypatiaScans, HypatiaQuarantine, HypatiaNeural, HypatiaRecipes]
   div(
     list{
       Attrs.class_("flex gap-1 border-b border-gray-800 mb-4"),
@@ -299,7 +299,7 @@ let view = (hypatia: hypatiaState): Tea_Vdom.t<msg> => {
               list{
                 div(list{Attrs.class_("text-4xl mb-2")}, list{text("Hypatia")}),
                 div(list{Attrs.class_("text-sm mb-1")}, list{text("Neurosymbolic CI/CD Intelligence")}),
-                div(list{Attrs.class_("text-xs text-gray-600 mb-6")}, list{text("5 neural networks. 298+ repos. Safety triangle routing.")}),
+                div(list{Attrs.class_("text-xs text-gray-600 mb-6")}, list{text(`5 neural networks. ${Int.toString(hypatia.totalRepos)}+ repos. Safety triangle routing.`)}),
                 button(
                   list{
                     Attrs.class_("px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-500"),
@@ -337,6 +337,172 @@ let view = (hypatia: hypatiaState): Tea_Vdom.t<msg> => {
                         },
                         hypatia.networks->Array.map(net => renderNetGauge(net))->List.fromArray,
                       ),
+                      // Safety Triangle summary
+                      switch hypatia.triangleCounts {
+                      | Some((elim, sub, ctrl)) =>
+                        div(
+                          list{
+                            Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4"),
+                            Attrs.role("figure"),
+                            Attrs.ariaLabel("Safety triangle — hierarchy of controls"),
+                          },
+                          list{
+                            div(
+                              list{Attrs.class_("text-sm font-medium text-gray-300 mb-3")},
+                              list{text("Safety Triangle")},
+                            ),
+                            div(
+                              list{Attrs.class_("space-y-2")},
+                              list{
+                                // Eliminate tier
+                                div(
+                                  list{Attrs.class_("flex items-center gap-3")},
+                                  list{
+                                    div(
+                                      list{Attrs.class_("w-20 text-right text-xs text-red-400 font-medium")},
+                                      list{text("Eliminate")},
+                                    ),
+                                    div(
+                                      list{Attrs.class_("flex-1 bg-gray-800 rounded-full h-3 overflow-hidden")},
+                                      list{
+                                        div(
+                                          list{
+                                            Attrs.class_("bg-red-600 h-full rounded-full transition-all"),
+                                            Attrs.prop("style", `width: ${Int.toString(elim * 10)}%`),
+                                          },
+                                          list{},
+                                        ),
+                                      },
+                                    ),
+                                    div(
+                                      list{Attrs.class_("w-8 text-xs text-gray-400 text-right")},
+                                      list{text(Int.toString(elim))},
+                                    ),
+                                  },
+                                ),
+                                // Substitute tier
+                                div(
+                                  list{Attrs.class_("flex items-center gap-3")},
+                                  list{
+                                    div(
+                                      list{Attrs.class_("w-20 text-right text-xs text-amber-400 font-medium")},
+                                      list{text("Substitute")},
+                                    ),
+                                    div(
+                                      list{Attrs.class_("flex-1 bg-gray-800 rounded-full h-3 overflow-hidden")},
+                                      list{
+                                        div(
+                                          list{
+                                            Attrs.class_("bg-amber-600 h-full rounded-full transition-all"),
+                                            Attrs.prop("style", `width: ${Int.toString(sub * 10)}%`),
+                                          },
+                                          list{},
+                                        ),
+                                      },
+                                    ),
+                                    div(
+                                      list{Attrs.class_("w-8 text-xs text-gray-400 text-right")},
+                                      list{text(Int.toString(sub))},
+                                    ),
+                                  },
+                                ),
+                                // Control tier
+                                div(
+                                  list{Attrs.class_("flex items-center gap-3")},
+                                  list{
+                                    div(
+                                      list{Attrs.class_("w-20 text-right text-xs text-blue-400 font-medium")},
+                                      list{text("Control")},
+                                    ),
+                                    div(
+                                      list{Attrs.class_("flex-1 bg-gray-800 rounded-full h-3 overflow-hidden")},
+                                      list{
+                                        div(
+                                          list{
+                                            Attrs.class_("bg-blue-600 h-full rounded-full transition-all"),
+                                            Attrs.prop("style", `width: ${Int.toString(ctrl * 10)}%`),
+                                          },
+                                          list{},
+                                        ),
+                                      },
+                                    ),
+                                    div(
+                                      list{Attrs.class_("w-8 text-xs text-gray-400 text-right")},
+                                      list{text(Int.toString(ctrl))},
+                                    ),
+                                  },
+                                ),
+                              },
+                            ),
+                          },
+                        )
+                      | None => noNode
+                      },
+                      // Outcomes summary
+                      switch hypatia.outcomes {
+                      | Some(out) =>
+                        div(
+                          list{
+                            Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4"),
+                            Attrs.role("region"),
+                            Attrs.ariaLabel("Dispatch outcomes summary"),
+                          },
+                          list{
+                            div(
+                              list{Attrs.class_("text-sm font-medium text-gray-300 mb-3")},
+                              list{text("Outcomes")},
+                            ),
+                            div(
+                              list{Attrs.class_("flex gap-6 text-xs")},
+                              list{
+                                div(
+                                  list{Attrs.class_("text-gray-400")},
+                                  list{text(`${Int.toString(out.totalOutcomes)} total`)},
+                                ),
+                                div(
+                                  list{Attrs.class_("text-gray-400")},
+                                  list{text(`${Int.toString(out.successCount)} succeeded`)},
+                                ),
+                                div(
+                                  list{
+                                    Attrs.class_(
+                                      if out.successRate >= 90.0 {
+                                        "text-green-400"
+                                      } else if out.successRate >= 70.0 {
+                                        "text-amber-400"
+                                      } else {
+                                        "text-red-400"
+                                      },
+                                    ),
+                                  },
+                                  list{text(`${Float.toFixed(out.successRate, ~digits=1)}% success`)},
+                                ),
+                                div(
+                                  list{
+                                    Attrs.class_(
+                                      if out.mismatchFixApplied {
+                                        "text-green-400"
+                                      } else {
+                                        "text-amber-400"
+                                      },
+                                    ),
+                                  },
+                                  list{
+                                    text(
+                                      if out.mismatchFixApplied {
+                                        "Mismatch fix: applied"
+                                      } else {
+                                        "Mismatch fix: pending"
+                                      },
+                                    ),
+                                  },
+                                ),
+                              },
+                            ),
+                          },
+                        )
+                      | None => noNode
+                      },
                       // Learning cycle
                       switch hypatia.learningCycle {
                       | Some(cycle) => renderLearningCycle(cycle)
@@ -398,14 +564,203 @@ let view = (hypatia: hypatiaState): Tea_Vdom.t<msg> => {
                   }
                 | HypatiaQuarantine =>
                   div(
-                    list{Attrs.class_("text-gray-500 text-sm")},
-                    list{text(`${Int.toString(hypatia.quarantinedCount)} items in quarantine — connect to Hypatia backend to view`)},
+                    list{
+                      Attrs.class_("space-y-4"),
+                      Attrs.role("region"),
+                      Attrs.ariaLabel("Quarantine status"),
+                    },
+                    list{
+                      if hypatia.quarantinedCount > 0 {
+                        div(
+                          list{Attrs.class_("bg-amber-900/20 border border-amber-700 rounded-lg p-4")},
+                          list{
+                            div(
+                              list{Attrs.class_("flex items-center gap-3 mb-2")},
+                              list{
+                                span(
+                                  list{Attrs.class_("text-amber-400 text-sm font-medium")},
+                                  list{text(`${Int.toString(hypatia.quarantinedCount)} items quarantined`)},
+                                ),
+                              },
+                            ),
+                            div(
+                              list{Attrs.class_("text-xs text-gray-400")},
+                              list{text("These items have been held for human review. Connect to the Hypatia backend to inspect and resolve individual quarantine entries.")},
+                            ),
+                          },
+                        )
+                      } else {
+                        div(
+                          list{Attrs.class_("text-center py-12")},
+                          list{
+                            div(
+                              list{Attrs.class_("text-3xl text-gray-600 mb-2")},
+                              list{text("Clear")},
+                            ),
+                            div(
+                              list{Attrs.class_("text-sm text-gray-500")},
+                              list{text("No items in quarantine. All findings have been routed through the safety triangle.")},
+                            ),
+                          },
+                        )
+                      },
+                    },
                   )
                 | HypatiaNeural =>
                   div(
-                    list{Attrs.class_("grid grid-cols-2 gap-4")},
+                    list{Attrs.class_("grid grid-cols-2 lg:grid-cols-3 gap-4")},
                     hypatia.networks->Array.map(net => renderNetGauge(net))->List.fromArray,
                   )
+                | HypatiaRecipes =>
+                  switch hypatia.recipes {
+                  | Some(inv) =>
+                    div(
+                      list{
+                        Attrs.class_("space-y-6"),
+                        Attrs.role("region"),
+                        Attrs.ariaLabel("Recipe inventory"),
+                      },
+                      list{
+                        // Total count header
+                        div(
+                          list{Attrs.class_("text-sm text-gray-300")},
+                          list{text(`${Int.toString(inv.totalRecipes)} recipes in inventory`)},
+                        ),
+                        // Confidence distribution
+                        div(
+                          list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4")},
+                          list{
+                            div(
+                              list{Attrs.class_("text-sm font-medium text-gray-300 mb-3")},
+                              list{text("Confidence Distribution")},
+                            ),
+                            div(
+                              list{Attrs.class_("space-y-2")},
+                              inv.confidenceBuckets
+                              ->Array.map(bucket => {
+                                let pct = if inv.totalRecipes > 0 {
+                                  Int.toFloat(bucket.count) /. Int.toFloat(inv.totalRecipes) *. 100.0
+                                } else {
+                                  0.0
+                                }
+                                let pctStr = Float.toFixed(pct, ~digits=0)
+                                let barColor = if bucket.label === "0.99" {
+                                  "bg-emerald-500"
+                                } else if bucket.label === "0.95+" {
+                                  "bg-green-500"
+                                } else if bucket.label === "0.90+" {
+                                  "bg-amber-500"
+                                } else {
+                                  "bg-red-500"
+                                }
+                                div(
+                                  list{
+                                    Attrs.class_("flex items-center gap-3"),
+                                    Attrs.ariaLabel(`${bucket.label} confidence: ${Int.toString(bucket.count)} recipes`),
+                                  },
+                                  list{
+                                    div(
+                                      list{Attrs.class_("w-16 text-right text-xs text-gray-400 font-mono")},
+                                      list{text(bucket.label)},
+                                    ),
+                                    div(
+                                      list{Attrs.class_("flex-1 bg-gray-800 rounded-full h-3 overflow-hidden")},
+                                      list{
+                                        div(
+                                          list{
+                                            Attrs.class_(`${barColor} h-full rounded-full transition-all`),
+                                            Attrs.prop("style", `width: ${pctStr}%`),
+                                          },
+                                          list{},
+                                        ),
+                                      },
+                                    ),
+                                    div(
+                                      list{Attrs.class_("w-8 text-xs text-gray-400 text-right")},
+                                      list{text(Int.toString(bucket.count))},
+                                    ),
+                                  },
+                                )
+                              })
+                              ->List.fromArray,
+                            ),
+                          },
+                        ),
+                        // Fix script coverage
+                        div(
+                          list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4")},
+                          list{
+                            div(
+                              list{Attrs.class_("text-sm font-medium text-gray-300 mb-3")},
+                              list{text("Recipe-to-Script Coverage")},
+                            ),
+                            div(
+                              list{Attrs.class_("flex gap-6 text-xs")},
+                              list{
+                                div(
+                                  list{Attrs.class_("text-green-400")},
+                                  list{text(`${Int.toString(inv.withFixScript)} with fix_script`)},
+                                ),
+                                div(
+                                  list{Attrs.class_("text-gray-500")},
+                                  list{text(`${Int.toString(inv.withoutFixScript)} without fix_script`)},
+                                ),
+                              },
+                            ),
+                            // Coverage bar
+                            {
+                              let coveragePct = if inv.totalRecipes > 0 {
+                                Float.toFixed(
+                                  Int.toFloat(inv.withFixScript) /. Int.toFloat(inv.totalRecipes) *. 100.0,
+                                  ~digits=0,
+                                )
+                              } else {
+                                "0"
+                              }
+                              div(
+                                list{
+                                  Attrs.class_("mt-3"),
+                                  Attrs.role("meter"),
+                                  Attrs.ariaLabel(`Fix script coverage: ${coveragePct}%`),
+                                  Attrs.prop("aria-valuenow", coveragePct),
+                                  Attrs.prop("aria-valuemin", "0"),
+                                  Attrs.prop("aria-valuemax", "100"),
+                                },
+                                list{
+                                  div(
+                                    list{Attrs.class_("w-full bg-gray-800 rounded-full h-3")},
+                                    list{
+                                      div(
+                                        list{
+                                          Attrs.class_("bg-emerald-500 h-full rounded-full transition-all"),
+                                          Attrs.prop("style", `width: ${coveragePct}%`),
+                                        },
+                                        list{},
+                                      ),
+                                    },
+                                  ),
+                                  div(
+                                    list{Attrs.class_("text-xs text-gray-500 mt-1")},
+                                    list{text(`${coveragePct}% coverage`)},
+                                  ),
+                                },
+                              )
+                            },
+                          },
+                        ),
+                      },
+                    )
+                  | None =>
+                    div(
+                      list{Attrs.class_("text-center py-12")},
+                      list{
+                        div(
+                          list{Attrs.class_("text-sm text-gray-500")},
+                          list{text("Recipe inventory not loaded. Connect to Hypatia backend to view the 34-recipe inventory.")},
+                        ),
+                      },
+                    )
+                  }
                 },
               },
             )

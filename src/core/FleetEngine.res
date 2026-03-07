@@ -27,7 +27,7 @@ let botDescription = (id: botId): string =>
   | Sustainabot => "Dependency health & sustainability"
   | Glambot => "Documentation & presentation quality"
   | Seambot => "Integration & API compatibility"
-  | Finishbot => "Completion verification & release readiness"
+  | Finishbot => "CI/CD completion & release readiness"
   }
 
 /// Icon identifier for each bot.

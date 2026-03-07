@@ -53,6 +53,7 @@ let categoryLabel = (cat: hypatiaCategory): string =>
   | HypatiaScans => "Scans"
   | HypatiaQuarantine => "Quarantine"
   | HypatiaNeural => "Neural"
+  | HypatiaRecipes => "Recipes"
   }
 
 /// Filter scan results by text search.
@@ -237,4 +238,7 @@ let defaultState: hypatiaState = {
   filterText: "",
   totalRepos: 0,
   quarantinedCount: 0,
+  triangleCounts: None,
+  recipes: None,
+  outcomes: None,
 }

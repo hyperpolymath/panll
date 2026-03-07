@@ -100,6 +100,40 @@ type hypatiaCategory =
   | HypatiaQuarantine
   /// Neural confidence — detailed network performance.
   | HypatiaNeural
+  /// Recipe inventory — confidence distribution and fix_script coverage.
+  | HypatiaRecipes
+
+/// Recipe confidence distribution bucket.
+type recipeConfidenceBucket = {
+  /// Label for this bucket (e.g. "0.99", "0.95+", "0.90+", "<0.90").
+  label: string,
+  /// Number of recipes in this bucket.
+  count: int,
+}
+
+/// Recipe inventory summary for the Recipes tab.
+type recipeInventory = {
+  /// Total number of recipes.
+  totalRecipes: int,
+  /// Confidence distribution buckets.
+  confidenceBuckets: array<recipeConfidenceBucket>,
+  /// Number of recipes with a fix_script (non-null).
+  withFixScript: int,
+  /// Number of recipes without a fix_script (null).
+  withoutFixScript: int,
+}
+
+/// Outcome summary for the Hypatia Dashboard.
+type outcomeSummary = {
+  /// Total dispatch outcomes recorded.
+  totalOutcomes: int,
+  /// Number of successful outcomes.
+  successCount: int,
+  /// Success rate as a percentage (0.0–100.0).
+  successRate: float,
+  /// Whether the key mismatch fix has been applied.
+  mismatchFixApplied: bool,
+}
 
 /// Root state for the Hypatia panel.
 type hypatiaState = {
@@ -123,4 +157,10 @@ type hypatiaState = {
   totalRepos: int,
   /// Number of repos currently quarantined.
   quarantinedCount: int,
+  /// Safety triangle counts: (eliminate, substitute, control).
+  triangleCounts: option<(int, int, int)>,
+  /// Recipe inventory summary.
+  recipes: option<recipeInventory>,
+  /// Outcome summary for dashboard display.
+  outcomes: option<outcomeSummary>,
 }

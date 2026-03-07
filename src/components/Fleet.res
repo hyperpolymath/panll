@@ -20,6 +20,7 @@ let renderBotCard = (bot: botState): Tea_Vdom.t<msg> => {
   let label = FleetEngine.botLabel(bot.id)
   let desc = FleetEngine.botDescription(bot.id)
   let statusText = FleetEngine.statusLabel(bot.status)
+  let icon = FleetEngine.botIcon(bot.id)
 
   div(
     list{
@@ -28,13 +29,25 @@ let renderBotCard = (bot: botState): Tea_Vdom.t<msg> => {
       Attrs.ariaLabel(`${label} — ${statusText}`),
     },
     list{
-      // Header: bot name + status dot
+      // Header: icon + bot name + status dot
       div(
         list{Attrs.class_("flex items-center justify-between mb-2")},
         list{
-          span(
-            list{Attrs.class_("text-sm font-medium text-gray-200")},
-            list{text(label)},
+          div(
+            list{Attrs.class_("flex items-center gap-1.5")},
+            list{
+              span(
+                list{
+                  Attrs.class_("text-xs text-gray-500"),
+                  Attrs.prop("aria-hidden", "true"),
+                },
+                list{text(icon)},
+              ),
+              span(
+                list{Attrs.class_("text-sm font-medium text-gray-200")},
+                list{text(label)},
+              ),
+            },
           ),
           span(
             list{
@@ -81,6 +94,14 @@ let renderBotCard = (bot: botState): Tea_Vdom.t<msg> => {
 /// Render the safety triangle (Eliminate / Substitute / Control) with counts.
 let renderSafetyTriangle = (health: fleetHealth): Tea_Vdom.t<msg> => {
   let (elim, sub, ctrl) = health.triangleCounts
+  let total = elim + sub + ctrl
+  let pct = (count: int): string => {
+    if total <= 0 {
+      "0"
+    } else {
+      Float.toFixed(Int.toFloat(count) /. Int.toFloat(total) *. 100.0, ~digits=0)
+    }
+  }
   div(
     list{
       Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-6"),
@@ -110,7 +131,7 @@ let renderSafetyTriangle = (health: fleetHealth): Tea_Vdom.t<msg> => {
                   div(
                     list{
                       Attrs.class_("bg-red-600 h-full rounded-full transition-all"),
-                      Attrs.prop("style", `width: ${Int.toString(elim * 10)}%`),
+                      Attrs.prop("style", `width: ${pct(elim)}%`),
                     },
                     list{},
                   ),
@@ -136,7 +157,7 @@ let renderSafetyTriangle = (health: fleetHealth): Tea_Vdom.t<msg> => {
                   div(
                     list{
                       Attrs.class_("bg-amber-600 h-full rounded-full transition-all"),
-                      Attrs.prop("style", `width: ${Int.toString(sub * 10)}%`),
+                      Attrs.prop("style", `width: ${pct(sub)}%`),
                     },
                     list{},
                   ),
@@ -162,7 +183,7 @@ let renderSafetyTriangle = (health: fleetHealth): Tea_Vdom.t<msg> => {
                   div(
                     list{
                       Attrs.class_("bg-blue-600 h-full rounded-full transition-all"),
-                      Attrs.prop("style", `width: ${Int.toString(ctrl * 10)}%`),
+                      Attrs.prop("style", `width: ${pct(ctrl)}%`),
                     },
                     list{},
                   ),
@@ -359,6 +380,115 @@ let renderFindings = (fleet: fleetState): Tea_Vdom.t<msg> => {
 }
 
 // ============================================================================
+// Dispatch View
+// ============================================================================
+
+/// Render the dispatch summary — stats derived from bot and findings state.
+/// Shows per-bot dispatch counts, resolution rates, and assignment coverage.
+let renderDispatch = (fleet: fleetState): Tea_Vdom.t<msg> => {
+  let totalResolved = fleet.findings->Array.filter(f => f.resolved)->Array.length
+  let totalFindings = Array.length(fleet.findings)
+  let assigned = fleet.findings->Array.filter(f => Option.isSome(f.assignedBot))->Array.length
+  let unassigned = totalFindings - assigned
+  div(
+    list{
+      Attrs.class_("space-y-6"),
+      Attrs.role("region"),
+      Attrs.ariaLabel("Dispatch manifest summary"),
+    },
+    list{
+      // Summary stats row
+      div(
+        list{Attrs.class_("flex gap-6 text-sm")},
+        list{
+          div(
+            list{Attrs.class_("text-gray-400")},
+            list{text(`Total findings: ${Int.toString(totalFindings)}`)},
+          ),
+          div(
+            list{Attrs.class_("text-gray-400")},
+            list{text(`Resolved: ${Int.toString(totalResolved)}`)},
+          ),
+          div(
+            list{Attrs.class_("text-gray-400")},
+            list{text(`Assigned: ${Int.toString(assigned)}`)},
+          ),
+          div(
+            list{Attrs.class_(unassigned > 0 ? "text-amber-400" : "text-gray-400")},
+            list{text(`Unassigned: ${Int.toString(unassigned)}`)},
+          ),
+        },
+      ),
+      // Per-bot dispatch breakdown
+      div(
+        list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4")},
+        list{
+          div(
+            list{Attrs.class_("text-sm font-medium text-gray-300 mb-3")},
+            list{text("Per-Bot Dispatch")},
+          ),
+          div(
+            list{Attrs.class_("space-y-2")},
+            fleet.bots->Array.map(bot => {
+              let assignedToBot = fleet.findings->Array.filter(f =>
+                f.assignedBot === Some(bot.id)
+              )->Array.length
+              let resolvedByBot = fleet.findings->Array.filter(f =>
+                f.assignedBot === Some(bot.id) && f.resolved
+              )->Array.length
+              let botName = FleetEngine.botLabel(bot.id)
+              div(
+                list{
+                  Attrs.class_("flex items-center gap-3"),
+                  Attrs.ariaLabel(`${botName}: ${Int.toString(assignedToBot)} assigned, ${Int.toString(resolvedByBot)} resolved`),
+                },
+                list{
+                  div(
+                    list{Attrs.class_("w-28 text-sm text-gray-300")},
+                    list{text(botName)},
+                  ),
+                  div(
+                    list{Attrs.class_("flex-1 h-3 bg-gray-800 rounded-full overflow-hidden")},
+                    list{
+                      div(
+                        list{
+                          Attrs.class_("h-full bg-indigo-500 rounded-full transition-all"),
+                          Attrs.prop(
+                            "style",
+                            `width: ${if totalFindings > 0 {
+                                Float.toFixed(
+                                  Int.toFloat(assignedToBot) /. Int.toFloat(totalFindings) *. 100.0,
+                                  ~digits=0,
+                                )
+                              } else {
+                                "0"
+                              }}%`,
+                          ),
+                        },
+                        list{},
+                      ),
+                    },
+                  ),
+                  div(
+                    list{Attrs.class_("w-24 text-xs text-gray-500 text-right")},
+                    list{text(`${Int.toString(resolvedByBot)}/${Int.toString(assignedToBot)}`)},
+                  ),
+                },
+              )
+            })->List.fromArray,
+          ),
+        },
+      ),
+      // Note about live dispatch history
+      div(
+        list{Attrs.class_("text-xs text-gray-600 italic")},
+        list{text("Dispatch audit log requires a live connection to the fleet backend.")},
+      ),
+    },
+  )
+}
+
+// ============================================================================
 // Category Tabs
 // ============================================================================
 
@@ -475,11 +605,7 @@ let view = (fleet: fleetState): Tea_Vdom.t<msg> => {
                 switch fleet.activeCategory {
                 | FleetDashboard => renderDashboard(fleet)
                 | FleetFindings => renderFindings(fleet)
-                | FleetDispatch =>
-                  div(
-                    list{Attrs.class_("text-gray-500 text-sm")},
-                    list{text("Dispatch history — connect to fleet backend to populate")},
-                  )
+                | FleetDispatch => renderDispatch(fleet)
                 },
               },
             )

@@ -271,26 +271,224 @@ let renderContent = (farm: farmState): Tea_Vdom.t<msg> => {
       list{Attrs.class_("flex-1 overflow-y-auto")},
       list{renderForgeCoverage(filtered)},
     )
-  | Enrollment =>
+  | Enrollment => {
+    let farmCount = filtered->Array.filter(r => r.enrollment.farm)->Array.length
+    let hypatiaCount = filtered->Array.filter(r => r.enrollment.hypatia)->Array.length
+    let fleetCount = filtered->Array.filter(r => r.enrollment.fleet)->Array.length
+    let totalCount = Array.length(filtered)
+    let pctBar = (count: int): string =>
+      if totalCount > 0 {
+        Float.toFixed(Int.toFloat(count) /. Int.toFloat(totalCount) *. 100.0, ~digits=0)
+      } else {
+        "0"
+      }
     div(
-      list{Attrs.class_("flex-1 overflow-y-auto p-4")},
       list{
+        Attrs.class_("flex-1 overflow-y-auto p-4 space-y-6"),
+        Attrs.role("region"),
+        Attrs.ariaLabel("Three-tier enrollment status"),
+      },
+      list{
+        // Summary heading
         div(
-          list{Attrs.class_("text-sm text-gray-500")},
-          list{text("Three-tier enrollment view — coming in Phase 3 (Hypatia integration)")},
+          list{Attrs.class_("text-sm font-medium text-gray-300 mb-2")},
+          list{text("Three-Tier Enrollment Pipeline")},
+        ),
+        div(
+          list{Attrs.class_("text-xs text-gray-500 mb-4")},
+          list{text("Each tier builds on the previous: Farm (admin registry) > Hypatia (scanning) > Fleet (execution)")},
+        ),
+        // Tier bars
+        div(
+          list{Attrs.class_("space-y-3")},
+          list{
+            // Tier 1: Farm
+            div(
+              list{Attrs.class_("flex items-center gap-3")},
+              list{
+                div(
+                  list{Attrs.class_("w-36 text-sm text-emerald-400 font-medium")},
+                  list{text("git-private-farm")},
+                ),
+                div(
+                  list{Attrs.class_("flex-1 h-4 bg-gray-800 rounded-full overflow-hidden")},
+                  list{
+                    div(
+                      list{
+                        Attrs.class_("h-full bg-emerald-600 rounded-full transition-all"),
+                        Attrs.prop("style", `width: ${pctBar(farmCount)}%`),
+                      },
+                      list{},
+                    ),
+                  },
+                ),
+                div(
+                  list{Attrs.class_("w-20 text-xs text-gray-400 text-right")},
+                  list{text(`${Int.toString(farmCount)}/${Int.toString(totalCount)}`)},
+                ),
+              },
+            ),
+            // Tier 2: Hypatia
+            div(
+              list{Attrs.class_("flex items-center gap-3")},
+              list{
+                div(
+                  list{Attrs.class_("w-36 text-sm text-indigo-400 font-medium")},
+                  list{text("hypatia")},
+                ),
+                div(
+                  list{Attrs.class_("flex-1 h-4 bg-gray-800 rounded-full overflow-hidden")},
+                  list{
+                    div(
+                      list{
+                        Attrs.class_("h-full bg-indigo-600 rounded-full transition-all"),
+                        Attrs.prop("style", `width: ${pctBar(hypatiaCount)}%`),
+                      },
+                      list{},
+                    ),
+                  },
+                ),
+                div(
+                  list{Attrs.class_("w-20 text-xs text-gray-400 text-right")},
+                  list{text(`${Int.toString(hypatiaCount)}/${Int.toString(totalCount)}`)},
+                ),
+              },
+            ),
+            // Tier 3: Fleet
+            div(
+              list{Attrs.class_("flex items-center gap-3")},
+              list{
+                div(
+                  list{Attrs.class_("w-36 text-sm text-purple-400 font-medium")},
+                  list{text("gitbot-fleet")},
+                ),
+                div(
+                  list{Attrs.class_("flex-1 h-4 bg-gray-800 rounded-full overflow-hidden")},
+                  list{
+                    div(
+                      list{
+                        Attrs.class_("h-full bg-purple-600 rounded-full transition-all"),
+                        Attrs.prop("style", `width: ${pctBar(fleetCount)}%`),
+                      },
+                      list{},
+                    ),
+                  },
+                ),
+                div(
+                  list{Attrs.class_("w-20 text-xs text-gray-400 text-right")},
+                  list{text(`${Int.toString(fleetCount)}/${Int.toString(totalCount)}`)},
+                ),
+              },
+            ),
+          },
+        ),
+        // Per-repo enrollment table
+        div(
+          list{Attrs.class_("border border-gray-700 rounded-lg overflow-hidden mt-4")},
+          list{
+            // Header
+            div(
+              list{Attrs.class_("flex items-center gap-3 px-4 py-2 border-b border-gray-700 text-xs font-medium text-gray-500 uppercase tracking-wider")},
+              list{
+                div(list{Attrs.class_("flex-1")}, list{text("Repository")}),
+                div(list{Attrs.class_("w-16 text-center")}, list{text("Farm")}),
+                div(list{Attrs.class_("w-16 text-center")}, list{text("Hypatia")}),
+                div(list{Attrs.class_("w-16 text-center")}, list{text("Fleet")}),
+              },
+            ),
+            // Rows
+            div(
+              list{Attrs.class_("max-h-96 overflow-y-auto")},
+              sorted->Array.map(repo => {
+                let tierDot = (enrolled: bool): Tea_Vdom.t<msg> =>
+                  span(
+                    list{
+                      Attrs.class_(enrolled ? "text-emerald-400" : "text-gray-700"),
+                      Attrs.ariaLabel(enrolled ? "Enrolled" : "Not enrolled"),
+                    },
+                    list{text(enrolled ? "Y" : "-")},
+                  )
+                div(
+                  list{
+                    Attrs.class_("flex items-center gap-3 px-4 py-2 border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"),
+                    Attrs.ariaLabel(`${repo.name} enrollment status`),
+                  },
+                  list{
+                    div(
+                      list{Attrs.class_("flex-1 text-sm text-gray-300 truncate")},
+                      list{text(repo.name)},
+                    ),
+                    div(list{Attrs.class_("w-16 text-center")}, list{tierDot(repo.enrollment.farm)}),
+                    div(list{Attrs.class_("w-16 text-center")}, list{tierDot(repo.enrollment.hypatia)}),
+                    div(list{Attrs.class_("w-16 text-center")}, list{tierDot(repo.enrollment.fleet)}),
+                  },
+                )
+              })->List.fromArray,
+            ),
+          },
         ),
       },
     )
-  | Health =>
+  }
+  | Health => {
+    let unhealthy = filtered->Array.filter(r =>
+      switch r.healthScore {
+      | Some(s) => s < 0.5
+      | None => false
+      }
+    )->Array.length
+    let unassessed = filtered->Array.filter(r => Option.isNone(r.healthScore))->Array.length
+    let withAlerts = filtered->Array.filter(r => r.hasDependabotAlerts)->Array.length
     div(
-      list{Attrs.class_("flex-1 overflow-y-auto p-4")},
       list{
+        Attrs.class_("flex-1 overflow-y-auto p-4 space-y-6"),
+        Attrs.role("region"),
+        Attrs.ariaLabel("Farm health dashboard"),
+      },
+      list{
+        // Quick stats
         div(
-          list{Attrs.class_("text-sm text-gray-500")},
-          list{text("Health dashboard — coming with Hypatia scan integration")},
+          list{Attrs.class_("flex gap-6 text-sm")},
+          list{
+            div(
+              list{Attrs.class_(unhealthy > 0 ? "text-red-400" : "text-gray-400")},
+              list{text(`Unhealthy (score < 0.5): ${Int.toString(unhealthy)}`)},
+            ),
+            div(
+              list{Attrs.class_("text-gray-400")},
+              list{text(`Unassessed: ${Int.toString(unassessed)}`)},
+            ),
+            div(
+              list{Attrs.class_(withAlerts > 0 ? "text-amber-400" : "text-gray-400")},
+              list{text(`Dependabot alerts: ${Int.toString(withAlerts)}`)},
+            ),
+          },
+        ),
+        // Hypatia integration prompt
+        div(
+          list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-6 text-center")},
+          list{
+            div(
+              list{Attrs.class_("text-sm text-gray-400 mb-3")},
+              list{text("Health scores are populated by Hypatia neurosymbolic scanning.")},
+            ),
+            div(
+              list{Attrs.class_("text-xs text-gray-500 mb-4")},
+              list{text(`${Int.toString(unassessed)} of ${Int.toString(Array.length(filtered))} repos have not been assessed yet.`)},
+            ),
+            button(
+              list{
+                Attrs.class_("px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-500 transition-colors"),
+                Attrs.ariaLabel("Open Hypatia panel to run health scans"),
+                Events.onClick(PanelSwitcher(TogglePanel(PanelHypatia))),
+              },
+              list{text("Open Hypatia")},
+            ),
+          },
         ),
       },
     )
+  }
   }
 }
 
