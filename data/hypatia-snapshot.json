@@ -1,0 +1,2465 @@
+{
+  "networks": [
+    {
+      "id": "graph_of_trust",
+      "status": "offline",
+      "confidence": 0.0,
+      "inference_count": 0,
+      "version": "0.0.0"
+    },
+    {
+      "id": "mixture_of_experts",
+      "status": "offline",
+      "confidence": 0.0,
+      "inference_count": 0,
+      "version": "0.0.0"
+    },
+    {
+      "id": "liquid_state_machine",
+      "status": "offline",
+      "confidence": 0.0,
+      "inference_count": 0,
+      "version": "0.0.0"
+    },
+    {
+      "id": "echo_state_network",
+      "status": "offline",
+      "confidence": 0.0,
+      "inference_count": 0,
+      "version": "0.0.0"
+    },
+    {
+      "id": "radial_neural_network",
+      "status": "offline",
+      "confidence": 0.0,
+      "inference_count": 0,
+      "version": "0.0.0"
+    }
+  ],
+  "scans": [
+    {
+      "repo_name": "0-ai-gatekeeper-protocol",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "7-tentacles",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "a2ml",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "absolute-zero",
+      "risk_score": 0.144,
+      "finding_count": 16,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "academic-workflow-suite",
+      "risk_score": 0.196,
+      "finding_count": 94,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "accessibilitybot",
+      "risk_score": 0.091,
+      "finding_count": 4,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "accessibility-everywhere",
+      "risk_score": 0.081,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "ada-loom-registry",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "aerie",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "affinescript",
+      "risk_score": 0.001,
+      "finding_count": 4,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "aggregate-library",
+      "risk_score": 0.012,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "aletheia",
+      "risk_score": 0.050,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "algorithm-shield",
+      "risk_score": 0.025,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "alkahest-shell-transmuter",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "ambientops",
+      "risk_score": 0.048,
+      "finding_count": 6,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "amethe",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "anamnesis",
+      "risk_score": 0.140,
+      "finding_count": 10,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "anvomidav",
+      "risk_score": 0.036,
+      "finding_count": 8,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "asdf-augmenters",
+      "risk_score": 0.137,
+      "finding_count": 217,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "asdf-tool-plugins",
+      "risk_score": 0.135,
+      "finding_count": 176,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "assemblyline-20260307195240",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "ats2-tui",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "avatar-fabrication-facility",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "avow-protocol",
+      "risk_score": 0.074,
+      "finding_count": 6,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "axel-protocol",
+      "risk_score": 0.037,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "Axiology.jl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "Axiom.jl",
+      "risk_score": 0.042,
+      "finding_count": 9,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "befunge93-vault-cracker",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "betlang",
+      "risk_score": 0.062,
+      "finding_count": 18,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "bgp-backbone-lab",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "bitfuckit",
+      "risk_score": 0.044,
+      "finding_count": 6,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "blocky-writer",
+      "risk_score": 0.164,
+      "finding_count": 6,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "blue-screen-of-app",
+      "risk_score": 0.020,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "bofig",
+      "risk_score": 0.048,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "boinc-boinc",
+      "risk_score": 0.075,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "BowtieRisk.jl",
+      "risk_score": 0.028,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "branch-newspaper",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "bridge-nginx-zig",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "broad-spectrum",
+      "risk_score": 0.038,
+      "finding_count": 82,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "bunsenite",
+      "risk_score": 0.047,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "cadre-router",
+      "risk_score": 0.021,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "candy-crash",
+      "risk_score": 0.027,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "casket-ssg",
+      "risk_score": 0.022,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "Causals.jl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "cccp",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "cerro-torre",
+      "risk_score": 0.046,
+      "finding_count": 13,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "checky-monkey",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "chimichanga",
+      "risk_score": 0.037,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "cicada",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "cipherbot",
+      "risk_score": 0.295,
+      "finding_count": 14,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "civic-connect",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "civic-stream",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "Cladistics.jl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "claim-forge",
+      "risk_score": 0.021,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "claude-integrations",
+      "risk_score": 0.070,
+      "finding_count": 15,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "Cliodynamics.jl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "Cliometrics.jl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "cloudflare-dns-terraform",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "cloud-sync-tuner",
+      "risk_score": 0.060,
+      "finding_count": 4,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "conative-gating",
+      "risk_score": 0.174,
+      "finding_count": 16,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "conflow",
+      "risk_score": 0.035,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "consent-aware-http",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "contractiles",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "coq-jr",
+      "risk_score": 0.070,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "czech-file-knife",
+      "risk_score": 0.027,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "defensive-multiplicity",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "defiant",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "deno-ecosystem",
+      "risk_score": 0.096,
+      "finding_count": 7,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "developer-ecosystem",
+      "risk_score": 0.041,
+      "finding_count": 32,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "devkit-risc-v",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "dicti0nary-attack",
+      "risk_score": 0.042,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "did-you-actually-do-that",
+      "risk_score": 0.074,
+      "finding_count": 12,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "disinfo-nesy-detector",
+      "risk_score": 0.013,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "displace",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "dnfinition",
+      "risk_score": 0.004,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "docmatrix",
+      "risk_score": 0.054,
+      "finding_count": 7,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "docudactyl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "dotmatrix-fileprinter",
+      "risk_score": 0.085,
+      "finding_count": 8,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "double-track-browser",
+      "risk_score": 0.018,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "echidnabot",
+      "risk_score": 0.047,
+      "finding_count": 7,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "echidna",
+      "risk_score": 0.003,
+      "finding_count": 82,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "echomesh",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "eclexia",
+      "risk_score": 0.012,
+      "finding_count": 9,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "elegant-state",
+      "risk_score": 0.024,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "elixir-mcp-server",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "emergency-button",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "empty-linter",
+      "risk_score": 0.102,
+      "finding_count": 8,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "ephapax",
+      "risk_score": 0.110,
+      "finding_count": 50,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "error-lang",
+      "risk_score": 0.019,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "esn",
+      "risk_score": 0.031,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "etma-handler",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "excel-economic-numbers-tool",
+      "risk_score": 0.047,
+      "finding_count": 11,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "Exnovation.jl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "explicit-trust-plane",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "feedback-o-tron",
+      "risk_score": 0.101,
+      "finding_count": 6,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "ffmpeg-ffi",
+      "risk_score": 0.042,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "filesoup",
+      "risk_score": 0.122,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "finishingbot",
+      "risk_score": 0.033,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "fireflag",
+      "risk_score": 0.089,
+      "finding_count": 8,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "flat-mate",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "flatracoon",
+      "risk_score": 0.070,
+      "finding_count": 26,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "flatracoon-os",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "fogbinder",
+      "risk_score": 0.058,
+      "finding_count": 8,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "formatrix-docs",
+      "risk_score": 0.015,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "formdb-http",
+      "risk_score": 0.185,
+      "finding_count": 13,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "forth-dotmatrix",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "funfriendly-git",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "games",
+      "risk_score": 0.102,
+      "finding_count": 9,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "gitbot-fleet",
+      "risk_score": 0.049,
+      "finding_count": 71,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "git-inflate",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "git-private-farm",
+      "risk_score": 0.164,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "glambot",
+      "risk_score": 0.141,
+      "finding_count": 6,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "glyphbase",
+      "risk_score": 0.047,
+      "finding_count": 19,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "gql-dt",
+      "risk_score": 0.010,
+      "finding_count": 189,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "grim-repo",
+      "risk_score": 0.250,
+      "finding_count": 33,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "gsbot",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "HackenbushGames.jl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "hesiod-dns-map",
+      "risk_score": 0.087,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "heterogenous-mobile-computing",
+      "risk_score": 0.038,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "pa-asmline-20260307195240-0000019cc9dbf0d2",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "http-capability-gateway",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "hybrid-automation-router",
+      "risk_score": 0.099,
+      "finding_count": 16,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "hypatia",
+      "risk_score": 0.067,
+      "finding_count": 51,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "hyperpolymath-archive",
+      "risk_score": 0.085,
+      "finding_count": 362,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "hyperpolymath.github.io",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "hyperpolymath",
+      "risk_score": 0.049,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "hyperpolymath-sovereign-registry",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "IDApixiTIK",
+      "risk_score": 0.020,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "idaptik",
+      "risk_score": 0.066,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "idris2-ecosystem",
+      "risk_score": 0.120,
+      "finding_count": 7,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "im-docs",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "immutable-linux-auditor",
+      "risk_score": 0.087,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "indieweb2-bastion",
+      "risk_score": 0.028,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "ipfs-overlay",
+      "risk_score": 0.098,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "ipv6-site-enforcer",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "ipv6-tools",
+      "risk_score": 0.247,
+      "finding_count": 10,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "januskey",
+      "risk_score": 0.111,
+      "finding_count": 7,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "julia-the-viper",
+      "risk_score": 0.080,
+      "finding_count": 17,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "k9-svc",
+      "risk_score": 0.159,
+      "finding_count": 8,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "k9-tools",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "kaldor-iiot",
+      "risk_score": 0.038,
+      "finding_count": 4,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "kea-tools",
+      "risk_score": 0.106,
+      "finding_count": 6,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "kith",
+      "risk_score": 0.064,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "KnotTheory.jl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "laminar",
+      "risk_score": 0.069,
+      "finding_count": 8,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "language-bridges",
+      "risk_score": 0.135,
+      "finding_count": 28,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "language-interop-compiler",
+      "risk_score": 0.059,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "laniakea",
+      "risk_score": 0.037,
+      "finding_count": 4,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "lcb-website",
+      "risk_score": 0.282,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "libstamp",
+      "risk_score": 0.088,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "lithoglyph",
+      "risk_score": 0.006,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "live-files",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "llm-tools",
+      "risk_score": 0.016,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "lol",
+      "risk_score": 0.221,
+      "finding_count": 17,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "lsm",
+      "risk_score": 0.130,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "maa-framework",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "manifesto",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "mcp-repo-guardian",
+      "risk_score": 0.054,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "me-dialect",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "megadog",
+      "risk_score": 0.061,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "metadata-grammar",
+      "risk_score": 0.037,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "misinformation-defence-platform",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "modshells",
+      "risk_score": 0.157,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "must",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "my-lang-archive",
+      "risk_score": 0.029,
+      "finding_count": 11,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "my-lang",
+      "risk_score": 0.030,
+      "finding_count": 11,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "nafa-app-ambient",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "nafa-app",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "2026-02-13T10:35:48+00:00",
+      "passed": true
+    },
+    {
+      "repo_name": "nano-aider",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "nerdsafe-restart",
+      "risk_score": 0.116,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "network-dashboard",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "network-orchestrator",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "neural-foundations",
+      "risk_score": 0.058,
+      "finding_count": 32,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "neurophone",
+      "risk_score": 0.178,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "nexia-list",
+      "risk_score": 0.162,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "nextgen-languages",
+      "risk_score": 0.072,
+      "finding_count": 28,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "nickel-augmentation",
+      "risk_score": 0.057,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "nick-shells",
+      "risk_score": 0.092,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "no-nonsense-nntps",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "nuj-lcb-production",
+      "risk_score": 0.141,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "oblibeny",
+      "risk_score": 0.014,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "ochrance",
+      "risk_score": 0.066,
+      "finding_count": 4,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "odds-and-sods-package-manager",
+      "risk_score": 0.044,
+      "finding_count": 18,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "opam-repository",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "opm-canonicalizer",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "opsm-ui",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "outreach",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "2026-02-13T10:35:48+00:00",
+      "passed": true
+    },
+    {
+      "repo_name": "package-publishers",
+      "risk_score": 0.093,
+      "finding_count": 55,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "packages",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "palimpsest-license",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "palimpsest-plasma",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "panic-attacker",
+      "risk_score": 0.150,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "panll",
+      "risk_score": 0.069,
+      "finding_count": 12,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "panoptes",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "patallm-gallery",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "_pathroot",
+      "risk_score": 0.081,
+      "finding_count": 12,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "personal-sysadmin",
+      "risk_score": 0.260,
+      "finding_count": 18,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "phantom-metal-taste",
+      "risk_score": 0.110,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "php-aegis",
+      "risk_score": 0.434,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "phronesis",
+      "risk_score": 0.028,
+      "finding_count": 7,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "pimcore-fortress",
+      "risk_score": 0.090,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "playbooks",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "2026-02-13T10:35:48+00:00",
+      "passed": true
+    },
+    {
+      "repo_name": "polyglot-formalisms-elixir",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "polyglot-formalisms-gleam",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "PolyglotFormalisms.jl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "polyglot-i18n",
+      "risk_score": 0.022,
+      "finding_count": 7,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "poly-k8s-mcp",
+      "risk_score": 0.011,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "poly-observability-mcp",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "polysafe-gitfixer",
+      "risk_score": 0.145,
+      "finding_count": 4,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "poly-secret-mcp",
+      "risk_score": 0.143,
+      "finding_count": 4,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "polystack",
+      "risk_score": 0.043,
+      "finding_count": 116,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "preference-injector",
+      "risk_score": 0.015,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "presswerk",
+      "risk_score": 0.083,
+      "finding_count": 11,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "project-cb",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "2026-02-13T10:35:48+00:00",
+      "passed": true
+    },
+    {
+      "repo_name": "project-wharf",
+      "risk_score": 0.085,
+      "finding_count": 9,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "proof-of-work",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "protocol-squisher",
+      "risk_score": 0.088,
+      "finding_count": 39,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "ProvenCrypto.jl",
+      "risk_score": 0.022,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "proven",
+      "risk_score": 0.032,
+      "finding_count": 79,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "proven-specialist-repos",
+      "risk_score": 0.014,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "qubes-sdp",
+      "risk_score": 0.159,
+      "finding_count": 9,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "raze-tui",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "reasonably-good-token-vault",
+      "risk_score": 0.075,
+      "finding_count": 8,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "recon-silly-ation",
+      "risk_score": 0.090,
+      "finding_count": 8,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "refugia",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "repo-batcher",
+      "risk_score": 0.279,
+      "finding_count": 12,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "repo-customiser",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "repo-guardian-fs",
+      "risk_score": 0.032,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "repo-slm-augmentor",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "reposystem",
+      "risk_score": 0.046,
+      "finding_count": 18,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "rescript-ecosystem",
+      "risk_score": 0.050,
+      "finding_count": 345,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "resource-record-fluctuator",
+      "risk_score": 0.031,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "rhodibot",
+      "risk_score": 0.041,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "rhodium-pipeline",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "rhodium-standard-repositories",
+      "risk_score": 0.042,
+      "finding_count": 13,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "riscv-guix-buildsys",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "robodog-ecm",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "robot-repo-automaton",
+      "risk_score": 0.111,
+      "finding_count": 4,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "robot-vacuum-cleaner",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "rpa-elysium",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "rrecord-verity",
+      "risk_score": 0.008,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "rsr-template-repo",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "safe-brute-force",
+      "risk_score": 0.050,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "sanctify-php",
+      "risk_score": 0.010,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "scaffoldia",
+      "risk_score": 0.015,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "scripts",
+      "risk_score": 0.218,
+      "finding_count": 12,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "sdp-hkdf-deployment",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "seambot",
+      "risk_score": 0.071,
+      "finding_count": 6,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "seamstress",
+      "risk_score": 0.056,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "selur",
+      "risk_score": 0.041,
+      "finding_count": 4,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "slopctl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "SMTLib.jl",
+      "risk_score": 0.017,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "snapcreate",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "social-media-tools",
+      "risk_score": 0.073,
+      "finding_count": 7,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "squisher-corpus",
+      "risk_score": 0.029,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "ssg-collection",
+      "risk_score": 0.070,
+      "finding_count": 91,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "standards",
+      "risk_score": 0.025,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "stapeln",
+      "risk_score": 0.005,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "stateful-artefacts-for-gitforges",
+      "risk_score": 0.079,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "stateful-artefacts",
+      "risk_score": 0.039,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "supernorma",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "sustainabot",
+      "risk_score": 0.001,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "svalinn",
+      "risk_score": 0.054,
+      "finding_count": 6,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "synapse",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "system-tools",
+      "risk_score": 0.035,
+      "finding_count": 12,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "tangle",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "techstack-filterlist",
+      "risk_score": 0.044,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "template-repo",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "the-hotchocolabot",
+      "risk_score": 0.077,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "thejeffparadox",
+      "risk_score": 0.017,
+      "finding_count": 1,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "theoneshow",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "thunderbird-template-reloaded",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "tma-mark2",
+      "risk_score": 0.034,
+      "finding_count": 25,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "total-recall",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "total-update",
+      "risk_score": 0.068,
+      "finding_count": 11,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "traffic-conditioner",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "tree-navigator",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "twingate-helm-deploy",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "ubicity",
+      "risk_score": 0.010,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "unified-dataset-vocab",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "union-policy-parser",
+      "risk_score": 0.037,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "universal-chat-extractor",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "universal-extension-format",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "universal-language-server-plugin",
+      "risk_score": 0.082,
+      "finding_count": 5,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "universal-project-manager",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "v3-templater",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "valence-shell",
+      "risk_score": 0.098,
+      "finding_count": 52,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "v-ecosystem",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "2026-02-13T10:35:48+00:00",
+      "passed": true
+    },
+    {
+      "repo_name": "verified-container-spec",
+      "risk_score": 0.053,
+      "finding_count": 2,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "verisimdb",
+      "risk_score": 0.096,
+      "finding_count": 24,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "vex-tools",
+      "risk_score": 0.049,
+      "finding_count": 10,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "volumod",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "vordr",
+      "risk_score": 0.070,
+      "finding_count": 18,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "voyage-enterprise-decision-system",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "well-known-ecosystem",
+      "risk_score": 0.046,
+      "finding_count": 3,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "wokelang",
+      "risk_score": 0.088,
+      "finding_count": 23,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "wordpress-tools",
+      "risk_score": 0.065,
+      "finding_count": 29,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "ZeroProb.jl",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "zerostep",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "zerotier-k8s-link",
+      "risk_score": 0,
+      "finding_count": 0,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": true
+    },
+    {
+      "repo_name": "zig-ffi",
+      "risk_score": 0.102,
+      "finding_count": 53,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    },
+    {
+      "repo_name": "zotero-tools",
+      "risk_score": 0.060,
+      "finding_count": 25,
+      "quarantine_count": 0,
+      "last_scanned": "",
+      "passed": false
+    }
+  ],
+  "summary": {
+    "total_repos": 302,
+    "total_recipes": 45,
+    "total_outcomes": 16671,
+    "success_count": 16564,
+    "failure_count": 42,
+    "success_rate": 99
+  }
+}

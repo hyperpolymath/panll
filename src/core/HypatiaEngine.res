@@ -10,21 +10,21 @@ open HypatiaModel
 /// Human-readable label for a neural network ID.
 let netLabel = (id: neuralNetId): string =>
   switch id {
-  | VulnNet => "VulnNet"
-  | DepNet => "DepNet"
-  | QualNet => "QualNet"
-  | NoveltyNet => "NoveltyNet"
-  | CalibNet => "CalibNet"
+  | GraphOfTrust => "Graph of Trust"
+  | MixtureOfExperts => "Mixture of Experts"
+  | LiquidStateMachine => "Liquid State Machine"
+  | EchoStateNetwork => "Echo State Network"
+  | RadialNeuralNetwork => "Radial Neural Network"
   }
 
 /// Description of what each network does.
 let netDescription = (id: neuralNetId): string =>
   switch id {
-  | VulnNet => "Vulnerability pattern recognition"
-  | DepNet => "Dependency graph analysis"
-  | QualNet => "Code quality scoring"
-  | NoveltyNet => "Novelty detection — unseen patterns"
-  | CalibNet => "Confidence calibration meta-network"
+  | GraphOfTrust => "PageRank trust over repos/bots/recipes"
+  | MixtureOfExperts => "Domain-specific confidence (7 experts)"
+  | LiquidStateMachine => "Temporal anomaly detection"
+  | EchoStateNetwork => "Confidence trajectory forecasting"
+  | RadialNeuralNetwork => "Finding similarity + novelty detection"
   }
 
 /// CSS class for network status indicator.
@@ -120,11 +120,11 @@ let parseNetworks = (json: string): result<array<neuralNetState>, string> => {
 
             let idStr = getString("id")
             let id = switch idStr {
-            | "vuln_net" => Some(VulnNet)
-            | "dep_net" => Some(DepNet)
-            | "qual_net" => Some(QualNet)
-            | "novelty_net" => Some(NoveltyNet)
-            | "calib_net" => Some(CalibNet)
+            | "graph_of_trust" => Some(GraphOfTrust)
+            | "mixture_of_experts" => Some(MixtureOfExperts)
+            | "liquid_state_machine" => Some(LiquidStateMachine)
+            | "echo_state_network" => Some(EchoStateNetwork)
+            | "radial_neural_network" => Some(RadialNeuralNetwork)
             | _ => None
             }
 

@@ -3,24 +3,24 @@
 /// PanLL Hypatia Model — types for the Hypatia neurosymbolic scanner panel.
 ///
 /// Hypatia is the intelligence hub: 5 neural networks, VQL queries against
-/// ArangoDB, safety triangle routing, quarantine, and learning cycles.
-/// This panel is the brain of the entire ecosystem — it sees across all
-/// 298+ repos and feeds findings to gitbot-fleet for execution.
+/// verisimdb-data flat files, safety triangle routing, quarantine, and
+/// learning cycles. This panel is the brain of the entire ecosystem — it
+/// sees across all 301+ repos and feeds findings to gitbot-fleet for execution.
 ///
 /// Dependency: leaf module — no imports from other PanLL models.
 
 /// Neural network identity within the Hypatia ensemble.
 type neuralNetId =
-  /// Vulnerability pattern recognition.
-  | VulnNet
-  /// Dependency graph analysis.
-  | DepNet
-  /// Code quality scoring.
-  | QualNet
-  /// Novelty detection (unseen patterns).
-  | NoveltyNet
-  /// Confidence calibration meta-network.
-  | CalibNet
+  /// PageRank trust over repos/bots/recipes.
+  | GraphOfTrust
+  /// Domain-specific confidence (7 expert domains).
+  | MixtureOfExperts
+  /// Temporal anomaly detection in event streams.
+  | LiquidStateMachine
+  /// Confidence trajectory forecasting + drift detection.
+  | EchoStateNetwork
+  /// Finding similarity, novelty detection, classification.
+  | RadialNeuralNetwork
 
 /// Status of an individual neural network.
 type neuralNetStatus =
