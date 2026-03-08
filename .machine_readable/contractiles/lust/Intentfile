@@ -4,6 +4,26 @@
 version: 1
 
 future:
+  boj-unification:
+    - "Complete BoJ gateway migration — all panels route through cartridges (17 total)."
+    - "Add bojRouting for Echidna (proof-mcp), TypeLL (nesy-mcp), Overlay (observe-mcp)."
+    - "Deprecate direct HTTP connections to :8080, :9000, :7800, :8103."
+    - "Single :7700 entry point for all PanLL operations."
+    - "Unified health check via boj_health() instead of per-server probes."
+
+  formal-verification:
+    - "Idris2 ABI proofs for Anti-Crash circuit breaker totality (src/abi/AntiCrash.idr)."
+    - "Contractiles elasticity bounded float invariant (Elasticity ∈ [0.0, 1.0])."
+    - "Orbital divergence Jaccard safety (no NaN/Infinity, result ∈ [0.0, 1.0])."
+    - "Storage JSON parse-on-load total parsing (never throws, always returns Result)."
+    - "TypeLL cross-panel request correlation (no stale/misrouted results)."
+    - "Zig FFI validators for bounded numerics and schema-validated JSON."
+
+  coprocessor-data-plane:
+    - "Phase 2: Zig FFI data plane for local GPU/CPU dispatch."
+    - "Phase 3: Smart routing — automatic local vs remote dispatch."
+    - "Axiom.jl integration through agent-mcp cartridge."
+
   proof-ux:
     - "Visual proof builder — CI/CD pipeline-style view for assembling proof chains."
     - "Switchable syntax linter — Coq, Lean, Isabelle, PanLL-Universal notation."
@@ -19,18 +39,18 @@ future:
     - "Phoenix Channels shared proof state — real-time co-editing via Elixir/OTP."
     - "Contextual chat — comments attached to proof goals, entities, protocol states."
     - "Ambient voice — Opus codec, push-to-talk, no ceremony."
-    - "Optional video — 720p, bandwidth-adaptive, never competes with proof engine."
 
-  discipline-layouts:
-    - "Global viewshift dropdown — instant layout switching."
-    - "Community layout contributions — K9 Yard-level .k9.ncl presets."
-    - "Project-scoped auto-switching — VeriSimDB project → Database Design layout."
-    - "Layout preview thumbnails in dropdown."
+  k9-integration:
+    - "K9 Kennel: Panel metadata as pure data configs (.k9.ncl)."
+    - "K9 Yard: Validated layout presets with Nickel contracts."
+    - "K9 Hunt: Signed deployment recipes for panel module updates."
+    - "A2ML clade definitions as K9 Kennel-level components."
 
   persistence:
     - "Migrate from localStorage to VeriSimDB-backed state persistence."
     - "Temporal versioning — roll back to any previous session state."
     - "Cross-device sync via Elixir collaboration server."
+    - "Storage schema versioning to prevent corrupt-data crashes."
 
   accessibility:
     - "WCAG 2.3 AA across all components."
@@ -42,5 +62,5 @@ future:
   infrastructure:
     - "Fuzzy search (Levenshtein/agrep) across proof libraries."
     - "IANA MIME type registration for A2ML and K9-SVC."
-    - "Formal verification of Anti-Crash soundness (Idris2 proofs)."
     - "Cross-pollination with ReScript Evangeliser progressive sophistication."
+    - "Panel coupling spectrum — switchable loose/tight coupling via event bus."

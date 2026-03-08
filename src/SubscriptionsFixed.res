@@ -26,8 +26,8 @@ let actionToMsg = (action: KeybindingsModel.keybindingAction): msg => {
   | ActionTogglePaneN => View(TogglePaneN)
   | ActionTogglePaneW => View(TogglePaneW)
   | ActionToggleVab => PanelSwitcher(TogglePanel(PanelVab))
-  | ActionTogglePanelBar => NoOp // TODO: toggle panel bar visibility
-  | ActionFullscreen => NoOp // TODO: fullscreen active panel
+  | ActionTogglePanelBar => View(TogglePanelBar)
+  | ActionFullscreen => View(ToggleFullscreen)
   | ActionCloseOverlay => PanelSwitcher(ClosePanels)
   | ActionToggleCapture => PanelSwitcher(TogglePanel(PanelCapture))
   | ActionToggleWorkspace => PanelSwitcher(TogglePanel(PanelWorkspace))

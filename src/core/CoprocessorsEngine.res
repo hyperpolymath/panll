@@ -217,4 +217,5 @@ let defaultState: coprocessorsState = {
   error: None,
   discoveredDevices: [],
   lastComputeResult: None,
+  bojRouting: false,
 }

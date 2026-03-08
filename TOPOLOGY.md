@@ -58,7 +58,7 @@
     │  │Proto-Squisher│ │ BoJ  │ │ 11× IDApTIK eNSAID panels            │    │
     │  └──────────────┘ └──────┘ └────────────────────────────────────────┘    │
     │  ┌──────────────┐                                                        │
-    │  │Clade Browser │  39 clades defined │ inheritance engine                │
+    │  │Clade Browser │  41 clades defined │ inheritance engine                │
     │  └──────────────┘                                                        │
     └─────────────────────────────────────┼─────────────────────────────────────┘
                                           │
@@ -117,7 +117,7 @@ INFRASTRUCTURE (5)
   Provisioner                       ██████████ 100%    Portfolios, config, tiers    D
   Code Provenance Map               ██████████ 100%    Trust surface, 4 palettes    D
   Filesystem Watcher                ██████████ 100%    Rust notify + ReScript cmds  D
-  Clade Browser                     ██████████ 100%    39 clades, inheritance engine D
+  Clade Browser                     ██████████ 100%    41 clades, inheritance engine D
 
 COGNITIVE GOVERNANCE (6)
   Vexometer                         ██████████ 100%    Friction monitoring           D
@@ -140,12 +140,12 @@ BACKEND CONNECTIONS
 ──────────────────────────────────────────────────────────────────────────────────────
 FRONTEND:         230 ReScript files │ 26,000+ lines │ 0 errors │ CRG D (Alpha)
 BACKEND:           63 Rust files     │  5,300+ lines │ 0 errors │ CRG D (Alpha)
-TOTAL:            293 source files   │ 31,300+ lines │ 41 panel entries │ 39 clades
+TOTAL:            293 source files   │ 31,300+ lines │ 41 panel entries │ 41 clades
 TESTS:            979 Deno + 28 Rust │ 0 warnings    │ 41 test suites
 ──────────────────────────────────────────────────────────────────────────────────────
 
 OVERALL PROGRESS
-  Frontend                          █████████░  98%    41 panels, 39 clades          D
+  Frontend                          █████████░  98%    41 panels, 41 clades          D
   Backend Connections                █████░░░░░  50%    BoJ gateway + coprocessor     D
   Testing                           ████████░░  85%    979+28 tests, 41 suites       D
   Documentation                     ██████░░░░  60%    TOPOLOGY, manifests, clades   D

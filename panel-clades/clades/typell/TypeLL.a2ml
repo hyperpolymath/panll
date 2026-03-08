@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+#
+# Clade Definition: TypeLL
+# Cross-panel type intelligence service — type checking, inference, and refinement.
+
+[clade]
+id = "typell"
+name = "TypeLL"
+kind = "service"
+version = "1.0.0"
+
+[clade-description]
+summary = "Cross-cutting type intelligence service providing type checking, inference, refinement, and proof obligation generation across all panels"
+long = """
+TypeLL is PanLL's primary type intelligence service, operating both as a standalone panel
+and as a cross-cutting service callable by any panel via TypeLLService helpers. It provides
+7 core operations: health, check, infer, refine, compute, list-signatures, and universes.
+
+Currently wired to 7 panels: VeriSimDB (VQL type checking), Protocol-Squisher (schema
+type checking), My-Lang (dialect-aware type checking), Anti-Crash (type-level token
+validation), Pane-L (constraint type inference), BoJ (cartridge ABI checking), and
+ECHIDNA (proof obligation generation).
+
+The evangeliser progressive disclosure system provides 4 sophistication levels:
+RAW (full type expressions), FOLDED (collapsed nested types), GLYPHED (symbolic
+notation), and WYSIWYG (visual type representations).
+
+All panels MUST degrade gracefully when TypeLL is unavailable — TypeLL errors never
+block panel workflows.
+"""
+
+[clade-traits]
+has-persistence = false
+has-backend = true
+has-work-items = false
+has-real-time = true
+is-ambient = true
+
+[clade-capabilities]
+capabilities = [
+  "TypeCheck",
+  "TypeInfer",
+  "TypeRefine",
+  "TypeCompute",
+  "SignatureList",
+  "UniverseHierarchy",
+  "ProofObligationGeneration",
+  "CrossPanelDispatch",
+  "ProgressiveDisclosure",
+]
+
+[clade-connections]
+backend-type = "http"
+default-endpoint = "http://localhost:7800/api/v1"
+protocols = ["REST", "TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = "service"
+sibling-clades = ["anti-crash", "governance"]
+
+[clade-integrations]
+consumes = []
+consumed-by = ["verisimdb", "protocol-squisher", "my-lang", "anti-crash", "pane-l", "boj", "echidna", "build-dashboard"]
+dispatches-to = ["nesy-mcp"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["status", "region", "log"]

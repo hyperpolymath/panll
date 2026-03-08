@@ -106,4 +106,6 @@ type coprocessorsState = {
   discoveredDevices: array<computeDevice>,
   /// Control plane: most recent compute query result.
   lastComputeResult: option<computeQueryResult>,
+  /// When true, compute operations route through BoJ agent-mcp cartridge instead of direct HTTP.
+  bojRouting: bool,
 }

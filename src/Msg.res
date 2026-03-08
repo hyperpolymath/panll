@@ -87,6 +87,8 @@ type viewMsg =
   | SetViewMode(viewMode)
   | SetHumidity(humidityLevel)
   | ParallaxAlign // Synchronous horizontal tiling
+  | TogglePanelBar // Toggle panel switcher bar visibility
+  | ToggleFullscreen // Toggle fullscreen (hide all chrome)
 
 /// Feedback-O-Tron messages
 type feedbackMsg =
@@ -183,6 +185,8 @@ type echidnaMsg =
   | ClearProofResult
   /// TypeLL-generated proof obligations for the current proof input.
   | ProofObligationsGenerated(result<string, string>)
+  /// Toggle BoJ routing for proof operations (proof-mcp cartridge).
+  | ToggleEchidnaBojRouting
 
 /// VAB (Verified Assembly Building) messages — server component assembly,
 /// category navigation, dependency-driven recomputation, and assembly management.
@@ -325,6 +329,8 @@ type aerieMsg =
   | LatencyLoaded(result<string, string>)
   | SpeedTestLoaded(result<string, string>)
   | SetAerieCategory(aerieCategory)
+  /// Toggle BoJ routing for overlay operations (observe-mcp cartridge).
+  | ToggleAerieBojRouting
 
 /// Interfaces ABI/FFI inventory messages.
 type interfacesMsg =
@@ -1213,6 +1219,8 @@ type coprocessorsMsg =
   | DiscoverDevices
   /// Device discovery result.
   | DevicesDiscovered(result<string, string>)
+  /// Toggle BoJ routing for compute operations (agent-mcp cartridge).
+  | ToggleCoprocBojRouting
 
 /// Multiplayer Monitor messages — WebSocket lifecycle, player state,
 /// channel subscriptions, state diffs, device locks, latency, and
@@ -1472,6 +1480,8 @@ type automationRouterMsg =
   | DismissRouterError
   /// Export automation rules to ENSAID_CONFIG.a2ml.
   | ExportAutomationConfig
+  /// Toggle BoJ routing for automation operations (agent-mcp cartridge).
+  | ToggleAutomationBojRouting
 
 /// BoJ messages — Bundle of Joy cartridge server interaction.
 type bojMsg =
@@ -1674,6 +1684,8 @@ type myLangMsg =
   | LspDiagnosticsReceived(array<string>)
   /// Request diagnostics from LSP.
   | RequestDiagnostics
+  /// Toggle BoJ routing for My-Lang operations (lsp-mcp cartridge).
+  | ToggleMyLangBojRouting
 
 /// TypeLL verification kernel messages.
 type typellMsg =
@@ -1715,6 +1727,8 @@ type typellMsg =
   | RunRefine
   /// Refinement result.
   | RefineResult(result<string, string>)
+  /// Toggle BoJ routing for TypeLL operations (nesy-mcp cartridge).
+  | ToggleTypellBojRouting
 
 /// The unified message type
 type msg =
@@ -1774,6 +1788,7 @@ type msg =
   | TypeLL(typellMsg) // Verification kernel (cross-panel type intelligence)
   | EnsaidConfig(ensaidConfigMsg) // Cross-panel ENSAID_CONFIG generation and I/O
   | Bus(panelBusMsg) // Panel Bus subscriber management
+  | RecordBojLatency(string, string, float) // cartridge, tool, elapsed ms
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

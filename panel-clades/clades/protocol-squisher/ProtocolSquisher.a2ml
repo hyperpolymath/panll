@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+#
+# Clade Definition: Protocol-Squisher
+# Protocol compression scanner — 13 formats, 4 transport classes, schema analysis.
+
+[clade]
+id = "protocol-squisher"
+name = "Protocol-Squisher"
+kind = "scanner"
+version = "1.0.0"
+
+[clade-description]
+summary = "Protocol compression scanner supporting 13 wire formats and 4 transport classes with schema analysis, comparison, and IR constraint import"
+long = """
+Protocol-Squisher analyses, compares, and compresses protocol schemas across 13 formats
+(JSON, Protobuf, MessagePack, CBOR, Avro, Thrift, FlatBuffers, Cap'n Proto, ASN.1,
+XML, YAML, TOML, EDN) and 4 transport classes (Streaming, Request-Response, Pub-Sub,
+Fire-and-Forget).
+
+The 4-tab interface provides: Analyse (schema type checking via TypeLL, format detection),
+Compare (side-by-side schema diff with compatibility scoring), Results (analysis history
+and IR constraint extraction), and Guide (format reference documentation).
+
+IR analysis results can be imported as Panel-L constraints via the ImportIrConstraints
+handler, bridging protocol analysis with symbolic verification.
+"""
+
+[clade-traits]
+has-persistence = false
+has-backend = true
+has-work-items = false
+has-real-time = false
+is-ambient = false
+
+[clade-capabilities]
+capabilities = [
+  "SchemaAnalysis",
+  "SchemaComparison",
+  "FormatDetection",
+  "TransportClassification",
+  "IrConstraintExtraction",
+  "TypeChecking",
+  "CompatibilityScoring",
+]
+
+[clade-connections]
+backend-type = "cli"
+protocols = ["TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = "scanner"
+sibling-clades = ["my-lang", "editor-bridge"]
+
+[clade-integrations]
+consumes = ["typell"]
+consumed-by = ["pane-l"]
+dispatches-to = []
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["tablist", "tab", "table", "status"]

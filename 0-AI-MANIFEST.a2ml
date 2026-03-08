@@ -133,7 +133,7 @@
       (panel-N "Neural Stream — inference tokens, ECHIDNA advisor, agency monitor")
       (panel-W "World Barycentre — task canvas, security tools, VeriSimDB, event chain")
       (total-panels 41)
-      (total-clades 39))
+      (total-clades 41))
 
     (cognitive-governance
       (anti-crash     "Circuit breaker — validates all neural tokens against symbolic constraints")

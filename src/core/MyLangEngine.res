@@ -142,4 +142,5 @@ let defaultState: myLangState = {
   lspConnected: false,
   lspDiagnostics: [],
   replSessions: [],
+  bojRouting: false,
 }

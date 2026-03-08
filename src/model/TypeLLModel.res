@@ -230,4 +230,6 @@ type typellState = {
   serviceActive: bool,
   /// How many cross-panel type queries have been served this session.
   queriesServed: int,
+  /// When true, TypeLL operations route through BoJ nesy-mcp cartridge instead of direct HTTP.
+  bojRouting: bool,
 }

@@ -128,6 +128,14 @@ type invokeArg = {
   value: string,
 }
 
+/// A latency measurement for a BoJ cartridge invocation.
+type bojLatencyEntry = {
+  cartridge: string,
+  tool: string,
+  durationMs: float,
+  timestamp: float,
+}
+
 /// Result of a cartridge tool invocation.
 type invokeResult = {
   /// Whether the invocation succeeded.
@@ -185,4 +193,6 @@ type bojState = {
   filterText: string,
   /// TypeLL ABI type-check result JSON for the last invocation (cross-panel intelligence).
   lastTypeCheck: option<string>,
+  /// Recent invocation latency log (last 100 entries).
+  latencyLog: array<bojLatencyEntry>,
 }

@@ -366,4 +366,5 @@ let defaultState: bojState = {
   error: None,
   filterText: "",
   lastTypeCheck: None,
+  latencyLog: [],
 }

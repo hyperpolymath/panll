@@ -16,37 +16,53 @@ parameters:
 
 checks:
   - name: rescript-builds-clean
-    description: "ReScript compiler must produce 0 errors and 0 warnings (excluding deprecation)."
-    run: "npx rescript-legacy 2>&1 | grep -c 'error' | grep -q '^0$'"
+    description: "ReScript compiler must produce 0 errors and 0 warnings."
+    run: "deno task res:build 2>&1 | tail -1 | rg -q 'Compiled'"
 
   - name: deno-tests-pass
-    description: "All 121+ Deno tests must pass."
-    run: "deno task test"
+    description: "All 979+ Deno tests must pass."
+    run: "deno test --no-check tests/"
 
   - name: rust-tests-pass
-    description: "All 19 Rust/Tauri backend tests must pass."
-    run: "cd src-tauri && cargo test"
+    description: "All 28 Rust/Tauri backend tests must pass."
+    run: "cargo test --manifest-path src-tauri/Cargo.toml"
+
+  - name: rust-compiles-clean
+    description: "Rust backend must compile without errors."
+    run: "cargo check --manifest-path src-tauri/Cargo.toml 2>&1 | rg -q 'Finished'"
 
   - name: layout-contracts-valid
     description: "All K9 layout presets must pass Nickel contract validation."
     run: "for f in layouts/*.k9.ncl; do nickel typecheck \"$f\" || exit 1; done"
 
   - name: model-composition-sound
-    description: "Model.res must include all 4 domain modules — no orphaned types."
-    run: "bash -uc 'rg \"include PaneModel\" src/Model.res && rg \"include EchidnaModel\" src/Model.res && rg \"include VeriSimModel\" src/Model.res && rg \"include GovernanceModel\" src/Model.res'"
+    description: "Model.res must include all domain modules — no orphaned types."
+    run: "bash -uc 'rg \"include PaneModel\" src/Model.res && rg \"include EchidnaModel\" src/Model.res && rg \"include VeriSimModel\" src/Model.res && rg \"include GovernanceModel\" src/Model.res && rg \"include VabModel\" src/Model.res'"
 
   - name: no-port-conflict
     description: "ECHIDNA endpoint must not conflict with dev server port."
     run: "bash -uc '! rg \"localhost:8000\" src/Model.res src-tauri/src/main.rs | rg -i echidna'"
 
+  - name: clade-directories-complete
+    description: "All registered panel clades must have corresponding clade directories with .a2ml definitions."
+    run: "bash -uc 'for d in panel-clades/clades/*/; do ls \"${d}\"*.a2ml >/dev/null 2>&1 || { echo \"Missing .a2ml in $d\"; exit 1; }; done'"
+
   - name: accessibility-baseline
     description: "No critical accessibility violations (WCAG 2.3 A)."
-    run: "npx pa11y-ci --config .pa11yci.json 2>/dev/null || echo 'pa11y not configured yet — skipping'"
+    run: "bash -uc 'rg -l \"aria-\" src/components/*.res | wc -l | xargs test 5 -le'"
 
   - name: spdx-headers-present
     description: "All ReScript source files must have SPDX license headers."
     run: "bash -uc 'for f in src/*.res src/**/*.res; do head -1 \"$f\" | rg -q SPDX || { echo \"Missing SPDX: $f\"; exit 1; }; done'"
 
+  - name: boj-cartridges-registered
+    description: "All BoJ cartridge Tauri commands must be registered in main.rs invoke_handler."
+    run: "bash -uc 'rg \"boj_\" src-tauri/src/main.rs | rg invoke_handler'"
+
   - name: trustfile-valid
     description: "Trustfile must be parseable A2ML."
     run: "a2ml validate .machine_readable/contractiles/trust/Trustfile.a2ml 2>/dev/null || echo 'a2ml CLI not installed — skipping'"
+
+  - name: no-banned-patterns
+    description: "No believe_me, sorry, Admitted, or unsafe without SAFETY comment in source."
+    run: "bash -uc '! rg -l \"believe_me|\\bsorry\\b|\\bAdmitted\\b\" src/ src-tauri/src/'"

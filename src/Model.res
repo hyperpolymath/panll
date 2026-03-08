@@ -274,6 +274,8 @@ type model = {
   paneNVisible: bool,
   paneWVisible: bool,
   protocolAnalysisVisible: bool,
+  panelBarVisible: bool,
+  fullscreenActive: bool,
 
   // Database backends
   verisimdb: verisimdbState,
@@ -585,6 +587,7 @@ let init = (): model => {
     tacticInput: "",
     sessionLoading: false,
     lastProofObligations: None,
+    bojRouting: false,
   },
   vab: {
     visible: false,
@@ -708,6 +711,8 @@ let init = (): model => {
   paneNVisible: true,
   paneWVisible: true,
   protocolAnalysisVisible: false,
+  panelBarVisible: true,
+  fullscreenActive: false,
   feedbackPending: None,
   feedbackError: None,
   feedbackReportType: Some("FeatureRequest"),

@@ -376,4 +376,5 @@ let defaultState: typellState = {
   lastRefinement: None,
   serviceActive: true,
   queriesServed: 0,
+  bojRouting: false,
 }

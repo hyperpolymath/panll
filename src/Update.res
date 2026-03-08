@@ -633,7 +633,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
   switch msg {
   | CheckHealth => {
       let cmd = if db.bojRouting {
-        BojCmd.invokeCartridge("database-mcp", "health", "", result => VeriSimDB(HealthResult(result)))
+        BojCmd.invokeCartridgeWithLatency("database-mcp", "health", "", result => VeriSimDB(HealthResult(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         TauriCmd.checkVeriSimDBHealth(result => VeriSimDB(HealthResult(result)))
       }
@@ -665,7 +665,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       }
       // Route through BoJ database-mcp cartridge when bojRouting is enabled.
       let queryCmd = if db.bojRouting {
-        BojCmd.invokeCartridge("database-mcp", "query", query, result => VeriSimDB(QueryResult(result)))
+        BojCmd.invokeCartridgeWithLatency("database-mcp", "query", query, result => VeriSimDB(QueryResult(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         TauriCmd.queryVeriSimDB(query, result => VeriSimDB(QueryResult(result)))
       }
@@ -696,7 +696,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     }
   | ListEntities => {
       let cmd = if db.bojRouting {
-        BojCmd.invokeCartridge("database-mcp", "list_entities", "{\"limit\":50,\"offset\":0}", result => VeriSimDB(EntitiesLoaded(result)))
+        BojCmd.invokeCartridgeWithLatency("database-mcp", "list_entities", "{\"limit\":50,\"offset\":0}", result => VeriSimDB(EntitiesLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         TauriCmd.listHexads(50, 0, result => VeriSimDB(EntitiesLoaded(result)))
       }
@@ -710,8 +710,8 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
   | SelectEntity(entityId) => {
       let (driftCmd, detailCmd) = if db.bojRouting {
         (
-          BojCmd.invokeCartridge("database-mcp", "drift", entityId, result => VeriSimDB(DriftLoaded(result))),
-          BojCmd.invokeCartridge("database-mcp", "entity_detail", entityId, result => VeriSimDB(EntityDetailLoaded(result))),
+          BojCmd.invokeCartridgeWithLatency("database-mcp", "drift", entityId, result => VeriSimDB(DriftLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e)),
+          BojCmd.invokeCartridgeWithLatency("database-mcp", "entity_detail", entityId, result => VeriSimDB(EntityDetailLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e)),
         )
       } else {
         (
@@ -776,7 +776,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     }
   | FetchTelemetry => {
       let cmd = if db.bojRouting {
-        BojCmd.invokeCartridge("database-mcp", "telemetry", "", result => VeriSimDB(TelemetryLoaded(result)))
+        BojCmd.invokeCartridgeWithLatency("database-mcp", "telemetry", "", result => VeriSimDB(TelemetryLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         TauriCmd.getTelemetry(result => VeriSimDB(TelemetryLoaded(result)))
       }
@@ -795,7 +795,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     )
   | FetchOrchStatus => {
       let cmd = if db.bojRouting {
-        BojCmd.invokeCartridge("database-mcp", "orch_status", "", result => VeriSimDB(OrchStatusLoaded(result)))
+        BojCmd.invokeCartridgeWithLatency("database-mcp", "orch_status", "", result => VeriSimDB(OrchStatusLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         TauriCmd.getOrchStatus(result => VeriSimDB(OrchStatusLoaded(result)))
       }
@@ -1536,6 +1536,10 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
   | ProofObligationsGenerated(Error(_)) =>
     // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
+  | ToggleEchidnaBojRouting => (
+      {...model, echidna: {...ec, bojRouting: !ec.bojRouting}},
+      Tea_Cmd.none,
+    )
   }
 }
 
@@ -1635,6 +1639,12 @@ let updateView = (model: model, msg: viewMsg): (model, Tea_Cmd.t<msg>) => {
   | ParallaxAlign => (
       // Synchronous horizontal tiling: show all panes in Standard mode.
       {...model, paneLVisible: true, paneNVisible: true, paneWVisible: true, viewMode: Standard},
+      Tea_Cmd.none,
+    )
+  | TogglePanelBar => ({...model, panelBarVisible: !model.panelBarVisible}, Tea_Cmd.none)
+  | ToggleFullscreen => (
+      // When entering fullscreen, hide the panel bar. When exiting, restore it.
+      {...model, fullscreenActive: !model.fullscreenActive, panelBarVisible: model.fullscreenActive},
       Tea_Cmd.none,
     )
   }
@@ -2708,6 +2718,10 @@ let updateAerie = (model: model, msg: aerieMsg): (model, Tea_Cmd.t<msg>) => {
     | Error(e) => ({...model, aerie: {...aer, loading: false, error: Some(e)}}, Tea_Cmd.none)
     }
   | SetAerieCategory(cat) => ({...model, aerie: {...aer, activeCategory: cat}}, Tea_Cmd.none)
+  | ToggleAerieBojRouting => (
+      {...model, aerie: {...aer, bojRouting: !aer.bojRouting}},
+      Tea_Cmd.none,
+    )
   }
 }
 
@@ -5635,7 +5649,7 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
     )
   | StepForward => {
       let cmd = if vm.bojRouting {
-        BojCmd.invokeCartridge("dap-mcp", "step_forward", "", result => VmInspector(StepResult(result)))
+        BojCmd.invokeCartridgeWithLatency("dap-mcp", "step_forward", "", result => VmInspector(StepResult(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         VmInspectorCmd.stepForward(result => VmInspector(StepResult(result)))
       }
@@ -5643,7 +5657,7 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
     }
   | StepBackward => {
       let cmd = if vm.bojRouting {
-        BojCmd.invokeCartridge("dap-mcp", "step_backward", "", result => VmInspector(StepResult(result)))
+        BojCmd.invokeCartridgeWithLatency("dap-mcp", "step_backward", "", result => VmInspector(StepResult(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         VmInspectorCmd.stepBackward(result => VmInspector(StepResult(result)))
       }
@@ -5660,7 +5674,7 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
     )
   | RunVm => {
       let cmd = if vm.bojRouting {
-        BojCmd.invokeCartridge("dap-mcp", "run", "", result => VmInspector(RunResult(result)))
+        BojCmd.invokeCartridgeWithLatency("dap-mcp", "run", "", result => VmInspector(RunResult(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         VmInspectorCmd.runToBreakpoint(result => VmInspector(RunResult(result)))
       }
@@ -6093,6 +6107,10 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
       {...model, coprocessors: {...cp, loading: false, error: Some(err)}},
       Tea_Cmd.none,
     )
+  | ToggleCoprocBojRouting => (
+      {...model, coprocessors: {...cp, bojRouting: !cp.bojRouting}},
+      Tea_Cmd.none,
+    )
   }
 }
 
@@ -6353,7 +6371,7 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
         // Route through BoJ's lsp-mcp cartridge.
         let args = `{"port": ${Int.toString(eb.lspPort)}}`
         Tea_Cmd.batch(list{
-          BojCmd.invokeCartridge("lsp-mcp", "connect", args, result => EditorBridge(LspConnected(result))),
+          BojCmd.invokeCartridgeWithLatency("lsp-mcp", "connect", args, result => EditorBridge(LspConnected(result)), (c, t, e) => RecordBojLatency(c, t, e)),
           Tea_Cmd.msg(Vexometer(RecordVqlQuery)),
         })
       } else {
@@ -6371,7 +6389,7 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
   | RefreshDiagnostics => (
       {...model, editorBridge: {...eb, loading: true}},
       if eb.bojRouting {
-        BojCmd.invokeCartridge("lsp-mcp", "diagnostics", "{}", result => EditorBridge(DiagnosticsReceived(result)))
+        BojCmd.invokeCartridgeWithLatency("lsp-mcp", "diagnostics", "{}", result => EditorBridge(DiagnosticsReceived(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         EditorBridgeCmd.readDiagnostics(result => EditorBridge(DiagnosticsReceived(result)))
       },
@@ -6398,7 +6416,7 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
       {...model, editorBridge: {...eb, loading: true}},
       if eb.bojRouting {
         let args = `{"query": "${eb.symbolFilter}"}`
-        BojCmd.invokeCartridge("lsp-mcp", "symbols", args, result => EditorBridge(SymbolsReceived(result)))
+        BojCmd.invokeCartridgeWithLatency("lsp-mcp", "symbols", args, result => EditorBridge(SymbolsReceived(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         EditorBridgeCmd.readSymbols(eb.symbolFilter, result => EditorBridge(SymbolsReceived(result)))
       },
@@ -6447,7 +6465,7 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
   | TriggerBuild(target) => {
       let label = BuildDashboardEngine.targetLabel(target)
       let cmd = if bd.bojRouting {
-        BojCmd.invokeCartridge("bsp-mcp", "build", label, result => BuildDashboard(BuildTriggered(result)))
+        BojCmd.invokeCartridgeWithLatency("bsp-mcp", "build", label, result => BuildDashboard(BuildTriggered(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         BuildDashboardCmd.triggerBuild(label, result => BuildDashboard(BuildTriggered(result)))
       }
@@ -6462,7 +6480,7 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
     )
   | RefreshBuildStatus => {
       let cmd = if bd.bojRouting {
-        BojCmd.invokeCartridge("bsp-mcp", "status", "", result => BuildDashboard(BuildStatusReceived(result)))
+        BojCmd.invokeCartridgeWithLatency("bsp-mcp", "status", "", result => BuildDashboard(BuildStatusReceived(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         BuildDashboardCmd.readBuildStatus(result => BuildDashboard(BuildStatusReceived(result)))
       }
@@ -6478,7 +6496,7 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
   | RunTests(target) => {
       let label = BuildDashboardEngine.targetLabel(target)
       let cmd = if bd.bojRouting {
-        BojCmd.invokeCartridge("bsp-mcp", "test", label, result => BuildDashboard(TestsReceived(result)))
+        BojCmd.invokeCartridgeWithLatency("bsp-mcp", "test", label, result => BuildDashboard(TestsReceived(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
         BuildDashboardCmd.runTests(label, result => BuildDashboard(TestsReceived(result)))
       }
@@ -6639,10 +6657,14 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
       )
       ({...model, automationRouter: {...ar, rules: newRules}}, Tea_Cmd.none)
     }
-  | ExecuteRule(ruleId) => (
-      model,
-      AutomationRouterCmd.executeRule(ruleId, result => AutomationRouter(ExecutionResult(ruleId, result))),
-    )
+  | ExecuteRule(ruleId) => {
+      let cmd = if ar.bojRouting {
+        BojCmd.invokeCartridgeWithLatency("agent-mcp", "execute_rule", ruleId, result => AutomationRouter(ExecutionResult(ruleId, result)), (c, t, e) => RecordBojLatency(c, t, e))
+      } else {
+        AutomationRouterCmd.executeRule(ruleId, result => AutomationRouter(ExecutionResult(ruleId, result)))
+      }
+      (model, cmd)
+    }
   | ExecutionResult(ruleId, Ok(detail)) => {
       let now = Date.now()
       let entry: executionLogEntry = {
@@ -6710,10 +6732,14 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
     }
   | ApproveAll => ({...model, automationRouter: {...ar, pendingActions: []}}, Tea_Cmd.none)
   | RejectAll => ({...model, automationRouter: {...ar, pendingActions: []}}, Tea_Cmd.none)
-  | LoadRules => (
-      {...model, automationRouter: {...ar, loading: true}},
-      AutomationRouterCmd.loadRules(result => AutomationRouter(RulesLoaded(result))),
-    )
+  | LoadRules => {
+      let cmd = if ar.bojRouting {
+        BojCmd.invokeCartridgeWithLatency("agent-mcp", "load_rules", "", result => AutomationRouter(RulesLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e))
+      } else {
+        AutomationRouterCmd.loadRules(result => AutomationRouter(RulesLoaded(result)))
+      }
+      ({...model, automationRouter: {...ar, loading: true}}, cmd)
+    }
   | RulesLoaded(Ok(_json)) =>
     // TODO: Deserialise rules from JSON.
     ({...model, automationRouter: {...ar, loading: false, error: None}}, Tea_Cmd.none)
@@ -6721,19 +6747,27 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
       {...model, automationRouter: {...ar, loading: false, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | SaveRules => (
-      model,
-      AutomationRouterCmd.saveRules("", result => AutomationRouter(RulesSaved(result))),
-    )
+  | SaveRules => {
+      let cmd = if ar.bojRouting {
+        BojCmd.invokeCartridgeWithLatency("agent-mcp", "save_rules", "", result => AutomationRouter(RulesSaved(result)), (c, t, e) => RecordBojLatency(c, t, e))
+      } else {
+        AutomationRouterCmd.saveRules("", result => AutomationRouter(RulesSaved(result)))
+      }
+      (model, cmd)
+    }
   | RulesSaved(Ok(_)) => (model, Tea_Cmd.none)
   | RulesSaved(Error(err)) => (
       {...model, automationRouter: {...ar, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | LoadFromRepo => (
-      {...model, automationRouter: {...ar, loading: true, configSource: "repo"}},
-      AutomationRouterCmd.loadFromRepo(".", result => AutomationRouter(RepoRulesLoaded(result))),
-    )
+  | LoadFromRepo => {
+      let cmd = if ar.bojRouting {
+        BojCmd.invokeCartridgeWithLatency("agent-mcp", "load_from_repo", ".", result => AutomationRouter(RepoRulesLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e))
+      } else {
+        AutomationRouterCmd.loadFromRepo(".", result => AutomationRouter(RepoRulesLoaded(result)))
+      }
+      ({...model, automationRouter: {...ar, loading: true, configSource: "repo"}}, cmd)
+    }
   | RepoRulesLoaded(Ok(_json)) =>
     // TODO: Deserialise rules from ENSAID_CONFIG.a2ml.
     ({...model, automationRouter: {...ar, loading: false, error: None}}, Tea_Cmd.none)
@@ -6761,6 +6795,7 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
       )
       ({...model, ensaidConfigPreview: Some(preview)}, Tea_Cmd.none)
     }
+  | ToggleAutomationBojRouting => ({...model, automationRouter: {...ar, bojRouting: !ar.bojRouting}}, Tea_Cmd.none)
   }
 }
 
@@ -6842,11 +6877,12 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
       (
         {...model, boj: {...boj, loading: true, invokeResult: None, lastTypeCheck: None}},
         Tea_Cmd.batch(list{
-          BojCmd.invokeCartridge(
+          BojCmd.invokeCartridgeWithLatency(
             boj.invokeCartridge,
             boj.invokeTool,
             "{}",
             result => Boj(InvokeResult(result)),
+            (c, t, e) => RecordBojLatency(c, t, e),
           ),
           TypeLLService.checkCartridgeAbi(abiSpec, result => Boj(AbiTypeCheckResult(result))),
         }),
@@ -7185,6 +7221,10 @@ let updateMyLang = (model: model, msg: myLangMsg): (model, Tea_Cmd.t<msg>) => {
     } else {
       (model, Tea_Cmd.none)
     }
+  | ToggleMyLangBojRouting => (
+      {...model, myLang: {...ml, bojRouting: !ml.bojRouting}},
+      Tea_Cmd.none,
+    )
   }
 }
 
@@ -7285,6 +7325,10 @@ let updateTypeLL = (model: model, msg: typellMsg): (model, Tea_Cmd.t<msg>) => {
     | Error(e) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
     }
   | RefineResult(Error(e)) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | ToggleTypellBojRouting => (
+      {...model, typell: {...tl, bojRouting: !tl.bojRouting}},
+      Tea_Cmd.none,
+    )
   }
 }
 
@@ -7431,6 +7475,16 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
       // Imperative: persist current state to localStorage.
       Storage.save(model)
       (model, Tea_Cmd.none)
+    }
+  | RecordBojLatency(cartridge, tool, elapsed) => {
+      let entry: BojModel.bojLatencyEntry = {
+        cartridge,
+        tool,
+        durationMs: elapsed,
+        timestamp: Date.now(),
+      }
+      let log = Array.concat([entry], model.boj.latencyLog)->Array.slice(~start=0, ~end=100)
+      ({...model, boj: {...model.boj, latencyLog: log}}, Tea_Cmd.none)
     }
   | NoOp => (model, Tea_Cmd.none)
   }

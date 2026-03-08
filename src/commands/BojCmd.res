@@ -139,6 +139,34 @@ let invokeCartridge = (
   })
 }
 
+/// Invoke a tool on a cartridge with latency measurement.
+/// Fires both the result tagger and a latency tagger with (cartridge, tool, elapsed ms).
+let invokeCartridgeWithLatency = (
+  name: string,
+  tool: string,
+  args: string,
+  resultTagger: result<string, string> => 'msg,
+  latencyTagger: (string, string, float) => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    let startTime = Date.now()
+    invoke("boj_invoke", {"name": name, "tool": tool, "args": args})
+    ->Promise.then(result => {
+      let elapsed = Date.now() -. startTime
+      callbacks.enqueue(resultTagger(Ok(result)))
+      callbacks.enqueue(latencyTagger(name, tool, elapsed))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      let elapsed = Date.now() -. startTime
+      callbacks.enqueue(resultTagger(Error(`Invocation failed: ${name}/${tool}`)))
+      callbacks.enqueue(latencyTagger(name, tool, elapsed))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 /// Get Umoja federation status.
 let umojaStatus = (
   tagger: result<string, string> => 'msg,

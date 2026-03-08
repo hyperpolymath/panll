@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+#
+# Clade Definition: Clade Browser
+# Interactive browser for exploring and managing panel clades, traits, and permissions.
+
+[clade]
+id = "clade-browser"
+name = "Clade Browser"
+kind = "inspector"
+version = "1.0.0"
+
+[clade-description]
+summary = "Interactive browser for exploring clades, their traits, inheritance chains, protocols, capabilities, and permission rules"
+long = """
+The Clade Browser provides a 4-tab interface for exploring the PanLL clade taxonomy:
+Overview (stats grid, clade cards), By Kind (grouped by 11 clade kinds), Traits
+(matrix table with persistence/backend/work-items/real-time/ambient/isolation columns),
+and Panel Map (panel-to-clade assignments, inheritance chains, permission badges with
+click-to-toggle PermitAll/PermitOnly/PermitNone controls).
+
+The engine implements OR-merge inheritance semantics with cycle detection, 16 query
+functions, and a 4-tier metadata system (protocols, capabilities, dependencies,
+isolation/signing/SBOM/sandbox).
+"""
+
+[clade-traits]
+has-persistence = false
+has-backend = false
+has-work-items = false
+has-real-time = false
+is-ambient = false
+
+[clade-capabilities]
+capabilities = [
+  "CladeList",
+  "CladeLookup",
+  "TraitQuery",
+  "InheritanceChain",
+  "PermissionManagement",
+  "ProtocolBrowse",
+  "CapabilityBrowse",
+  "DependencyGraph",
+]
+
+[clade-connections]
+backend-type = "none"
+protocols = []
+
+[clade-taxonomy]
+inherits-from = "inspector"
+sibling-clades = ["panel-switcher", "workspace"]
+
+[clade-integrations]
+consumes = ["all-clades"]
+consumed-by = []
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["tablist", "tab", "grid", "table", "button"]

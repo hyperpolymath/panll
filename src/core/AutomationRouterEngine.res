@@ -140,4 +140,5 @@ let defaultState: automationRouterState = {
   configSource: "local",
   loading: false,
   error: None,
+  bojRouting: false,
 }

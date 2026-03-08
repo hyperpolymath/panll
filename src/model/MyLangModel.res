@@ -89,4 +89,6 @@ type myLangState = {
   lspDiagnostics: array<string>,
   /// Per-dialect REPL session IDs (dialect → session persistence).
   replSessions: array<(myLangDialect, string)>,
+  /// When true, LSP/compile operations route through BoJ lsp-mcp cartridge instead of direct CLI.
+  bojRouting: bool,
 }

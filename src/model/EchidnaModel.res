@@ -121,4 +121,6 @@ type echidnaState = {
   sessionLoading: bool,
   /// TypeLL-generated proof obligations JSON for the last proof input (cross-panel intelligence).
   lastProofObligations: option<string>,
+  /// When true, proof operations route through BoJ proof-mcp cartridge instead of direct ECHIDNA HTTP.
+  bojRouting: bool,
 }

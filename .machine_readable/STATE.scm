@@ -23,7 +23,7 @@
       (rust 63)
       (other 193))
     (panels 41)
-    (clades 39)
+    (clades 41)
     (tests 979)
     (rust-tests 28)
     (build-status "0 errors, 0 warnings"))
@@ -36,8 +36,8 @@
       (testing 85)
       (overall 74))
     (phase "development")
-    (current-focus "BoJ primary gateway routing (4 panels: LSP/database/DAP/BSP via cartridges), clade Tier 1-4 system, Panel Bus pub/sub, 979 Deno + 28 Rust tests")
-    (status-summary "98% frontend, 74% overall — 41 panels, 39 clades, 1007 total tests, BoJ gateway: 4 panels routed through cartridges, 3 JSON deserialisers wired, FeedbackOTron BoJ context, clade 4-tier metadata, Panel Bus event system, 0 errors 0 warnings")
+    (current-focus "BoJ primary gateway routing (5 panels: LSP/database/DAP/BSP/agent-mcp via cartridges), per-invocation latency tracking, fullscreen mode, 979 Deno + 28 Rust tests")
+    (status-summary "98% frontend, 75% overall — 41 panels, 41 clades, 1007 total tests, BoJ gateway: 5 panels routed through cartridges with latency tracking, fullscreen mode, 0 errors 0 warnings")
 
     (work-completed
       ("Custom TEA implementation with full Model-Update-View cycle")
@@ -86,12 +86,16 @@
       ("7-Tentacles agentic orchestration panel")
       ("Clade Browser with inheritance engine")
       ("BoJ panel with 14 cartridges")
-      ("BoJ primary gateway: 4 panels route through cartridges (lsp-mcp, database-mcp, dap-mcp, bsp-mcp) via bojRouting toggle")
+      ("BoJ primary gateway: 5 panels route through cartridges (lsp-mcp, database-mcp, dap-mcp, bsp-mcp, agent-mcp) via bojRouting toggle")
       ("BoJ JSON deserialisers: parseCartridges, parseTopology, parseUmojaStatus wired into Update.res")
       ("FeedbackOTron BoJ context snapshot: connection status, cartridge counts, last invoke, Umoja status")
       ("Panel Bus pub/sub: 10 event topics, event envelopes, subscriber registry (11 defaults), 100-event ring buffer")
       ("Clade 4-tier system: Tier 1 protocols/capabilities/deps/isolation, Tier 2 pub/sub bus, Tier 3 DX badges, Tier 4 signing/SBOM/sandbox")
-      ("ToggleDryRun: proper Live/DryRun toggle in workspace (was one-way)"))
+      ("ToggleDryRun: proper Live/DryRun toggle in workspace (was one-way)")
+      ("BoJ per-invocation latency tracking: all 17+ BoJ calls fire RecordBojLatency with (cartridge, tool, elapsed), 100-entry ring buffer on boj.latencyLog")
+      ("Automation Router BoJ routing: agent-mcp cartridge for ExecuteRule, LoadRules, SaveRules, LoadFromRepo")
+      ("ActionTogglePanelBar and ActionFullscreen keybinding actions fully implemented")
+      ("Fullscreen mode: hides Provenance, Vexometer, FeedbackOTron, PanelSwitcher, StatusBar; shows only panels + active overlay"))
 
     (work-in-progress
       ("TypeLL integration for remaining panels"
@@ -218,9 +222,9 @@
 
     (technical-debt
       ("44 TODO comments in Update.res — incomplete JSON parsing stubs for some panel handlers")
-      ("~50% of panels still use stub/local-only backend connections (BoJ gateway covers 4)")
-      ("Tauri backend needs proper error handling and validation logic for newer panels")
-      ("ActionTogglePanelBar and ActionFullscreen keybinding actions not yet implemented")))
+      ("~50% of panels still use stub/local-only backend connections (BoJ gateway covers 5)")
+      ("Tauri backend needs proper error handling and validation logic for newer panels")))
+
 
   (critical-next-actions
     ((action 1)
@@ -294,7 +298,7 @@
        ("Rust cargo test integrated into CI pipeline")
        ("STATE.scm updated: BLOCK-1/BLOCK-2 notes, critical-next-actions refreshed")
        ("TOPOLOGY.md completion dashboard synced with current architecture")
-       ("AI manifest consistency fixes aligned with 41 panels / 39 clades")))
+       ("AI manifest consistency fixes aligned with 41 panels / 41 clades")))
 
     ((session-id "2026-03-08-opus-typell-crosswire")
      (date "2026-03-08")

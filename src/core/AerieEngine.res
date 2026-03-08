@@ -46,4 +46,5 @@ let defaultState: aerieState = {
   bgpRoutes: [],
   activeCategory: AerieDashboard,
   bgpAnomalyCount: 0,
+  bojRouting: false,
 }

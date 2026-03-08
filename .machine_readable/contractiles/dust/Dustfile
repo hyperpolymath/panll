@@ -16,6 +16,12 @@ recovery:
       undo: "VeriSimDB temporal rollback to previous snapshot"
       notes: "VeriSimDB's versioned persistence allows point-in-time recovery."
 
+    - name: json-parse-failure
+      path: "Storage.load()"
+      reversible: true
+      handler: "Catch JSON.parseExn exceptions and return Model.init() defaults"
+      notes: "Malformed JSON in localStorage must never crash the app at startup."
+
   proof-sessions:
     - name: echidna-session-crash
       event: "echidna.session.error"
@@ -26,6 +32,22 @@ recovery:
       event: "user.undo-tactic"
       undo: "Pop last entry from proofScript and tacticsApplied arrays"
       notes: "Each tactic application is recorded; undo reverses the last step."
+
+    - name: typell-unavailable
+      event: "typell.connection.error"
+      handler: "All panels degrade gracefully; TypeLL errors never block panel workflows"
+      notes: "Cross-panel TypeLL checks return Error variant, panels display last-known-good result."
+
+  boj-gateway:
+    - name: boj-cartridge-failure
+      event: "boj.invoke.error"
+      handler: "Fall back to direct HTTP when bojRouting=true and cartridge fails"
+      notes: "Each panel with bojRouting can toggle back to direct mode without restart."
+
+    - name: boj-server-down
+      event: "boj.health.error"
+      handler: "All bojRouting toggles revert to direct HTTP mode"
+      notes: "BoJ is optional — all panels must work with direct connections as fallback."
 
   layout-presets:
     - name: layout-corruption
@@ -39,8 +61,40 @@ recovery:
       rollback: "git checkout HEAD~1 -- src/model/ src/Model.res"
       notes: "Domain modules are type-checked — regressions are caught at compile time."
 
-  dust-events:
+  governance:
     - name: anti-crash-halt-log
       source: "model.antiCrash.violations"
       transform: "Log violation chain for post-mortem analysis"
       notes: "Anti-Crash halt events are recorded in the model; halts are clearable by operator."
+
+    - name: contractiles-elasticity-overflow
+      event: "contractiles.elasticity.out-of-bounds"
+      handler: "Clamp elasticity to [0.0, 1.0] range via min/max"
+      notes: "If vexation accumulates unboundedly, clamping prevents invalid contractile state."
+
+    - name: orbital-divergence-nan
+      event: "orbital.divergence.nan"
+      handler: "Return 1.0 (maximum divergence) for NaN/Infinity results"
+      notes: "Jaccard distance computation guards against division-by-zero on empty token sets."
+
+  clade-system:
+    - name: clade-permission-reset
+      event: "clade.permission.corrupt"
+      handler: "Reset to defaultPermissionRules from CladeBrowserEngine"
+      notes: "Permission rules can be reset without losing clade definitions."
+
+    - name: missing-clade-definition
+      event: "clade.lookup.notfound"
+      handler: "CladeBrowserEngine returns default traits for unknown clades"
+      notes: "Missing clade directories don't crash the browser — engine returns fallback data."
+
+  deployment:
+    - name: tauri-build-failure
+      event: "build.tauri.error"
+      rollback: "cargo clean && cargo build --manifest-path src-tauri/Cargo.toml"
+      notes: "Tauri incremental build cache can become stale; clean build resolves most issues."
+
+    - name: rescript-cache-corruption
+      event: "build.rescript.error"
+      rollback: "rm -rf lib/bs .bsb.lock && deno task res:build"
+      notes: "ReScript build cache corruption fixed by clearing lib/bs directory."

@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+#
+# Clade Definition: My-Lang
+# Personal language panel with 4 dialects, REPL, compiler, and LSP integration.
+
+[clade]
+id = "my-lang"
+name = "My-Lang"
+kind = "builder"
+version = "1.0.0"
+
+[clade-description]
+summary = "AI-native personal language with 4 dialects (Solo, Duet, Ensemble, Me), integrated REPL, compiler, and LSP diagnostics"
+long = """
+My-Lang is a personal language panel providing a 4-tab interface: Editor (syntax-highlighted
+code editing with LSP diagnostics), REPL (per-dialect session management with history),
+Compile (dialect-aware compilation with TypeLL type checking), and Dialects (dialect
+selector with descriptions and examples).
+
+The 4 dialects represent different collaboration modes: Solo (individual), Duet (pair),
+Ensemble (team), and Me (introspective). Each dialect maintains its own REPL session
+state. LSP integration provides real-time syntax highlighting and error diagnostics
+through the My-Lang language server.
+"""
+
+[clade-traits]
+has-persistence = true
+has-backend = true
+has-work-items = false
+has-real-time = true
+is-ambient = false
+
+[clade-capabilities]
+capabilities = [
+  "CodeEditing",
+  "ReplEval",
+  "Compilation",
+  "DialectSwitching",
+  "LspDiagnostics",
+  "LspConnect",
+  "TypeChecking",
+  "SyntaxHighlighting",
+]
+
+[clade-connections]
+backend-type = "http"
+default-endpoint = "http://localhost:7900"
+protocols = ["LSP", "TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = "builder"
+sibling-clades = ["editor-bridge", "protocol-squisher"]
+
+[clade-integrations]
+consumes = ["typell"]
+consumed-by = []
+dispatches-to = ["lsp-mcp"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["textbox", "tablist", "tab", "log", "status"]

@@ -193,12 +193,12 @@ let view = (model: model): Tea_Vdom.t<msg> => {
         // Ambient substrate - Orbital Drift Aura
         renderDriftAura(model.orbital, model.humidity),
 
-        // Code Provenance Map — Qubes-style trust surface (always visible)
-        Provenance.view(model.provenance),
+        // Code Provenance Map — Qubes-style trust surface (hidden in fullscreen)
+        if !model.fullscreenActive { Provenance.view(model.provenance) } else { noNode },
 
-        // Main three-pane layout (padded right for the panel bar)
+        // Main three-pane layout (padded right for the panel bar when visible)
         div(
-          list{Attrs.class_("flex-1 flex overflow-hidden relative z-10 pr-12")},
+          list{Attrs.class_(`flex-1 flex overflow-hidden relative z-10 ${if model.panelBarVisible { "pr-12" } else { "" }}`)},
           list{
             // Pane-L with capture bar
             div(
@@ -227,26 +227,28 @@ let view = (model: model): Tea_Vdom.t<msg> => {
           },
         ),
 
-        // Vexometer - using full component with compact view by default
-        Vexometer.view(model.vexometer, false),
+        // Vexometer - hidden in fullscreen
+        if !model.fullscreenActive { Vexometer.view(model.vexometer, false) } else { noNode },
 
-        // Feedback-O-Tron - using full component
-        FeedbackOTron.view(
-          model.feedbackPending,
-          model.feedbackError,
-          model.feedbackReportType,
-          model.boj,
-        ),
+        // Feedback-O-Tron - hidden in fullscreen
+        if !model.fullscreenActive {
+          FeedbackOTron.view(
+            model.feedbackPending,
+            model.feedbackError,
+            model.feedbackReportType,
+            model.boj,
+          )
+        } else { noNode },
 
         // Active panel overlay — replaces ad-hoc visible checks on VAB/CloudGuard.
         // The panel switcher routes to the correct module's view or a placeholder.
         renderActivePanel(model),
 
-        // Panel switcher bar — vertical icon strip on right edge (z-50 over overlays)
-        PanelSwitcher.view(model.panelSwitcher),
+        // Panel switcher bar — controlled by panelBarVisible toggle
+        if model.panelBarVisible { PanelSwitcher.view(model.panelSwitcher) } else { noNode },
 
-        // Status bar — configurable bottom bar with system info widgets (DD-025)
-        StatusBar.view(model),
+        // Status bar — hidden in fullscreen
+        if !model.fullscreenActive { StatusBar.view(model) } else { noNode },
       },
     )
   }

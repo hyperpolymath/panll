@@ -93,4 +93,6 @@ type aerieState = {
   activeCategory: aerieCategory,
   /// Number of anomalous BGP routes detected.
   bgpAnomalyCount: int,
+  /// When true, overlay operations route through BoJ observe-mcp cartridge instead of direct HTTP.
+  bojRouting: bool,
 }
