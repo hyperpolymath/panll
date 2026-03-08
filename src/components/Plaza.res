@@ -375,21 +375,271 @@ let renderAdoptionWizard = (_plaza: plazaState): Tea_Vdom.t<msg> => {
   )
 }
 
-/// Render a placeholder tab for features coming soon.
-let renderPlaceholder = (tabName: string, description: string): Tea_Vdom.t<msg> => {
+/// Render a compliance level badge.
+let renderComplianceBadge = (level: complianceLevel): Tea_Vdom.t<msg> => {
+  let (label, colour) = switch level {
+  | FullCompliance => ("Full", "bg-green-700")
+  | PartialCompliance => ("Partial", "bg-yellow-700")
+  | NonCompliant => ("Non-Compliant", "bg-red-700")
+  | Unknown => ("Unknown", "bg-gray-700")
+  }
+  span(
+    list{Attrs.class_(`px-2 py-0.5 rounded text-xs ${colour} text-white`)},
+    list{text(label)},
+  )
+}
+
+/// Render the Compliance Audit tab — SPDX headers, LICENSE files, exhibit completeness.
+let renderCompliance = (plaza: plazaState): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("flex-1 flex items-center justify-center")},
+    list{Attrs.class_("flex-1 overflow-auto p-6")},
     list{
       div(
-        list{Attrs.class_("text-center")},
+        list{Attrs.class_("mb-4 flex items-center justify-between")},
         list{
           div(
-            list{Attrs.class_("text-lg text-gray-400 mb-2")},
-            list{text(tabName)},
+            list{Attrs.class_("text-sm text-gray-400")},
+            list{text(`${Int.toString(Array.length(plaza.audits))} repos audited`)},
+          ),
+          button(
+            list{
+              Attrs.class_("px-3 py-1 text-xs bg-indigo-800 text-indigo-200 rounded hover:bg-indigo-700"),
+              Attrs.ariaLabel("Run compliance scan on all repos"),
+              Events.onClick(Plaza(LoadAdoptionStats)),
+            },
+            list{text("Scan All")},
+          ),
+        },
+      ),
+      if Array.length(plaza.audits) == 0 {
+        div(
+          list{Attrs.class_("text-center py-12")},
+          list{
+            div(list{Attrs.class_("text-gray-500 mb-2")}, list{text("No audits yet")}),
+            div(
+              list{Attrs.class_("text-xs text-gray-600 max-w-md mx-auto")},
+              list{text("Scan repos for SPDX headers, LICENSE files, and exhibit completeness. Connect to pmpl-audit for deep scanning.")},
+            ),
+          },
+        )
+      } else {
+        div(
+          list{Attrs.class_("space-y-2")},
+          plaza.audits
+          ->Array.map(audit =>
+            div(
+              list{Attrs.class_("p-3 bg-gray-900/50 rounded border border-gray-800 flex items-center justify-between")},
+              list{
+                div(
+                  list{Attrs.class_("flex-1")},
+                  list{
+                    div(
+                      list{Attrs.class_("text-sm text-gray-300 flex items-center gap-2")},
+                      list{text(audit.repoName), renderComplianceBadge(audit.level)},
+                    ),
+                    div(
+                      list{Attrs.class_("text-xs text-gray-600 mt-1")},
+                      list{
+                        text(
+                          `${Int.toString(audit.filesWithHeaders)}/${Int.toString(audit.filesScanned)} files with SPDX headers`,
+                        ),
+                      },
+                    ),
+                  },
+                ),
+                div(
+                  list{Attrs.class_("text-xs text-gray-600")},
+                  list{text(audit.lastAudit)},
+                ),
+              },
+            )
+          )
+          ->List.fromArray,
+        )
+      },
+    },
+  )
+}
+
+/// Render the Provenance Verification tab — quantum-safe signatures.
+let renderProvenance = (plaza: plazaState): Tea_Vdom.t<msg> => {
+  div(
+    list{Attrs.class_("flex-1 overflow-auto p-6")},
+    list{
+      div(
+        list{Attrs.class_("mb-4 flex items-center justify-between")},
+        list{
+          div(
+            list{Attrs.class_("text-sm text-gray-400")},
+            list{text(`${Int.toString(Array.length(plaza.signatures))} signatures`)},
+          ),
+          button(
+            list{
+              Attrs.class_("px-3 py-1 text-xs bg-indigo-800 text-indigo-200 rounded hover:bg-indigo-700"),
+              Attrs.ariaLabel("Verify all provenance signatures"),
+              Events.onClick(Plaza(LoadAdoptionStats)),
+            },
+            list{text("Verify All")},
+          ),
+        },
+      ),
+      if Array.length(plaza.signatures) == 0 {
+        div(
+          list{Attrs.class_("text-center py-12")},
+          list{
+            div(list{Attrs.class_("text-gray-500 mb-2")}, list{text("No signatures found")}),
+            div(
+              list{Attrs.class_("text-xs text-gray-600 max-w-md mx-auto")},
+              list{text("Verify quantum-safe signatures (ML-DSA, SLH-DSA) on files and commits. Connect to pmpl-verify for signature chain validation.")},
+            ),
+          },
+        )
+      } else {
+        div(
+          list{Attrs.class_("space-y-2")},
+          plaza.signatures
+          ->Array.map(sig => {
+            let (statusText, statusColour) = switch sig.status {
+            | SignatureValid => ("Valid", "text-green-400")
+            | SignatureInvalid(reason) => (`Invalid: ${reason}`, "text-red-400")
+            | NoSignature => ("Missing", "text-gray-500")
+            | ClassicalOnly => ("Classical", "text-yellow-400")
+            }
+            div(
+              list{Attrs.class_("p-3 bg-gray-900/50 rounded border border-gray-800")},
+              list{
+                div(
+                  list{Attrs.class_("flex items-center justify-between")},
+                  list{
+                    div(list{Attrs.class_("text-sm text-gray-300")}, list{text(sig.target)}),
+                    span(list{Attrs.class_(`text-xs ${statusColour}`)}, list{text(statusText)}),
+                  },
+                ),
+                div(
+                  list{Attrs.class_("text-xs text-gray-600 mt-1 flex items-center gap-3")},
+                  list{
+                    text(`Algorithm: ${sig.algorithm}`),
+                    text(`Signer: ${sig.signer}`),
+                    text(sig.timestamp),
+                  },
+                ),
+              },
+            )
+          })
+          ->List.fromArray,
+        )
+      },
+    },
+  )
+}
+
+/// Render the Ethical Use Guide tab — AI training disclosure and responsible use.
+let renderEthicalUse = (_plaza: plazaState): Tea_Vdom.t<msg> => {
+  div(
+    list{Attrs.class_("flex-1 overflow-auto p-6")},
+    list{
+      div(
+        list{Attrs.class_("max-w-2xl mx-auto space-y-6")},
+        list{
+          div(
+            list{Attrs.class_("text-sm font-medium text-gray-300 border-b border-gray-800 pb-2")},
+            list{text("Ethical Use Guide (Exhibit A)")},
           ),
           div(
-            list{Attrs.class_("text-sm text-gray-600 max-w-md")},
-            list{text(description)},
+            list{Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800 space-y-3")},
+            list{
+              div(
+                list{Attrs.class_("text-xs text-gray-400 font-medium")},
+                list{text("AI Training Disclosure")},
+              ),
+              div(
+                list{Attrs.class_("text-xs text-gray-500")},
+                list{text("If you use PMPL-licensed code in AI training datasets, Exhibit A requires disclosure. Provide a clear statement in your model card or data sheet identifying the PMPL-licensed sources used.")},
+              ),
+            },
+          ),
+          div(
+            list{Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800 space-y-3")},
+            list{
+              div(
+                list{Attrs.class_("text-xs text-gray-400 font-medium")},
+                list{text("Cultural Sensitivity")},
+              ),
+              div(
+                list{Attrs.class_("text-xs text-gray-500")},
+                list{text("Respect the cultural context of code contributions. Attribution should preserve original authorship information and acknowledge cultural origins where relevant.")},
+              ),
+            },
+          ),
+          div(
+            list{Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800 space-y-3")},
+            list{
+              div(
+                list{Attrs.class_("text-xs text-gray-400 font-medium")},
+                list{text("Responsible Use")},
+              ),
+              div(
+                list{Attrs.class_("text-xs text-gray-500")},
+                list{text("PMPL code should not be used in systems designed to cause harm, violate human rights, or circumvent legal protections. The stewardship council reviews edge cases.")},
+              ),
+            },
+          ),
+        },
+      ),
+    },
+  )
+}
+
+/// Render the Governance tab — stewardship decisions and amendments.
+let renderGovernance = (_plaza: plazaState): Tea_Vdom.t<msg> => {
+  div(
+    list{Attrs.class_("flex-1 overflow-auto p-6")},
+    list{
+      div(
+        list{Attrs.class_("max-w-2xl mx-auto space-y-6")},
+        list{
+          div(
+            list{Attrs.class_("text-sm font-medium text-gray-300 border-b border-gray-800 pb-2")},
+            list{text("Stewardship Council")},
+          ),
+          div(
+            list{Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800 space-y-2")},
+            list{
+              div(
+                list{Attrs.class_("text-xs text-gray-400 font-medium")},
+                list{text("License Governance")},
+              ),
+              div(
+                list{Attrs.class_("text-xs text-gray-500")},
+                list{text("The Palimpsest License is governed by the Stewardship Council. Proposed amendments require council review and community feedback. Governance decisions are recorded in the transparency log.")},
+              ),
+            },
+          ),
+          div(
+            list{Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800 space-y-2")},
+            list{
+              div(
+                list{Attrs.class_("text-xs text-gray-400 font-medium")},
+                list{text("Amendment Process")},
+              ),
+              div(
+                list{Attrs.class_("text-xs text-gray-500")},
+                list{text("1. Proposal submission with rationale. 2. Community comment period (30 days). 3. Council deliberation. 4. Decision recorded in transparency log. 5. Implementation in next license version.")},
+              ),
+            },
+          ),
+          div(
+            list{Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800 space-y-2")},
+            list{
+              div(
+                list{Attrs.class_("text-xs text-gray-400 font-medium")},
+                list{text("Contact")},
+              ),
+              div(
+                list{Attrs.class_("text-xs text-gray-500")},
+                list{text("Governance proposals and ethical use questions: j.d.a.jewell@open.ac.uk")},
+              ),
+            },
           ),
         },
       ),
@@ -403,10 +653,10 @@ let renderContent = (plaza: plazaState): Tea_Vdom.t<msg> => {
   | Dashboard => renderDashboard(plaza)
   | Compatibility => renderCompatibility(plaza)
   | Adopt => renderAdoptionWizard(plaza)
-  | Compliance => renderPlaceholder("Compliance Audit", "Scan individual repos for SPDX headers, LICENSE files, and exhibit completeness. Connect to pmpl-audit for deep scanning.")
-  | Provenance => renderPlaceholder("Provenance Verification", "Verify quantum-safe signatures (ML-DSA, SLH-DSA) on files and commits. Connect to pmpl-verify for signature chain validation.")
-  | EthicalUse => renderPlaceholder("Ethical Use Guide", "Interactive guide for AI training disclosure, cultural sensitivity, and responsible use under Exhibit A.")
-  | Governance => renderPlaceholder("Stewardship Council", "View governance decisions, proposed amendments, and voting history for the Palimpsest License stewardship process.")
+  | Compliance => renderCompliance(plaza)
+  | Provenance => renderProvenance(plaza)
+  | EthicalUse => renderEthicalUse(plaza)
+  | Governance => renderGovernance(plaza)
   }
 }
 

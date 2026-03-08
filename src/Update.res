@@ -1314,17 +1314,30 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     }
 
   // --- Proof submission ---
-  | SubmitProof => (
-      {...model, echidna: {...ec, proofLoading: true, proofError: None, lastProofResult: None, lastProofObligations: None}},
-      Tea_Cmd.batch(list{
+  | SubmitProof => {
+      let proveCmd = if ec.bojRouting {
+        BojCmd.invokeCartridgeWithLatency(
+          "proof-mcp",
+          "prove",
+          `{"input": "${ec.proofInput}", "prover": "${ec.selectedProver->Option.getOr("auto")}"}`,
+          result => Echidna(ProofResult(result)),
+          (cart, tool, elapsed) => RecordBojLatency(cart, tool, elapsed),
+        )
+      } else {
         TauriCmd.echidnaProve(ec.proofInput, ec.selectedProver, result =>
           Echidna(ProofResult(result))
-        ),
-        TypeLLService.generateProofObligations(ec.proofInput, result =>
-          Echidna(ProofObligationsGenerated(result))
-        ),
-      }),
-    )
+        )
+      }
+      (
+        {...model, echidna: {...ec, proofLoading: true, proofError: None, lastProofResult: None, lastProofObligations: None}},
+        Tea_Cmd.batch(list{
+          proveCmd,
+          TypeLLService.generateProofObligations(ec.proofInput, result =>
+            Echidna(ProofObligationsGenerated(result))
+          ),
+        }),
+      )
+    }
   | ProofResult(result) =>
     switch result {
     | Ok(json) =>
@@ -2703,10 +2716,23 @@ let updateReposystem = (model: model, msg: reposystemMsg): (model, Tea_Cmd.t<msg
 let updateAerie = (model: model, msg: aerieMsg): (model, Tea_Cmd.t<msg>) => {
   let aer = model.aerie
   switch msg {
-  | LoadAerie => (
-      {...model, aerie: {...aer, loading: true, error: None}},
-      AerieCmd.fetchLatency(result => Aerie(LatencyLoaded(result))),
-    )
+  | LoadAerie => {
+      let fetchCmd = if aer.bojRouting {
+        BojCmd.invokeCartridgeWithLatency(
+          "observe-mcp",
+          "metrics",
+          `{"type": "latency"}`,
+          result => Aerie(LatencyLoaded(result)),
+          (cart, tool, elapsed) => RecordBojLatency(cart, tool, elapsed),
+        )
+      } else {
+        AerieCmd.fetchLatency(result => Aerie(LatencyLoaded(result)))
+      }
+      (
+        {...model, aerie: {...aer, loading: true, error: None}},
+        fetchCmd,
+      )
+    }
   | LatencyLoaded(result) =>
     switch result {
     | Ok(_jsonStr) => ({...model, aerie: {...aer, loaded: true, loading: false}}, Tea_Cmd.none)
@@ -6089,14 +6115,27 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
       Tea_Cmd.none,
     )
   | DismissCoprocError => ({...model, coprocessors: {...cp, error: None}}, Tea_Cmd.none)
-  | QueryComputeEngine(engineId, operation) => (
-      {...model, coprocessors: {...cp, loading: true}},
-      CoprocessorsCmd.queryComputeEngine(
-        engineId,
-        operation,
-        result => Coprocessors(ComputeEngineResult(result)),
-      ),
-    )
+  | QueryComputeEngine(engineId, operation) => {
+      let queryCmd = if cp.bojRouting {
+        BojCmd.invokeCartridgeWithLatency(
+          "agent-mcp",
+          "query-compute",
+          `{"engine": "${engineId}", "operation": "${operation}"}`,
+          result => Coprocessors(ComputeEngineResult(result)),
+          (cart, tool, elapsed) => RecordBojLatency(cart, tool, elapsed),
+        )
+      } else {
+        CoprocessorsCmd.queryComputeEngine(
+          engineId,
+          operation,
+          result => Coprocessors(ComputeEngineResult(result)),
+        )
+      }
+      (
+        {...model, coprocessors: {...cp, loading: true}},
+        queryCmd,
+      )
+    }
   | ComputeEngineResult(Ok(json)) => {
       let parsed = CoprocessorsEngine.parseComputeResult(json, EngineAxiom)
       switch parsed {
@@ -7158,10 +7197,21 @@ let updateMyLang = (model: model, msg: myLangMsg): (model, Tea_Cmd.t<msg>) => {
   | UpdateEditor(v) => ({...model, myLang: {...ml, editorContent: v}}, Tea_Cmd.none)
   | Compile => {
       let dialectStr = MyLangEngine.dialectLabel(ml.activeDialect)
+      let compileCmd = if ml.bojRouting {
+        BojCmd.invokeCartridgeWithLatency(
+          "lsp-mcp",
+          "compile",
+          `{"code": "${ml.editorContent}", "dialect": "${dialectStr}"}`,
+          result => MyLang(CompileResult(result)),
+          (cart, tool, elapsed) => RecordBojLatency(cart, tool, elapsed),
+        )
+      } else {
+        MyLangCmd.compile(ml.editorContent, dialectStr, result => MyLang(CompileResult(result)))
+      }
       (
         {...model, myLang: {...ml, loading: true, error: None, lastTypeCheck: None}},
         Tea_Cmd.batch(list{
-          MyLangCmd.compile(ml.editorContent, dialectStr, result => MyLang(CompileResult(result))),
+          compileCmd,
           TypeLLService.checkMyLangTypes(ml.editorContent, dialectStr, result => MyLang(MlTypeCheckResult(result))),
         }),
       )
@@ -7177,13 +7227,25 @@ let updateMyLang = (model: model, msg: myLangMsg): (model, Tea_Cmd.t<msg>) => {
     if ml.replInput === "" {
       (model, Tea_Cmd.none)
     } else {
-      (
-        {...model, myLang: {...ml, loading: true, replInput: ""}},
+      let dialectStr = MyLangEngine.dialectLabel(ml.activeDialect)
+      let evalCmd = if ml.bojRouting {
+        BojCmd.invokeCartridgeWithLatency(
+          "lsp-mcp",
+          "repl",
+          `{"input": "${ml.replInput}", "dialect": "${dialectStr}"}`,
+          result => MyLang(ReplResult(result)),
+          (cart, tool, elapsed) => RecordBojLatency(cart, tool, elapsed),
+        )
+      } else {
         MyLangCmd.replEval(
           ml.replInput,
-          MyLangEngine.dialectLabel(ml.activeDialect),
+          dialectStr,
           result => MyLang(ReplResult(result)),
-        ),
+        )
+      }
+      (
+        {...model, myLang: {...ml, loading: true, replInput: ""}},
+        evalCmd,
       )
     }
   | ReplResult(Ok(output)) => {
@@ -7264,9 +7326,24 @@ let updateTypeLL = (model: model, msg: typellMsg): (model, Tea_Cmd.t<msg>) => {
   | UpdateCheckerInput(v) => ({...model, typell: {...tl, checkerInput: v}}, Tea_Cmd.none)
   | RunCheck => {
       let ctx = if tl.checkerContext !== "" { Some(tl.checkerContext) } else { None }
+      let checkCmd = if tl.bojRouting {
+        let ctxStr = switch ctx {
+        | Some(c) => `, "context": "${c}"`
+        | None => ""
+        }
+        BojCmd.invokeCartridgeWithLatency(
+          "nesy-mcp",
+          "check",
+          `{"input": "${tl.checkerInput}"${ctxStr}}`,
+          result => TypeLL(CheckResult(result)),
+          (cart, tool, elapsed) => RecordBojLatency(cart, tool, elapsed),
+        )
+      } else {
+        TypeLLCmd.check(tl.checkerInput, ctx, result => TypeLL(CheckResult(result)))
+      }
       (
         {...model, typell: {...tl, loading: true, error: None}},
-        TypeLLCmd.check(tl.checkerInput, ctx, result => TypeLL(CheckResult(result))),
+        checkCmd,
       )
     }
   | CheckResult(Ok(json)) =>
@@ -7288,10 +7365,23 @@ let updateTypeLL = (model: model, msg: typellMsg): (model, Tea_Cmd.t<msg>) => {
     | Error(e) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
     }
   | CheckResult(Error(e)) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
-  | RunInfer => (
-      {...model, typell: {...tl, loading: true, error: None}},
-      TypeLLCmd.infer(tl.checkerInput, result => TypeLL(InferResult(result))),
-    )
+  | RunInfer => {
+      let inferCmd = if tl.bojRouting {
+        BojCmd.invokeCartridgeWithLatency(
+          "nesy-mcp",
+          "infer",
+          `{"input": "${tl.checkerInput}"}`,
+          result => TypeLL(InferResult(result)),
+          (cart, tool, elapsed) => RecordBojLatency(cart, tool, elapsed),
+        )
+      } else {
+        TypeLLCmd.infer(tl.checkerInput, result => TypeLL(InferResult(result)))
+      }
+      (
+        {...model, typell: {...tl, loading: true, error: None}},
+        inferCmd,
+      )
+    }
   | InferResult(Ok(json)) =>
     switch TypeLLEngine.parseCheckResult(json) {
     | Ok(result) => {

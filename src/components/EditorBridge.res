@@ -391,12 +391,31 @@ let view = (state: editorBridgeState): Tea_Vdom.t<msg> => {
               ),
             },
           ),
-          button(
+          div(
+            list{Attrs.class_("flex items-center gap-2")},
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
-              Events.onClick(EditorBridge(RefreshBridge)),
+              button(
+                list{
+                  Attrs.class_(
+                    if state.bojRouting {
+                      "px-3 py-1.5 text-xs bg-blue-700 text-white rounded"
+                    } else {
+                      "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
+                    },
+                  ),
+                  Attrs.ariaLabel(if state.bojRouting { "Disable BoJ routing" } else { "Enable BoJ routing" }),
+                  Events.onClick(EditorBridge(ToggleBojRouting)),
+                },
+                list{text(if state.bojRouting { "BoJ On" } else { "BoJ" })},
+              ),
+              button(
+                list{
+                  Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Events.onClick(EditorBridge(RefreshBridge)),
+                },
+                list{text("Refresh")},
+              ),
             },
-            list{text("Refresh")},
           ),
         },
       ),

@@ -148,7 +148,33 @@ let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
             )->List.fromArray,
           )
         | PlayTutorials =>
-          div(list{Attrs.class_("text-gray-500 text-sm")}, list{text("Interactive tutorials — coming soon")})
+          div(
+            list{Attrs.class_("space-y-4")},
+            list{
+              div(list{Attrs.class_("text-sm font-medium text-gray-400 border-b border-gray-800 pb-2")}, list{text("Interactive Tutorials")}),
+              div(
+                list{Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800")},
+                list{
+                  div(list{Attrs.class_("text-xs text-gray-400 font-medium mb-2")}, list{text("Getting Started")}),
+                  div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Tutorials run in the sandbox environment. Select a language, follow the guided steps, and experiment with code in a safe, isolated context.")}),
+                },
+              ),
+              div(
+                list{Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800")},
+                list{
+                  div(list{Attrs.class_("text-xs text-gray-400 font-medium mb-2")}, list{text("NQC Playground")}),
+                  div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Explore NQC queries against QuandleDB. Write and test quantum-safe database operations in a sandboxed environment.")}),
+                },
+              ),
+              div(
+                list{Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800")},
+                list{
+                  div(list{Attrs.class_("text-xs text-gray-400 font-medium mb-2")}, list{text("Proof Sketching")}),
+                  div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Draft proof outlines using the ECHIDNA multi-solver dispatch. Connect Panel-L constraints to see how formal verification works.")}),
+                },
+              ),
+            },
+          )
         },
         switch pg.error {
         | Some(e) => div(list{Attrs.class_("mt-4 p-3 bg-red-900/30 border border-red-700 rounded text-sm text-red-300"), Attrs.role("alert")}, list{text(e)})

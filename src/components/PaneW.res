@@ -619,6 +619,30 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
               ),
             },
           ),
+          // BoJ routing toggle for VeriSimDB operations
+          div(
+            list{Attrs.class_("flex items-center gap-2 mt-2")},
+            list{
+              div(
+                list{Attrs.class_("text-[11px] text-gray-400")},
+                list{text("BoJ Routing")},
+              ),
+              button(
+                list{
+                  Attrs.class_(
+                    if db.bojRouting {
+                      "px-2 py-0.5 text-[10px] bg-blue-700 text-white rounded"
+                    } else {
+                      "px-2 py-0.5 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300"
+                    },
+                  ),
+                  Attrs.ariaLabel(if db.bojRouting { "Disable BoJ routing" } else { "Enable BoJ routing" }),
+                  Events.onClick(VeriSimDB(ToggleVeriSimBojRouting)),
+                },
+                list{text(if db.bojRouting { "BoJ On" } else { "BoJ" })},
+              ),
+            },
+          ),
           // Query count and inference stream summary
           div(
             list{Attrs.class_("flex items-center gap-3 mt-2 text-[10px] text-gray-500")},

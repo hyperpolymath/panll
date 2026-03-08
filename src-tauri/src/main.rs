@@ -49,6 +49,9 @@ mod cloudguard;
 /// Farm — Git-Private-Farm repo inventory module.
 mod farm;
 
+/// VM Inspector — in-process virtual machine with stepping and reverse execution.
+mod vm_inspector;
+
 /// VoiceTag — Code MRI Layer 0 sidecar file I/O module.
 mod voicetag;
 
@@ -92,8 +95,15 @@ mod boj;
 /// Routes to TypeLL server at TYPELL_URL (default http://localhost:7800/api/v1).
 mod typell;
 
+/// Valence Shell — PTY session management, asciicast recordings, and checkpoints.
+/// Ephemeral data stored under /tmp/panll/ (recordings, checkpoints).
+mod valence_shell;
+
 /// Coprocessor — Control plane for external compute engines (Axiom.jl, BoJ).
 mod coprocessor;
+
+/// Game Preview — IDApTIK game engine preview and recording.
+mod game_preview;
 
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
@@ -1979,6 +1989,14 @@ fn main() {
             farm::commands::farm_list_repos,
             farm::commands::farm_get_repo,
             farm::commands::farm_get_stats,
+            // VM Inspector — in-process virtual machine
+            vm_inspector::commands::vm_inspector_read_state,
+            vm_inspector::commands::vm_inspector_step_forward,
+            vm_inspector::commands::vm_inspector_step_backward,
+            vm_inspector::commands::vm_inspector_run,
+            vm_inspector::commands::vm_inspector_load_program,
+            vm_inspector::commands::vm_inspector_export_snapshot,
+            vm_inspector::commands::vm_inspector_read_file,
             // Plaza — Palimpsest License adoption and compliance
             plaza::commands::plaza_scan_repo,
             plaza::commands::plaza_adoption_stats,
@@ -2085,6 +2103,28 @@ fn main() {
             // Coprocessor — Control plane for external compute engines
             coprocessor::commands::query_compute_engine,
             coprocessor::commands::discover_compute_devices,
+            // Game Preview — IDApTIK engine preview and recording
+            game_preview::commands::game_preview_check_server,
+            game_preview::commands::game_preview_control,
+            game_preview::commands::game_preview_record_start,
+            game_preview::commands::game_preview_record_stop,
+            game_preview::commands::game_preview_screenshot,
+            game_preview::commands::game_preview_stats,
+            game_preview::commands::game_preview_clips_list,
+            game_preview::commands::game_preview_clip_delete,
+            // Valence Shell — PTY sessions, recordings, checkpoints
+            valence_shell::commands::valence_shell_check,
+            valence_shell::commands::valence_shell_spawn,
+            valence_shell::commands::valence_shell_input,
+            valence_shell::commands::valence_shell_record_start,
+            valence_shell::commands::valence_shell_record_stop,
+            valence_shell::commands::valence_shell_recordings_list,
+            valence_shell::commands::valence_shell_recording_delete,
+            valence_shell::commands::valence_shell_checkpoint_create,
+            valence_shell::commands::valence_shell_checkpoint_restore,
+            valence_shell::commands::valence_shell_checkpoints_list,
+            valence_shell::commands::valence_shell_screenshot,
+            valence_shell::commands::valence_shell_recording_export,
         ])
         .setup(|_app| {
             Ok(())

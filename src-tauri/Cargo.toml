@@ -36,6 +36,10 @@ notify-debouncer-mini = "0.5"
 walkdir = "2"
 regex = "1"
 libc = "0.2"
+which = "7"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt"] }
 
 [features]
 default = ["custom-protocol"]

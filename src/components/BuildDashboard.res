@@ -135,6 +135,20 @@ let renderOverview = (state: buildDashboardState): Tea_Vdom.t<msg> => {
             },
             list{text(if state.autoRebuild { "Auto-Rebuild On" } else { "Auto-Rebuild" })},
           ),
+          button(
+            list{
+              Attrs.class_(
+                if state.bojRouting {
+                  "px-3 py-1.5 text-xs bg-blue-700 text-white rounded"
+                } else {
+                  "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
+                },
+              ),
+              Attrs.ariaLabel(if state.bojRouting { "Disable BoJ routing" } else { "Enable BoJ routing" }),
+              Events.onClick(BuildDashboard(ToggleBuildBojRouting)),
+            },
+            list{text(if state.bojRouting { "BoJ On" } else { "BoJ" })},
+          ),
         },
       ),
     },
