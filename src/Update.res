@@ -4446,6 +4446,139 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
     ({...model, massPanic: {...mp, loading: false, lastError: Some(err)}}, Tea_Cmd.none)
   | DismissMassPanicError =>
     ({...model, massPanic: {...mp, lastError: None}}, Tea_Cmd.none)
+
+  // -- Sub-view navigation --
+  | SwitchView(view) =>
+    ({...model, massPanic: {...mp, activeView: view}}, Tea_Cmd.none)
+
+  // -- Imaging (fNIRS-style spatial health map) --
+  | BuildImage =>
+    let storePath = switch mp.storage {
+    | Filesystem(p) | VerisimDB(p) => Some(p)
+    | NoStorage => None
+    }
+    (
+      {...model, massPanic: {...mp, imagingLoading: true, lastError: None}},
+      MassPanicCmd.buildImage(
+        mp.reposDirectory,
+        mp.incremental,
+        storePath,
+        result => MassPanic(ImageLoaded(result)),
+      ),
+    )
+  | ImageLoaded(Ok(json)) => {
+      // Parse panll.system-image.v0 JSON into systemImage
+      let parsed = try {
+        let obj = JSON.parseExn(json)
+        let getStr = (o, k) =>
+          switch o->JSON.Decode.object->Option.flatMap(d => d->Dict.get(k)) {
+          | Some(v) => v->JSON.Decode.string->Option.getOr("")
+          | None => ""
+          }
+        let getFloat = (o, k) =>
+          switch o->JSON.Decode.object->Option.flatMap(d => d->Dict.get(k)) {
+          | Some(v) => v->JSON.Decode.float->Option.getOr(0.0)
+          | None => 0.0
+          }
+        let getInt = (o, k) =>
+          switch o->JSON.Decode.object->Option.flatMap(d => d->Dict.get(k)) {
+          | Some(v) => v->JSON.Decode.float->Option.getOr(0.0)->Float.toInt
+          | None => 0
+          }
+        let image: MassPanicModel.systemImage = {
+          scanSurface: getStr(obj, "scan_surface"),
+          generatedAt: getStr(obj, "generated_at"),
+          globalHealth: getFloat(obj, "global_health"),
+          globalRisk: getFloat(obj, "global_risk"),
+          nodeCount: getInt(obj, "node_count"),
+          edgeCount: getInt(obj, "edge_count"),
+          totalWeakPoints: getInt(obj, "total_weak_points"),
+          totalCritical: getInt(obj, "total_critical"),
+          riskDistribution: {healthy: 0, low: 0, moderate: 0, high: 0, critical: 0},
+          nodes: [],
+          edges: [],
+        }
+        Some(image)
+      } catch {
+      | _ => None
+      }
+      switch parsed {
+      | Some(img) =>
+        ({...model, massPanic: {...mp, imagingLoading: false, currentImage: Some(img)}}, Tea_Cmd.none)
+      | None =>
+        ({...model, massPanic: {...mp, imagingLoading: false, lastError: Some("Failed to parse system image JSON")}}, Tea_Cmd.none)
+      }
+    }
+  | ImageLoaded(Error(err)) =>
+    ({...model, massPanic: {...mp, imagingLoading: false, lastError: Some(err)}}, Tea_Cmd.none)
+  | ImportImageFile =>
+    // TODO: Wire file picker dialog via Tauri
+    (model, Tea_Cmd.none)
+  | ImageFileLoaded(Ok(_json)) =>
+    // Same parsing as ImageLoaded — TODO: parse imported file
+    ({...model, massPanic: {...mp, imagingLoading: false}}, Tea_Cmd.none)
+  | ImageFileLoaded(Error(err)) =>
+    ({...model, massPanic: {...mp, imagingLoading: false, lastError: Some(err)}}, Tea_Cmd.none)
+
+  // -- Temporal navigation --
+  | ListSnapshots => {
+      let storePath = switch mp.storage {
+      | VerisimDB(p) => p
+      | _ => "verisimdb-data"
+      }
+      (
+        {...model, massPanic: {...mp, temporalLoading: true, lastError: None}},
+        MassPanicCmd.listSnapshots(storePath, result => MassPanic(SnapshotsLoaded(result))),
+      )
+    }
+  | SnapshotsLoaded(Ok(_json)) =>
+    // TODO: Parse snapshot entries array from JSON
+    ({...model, massPanic: {...mp, temporalLoading: false}}, Tea_Cmd.none)
+  | SnapshotsLoaded(Error(err)) =>
+    ({...model, massPanic: {...mp, temporalLoading: false, lastError: Some(err)}}, Tea_Cmd.none)
+  | SelectSnapshot(slot, index) => {
+      let (s0, s1) = mp.selectedSnapshots
+      let newSelected = if slot == 0 {
+        (Some(index), s1)
+      } else {
+        (s0, Some(index))
+      }
+      ({...model, massPanic: {...mp, selectedSnapshots: newSelected}}, Tea_Cmd.none)
+    }
+  | DiffSnapshots => {
+      let storePath = switch mp.storage {
+      | VerisimDB(p) => p
+      | _ => "verisimdb-data"
+      }
+      switch (mp.selectedSnapshots) {
+      | (Some(fromIdx), Some(toIdx)) =>
+        (
+          {...model, massPanic: {...mp, temporalLoading: true}},
+          MassPanicCmd.diffSnapshots(storePath, fromIdx, toIdx, result => MassPanic(DiffLoaded(result))),
+        )
+      | _ => (model, Tea_Cmd.none)
+      }
+    }
+  | DiffLoaded(Ok(_json)) =>
+    // TODO: Parse temporalDiff from JSON
+    ({...model, massPanic: {...mp, temporalLoading: false}}, Tea_Cmd.none)
+  | DiffLoaded(Error(err)) =>
+    ({...model, massPanic: {...mp, temporalLoading: false, lastError: Some(err)}}, Tea_Cmd.none)
+  | TakeSnapshot(label) => {
+      let storePath = switch mp.storage {
+      | VerisimDB(p) => p
+      | _ => "verisimdb-data"
+      }
+      (
+        {...model, massPanic: {...mp, temporalLoading: true}},
+        MassPanicCmd.takeSnapshot(storePath, label, result => MassPanic(SnapshotTaken(result))),
+      )
+    }
+  | SnapshotTaken(Ok(_json)) =>
+    // Refresh snapshot list after taking a new one
+    ({...model, massPanic: {...mp, temporalLoading: false}}, Tea_Cmd.none)
+  | SnapshotTaken(Error(err)) =>
+    ({...model, massPanic: {...mp, temporalLoading: false, lastError: Some(err)}}, Tea_Cmd.none)
   }
 }
 
@@ -4558,6 +4691,627 @@ let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
   }
 }
 
+/// STATE TRANSITION: Valence Shell
+/// Manages the embedded terminal panel — PTY lifecycle, input handling,
+/// session recording, checkpoint management, approval gate, and Claude
+/// Code integration. The terminal connects to the Valence shell binary
+/// (formally verified reversible ops) or falls back to the system shell.
+let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t<msg>) => {
+  let vs = model.valenceShell
+  switch msg {
+  | SetShellCategory(cat) => ({...model, valenceShell: {...vs, activeCategory: cat}}, Tea_Cmd.none)
+  | UpdateInput(value) => (
+      {
+        ...model,
+        valenceShell: {
+          ...vs,
+          inputLine: value,
+          completionsVisible: String.length(value) > 0,
+        },
+      },
+      Tea_Cmd.none,
+    )
+  | SubmitInput => {
+      let input = String.trim(vs.inputLine)
+      if String.length(input) === 0 {
+        (model, Tea_Cmd.none)
+      } else {
+        // Check approval gate
+        switch vs.approvalGate {
+        | GateDisabled => (
+            {
+              ...model,
+              valenceShell: {
+                ...vs,
+                inputLine: "",
+                commandHistory: Array.concat(vs.commandHistory, [input]),
+                historyIndex: -1,
+                completionsVisible: false,
+                claudeCodeActive: input === "claude" || String.startsWith(input, "claude "),
+              },
+            },
+            ValenceShellCmd.sendInput(input ++ "\n", result => ValenceShell(PtyOutput(
+              switch result {
+              | Ok(s) => s
+              | Error(e) => e
+              },
+              switch result {
+              | Ok(_) => true
+              | Error(_) => false
+              },
+            ))),
+          )
+        | GateEnabled | GateLearning => {
+            // Check whitelist for learning mode
+            let isWhitelisted =
+              vs.approvalGate === GateLearning &&
+                Array.some(vs.approvedCommands, cmd => cmd === input)
+            if isWhitelisted {
+              // Auto-approve whitelisted commands
+              (
+                {
+                  ...model,
+                  valenceShell: {
+                    ...vs,
+                    inputLine: "",
+                    commandHistory: Array.concat(vs.commandHistory, [input]),
+                    historyIndex: -1,
+                    completionsVisible: false,
+                  },
+                },
+                ValenceShellCmd.sendInput(input ++ "\n", result => ValenceShell(PtyOutput(
+                  switch result {
+                  | Ok(s) => s
+                  | Error(e) => e
+                  },
+                  switch result {
+                  | Ok(_) => true
+                  | Error(_) => false
+                  },
+                ))),
+              )
+            } else {
+              // Queue for approval
+              let pending: pendingCommand = {
+                command: input,
+                author: "child",
+                submittedAt: 0.0,
+              }
+              (
+                {
+                  ...model,
+                  valenceShell: {
+                    ...vs,
+                    inputLine: "",
+                    pendingCommands: Array.concat(vs.pendingCommands, [pending]),
+                    completionsVisible: false,
+                  },
+                },
+                Tea_Cmd.none,
+              )
+            }
+          }
+        }
+      }
+    }
+  | SelectCompletion(completion) => (
+      {
+        ...model,
+        valenceShell: {
+          ...vs,
+          inputLine: completion,
+          completionsVisible: false,
+        },
+      },
+      Tea_Cmd.none,
+    )
+  | ToggleCompletions => (
+      {...model, valenceShell: {...vs, completionsVisible: !vs.completionsVisible}},
+      Tea_Cmd.none,
+    )
+  | PtySpawned(Ok(_sessionId)) => (
+      {...model, valenceShell: {...vs, ptyConnected: true, error: None}},
+      Tea_Cmd.none,
+    )
+  | PtySpawned(Error(err)) => (
+      {...model, valenceShell: {...vs, ptyConnected: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | PtyOutput(content, isStdout) => {
+      let line: terminalLine = {content, isStdout, timestamp: 0.0}
+      let buffer = Array.concat(vs.outputBuffer, [line])
+      // Ring buffer: keep last 1000 lines
+      let trimmed = if Array.length(buffer) > 1000 {
+        Array.sliceToEnd(buffer, ~start=Array.length(buffer) - 1000)
+      } else {
+        buffer
+      }
+      ({...model, valenceShell: {...vs, outputBuffer: trimmed}}, Tea_Cmd.none)
+    }
+  | PtyExited => (
+      {...model, valenceShell: {...vs, ptyConnected: false, claudeCodeActive: false}},
+      Tea_Cmd.none,
+    )
+  | CheckValenceAvailability => (
+      model,
+      ValenceShellCmd.checkValenceAvailability(result => ValenceShell(ValenceAvailabilityResult(result))),
+    )
+  | ValenceAvailabilityResult(Ok(_version)) => (
+      {
+        ...model,
+        valenceShell: {
+          ...vs,
+          valenceAvailable: true,
+          backend: ValenceShell,
+        },
+      },
+      Tea_Cmd.none,
+    )
+  | ValenceAvailabilityResult(Error(_)) => (
+      {...model, valenceShell: {...vs, valenceAvailable: false}},
+      Tea_Cmd.none,
+    )
+  | LaunchClaudeCode => (
+      {
+        ...model,
+        valenceShell: {
+          ...vs,
+          inputLine: "",
+          commandHistory: Array.concat(vs.commandHistory, ["claude"]),
+          claudeCodeActive: true,
+        },
+      },
+      ValenceShellCmd.sendInput("claude\n", result => ValenceShell(PtyOutput(
+        switch result {
+        | Ok(s) => s
+        | Error(e) => e
+        },
+        switch result {
+        | Ok(_) => true
+        | Error(_) => false
+        },
+      ))),
+    )
+  | StartRecordingSession => (
+      {...model, valenceShell: {...vs, loading: true}},
+      ValenceShellCmd.startRecording("session", result => ValenceShell(RecordingStarted(result))),
+    )
+  | StopRecordingSession => (
+      {...model, valenceShell: {...vs, loading: true}},
+      ValenceShellCmd.stopRecording(result => ValenceShell(RecordingStopped(result))),
+    )
+  | RecordingStarted(Ok(_path)) => (
+      {
+        ...model,
+        valenceShell: {
+          ...vs,
+          recording: RecordingActive(0.0),
+          loading: false,
+          error: None,
+        },
+      },
+      Tea_Cmd.none,
+    )
+  | RecordingStarted(Error(err)) => (
+      {...model, valenceShell: {...vs, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RecordingStopped(Ok(_path)) => (
+      {
+        ...model,
+        valenceShell: {
+          ...vs,
+          recording: RecordingIdle,
+          loading: false,
+          error: None,
+        },
+      },
+      // Reload the recordings list after stopping
+      ValenceShellCmd.listRecordings(result => ValenceShell(RecordingsLoaded(result))),
+    )
+  | RecordingStopped(Error(err)) => (
+      {
+        ...model,
+        valenceShell: {
+          ...vs,
+          recording: RecordingIdle,
+          loading: false,
+          error: Some(err),
+        },
+      },
+      Tea_Cmd.none,
+    )
+  | LoadRecordings => (
+      {...model, valenceShell: {...vs, loading: true}},
+      ValenceShellCmd.listRecordings(result => ValenceShell(RecordingsLoaded(result))),
+    )
+  | RecordingsLoaded(Ok(_json)) => {
+      // TODO: Deserialise recordings array from JSON.
+      ({...model, valenceShell: {...vs, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  | RecordingsLoaded(Error(err)) => (
+      {...model, valenceShell: {...vs, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | DeleteRecordingById(id) => (
+      model,
+      ValenceShellCmd.deleteRecording(id, result => ValenceShell(RecordingDeleted(result))),
+    )
+  | RecordingDeleted(Ok(_)) => (
+      model,
+      ValenceShellCmd.listRecordings(result => ValenceShell(RecordingsLoaded(result))),
+    )
+  | RecordingDeleted(Error(err)) => (
+      {...model, valenceShell: {...vs, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ExportRecordingAs(id, format) => (
+      {...model, valenceShell: {...vs, loading: true}},
+      ValenceShellCmd.exportRecording(id, format, result => ValenceShell(RecordingExported(result))),
+    )
+  | RecordingExported(Ok(_path)) => (
+      {...model, valenceShell: {...vs, loading: false, error: None}},
+      Tea_Cmd.none,
+    )
+  | RecordingExported(Error(err)) => (
+      {...model, valenceShell: {...vs, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | CreateCheckpointWithLabel(label) => (
+      {...model, valenceShell: {...vs, loading: true}},
+      ValenceShellCmd.createCheckpoint(label, result => ValenceShell(CheckpointCreated(result))),
+    )
+  | CheckpointCreated(Ok(_json)) => {
+      // TODO: Deserialise checkpoint from JSON and add to state.
+      (
+        {...model, valenceShell: {...vs, loading: false, error: None}},
+        ValenceShellCmd.listCheckpoints(result => ValenceShell(CheckpointsLoaded(result))),
+      )
+    }
+  | CheckpointCreated(Error(err)) => (
+      {...model, valenceShell: {...vs, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RestoreCheckpointById(id) => (
+      {...model, valenceShell: {...vs, loading: true}},
+      ValenceShellCmd.restoreCheckpoint(id, result => ValenceShell(CheckpointRestored(result))),
+    )
+  | CheckpointRestored(Ok(_)) => (
+      {...model, valenceShell: {...vs, loading: false, error: None}},
+      Tea_Cmd.none,
+    )
+  | CheckpointRestored(Error(err)) => (
+      {...model, valenceShell: {...vs, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | LoadCheckpoints => (
+      {...model, valenceShell: {...vs, loading: true}},
+      ValenceShellCmd.listCheckpoints(result => ValenceShell(CheckpointsLoaded(result))),
+    )
+  | CheckpointsLoaded(Ok(_json)) => {
+      // TODO: Deserialise checkpoints array from JSON.
+      ({...model, valenceShell: {...vs, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  | CheckpointsLoaded(Error(err)) => (
+      {...model, valenceShell: {...vs, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ScreenshotTerminal => (
+      model,
+      ValenceShellCmd.screenshotTerminal(result => ValenceShell(ScreenshotCaptured(result))),
+    )
+  | ScreenshotCaptured(Ok(_path)) => (model, Tea_Cmd.none)
+  | ScreenshotCaptured(Error(err)) => (
+      {...model, valenceShell: {...vs, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SetApprovalGate(gate) => (
+      {...model, valenceShell: {...vs, approvalGate: gate}},
+      Tea_Cmd.none,
+    )
+  | ApproveCommand(idx) => {
+      let cmd = vs.pendingCommands->Array.get(idx)
+      switch cmd {
+      | Some(pending) => {
+          let remaining = Array.filterWithIndex(vs.pendingCommands, (_c, i) => i !== idx)
+          let newApproved = if vs.approvalGate === GateLearning {
+            Array.concat(vs.approvedCommands, [pending.command])
+          } else {
+            vs.approvedCommands
+          }
+          (
+            {
+              ...model,
+              valenceShell: {
+                ...vs,
+                pendingCommands: remaining,
+                approvedCommands: newApproved,
+                commandHistory: Array.concat(vs.commandHistory, [pending.command]),
+              },
+            },
+            ValenceShellCmd.sendInput(pending.command ++ "\n", result => ValenceShell(PtyOutput(
+              switch result {
+              | Ok(s) => s
+              | Error(e) => e
+              },
+              switch result {
+              | Ok(_) => true
+              | Error(_) => false
+              },
+            ))),
+          )
+        }
+      | None => (model, Tea_Cmd.none)
+      }
+    }
+  | RejectCommand(idx) => {
+      let remaining = Array.filterWithIndex(vs.pendingCommands, (_c, i) => i !== idx)
+      ({...model, valenceShell: {...vs, pendingCommands: remaining}}, Tea_Cmd.none)
+    }
+  | ToggleSplitView => (
+      {...model, valenceShell: {...vs, splitView: !vs.splitView}},
+      Tea_Cmd.none,
+    )
+  | DismissError => ({...model, valenceShell: {...vs, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// STATE TRANSITION: Game Preview
+/// Manages the live IDApTIK game preview — dev server connection,
+/// game loop control (pause/resume/step), overlay toggles, gameplay
+/// recording, zoom, multiplayer view, and render statistics.
+let updateGamePreview = (model: model, msg: gamePreviewMsg): (model, Tea_Cmd.t<msg>) => {
+  let gp = model.gamePreview
+  switch msg {
+  | SetPreviewCategory(cat) => ({...model, gamePreview: {...gp, activeCategory: cat}}, Tea_Cmd.none)
+  | CheckDevServer => (
+      {...model, gamePreview: {...gp, loading: true}},
+      GamePreviewCmd.checkDevServer(gp.devServerUrl, result => GamePreview(DevServerResult(result))),
+    )
+  | DevServerResult(Ok(_)) => (
+      {...model, gamePreview: {...gp, devServerConnected: true, loading: false, error: None}},
+      Tea_Cmd.none,
+    )
+  | DevServerResult(Error(err)) => (
+      {...model, gamePreview: {...gp, devServerConnected: false, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | PauseGame => (
+      {...model, gamePreview: {...gp, execution: GamePaused}},
+      GamePreviewCmd.controlGameLoop("pause", result => GamePreview(GameControlResult(result))),
+    )
+  | ResumeGame => (
+      {...model, gamePreview: {...gp, execution: GameRunning}},
+      GamePreviewCmd.controlGameLoop("resume", result => GamePreview(GameControlResult(result))),
+    )
+  | StepFrame => (
+      {...model, gamePreview: {...gp, execution: GameStepping}},
+      GamePreviewCmd.controlGameLoop("step", result => GamePreview(GameControlResult(result))),
+    )
+  | GameControlResult(Ok(_)) => (model, Tea_Cmd.none)
+  | GameControlResult(Error(err)) => (
+      {...model, gamePreview: {...gp, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ToggleOverlay(overlay) => (
+      {
+        ...model,
+        gamePreview: {
+          ...gp,
+          activeOverlays: GamePreviewEngine.toggleOverlay(gp.activeOverlays, overlay),
+        },
+      },
+      Tea_Cmd.none,
+    )
+  | StartGameRecording => (
+      {...model, gamePreview: {...gp, loading: true}},
+      GamePreviewCmd.startGameRecording("gameplay", result => GamePreview(GameRecordingStarted(result))),
+    )
+  | StopGameRecording => (
+      {...model, gamePreview: {...gp, loading: true}},
+      GamePreviewCmd.stopGameRecording(result => GamePreview(GameRecordingStopped(result))),
+    )
+  | GameRecordingStarted(Ok(_)) => (
+      {...model, gamePreview: {...gp, gameRecording: GameRecordingActive(0.0), loading: false, error: None}},
+      Tea_Cmd.none,
+    )
+  | GameRecordingStarted(Error(err)) => (
+      {...model, gamePreview: {...gp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | GameRecordingStopped(Ok(_)) => (
+      {...model, gamePreview: {...gp, gameRecording: GameRecordingIdle, loading: false, error: None}},
+      GamePreviewCmd.listClips(result => GamePreview(ClipsLoaded(result))),
+    )
+  | GameRecordingStopped(Error(err)) => (
+      {...model, gamePreview: {...gp, gameRecording: GameRecordingIdle, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ScreenshotGame => (
+      model,
+      GamePreviewCmd.screenshotGameFrame(result => GamePreview(GameScreenshotCaptured(result))),
+    )
+  | GameScreenshotCaptured(Ok(_)) => (model, Tea_Cmd.none)
+  | GameScreenshotCaptured(Error(err)) => (
+      {...model, gamePreview: {...gp, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SetZoom(level) => {
+      let clamped = if level < 0.25 { 0.25 } else if level > 4.0 { 4.0 } else { level }
+      ({...model, gamePreview: {...gp, zoomLevel: clamped}}, Tea_Cmd.none)
+    }
+  | ToggleMultiplayerView => (
+      {...model, gamePreview: {...gp, multiplayerView: !gp.multiplayerView}},
+      Tea_Cmd.none,
+    )
+  | LoadClips => (
+      {...model, gamePreview: {...gp, loading: true}},
+      GamePreviewCmd.listClips(result => GamePreview(ClipsLoaded(result))),
+    )
+  | ClipsLoaded(Ok(_json)) =>
+    // TODO: Deserialise clips array from JSON.
+    ({...model, gamePreview: {...gp, loading: false, error: None}}, Tea_Cmd.none)
+  | ClipsLoaded(Error(err)) => (
+      {...model, gamePreview: {...gp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | DeleteClip(id) => (
+      model,
+      GamePreviewCmd.deleteClip(id, result => GamePreview(ClipDeleted(result))),
+    )
+  | ClipDeleted(Ok(_)) => (
+      model,
+      GamePreviewCmd.listClips(result => GamePreview(ClipsLoaded(result))),
+    )
+  | ClipDeleted(Error(err)) => (
+      {...model, gamePreview: {...gp, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshStats => (
+      model,
+      GamePreviewCmd.fetchRenderStats(result => GamePreview(StatsReceived(result))),
+    )
+  | StatsReceived(Ok(_json)) =>
+    // TODO: Deserialise render stats from JSON.
+    (model, Tea_Cmd.none)
+  | StatsReceived(Error(err)) => (
+      {...model, gamePreview: {...gp, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ClearDeviceLog => ({...model, gamePreview: {...gp, deviceLog: []}}, Tea_Cmd.none)
+  | DeviceInteractionEvent(entry) => {
+      let log = Array.concat(gp.deviceLog, [entry])
+      let trimmed = if Array.length(log) > 200 {
+        Array.sliceToEnd(log, ~start=Array.length(log) - 200)
+      } else {
+        log
+      }
+      ({...model, gamePreview: {...gp, deviceLog: trimmed}}, Tea_Cmd.none)
+    }
+  | DismissGameError => ({...model, gamePreview: {...gp, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// STATE TRANSITION: VM Inspector
+/// Manages the reversible VM visual debugger — step forward/backward,
+/// breakpoints, timeline navigation, and state export.
+let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<msg>) => {
+  let vm = model.vmInspector
+  switch msg {
+  | SetInspectorCategory(cat) => ({...model, vmInspector: {...vm, activeCategory: cat}}, Tea_Cmd.none)
+  | ReadVmState => (
+      {...model, vmInspector: {...vm, loading: true}},
+      switch vm.connection {
+      | VmFileConnection(path) =>
+        VmInspectorCmd.readVmStateFromFile(path, result => VmInspector(VmStateReceived(result)))
+      | VmLiveConnection | VmDisconnected =>
+        VmInspectorCmd.readVmState(result => VmInspector(VmStateReceived(result)))
+      },
+    )
+  | VmStateReceived(Ok(_json)) =>
+    // TODO: Deserialise VM state (pc, stack, memory, instructions) from JSON.
+    ({...model, vmInspector: {...vm, loading: false, error: None}}, Tea_Cmd.none)
+  | VmStateReceived(Error(err)) => (
+      {...model, vmInspector: {...vm, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | StepForward => (
+      {...model, vmInspector: {...vm, loading: true}},
+      VmInspectorCmd.stepForward(result => VmInspector(StepResult(result))),
+    )
+  | StepBackward => (
+      {...model, vmInspector: {...vm, loading: true}},
+      VmInspectorCmd.stepBackward(result => VmInspector(StepResult(result))),
+    )
+  | StepResult(Ok(_json)) => {
+      // TODO: Deserialise new VM state after step, add to history.
+      let newStep = vm.totalSteps + 1
+      ({...model, vmInspector: {...vm, loading: false, totalSteps: newStep, error: None}}, Tea_Cmd.none)
+    }
+  | StepResult(Error(err)) => (
+      {...model, vmInspector: {...vm, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RunVm => (
+      {...model, vmInspector: {...vm, running: true}},
+      VmInspectorCmd.runToBreakpoint(result => VmInspector(RunResult(result))),
+    )
+  | PauseVm => ({...model, vmInspector: {...vm, running: false}}, Tea_Cmd.none)
+  | RunResult(Ok(_json)) =>
+    // TODO: Deserialise state at breakpoint/end.
+    ({...model, vmInspector: {...vm, running: false, error: None}}, Tea_Cmd.none)
+  | RunResult(Error(err)) => (
+      {...model, vmInspector: {...vm, running: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ResetVm => (
+      {
+        ...model,
+        vmInspector: {
+          ...vm,
+          pc: 0,
+          stack: [],
+          history: [],
+          timelinePosition: 0,
+          totalSteps: 0,
+          running: false,
+          portLog: [],
+          tierCounts: [0, 0, 0, 0, 0],
+        },
+      },
+      Tea_Cmd.none,
+    )
+  | ToggleBreakpoint(idx) => {
+      let hasIt = Array.some(vm.breakpoints, bp =>
+        switch bp {
+        | BreakAtInstruction(i) => i === idx
+        | _ => false
+        }
+      )
+      let newBps = if hasIt {
+        Array.filter(vm.breakpoints, bp =>
+          switch bp {
+          | BreakAtInstruction(i) => i !== idx
+          | _ => true
+          }
+        )
+      } else {
+        Array.concat(vm.breakpoints, [BreakAtInstruction(idx)])
+      }
+      let newInstructions = Array.map(vm.instructions, instr =>
+        if instr.index === idx {
+          {...instr, hasBreakpoint: !instr.hasBreakpoint}
+        } else {
+          instr
+        }
+      )
+      (
+        {...model, vmInspector: {...vm, breakpoints: newBps, instructions: newInstructions}},
+        Tea_Cmd.none,
+      )
+    }
+  | SeekTimeline(pos) => {
+      let maxPos = Array.length(vm.history) - 1
+      let clamped = if pos < 0 { 0 } else if pos > maxPos { maxPos } else { pos }
+      ({...model, vmInspector: {...vm, timelinePosition: clamped}}, Tea_Cmd.none)
+    }
+  | ExportSnapshot => (
+      model,
+      VmInspectorCmd.exportSnapshot(result => VmInspector(SnapshotExported(result))),
+    )
+  | SnapshotExported(Ok(_)) => (model, Tea_Cmd.none)
+  | SnapshotExported(Error(err)) => (
+      {...model, vmInspector: {...vm, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ToggleMultiVm => (
+      {...model, vmInspector: {...vm, multiVmView: !vm.multiVmView}},
+      Tea_Cmd.none,
+    )
+  | DismissVmError => ({...model, vmInspector: {...vm, error: None}}, Tea_Cmd.none)
+  }
+}
+
 /// ORCHESTRATOR: The main entry point for state updates.
 /// Routes each message to its domain-specific sub-updater, then applies
 /// contractile evaluation as a post-processing cognitive governance step.
@@ -4606,6 +5360,9 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | PanicAttack(subMsg) => updatePanicAttack(model, subMsg)
   | MassPanic(subMsg) => updateMassPanic(model, subMsg)
   | Tsdm(subMsg) => updateTsdm(model, subMsg)
+  | ValenceShell(subMsg) => updateValenceShell(model, subMsg)
+  | GamePreview(subMsg) => updateGamePreview(model, subMsg)
+  | VmInspector(subMsg) => updateVmInspector(model, subMsg)
   | Undo => {
       // Pop from undo stack, push current to redo.
       // For now, undo/redo stacks store serialised JSON strings.

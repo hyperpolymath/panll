@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# DLC Workshop Panel Clade — Create, test, and package puzzle packs
+
+[clade-metadata]
+id = "dlc-workshop"
+name = "DLC Workshop"
+short-name = "DLC"
+version = "1.0.0"
+kind = "builder"
+icon = "puzzle"
+description = "Create, test, and package DLC puzzle packs — VM instruction composer, solution test runner, difficulty classification, asset bundling."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "PuzzleEditor",
+  "VMInstructionComposer",
+  "SolutionTestRunner",
+  "DifficultyClassification",
+  "AssetBundling",
+  "PuzzleImportExport",
+  "PuzzleChainEditor",
+]
+
+[clade-panel-integration]
+panel-id = "PanelDlcWorkshop"
+model-module = "DlcWorkshopModel"
+component-module = "DlcWorkshop"
+command-module = "DlcWorkshopCmd"
+
+[clade-dependencies]
+dlc-directory = "dlc/"
+test-suite = "dlc/idaptik-reversible/"
+test-count = 42

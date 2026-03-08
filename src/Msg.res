@@ -826,6 +826,33 @@ type massPanicMsg =
   | NotificationGenerated(result<string, string>)
   /// Dismiss error.
   | DismissMassPanicError
+  // -- Sub-view navigation --
+  /// Switch active sub-view (scan / imaging / temporal).
+  | SwitchView(MassPanicModel.massPanicView)
+  // -- Imaging (fNIRS-style spatial health map) --
+  /// Build system image from latest assemblyline results.
+  | BuildImage
+  /// System image built/loaded.
+  | ImageLoaded(result<string, string>)
+  /// Import a panll.system-image.v0 JSON file.
+  | ImportImageFile
+  /// Image file loaded.
+  | ImageFileLoaded(result<string, string>)
+  // -- Temporal navigation --
+  /// List temporal snapshots.
+  | ListSnapshots
+  /// Snapshots listed.
+  | SnapshotsLoaded(result<string, string>)
+  /// Select a snapshot for comparison (slot 0 or 1).
+  | SelectSnapshot(int, int)
+  /// Diff selected snapshots.
+  | DiffSnapshots
+  /// Diff computed.
+  | DiffLoaded(result<string, string>)
+  /// Take a snapshot of the current image.
+  | TakeSnapshot(string)
+  /// Snapshot taken.
+  | SnapshotTaken(result<string, string>)
 
 /// TSDM directive panel messages — axis reordering, tier customisation,
 /// cleanup configuration, work item aggregation, and directive persistence.
@@ -872,6 +899,171 @@ type tsdmMsg =
   | WorkItemsCollected(result<string, string>)
   /// Dismiss error.
   | DismissTsdmError
+
+/// Valence Shell messages — terminal PTY lifecycle, input handling,
+/// session recording, checkpoint management, approval gate, and Claude
+/// Code integration for the embedded terminal panel.
+type valenceShellMsg =
+  /// Switch the active category tab.
+  | SetShellCategory(valenceShellCategory)
+  /// Update the text input line.
+  | UpdateInput(string)
+  /// Submit the current input line (Enter key).
+  | SubmitInput
+  /// Select a completion from the popup.
+  | SelectCompletion(string)
+  /// Toggle the completions popup visibility.
+  | ToggleCompletions
+  /// PTY spawned (or failed).
+  | PtySpawned(result<string, string>)
+  /// Terminal output received from the PTY.
+  | PtyOutput(string, bool)
+  /// PTY exited.
+  | PtyExited
+  /// Check if Valence shell binary is available.
+  | CheckValenceAvailability
+  /// Valence availability result.
+  | ValenceAvailabilityResult(result<string, string>)
+  /// Launch Claude Code in the terminal.
+  | LaunchClaudeCode
+  /// Start recording a terminal session.
+  | StartRecordingSession
+  /// Stop the current recording.
+  | StopRecordingSession
+  /// Recording started (or failed).
+  | RecordingStarted(result<string, string>)
+  /// Recording stopped and saved (or failed).
+  | RecordingStopped(result<string, string>)
+  /// Load the list of saved recordings.
+  | LoadRecordings
+  /// Recordings loaded (or failed).
+  | RecordingsLoaded(result<string, string>)
+  /// Delete a recording by ID.
+  | DeleteRecordingById(string)
+  /// Recording deleted (or failed).
+  | RecordingDeleted(result<string, string>)
+  /// Export a recording in the given format (html, json, cast).
+  | ExportRecordingAs(string, string)
+  /// Recording exported (or failed).
+  | RecordingExported(result<string, string>)
+  /// Create a Valence filesystem checkpoint with the given label.
+  | CreateCheckpointWithLabel(string)
+  /// Checkpoint created (or failed).
+  | CheckpointCreated(result<string, string>)
+  /// Restore a checkpoint by ID.
+  | RestoreCheckpointById(string)
+  /// Checkpoint restored (or failed).
+  | CheckpointRestored(result<string, string>)
+  /// Load the list of checkpoints.
+  | LoadCheckpoints
+  /// Checkpoints loaded (or failed).
+  | CheckpointsLoaded(result<string, string>)
+  /// Take a screenshot of the terminal state.
+  | ScreenshotTerminal
+  /// Screenshot captured (or failed).
+  | ScreenshotCaptured(result<string, string>)
+  /// Set the approval gate mode.
+  | SetApprovalGate(approvalGateMode)
+  /// Approve a pending command by index.
+  | ApproveCommand(int)
+  /// Reject a pending command by index.
+  | RejectCommand(int)
+  /// Toggle split view mode.
+  | ToggleSplitView
+  /// Dismiss the error banner.
+  | DismissError
+
+/// Game Preview messages — dev server lifecycle, game loop control,
+/// overlay management, gameplay recording, and render stats for the
+/// live IDApTIK game preview panel.
+type gamePreviewMsg =
+  /// Switch the active category tab.
+  | SetPreviewCategory(gamePreviewCategory)
+  /// Check if the Vite dev server is running.
+  | CheckDevServer
+  /// Dev server check result.
+  | DevServerResult(result<string, string>)
+  /// Pause the game loop.
+  | PauseGame
+  /// Resume the game loop.
+  | ResumeGame
+  /// Step one frame forward (when paused).
+  | StepFrame
+  /// Game control result.
+  | GameControlResult(result<string, string>)
+  /// Toggle a game overlay on/off.
+  | ToggleOverlay(gameOverlay)
+  /// Start recording gameplay to WebM.
+  | StartGameRecording
+  /// Stop gameplay recording.
+  | StopGameRecording
+  /// Gameplay recording started (or failed).
+  | GameRecordingStarted(result<string, string>)
+  /// Gameplay recording stopped (or failed).
+  | GameRecordingStopped(result<string, string>)
+  /// Take a screenshot of the current game frame.
+  | ScreenshotGame
+  /// Game screenshot captured (or failed).
+  | GameScreenshotCaptured(result<string, string>)
+  /// Set the zoom level.
+  | SetZoom(float)
+  /// Toggle multiplayer/co-op view.
+  | ToggleMultiplayerView
+  /// Load saved gameplay clips.
+  | LoadClips
+  /// Clips loaded (or failed).
+  | ClipsLoaded(result<string, string>)
+  /// Delete a gameplay clip by ID.
+  | DeleteClip(string)
+  /// Clip deleted (or failed).
+  | ClipDeleted(result<string, string>)
+  /// Refresh render statistics.
+  | RefreshStats
+  /// Render stats received.
+  | StatsReceived(result<string, string>)
+  /// Clear the device interaction log.
+  | ClearDeviceLog
+  /// A device interaction event arrived from the game.
+  | DeviceInteractionEvent(deviceInteraction)
+  /// Dismiss the error banner.
+  | DismissGameError
+
+/// VM Inspector messages — VM state reading, step execution, breakpoint
+/// management, timeline navigation, and state export for the reversible
+/// VM visual debugger panel.
+type vmInspectorMsg =
+  /// Switch the active category tab.
+  | SetInspectorCategory(vmInspectorCategory)
+  /// Read the current VM state from the running game.
+  | ReadVmState
+  /// VM state received.
+  | VmStateReceived(result<string, string>)
+  /// Step the VM forward by one instruction.
+  | StepForward
+  /// Step the VM backward by one instruction (reverse execution).
+  | StepBackward
+  /// Step result received.
+  | StepResult(result<string, string>)
+  /// Run the VM until the next breakpoint or end.
+  | RunVm
+  /// Pause the running VM.
+  | PauseVm
+  /// Run/pause result.
+  | RunResult(result<string, string>)
+  /// Reset the VM to initial state.
+  | ResetVm
+  /// Toggle a breakpoint at the given instruction index.
+  | ToggleBreakpoint(int)
+  /// Seek to a position in the execution timeline.
+  | SeekTimeline(int)
+  /// Export the current VM state as JSON.
+  | ExportSnapshot
+  /// Snapshot exported (or failed).
+  | SnapshotExported(result<string, string>)
+  /// Toggle multi-VM view (for multiplayer debugging).
+  | ToggleMultiVm
+  /// Dismiss the error banner.
+  | DismissVmError
 
 /// Keybindings messages — rebinding, recording, reset.
 type keybindingsMsg =
@@ -924,6 +1116,9 @@ type msg =
   | PanicAttack(panicAttackMsg) // Stress testing and bug detection
   | MassPanic(massPanicMsg) // Organisation-scale batch scanning
   | Tsdm(tsdmMsg) // TSDM directive — triaxial priority ordering
+  | ValenceShell(valenceShellMsg) // Embedded terminal with Claude Code
+  | GamePreview(gamePreviewMsg) // Live IDApTIK game preview
+  | VmInspector(vmInspectorMsg) // Reversible VM visual debugger
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

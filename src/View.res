@@ -160,6 +160,9 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelPanicAttack) => PanicAttack.view(model.panicAttack)
   | Some(PanelMassPanic) => MassPanic.view(model.massPanic)
   | Some(PanelTsdm) => Tsdm.view(model.tsdm)
+  | Some(PanelValenceShell) => ValenceShell.view(model.valenceShell)
+  | Some(PanelGamePreview) => GamePreview.view(model.gamePreview)
+  | Some(PanelVmInspector) => VmInspector.view(model.vmInspector)
   }
 }
 

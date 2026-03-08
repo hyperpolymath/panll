@@ -17,6 +17,8 @@ type massPanicCapability =
   | NotificationPipeline
   | RepoDiscovery
   | CacheManagement
+  | SystemImaging
+  | TemporalNavigation
 
 type massPanicModuleConfig = {
   id: string,
@@ -32,7 +34,7 @@ let config: massPanicModuleConfig = {
   id: "mass-panic",
   name: "Mass Panic",
   version: "2.1.0",
-  description: "Organisation-scale batch scanning — assemblyline + BLAKE3 + verisimdb + delta",
+  description: "Organisation-scale batch scanning — assemblyline + BLAKE3 + imaging + temporal + verisimdb",
   binaryName: "panic-attack",
   icon: Some("zap-off"), // differentiate from single-repo "zap"
   capabilities: [
@@ -43,6 +45,8 @@ let config: massPanicModuleConfig = {
     NotificationPipeline,
     RepoDiscovery,
     CacheManagement,
+    SystemImaging,
+    TemporalNavigation,
   ],
 }
 
@@ -58,4 +62,6 @@ let capabilityLabel = (cap: massPanicCapability): string =>
   | NotificationPipeline => "Notification Pipeline (markdown + GitHub)"
   | RepoDiscovery => "Repository Discovery (.git detection)"
   | CacheManagement => "Fingerprint Cache Management"
+  | SystemImaging => "System Health Imaging (fNIRS-style spatial risk map)"
+  | TemporalNavigation => "Temporal Navigation (time-series diff + trend detection)"
   }

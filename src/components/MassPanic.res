@@ -349,6 +349,500 @@ let sortBtn = (
   )
 }
 
+/// Sub-view tab button.
+let viewTab = (
+  targetView: massPanicView,
+  lbl: string,
+  activeView: massPanicView,
+): Tea_Vdom.t<msg> => {
+  let active = activeView == targetView
+  button(
+    list{
+      Attrs.class_(
+        `px-3 py-1.5 rounded-t font-mono text-xs border-b-2 ${active
+          ? "bg-gray-800 text-white border-amber-500"
+          : "bg-gray-900 text-gray-500 border-transparent hover:text-gray-300"}`,
+      ),
+      Events.onClick(MassPanic(SwitchView(targetView))),
+    },
+    list{text(lbl)},
+  )
+}
+
+/// Risk intensity bar (horizontal coloured bar for a node's risk).
+let riskBar = (intensity: float): Tea_Vdom.t<msg> => {
+  let pct = Int.toString(Int.fromFloat(intensity *. 100.0))
+  let colour = if intensity > 0.7 {
+    "bg-red-500"
+  } else if intensity > 0.4 {
+    "bg-orange-500"
+  } else if intensity > 0.2 {
+    "bg-amber-400"
+  } else {
+    "bg-emerald-500"
+  }
+  div(
+    list{Attrs.class_("w-20 h-2 bg-gray-700 rounded overflow-hidden")},
+    list{
+      div(
+        list{Attrs.class_(`h-full ${colour} w-[${pct}%]`)},
+        list{},
+      ),
+    },
+  )
+}
+
+/// Imaging sub-view — fNIRS-style spatial health map.
+let renderImagingView = (state: massPanicState): Tea_Vdom.t<msg> => {
+  div(
+    list{Attrs.class_("flex flex-col h-full overflow-hidden")},
+    list{
+      // Toolbar
+      div(
+        list{Attrs.class_("flex items-center gap-3 px-4 py-2 border-b border-gray-700")},
+        list{
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs rounded bg-cyan-700 hover:bg-cyan-600 text-white font-mono disabled:opacity-50",
+              ),
+              Attrs.disabled(state.imagingLoading || state.reposDirectory == ""),
+              Events.onClick(MassPanic(BuildImage)),
+            },
+            list{text(if state.imagingLoading { "building..." } else { "build image" })},
+          ),
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 text-gray-200 font-mono",
+              ),
+              Events.onClick(MassPanic(ImportImageFile)),
+            },
+            list{text("import JSON")},
+          ),
+          switch state.currentImage {
+          | Some(img) =>
+            div(
+              list{Attrs.class_("flex gap-3 ml-auto text-xs font-mono text-gray-400")},
+              list{
+                span(list{}, list{text(`${Int.toString(img.nodeCount)} nodes`)}),
+                span(list{}, list{text(`${Int.toString(img.edgeCount)} edges`)}),
+                span(
+                  list{
+                    Attrs.class_(
+                      if img.globalHealth > 0.7 {
+                        "text-emerald-400"
+                      } else if img.globalHealth > 0.4 {
+                        "text-amber-400"
+                      } else {
+                        "text-red-400"
+                      },
+                    ),
+                  },
+                  list{text(`health: ${Float.toFixed(img.globalHealth *. 100.0, ~digits=1)}%`)},
+                ),
+                span(list{}, list{text(`risk: ${Float.toFixed(img.globalRisk *. 100.0, ~digits=1)}%`)}),
+                span(list{}, list{text(`${Int.toString(img.totalCritical)} critical`)}),
+              },
+            )
+          | None => noNode
+          },
+        },
+      ),
+      // Risk distribution bar
+      switch state.currentImage {
+      | Some(img) =>
+        div(
+          list{Attrs.class_("flex items-center gap-1 px-4 py-2 border-b border-gray-700 text-xs")},
+          list{
+            span(list{Attrs.class_("text-gray-500 mr-2")}, list{text("Distribution:")}),
+            span(list{Attrs.class_("text-emerald-400 font-mono")}, list{text(`${Int.toString(img.riskDistribution.healthy)} healthy`)}),
+            span(list{Attrs.class_("text-blue-400 font-mono")}, list{text(`${Int.toString(img.riskDistribution.low)} low`)}),
+            span(list{Attrs.class_("text-amber-400 font-mono")}, list{text(`${Int.toString(img.riskDistribution.moderate)} mod`)}),
+            span(list{Attrs.class_("text-orange-400 font-mono")}, list{text(`${Int.toString(img.riskDistribution.high)} high`)}),
+            span(list{Attrs.class_("text-red-400 font-mono")}, list{text(`${Int.toString(img.riskDistribution.critical)} crit`)}),
+          },
+        )
+      | None => noNode
+      },
+      // Node grid
+      div(
+        list{Attrs.class_("flex-1 overflow-y-auto")},
+        switch state.currentImage {
+        | None =>
+          list{
+            div(
+              list{Attrs.class_("flex items-center justify-center h-32 text-gray-500 text-sm")},
+              list{text("No system image. Click 'build image' or 'import JSON' to generate one.")},
+            ),
+          }
+        | Some(img) =>
+          img.nodes
+          ->Array.map(node =>
+            div(
+              list{
+                Attrs.class_(
+                  "flex items-center gap-3 py-2 px-4 border-b border-gray-700 hover:bg-gray-800/50",
+                ),
+              },
+              list{
+                // Health indicator
+                span(
+                  list{
+                    Attrs.class_(
+                      `w-2 h-2 rounded-full ${if node.healthScore > 0.7 {
+                        "bg-emerald-500"
+                      } else if node.healthScore > 0.4 {
+                        "bg-amber-500"
+                      } else {
+                        "bg-red-500"
+                      }}`,
+                    ),
+                  },
+                  list{},
+                ),
+                // Name
+                div(
+                  list{Attrs.class_("flex-1 min-w-0")},
+                  list{
+                    div(
+                      list{Attrs.class_("text-sm text-gray-200 font-mono truncate")},
+                      list{text(node.name)},
+                    ),
+                    if Array.length(node.topCategories) > 0 {
+                      div(
+                        list{Attrs.class_("text-xs text-gray-500 font-mono truncate")},
+                        list{text(Array.join(node.topCategories, ", "))},
+                      )
+                    } else {
+                      noNode
+                    },
+                  },
+                ),
+                // Risk bar
+                riskBar(node.riskIntensity),
+                // Metrics
+                span(
+                  list{Attrs.class_("text-xs text-gray-400 font-mono min-w-[60px] text-right")},
+                  list{text(`${Float.toFixed(node.healthScore *. 100.0, ~digits=0)}%`)},
+                ),
+                span(
+                  list{Attrs.class_("text-xs text-gray-500 font-mono min-w-[40px] text-right")},
+                  list{text(`${Int.toString(node.weakPointCount)}wp`)},
+                ),
+                if node.criticalCount > 0 {
+                  span(
+                    list{Attrs.class_("text-xs text-red-400 font-mono")},
+                    list{text(`${Int.toString(node.criticalCount)}C`)},
+                  )
+                } else {
+                  noNode
+                },
+                if node.skipped {
+                  span(
+                    list{Attrs.class_("text-xs text-blue-500")},
+                    list{text("skipped")},
+                  )
+                } else {
+                  noNode
+                },
+              },
+            )
+          )
+          ->List.fromArray
+        },
+      ),
+    },
+  )
+}
+
+/// Temporal sub-view — time-series snapshot navigation.
+let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
+  div(
+    list{Attrs.class_("flex flex-col h-full overflow-hidden")},
+    list{
+      // Toolbar
+      div(
+        list{Attrs.class_("flex items-center gap-3 px-4 py-2 border-b border-gray-700")},
+        list{
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs rounded bg-violet-700 hover:bg-violet-600 text-white font-mono disabled:opacity-50",
+              ),
+              Attrs.disabled(state.temporalLoading),
+              Events.onClick(MassPanic(ListSnapshots)),
+            },
+            list{text(if state.temporalLoading { "loading..." } else { "list snapshots" })},
+          ),
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 text-gray-200 font-mono disabled:opacity-50",
+              ),
+              Attrs.disabled(
+                switch state.selectedSnapshots {
+                | (Some(_), Some(_)) => false
+                | _ => true
+                },
+              ),
+              Events.onClick(MassPanic(DiffSnapshots)),
+            },
+            list{text("diff selected")},
+          ),
+          button(
+            list{
+              Attrs.class_(
+                "px-3 py-1 text-xs rounded bg-emerald-700 hover:bg-emerald-600 text-white font-mono disabled:opacity-50",
+              ),
+              Attrs.disabled(
+                switch state.currentImage {
+                | Some(_) => false
+                | None => true
+                },
+              ),
+              Events.onClick(MassPanic(TakeSnapshot("manual"))),
+            },
+            list{text("take snapshot")},
+          ),
+        },
+      ),
+      // Diff summary (when active)
+      switch state.currentDiff {
+      | Some(diff) =>
+        div(
+          list{Attrs.class_("px-4 py-2 border-b border-gray-700 bg-gray-800")},
+          list{
+            div(
+              list{Attrs.class_("flex items-center gap-4 text-xs font-mono")},
+              list{
+                span(
+                  list{Attrs.class_("text-gray-400")},
+                  list{text(`${diff.fromLabel} → ${diff.toLabel}`)},
+                ),
+                span(
+                  list{
+                    Attrs.class_(
+                      if diff.healthDelta > 0.0 {
+                        "text-emerald-400"
+                      } else if diff.healthDelta < 0.0 {
+                        "text-red-400"
+                      } else {
+                        "text-gray-400"
+                      },
+                    ),
+                  },
+                  list{
+                    text(
+                      `health: ${if diff.healthDelta > 0.0 {
+                        "+"
+                      } else {
+                        ""
+                      }}${Float.toFixed(diff.healthDelta *. 100.0, ~digits=1)}%`,
+                    ),
+                  },
+                ),
+                span(
+                  list{
+                    Attrs.class_(
+                      if diff.weakPointDelta < 0 {
+                        "text-emerald-400"
+                      } else if diff.weakPointDelta > 0 {
+                        "text-red-400"
+                      } else {
+                        "text-gray-400"
+                      },
+                    ),
+                  },
+                  list{
+                    text(
+                      `wp: ${if diff.weakPointDelta > 0 {
+                        "+"
+                      } else {
+                        ""
+                      }}${Int.toString(diff.weakPointDelta)}`,
+                    ),
+                  },
+                ),
+                span(
+                  list{
+                    Attrs.class_(
+                      switch diff.trend {
+                      | "improving" => "text-emerald-400 font-bold"
+                      | "degrading" => "text-red-400 font-bold"
+                      | _ => "text-gray-400"
+                      },
+                    ),
+                  },
+                  list{text(String.toUpperCase(diff.trend))},
+                ),
+                span(
+                  list{Attrs.class_("text-gray-500")},
+                  list{
+                    text(
+                      `${Int.toString(Array.length(diff.improvedNodes))} improved, ${Int.toString(
+                          Array.length(diff.degradedNodes),
+                        )} degraded, ${Int.toString(diff.unchangedCount)} stable`,
+                    ),
+                  },
+                ),
+              },
+            ),
+            // Changed nodes
+            if Array.length(diff.degradedNodes) > 0 {
+              div(
+                list{Attrs.class_("mt-2")},
+                list{
+                  div(
+                    list{Attrs.class_("text-xs text-red-400 font-bold mb-1")},
+                    list{text("Degraded:")},
+                  ),
+                  div(
+                    list{Attrs.class_("max-h-24 overflow-y-auto")},
+                    diff.degradedNodes
+                    ->Array.map(nd =>
+                      div(
+                        list{Attrs.class_("flex items-center gap-2 text-xs font-mono py-0.5")},
+                        list{
+                          span(list{Attrs.class_("text-gray-200")}, list{text(nd.name)}),
+                          span(
+                            list{Attrs.class_("text-red-400")},
+                            list{
+                              text(
+                                `${Float.toFixed(nd.healthDelta *. 100.0, ~digits=1)}% health`,
+                              ),
+                            },
+                          ),
+                          span(
+                            list{Attrs.class_("text-gray-500")},
+                            list{
+                              text(
+                                `${if nd.weakPointDelta > 0 {
+                                  "+"
+                                } else {
+                                  ""
+                                }}${Int.toString(nd.weakPointDelta)} wp`,
+                              ),
+                            },
+                          ),
+                        },
+                      )
+                    )
+                    ->List.fromArray,
+                  ),
+                },
+              )
+            } else {
+              noNode
+            },
+            if Array.length(diff.improvedNodes) > 0 {
+              div(
+                list{Attrs.class_("mt-2")},
+                list{
+                  div(
+                    list{Attrs.class_("text-xs text-emerald-400 font-bold mb-1")},
+                    list{text("Improved:")},
+                  ),
+                  div(
+                    list{Attrs.class_("max-h-24 overflow-y-auto")},
+                    diff.improvedNodes
+                    ->Array.map(nd =>
+                      div(
+                        list{Attrs.class_("flex items-center gap-2 text-xs font-mono py-0.5")},
+                        list{
+                          span(list{Attrs.class_("text-gray-200")}, list{text(nd.name)}),
+                          span(
+                            list{Attrs.class_("text-emerald-400")},
+                            list{
+                              text(
+                                `+${Float.toFixed(nd.healthDelta *. 100.0, ~digits=1)}% health`,
+                              ),
+                            },
+                          ),
+                        },
+                      )
+                    )
+                    ->List.fromArray,
+                  ),
+                },
+              )
+            } else {
+              noNode
+            },
+          },
+        )
+      | None => noNode
+      },
+      // Snapshot timeline list
+      div(
+        list{Attrs.class_("flex-1 overflow-y-auto")},
+        if Array.length(state.snapshots) == 0 {
+          list{
+            div(
+              list{Attrs.class_("flex items-center justify-center h-32 text-gray-500 text-sm")},
+              list{text("No snapshots. Run an image scan and click 'take snapshot', or 'list snapshots' to load existing ones.")},
+            ),
+          }
+        } else {
+          state.snapshots
+          ->Array.map(snap => {
+            let (selA, selB) = state.selectedSnapshots
+            let isSelected =
+              selA == Some(snap.sequence) || selB == Some(snap.sequence)
+            div(
+              list{
+                Attrs.class_(
+                  `flex items-center gap-3 py-2 px-4 border-b border-gray-700 cursor-pointer hover:bg-gray-800/50 ${isSelected
+                    ? "bg-violet-900/20 border-l-2 border-l-violet-500"
+                    : ""}`,
+                ),
+                Events.onClick(MassPanic(SelectSnapshot(snap.sequence, 0))),
+              },
+              list{
+                span(
+                  list{Attrs.class_("text-xs text-gray-500 font-mono min-w-[30px]")},
+                  list{text(`#${Int.toString(snap.sequence)}`)},
+                ),
+                span(
+                  list{Attrs.class_("text-sm text-gray-200 font-mono")},
+                  list{text(snap.label)},
+                ),
+                span(
+                  list{Attrs.class_("text-xs text-gray-500 font-mono")},
+                  list{text(snap.timestamp)},
+                ),
+                span(
+                  list{Attrs.class_("text-xs text-gray-400 font-mono ml-auto")},
+                  list{text(`${Int.toString(snap.nodeCount)} nodes`)},
+                ),
+                span(
+                  list{
+                    Attrs.class_(
+                      `text-xs font-mono ${if snap.globalHealth > 0.7 {
+                        "text-emerald-400"
+                      } else if snap.globalHealth > 0.4 {
+                        "text-amber-400"
+                      } else {
+                        "text-red-400"
+                      }}`,
+                    ),
+                  },
+                  list{text(`${Float.toFixed(snap.globalHealth *. 100.0, ~digits=0)}%`)},
+                ),
+                span(
+                  list{Attrs.class_("text-xs text-gray-500 font-mono")},
+                  list{text(`${Int.toString(snap.totalWeakPoints)}wp`)},
+                ),
+              },
+            )
+          })
+          ->List.fromArray
+        },
+      ),
+    },
+  )
+}
+
 /// Main panel view.
 let view = (state: massPanicState): Tea_Vdom.t<msg> => {
   let filtered = filterAndSort(
@@ -361,7 +855,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex flex-col h-full bg-gray-900 text-gray-100 overflow-hidden")},
     list{
-      // Header bar
+      // Header bar with tab navigation
       div(
         list{
           Attrs.class_(
@@ -376,13 +870,14 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("text-lg font-bold text-red-400")},
                 list{text("mass-panic")},
               ),
-              span(
+              // View tabs
+              div(
+                list{Attrs.class_("flex items-center gap-0 ml-4")},
                 list{
-                  Attrs.class_(
-                    "text-xs text-gray-500 font-mono px-2 py-0.5 rounded bg-gray-700",
-                  ),
+                  viewTab(ScanView, "scan", state.activeView),
+                  viewTab(ImagingView, "imaging", state.activeView),
+                  viewTab(TemporalView, "temporal", state.activeView),
                 },
-                list{text("assemblyline")},
               ),
               if state.incremental {
                 span(
@@ -446,109 +941,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-      // Directory input + controls bar
-      div(
-        list{Attrs.class_("flex items-center gap-2 px-4 py-2 border-b border-gray-700")},
-        list{
-          span(
-            list{Attrs.class_("text-xs text-gray-500")},
-            list{text("Repos:")},
-          ),
-          input(
-            list{
-              Attrs.type_("text"),
-              Attrs.class_(
-                "flex-1 bg-gray-800 text-sm text-gray-200 px-2 py-1 rounded border border-gray-600 font-mono",
-              ),
-              Attrs.placeholder("/path/to/repos/"),
-              Attrs.value(state.reposDirectory),
-              Events.onInput(v => MassPanic(SetReposDirectory(v))),
-            },
-            list{},
-          ),
-          button(
-            list{
-              Attrs.class_(
-                "px-2 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 text-gray-200 font-mono",
-              ),
-              Attrs.disabled(state.reposDirectory == ""),
-              Events.onClick(MassPanic(DiscoverRepos)),
-            },
-            list{text("discover")},
-          ),
-        },
-      ),
-      // Options bar: incremental, storage, filter, sort
-      div(
-        list{
-          Attrs.class_(
-            "flex items-center gap-4 px-4 py-2 border-b border-gray-700 text-xs",
-          ),
-        },
-        list{
-          label(
-            list{Attrs.class_("flex items-center gap-1 text-gray-400 cursor-pointer")},
-            list{
-              input(
-                list{
-                  Attrs.type_("checkbox"),
-                  Attrs.checked(state.incremental),
-                  Attrs.class_("w-3.5 h-3.5 accent-blue-500"),
-                  Events.onClick(MassPanic(ToggleIncremental)),
-                },
-                list{},
-              ),
-              text("Incremental"),
-            },
-          ),
-          label(
-            list{Attrs.class_("flex items-center gap-1 text-gray-400 cursor-pointer")},
-            list{
-              input(
-                list{
-                  Attrs.type_("checkbox"),
-                  Attrs.checked(state.notifyEnabled),
-                  Attrs.class_("w-3.5 h-3.5 accent-amber-500"),
-                  Events.onClick(MassPanic(ToggleNotify)),
-                },
-                list{},
-              ),
-              text("Notify"),
-            },
-          ),
-          // Filter buttons
-          div(
-            list{Attrs.class_("flex gap-1 ml-auto")},
-            list{
-              filterBtn(AllRepos, "All", state.filterMode),
-              filterBtn(FindingsOnly, "Findings", state.filterMode),
-              filterBtn(CriticalOnly, "Critical", state.filterMode),
-              filterBtn(FailedOnly, "Failed", state.filterMode),
-            },
-          ),
-          // Search
-          input(
-            list{
-              Attrs.type_("text"),
-              Attrs.class_(
-                "w-40 bg-gray-800 text-sm text-gray-200 px-2 py-0.5 rounded border border-gray-600 font-mono",
-              ),
-              Attrs.placeholder("Search repos..."),
-              Attrs.value(state.searchText),
-              Events.onInput(v => MassPanic(SetSearchText(v))),
-            },
-            list{},
-          ),
-        },
-      ),
-      // Progress bar
-      progressBar(state.progress, state.scanning),
-      // Summary bar
-      div(
-        list{Attrs.class_("px-4 border-b border-gray-700")},
-        list{summaryView(state.summary)},
-      ),
-      // Error display
+      // Error display (shared across all views)
       switch state.lastError {
       | Some(err) =>
         div(
@@ -570,126 +963,240 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
         )
       | None => noNode
       },
-      // Select-all bar
-      if Array.length(state.repoResults) > 0 {
+      // Sub-view content
+      switch state.activeView {
+      | ImagingView => renderImagingView(state)
+      | TemporalView => renderTemporalView(state)
+      | ScanView =>
+        // Scan view — assemblyline batch scanning
         div(
+          list{Attrs.class_("flex flex-col flex-1 overflow-hidden")},
           list{
-            Attrs.class_(
-              "flex items-center gap-3 px-4 py-1.5 border-b border-gray-700 bg-gray-850 text-xs",
-            ),
-          },
-          list{
-            label(
+            // Directory input + controls bar
+            div(
+              list{Attrs.class_("flex items-center gap-2 px-4 py-2 border-b border-gray-700")},
               list{
-                Attrs.class_("flex items-center gap-1 text-gray-400 cursor-pointer"),
-              },
-              list{
+                span(
+                  list{Attrs.class_("text-xs text-gray-500")},
+                  list{text("Repos:")},
+                ),
                 input(
                   list{
-                    Attrs.type_("checkbox"),
-                    Attrs.checked(state.selectAll),
-                    Attrs.class_("w-3.5 h-3.5 accent-amber-500"),
-                    Events.onClick(MassPanic(ToggleSelectAll)),
+                    Attrs.type_("text"),
+                    Attrs.class_(
+                      "flex-1 bg-gray-800 text-sm text-gray-200 px-2 py-1 rounded border border-gray-600 font-mono",
+                    ),
+                    Attrs.placeholder("/path/to/repos/"),
+                    Attrs.value(state.reposDirectory),
+                    Events.onInput(v => MassPanic(SetReposDirectory(v))),
                   },
                   list{},
                 ),
-                text("Select all"),
-              },
-            ),
-            span(
-              list{Attrs.class_("text-gray-500")},
-              list{
-                text(
-                  `${Int.toString(Array.length(state.selectedRepos))} of ${Int.toString(
-                      Array.length(state.repoResults),
-                    )} selected`,
-                ),
-              },
-            ),
-            // Sort controls
-            div(
-              list{Attrs.class_("flex gap-1 ml-auto")},
-              list{
-                sortBtn(ByRisk, "Risk", state.sortMode),
-                sortBtn(ByName, "Name", state.sortMode),
-                sortBtn(ByFindings, "Findings", state.sortMode),
-                sortBtn(ByDuration, "Time", state.sortMode),
-              },
-            ),
-          },
-        )
-      } else {
-        noNode
-      },
-      // Delta comparison view (when active)
-      if state.showDelta && Array.length(state.delta) > 0 {
-        div(
-          list{Attrs.class_("border-b border-gray-700")},
-          list{
-            div(
-              list{
-                Attrs.class_(
-                  "flex items-center gap-2 px-4 py-1.5 bg-gray-800 text-xs",
-                ),
-              },
-              list{
-                span(
-                  list{Attrs.class_("text-gray-400 font-bold")},
-                  list{text("DELTA")},
-                ),
-                span(
-                  list{Attrs.class_("text-gray-500")},
-                  list{text("Changes since previous run")},
-                ),
                 button(
                   list{
-                    Attrs.class_("ml-auto text-gray-500 hover:text-gray-300"),
-                    Events.onClick(MassPanic(ToggleDelta)),
+                    Attrs.class_(
+                      "px-2 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 text-gray-200 font-mono",
+                    ),
+                    Attrs.disabled(state.reposDirectory == ""),
+                    Events.onClick(MassPanic(DiscoverRepos)),
                   },
-                  list{text("[close]")},
+                  list{text("discover")},
                 ),
               },
             ),
-            div(
-              list{Attrs.class_("max-h-40 overflow-y-auto")},
-              state.delta->Array.map(deltaRow)->List.fromArray,
-            ),
-          },
-        )
-      } else {
-        noNode
-      },
-      // Repo results list
-      div(
-        list{Attrs.class_("flex-1 overflow-y-auto")},
-        if Array.length(filtered) == 0 && !state.scanning {
-          list{
+            // Options bar: incremental, storage, filter, sort
             div(
               list{
                 Attrs.class_(
-                  "flex items-center justify-center h-32 text-gray-500 text-sm",
+                  "flex items-center gap-4 px-4 py-2 border-b border-gray-700 text-xs",
                 ),
               },
               list{
-                text(
-                  if Array.length(state.repoResults) == 0 {
-                    "No repos discovered. Enter a directory path and click 'discover'."
-                  } else {
-                    "No repos match the current filter."
+                label(
+                  list{Attrs.class_("flex items-center gap-1 text-gray-400 cursor-pointer")},
+                  list{
+                    input(
+                      list{
+                        Attrs.type_("checkbox"),
+                        Attrs.checked(state.incremental),
+                        Attrs.class_("w-3.5 h-3.5 accent-blue-500"),
+                        Events.onClick(MassPanic(ToggleIncremental)),
+                      },
+                      list{},
+                    ),
+                    text("Incremental"),
                   },
+                ),
+                label(
+                  list{Attrs.class_("flex items-center gap-1 text-gray-400 cursor-pointer")},
+                  list{
+                    input(
+                      list{
+                        Attrs.type_("checkbox"),
+                        Attrs.checked(state.notifyEnabled),
+                        Attrs.class_("w-3.5 h-3.5 accent-amber-500"),
+                        Events.onClick(MassPanic(ToggleNotify)),
+                      },
+                      list{},
+                    ),
+                    text("Notify"),
+                  },
+                ),
+                // Filter buttons
+                div(
+                  list{Attrs.class_("flex gap-1 ml-auto")},
+                  list{
+                    filterBtn(AllRepos, "All", state.filterMode),
+                    filterBtn(FindingsOnly, "Findings", state.filterMode),
+                    filterBtn(CriticalOnly, "Critical", state.filterMode),
+                    filterBtn(FailedOnly, "Failed", state.filterMode),
+                  },
+                ),
+                // Search
+                input(
+                  list{
+                    Attrs.type_("text"),
+                    Attrs.class_(
+                      "w-40 bg-gray-800 text-sm text-gray-200 px-2 py-0.5 rounded border border-gray-600 font-mono",
+                    ),
+                    Attrs.placeholder("Search repos..."),
+                    Attrs.value(state.searchText),
+                    Events.onInput(v => MassPanic(SetSearchText(v))),
+                  },
+                  list{},
                 ),
               },
             ),
-          }
-        } else {
-          filtered
-          ->Array.mapWithIndex((repo, index) => {
-            let isSelected = state.selectedRepos->Array.includes(index)
-            repoRow(repo, index, isSelected)
-          })
-          ->List.fromArray
-        },
-      ),
+            // Progress bar
+            progressBar(state.progress, state.scanning),
+            // Summary bar
+            div(
+              list{Attrs.class_("px-4 border-b border-gray-700")},
+              list{summaryView(state.summary)},
+            ),
+            // Select-all bar
+            if Array.length(state.repoResults) > 0 {
+              div(
+                list{
+                  Attrs.class_(
+                    "flex items-center gap-3 px-4 py-1.5 border-b border-gray-700 bg-gray-850 text-xs",
+                  ),
+                },
+                list{
+                  label(
+                    list{
+                      Attrs.class_("flex items-center gap-1 text-gray-400 cursor-pointer"),
+                    },
+                    list{
+                      input(
+                        list{
+                          Attrs.type_("checkbox"),
+                          Attrs.checked(state.selectAll),
+                          Attrs.class_("w-3.5 h-3.5 accent-amber-500"),
+                          Events.onClick(MassPanic(ToggleSelectAll)),
+                        },
+                        list{},
+                      ),
+                      text("Select all"),
+                    },
+                  ),
+                  span(
+                    list{Attrs.class_("text-gray-500")},
+                    list{
+                      text(
+                        `${Int.toString(Array.length(state.selectedRepos))} of ${Int.toString(
+                            Array.length(state.repoResults),
+                          )} selected`,
+                      ),
+                    },
+                  ),
+                  // Sort controls
+                  div(
+                    list{Attrs.class_("flex gap-1 ml-auto")},
+                    list{
+                      sortBtn(ByRisk, "Risk", state.sortMode),
+                      sortBtn(ByName, "Name", state.sortMode),
+                      sortBtn(ByFindings, "Findings", state.sortMode),
+                      sortBtn(ByDuration, "Time", state.sortMode),
+                    },
+                  ),
+                },
+              )
+            } else {
+              noNode
+            },
+            // Delta comparison view (when active)
+            if state.showDelta && Array.length(state.delta) > 0 {
+              div(
+                list{Attrs.class_("border-b border-gray-700")},
+                list{
+                  div(
+                    list{
+                      Attrs.class_(
+                        "flex items-center gap-2 px-4 py-1.5 bg-gray-800 text-xs",
+                      ),
+                    },
+                    list{
+                      span(
+                        list{Attrs.class_("text-gray-400 font-bold")},
+                        list{text("DELTA")},
+                      ),
+                      span(
+                        list{Attrs.class_("text-gray-500")},
+                        list{text("Changes since previous run")},
+                      ),
+                      button(
+                        list{
+                          Attrs.class_("ml-auto text-gray-500 hover:text-gray-300"),
+                          Events.onClick(MassPanic(ToggleDelta)),
+                        },
+                        list{text("[close]")},
+                      ),
+                    },
+                  ),
+                  div(
+                    list{Attrs.class_("max-h-40 overflow-y-auto")},
+                    state.delta->Array.map(deltaRow)->List.fromArray,
+                  ),
+                },
+              )
+            } else {
+              noNode
+            },
+            // Repo results list
+            div(
+              list{Attrs.class_("flex-1 overflow-y-auto")},
+              if Array.length(filtered) == 0 && !state.scanning {
+                list{
+                  div(
+                    list{
+                      Attrs.class_(
+                        "flex items-center justify-center h-32 text-gray-500 text-sm",
+                      ),
+                    },
+                    list{
+                      text(
+                        if Array.length(state.repoResults) == 0 {
+                          "No repos discovered. Enter a directory path and click 'discover'."
+                        } else {
+                          "No repos match the current filter."
+                        },
+                      ),
+                    },
+                  ),
+                }
+              } else {
+                filtered
+                ->Array.mapWithIndex((repo, index) => {
+                  let isSelected = state.selectedRepos->Array.includes(index)
+                  repoRow(repo, index, isSelected)
+                })
+                ->List.fromArray
+              },
+            ),
+          },
+        )
+      },
       // Footer
       div(
         list{

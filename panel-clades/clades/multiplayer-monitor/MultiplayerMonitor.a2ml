@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Multiplayer Monitor Panel Clade — Phoenix sync server inspector
+
+[clade-metadata]
+id = "multiplayer-monitor"
+name = "Multiplayer Monitor"
+short-name = "MP"
+version = "1.0.0"
+kind = "viewer"
+icon = "users"
+description = "Monitor Elixir/Phoenix sync server — WebSocket status, channel subscriptions, player state diff, Lamport clocks, device locks, latency."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = false
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "WebSocketStatus",
+  "ChannelSubscriptions",
+  "PlayerStateDiff",
+  "VMMessageBusMonitor",
+  "LamportClockVisualisation",
+  "DeviceLockStatus",
+  "LatencyGraph",
+  "ProcessTree",
+  "ETSCacheInspection",
+  "ReconnectionTest",
+]
+
+[clade-panel-integration]
+panel-id = "PanelMultiplayerMonitor"
+model-module = "MultiplayerMonitorModel"
+component-module = "MultiplayerMonitor"
+command-module = "MultiplayerMonitorCmd"
+
+[clade-dependencies]
+sync-server-port = 4000
+protocol = "phoenix-websocket-v2"

@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Game Preview Panel Clade — Live IDApTIK game preview with hot-reload
+
+[clade-metadata]
+id = "game-preview"
+name = "Game Preview"
+short-name = "Game"
+version = "1.0.0"
+kind = "viewer"
+icon = "gamepad-2"
+description = "Live game preview via embedded Vite dev server with hot-reload, frame stepping, overlay toggles, and gameplay recording."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = false
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "LivePreview",
+  "HotReload",
+  "FrameStepping",
+  "OverlayToggles",
+  "GameplayRecording",
+  "ScreenshotCapture",
+  "FPSCounter",
+  "RenderStats",
+  "MultiplayerView",
+]
+
+[clade-panel-integration]
+panel-id = "PanelGamePreview"
+model-module = "GamePreviewModel"
+component-module = "GamePreview"
+command-module = "GamePreviewCmd"
+
+[clade-dependencies]
+dev-server = "vite"
+dev-server-port = 8080

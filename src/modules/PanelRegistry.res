@@ -218,6 +218,33 @@ let allPanels: array<panelMeta> = [
     connectionStatus: ServiceConnected, // Pure client-side state, always available
     hasBackend: false, // Directive state is local; optional verisimdb persistence
   },
+  {
+    id: PanelValenceShell,
+    name: "Valence Shell",
+    shortName: "VS",
+    description: "Embedded terminal with Claude Code, session recording, reversible ops, and collaborative approval gate",
+    icon: "terminal-square",
+    connectionStatus: ServiceDisconnected, // Probes for Valence shell binary + PTY allocation
+    hasBackend: true, // PTY via Tauri shell plugin + Valence binary
+  },
+  {
+    id: PanelGamePreview,
+    name: "Game Preview",
+    shortName: "Game",
+    description: "Live IDApTIK game preview with hot-reload, frame stepping, overlays, and gameplay recording",
+    icon: "gamepad-2",
+    connectionStatus: ServiceDisconnected, // Probes for Vite dev server on :8080
+    hasBackend: true, // Embedded iframe/webview + Tauri game control bridge
+  },
+  {
+    id: PanelVmInspector,
+    name: "VM Inspector",
+    shortName: "VM",
+    description: "Reversible VM visual debugger — stack, memory, instructions, step forward and backward",
+    icon: "cpu",
+    connectionStatus: ServiceDisconnected, // Connects to running VM via inter-webview or file
+    hasBackend: true, // Tauri inter-webview messaging or file I/O
+  },
 ]
 
 /// Look up panel metadata by ID.

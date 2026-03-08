@@ -35,6 +35,9 @@ type panelId =
   | PanelPanicAttack
   | PanelMassPanic
   | PanelTsdm
+  | PanelValenceShell
+  | PanelGamePreview
+  | PanelVmInspector
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

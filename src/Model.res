@@ -167,6 +167,24 @@ include StatusBarModel
 /// securityCategory, securityState) for secrets, vault, 2FA, Trustfile (DD-026/027).
 include SecurityModel
 
+/// Re-export Valence Shell types (shellBackend, recordingState, terminalRecording,
+/// approvalGateMode, pendingCommand, valenceCheckpoint, valenceShellCategory,
+/// terminalLine, valenceShellState) for the embedded terminal panel with Claude
+/// Code integration, session recording, and collaborative approval gate.
+include ValenceShellModel
+
+/// Re-export Game Preview types (gameOverlay, gameExecutionState,
+/// gameRecordingState, deviceInteraction, gameplayClip, renderStats,
+/// gamePreviewCategory, gamePreviewState) for the live IDApTIK game
+/// preview panel with hot-reload, overlays, and gameplay recording.
+include GamePreviewModel
+
+/// Re-export VM Inspector types (vmInstructionTier, vmInstruction,
+/// vmMemoryCell, vmPortEntry, vmSnapshot, vmBreakpoint, vmConnectionMode,
+/// vmInspectorCategory, vmInspectorState) for the reversible VM visual
+/// debugger with step forward/backward and execution timeline.
+include VmInspectorModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -276,6 +294,15 @@ type model = {
 
   // TSDM — triaxial software development methodology directive
   tsdm: tsdmState,
+
+  // Valence Shell — embedded terminal with Claude Code and reversible ops
+  valenceShell: valenceShellState,
+
+  // Game Preview — live IDApTIK game preview with hot-reload and overlays
+  gamePreview: gamePreviewState,
+
+  // VM Inspector — reversible VM visual debugger (step forward/backward)
+  vmInspector: vmInspectorState,
 
   // Undo/Redo — ring buffer of model snapshots
   undoStack: array<string>,
@@ -521,6 +548,9 @@ let init = (): model => {
   panicAttack: PanicAttackModel.init,
   massPanic: MassPanicModel.init,
   tsdm: TsdmModel.init,
+  valenceShell: ValenceShellEngine.defaultState,
+  gamePreview: GamePreviewEngine.defaultState,
+  vmInspector: VmInspectorEngine.defaultState,
   undoStack: [],
   redoStack: [],
   humidity: Medium,

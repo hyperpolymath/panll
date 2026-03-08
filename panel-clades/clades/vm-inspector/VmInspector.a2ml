@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# VM Inspector Panel Clade — Reversible VM visual debugger
+
+[clade-metadata]
+id = "vm-inspector"
+name = "VM Inspector"
+short-name = "VM"
+version = "1.0.0"
+kind = "viewer"
+icon = "cpu"
+description = "Visual debugger for IDApTIK's reversible VM — stack, memory, instructions, step forward/backward, breakpoints, execution timeline."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "StackVisualisation",
+  "MemoryGrid",
+  "InstructionListing",
+  "StepForward",
+  "StepBackward",
+  "Breakpoints",
+  "ExecutionTimeline",
+  "SubroutineCallGraph",
+  "PortIOMonitor",
+  "MultiVmView",
+  "StateSnapshot",
+]
+
+[clade-panel-integration]
+panel-id = "PanelVmInspector"
+model-module = "VmInspectorModel"
+component-module = "VmInspector"
+command-module = "VmInspectorCmd"
+
+[clade-dependencies]
+vm-state-bridge = "tauri-inter-webview"
+instruction-count = 23
+tiers = ["Arithmetic", "Conditionals", "StackMemory", "Subroutines", "IO"]

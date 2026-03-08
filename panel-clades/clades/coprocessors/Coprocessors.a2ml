@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Coprocessor Dashboard Panel Clade — Monitor compute/security/IO backends
+
+[clade-metadata]
+id = "coprocessors"
+name = "Coprocessors"
+short-name = "CoPr"
+version = "1.0.0"
+kind = "viewer"
+icon = "chip"
+description = "Monitor IDApTIK's 3 coprocessor backends (Compute, Security, I/O) — call log, heatmap, performance metrics, backend toggles."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = false
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "CallLog",
+  "FrequencyHeatmap",
+  "PerformanceMetrics",
+  "InputOutputInspection",
+  "DispatchLog",
+  "BackendToggle",
+  "HealthStatus",
+]
+
+[clade-panel-integration]
+panel-id = "PanelCoprocessors"
+model-module = "CoprocessorsModel"
+component-module = "Coprocessors"
+command-module = "CoprocessorsCmd"
+
+[clade-dependencies]
+backends = ["Maths", "Vector", "Tensor", "Physics", "Crypto", "Neural", "Quantum", "Audio", "Graphics", "IO"]
+source-files = ["Coprocessor_Compute.res", "Coprocessor_Security.res", "Coprocessor_IO.res"]

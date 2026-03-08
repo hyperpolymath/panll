@@ -128,6 +128,110 @@ let generateNotification = (
   })
 }
 
+// ---------------------------------------------------------------------------
+// Imaging — fNIRS-style spatial health map
+// ---------------------------------------------------------------------------
+
+/// Build a system image from an assemblyline scan.
+/// Runs assemblyline internally, then builds the fNIRS-style image.
+/// Returns panll.system-image.v0 JSON.
+let buildImage = (
+  directory: string,
+  incremental: bool,
+  cachePath: option<string>,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke(
+      "mass_panic_build_image",
+      {
+        "directory": directory,
+        "incremental": incremental,
+        "cache_path": cachePath,
+      },
+    )
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to build system image")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Temporal — time-series navigation
+// ---------------------------------------------------------------------------
+
+/// List temporal snapshots in VeriSimDB.
+/// Returns JSON array of snapshot entries.
+let listSnapshots = (
+  verisimdbDir: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("mass_panic_list_snapshots", {"verisimdb_dir": verisimdbDir})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to list temporal snapshots")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Diff two temporal snapshots.
+/// Returns panll.temporal-diff.v0 JSON.
+let diffSnapshots = (
+  verisimdbDir: string,
+  fromSeq: int,
+  toSeq: int,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke(
+      "mass_panic_diff_snapshots",
+      {"verisimdb_dir": verisimdbDir, "from_seq": fromSeq, "to_seq": toSeq},
+    )
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to diff temporal snapshots")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Take a temporal snapshot of the current image.
+/// Returns snapshot entry JSON.
+let takeSnapshot = (
+  verisimdbDir: string,
+  label: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("mass_panic_take_snapshot", {"verisimdb_dir": verisimdbDir, "label": label})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to take temporal snapshot")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 /// Load the BLAKE3 fingerprint cache (shows which repos have changed).
 /// Returns JSON with { cached_repos, total_entries }.
 let loadCache = (

@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Network Topology Panel Clade — In-game network device map
+
+[clade-metadata]
+id = "network-topology"
+name = "Network Topology"
+short-name = "Topo"
+version = "1.0.0"
+kind = "viewer"
+icon = "network"
+description = "Force-directed graph of IDApTIK in-game network — devices, zones, security levels, packet flow, defence flags, DNS resolution."
+
+[clade-traits]
+has-backend = false
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "ForceDirectedGraph",
+  "ZoneColouring",
+  "SecurityLevelIndicators",
+  "PacketFlowAnimation",
+  "DeviceGUILaunch",
+  "DefenceFlagBadges",
+  "DNSResolutionTree",
+  "SSHPathHighlight",
+  "DragRearrange",
+  "SVGExport",
+]
+
+[clade-panel-integration]
+panel-id = "PanelNetworkTopology"
+model-module = "NetworkTopologyModel"
+component-module = "NetworkTopology"
+command-module = "NetworkTopologyCmd"

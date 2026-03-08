@@ -74,6 +74,108 @@ type storageTarget =
   | Filesystem(string) // base directory
   | VerisimDB(string) // verisimdb data directory
 
+// ---------------------------------------------------------------------------
+// Imaging — fNIRS-style spatial health map (panll.system-image.v0)
+// ---------------------------------------------------------------------------
+
+/// Risk distribution histogram — how many nodes at each risk level.
+type riskDistribution = {
+  healthy: int,
+  low: int,
+  moderate: int,
+  high: int,
+  critical: int,
+}
+
+/// A single node in the system image — one repo's health reading.
+type imageNode = {
+  id: string,
+  name: string,
+  healthScore: float,
+  riskIntensity: float,
+  weakPointDensity: float,
+  weakPointCount: int,
+  criticalCount: int,
+  highCount: int,
+  fingerprint: option<string>,
+  skipped: bool,
+  topCategories: array<string>,
+}
+
+/// An edge connecting two nodes by risk proximity or shared pattern.
+type imageEdge = {
+  fromNode: string,
+  toNode: string,
+  edgeType: string,
+  weight: float,
+}
+
+/// A point-in-time system health image (fNIRS-style functional scan).
+type systemImage = {
+  scanSurface: string,
+  generatedAt: string,
+  globalHealth: float,
+  globalRisk: float,
+  nodeCount: int,
+  edgeCount: int,
+  totalWeakPoints: int,
+  totalCritical: int,
+  riskDistribution: riskDistribution,
+  nodes: array<imageNode>,
+  edges: array<imageEdge>,
+}
+
+// ---------------------------------------------------------------------------
+// Temporal — time-series navigation (panll.temporal-diff.v0)
+// ---------------------------------------------------------------------------
+
+/// A temporal snapshot entry (lightweight manifest row).
+type snapshotEntry = {
+  sequence: int,
+  timestamp: string,
+  label: string,
+  nodeCount: int,
+  globalHealth: float,
+  globalRisk: float,
+  totalWeakPoints: int,
+}
+
+/// Per-node health change between two snapshots.
+type nodeDelta = {
+  name: string,
+  healthBefore: float,
+  healthAfter: float,
+  healthDelta: float,
+  riskBefore: float,
+  riskAfter: float,
+  riskDelta: float,
+  weakPointDelta: int,
+}
+
+/// Diff between two system image snapshots.
+type temporalDiff = {
+  fromLabel: string,
+  toLabel: string,
+  fromTimestamp: string,
+  toTimestamp: string,
+  healthDelta: float,
+  riskDelta: float,
+  weakPointDelta: int,
+  criticalDelta: int,
+  newNodes: array<string>,
+  removedNodes: array<string>,
+  improvedNodes: array<nodeDelta>,
+  degradedNodes: array<nodeDelta>,
+  unchangedCount: int,
+  trend: string,
+}
+
+/// Which sub-view is active in the mass-panic panel.
+type massPanicView =
+  | ScanView
+  | ImagingView
+  | TemporalView
+
 /// Root state for the mass-panic panel.
 type massPanicState = {
   /// Directory containing repos to scan.
@@ -120,9 +222,26 @@ type massPanicState = {
   loading: bool,
   /// Last error message.
   lastError: option<string>,
+  // -- Imaging (fNIRS-style spatial health map) --
+  /// Current system image (latest scan).
+  currentImage: option<systemImage>,
+  /// Whether imaging view is loading.
+  imagingLoading: bool,
+  // -- Temporal navigation --
+  /// Snapshot timeline entries.
+  snapshots: array<snapshotEntry>,
+  /// Current temporal diff (between two selected snapshots).
+  currentDiff: option<temporalDiff>,
+  /// Selected snapshot indices for comparison.
+  selectedSnapshots: (option<int>, option<int>),
+  /// Whether temporal view is loading.
+  temporalLoading: bool,
+  // -- Sub-view selection --
+  /// Which sub-view is active.
+  activeView: massPanicView,
 }
 
-/// Initial state for the mass-panic panel.
+/// Default initial state for the mass-panic panel.
 let init: massPanicState = {
   reposDirectory: "",
   scanning: false,
@@ -146,4 +265,11 @@ let init: massPanicState = {
   notifyCriticalOnly: true,
   loading: false,
   lastError: None,
+  currentImage: None,
+  imagingLoading: false,
+  snapshots: [],
+  currentDiff: None,
+  selectedSnapshots: (None, None),
+  temporalLoading: false,
+  activeView: ScanView,
 }

@@ -10,7 +10,7 @@ short-name = "MP"
 version = "2.1.0"
 kind = "scanner"
 icon = "zap-off"
-description = "Organisation-scale batch scanning — assemblyline + BLAKE3 + verisimdb + delta."
+description = "Organisation-scale batch scanning — assemblyline + BLAKE3 + imaging + temporal + verisimdb."
 
 [clade-traits]
 has-backend = true           # Invokes panic-attack assemblyline via Tauri
@@ -31,6 +31,8 @@ capabilities = [
   "NotificationPipeline",    # Generate notifications for critical findings
   "RepoDiscovery",           # Auto-discover repos in a directory
   "CacheManagement",         # Manage incremental scan cache
+  "SystemImaging",           # fNIRS-style spatial health mapping
+  "TemporalNavigation",      # Time-series diff, trend detection, replay
 ]
 
 [clade-panel-integration]

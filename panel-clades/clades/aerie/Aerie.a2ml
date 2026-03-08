@@ -29,7 +29,29 @@ capabilities = [
   "PacketLossDetection",     # Identify lossy network segments
   "BGPForensics",            # BGP route analysis and anomaly detection
   "DNSProbing",              # DNS resolution diagnostics
+  "ProofEnvelopeInspection", # SHA-256/Ed448 proof verification
+  "VeriSimDBTemporal",       # Bitemporal audit queries
+  "ContainerOrchestration",  # Podman Compose 6-service management
+  "NetworkSimulation",       # Latency injection, route injection
+  "CollaborativeMode",       # Parent+child shared sessions
 ]
+
+[clade-ensaid]
+# eNSAID panel suite for Aerie development (designed 2026-03-08)
+design-doc = "AERIE-ENSAID-DESIGN.md"
+panel-count = 13
+must-panels = ["valence-shell", "network-topology", "probe-dashboard", "proof-inspector"]
+should-panels = ["abi-ffi-workbench", "api-explorer", "watcher", "container-orchestrator"]
+could-panels = ["simulation", "capture-share", "boj-monitor", "panic-attack"]
+corrective-panels = ["verisimdb-explorer"]
+
+[clade-integrations]
+boj-cartridges = ["observe-mcp", "database-mcp", "nesy-mcp", "proof-mcp"]
+echidna = true
+typell = true
+panic-attack = true
+verisimdb = true
+proven-servers = true
 
 [clade-panel-integration]
 panel-id = "PanelAerie"
