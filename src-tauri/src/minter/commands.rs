@@ -24,7 +24,7 @@ fn to_camel_case(name: &str) -> String {
         return String::new();
     }
     let mut chars = name.chars();
-    let first = chars.next().unwrap().to_lowercase().to_string();
+    let first = chars.next().unwrap_or_default().to_lowercase().to_string();
     format!("{}{}", first, chars.collect::<String>())
 }
 
@@ -36,7 +36,7 @@ fn to_snake_case(name: &str) -> String {
             if i > 0 {
                 result.push('_');
             }
-            result.push(ch.to_lowercase().next().unwrap());
+            result.extend(ch.to_lowercase());
         } else {
             result.push(ch);
         }

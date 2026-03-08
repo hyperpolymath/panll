@@ -4304,9 +4304,31 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
     (model, Tea_Cmd.none)
   | SystemInfoLoaded(result) => {
       switch result {
-      | Ok(_jsonStr) =>
-        // TODO: parse SystemInfo JSON and update statusBar.systemInfo
-        (model, Tea_Cmd.none)
+      | Ok(jsonStr) => {
+          let parsed = try {
+            let json = JSON.parseExn(jsonStr)
+            let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+            let getFloat = key =>
+              obj->Dict.get(key)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+            Some({
+              StatusBarModel.cpuUsage: getFloat("cpu_usage"),
+              memoryTotal: getFloat("memory_total"),
+              memoryUsed: getFloat("memory_used"),
+              diskTotal: getFloat("disk_total"),
+              diskUsed: getFloat("disk_used"),
+              uptimeSeconds: getFloat("uptime_seconds"),
+            })
+          } catch {
+          | _ => None
+          }
+          switch parsed {
+          | Some(info) => (
+              {...model, statusBar: {...model.statusBar, systemInfo: Some(info)}},
+              Tea_Cmd.none,
+            )
+          | None => (model, Tea_Cmd.none)
+          }
+        }
       | Error(_) => (model, Tea_Cmd.none)
       }
     }

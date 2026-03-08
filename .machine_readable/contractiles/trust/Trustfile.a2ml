@@ -177,7 +177,7 @@ github_actions:
         - name: "Validate A2ML Trustfile"
           run: "a2ml validate .machine_readable/contractiles/trust/Trustfile.a2ml"
         - name: "ReScript Build"
-          run: "npx rescript-legacy"
+          run: "deno task res:build"
         - name: "Deno Tests"
           run: "deno task test"
         - name: "Rust Tests"
@@ -208,6 +208,142 @@ hypatia:
       frequency: "weekly"
 
 ---
+### [CAPABILITY_GATEWAY]
+description: |
+  BoJ (Bundle of Joy) primary gateway controls all protocol routing.
+  When bojRouting=true, panels route through cartridges instead of direct HTTP.
+  Each cartridge has declared capabilities and isolation tiers.
+
+gateway:
+  endpoint: "http://localhost:7700/boj/v1"
+  cartridges: 17
+  routing_toggle: "bojRouting (per-panel boolean)"
+  policy: "Panels MUST degrade gracefully when cartridge unavailable"
+
+rules:
+  - name: "lsp-mcp"
+    description: "LSP protocol operations (Editor Bridge, My-Lang)"
+    capabilities: ["textDocument/completion", "textDocument/hover", "textDocument/diagnostics"]
+    isolation: "standard-pod"
+    rego: |
+      package trustfile.boj.lsp
+      default allow = false
+      allow {
+        input.cartridge == "lsp-mcp"
+        input.panel in {"editor-bridge", "my-lang"}
+      }
+  - name: "database-mcp"
+    description: "VQL query execution (VeriSimDB)"
+    capabilities: ["query", "entities", "drift", "normalise", "telemetry"]
+    isolation: "standard-pod"
+    rego: |
+      package trustfile.boj.database
+      default allow = false
+      allow {
+        input.cartridge == "database-mcp"
+        input.anti_crash_validated == true
+      }
+  - name: "dap-mcp"
+    description: "Debug Adapter Protocol (VM Inspector)"
+    capabilities: ["step", "continue", "breakpoints", "evaluate"]
+    isolation: "hardened-pod"
+    rego: |
+      package trustfile.boj.dap
+      default allow = false
+      allow {
+        input.cartridge == "dap-mcp"
+        input.panel == "vm-inspector"
+      }
+  - name: "bsp-mcp"
+    description: "Build Server Protocol (Build Dashboard)"
+    capabilities: ["compile", "test", "run", "diagnostics"]
+    isolation: "standard-pod"
+  - name: "proof-mcp"
+    description: "ECHIDNA theorem prover dispatch"
+    capabilities: ["prove", "verify", "search", "sessions", "tactics"]
+    isolation: "hardened-pod"
+  - name: "nesy-mcp"
+    description: "Neurosymbolic type intelligence (TypeLL)"
+    capabilities: ["checkTypes", "inferConstraintType", "generateProofObligations"]
+    isolation: "standard-pod"
+  - name: "agent-mcp"
+    description: "Agentic orchestration (7-Tentacles, Automation Router, Coprocessors)"
+    capabilities: ["dispatch", "coordinate", "query-compute"]
+    isolation: "hardened-pod"
+  - name: "observe-mcp"
+    description: "Observability and telemetry (Aerie)"
+    capabilities: ["metrics", "traces", "logs", "topology"]
+    isolation: "standard-pod"
+ci_cd: "validate-cartridge-policies-on-push"
+
+---
+### [SDP_RULES]
+description: |
+  Software-Defined Perimeter rules for panel isolation.
+  PanLL enforces 4 isolation tiers via the Provisioner and Clade system.
+
+tiers:
+  - name: "native"
+    description: "Direct Tauri webview execution (core panels)"
+    panels: ["Panel-L", "Panel-N", "Panel-W"]
+    permissions: ["full-model-access", "all-msg-dispatch"]
+  - name: "standard-pod"
+    description: "Standard sandboxed execution (most overlay panels)"
+    panels: ["VAB", "CloudGuard", "Farm", "Plaza", "TypeLL", "BoJ"]
+    permissions: ["own-model-access", "typed-msg-dispatch", "tauri-invoke"]
+    restrictions: ["no-direct-model-mutation", "no-raw-fs-access"]
+  - name: "hardened-pod"
+    description: "Hardened sandbox for security-sensitive panels"
+    panels: ["Playgrounds", "VM Inspector"]
+    permissions: ["own-model-access", "sandboxed-invoke"]
+    restrictions: ["no-network-direct", "no-fs-access", "no-eval"]
+  - name: "stapeln"
+    description: "Full container isolation via Stapeln"
+    panels: ["Multiplayer Monitor", "DLC Workshop"]
+    permissions: ["rpc-only"]
+    restrictions: ["network-allowlist", "resource-limits", "no-host-access"]
+
+clade_permissions:
+  description: "Clade-level cross-reference permissions managed via Clade Browser"
+  enforcement: "CladeBrowserEngine.canCrossReference(fromClade, toClade)"
+  policy: "Deny by default; explicit allow-list per clade pair"
+ci_cd: "validate-isolation-tiers-on-push"
+
+---
+### [TRANSPARENCY_LOG]
+description: |
+  Provenance tracking for PanLL operations.
+  Code Provenance Map (existing panel) tracks git blame trust surfaces.
+  BoJ latency log tracks all cartridge invocations.
+
+provenance:
+  code:
+    tool: "Code Provenance Map panel"
+    palettes: 4
+    data_source: "git blame (Tauri backend)"
+  operations:
+    boj_latency_log:
+      description: "Per-invocation latency tracking for all BoJ cartridge calls"
+      format: "100-entry ring buffer on boj.latencyLog"
+      fields: ["cartridge", "tool", "elapsed_ms", "timestamp"]
+    vexation_log:
+      description: "Operator friction events with decay-weighted tracking"
+      format: "VexationTracker with NDJSON append to /tmp/panll/feedback/"
+    type_check_log:
+      description: "TypeLL cross-panel type-check results"
+      format: "typell.queriesServed counter + per-panel result display"
+
+rfc9162:
+  log_type: "development"
+  description: "RFC 9162 Certificate Transparency-style log for proof submissions"
+  status: "planned"
+  entries:
+    - "ECHIDNA proof submissions (trust level, solver agreement)"
+    - "Anti-Crash validation events (token pass/fail)"
+    - "Contractile evaluation results (pass/tighten/warn)"
+ci_cd: "audit-log-on-release"
+
+---
 ### [FORMAL_VERIFICATION]
 theorems:
   - name: "anti_crash_soundness"
@@ -227,6 +363,36 @@ theorems:
     description: "Trust level cannot decrease without an explicit axiom risk detection event."
     status: "pending"
     ci_cd: "reprove-on-echidna-change"
+  - name: "orbital_divergence_safety"
+    description: "Orbital divergence Jaccard computation never produces NaN/Infinity, result ∈ [0.0, 1.0]."
+    status: "pending"
+    tool: "Idris2 dependent types (src/abi/OrbitalSync.idr)"
+    ci_cd: "reprove-on-orbital-change"
+  - name: "storage_parse_totality"
+    description: "Storage JSON parse-on-load is total: never throws, always returns Result."
+    status: "pending"
+    tool: "Idris2 dependent types (src/abi/Storage.idr)"
+    ci_cd: "reprove-on-storage-change"
+  - name: "typell_dispatch_correctness"
+    description: "TypeLL cross-panel request correlation: no stale/misrouted results across 7+ panel consumers."
+    status: "pending"
+    tool: "Idris2 dependent types (src/abi/TypeLL.idr)"
+    ci_cd: "reprove-on-typell-change"
+  - name: "vexometer_bounded_float"
+    description: "Vexation index always ∈ [0.0, 1.0] with decay-weighted averaging."
+    status: "pending"
+    tool: "Idris2 dependent types (src/abi/Vexometer.idr)"
+    ci_cd: "reprove-on-vexometer-change"
+  - name: "boj_routing_fallback"
+    description: "When bojRouting=true and cartridge is unreachable, panel degrades to direct mode without data loss."
+    status: "pending"
+    tool: "Idris2 dependent types (src/abi/BojRouting.idr)"
+    ci_cd: "reprove-on-boj-routing-change"
+  - name: "panel_bus_delivery"
+    description: "Panel Bus event delivery: all subscribers receive published events exactly once per ring buffer cycle."
+    status: "pending"
+    tool: "Idris2 dependent types (src/abi/PanelBus.idr)"
+    ci_cd: "reprove-on-bus-change"
 
 ---
 ### [CONTAINER_SUPPLY_CHAIN]

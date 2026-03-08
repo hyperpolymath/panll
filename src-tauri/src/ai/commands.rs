@@ -114,11 +114,11 @@ pub async fn ai_check_provider(provider_id: String) -> Result<String, String> {
         .ok_or(format!("Provider {} not configured", provider_id))?;
 
     if !provider.enabled {
-        return Ok(serde_json::to_string(&serde_json::json!({
+        return serde_json::to_string(&serde_json::json!({
             "status": "disabled",
             "detail": "Provider is disabled"
         }))
-        .unwrap());
+        .map_err(|e| format!("Serialisation error: {e}"));
     }
 
     // Try to resolve the API key (except for local which needs none).
@@ -126,11 +126,11 @@ pub async fn ai_check_provider(provider_id: String) -> Result<String, String> {
         let key_check = std::env::var(&provider.env_var);
         let has_explicit = provider.api_key.as_ref().is_some_and(|k| !k.is_empty());
         if !has_explicit && key_check.is_err() {
-            return Ok(serde_json::to_string(&serde_json::json!({
+            return serde_json::to_string(&serde_json::json!({
                 "status": "no_key",
                 "detail": format!("No API key: set {} or provide in config", provider.env_var)
             }))
-            .unwrap());
+            .map_err(|e| format!("Serialisation error: {e}"));
         }
     }
 
@@ -143,29 +143,29 @@ pub async fn ai_check_provider(provider_id: String) -> Result<String, String> {
 
         match client.get("http://localhost:11434/api/tags").send().await {
             Ok(resp) if resp.status().is_success() => {
-                return Ok(serde_json::to_string(&serde_json::json!({
+                return serde_json::to_string(&serde_json::json!({
                     "status": "ready",
                     "detail": "Ollama is running"
                 }))
-                .unwrap());
+                .map_err(|e| format!("Serialisation error: {e}"));
             }
             _ => {
-                return Ok(serde_json::to_string(&serde_json::json!({
+                return serde_json::to_string(&serde_json::json!({
                     "status": "error",
                     "detail": "Ollama not reachable at localhost:11434"
                 }))
-                .unwrap());
+                .map_err(|e| format!("Serialisation error: {e}"));
             }
         }
     }
 
     // For remote providers, we consider having a valid key as "ready".
     // A full auth check would consume tokens; we defer that to the first real message.
-    Ok(serde_json::to_string(&serde_json::json!({
+    serde_json::to_string(&serde_json::json!({
         "status": "ready",
         "detail": "API key configured"
     }))
-    .unwrap())
+    .map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Change the selected model for a provider.

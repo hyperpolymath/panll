@@ -99,6 +99,9 @@ fn read_disk_usage() -> (u64, u64) {
         .unwrap_or("/");
 
     // Use libc statvfs to get filesystem stats.
+    // SAFETY: statvfs is a POSIX syscall that writes into a zeroed struct we own.
+    // The CString is valid for the duration of the call. No UB if path is invalid
+    // (statvfs returns -1 and we fall through to (0, 0)).
     unsafe {
         let mut stat: libc::statvfs = std::mem::zeroed();
         let c_path = std::ffi::CString::new(mount_point).unwrap_or_default();
