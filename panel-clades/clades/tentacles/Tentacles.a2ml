@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+#
+# Clade Definition: 7-Tentacles
+# Compiler agent orchestra — 7 colour-coded agents with progressive staging.
+
+[clade]
+id = "clade-tentacles"
+name = "7-Tentacles — Compiler Agent Orchestra"
+kind = "ai"
+version = "1.0.0"
+
+[clade-description]
+summary = "Seven colour-coded compiler agents (Parser, Concurrency, TypeSystem, ASTArchitect, Auditor, Metaprogrammer, Governance) with OODA reasoning and progressive cephalopod staging"
+long = """
+The 7-Tentacles panel embeds the seven compiler agent personas from the
+nextgen-languages/7-tentacles educational system into PanLL's three-panel model.
+Each agent maps to a compiler subsystem and operates through the OODA loop
+(Observe/Orient/Decide/Act), producing constraints (Panel-L), reasoning streams
+(Panel-N), and validated results (Panel-W).
+
+Progressive reveal stages — Cuttle (8-12), Squidlet (13-14), Duet (15),
+Octopus (16+) — control concept depth. The orchestra view shows all 7 agents
+simultaneously with inter-agent broadcast communication.
+
+The "without" mode connects to ECHIDNA's FFI/ABI layer (Idris2 → Zig → C → V-lang)
+for standalone agent operation outside the PanLL TEA loop.
+"""
+
+[clade-traits]
+has-persistence = false
+has-backend = true
+has-work-items = true
+has-real-time = true
+is-ambient = false
+
+[clade-capabilities]
+capabilities = [
+  "AgentView",
+  "OrchestraView",
+  "StageConfiguration",
+  "ProgressDashboard",
+  "OODAReasoning",
+  "InterAgentBroadcast",
+  "ConstraintGeneration",
+  "ResultValidation",
+  "FFIBridge",
+]
+
+[clade-connections]
+backend-type = "http"
+default-endpoint = "http://localhost:8000/api/v1"
+protocols = ["REST"]
+
+[clade-architecture]
+layers = ["PanLL TEA (within)", "ECHIDNA Idris2 ABI (without)", "Zig FFI", "V-lang REST Adapter"]
+agent-count = 7
+agents = ["Red/Parser", "Orange/Concurrency", "Yellow/TypeSystem", "Green/ASTArchitect", "Blue/Auditor", "Indigo/Metaprogrammer", "Violet/Governance"]
+stages = ["Cuttle", "Squidlet", "Duet", "Octopus"]
+
+[clade-taxonomy]
+inherits-from = "ai"
+sibling-clades = ["ai", "boj"]
+source-project = "nextgen-languages/7-tentacles"
+
+[clade-integrations]
+consumes = ["echidna"]
+consumed-by = []
+dispatches-to = []
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["dialog", "grid", "tab", "tablist", "tabpanel"]

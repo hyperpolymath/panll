@@ -2793,6 +2793,34 @@ let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, minter: MinterEngine.defaultState},
       Tea_Cmd.none,
     )
+  | ExportToEnsaidConfig => {
+      // Generate a preview showing what the minted panel would add to ENSAID_CONFIG.
+      let form = model.minter.form
+      let humidityStr = switch model.humidity {
+      | High => "high"
+      | Medium => "medium"
+      | Low => "low"
+      }
+      let newPanelConfig: ProvisionerModel.panelConfig = {
+        panelName: form.panelName,
+        endpoint: form.endpoint,
+        autoConnect: true,
+        isolation: ProvisionerModel.Native,
+        envVars: [],
+        enabled: true,
+      }
+      let configs = Array.concat(model.provisioner.configs, [newPanelConfig])
+      let preview = EnsaidConfigEngine.generate(
+        ~repoName="(current repo)",
+        ~workspace=model.workspace,
+        ~humidity=humidityStr,
+        ~panelConfigs=configs,
+        ~portfolios=model.provisioner.portfolios,
+        ~automationRules=model.automationRouter.rules,
+        (),
+      )
+      ({...model, ensaidConfigPreview: Some(preview)}, Tea_Cmd.none)
+    }
   }
 }
 
@@ -2951,6 +2979,23 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
           Tea_Cmd.none,
         )
       }
+    }
+  | ExportProvisionerConfig => {
+      let humidityStr = switch model.humidity {
+      | High => "high"
+      | Medium => "medium"
+      | Low => "low"
+      }
+      let preview = EnsaidConfigEngine.generate(
+        ~repoName="(current repo)",
+        ~workspace=model.workspace,
+        ~humidity=humidityStr,
+        ~panelConfigs=prov.configs,
+        ~portfolios=prov.portfolios,
+        ~automationRules=model.automationRouter.rules,
+        (),
+      )
+      ({...model, ensaidConfigPreview: Some(preview)}, Tea_Cmd.none)
     }
   }
 }
@@ -3916,6 +3961,23 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
   | ResetAllPanels =>
     // TODO: reset all panels to defaults, preserving user config
     (model, Tea_Cmd.none)
+  | ExportWorkspaceConfig => {
+      let humidityStr = switch model.humidity {
+      | High => "high"
+      | Medium => "medium"
+      | Low => "low"
+      }
+      let preview = EnsaidConfigEngine.generate(
+        ~repoName="(current repo)",
+        ~workspace=model.workspace,
+        ~humidity=humidityStr,
+        ~panelConfigs=model.provisioner.configs,
+        ~portfolios=model.provisioner.portfolios,
+        ~automationRules=model.automationRouter.rules,
+        (),
+      )
+      ({...model, ensaidConfigPreview: Some(preview)}, Tea_Cmd.none)
+    }
   }
 }
 
@@ -5312,6 +5374,1195 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
   }
 }
 
+// ===========================================================================
+// Network Topology Sub-Updater
+// ===========================================================================
+
+/// Handles all Network Topology (IDApTIK in-game network viewer) messages.
+let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea_Cmd.t<msg>) => {
+  let nt = model.networkTopology
+  switch msg {
+  | SetTopologyCategory(cat) => ({...model, networkTopology: {...nt, activeCategory: cat}}, Tea_Cmd.none)
+  | RefreshTopology => (
+      {...model, networkTopology: {...nt, loading: true}},
+      NetworkTopologyCmd.readTopology(result => NetworkTopology(TopologyReceived(result))),
+    )
+  | TopologyReceived(Ok(_json)) =>
+    // TODO: Deserialise devices and connections from JSON.
+    ({...model, networkTopology: {...nt, loading: false, error: None}}, Tea_Cmd.none)
+  | TopologyReceived(Error(err)) => (
+      {...model, networkTopology: {...nt, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SelectDevice(id) => ({...model, networkTopology: {...nt, selectedDeviceId: Some(id)}}, Tea_Cmd.none)
+  | DeselectDevice => ({...model, networkTopology: {...nt, selectedDeviceId: None}}, Tea_Cmd.none)
+  | RefreshDns => (
+      {...model, networkTopology: {...nt, loading: true}},
+      NetworkTopologyCmd.readDnsTable(result => NetworkTopology(DnsReceived(result))),
+    )
+  | DnsReceived(Ok(_json)) =>
+    // TODO: Deserialise DNS entries from JSON.
+    ({...model, networkTopology: {...nt, loading: false, error: None}}, Tea_Cmd.none)
+  | DnsReceived(Error(err)) => (
+      {...model, networkTopology: {...nt, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | TogglePacketAnimation => (
+      {...model, networkTopology: {...nt, animatePackets: !nt.animatePackets}},
+      if !nt.animatePackets {
+        NetworkTopologyCmd.readPacketFlow(result => NetworkTopology(PacketFlowReceived(result)))
+      } else {
+        Tea_Cmd.none
+      },
+    )
+  | PacketFlowReceived(Ok(_json)) =>
+    // TODO: Deserialise packet flow events from JSON.
+    ({...model, networkTopology: {...nt, error: None}}, Tea_Cmd.none)
+  | PacketFlowReceived(Error(err)) => (
+      {...model, networkTopology: {...nt, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ToggleLabels => ({...model, networkTopology: {...nt, showLabels: !nt.showLabels}}, Tea_Cmd.none)
+  | ToggleSecurityLevels => (
+      {...model, networkTopology: {...nt, showSecurityLevels: !nt.showSecurityLevels}},
+      Tea_Cmd.none,
+    )
+  | ExportTopologySvg => (
+      model,
+      NetworkTopologyCmd.exportSvg(result => NetworkTopology(TopologySvgExported(result))),
+    )
+  | TopologySvgExported(Ok(_)) => (model, Tea_Cmd.none)
+  | TopologySvgExported(Error(err)) => (
+      {...model, networkTopology: {...nt, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | DismissTopoError => ({...model, networkTopology: {...nt, error: None}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// Level Architect Sub-Updater
+// ===========================================================================
+
+/// Handles all Level Architect (IDApTIK visual level design) messages.
+let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_Cmd.t<msg>) => {
+  let la = model.levelArchitect
+  switch msg {
+  | SetArchitectCategory(cat) => ({...model, levelArchitect: {...la, activeCategory: cat}}, Tea_Cmd.none)
+  | ClickGrid(x, y) => {
+      // Behaviour depends on selected tool
+      switch la.selectedTool {
+      | ToolSelect =>
+        let entity = la.entities->Array.find(e => e.gridX === x && e.gridY === y)
+        let selected = switch entity {
+        | Some(e) => Some(e.id)
+        | None => None
+        }
+        ({...model, levelArchitect: {...la, selectedEntityId: selected}}, Tea_Cmd.none)
+      | ToolPlace(kind) =>
+        if LevelArchitectEngine.isOccupied(la.entities, x, y) {
+          (model, Tea_Cmd.none)
+        } else {
+          let id = `${Int.toString(x)}_${Int.toString(y)}_${Int.toString(Array.length(la.entities))}`
+          let entity: levelEntity = {
+            id,
+            kind,
+            name: LevelArchitectEngine.entityKindLabel(kind),
+            gridX: x,
+            gridY: y,
+            rotation: 0,
+            properties: [],
+          }
+          (
+            {
+              ...model,
+              levelArchitect: {
+                ...la,
+                entities: Array.concat(la.entities, [entity]),
+                selectedEntityId: Some(id),
+              },
+            },
+            Tea_Cmd.none,
+          )
+        }
+      | ToolErase =>
+        let newEntities = la.entities->Array.filter(e => !(e.gridX === x && e.gridY === y))
+        ({...model, levelArchitect: {...la, entities: newEntities}}, Tea_Cmd.none)
+      | ToolPatrol | ToolDefenceFlag =>
+        // TODO: Patrol waypoint and defence flag placement
+        (model, Tea_Cmd.none)
+      }
+    }
+  | SelectEntity(id) => ({...model, levelArchitect: {...la, selectedEntityId: Some(id)}}, Tea_Cmd.none)
+  | DeselectEntity => ({...model, levelArchitect: {...la, selectedEntityId: None}}, Tea_Cmd.none)
+  | SelectTool(tool) => ({...model, levelArchitect: {...la, selectedTool: tool}}, Tea_Cmd.none)
+  | ToggleDefenceFlag(flag) => {
+      let hasIt = la.defenceFlags->Array.includes(flag)
+      let newFlags = if hasIt {
+        la.defenceFlags->Array.filter(f => f !== flag)
+      } else {
+        Array.concat(la.defenceFlags, [flag])
+      }
+      ({...model, levelArchitect: {...la, defenceFlags: newFlags}}, Tea_Cmd.none)
+    }
+  | SetAlertThreshold(n) => ({...model, levelArchitect: {...la, alertThreshold: n}}, Tea_Cmd.none)
+  | BrowseAssets => (
+      {...model, levelArchitect: {...la, loading: true}},
+      LevelArchitectCmd.browseAssets(result => LevelArchitect(AssetsLoaded(result))),
+    )
+  | AssetsLoaded(Ok(_json)) =>
+    // TODO: Deserialise assets from JSON.
+    ({...model, levelArchitect: {...la, loading: false, error: None}}, Tea_Cmd.none)
+  | AssetsLoaded(Error(err)) => (
+      {...model, levelArchitect: {...la, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ValidateLevel => (
+      {...model, levelArchitect: {...la, loading: true}},
+      LevelArchitectCmd.validateLevel("", result => LevelArchitect(ValidationResult(result))),
+    )
+  | ValidationResult(Ok(_json)) =>
+    // TODO: Deserialise validation issues from JSON.
+    ({...model, levelArchitect: {...la, loading: false, error: None}}, Tea_Cmd.none)
+  | ValidationResult(Error(err)) => (
+      {...model, levelArchitect: {...la, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | LoadLevel(path) => (
+      {...model, levelArchitect: {...la, loading: true}},
+      LevelArchitectCmd.loadLevel(path, result => LevelArchitect(LevelLoaded(result))),
+    )
+  | LevelLoaded(Ok(_json)) =>
+    // TODO: Deserialise level data from JSON.
+    ({...model, levelArchitect: {...la, loading: false, error: None}}, Tea_Cmd.none)
+  | LevelLoaded(Error(err)) => (
+      {...model, levelArchitect: {...la, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SaveLevel(path) => (
+      model,
+      LevelArchitectCmd.saveLevel(path, "", result => LevelArchitect(LevelSaved(result))),
+    )
+  | LevelSaved(Ok(_)) => (model, Tea_Cmd.none)
+  | LevelSaved(Error(err)) => (
+      {...model, levelArchitect: {...la, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ExportLevelConfig => (
+      model,
+      LevelArchitectCmd.exportLevelConfig("", result => LevelArchitect(LevelConfigExported(result))),
+    )
+  | LevelConfigExported(Ok(_)) => (model, Tea_Cmd.none)
+  | LevelConfigExported(Error(err)) => (
+      {...model, levelArchitect: {...la, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | UndoAction => {
+      if la.historyIndex > 0 {
+        let newIdx = la.historyIndex - 1
+        let entry = la.history->Array.get(newIdx)
+        switch entry {
+        | Some(e) => (
+            {
+              ...model,
+              levelArchitect: {
+                ...la,
+                entities: e.entities,
+                patrols: e.patrols,
+                historyIndex: newIdx,
+              },
+            },
+            Tea_Cmd.none,
+          )
+        | None => (model, Tea_Cmd.none)
+        }
+      } else {
+        (model, Tea_Cmd.none)
+      }
+    }
+  | RedoAction => {
+      if la.historyIndex < Array.length(la.history) - 1 {
+        let newIdx = la.historyIndex + 1
+        let entry = la.history->Array.get(newIdx)
+        switch entry {
+        | Some(e) => (
+            {
+              ...model,
+              levelArchitect: {
+                ...la,
+                entities: e.entities,
+                patrols: e.patrols,
+                historyIndex: newIdx,
+              },
+            },
+            Tea_Cmd.none,
+          )
+        | None => (model, Tea_Cmd.none)
+        }
+      } else {
+        (model, Tea_Cmd.none)
+      }
+    }
+  | ToggleGrid => ({...model, levelArchitect: {...la, showGrid: !la.showGrid}}, Tea_Cmd.none)
+  | TogglePatrolPaths => (
+      {...model, levelArchitect: {...la, showPatrolPaths: !la.showPatrolPaths}},
+      Tea_Cmd.none,
+    )
+  | DismissArchitectError => ({...model, levelArchitect: {...la, error: None}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// Coprocessors Sub-Updater
+// ===========================================================================
+
+/// Handles all Coprocessors (IDApTIK coprocessor monitoring) messages.
+let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t<msg>) => {
+  let cp = model.coprocessors
+  switch msg {
+  | SetCoprocCategory(cat) => ({...model, coprocessors: {...cp, activeCategory: cat}}, Tea_Cmd.none)
+  | RefreshMetrics => (
+      {...model, coprocessors: {...cp, loading: true}},
+      CoprocessorsCmd.readMetrics(result => Coprocessors(MetricsReceived(result))),
+    )
+  | MetricsReceived(Ok(_json)) =>
+    // TODO: Deserialise metrics from JSON.
+    ({...model, coprocessors: {...cp, loading: false, error: None}}, Tea_Cmd.none)
+  | MetricsReceived(Error(err)) => (
+      {...model, coprocessors: {...cp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshCallLog => (
+      {...model, coprocessors: {...cp, loading: true}},
+      CoprocessorsCmd.readCallLog(result => Coprocessors(CallLogReceived(result))),
+    )
+  | CallLogReceived(Ok(_json)) =>
+    // TODO: Deserialise call log from JSON.
+    ({...model, coprocessors: {...cp, loading: false, error: None}}, Tea_Cmd.none)
+  | CallLogReceived(Error(err)) => (
+      {...model, coprocessors: {...cp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshHeatmap => (
+      {...model, coprocessors: {...cp, loading: true}},
+      CoprocessorsCmd.readHeatmap(result => Coprocessors(HeatmapReceived(result))),
+    )
+  | HeatmapReceived(Ok(_json)) =>
+    // TODO: Deserialise heatmap data from JSON.
+    ({...model, coprocessors: {...cp, loading: false, error: None}}, Tea_Cmd.none)
+  | HeatmapReceived(Error(err)) => (
+      {...model, coprocessors: {...cp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ToggleCoprocBackend(backend) => {
+      let isEnabled = cp.enabledBackends->Array.includes(backend)
+      let newEnabled = if isEnabled {
+        cp.enabledBackends->Array.filter(b => b !== backend)
+      } else {
+        Array.concat(cp.enabledBackends, [backend])
+      }
+      (
+        {...model, coprocessors: {...cp, enabledBackends: newEnabled}},
+        CoprocessorsCmd.toggleBackend(
+          CoprocessorsEngine.backendLabel(backend),
+          !isEnabled,
+          result => Coprocessors(BackendToggled(result)),
+        ),
+      )
+    }
+  | BackendToggled(Ok(_)) => (model, Tea_Cmd.none)
+  | BackendToggled(Error(err)) => (
+      {...model, coprocessors: {...cp, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SelectBackendFilter(backend) => (
+      {...model, coprocessors: {...cp, selectedBackend: backend}},
+      Tea_Cmd.none,
+    )
+  | ToggleAutoRefresh => (
+      {...model, coprocessors: {...cp, autoRefresh: !cp.autoRefresh}},
+      Tea_Cmd.none,
+    )
+  | DismissCoprocError => ({...model, coprocessors: {...cp, error: None}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// Multiplayer Monitor Sub-Updater
+// ===========================================================================
+
+/// Handles all Multiplayer Monitor (Phoenix sync server) messages.
+let updateMultiplayerMonitor = (model: model, msg: multiplayerMonitorMsg): (model, Tea_Cmd.t<msg>) => {
+  let mp = model.multiplayerMonitor
+  switch msg {
+  | SetMultiplayerCategory(cat) => (
+      {...model, multiplayerMonitor: {...mp, activeCategory: cat}},
+      Tea_Cmd.none,
+    )
+  | ConnectServer => (
+      {...model, multiplayerMonitor: {...mp, wsConnection: WsConnecting, loading: true}},
+      MultiplayerMonitorCmd.connectToServer(
+        mp.serverUrl,
+        result => MultiplayerMonitor(ConnectionResult(result)),
+      ),
+    )
+  | DisconnectServer => (
+      {...model, multiplayerMonitor: {...mp, loading: true}},
+      MultiplayerMonitorCmd.disconnectFromServer(
+        result => MultiplayerMonitor(DisconnectionResult(result)),
+      ),
+    )
+  | ConnectionResult(Ok(_)) => (
+      {...model, multiplayerMonitor: {...mp, wsConnection: WsConnected, loading: false, error: None}},
+      MultiplayerMonitorCmd.readMultiplayerState(result => MultiplayerMonitor(StateReceived(result))),
+    )
+  | ConnectionResult(Error(err)) => (
+      {...model, multiplayerMonitor: {...mp, wsConnection: WsError(err), loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | DisconnectionResult(Ok(_)) => (
+      {
+        ...model,
+        multiplayerMonitor: {
+          ...mp,
+          wsConnection: WsDisconnected,
+          loading: false,
+          players: [],
+          channels: [],
+          error: None,
+        },
+      },
+      Tea_Cmd.none,
+    )
+  | DisconnectionResult(Error(err)) => (
+      {...model, multiplayerMonitor: {...mp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshState => (
+      {...model, multiplayerMonitor: {...mp, loading: true}},
+      MultiplayerMonitorCmd.readMultiplayerState(result => MultiplayerMonitor(StateReceived(result))),
+    )
+  | StateReceived(Ok(_json)) =>
+    // TODO: Deserialise players, channels, locks from JSON.
+    ({...model, multiplayerMonitor: {...mp, loading: false, error: None}}, Tea_Cmd.none)
+  | StateReceived(Error(err)) => (
+      {...model, multiplayerMonitor: {...mp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshDiffs => (
+      {...model, multiplayerMonitor: {...mp, loading: true}},
+      MultiplayerMonitorCmd.readStateDiffs(result => MultiplayerMonitor(DiffsReceived(result))),
+    )
+  | DiffsReceived(Ok(_json)) =>
+    // TODO: Deserialise state diffs from JSON.
+    ({...model, multiplayerMonitor: {...mp, loading: false, error: None}}, Tea_Cmd.none)
+  | DiffsReceived(Error(err)) => (
+      {...model, multiplayerMonitor: {...mp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SelectPlayer(id) => (
+      {...model, multiplayerMonitor: {...mp, selectedPlayerId: Some(id)}},
+      Tea_Cmd.none,
+    )
+  | DeselectPlayer => (
+      {...model, multiplayerMonitor: {...mp, selectedPlayerId: None}},
+      Tea_Cmd.none,
+    )
+  | ToggleSpectators => (
+      {...model, multiplayerMonitor: {...mp, showSpectators: !mp.showSpectators}},
+      Tea_Cmd.none,
+    )
+  | ToggleAutoReconnect => (
+      {...model, multiplayerMonitor: {...mp, autoReconnect: !mp.autoReconnect}},
+      Tea_Cmd.none,
+    )
+  | ReconnectionTest => (
+      {...model, multiplayerMonitor: {...mp, loading: true}},
+      MultiplayerMonitorCmd.reconnectionTest(
+        result => MultiplayerMonitor(ReconnectionTestResult(result)),
+      ),
+    )
+  | ReconnectionTestResult(Ok(_)) => (
+      {...model, multiplayerMonitor: {...mp, loading: false, error: None}},
+      Tea_Cmd.none,
+    )
+  | ReconnectionTestResult(Error(err)) => (
+      {...model, multiplayerMonitor: {...mp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | DismissMultiplayerError => (
+      {...model, multiplayerMonitor: {...mp, error: None}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+// ===========================================================================
+// DLC Workshop Sub-Updater
+// ===========================================================================
+
+/// Handles all DLC Workshop (puzzle pack creation and testing) messages.
+let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<msg>) => {
+  let dw = model.dlcWorkshop
+  switch msg {
+  | SetWorkshopCategory(cat) => ({...model, dlcWorkshop: {...dw, activeCategory: cat}}, Tea_Cmd.none)
+  | LoadPuzzles => (
+      {...model, dlcWorkshop: {...dw, loading: true}},
+      DlcWorkshopCmd.loadPuzzles(result => DlcWorkshop(PuzzlesLoaded(result))),
+    )
+  | PuzzlesLoaded(Ok(_json)) =>
+    // TODO: Deserialise puzzles from JSON.
+    ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+  | PuzzlesLoaded(Error(err)) => (
+      {...model, dlcWorkshop: {...dw, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SelectPuzzle(id) => ({...model, dlcWorkshop: {...dw, selectedPuzzleId: Some(id)}}, Tea_Cmd.none)
+  | DeselectPuzzle => ({...model, dlcWorkshop: {...dw, selectedPuzzleId: None}}, Tea_Cmd.none)
+  | AddInstruction => {
+      let idx = Array.length(dw.composerInstructions)
+      let instr: puzzleInstruction = {index: idx, opcode: "NOP", operand: None, comment: ""}
+      (
+        {
+          ...model,
+          dlcWorkshop: {
+            ...dw,
+            composerInstructions: Array.concat(dw.composerInstructions, [instr]),
+          },
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | RemoveInstruction(idx) => {
+      let newInstrs = dw.composerInstructions->Array.filter(i => i.index !== idx)
+      ({...model, dlcWorkshop: {...dw, composerInstructions: newInstrs}}, Tea_Cmd.none)
+    }
+  | ClearComposer => ({...model, dlcWorkshop: {...dw, composerInstructions: []}}, Tea_Cmd.none)
+  | SavePuzzle => (
+      model,
+      DlcWorkshopCmd.savePuzzle("", result => DlcWorkshop(PuzzleSaved(result))),
+    )
+  | PuzzleSaved(Ok(_)) => (model, Tea_Cmd.none)
+  | PuzzleSaved(Error(err)) => (
+      {...model, dlcWorkshop: {...dw, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RunPuzzleTest(puzzleId) => (
+      {...model, dlcWorkshop: {...dw, loading: true}},
+      DlcWorkshopCmd.runTest(puzzleId, result => DlcWorkshop(PuzzleTestResult(result))),
+    )
+  | PuzzleTestResult(Ok(_json)) =>
+    // TODO: Deserialise test result and update puzzle status.
+    ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+  | PuzzleTestResult(Error(err)) => (
+      {...model, dlcWorkshop: {...dw, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RunAllTests => (
+      {...model, dlcWorkshop: {...dw, loading: true}},
+      DlcWorkshopCmd.runAllTests(result => DlcWorkshop(AllTestsResult(result))),
+    )
+  | AllTestsResult(Ok(_json)) =>
+    // TODO: Deserialise all test results.
+    ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+  | AllTestsResult(Error(err)) => (
+      {...model, dlcWorkshop: {...dw, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | BrowseDlcAssets => (
+      {...model, dlcWorkshop: {...dw, loading: true}},
+      DlcWorkshopCmd.browseAssets(result => DlcWorkshop(DlcAssetsLoaded(result))),
+    )
+  | DlcAssetsLoaded(Ok(_json)) =>
+    // TODO: Deserialise assets from JSON.
+    ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+  | DlcAssetsLoaded(Error(err)) => (
+      {...model, dlcWorkshop: {...dw, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | PackageDlc => (
+      {...model, dlcWorkshop: {...dw, loading: true}},
+      DlcWorkshopCmd.packageDlc("", result => DlcWorkshop(PackageResult(result))),
+    )
+  | PackageResult(Ok(_)) => ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+  | PackageResult(Error(err)) => (
+      {...model, dlcWorkshop: {...dw, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ImportPuzzle => (
+      model,
+      DlcWorkshopCmd.importPuzzle("", result => DlcWorkshop(PuzzleImported(result))),
+    )
+  | PuzzleImported(Ok(_json)) =>
+    // TODO: Deserialise imported puzzle and add to list.
+    ({...model, dlcWorkshop: {...dw, error: None}}, Tea_Cmd.none)
+  | PuzzleImported(Error(err)) => (
+      {...model, dlcWorkshop: {...dw, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ExportPuzzle => {
+      let puzzleId = switch dw.selectedPuzzleId {
+      | Some(id) => id
+      | None => ""
+      }
+      (model, DlcWorkshopCmd.exportPuzzle(puzzleId, result => DlcWorkshop(PuzzleExported(result))))
+    }
+  | PuzzleExported(Ok(_)) => (model, Tea_Cmd.none)
+  | PuzzleExported(Error(err)) => (
+      {...model, dlcWorkshop: {...dw, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SetDlcFilter(text) => ({...model, dlcWorkshop: {...dw, filterText: text}}, Tea_Cmd.none)
+  | SetDifficultyFilter(diff) => ({...model, dlcWorkshop: {...dw, filterDifficulty: diff}}, Tea_Cmd.none)
+  | DismissWorkshopError => ({...model, dlcWorkshop: {...dw, error: None}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// EDITOR BRIDGE — external code editor federation (LSP)
+// ===========================================================================
+
+/// Handles all Editor Bridge (external editor federation) messages.
+let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t<msg>) => {
+  let eb = model.editorBridge
+  switch msg {
+  | SetBridgeCategory(cat) => ({...model, editorBridge: {...eb, activeCategory: cat}}, Tea_Cmd.none)
+  | DetectEditor => (
+      {...model, editorBridge: {...eb, loading: true}},
+      EditorBridgeCmd.detectEditor(result => EditorBridge(EditorDetected(result))),
+    )
+  | EditorDetected(Ok(_json)) =>
+    // TODO: Deserialise editor info and set editorKind + connection state.
+    ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+  | EditorDetected(Error(err)) => (
+      {...model, editorBridge: {...eb, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ConnectLsp => (
+      {...model, editorBridge: {...eb, connection: EditorConnecting}},
+      EditorBridgeCmd.connectLsp(eb.lspPort, result => EditorBridge(LspConnected(result))),
+    )
+  | LspConnected(Ok(info)) => (
+      {...model, editorBridge: {...eb, connection: EditorConnected(info), error: None}},
+      Tea_Cmd.none,
+    )
+  | LspConnected(Error(err)) => (
+      {...model, editorBridge: {...eb, connection: EditorError(err), error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshDiagnostics => (
+      {...model, editorBridge: {...eb, loading: true}},
+      EditorBridgeCmd.readDiagnostics(result => EditorBridge(DiagnosticsReceived(result))),
+    )
+  | DiagnosticsReceived(Ok(_json)) =>
+    // TODO: Deserialise diagnostics from JSON.
+    ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+  | DiagnosticsReceived(Error(err)) => (
+      {...model, editorBridge: {...eb, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshOpenFiles => (
+      {...model, editorBridge: {...eb, loading: true}},
+      EditorBridgeCmd.readOpenFiles(result => EditorBridge(OpenFilesReceived(result))),
+    )
+  | OpenFilesReceived(Ok(_json)) =>
+    // TODO: Deserialise open files from JSON.
+    ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+  | OpenFilesReceived(Error(err)) => (
+      {...model, editorBridge: {...eb, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshSymbols => (
+      {...model, editorBridge: {...eb, loading: true}},
+      EditorBridgeCmd.readSymbols(eb.symbolFilter, result => EditorBridge(SymbolsReceived(result))),
+    )
+  | SymbolsReceived(Ok(_json)) =>
+    // TODO: Deserialise symbols from JSON.
+    ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+  | SymbolsReceived(Error(err)) => (
+      {...model, editorBridge: {...eb, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | OpenFileInEditor(path, line) => (
+      model,
+      EditorBridgeCmd.openFileAtLine(path, line, result => EditorBridge(FileOpened(result))),
+    )
+  | FileOpened(Ok(_)) => (model, Tea_Cmd.none)
+  | FileOpened(Error(err)) => (
+      {...model, editorBridge: {...eb, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshBridge => (
+      {...model, editorBridge: {...eb, loading: true}},
+      EditorBridgeCmd.detectEditor(result => EditorBridge(EditorDetected(result))),
+    )
+  | SetDiagnosticFilter(text) => ({...model, editorBridge: {...eb, diagnosticFilter: text}}, Tea_Cmd.none)
+  | ToggleShowErrors => ({...model, editorBridge: {...eb, showErrors: !eb.showErrors}}, Tea_Cmd.none)
+  | ToggleShowWarnings => ({...model, editorBridge: {...eb, showWarnings: !eb.showWarnings}}, Tea_Cmd.none)
+  | ToggleShowInfo => ({...model, editorBridge: {...eb, showInfo: !eb.showInfo}}, Tea_Cmd.none)
+  | SetSymbolFilter(text) => ({...model, editorBridge: {...eb, symbolFilter: text}}, Tea_Cmd.none)
+  | SetEditorKind(editor) => ({...model, editorBridge: {...eb, editorKind: editor}}, Tea_Cmd.none)
+  | ToggleAutoSync => ({...model, editorBridge: {...eb, autoSync: !eb.autoSync}}, Tea_Cmd.none)
+  | DismissBridgeError => ({...model, editorBridge: {...eb, error: None}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// BUILD DASHBOARD — build/test/error monitoring
+// ===========================================================================
+
+/// Handles all Build Dashboard (build monitoring) messages.
+let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_Cmd.t<msg>) => {
+  let bd = model.buildDashboard
+  switch msg {
+  | SetBuildCategory(cat) => ({...model, buildDashboard: {...bd, activeCategory: cat}}, Tea_Cmd.none)
+  | TriggerBuild(target) => (
+      {...model, buildDashboard: {...bd, loading: true}},
+      BuildDashboardCmd.triggerBuild(
+        BuildDashboardEngine.targetLabel(target),
+        result => BuildDashboard(BuildTriggered(result)),
+      ),
+    )
+  | BuildTriggered(Ok(_json)) =>
+    // TODO: Deserialise build status update.
+    ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+  | BuildTriggered(Error(err)) => (
+      {...model, buildDashboard: {...bd, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshBuildStatus => (
+      {...model, buildDashboard: {...bd, loading: true}},
+      BuildDashboardCmd.readBuildStatus(result => BuildDashboard(BuildStatusReceived(result))),
+    )
+  | BuildStatusReceived(Ok(_json)) =>
+    // TODO: Deserialise build status for all targets.
+    ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+  | BuildStatusReceived(Error(err)) => (
+      {...model, buildDashboard: {...bd, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RunTests(target) => (
+      {...model, buildDashboard: {...bd, loading: true}},
+      BuildDashboardCmd.runTests(
+        BuildDashboardEngine.targetLabel(target),
+        result => BuildDashboard(TestsReceived(result)),
+      ),
+    )
+  | TestsReceived(Ok(_json)) =>
+    // TODO: Deserialise test results.
+    ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+  | TestsReceived(Error(err)) => (
+      {...model, buildDashboard: {...bd, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | CancelBuild(target) => (
+      model,
+      BuildDashboardCmd.cancelBuild(
+        BuildDashboardEngine.targetLabel(target),
+        result => BuildDashboard(BuildCancelled(result)),
+      ),
+    )
+  | BuildCancelled(Ok(_)) => (model, Tea_Cmd.none)
+  | BuildCancelled(Error(err)) => (
+      {...model, buildDashboard: {...bd, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | RefreshHistory => (
+      {...model, buildDashboard: {...bd, loading: true}},
+      BuildDashboardCmd.readHistory(result => BuildDashboard(HistoryReceived(result))),
+    )
+  | HistoryReceived(Ok(_json)) =>
+    // TODO: Deserialise build history.
+    ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+  | HistoryReceived(Error(err)) => (
+      {...model, buildDashboard: {...bd, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ToggleWatchMode => ({...model, buildDashboard: {...bd, watchMode: !bd.watchMode}}, Tea_Cmd.none)
+  | ToggleAutoRebuild => ({...model, buildDashboard: {...bd, autoRebuild: !bd.autoRebuild}}, Tea_Cmd.none)
+  | ToggleShowPassed => ({...model, buildDashboard: {...bd, showPassedTests: !bd.showPassedTests}}, Tea_Cmd.none)
+  | DismissBuildError => ({...model, buildDashboard: {...bd, error: None}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// RELEASE MANAGER — versioning, changelog, distribution
+// ===========================================================================
+
+/// Handles all Release Manager (versioning and distribution) messages.
+let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_Cmd.t<msg>) => {
+  let rm = model.releaseManager
+  switch msg {
+  | SetReleaseCategory(cat) => ({...model, releaseManager: {...rm, activeCategory: cat}}, Tea_Cmd.none)
+  | BumpVersion(bumpType) => (
+      {...model, releaseManager: {...rm, loading: true}},
+      ReleaseManagerCmd.bumpVersion(bumpType, result => ReleaseManager(VersionBumped(result))),
+    )
+  | VersionBumped(Ok(_json)) =>
+    // TODO: Deserialise new version string and update currentVersion/nextVersion.
+    ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+  | VersionBumped(Error(err)) => (
+      {...model, releaseManager: {...rm, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SelectRelease(version) => ({...model, releaseManager: {...rm, selectedRelease: Some(version)}}, Tea_Cmd.none)
+  | GenerateChangelog => (
+      {...model, releaseManager: {...rm, loading: true}},
+      ReleaseManagerCmd.generateChangelog(
+        rm.currentVersion,
+        result => ReleaseManager(ChangelogGenerated(result)),
+      ),
+    )
+  | ChangelogGenerated(Ok(_json)) =>
+    // TODO: Deserialise changelog entries from JSON.
+    ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+  | ChangelogGenerated(Error(err)) => (
+      {...model, releaseManager: {...rm, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | ToggleAutoChangelog => ({...model, releaseManager: {...rm, autoChangelog: !rm.autoChangelog}}, Tea_Cmd.none)
+  | TogglePlatform(platform) => {
+      let enabled = rm.enabledPlatforms->Array.includes(platform)
+      let newPlatforms = if enabled {
+        rm.enabledPlatforms->Array.filter(p => p !== platform)
+      } else {
+        Array.concat(rm.enabledPlatforms, [platform])
+      }
+      ({...model, releaseManager: {...rm, enabledPlatforms: newPlatforms}}, Tea_Cmd.none)
+    }
+  | BuildArtifacts => {
+      let platformStr = rm.enabledPlatforms
+        ->Array.map(ReleaseManagerEngine.platformLabel)
+        ->Array.join(",")
+      (
+        {...model, releaseManager: {...rm, loading: true}},
+        ReleaseManagerCmd.buildArtifacts(
+          rm.nextVersion,
+          platformStr,
+          result => ReleaseManager(ArtifactsBuilt(result)),
+        ),
+      )
+    }
+  | ArtifactsBuilt(Ok(_json)) =>
+    // TODO: Deserialise artifacts from JSON.
+    ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+  | ArtifactsBuilt(Error(err)) => (
+      {...model, releaseManager: {...rm, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | PublishRelease => (
+      {...model, releaseManager: {...rm, loading: true}},
+      ReleaseManagerCmd.publishRelease(
+        rm.nextVersion,
+        ReleaseManagerEngine.channelLabel(rm.channel),
+        result => ReleaseManager(ReleasePublished(result)),
+      ),
+    )
+  | ReleasePublished(Ok(_json)) =>
+    // TODO: Deserialise publish result and update releases list.
+    ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+  | ReleasePublished(Error(err)) => (
+      {...model, releaseManager: {...rm, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SetChannel(ch) => ({...model, releaseManager: {...rm, channel: ch}}, Tea_Cmd.none)
+  | ToggleSignArtifacts => ({...model, releaseManager: {...rm, signArtifacts: !rm.signArtifacts}}, Tea_Cmd.none)
+  | LoadReleases => (
+      {...model, releaseManager: {...rm, loading: true}},
+      ReleaseManagerCmd.readReleases(result => ReleaseManager(ReleasesLoaded(result))),
+    )
+  | ReleasesLoaded(Ok(_json)) =>
+    // TODO: Deserialise releases from JSON.
+    ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+  | ReleasesLoaded(Error(err)) => (
+      {...model, releaseManager: {...rm, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | DismissReleaseError => ({...model, releaseManager: {...rm, error: None}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// AUTOMATION ROUTER — hybrid cross-panel workflow orchestration
+// ===========================================================================
+
+/// Handles all Automation Router (workflow orchestration) messages.
+let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, Tea_Cmd.t<msg>) => {
+  let ar = model.automationRouter
+  switch msg {
+  | SetRouterCategory(cat) => ({...model, automationRouter: {...ar, activeCategory: cat}}, Tea_Cmd.none)
+  | ToggleGlobalEnabled => ({...model, automationRouter: {...ar, globalEnabled: !ar.globalEnabled}}, Tea_Cmd.none)
+  | ToggleRule(ruleId) => {
+      let newRules = ar.rules->Array.map(r =>
+        if r.id === ruleId {
+          {...r, enabled: !r.enabled}
+        } else {
+          r
+        }
+      )
+      ({...model, automationRouter: {...ar, rules: newRules}}, Tea_Cmd.none)
+    }
+  | ExecuteRule(ruleId) => (
+      model,
+      AutomationRouterCmd.executeRule(ruleId, result => AutomationRouter(ExecutionResult(ruleId, result))),
+    )
+  | ExecutionResult(ruleId, Ok(detail)) => {
+      let now = Date.now()
+      let entry: executionLogEntry = {
+        ruleId,
+        ruleName: switch ar.rules->Array.find(r => r.id === ruleId) {
+        | Some(r) => r.name
+        | None => ruleId
+        },
+        triggeredAt: now,
+        completedAt: now,
+        success: true,
+        detail,
+      }
+      let newRules = ar.rules->Array.map(r =>
+        if r.id === ruleId {
+          {...r, firedCount: r.firedCount + 1, lastFired: Some(now), lastResult: Some(detail)}
+        } else {
+          r
+        }
+      )
+      (
+        {
+          ...model,
+          automationRouter: {
+            ...ar,
+            rules: newRules,
+            executionLog: Array.concat([entry], ar.executionLog),
+          },
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | ExecutionResult(ruleId, Error(err)) => {
+      let now = Date.now()
+      let entry: executionLogEntry = {
+        ruleId,
+        ruleName: switch ar.rules->Array.find(r => r.id === ruleId) {
+        | Some(r) => r.name
+        | None => ruleId
+        },
+        triggeredAt: now,
+        completedAt: now,
+        success: false,
+        detail: err,
+      }
+      (
+        {
+          ...model,
+          automationRouter: {
+            ...ar,
+            executionLog: Array.concat([entry], ar.executionLog),
+            error: Some(err),
+          },
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | ApproveAction(idx) => {
+      let newPending = ar.pendingActions->Array.filterWithIndex((_a, i) => i !== idx)
+      ({...model, automationRouter: {...ar, pendingActions: newPending}}, Tea_Cmd.none)
+    }
+  | RejectAction(idx) => {
+      let newPending = ar.pendingActions->Array.filterWithIndex((_a, i) => i !== idx)
+      ({...model, automationRouter: {...ar, pendingActions: newPending}}, Tea_Cmd.none)
+    }
+  | ApproveAll => ({...model, automationRouter: {...ar, pendingActions: []}}, Tea_Cmd.none)
+  | RejectAll => ({...model, automationRouter: {...ar, pendingActions: []}}, Tea_Cmd.none)
+  | LoadRules => (
+      {...model, automationRouter: {...ar, loading: true}},
+      AutomationRouterCmd.loadRules(result => AutomationRouter(RulesLoaded(result))),
+    )
+  | RulesLoaded(Ok(_json)) =>
+    // TODO: Deserialise rules from JSON.
+    ({...model, automationRouter: {...ar, loading: false, error: None}}, Tea_Cmd.none)
+  | RulesLoaded(Error(err)) => (
+      {...model, automationRouter: {...ar, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SaveRules => (
+      model,
+      AutomationRouterCmd.saveRules("", result => AutomationRouter(RulesSaved(result))),
+    )
+  | RulesSaved(Ok(_)) => (model, Tea_Cmd.none)
+  | RulesSaved(Error(err)) => (
+      {...model, automationRouter: {...ar, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | LoadFromRepo => (
+      {...model, automationRouter: {...ar, loading: true, configSource: "repo"}},
+      AutomationRouterCmd.loadFromRepo(".", result => AutomationRouter(RepoRulesLoaded(result))),
+    )
+  | RepoRulesLoaded(Ok(_json)) =>
+    // TODO: Deserialise rules from ENSAID_CONFIG.a2ml.
+    ({...model, automationRouter: {...ar, loading: false, error: None}}, Tea_Cmd.none)
+  | RepoRulesLoaded(Error(err)) => (
+      {...model, automationRouter: {...ar, loading: false, configSource: "local", error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SetRouterFilter(text) => ({...model, automationRouter: {...ar, filterText: text}}, Tea_Cmd.none)
+  | ToggleShowDisabled => ({...model, automationRouter: {...ar, showDisabled: !ar.showDisabled}}, Tea_Cmd.none)
+  | DismissRouterError => ({...model, automationRouter: {...ar, error: None}}, Tea_Cmd.none)
+  | ExportAutomationConfig => {
+      let humidityStr = switch model.humidity {
+      | High => "high"
+      | Medium => "medium"
+      | Low => "low"
+      }
+      let preview = EnsaidConfigEngine.generate(
+        ~repoName="(current repo)",
+        ~workspace=model.workspace,
+        ~humidity=humidityStr,
+        ~panelConfigs=model.provisioner.configs,
+        ~portfolios=model.provisioner.portfolios,
+        ~automationRules=ar.rules,
+        (),
+      )
+      ({...model, ensaidConfigPreview: Some(preview)}, Tea_Cmd.none)
+    }
+  }
+}
+
+// ===========================================================================
+// BoJ Sub-Updater — Bundle of Joy cartridge server
+// ===========================================================================
+
+let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
+  let boj = model.boj
+  switch msg {
+  | SetBojCategory(cat) => ({...model, boj: {...boj, activeCategory: cat}}, Tea_Cmd.none)
+  | RefreshHealth => (
+      {...model, boj: {...boj, loading: true}},
+      BojCmd.health(result => Boj(HealthResult(result))),
+    )
+  | HealthResult(Ok(_)) => ({...model, boj: {...boj, connected: true, loading: false, error: None}}, Tea_Cmd.none)
+  | HealthResult(Error(err)) => ({...model, boj: {...boj, connected: false, loading: false, error: Some(err)}}, Tea_Cmd.none)
+  | RefreshCartridges => (
+      {...model, boj: {...boj, loading: true}},
+      BojCmd.listCartridges(result => Boj(CartridgesResult(result))),
+    )
+  | CartridgesResult(Ok(_json)) =>
+    // TODO: Deserialise cartridge list from JSON.
+    ({...model, boj: {...boj, loading: false, error: None}}, Tea_Cmd.none)
+  | CartridgesResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
+  | SelectCartridge(name) => {
+      let sel = if name === "" { None } else { Some(name) }
+      ({...model, boj: {...boj, selectedCartridge: sel}}, Tea_Cmd.none)
+    }
+  | LoadCartridge(name) => (
+      {...model, boj: {...boj, loading: true}},
+      BojCmd.loadCartridge(name, result => Boj(CartridgeActionResult(name, result))),
+    )
+  | UnloadCartridge(name) => (
+      {...model, boj: {...boj, loading: true}},
+      BojCmd.unloadCartridge(name, result => Boj(CartridgeActionResult(name, result))),
+    )
+  | CartridgeActionResult(_name, Ok(_)) =>
+    // Refresh cartridge list after load/unload.
+    (
+      {...model, boj: {...boj, loading: false, error: None}},
+      BojCmd.listCartridges(result => Boj(CartridgesResult(result))),
+    )
+  | CartridgeActionResult(name, Error(err)) => (
+      {...model, boj: {...boj, loading: false, error: Some(`${name}: ${err}`)}},
+      Tea_Cmd.none,
+    )
+  | RefreshTopology => (
+      {...model, boj: {...boj, loading: true}},
+      BojCmd.topology(result => Boj(TopologyResult(result))),
+    )
+  | TopologyResult(Ok(_json)) =>
+    // TODO: Deserialise topology data.
+    ({...model, boj: {...boj, loading: false, error: None}}, Tea_Cmd.none)
+  | TopologyResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
+  | RefreshUmoja => (
+      {...model, boj: {...boj, loading: true}},
+      BojCmd.umojaStatus(result => Boj(UmojaResult(result))),
+    )
+  | UmojaResult(Ok(_json)) =>
+    // TODO: Deserialise Umoja status.
+    ({...model, boj: {...boj, loading: false, error: None}}, Tea_Cmd.none)
+  | UmojaResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
+  | SetInvokeCartridge(name) => ({...model, boj: {...boj, invokeCartridge: name}}, Tea_Cmd.none)
+  | SetInvokeTool(tool) => ({...model, boj: {...boj, invokeTool: tool}}, Tea_Cmd.none)
+  | SetInvokeArgs(_argsJson) =>
+    // Store raw args JSON string — parsed on invocation.
+    (model, Tea_Cmd.none)
+  | ExecuteInvoke => (
+      {...model, boj: {...boj, loading: true, invokeResult: None}},
+      BojCmd.invokeCartridge(
+        boj.invokeCartridge,
+        boj.invokeTool,
+        "{}",
+        result => Boj(InvokeResult(result)),
+      ),
+    )
+  | InvokeResult(Ok(payload)) => {
+      let result: BojModel.invokeResult = {success: true, payload, durationMs: 0}
+      ({...model, boj: {...boj, loading: false, invokeResult: Some(result), error: None}}, Tea_Cmd.none)
+    }
+  | InvokeResult(Error(err)) => {
+      let result: BojModel.invokeResult = {success: false, payload: err, durationMs: 0}
+      ({...model, boj: {...boj, loading: false, invokeResult: Some(result), error: None}}, Tea_Cmd.none)
+    }
+  | SetBojFilter(text) => ({...model, boj: {...boj, filterText: text}}, Tea_Cmd.none)
+  | DismissBojError => ({...model, boj: {...boj, error: None}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
+// ENSAID_CONFIG Sub-Updater — cross-panel config generation
+// ===========================================================================
+
+let updateCladeBrowser = (model: model, msg: cladeBrowserMsg): (model, Tea_Cmd.t<msg>) => {
+  let cb = model.cladeBrowser
+  switch msg {
+  | SetCladeCategory(cat) => ({...model, cladeBrowser: {...cb, category: cat}}, Tea_Cmd.none)
+  | SelectClade(id) => ({...model, cladeBrowser: {...cb, selectedClade: id}}, Tea_Cmd.none)
+  | SetKindFilter(kind) => ({...model, cladeBrowser: {...cb, kindFilter: kind}}, Tea_Cmd.none)
+  | UpdateCladeSearch(query) => ({...model, cladeBrowser: {...cb, searchQuery: query}}, Tea_Cmd.none)
+  | LoadClades => ({...model, cladeBrowser: {...cb, loading: true}}, Tea_Cmd.none)
+  | CladesLoaded(clades) => ({...model, cladeBrowser: {...cb, clades, loading: false, error: None}}, Tea_Cmd.none)
+  }
+}
+
+let updateTentacles = (model: model, msg: tentaclesMsg): (model, Tea_Cmd.t<msg>) => {
+  let st = model.tentacles
+  switch msg {
+  | SetTentaclesCategory(cat) => ({...model, tentacles: {...st, activeCategory: cat}}, Tea_Cmd.none)
+  | SelectAgent(id) => ({...model, tentacles: {...st, selectedAgent: id}}, Tea_Cmd.none)
+  | SetGlobalStage(stage) => {
+      let updatedAgents = st.agents->Array.map(a => {...a, stage})
+      ({...model, tentacles: {...st, globalStage: stage, agents: updatedAgents}}, Tea_Cmd.none)
+    }
+  | ToggleOrchestraCompact => ({...model, tentacles: {...st, orchestraCompact: !st.orchestraCompact}}, Tea_Cmd.none)
+  | BroadcastFromAgent(_source, payload) => (
+      {...model, tentacles: {...st, pendingBroadcasts: Array.concat(st.pendingBroadcasts, [payload])}},
+      Tea_Cmd.none,
+    )
+  | DeliverBroadcasts => ({...model, tentacles: {...st, pendingBroadcasts: []}}, Tea_Cmd.none)
+  | StartAgentTask(id, task) => {
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {
+        ...a,
+        busy: true,
+        currentTask: Some(task),
+        currentPhase: Observe,
+        lastError: None,
+      })
+      ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
+    }
+  | AgentPhaseAdvanced(id, phase) => {
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {...a, currentPhase: phase})
+      ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
+    }
+  | AgentConstraintAdded(id, newConstraint) => {
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {
+        ...a,
+        constraints: Array.concat(a.constraints, [newConstraint]),
+      })
+      ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
+    }
+  | AgentReasoningAdded(id, entry) => {
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {
+        ...a,
+        reasoning: Array.concat(a.reasoning, [entry]),
+      })
+      ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
+    }
+  | AgentResultAdded(id, result) => {
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {
+        ...a,
+        results: Array.concat(a.results, [result]),
+      })
+      ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
+    }
+  | AgentTaskCompleted(id) => {
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {
+        ...a,
+        busy: false,
+        currentTask: None,
+      })
+      ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
+    }
+  | AgentError(id, err) => {
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {
+        ...a,
+        busy: false,
+        lastError: Some(err),
+      })
+      ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
+    }
+  | ClearAgentError(id) => {
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {...a, lastError: None})
+      ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
+    }
+  | CheckFfiBridge => (model, TentaclesCmd.checkFfiBridge(result =>
+      switch result {
+      | Ok(_) => Tentacles(FfiBridgeResult(true, None))
+      | Error(err) => Tentacles(FfiBridgeResult(false, Some(err)))
+      }
+    ))
+  | FfiBridgeResult(connected, error) => (
+      {...model, tentacles: {...st, ffiConnected: connected, ffiError: error, ffiLastCheck: 0.0}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+let updateEnsaidConfig = (model: model, msg: ensaidConfigMsg): (model, Tea_Cmd.t<msg>) => {
+  let humidityStr = switch model.humidity {
+  | High => "high"
+  | Medium => "medium"
+  | Low => "low"
+  }
+  switch msg {
+  | GenerateAndWrite => {
+      let content = EnsaidConfigEngine.generate(
+        ~repoName="(current repo)",
+        ~workspace=model.workspace,
+        ~humidity=humidityStr,
+        ~panelConfigs=model.provisioner.configs,
+        ~portfolios=model.provisioner.portfolios,
+        ~automationRules=model.automationRouter.rules,
+        (),
+      )
+      (
+        {...model, ensaidConfigPreview: Some(content)},
+        EnsaidConfigCmd.writeConfig(".", content, result => EnsaidConfig(ConfigWritten(result))),
+      )
+    }
+  | PreviewConfig => {
+      let content = EnsaidConfigEngine.generate(
+        ~repoName="(current repo)",
+        ~workspace=model.workspace,
+        ~humidity=humidityStr,
+        ~panelConfigs=model.provisioner.configs,
+        ~portfolios=model.provisioner.portfolios,
+        ~automationRules=model.automationRouter.rules,
+        (),
+      )
+      ({...model, ensaidConfigPreview: Some(content)}, Tea_Cmd.none)
+    }
+  | PreviewReady(content) => ({...model, ensaidConfigPreview: Some(content)}, Tea_Cmd.none)
+  | ConfigWritten(Ok(_)) => ({...model, ensaidConfigError: None}, Tea_Cmd.none)
+  | ConfigWritten(Error(err)) => ({...model, ensaidConfigError: Some(err)}, Tea_Cmd.none)
+  | ReadFromRepo => (
+      model,
+      EnsaidConfigCmd.readConfig(".", result => EnsaidConfig(ConfigRead(result))),
+    )
+  | ConfigRead(Ok(content)) => (
+      {...model, ensaidConfigPreview: Some(content), ensaidConfigError: None},
+      Tea_Cmd.none,
+    )
+  | ConfigRead(Error(err)) => ({...model, ensaidConfigError: Some(err)}, Tea_Cmd.none)
+  | DismissConfigError => ({...model, ensaidConfigError: None}, Tea_Cmd.none)
+  }
+}
+
 /// ORCHESTRATOR: The main entry point for state updates.
 /// Routes each message to its domain-specific sub-updater, then applies
 /// contractile evaluation as a post-processing cognitive governance step.
@@ -5363,6 +6614,19 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | ValenceShell(subMsg) => updateValenceShell(model, subMsg)
   | GamePreview(subMsg) => updateGamePreview(model, subMsg)
   | VmInspector(subMsg) => updateVmInspector(model, subMsg)
+  | NetworkTopology(subMsg) => updateNetworkTopology(model, subMsg)
+  | LevelArchitect(subMsg) => updateLevelArchitect(model, subMsg)
+  | Coprocessors(subMsg) => updateCoprocessors(model, subMsg)
+  | MultiplayerMonitor(subMsg) => updateMultiplayerMonitor(model, subMsg)
+  | DlcWorkshop(subMsg) => updateDlcWorkshop(model, subMsg)
+  | EditorBridge(subMsg) => updateEditorBridge(model, subMsg)
+  | BuildDashboard(subMsg) => updateBuildDashboard(model, subMsg)
+  | ReleaseManager(subMsg) => updateReleaseManager(model, subMsg)
+  | AutomationRouter(subMsg) => updateAutomationRouter(model, subMsg)
+  | Boj(subMsg) => updateBoj(model, subMsg)
+  | CladeBrowser(subMsg) => updateCladeBrowser(model, subMsg)
+  | Tentacles(subMsg) => updateTentacles(model, subMsg)
+  | EnsaidConfig(subMsg) => updateEnsaidConfig(model, subMsg)
   | Undo => {
       // Pop from undo stack, push current to redo.
       // For now, undo/redo stacks store serialised JSON strings.

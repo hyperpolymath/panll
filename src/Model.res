@@ -185,6 +185,70 @@ include GamePreviewModel
 /// debugger with step forward/backward and execution timeline.
 include VmInspectorModel
 
+/// Re-export Network Topology types (networkZone, connectionProtocol,
+/// networkDevice, networkConnection, dnsEntry, packetFlowEvent,
+/// networkTopologyCategory, networkTopologyState) for the IDApTIK
+/// in-game network topology viewer.
+include NetworkTopologyModel
+
+/// Re-export Level Architect types (levelEntityKind, levelEntity,
+/// guardPatrol, defenceFlag, validationIssue, levelAsset, editorTool,
+/// levelArchitectCategory, levelArchitectState) for the visual level
+/// design tool with grid editor and LevelConfig export.
+include LevelArchitectModel
+
+/// Re-export Coprocessors types (coprocessorBackend, coprocHealth,
+/// coprocCallEntry, coprocMetrics, heatmapCell, coprocessorsCategory,
+/// coprocessorsState) for the IDApTIK coprocessor monitoring dashboard.
+include CoprocessorsModel
+
+/// Re-export Multiplayer Monitor types (wsConnectionState, connectedPlayer,
+/// channelSubscription, stateDiffEntry, deviceLock, latencySample,
+/// etsCacheEntry, multiplayerCategory, multiplayerMonitorState) for the
+/// IDApTIK Phoenix sync server monitoring panel.
+include MultiplayerMonitorModel
+
+/// Re-export DLC Workshop types (puzzleDifficulty, testRunStatus,
+/// puzzleInstruction, dlcPuzzle, puzzleChain, dlcAsset, dlcPackMeta,
+/// dlcWorkshopCategory, dlcWorkshopState) for the DLC puzzle pack
+/// creation, testing, and packaging panel.
+include DlcWorkshopModel
+
+/// Re-export Editor Bridge types (editorKind, editorConnectionState,
+/// openFileEntry, lspDiagnostic, workspaceSymbol, bridgeActivity,
+/// editorBridgeCategory, editorBridgeState) for the external code
+/// editor federation panel (LSP diagnostics, symbols, jump-to-line).
+include EditorBridgeModel
+
+/// Re-export Build Dashboard types (buildTarget, buildStatus,
+/// buildMessage, testResult, buildHistoryEntry, buildDashboardCategory,
+/// buildDashboardState) for the IDApTIK build monitoring panel.
+include BuildDashboardModel
+
+/// Re-export Release Manager types (releaseChannel, platformTarget,
+/// releaseStatus, releaseArtifact, changelogEntry, releaseRecord,
+/// releaseManagerCategory, releaseManagerState) for the versioning,
+/// changelog, and distribution panel.
+include ReleaseManagerModel
+
+/// Re-export Automation Router types (triggerEvent, ruleCondition, ruleAction,
+/// approvalMode, automationRule, pendingAction, executionLogEntry,
+/// automationRouterCategory, automationRouterState) for the hybrid cross-panel
+/// workflow orchestration panel with event-driven rules and approval gates.
+include AutomationRouterModel
+
+/// Opens BojModel into this scope, contributing BoJ types
+/// (bojCartridge, bojCategory, bojState, etc.) for the Bundle of Joy panel.
+include BojModel
+include CladeBrowserModel
+
+/// Re-export Tentacles types (tentacleId, tentacleStage, oodaPhase,
+/// tentacleConstraint, reasoningEntry, validatedResult, tentaclePersonality,
+/// tentacleNames, agentBroadcastPayload, tentacleAgentState, tentaclesCategory,
+/// tentaclesState) for the 7-Tentacles compiler agent panel — seven colour-coded
+/// agents representing compiler subsystems with progressive cephalopod staging.
+include TentaclesModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -303,6 +367,46 @@ type model = {
 
   // VM Inspector — reversible VM visual debugger (step forward/backward)
   vmInspector: vmInspectorState,
+
+  // Network Topology — IDApTIK in-game network graph viewer
+  networkTopology: networkTopologyState,
+
+  // Level Architect — visual level design tool
+  levelArchitect: levelArchitectState,
+
+  // Coprocessors — coprocessor backend monitoring dashboard
+  coprocessors: coprocessorsState,
+
+  // Multiplayer Monitor — Phoenix sync server inspector
+  multiplayerMonitor: multiplayerMonitorState,
+
+  // DLC Workshop — puzzle pack creation, testing, packaging
+  dlcWorkshop: dlcWorkshopState,
+
+  // Editor Bridge — federate with external code editors (VSCodium, Zed, etc.)
+  editorBridge: editorBridgeState,
+
+  // Build Dashboard — build/test/error monitoring for IDApTIK sub-projects
+  buildDashboard: buildDashboardState,
+
+  // Release Manager — versioning, changelog, artifacts, distribution
+  releaseManager: releaseManagerState,
+
+  // Automation Router — hybrid cross-panel workflow orchestration
+  automationRouter: automationRouterState,
+
+  // BoJ — Bundle of Joy cartridge server
+  boj: bojState,
+
+  // Clade Browser — panel taxonomy explorer
+  cladeBrowser: cladeBrowserState,
+
+  // Tentacles — 7-Tentacles compiler agent panel (within/without ECHIDNA)
+  tentacles: tentaclesState,
+
+  // ENSAID_CONFIG — cross-panel config generation state
+  ensaidConfigPreview: option<string>,
+  ensaidConfigError: option<string>,
 
   // Undo/Redo — ring buffer of model snapshots
   undoStack: array<string>,
@@ -551,6 +655,23 @@ let init = (): model => {
   valenceShell: ValenceShellEngine.defaultState,
   gamePreview: GamePreviewEngine.defaultState,
   vmInspector: VmInspectorEngine.defaultState,
+  networkTopology: NetworkTopologyEngine.defaultState,
+  levelArchitect: LevelArchitectEngine.defaultState,
+  coprocessors: CoprocessorsEngine.defaultState,
+  multiplayerMonitor: MultiplayerMonitorEngine.defaultState,
+  dlcWorkshop: DlcWorkshopEngine.defaultState,
+  editorBridge: EditorBridgeEngine.defaultState,
+  buildDashboard: BuildDashboardEngine.defaultState,
+  releaseManager: ReleaseManagerEngine.defaultState,
+  automationRouter: AutomationRouterEngine.defaultState,
+  boj: BojEngine.defaultState,
+  cladeBrowser: {
+    ...CladeBrowserModel.defaultState,
+    clades: CladeBrowserEngine.builtinClades,
+  },
+  tentacles: TentaclesEngine.init(),
+  ensaidConfigPreview: None,
+  ensaidConfigError: None,
   undoStack: [],
   redoStack: [],
   humidity: Medium,

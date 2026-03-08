@@ -1,10 +1,16 @@
 # Migration from Custom TEA to Official rescript-tea
 
-## Overview
+## ⛔ SUPERSEDED — DO NOT FOLLOW
 
-This document tracks the migration from our custom TEA implementation (`src/tea/`) to the official `rescript-tea` package (v0.16.0).
+**Decision (2026-03-08):** The custom TEA in `src/tea/` is PanLL's permanent
+architecture. This migration will not happen. See `docs/TEA_GUIDE.md` §Permanence
+Decision for rationale.
 
-## Status: IN PROGRESS
+## Overview (historical)
+
+This document tracked the migration from our custom TEA implementation (`src/tea/`) to the official `rescript-tea` package (v0.16.0).
+
+## Status: CANCELLED
 
 - [x] Install rescript-tea@0.16.0
 - [x] Update package.json

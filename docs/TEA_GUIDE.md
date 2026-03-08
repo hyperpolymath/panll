@@ -1,13 +1,15 @@
 # The Elm Architecture (TEA) Guide for PanLL
 
-**Version:** 1.0.0
-**Status:** Production Ready
+**Version:** 2.0.0
+**Status:** Production Ready — Permanent Custom Implementation
 **License:** PMPL-1.0-or-later
-**Author:** Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>
+**Author:** Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 ## Table of Contents
 
 - [Introduction](#introduction)
+- [Permanence Decision](#permanence-decision)
+- [Module Inventory](#module-inventory)
 - [Core Concepts](#core-concepts)
 - [Module Reference](#module-reference)
 - [Architecture Guide](#architecture-guide)
@@ -35,6 +37,82 @@ PanLL (eNSAID - Environment for NeSy-Agentic Integrated Development) requires:
 - Type-safe guarantees for critical operations
 
 TEA provides all of these guarantees.
+
+---
+
+## Permanence Decision
+
+**Status: PERMANENT — this is not a temporary fork or stopgap.**
+
+PanLL's custom TEA implementation in `src/tea/` (8 modules, ~700 lines) is the
+permanent architecture. The earlier plan to migrate to the official
+`rescript-tea@0.16.0` package has been abandoned. The migration guides
+(`MIGRATION-TO-RESCRIPT-TEA.md` and `RESCRIPT-TEA-MIGRATION-GUIDE.md`) are
+superseded by this document.
+
+### Why Not Official rescript-tea?
+
+1. **Unmaintained upstream** — `rescript-tea` has not been updated since 2021.
+   It depends on `rescript-webapi@0.7.0`, which is incompatible with
+   ReScript 11.1.4+.
+2. **No keyboard subscriptions** — PanLL needs custom keyboard handling
+   (panel switching, shortcuts). Official rescript-tea has no built-in keyboard
+   support, so custom subscription code is needed regardless.
+3. **Tauri integration** — PanLL's command layer wraps Tauri IPC calls.
+   Official rescript-tea's command model doesn't account for desktop bridge
+   APIs.
+4. **ARIA accessibility** — Our `Tea_Vdom` has first-class ARIA attribute
+   support (12+ aria-* helpers, role, tabIndex) built directly into the
+   attribute type. Official rescript-tea requires manual `property` calls.
+5. **VDOM diffing** — Our `Tea_Render` includes a complete diff/patch engine
+   (Replace, UpdateProps, UpdateChildren, RemoveNode) with event listener
+   lifecycle management. This would need to be reimplemented on top of
+   rescript-tea anyway.
+6. **Message queue** — `Tea_App` implements a dispatch queue that prevents
+   recursive dispatch, which is critical for PanLL's multi-panel architecture
+   where one panel's update can trigger messages in another.
+7. **Zero dependencies** — The custom TEA has no npm dependencies at all.
+   It compiles with ReScript alone and runs in any browser or Tauri webview.
+
+### What This Means
+
+- `src/tea/` is a first-class PanLL subsystem, not a vendored fork.
+- New features (WebSocket subscriptions, navigation, batch rendering) are
+  added directly to these modules.
+- Bug fixes and optimisations are made in-place.
+- The `MIGRATION-TO-RESCRIPT-TEA.md` and `RESCRIPT-TEA-MIGRATION-GUIDE.md`
+  files in the repo root are historical artefacts and should not be followed.
+
+---
+
+## Module Inventory
+
+| Module | Lines | Purpose |
+|--------|-------|---------|
+| `Tea.res` | 25 | Facade — re-exports all TEA modules |
+| `Tea_App.res` | 173 | Core runtime: `standardProgram`, `simpleProgram`, dispatch loop, message queue |
+| `Tea_Cmd.res` | 61 | Commands: `None`, `Msg`, `Batch`, `Call` with `map`/`execute` |
+| `Tea_Sub.res` | 76 | Subscriptions: key-based diffing, `enable`/`cleanup` lifecycle |
+| `Tea_Vdom.res` | 106 | Virtual DOM: `Text`/`Element` nodes, attributes (Property, Style, Event, EventWithValue, EventWithKey), ARIA |
+| `Tea_Html.res` | 111 | HTML element constructors (37 elements) + `Attrs` and `Events` sub-modules |
+| `Tea_Render.res` | 405 | DOM rendering: `createElement`, `diff`, `applyPatch`, event listener tracking, `mount`/`unmount` |
+| `Tea_Time.res` | 30 | Time subscriptions: `every` (interval), `after` (timeout) |
+| `Tea_Animationframe.res` | 24 | `requestAnimationFrame` subscription |
+| **Total** | **~1011** | **Complete TEA implementation with VDOM diffing** |
+
+### Dependency Graph
+
+```
+Tea.res (facade)
+  ├── Tea_App.res ──────→ Tea_Cmd.res
+  │       │               Tea_Sub.res
+  │       └──────────────→ Tea_Render.res ──→ Tea_Vdom.res
+  ├── Tea_Html.res ──────→ Tea_Vdom.res
+  ├── Tea_Time.res ──────→ Tea_Sub.res
+  └── Tea_Animationframe.res → Tea_Sub.res
+```
+
+No circular dependencies. `Tea_Vdom` is the leaf module.
 
 ---
 

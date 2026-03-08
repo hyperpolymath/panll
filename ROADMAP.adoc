@@ -395,7 +395,7 @@ Each integration is a **pane module** — a self-contained unit that provides da
 * [ ] Performance benchmarks (startup time, query latency)
 
 === Low Priority
-* [ ] Migration to official rescript-tea (blocked on ReScript 11.x compatibility)
+* [x] Custom TEA declared permanent (2026-03-08) — rescript-tea migration cancelled
 * [ ] Logo and branding
 
 == License & Governance

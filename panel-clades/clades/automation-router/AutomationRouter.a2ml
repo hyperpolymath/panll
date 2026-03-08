@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Automation Router Panel Clade — Cross-panel workflow orchestration
+
+[clade-metadata]
+id = "automation-router"
+name = "Automation Router"
+short-name = "Auto"
+version = "1.0.0"
+kind = "directive"
+icon = "route"
+description = "Hybrid automation router — orchestrate cross-panel workflows via event-driven rules with optional human approval gates. Reads .ensaid-config/workflows.a2ml for per-repo automation."
+
+[clade-traits]
+has-backend = true           # Tauri backend executes rules and reads .ensaid-config
+has-scanning = false
+has-persistence = true       # Rules and execution history persisted
+has-work-items = true        # Pending approval actions are work items
+has-priority-ordering = true # Rules have priority ordering (before/after/parallel)
+has-customisation = true     # Rule creation, approval modes, enable/disable
+is-directive = true          # Controls how other panels operate
+is-readonly = false          # Creates and executes rules
+
+[clade-capabilities]
+capabilities = [
+  "EventDrivenRules",       # Rules triggered by file changes, panel messages, timers
+  "HybridApproval",         # AutoFire, RequireApproval, ApproveOnce, DryRunFirst
+  "CrossPanelDispatch",     # Send messages to any panel from rules
+  "ConditionalExecution",   # Rules fire only when conditions on panel state are met
+  "ExecutionHistory",       # Log of all rule executions with success/failure
+  "RepoConfigLoading",      # Read .ensaid-config/workflows.a2ml for per-repo rules
+  "GlobalKillSwitch",       # Enable/disable all automation globally
+  "ManualTrigger",          # Execute any rule manually regardless of trigger
+  "PriorityChaining",       # before/after/parallel execution ordering
+]
+
+[clade-panel-integration]
+panel-id = "PanelAutomationRouter"
+model-module = "AutomationRouterModel"
+engine-module = "AutomationRouterEngine"
+component-module = "AutomationRouter"
+command-module = "AutomationRouterCmd"
+
+[clade-dependencies]
+config-file = ".ensaid-config/workflows.a2ml"
+config-format = "a2ml"
+
+[clade-cross-panel]
+# The router can dispatch messages to ANY panel — it's the orchestration layer
+dispatches-to = ["all"]
+# Reads .ensaid-config loaded by RepoLoader
+depends-on = ["repoloader"]
+# TSDM provides priority ordering that the router respects
+coordinated-with = ["tsdm", "workspace"]

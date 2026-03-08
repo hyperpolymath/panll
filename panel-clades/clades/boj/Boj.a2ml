@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+#
+# Clade Definition: BoJ (Bundle of Joy)
+# Unified cartridge server — 17 domains, 3-layer ABI/FFI/Adapter, Umoja federation.
+
+[clade]
+id = "boj"
+name = "BoJ — Bundle of Joy"
+kind = "bridge"
+version = "1.0.0"
+
+[clade-description]
+summary = "Unified cartridge runtime bridging all protocol domains (MCP, LSP, DAP, BSP, etc.) through Idris2 ABI → Zig FFI → V-lang triple adapter"
+long = """
+The Bundle of Joy server is the protocol backbone of the hyperpolymath ecosystem.
+It replaces polystack with a single cartridge-based architecture where each domain
+(database, fleet, nesy, agent, cloud, container, k8s, git, secrets, queues, iac,
+observe, ssg, proof, lsp, dap, bsp) is a hot-reloadable shared library (.so) with SHA-256
+integrity verification and formal ABI proofs via Idris2 dependent types.
+
+The Umoja federation layer enables distributed node discovery via gossip protocol,
+allowing multiple BoJ instances to form a peer network with cryptographic attestation.
+"""
+
+[clade-traits]
+has-persistence = false
+has-backend = true
+has-work-items = false
+has-real-time = true
+is-ambient = false
+
+[clade-capabilities]
+capabilities = [
+  "CartridgeList",
+  "CartridgeLoad",
+  "CartridgeUnload",
+  "CartridgeInvoke",
+  "HealthCheck",
+  "TopologyView",
+  "UmojaFederation",
+  "MatrixView",
+  "HotReload",
+]
+
+[clade-connections]
+backend-type = "http"
+default-endpoint = "http://localhost:7700/api/v1"
+protocols = ["MCP", "REST", "gRPC", "GraphQL"]
+
+[clade-architecture]
+layers = ["Idris2 ABI (dependent types)", "Zig FFI (C-compatible)", "V-lang Triple Adapter (REST+gRPC+GraphQL)"]
+cartridge-count = 17
+federation = "Umoja gossip protocol"
+
+[clade-taxonomy]
+inherits-from = "bridge"
+sibling-clades = ["ai", "database", "network"]
+supersedes = "polystack"
+
+[clade-integrations]
+consumes = []
+consumed-by = ["aerie", "ai", "databases", "playgrounds", "valence-shell"]
+dispatches-to = ["database-mcp", "fleet-mcp", "nesy-mcp", "agent-mcp", "cloud-mcp", "container-mcp", "k8s-mcp", "git-mcp", "secrets-mcp", "queues-mcp", "iac-mcp", "observe-mcp", "ssg-mcp", "proof-mcp", "lsp-mcp", "dap-mcp", "bsp-mcp"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["dialog", "grid", "tab", "tablist"]

@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Editor Bridge Panel Clade — Federate with external code editors via LSP
+
+[clade-metadata]
+id = "editor-bridge"
+name = "Editor Bridge"
+short-name = "EB"
+version = "1.0.0"
+kind = "bridge"
+icon = "file-code"
+description = "Federate with external code editors (VSCodium, Zed, Helix, Neovim, Emacs) via LSP — diagnostics, symbols, open files, jump-to-line. PanLL is mission control, not a text editor."
+
+[clade-traits]
+has-backend = true           # LSP protocol via Tauri
+has-scanning = true          # Reads diagnostics (errors, warnings, info)
+has-persistence = false
+has-work-items = true        # Diagnostics are actionable work items
+has-priority-ordering = false
+has-customisation = true     # Editor kind selection, auto-sync, filter preferences
+is-directive = false
+is-readonly = false          # Can open files in external editor (jump-to-line)
+
+[clade-capabilities]
+capabilities = [
+  "EditorDetection",        # Auto-detect running editor (8 supported)
+  "LspConnection",          # Connect to editor's LSP server
+  "DiagnosticViewer",       # Display errors, warnings, info from LSP
+  "SymbolBrowser",          # Workspace symbol search and navigation
+  "OpenFileTracker",        # Track files open in external editor
+  "JumpToLine",             # Open file at specific line in external editor
+  "ActivityFeed",           # Recent editor actions log
+  "AutoSync",               # Auto-refresh diagnostics and symbols
+  "CrossPanelIntegration",  # BuildDashboard errors route through EditorBridge
+]
+
+[clade-panel-integration]
+panel-id = "PanelEditorBridge"
+model-module = "EditorBridgeModel"
+engine-module = "EditorBridgeEngine"
+component-module = "EditorBridge"
+command-module = "EditorBridgeCmd"
+
+[clade-dependencies]
+protocol = "LSP (Language Server Protocol)"
+supported-editors = ["VSCodium", "VSCode", "Zed", "Helix", "Neovim", "Emacs", "Kakoune", "Custom"]
+
+[clade-cross-panel]
+# BuildDashboard routes build errors through EditorBridge for jump-to-line
+consumers = ["build-dashboard"]
+# Editor activity feeds into Workspace session context
+feeds-into = ["workspace"]

@@ -163,6 +163,18 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelValenceShell) => ValenceShell.view(model.valenceShell)
   | Some(PanelGamePreview) => GamePreview.view(model.gamePreview)
   | Some(PanelVmInspector) => VmInspector.view(model.vmInspector)
+  | Some(PanelNetworkTopology) => NetworkTopology.view(model.networkTopology)
+  | Some(PanelLevelArchitect) => LevelArchitect.view(model.levelArchitect)
+  | Some(PanelCoprocessors) => Coprocessors.view(model.coprocessors)
+  | Some(PanelMultiplayerMonitor) => MultiplayerMonitor.view(model.multiplayerMonitor)
+  | Some(PanelDlcWorkshop) => DlcWorkshop.view(model.dlcWorkshop)
+  | Some(PanelEditorBridge) => EditorBridge.view(model.editorBridge)
+  | Some(PanelBuildDashboard) => BuildDashboard.view(model.buildDashboard)
+  | Some(PanelReleaseManager) => ReleaseManager.view(model.releaseManager)
+  | Some(PanelAutomationRouter) => AutomationRouter.view(model.automationRouter)
+  | Some(PanelBoj) => Boj.view(model.boj)
+  | Some(PanelCladeBrowser) => CladeBrowser.view(model.cladeBrowser)
+  | Some(PanelTentacles) => Tentacles.view(model.tentacles)
   }
 }
 

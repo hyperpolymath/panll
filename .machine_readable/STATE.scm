@@ -64,13 +64,13 @@
 
 
     (work-in-progress
-      ("Migration from custom TEA to official rescript-tea@0.16.0"
-       (status "blocked")
-       (decision "Incompatible with ReScript 11.x - keeping custom TEA")
-       (tracking-doc "RESCRIPT-TEA-MIGRATION-GUIDE.md")
-       (blocker "rescript-tea@0.16.0 depends on rescript-webapi@0.7.0 (incompatible with ReScript 11.1.4)")
-       (rationale "Official rescript-tea not maintained since 2021, requires fork and major update effort")
-       (resolution "Keep custom TEA - works perfectly (33 tests, 86.2% coverage), well-tested, documented"))
+      ("Custom TEA declared permanent (2026-03-08)"
+       (status "complete")
+       (decision "Custom TEA in src/tea/ is PanLL's permanent architecture")
+       (tracking-doc "docs/TEA_GUIDE.md")
+       (rationale "rescript-tea@0.16.0 unmaintained since 2021, incompatible deps, no keyboard/ARIA/Tauri support")
+       (resolution "8 modules, ~1011 lines, zero npm deps, VDOM diffing, ARIA, message queue, animation frames")
+       (superseded ("RESCRIPT-TEA-MIGRATION-GUIDE.md" "MIGRATION-TO-RESCRIPT-TEA.md")))
       ("Tauri backend FFI implementation"
        (status "next-up")
        (approach "Replace stubbed validation/vexation/feedback logic with real implementations")

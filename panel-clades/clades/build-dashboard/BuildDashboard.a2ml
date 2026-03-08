@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Build Dashboard Panel Clade — Monitor builds, tests, and compilation status
+
+[clade-metadata]
+id = "build-dashboard"
+name = "Build Dashboard"
+short-name = "Bld"
+version = "1.0.0"
+kind = "scanner"
+icon = "hammer"
+description = "Monitor build processes, test results, errors, and compilation status across IDApTIK sub-projects (game, VM, DLC, sync server, shared, coprocessors)."
+
+[clade-traits]
+has-backend = true           # Tauri build process invocation
+has-scanning = true          # Scans for build errors, warnings, test results
+has-persistence = true       # Build history stored
+has-work-items = true        # Errors and failed tests are actionable work items
+has-priority-ordering = false
+has-customisation = true     # Watch mode, auto-rebuild, show/hide passed tests
+is-directive = false
+is-readonly = false          # Can trigger builds, cancel builds, run tests
+
+[clade-capabilities]
+capabilities = [
+  "BuildTrigger",           # Trigger builds for 6 IDApTIK targets
+  "BuildCancel",            # Cancel running builds
+  "TestRunner",             # Run test suites per target
+  "ErrorViewer",            # Clickable error list (routes to EditorBridge)
+  "TestResultViewer",       # Pass/fail with duration and suite info
+  "BuildHistory",           # Historical build records with stats
+  "WatchMode",              # Auto-detect file changes and rebuild
+  "AutoRebuild",            # Rebuild on change without prompt
+  "CrossPanelJumpToLine",   # Click error → open in external editor via EditorBridge
+]
+
+[clade-panel-integration]
+panel-id = "PanelBuildDashboard"
+model-module = "BuildDashboardModel"
+engine-module = "BuildDashboardEngine"
+component-module = "BuildDashboard"
+command-module = "BuildDashboardCmd"
+
+[clade-dependencies]
+build-targets = ["Game", "VM", "DLC", "SyncServer", "Shared", "Coprocessors"]
+
+[clade-cross-panel]
+# Errors route through EditorBridge for jump-to-line in external editor
+depends-on = ["editor-bridge"]
+# Build status feeds into ReleaseManager readiness checks
+feeds-into = ["release-manager"]

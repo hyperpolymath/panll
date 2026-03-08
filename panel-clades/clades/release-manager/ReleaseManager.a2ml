@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Release Manager Panel Clade — Versioning, changelog, artifacts, distribution
+
+[clade-metadata]
+id = "release-manager"
+name = "Release Manager"
+short-name = "Rel"
+version = "1.0.0"
+kind = "builder"
+icon = "package-check"
+description = "Versioning, changelog generation from git, artifact building across 6 platforms, signing, and distribution of IDApTIK builds through 5 release channels."
+
+[clade-traits]
+has-backend = true           # Tauri release pipeline invocation
+has-scanning = false
+has-persistence = true       # Release history, changelog, artifacts stored
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Platform toggles, channel selection, signing, auto-changelog
+is-directive = false
+is-readonly = false          # Creates versions, builds artifacts, publishes releases
+
+[clade-capabilities]
+capabilities = [
+  "VersionBumping",         # Patch, minor, major semver bumps
+  "ChangelogGeneration",    # Generate from git commit history
+  "AutoChangelog",          # Auto-generate on version bump
+  "ArtifactBuilding",       # Build for 6 platforms (Web, Linux, Mac, Windows, Android, iOS)
+  "PlatformToggling",       # Enable/disable platforms per release
+  "ArtifactSigning",        # GPG/Sigstore signing of artifacts
+  "ReleasePublishing",      # Publish to distribution channels
+  "ChannelManagement",      # Dev, Alpha, Beta, RC, Stable channels
+  "ReleaseHistory",         # Browse past releases with artifact counts
+]
+
+[clade-panel-integration]
+panel-id = "PanelReleaseManager"
+model-module = "ReleaseManagerModel"
+engine-module = "ReleaseManagerEngine"
+component-module = "ReleaseManager"
+command-module = "ReleaseManagerCmd"
+
+[clade-dependencies]
+platforms = ["Web", "DesktopLinux", "DesktopMac", "DesktopWindows", "MobileAndroid", "MobileIOS"]
+channels = ["Dev", "Alpha", "Beta", "RC", "Stable"]
+
+[clade-cross-panel]
+# Depends on BuildDashboard for build readiness
+depends-on = ["build-dashboard"]
+# Changelog integrates with Valence Shell git operations
+related = ["valence-shell"]

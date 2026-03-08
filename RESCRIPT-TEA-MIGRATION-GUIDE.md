@@ -1,9 +1,15 @@
 # ReScript TEA Migration Guide: Custom → Official (rescript-tea@0.16.0)
 
-**Status:** NOT STARTED (custom TEA currently works, 33 tests passing)
-**Risk Level:** HIGH (core architecture change)
-**Estimated Effort:** 1-2 weeks
-**Requires:** Comprehensive testing before deployment
+## ⛔ SUPERSEDED — DO NOT FOLLOW
+
+**Decision (2026-03-08):** The custom TEA in `src/tea/` is PanLL's permanent
+architecture. This migration will not happen. See `docs/TEA_GUIDE.md` §Permanence
+Decision for rationale.
+
+**Status:** CANCELLED
+**Risk Level:** N/A
+**Estimated Effort:** N/A
+**Requires:** N/A
 
 ---
 

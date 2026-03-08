@@ -352,6 +352,8 @@ type minterMsg =
   | MintResult(result<string, string>)
   /// Reset the minter to its initial state for another panel.
   | ResetMinter
+  /// Export current minter config to ENSAID_CONFIG.a2ml (adds panel entry).
+  | ExportToEnsaidConfig
 
 /// Provisioner messages — portfolio bundling, panel configuration,
 /// installation lifecycle, and isolation tier management.
@@ -380,6 +382,8 @@ type provisionerMsg =
   | ToggleCustomPanel(string)
   /// Save the custom portfolio.
   | SaveCustomPortfolio
+  /// Export panel configs and portfolios to ENSAID_CONFIG.a2ml.
+  | ExportProvisionerConfig
 
 /// Code MRI VoiceTag messages — tag CRUD, voice input lifecycle, file I/O,
 /// and filter controls. VoiceTag is an ambient annotation system (Layer 0)
@@ -599,6 +603,8 @@ type workspaceMsg =
   | ResetPanel(string)
   /// Reset all panels to defaults.
   | ResetAllPanels
+  /// Export workspace config (mode, protection, execution, arrangement) to ENSAID_CONFIG.a2ml.
+  | ExportWorkspaceConfig
 
 /// Capture messages — screenshots, recordings, demos, cloning (DD-022).
 type captureMsg =
@@ -1065,6 +1071,484 @@ type vmInspectorMsg =
   /// Dismiss the error banner.
   | DismissVmError
 
+/// Network Topology messages — topology reading, device selection,
+/// packet flow animation, DNS browsing, and display toggles for the
+/// IDApTIK in-game network topology viewer.
+type networkTopologyMsg =
+  /// Switch the active category tab.
+  | SetTopologyCategory(networkTopologyCategory)
+  /// Read the network topology from the running game.
+  | RefreshTopology
+  /// Topology data received.
+  | TopologyReceived(result<string, string>)
+  /// Select a device by ID.
+  | SelectDevice(string)
+  /// Deselect the current device.
+  | DeselectDevice
+  /// Read DNS resolution table.
+  | RefreshDns
+  /// DNS data received.
+  | DnsReceived(result<string, string>)
+  /// Toggle packet flow animation.
+  | TogglePacketAnimation
+  /// Packet flow data received.
+  | PacketFlowReceived(result<string, string>)
+  /// Toggle device name labels.
+  | ToggleLabels
+  /// Toggle security level indicators.
+  | ToggleSecurityLevels
+  /// Export topology as SVG.
+  | ExportTopologySvg
+  /// SVG exported (or failed).
+  | TopologySvgExported(result<string, string>)
+  /// Dismiss the error banner.
+  | DismissTopoError
+
+/// Level Architect messages — grid editing, entity placement, patrol
+/// editing, defence flag toggling, asset browsing, validation, undo/redo,
+/// and level file I/O for the IDApTIK visual level design tool.
+type levelArchitectMsg =
+  /// Switch the active category tab.
+  | SetArchitectCategory(levelArchitectCategory)
+  /// Click a grid cell (place/select/erase based on tool).
+  | ClickGrid(int, int)
+  /// Select an entity by ID.
+  | SelectEntity(string)
+  /// Deselect the current entity.
+  | DeselectEntity
+  /// Select an editor tool.
+  | SelectTool(editorTool)
+  /// Toggle a defence flag on/off.
+  | ToggleDefenceFlag(defenceFlag)
+  /// Set the alert threshold.
+  | SetAlertThreshold(int)
+  /// Browse game assets.
+  | BrowseAssets
+  /// Assets loaded.
+  | AssetsLoaded(result<string, string>)
+  /// Validate the current level.
+  | ValidateLevel
+  /// Validation result.
+  | ValidationResult(result<string, string>)
+  /// Load a level from file.
+  | LoadLevel(string)
+  /// Level loaded.
+  | LevelLoaded(result<string, string>)
+  /// Save the current level.
+  | SaveLevel(string)
+  /// Level saved.
+  | LevelSaved(result<string, string>)
+  /// Export as LevelConfig.res.
+  | ExportLevelConfig
+  /// LevelConfig exported.
+  | LevelConfigExported(result<string, string>)
+  /// Undo the last action.
+  | UndoAction
+  /// Redo the last undone action.
+  | RedoAction
+  /// Toggle grid line visibility.
+  | ToggleGrid
+  /// Toggle patrol path visibility.
+  | TogglePatrolPaths
+  /// Dismiss the error banner.
+  | DismissArchitectError
+
+/// Coprocessors messages — metrics refresh, call log, heatmap,
+/// backend toggling, and filter controls for the IDApTIK coprocessor
+/// monitoring dashboard.
+type coprocessorsMsg =
+  /// Switch the active category tab.
+  | SetCoprocCategory(coprocessorsCategory)
+  /// Refresh all metrics.
+  | RefreshMetrics
+  /// Metrics received.
+  | MetricsReceived(result<string, string>)
+  /// Refresh the call log.
+  | RefreshCallLog
+  /// Call log received.
+  | CallLogReceived(result<string, string>)
+  /// Refresh the heatmap.
+  | RefreshHeatmap
+  /// Heatmap received.
+  | HeatmapReceived(result<string, string>)
+  /// Toggle a coprocessor backend on/off.
+  | ToggleCoprocBackend(coprocessorBackend)
+  /// Backend toggle result.
+  | BackendToggled(result<string, string>)
+  /// Select a backend filter for the call log.
+  | SelectBackendFilter(option<coprocessorBackend>)
+  /// Toggle auto-refresh.
+  | ToggleAutoRefresh
+  /// Dismiss the error banner.
+  | DismissCoprocError
+
+/// Multiplayer Monitor messages — WebSocket lifecycle, player state,
+/// channel subscriptions, state diffs, device locks, latency, and
+/// reconnection testing for the IDApTIK Phoenix sync server.
+type multiplayerMonitorMsg =
+  /// Switch the active category tab.
+  | SetMultiplayerCategory(multiplayerCategory)
+  /// Connect to the Phoenix sync server.
+  | ConnectServer
+  /// Disconnect from the sync server.
+  | DisconnectServer
+  /// Connection result.
+  | ConnectionResult(result<string, string>)
+  /// Disconnection result.
+  | DisconnectionResult(result<string, string>)
+  /// Refresh the full multiplayer state.
+  | RefreshState
+  /// Multiplayer state received.
+  | StateReceived(result<string, string>)
+  /// Refresh state diffs.
+  | RefreshDiffs
+  /// State diffs received.
+  | DiffsReceived(result<string, string>)
+  /// Select a player by ID.
+  | SelectPlayer(string)
+  /// Deselect the current player.
+  | DeselectPlayer
+  /// Toggle spectator visibility.
+  | ToggleSpectators
+  /// Toggle auto-reconnect.
+  | ToggleAutoReconnect
+  /// Run a reconnection test.
+  | ReconnectionTest
+  /// Reconnection test result.
+  | ReconnectionTestResult(result<string, string>)
+  /// Dismiss the error banner.
+  | DismissMultiplayerError
+
+/// DLC Workshop messages — puzzle CRUD, composer, testing, asset browsing,
+/// packaging, import/export for the IDApTIK DLC puzzle pack panel.
+type dlcWorkshopMsg =
+  /// Switch the active category tab.
+  | SetWorkshopCategory(dlcWorkshopCategory)
+  /// Load puzzles from the DLC directory.
+  | LoadPuzzles
+  /// Puzzles loaded.
+  | PuzzlesLoaded(result<string, string>)
+  /// Select a puzzle by ID.
+  | SelectPuzzle(string)
+  /// Deselect the current puzzle.
+  | DeselectPuzzle
+  /// Add an instruction to the composer.
+  | AddInstruction
+  /// Remove an instruction by index.
+  | RemoveInstruction(int)
+  /// Clear the composer.
+  | ClearComposer
+  /// Save the current puzzle.
+  | SavePuzzle
+  /// Puzzle saved.
+  | PuzzleSaved(result<string, string>)
+  /// Run tests for a specific puzzle.
+  | RunPuzzleTest(string)
+  /// Test result for a puzzle.
+  | PuzzleTestResult(result<string, string>)
+  /// Run all tests.
+  | RunAllTests
+  /// All tests result.
+  | AllTestsResult(result<string, string>)
+  /// Browse DLC assets.
+  | BrowseDlcAssets
+  /// Assets loaded.
+  | DlcAssetsLoaded(result<string, string>)
+  /// Package the DLC for distribution.
+  | PackageDlc
+  /// Package result.
+  | PackageResult(result<string, string>)
+  /// Import a puzzle from file.
+  | ImportPuzzle
+  /// Puzzle imported.
+  | PuzzleImported(result<string, string>)
+  /// Export the selected puzzle.
+  | ExportPuzzle
+  /// Puzzle exported.
+  | PuzzleExported(result<string, string>)
+  /// Set filter text.
+  | SetDlcFilter(string)
+  /// Set difficulty filter.
+  | SetDifficultyFilter(option<puzzleDifficulty>)
+  /// Dismiss the error banner.
+  | DismissWorkshopError
+
+/// Editor Bridge messages — editor detection, LSP lifecycle, diagnostics,
+/// symbols, open files, jump-to-line, and settings for the external code
+/// editor federation panel.
+type editorBridgeMsg =
+  /// Switch the active category tab.
+  | SetBridgeCategory(editorBridgeCategory)
+  /// Detect which editor is running.
+  | DetectEditor
+  /// Editor detection result.
+  | EditorDetected(result<string, string>)
+  /// Connect to the editor's LSP server.
+  | ConnectLsp
+  /// LSP connection result.
+  | LspConnected(result<string, string>)
+  /// Refresh diagnostics from LSP.
+  | RefreshDiagnostics
+  /// Diagnostics received.
+  | DiagnosticsReceived(result<string, string>)
+  /// Refresh open files list.
+  | RefreshOpenFiles
+  /// Open files received.
+  | OpenFilesReceived(result<string, string>)
+  /// Refresh workspace symbols.
+  | RefreshSymbols
+  /// Symbols received.
+  | SymbolsReceived(result<string, string>)
+  /// Open a file at a specific line in the external editor.
+  | OpenFileInEditor(string, int)
+  /// File opened (or failed).
+  | FileOpened(result<string, string>)
+  /// Refresh the bridge status.
+  | RefreshBridge
+  /// Set the diagnostic filter text.
+  | SetDiagnosticFilter(string)
+  /// Toggle error visibility.
+  | ToggleShowErrors
+  /// Toggle warning visibility.
+  | ToggleShowWarnings
+  /// Toggle info visibility.
+  | ToggleShowInfo
+  /// Set the symbol search filter.
+  | SetSymbolFilter(string)
+  /// Set the preferred editor kind.
+  | SetEditorKind(editorKind)
+  /// Toggle auto-sync with the editor.
+  | ToggleAutoSync
+  /// Dismiss the error banner.
+  | DismissBridgeError
+
+/// Build Dashboard messages — build triggering, status reading, test
+/// running, error display, and history for the IDApTIK build monitoring panel.
+type buildDashboardMsg =
+  /// Switch the active category tab.
+  | SetBuildCategory(buildDashboardCategory)
+  /// Trigger a build for a specific target.
+  | TriggerBuild(buildTarget)
+  /// Build triggered (or failed).
+  | BuildTriggered(result<string, string>)
+  /// Refresh build status for all targets.
+  | RefreshBuildStatus
+  /// Build status received.
+  | BuildStatusReceived(result<string, string>)
+  /// Run tests for a specific target.
+  | RunTests(buildTarget)
+  /// Test results received.
+  | TestsReceived(result<string, string>)
+  /// Cancel a running build.
+  | CancelBuild(buildTarget)
+  /// Build cancelled (or failed).
+  | BuildCancelled(result<string, string>)
+  /// Refresh build history.
+  | RefreshHistory
+  /// History received.
+  | HistoryReceived(result<string, string>)
+  /// Toggle watch mode.
+  | ToggleWatchMode
+  /// Toggle auto-rebuild.
+  | ToggleAutoRebuild
+  /// Toggle show passed tests.
+  | ToggleShowPassed
+  /// Dismiss the error banner.
+  | DismissBuildError
+
+/// Release Manager messages — version bumping, changelog generation,
+/// artifact building, signing, publishing, and channel management for
+/// the IDApTIK release distribution panel.
+type releaseManagerMsg =
+  /// Switch the active category tab.
+  | SetReleaseCategory(releaseManagerCategory)
+  /// Bump the version (patch, minor, major).
+  | BumpVersion(string)
+  /// Version bumped (or failed).
+  | VersionBumped(result<string, string>)
+  /// Select a release to view details.
+  | SelectRelease(string)
+  /// Generate changelog from git history.
+  | GenerateChangelog
+  /// Changelog generated (or failed).
+  | ChangelogGenerated(result<string, string>)
+  /// Toggle auto-changelog generation.
+  | ToggleAutoChangelog
+  /// Toggle a platform target for artifact building.
+  | TogglePlatform(platformTarget)
+  /// Build artifacts for enabled platforms.
+  | BuildArtifacts
+  /// Artifacts built (or failed).
+  | ArtifactsBuilt(result<string, string>)
+  /// Publish a release.
+  | PublishRelease
+  /// Release published (or failed).
+  | ReleasePublished(result<string, string>)
+  /// Set the release channel.
+  | SetChannel(releaseChannel)
+  /// Toggle artifact signing.
+  | ToggleSignArtifacts
+  /// Load release history.
+  | LoadReleases
+  /// Releases loaded (or failed).
+  | ReleasesLoaded(result<string, string>)
+  /// Dismiss the error banner.
+  | DismissReleaseError
+
+/// Automation Router messages — rule management, execution, approval gates,
+/// history, and configuration for the hybrid cross-panel workflow orchestrator.
+type automationRouterMsg =
+  /// Switch the active category tab.
+  | SetRouterCategory(automationRouterCategory)
+  /// Toggle global automation on/off.
+  | ToggleGlobalEnabled
+  /// Toggle a specific rule on/off.
+  | ToggleRule(string)
+  /// Execute a rule manually.
+  | ExecuteRule(string)
+  /// Rule execution result.
+  | ExecutionResult(string, result<string, string>)
+  /// Approve a pending action by index.
+  | ApproveAction(int)
+  /// Reject a pending action by index.
+  | RejectAction(int)
+  /// Approve all pending actions.
+  | ApproveAll
+  /// Reject all pending actions.
+  | RejectAll
+  /// Load rules from storage or repo.
+  | LoadRules
+  /// Rules loaded.
+  | RulesLoaded(result<string, string>)
+  /// Save rules to local storage.
+  | SaveRules
+  /// Rules saved.
+  | RulesSaved(result<string, string>)
+  /// Load rules from repo's .machine_readable/ENSAID_CONFIG.a2ml.
+  | LoadFromRepo
+  /// Repo rules loaded.
+  | RepoRulesLoaded(result<string, string>)
+  /// Set filter text.
+  | SetRouterFilter(string)
+  /// Toggle show disabled rules.
+  | ToggleShowDisabled
+  /// Dismiss the error banner.
+  | DismissRouterError
+  /// Export automation rules to ENSAID_CONFIG.a2ml.
+  | ExportAutomationConfig
+
+/// BoJ messages — Bundle of Joy cartridge server interaction.
+type bojMsg =
+  /// Switch the active category tab.
+  | SetBojCategory(bojCategory)
+  /// Refresh BoJ server health check.
+  | RefreshHealth
+  /// Health check result.
+  | HealthResult(result<string, string>)
+  /// Refresh cartridge list.
+  | RefreshCartridges
+  /// Cartridge list result.
+  | CartridgesResult(result<string, string>)
+  /// Select a cartridge for detail view.
+  | SelectCartridge(string)
+  /// Load a cartridge into the runtime.
+  | LoadCartridge(string)
+  /// Unload a cartridge from the runtime.
+  | UnloadCartridge(string)
+  /// Load/unload result.
+  | CartridgeActionResult(string, result<string, string>)
+  /// Refresh topology data.
+  | RefreshTopology
+  /// Topology result.
+  | TopologyResult(result<string, string>)
+  /// Refresh Umoja federation status.
+  | RefreshUmoja
+  /// Umoja status result.
+  | UmojaResult(result<string, string>)
+  /// Set the cartridge for invocation.
+  | SetInvokeCartridge(string)
+  /// Set the tool name for invocation.
+  | SetInvokeTool(string)
+  /// Set the args JSON for invocation.
+  | SetInvokeArgs(string)
+  /// Execute the invocation.
+  | ExecuteInvoke
+  /// Invocation result.
+  | InvokeResult(result<string, string>)
+  /// Set filter text.
+  | SetBojFilter(string)
+  /// Dismiss the error banner.
+  | DismissBojError
+
+/// ENSAID_CONFIG messages — cross-panel config generation and I/O.
+/// Any panel can trigger a full ENSAID_CONFIG export; the engine assembles
+/// state from Provisioner, Workspace, and Automation Router into one file.
+type ensaidConfigMsg =
+  /// Generate and write ENSAID_CONFIG.a2ml to the current repo.
+  | GenerateAndWrite
+  /// Preview the generated content (no disk write).
+  | PreviewConfig
+  /// Config preview ready (content string).
+  | PreviewReady(string)
+  /// Config written successfully.
+  | ConfigWritten(result<string, string>)
+  /// Read existing config from repo.
+  | ReadFromRepo
+  /// Config read from repo.
+  | ConfigRead(result<string, string>)
+  /// Dismiss error.
+  | DismissConfigError
+
+/// Clade Browser messages — exploring and customising panel clades.
+type cladeBrowserMsg =
+  /// Switch the active category tab.
+  | SetCladeCategory(cladeBrowserCategory)
+  /// Select a clade for detail view.
+  | SelectClade(option<string>)
+  /// Set the kind filter.
+  | SetKindFilter(cladeKind)
+  /// Update search query.
+  | UpdateCladeSearch(string)
+  /// Load clades from filesystem (or use builtins).
+  | LoadClades
+  /// Clades loaded successfully.
+  | CladesLoaded(array<cladeEntry>)
+
+/// Messages for the 7-Tentacles compiler agent panel.
+type tentaclesMsg =
+  /// Switch the active category tab.
+  | SetTentaclesCategory(tentaclesCategory)
+  /// Select an agent for the AgentView tab.
+  | SelectAgent(tentacleId)
+  /// Change the global learner stage.
+  | SetGlobalStage(tentacleStage)
+  /// Toggle orchestra compact mode.
+  | ToggleOrchestraCompact
+  /// An agent broadcasts a message to the orchestra.
+  | BroadcastFromAgent(tentacleId, agentBroadcastPayload)
+  /// Deliver pending broadcasts to all agents.
+  | DeliverBroadcasts
+  /// Start a task on a specific agent.
+  | StartAgentTask(tentacleId, string)
+  /// An agent's OODA phase advanced.
+  | AgentPhaseAdvanced(tentacleId, oodaPhase)
+  /// An agent produced a constraint (Panel-L feed).
+  | AgentConstraintAdded(tentacleId, tentacleConstraint)
+  /// An agent produced a reasoning entry (Panel-N feed).
+  | AgentReasoningAdded(tentacleId, reasoningEntry)
+  /// An agent produced a validated result (Panel-W feed).
+  | AgentResultAdded(tentacleId, validatedResult)
+  /// An agent finished its current task.
+  | AgentTaskCompleted(tentacleId)
+  /// An agent encountered an error.
+  | AgentError(tentacleId, string)
+  /// Clear an agent's error state.
+  | ClearAgentError(tentacleId)
+  /// Check FFI bridge health (ECHIDNA "without" mode).
+  | CheckFfiBridge
+  /// FFI bridge health check result.
+  | FfiBridgeResult(bool, option<string>)
+
 /// Keybindings messages — rebinding, recording, reset.
 type keybindingsMsg =
   /// Start recording a new keybinding for an action.
@@ -1119,6 +1603,19 @@ type msg =
   | ValenceShell(valenceShellMsg) // Embedded terminal with Claude Code
   | GamePreview(gamePreviewMsg) // Live IDApTIK game preview
   | VmInspector(vmInspectorMsg) // Reversible VM visual debugger
+  | NetworkTopology(networkTopologyMsg) // IDApTIK in-game network graph
+  | LevelArchitect(levelArchitectMsg) // Visual level design tool
+  | Coprocessors(coprocessorsMsg) // Coprocessor backend monitoring
+  | MultiplayerMonitor(multiplayerMonitorMsg) // Phoenix sync server inspector
+  | DlcWorkshop(dlcWorkshopMsg) // DLC puzzle pack creation and testing
+  | EditorBridge(editorBridgeMsg) // External code editor federation (LSP)
+  | BuildDashboard(buildDashboardMsg) // Build/test/error monitoring
+  | ReleaseManager(releaseManagerMsg) // Versioning, changelog, distribution
+  | AutomationRouter(automationRouterMsg) // Hybrid cross-panel workflow orchestration
+  | Boj(bojMsg) // Bundle of Joy cartridge server
+  | CladeBrowser(cladeBrowserMsg) // Clade taxonomy browser
+  | Tentacles(tentaclesMsg) // 7-Tentacles compiler agent orchestra
+  | EnsaidConfig(ensaidConfigMsg) // Cross-panel ENSAID_CONFIG generation and I/O
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

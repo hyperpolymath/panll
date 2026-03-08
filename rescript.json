@@ -13,10 +13,10 @@
     }
   ],
   "suffix": ".res.js",
-  "bs-dependencies": [
+  "dependencies": [
     "@rescript/core"
   ],
-  "bsc-flags": [
+  "compiler-flags": [
     "-open RescriptCore"
   ],
   "warnings": {

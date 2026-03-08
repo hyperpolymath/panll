@@ -42,6 +42,12 @@ and users can customise how clades interact.
 
 | **meta**
 | Governance, compliance, and licensing hub.
+
+| **bridge**
+| Federates with external tools (editors, terminals) via protocol bridges.
+
+| **terminal**
+| Embedded shell / REPL with session recording and collaborative features.
 |===
 
 == Registry
@@ -164,6 +170,66 @@ and users can customise how clades interact.
 | meta
 | PMPL
 | Palimpsest Plaza — PMPL license adoption, compliance, and governance hub
+
+| `automation-router/`
+| directive
+| Auto
+| Hybrid automation router — cross-panel workflow orchestration with approval gates
+
+| `build-dashboard/`
+| scanner
+| Bld
+| Build process monitor — test results, errors, compilation status across sub-projects
+
+| `coprocessors/`
+| viewer
+| CoPr
+| Coprocessor backends monitor — Compute, Security, I/O call log, heatmap, performance
+
+| `dlc-workshop/`
+| builder
+| DLC
+| DLC puzzle pack creator — VM instruction composer, solution tester, asset bundler
+
+| `editor-bridge/`
+| bridge
+| EB
+| External editor federation — VSCodium, Zed, Helix, Neovim, Emacs via LSP bridge
+
+| `game-preview/`
+| viewer
+| Game
+| Live game preview — embedded Vite dev server, hot-reload, frame stepping, overlays
+
+| `level-architect/`
+| builder
+| Lvl
+| Visual level design — device placement, guard patrols, validation, LevelConfig export
+
+| `multiplayer-monitor/`
+| viewer
+| MP
+| Elixir/Phoenix sync monitor — WebSocket status, player state diff, Lamport clocks
+
+| `network-topology/`
+| viewer
+| Topo
+| Force-directed game network graph — devices, zones, packet flow, DNS resolution
+
+| `release-manager/`
+| builder
+| Rel
+| Versioning, changelog, 6-platform artifact building, signing, 5 release channels
+
+| `valence-shell/`
+| terminal
+| VS
+| Embedded Valence shell — Claude Code, session recording, reversible filesystem ops
+
+| `vm-inspector/`
+| viewer
+| VM
+| Reversible VM debugger — stack, memory, instructions, step forward/backward, breakpoints
 |===
 
 == Adding a new clade

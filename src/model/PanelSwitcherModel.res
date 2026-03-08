@@ -38,6 +38,18 @@ type panelId =
   | PanelValenceShell
   | PanelGamePreview
   | PanelVmInspector
+  | PanelNetworkTopology
+  | PanelLevelArchitect
+  | PanelCoprocessors
+  | PanelMultiplayerMonitor
+  | PanelDlcWorkshop
+  | PanelEditorBridge
+  | PanelBuildDashboard
+  | PanelReleaseManager
+  | PanelAutomationRouter
+  | PanelBoj
+  | PanelCladeBrowser
+  | PanelTentacles
 
 /// Connection status for panels backed by external services.
 type connectionStatus =
@@ -57,6 +69,8 @@ type panelMeta = {
   connectionStatus: connectionStatus,
   /// Whether this panel has a backend service to connect to.
   hasBackend: bool,
+  /// Clade ID this panel belongs to (for trait inheritance queries).
+  cladeId: option<string>,
 }
 
 /// Root state for the panel switcher.

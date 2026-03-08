@@ -80,6 +80,18 @@ mod capture;
 /// Security — Redaction, vault, 2FA, and Trustfile enforcement (DD-026/027).
 mod security;
 
+/// Overlay — Tor, IPFS, Ethereum overlay network bridge (Aerie backend).
+/// Routes to ECHIDNA overlay FFI via V-lang adapter at OVERLAY_URL.
+mod overlay;
+
+/// BoJ — Barrel of Jelly cartridge runtime bridge.
+/// Routes to BoJ server at BOJ_URL (default http://localhost:7700/api/v1).
+mod boj;
+
+/// TypeLL — Type-Level Language server bridge.
+/// Routes to TypeLL server at TYPELL_URL (default http://localhost:7800/api/v1).
+mod typell;
+
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
 
@@ -1798,6 +1810,47 @@ fn main() {
             security::commands::vault_retrieve,
             security::commands::vault_list,
             security::commands::load_trustfile,
+            // Overlay — Tor, IPFS, Ethereum overlay networks (Aerie)
+            overlay::commands::overlay_status,
+            overlay::commands::overlay_health,
+            overlay::commands::overlay_tor_connect,
+            overlay::commands::overlay_tor_disconnect,
+            overlay::commands::overlay_tor_status,
+            overlay::commands::overlay_tor_create_hidden_service,
+            overlay::commands::overlay_tor_destroy_hidden_service,
+            overlay::commands::overlay_tor_list_circuits,
+            overlay::commands::overlay_tor_get_circuit,
+            overlay::commands::overlay_tor_resolve,
+            overlay::commands::overlay_ipfs_connect,
+            overlay::commands::overlay_ipfs_disconnect,
+            overlay::commands::overlay_ipfs_status,
+            overlay::commands::overlay_ipfs_add,
+            overlay::commands::overlay_ipfs_cat,
+            overlay::commands::overlay_ipfs_pin,
+            overlay::commands::overlay_ipfs_unpin,
+            overlay::commands::overlay_ipfs_dag_get,
+            overlay::commands::overlay_eth_connect,
+            overlay::commands::overlay_eth_disconnect,
+            overlay::commands::overlay_eth_status,
+            overlay::commands::overlay_eth_timestamp_proof,
+            overlay::commands::overlay_eth_verify_timestamp,
+            // BoJ — Barrel of Jelly cartridge runtime
+            boj::commands::boj_health,
+            boj::commands::boj_list_cartridges,
+            boj::commands::boj_get_cartridge,
+            boj::commands::boj_load_cartridge,
+            boj::commands::boj_unload_cartridge,
+            boj::commands::boj_topology,
+            boj::commands::boj_invoke,
+            boj::commands::boj_umoja_status,
+            // TypeLL — Type-level language server
+            typell::commands::typell_health,
+            typell::commands::typell_check,
+            typell::commands::typell_infer,
+            typell::commands::typell_refine,
+            typell::commands::typell_compute,
+            typell::commands::typell_list_signatures,
+            typell::commands::typell_universes,
         ])
         .setup(|_app| {
             Ok(())

@@ -45,7 +45,8 @@
         "Need architecture that prevents state corruption and makes reasoning transparent.")
       (decision
         "Use The Elm Architecture (Model-Update-View with Commands and Subscriptions). "
-        "Custom TEA implementation for v0.1.0 (migration to official rescript-tea deferred to v0.2.0). "
+        "Permanent custom TEA implementation in src/tea/ (8 modules, ~1011 lines). "
+        "Migration to rescript-tea@0.16.0 evaluated and rejected (2026-03-08). "
         "All state changes flow through typed messages, ensuring deterministic updates.")
       (consequences
         (positive
@@ -53,14 +54,18 @@
           ("Time-travel debugging possible")
           ("Pure functions enable comprehensive testing")
           ("Enforced separation of effects (Commands) from state updates")
-          ("Official library provides battle-tested runtime"))
+          ("Zero npm dependencies - compiles with ReScript alone")
+          ("First-class ARIA accessibility (12+ aria-* helpers in Tea_Vdom)")
+          ("Built-in VDOM diffing with event listener lifecycle management")
+          ("Dispatch queue prevents recursive dispatch in multi-panel architecture"))
         (negative
           ("Steeper learning curve for contributors unfamiliar with TEA")
           ("More boilerplate than imperative state updates")
-          ("Custom subscriptions needed for keyboard (not built-in to rescript-tea)")))
+          ("No upstream community maintaining the TEA runtime - all fixes are in-house")))
       (alternatives-considered
         ("Redux - rejected, too imperative")
         ("React hooks - rejected, not deterministic enough")
+        ("rescript-tea@0.16.0 - rejected: unmaintained since 2021, depends on incompatible rescript-webapi@0.7.0, no keyboard/ARIA/Tauri support")
         ("Custom state management - rejected, reinventing wheel")))
 
     ((adr-003
