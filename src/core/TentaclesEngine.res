@@ -296,6 +296,63 @@ let totalResults = (agents: array<tentacleAgentState>): int => {
   agents->Array.reduce(0, (acc, a) => acc + Array.length(a.results))
 }
 
+// ---------------------------------------------------------------------------
+// S1: OODA phase progression — advance agents through Observe→Orient→Decide→Act
+// ---------------------------------------------------------------------------
+
+/// Next OODA phase in the cycle.
+let nextPhase = (phase: oodaPhase): oodaPhase => {
+  switch phase {
+  | Observe => Orient
+  | Orient => Decide
+  | Decide => Act
+  | Act => Observe // Cycle restarts
+  }
+}
+
+/// Whether an agent has completed a full OODA cycle (returned to Observe after Act).
+let cycleComplete = (prevPhase: oodaPhase, newPhase: oodaPhase): bool => {
+  prevPhase == Act && newPhase == Observe
+}
+
+/// Advance an agent's OODA phase. Returns the updated agent and whether
+/// the cycle completed (Act → Observe transition).
+let advancePhase = (agent: tentacleAgentState): (tentacleAgentState, bool) => {
+  let prev = agent.currentPhase
+  let next = nextPhase(prev)
+  let completed = cycleComplete(prev, next)
+  let updatedAgent = {
+    ...agent,
+    currentPhase: next,
+    // When cycle completes, agent is no longer busy.
+    busy: completed ? false : agent.busy,
+    // Clear the task on cycle completion.
+    currentTask: completed ? None : agent.currentTask,
+  }
+  (updatedAgent, completed)
+}
+
+/// Start a task: set the agent to busy at the Observe phase.
+let startTask = (agent: tentacleAgentState, task: string): tentacleAgentState => {
+  {
+    ...agent,
+    busy: true,
+    currentPhase: Observe,
+    currentTask: Some(task),
+    lastError: None,
+  }
+}
+
+/// Fail a task: set error state and stop the agent.
+let failTask = (agent: tentacleAgentState, error: string): tentacleAgentState => {
+  {
+    ...agent,
+    busy: false,
+    currentTask: None,
+    lastError: Some(error),
+  }
+}
+
 /// Build the initial tentacles panel state.
 let init = (): tentaclesState => {
   agents: allTentacles->Array.map(id => initAgent(id, Cuttle)),

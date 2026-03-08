@@ -1706,6 +1706,157 @@ mod echidna_tests {
     }
 }
 
+// ===========================================================================
+// Protocol-Squisher CLI Bridge
+// ===========================================================================
+
+const DEFAULT_PROTOCOL_SQUISHER_BIN: &str = "protocol-squisher";
+
+/// Resolve the protocol-squisher binary path from environment or default.
+fn protocol_squisher_bin() -> String {
+    std::env::var("PROTOCOL_SQUISHER_BIN")
+        .unwrap_or_else(|_| DEFAULT_PROTOCOL_SQUISHER_BIN.to_string())
+}
+
+/// Check whether the protocol-squisher CLI binary is available.
+#[tauri::command]
+fn protocol_squisher_check() -> Result<String, String> {
+    let output = std::process::Command::new(protocol_squisher_bin())
+        .arg("--version")
+        .output()
+        .map_err(|e| format!("CLI not found: {}", e))?;
+
+    if output.status.success() {
+        let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        Ok(format!("{{\"available\":true,\"version\":\"{}\"}}", version))
+    } else {
+        Err("protocol-squisher CLI not available".to_string())
+    }
+}
+
+/// Analyse a schema file using `protocol-squisher analyze`.
+/// Returns JSON analysis result.
+#[tauri::command]
+fn protocol_squisher_analyze(file_path: String) -> Result<String, String> {
+    let output = std::process::Command::new(protocol_squisher_bin())
+        .args(["analyze", &file_path, "--format", "json"])
+        .output()
+        .map_err(|e| format!("Analysis failed: {}", e))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        Err(format!("Analysis error: {}", stderr))
+    }
+}
+
+/// Compare two schema files using `protocol-squisher compare`.
+/// Returns JSON compatibility result.
+#[tauri::command]
+fn protocol_squisher_compare(left_path: String, right_path: String) -> Result<String, String> {
+    let output = std::process::Command::new(protocol_squisher_bin())
+        .args(["compare", &left_path, &right_path, "--format", "json"])
+        .output()
+        .map_err(|e| format!("Comparison failed: {}", e))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        Err(format!("Comparison error: {}", stderr))
+    }
+}
+
+// ===========================================================================
+// My-Lang CLI Bridge
+// ===========================================================================
+
+const DEFAULT_MYLANG_BIN: &str = "my";
+
+/// Resolve the my-lang binary path from environment or default.
+fn mylang_bin() -> String {
+    std::env::var("MYLANG_BIN").unwrap_or_else(|_| DEFAULT_MYLANG_BIN.to_string())
+}
+
+/// Check whether the my-lang CLI binary is available.
+#[tauri::command]
+fn mylang_check() -> Result<String, String> {
+    let output = std::process::Command::new(mylang_bin())
+        .arg("--version")
+        .output()
+        .map_err(|e| format!("CLI not found: {}", e))?;
+
+    if output.status.success() {
+        let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        Ok(format!("{{\"available\":true,\"version\":\"{}\"}}", version))
+    } else {
+        Err("my-lang CLI not available".to_string())
+    }
+}
+
+/// Compile source code in a given dialect.
+/// Writes source to a temp file, runs `my compile`, returns JSON result.
+#[tauri::command]
+fn mylang_compile(source: String, dialect: String) -> Result<String, String> {
+    use std::io::Write;
+
+    let ext = match dialect.to_lowercase().as_str() {
+        "solo" => "solo",
+        "duet" => "duet",
+        "ensemble" => "ens",
+        "me" => "me",
+        _ => "solo",
+    };
+
+    let tmp_dir = std::env::temp_dir().join("panll-mylang");
+    std::fs::create_dir_all(&tmp_dir)
+        .map_err(|e| format!("Failed to create temp dir: {}", e))?;
+
+    let tmp_file = tmp_dir.join(format!("input.{}", ext));
+    let mut f = std::fs::File::create(&tmp_file)
+        .map_err(|e| format!("Failed to create temp file: {}", e))?;
+    f.write_all(source.as_bytes())
+        .map_err(|e| format!("Failed to write source: {}", e))?;
+
+    let start = std::time::Instant::now();
+    let output = std::process::Command::new(mylang_bin())
+        .args(["compile", tmp_file.to_str().unwrap_or("input"), "--format", "json"])
+        .output()
+        .map_err(|e| format!("Compilation failed: {}", e))?;
+    let elapsed_ms = start.elapsed().as_millis();
+
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+    // Construct a JSON result
+    let success = output.status.success();
+    Ok(format!(
+        "{{\"success\":{},\"output\":{},\"diagnostics\":{},\"error_count\":0,\"warning_count\":0,\"compile_time_ms\":{}}}",
+        success,
+        serde_json::to_string(&stdout).unwrap_or_else(|_| "\"\"".to_string()),
+        serde_json::to_string(&stderr).unwrap_or_else(|_| "\"\"".to_string()),
+        elapsed_ms
+    ))
+}
+
+/// Evaluate a REPL input line.
+/// Runs `my repl --eval` with the given input and dialect.
+#[tauri::command]
+fn mylang_repl(input: String, dialect: String) -> Result<String, String> {
+    let output = std::process::Command::new(mylang_bin())
+        .args(["repl", "--eval", &input, "--dialect", &dialect.to_lowercase()])
+        .output()
+        .map_err(|e| format!("REPL eval failed: {}", e))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        Err(if stderr.is_empty() { "Evaluation error".to_string() } else { stderr })
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -1851,6 +2002,14 @@ fn main() {
             typell::commands::typell_compute,
             typell::commands::typell_list_signatures,
             typell::commands::typell_universes,
+            // Protocol-Squisher — 13-format schema analysis CLI bridge
+            protocol_squisher_check,
+            protocol_squisher_analyze,
+            protocol_squisher_compare,
+            // My-Lang — AI-native language CLI bridge
+            mylang_check,
+            mylang_compile,
+            mylang_repl,
         ])
         .setup(|_app| {
             Ok(())

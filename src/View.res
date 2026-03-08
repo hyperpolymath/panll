@@ -175,6 +175,9 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelBoj) => Boj.view(model.boj)
   | Some(PanelCladeBrowser) => CladeBrowser.view(model.cladeBrowser)
   | Some(PanelTentacles) => Tentacles.view(model.tentacles)
+  | Some(PanelProtocolSquisher) => ProtocolSquisher.view(model.protocolSquisher)
+  | Some(PanelMyLang) => MyLang.view(model.myLang)
+  | Some(PanelTypeLL) => TypeLL.view(model.typell)
   }
 }
 

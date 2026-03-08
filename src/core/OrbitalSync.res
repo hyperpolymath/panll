@@ -54,22 +54,54 @@ let detectWorldChanges = (paneW: Model.paneWState, state: syncState): option<syn
   }
 }
 
-/// Calculate divergence between symbolic and neural content
+/// S3: Token-overlap divergence between symbolic and neural content.
+/// Splits both panes' content into word tokens and computes Jaccard
+/// distance: 1 - |intersection| / |union|. Falls back to length
+/// ratio when token sets are empty.
 let calculateDivergence = (paneL: Model.paneLState, paneN: Model.paneNState): float => {
-  // Simple divergence calculation based on content similarity
-  // In production, use semantic similarity measures
-  let symbolicLen = String.length(paneL.editorContent)
-  let neuralLen = String.length(paneN.monologue)
+  let symbolicContent = paneL.editorContent
+  let neuralContent = paneN.monologue
+
+  let symbolicLen = String.length(symbolicContent)
+  let neuralLen = String.length(neuralContent)
 
   if symbolicLen === 0 && neuralLen === 0 {
     0.0
   } else if symbolicLen === 0 || neuralLen === 0 {
     1.0
   } else {
-    // Calculate difference ratio
-    let diff = Int.toFloat(abs(symbolicLen - neuralLen))
-    let maxLen = Int.toFloat(max(symbolicLen, neuralLen))
-    Math.min(1.0, diff /. maxLen)
+    // Tokenise: split on whitespace and punctuation boundaries.
+    let tokenise = (s: string): array<string> => {
+      String.split(s, " ")
+      ->Array.flatMap(w => String.split(w, "\n"))
+      ->Array.map(String.trim)
+      ->Array.filter(t => String.length(t) > 0)
+    }
+
+    let symTokens = tokenise(symbolicContent)
+    let neuTokens = tokenise(neuralContent)
+
+    let symLen = Array.length(symTokens)
+    let neuLen = Array.length(neuTokens)
+
+    if symLen === 0 && neuLen === 0 {
+      0.0
+    } else {
+      // Count intersection: tokens present in both sets.
+      let intersection = Array.filter(symTokens, t =>
+        Array.includes(neuTokens, t)
+      )->Array.length
+
+      // Jaccard distance = 1 - |intersection| / |union|
+      // |union| = |A| + |B| - |intersection|
+      let union = symLen + neuLen - intersection
+      if union === 0 {
+        0.0
+      } else {
+        let jaccard = Int.toFloat(intersection) /. Int.toFloat(union)
+        Math.min(1.0, 1.0 -. jaccard)
+      }
+    }
   }
 }
 

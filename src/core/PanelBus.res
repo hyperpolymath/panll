@@ -26,11 +26,34 @@ type panelEvent =
   /// Database connection status changed.
   | DatabaseConnectionChanged(string, bool) // (dbName, connected)
 
-/// Collect bus events from a sub-updater's state transition.
-/// Returns an empty array if no cross-panel effects are needed.
-/// The main update loop calls this after each sub-updater and
-/// dispatches follow-up messages for any events produced.
-///
-/// Currently a placeholder — each panel's sub-updater will return
-/// events as a second element of its return tuple once implemented.
+/// Empty event array for sub-updaters with no cross-panel effects.
 let noEvents: array<panelEvent> = []
+
+/// Governance-originated events — emitted by the post-update governance
+/// pass when contractile compliance, orbital stability, or database
+/// connection state changes. These allow consumer panels (Hypatia, Fleet,
+/// Reposystem) to react to cross-cutting state transitions.
+
+/// Anti-Crash violation spike detected — governance tightened constraints.
+type governanceEvent =
+  /// Contractile compliance score changed (0.0–1.0).
+  | ComplianceChanged(float)
+  /// Orbital stability changed significantly.
+  | StabilityChanged(float)
+  /// Inference was halted by governance.
+  | InferenceHalted(string) // reason
+  /// Inference was resumed by governance.
+  | InferenceResumed
+  /// Humidity level was adjusted.
+  | HumidityAdjusted(Model.humidityLevel)
+
+/// Convert a governance event to a panel event for bus routing.
+let governanceToPanel = (evt: governanceEvent): panelEvent => {
+  switch evt {
+  | ComplianceChanged(score) => RsrComplianceChanged("contractiles", score)
+  | StabilityChanged(score) => RepoHealthChanged("panll-orbit", score)
+  | InferenceHalted(_) => RepoHealthChanged("panll-inference", 0.0)
+  | InferenceResumed => RepoHealthChanged("panll-inference", 1.0)
+  | HumidityAdjusted(_) => RepoHealthChanged("panll-humidity", 1.0)
+  }
+}

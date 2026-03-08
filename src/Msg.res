@@ -1562,6 +1562,93 @@ type keybindingsMsg =
   /// Reset all bindings to defaults.
   | ResetAllBindings
 
+/// Protocol-Squisher format analysis messages.
+type protocolSquisherMsg =
+  /// Set the active category tab.
+  | SetPsCategory(protocolSquisherCategory)
+  /// Check whether CLI binary is available.
+  | CheckPsCli
+  /// CLI check result.
+  | PsCliResult(result<string, string>)
+  /// Update the analyse file path input.
+  | SetAnalyseInput(string)
+  /// Run analysis on the current input path.
+  | RunAnalysis
+  /// Analysis result from Tauri backend.
+  | AnalysisResult(result<string, string>)
+  /// Update the left comparison input.
+  | SetCompareLeft(string)
+  /// Update the right comparison input.
+  | SetCompareRight(string)
+  /// Run comparison between left and right schemas.
+  | RunComparison
+  /// Comparison result from Tauri backend.
+  | ComparisonResult(result<string, string>)
+
+/// My-Lang AI-native language messages.
+type myLangMsg =
+  /// Set the active category tab.
+  | SetMlCategory(myLangCategory)
+  /// Switch the active dialect.
+  | SetDialect(myLangDialect)
+  /// Check whether CLI binary is available.
+  | CheckMlCli
+  /// CLI check result.
+  | MlCliResult(result<string, string>)
+  /// Update editor content.
+  | UpdateEditor(string)
+  /// Compile the current editor content.
+  | Compile
+  /// Compilation result from Tauri backend.
+  | CompileResult(result<string, string>)
+  /// Update REPL input.
+  | UpdateReplInput(string)
+  /// Evaluate the current REPL input.
+  | EvalRepl
+  /// REPL evaluation result from Tauri backend.
+  | ReplResult(result<string, string>)
+
+/// TypeLL verification kernel messages.
+type typellMsg =
+  /// Set the active category tab.
+  | SetTlCategory(typellCategory)
+  /// Set the view layer (progressive disclosure level).
+  | SetViewLayer(viewLayer)
+  /// Check TypeLL server health.
+  | CheckTlHealth
+  /// Health check result.
+  | TlHealthResult(result<string, string>)
+  /// Update checker input.
+  | UpdateCheckerInput(string)
+  /// Run type check on current input.
+  | RunCheck
+  /// Type check result.
+  | CheckResult(result<string, string>)
+  /// Run type inference on current input.
+  | RunInfer
+  /// Type inference result.
+  | InferResult(result<string, string>)
+  /// Load signatures from server.
+  | LoadSignatures
+  /// Signatures loaded.
+  | SignaturesLoaded(result<string, string>)
+  /// Load universe hierarchy.
+  | LoadUniverses
+  /// Universes loaded.
+  | UniversesLoaded(result<string, string>)
+  /// Set signature search filter.
+  | SetSignatureFilter(string)
+  /// Set tier filter.
+  | SetTierFilter(option<typeTier>)
+  /// Update refinement spec.
+  | UpdateRefinementSpec(string)
+  /// Update refinement constraints.
+  | UpdateRefinementConstraints(string)
+  /// Run refinement.
+  | RunRefine
+  /// Refinement result.
+  | RefineResult(result<string, string>)
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -1615,6 +1702,9 @@ type msg =
   | Boj(bojMsg) // Bundle of Joy cartridge server
   | CladeBrowser(cladeBrowserMsg) // Clade taxonomy browser
   | Tentacles(tentaclesMsg) // 7-Tentacles compiler agent orchestra
+  | ProtocolSquisher(protocolSquisherMsg) // Format analysis and compatibility
+  | MyLang(myLangMsg) // AI-native language workbench
+  | TypeLL(typellMsg) // Verification kernel (cross-panel type intelligence)
   | EnsaidConfig(ensaidConfigMsg) // Cross-panel ENSAID_CONFIG generation and I/O
   | Undo // Undo last significant action
   | Redo // Redo last undone action

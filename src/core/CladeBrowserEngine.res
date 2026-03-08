@@ -307,6 +307,21 @@ let builtinClades: array<cladeEntry> = [
     longDescription: "Manages panel layouts, session persistence, and workspace configuration.",
     traits: { hasPersistence: true, hasBackend: true, hasWorkItems: false, hasRealTime: false, isAmbient: false },
     panelIds: ["PanelWorkspace"], consumedBy: [], supersedes: [], parentCladeId: None, siblingClades: [] },
+  { id: "protocol-squisher", name: "Protocol-Squisher", kind: "scanner", version: "1.0.0",
+    summary: "13-format schema analysis — transport class classification and compatibility",
+    longDescription: "Analyses serialisation schemas across Protobuf, Avro, FlatBuffers, Cap'n Proto, Thrift, MessagePack, Bebop, JSON Schema, GraphQL, TOML, Rust, ReScript, Python. Classifies transport classes (Concorde/Business/Economy/Wheelbarrow) and compares compatibility.",
+    traits: { hasPersistence: false, hasBackend: true, hasWorkItems: false, hasRealTime: false, isAmbient: false },
+    panelIds: ["PanelProtocolSquisher"], consumedBy: ["boj"], supersedes: [], parentCladeId: Some("scanner"), siblingClades: ["aerie", "interfaces"] },
+  { id: "my-lang", name: "My-Lang", kind: "builder", version: "1.0.0",
+    summary: "AI-native language workbench — 4 dialects, REPL, compiler",
+    longDescription: "Development environment for my-lang with Solo (systems), Duet (AI-assisted), Ensemble (AI-native), Me (personal agent) dialects. Includes code editor, REPL, and compilation output.",
+    traits: { hasPersistence: false, hasBackend: true, hasWorkItems: false, hasRealTime: false, isAmbient: false },
+    panelIds: ["PanelMyLang"], consumedBy: [], supersedes: [], parentCladeId: None, siblingClades: ["build-dashboard", "editor-bridge"] },
+  { id: "typell", name: "TypeLL — Verification Kernel", kind: "ai", version: "1.0.0",
+    summary: "Cross-panel type intelligence — dependent, linear, affine, session, refinement types",
+    longDescription: "PanLL's verification backbone. Provides type checking, inference, refinement, and proof obligation generation to every panel. Progressive disclosure (RAW/FOLDED/GLYPHED/WYSIWYG) from rescript-evangeliser makes advanced type systems accessible.",
+    traits: { hasPersistence: false, hasBackend: true, hasWorkItems: false, hasRealTime: true, isAmbient: true },
+    panelIds: ["PanelTypeLL"], consumedBy: ["databases", "protocol-squisher", "my-lang", "boj", "playgrounds"], supersedes: [], parentCladeId: None, siblingClades: ["ai", "clade-tentacles"] },
 ]
 
 // ════════════════════════════════════════════════════════════════════════

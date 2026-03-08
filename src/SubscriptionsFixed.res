@@ -95,7 +95,73 @@ let inferenceSubscriptions = (model: model): Tea_Sub.t<msg> => {
   }
 }
 
+/// S2: Tauri backend event subscriptions — real-time neurosymbolic streaming.
+/// These fire when the Rust backend receives events from ECHIDNA, Tentacles,
+/// VeriSimDB, or Hypatia. Only active when the relevant panel is connected.
+let neurosymbolicSubscriptions = (_model: model): Tea_Sub.t<msg> => {
+  Tea_Sub.batch(list{
+    // ECHIDNA proof progress → feed into proof session state.
+    TauriEvents.onEchidnaProgress(payload =>
+      Echidna(ProofResult(Ok(payload)))
+    ),
+    // ECHIDNA tactic suggestions → populate suggestion ribbon.
+    TauriEvents.onEchidnaTactics(payload =>
+      Echidna(TacticSuggestionsLoaded(Ok(payload)))
+    ),
+    // Tentacles agent phase changes → advance OODA indicators.
+    // Payload expected as "agentId:phaseId" string from FFI.
+    TauriEvents.onTentaclesPhaseChange(payload => {
+      // Parse "0:2" as agent Red, phase Decide — graceful fallback.
+      let parts = String.split(payload, ":")
+      let agentIdx = parts[0]->Option.getOr("0")->Int.fromString->Option.getOr(0)
+      let agentId = switch agentIdx {
+      | 0 => TentaclesModel.Red
+      | 1 => TentaclesModel.Orange
+      | 2 => TentaclesModel.Yellow
+      | 3 => TentaclesModel.Green
+      | 4 => TentaclesModel.Blue
+      | 5 => TentaclesModel.Indigo
+      | _ => TentaclesModel.Violet
+      }
+      let phaseIdx = parts[1]->Option.getOr("0")->Int.fromString->Option.getOr(0)
+      let phase = switch phaseIdx {
+      | 0 => PaneModel.Observe
+      | 1 => PaneModel.Orient
+      | 2 => PaneModel.Decide
+      | _ => PaneModel.Act
+      }
+      Tentacles(AgentPhaseAdvanced(agentId, phase))
+    }),
+    // Tentacles agent broadcasts → deliver as reasoning share.
+    TauriEvents.onTentaclesBroadcast(payload =>
+      Tentacles(BroadcastFromAgent(Red, ReasoningShare({
+        agent: Red,
+        phase: Observe,
+        summary: payload,
+        detail: None,
+        timestamp: 0.0,
+      })))
+    ),
+    // VeriSimDB drift alerts → refresh drift display.
+    TauriEvents.onVeriSimDBDrift(payload =>
+      VeriSimDB(DriftLoaded(Ok(payload)))
+    ),
+    // Hypatia neural network status → refresh network grid.
+    TauriEvents.onHypatiaStatus(payload =>
+      Hypatia(ScansLoaded(Ok(payload)))
+    ),
+    // Governance signals → Anti-Crash intervention request.
+    TauriEvents.onGovernanceSignal(payload =>
+      AntiCrash(RequestOperatorIntervention(payload))
+    ),
+  })
+}
+
 /// Combined subscriptions.
 let all = (model: model): Tea_Sub.t<msg> => {
-  Tea_Sub.batch(list{subscriptions(model), inferenceSubscriptions(model)})
+  Tea_Sub.batch(list{
+    subscriptions(model),
+    inferenceSubscriptions(model),
+    neurosymbolicSubscriptions(model),
+  })
 }

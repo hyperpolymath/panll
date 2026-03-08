@@ -248,6 +248,9 @@ include CladeBrowserModel
 /// tentaclesState) for the 7-Tentacles compiler agent panel — seven colour-coded
 /// agents representing compiler subsystems with progressive cephalopod staging.
 include TentaclesModel
+include ProtocolSquisherModel
+include MyLangModel
+include TypeLLModel
 
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
@@ -403,6 +406,15 @@ type model = {
 
   // Tentacles — 7-Tentacles compiler agent panel (within/without ECHIDNA)
   tentacles: tentaclesState,
+
+  // Protocol-Squisher — 13-format schema analysis and compatibility
+  protocolSquisher: protocolSquisherState,
+
+  // My-Lang — AI-native language workbench (Solo/Duet/Ensemble/Me dialects)
+  myLang: myLangState,
+
+  // TypeLL — Verification kernel (cross-panel type intelligence)
+  typell: typellState,
 
   // ENSAID_CONFIG — cross-panel config generation state
   ensaidConfigPreview: option<string>,
@@ -670,6 +682,9 @@ let init = (): model => {
     clades: CladeBrowserEngine.builtinClades,
   },
   tentacles: TentaclesEngine.init(),
+  protocolSquisher: ProtocolSquisherEngine.defaultState,
+  myLang: MyLangEngine.defaultState,
+  typell: TypeLLEngine.defaultState,
   ensaidConfigPreview: None,
   ensaidConfigError: None,
   undoStack: [],

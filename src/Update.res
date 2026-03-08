@@ -1209,8 +1209,24 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     switch result {
     | Ok(json) =>
       let parsed = parseEchidnaDispatchResult(json)
+      // S4: Proof completion feeds back into the neurosymbolic loop.
+      // Advance OODA phase in Panel-N agency based on proof outcome.
+      let newAgency = switch parsed {
+      | Some(r) if r.verified => {
+          // Proof verified → advance to Act phase (decision confirmed).
+          ...model.paneN.agency,
+          phase: Act,
+        }
+      | Some(_) => {
+          // Proof failed → re-orient (need new approach).
+          ...model.paneN.agency,
+          phase: Orient,
+        }
+      | None => model.paneN.agency
+      }
+      let newPaneN = {...model.paneN, agency: newAgency}
       (
-        {...model, echidna: {...ec, lastProofResult: parsed, proofLoading: false, proofError: None}},
+        {...model, echidna: {...ec, lastProofResult: parsed, proofLoading: false, proofError: None}, paneN: newPaneN},
         Tea_Cmd.none,
       )
     | Error(err) => (
@@ -1296,13 +1312,25 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     switch result {
     | Ok(json) =>
       switch parseTacticResponse(json) {
-      | Some((_success, updatedSession)) => (
-          {...model, echidna: {...ec, session: Some(updatedSession), proofError: None}},
-          // Auto-request fresh suggestions after tactic application
-          TauriCmd.suggestEchidnaTactics(updatedSession.sessionId, 5, result =>
-            Echidna(TacticSuggestionsLoaded(result))
-          ),
-        )
+      | Some((_success, updatedSession)) => {
+          // S4: Tactic applied → advance OODA from Orient to Decide.
+          // Each tactic application represents a decision step in the proof search.
+          let newPhase = switch model.paneN.agency.phase {
+          | Observe => Orient  // Observed → now orienting with tactic
+          | Orient => Decide   // Oriented → decided on tactic
+          | Decide => Act      // Decided → acting (tactic applied)
+          | Act => Observe     // Cycle complete → observe result
+          }
+          let newAgency = {...model.paneN.agency, phase: newPhase}
+          let newPaneN = {...model.paneN, agency: newAgency}
+          (
+            {...model, echidna: {...ec, session: Some(updatedSession), proofError: None}, paneN: newPaneN},
+            // Auto-request fresh suggestions after tactic application
+            TauriCmd.suggestEchidnaTactics(updatedSession.sessionId, 5, result =>
+              Echidna(TacticSuggestionsLoaded(result))
+            ),
+          )
+        }
       | None => (
           {...model, echidna: {...ec, proofError: Some("Failed to parse tactic response")}},
           Tea_Cmd.none,
@@ -1535,7 +1563,14 @@ let updateAntiCrash = (model: model, msg: antiCrashMsg): (model, Tea_Cmd.t<msg>)
       | Some(vt) => {...model.paneN, tokens: Array.concat(model.paneN.tokens, [vt])}
       | None => model.paneN
       }
-      ({...model, antiCrash: newAntiCrash, paneN: newPaneN}, Tea_Cmd.none)
+      // M4: Anti-Crash → Governance feedback. When a token is rejected,
+      // record a correction in the Vexometer so the governance engine
+      // can adjust contractile elasticity on the next pass.
+      let newVexometer = switch validatedToken {
+      | None => {...model.vexometer, recentCorrections: model.vexometer.recentCorrections + 1}
+      | Some(_) => model.vexometer
+      }
+      ({...model, antiCrash: newAntiCrash, paneN: newPaneN, vexometer: newVexometer}, Tea_Cmd.none)
     }
   | ValidationPassed(token) => {
       // Token has already been validated externally — mark as validated and add.
@@ -1573,6 +1608,8 @@ let updateAntiCrash = (model: model, msg: antiCrashMsg): (model, Tea_Cmd.t<msg>)
 /// a safety measure. This is called after every state-modifying update in the
 /// main orchestrator.
 let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<msg>) => {
+  // --- Phase 1: Evaluate contractiles ---
+
   let results = Contractiles.evaluateAll(model, model.contractiles)
 
   // Update each contractile's status based on evaluation results.
@@ -1607,11 +1644,135 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
   }
 
   // If a Strict contractile is violated, halt neural inference.
-  if hasStrictViolation {
-    ({...newModel, paneN: {...newModel.paneN, inferenceActive: false}}, cmd)
+  let newModel = if hasStrictViolation {
+    {...newModel, paneN: {...newModel.paneN, inferenceActive: false}}
   } else {
-    (newModel, cmd)
+    newModel
   }
+
+  // --- Phase 2: OrbitalSync — detect L↔N↔W divergence (M2) ---
+
+  let (newSyncState, newOrbital) = OrbitalSync.sync(newModel, newModel.syncState)
+  let newModel = {...newModel, syncState: newSyncState, orbital: newOrbital}
+
+  // --- Phase 3: Consume pendingSync events (M2) ---
+  // Cross-panel sync events feed back into the orbital metrics and
+  // are cleared after processing. In future, these will trigger
+  // Panel Bus events for inter-module communication.
+
+  let syncEventCount = Array.length(newModel.syncState.pendingSync)
+  let newModel = if syncEventCount > 0 {
+    // Sync latency increases with event volume (simple heuristic).
+    let latencyAdjust = Int.toFloat(syncEventCount) *. 5.0
+    let newSync = {
+      ...newModel.syncState,
+      pendingSync: [], // Consumed — clear the queue
+      syncLatency: Math.min(500.0, newModel.syncState.syncLatency +. latencyAdjust),
+    }
+    {...newModel, syncState: newSync}
+  } else {
+    // No events — latency decays toward zero.
+    let newSync = {
+      ...newModel.syncState,
+      syncLatency: Math.max(0.0, newModel.syncState.syncLatency -. 2.0),
+    }
+    {...newModel, syncState: newSync}
+  }
+
+  // --- Phase 4: GovernanceEngine — close all feedback loops (M1, M3, M4) ---
+  // Anti-Crash violations → Governance → Contractile elasticity
+  // Vexometer frustration → Governance → Anti-Crash strictness
+  // Orbital divergence → Governance → inference halting / humidity
+
+  let newModel = GovernanceEngine.govern(newModel)
+
+  // --- Phase 5: Panel Bus event emission (M5) ---
+  // Emit cross-panel events based on state transitions detected by
+  // OrbitalSync and GovernanceEngine. These events allow panels to
+  // react to changes in other panels without direct coupling.
+
+  let busEvents: array<PanelBus.panelEvent> = []
+
+  // Emit confidence update if orbital stability changed significantly.
+  let stabilityDiff = newModel.orbital.stability -. model.orbital.stability
+  let busEvents = if stabilityDiff > 0.05 || stabilityDiff < -0.05 {
+    Array.concat(busEvents, [
+      PanelBus.RepoHealthChanged("panll-orbit", newModel.orbital.stability),
+    ])
+  } else {
+    busEvents
+  }
+
+  // Emit database connection change if VeriSimDB state changed.
+  let busEvents = if newModel.verisimdb.connected !== model.verisimdb.connected {
+    Array.concat(busEvents, [
+      PanelBus.DatabaseConnectionChanged("verisimdb", newModel.verisimdb.connected),
+    ])
+  } else {
+    busEvents
+  }
+
+  // Emit compliance change if contractile statuses changed.
+  let violatedCount = Array.filter(newModel.contractiles, c => {
+    switch c.status {
+    | Violated(_) => true
+    | _ => false
+    }
+  })->Array.length
+  let prevViolatedCount = Array.filter(model.contractiles, c => {
+    switch c.status {
+    | Violated(_) => true
+    | _ => false
+    }
+  })->Array.length
+  let busEvents = if violatedCount !== prevViolatedCount {
+    let complianceScore = if Array.length(newModel.contractiles) > 0 {
+      1.0 -. Int.toFloat(violatedCount) /. Int.toFloat(Array.length(newModel.contractiles))
+    } else {
+      1.0
+    }
+    Array.concat(busEvents, [
+      PanelBus.RsrComplianceChanged("contractiles", complianceScore),
+    ])
+  } else {
+    busEvents
+  }
+
+  // Dispatch follow-up messages for bus events. Each bus event maps to a
+  // message that the consuming panel handles. This closes the cross-panel
+  // intelligence loop: governance changes propagate to dependent panels.
+  let busCmd = if Array.length(busEvents) > 0 {
+    let followUps = Array.filterMap(busEvents, evt => {
+      switch evt {
+      | PanelBus.HypatiaConfidenceUpdated(_repo, _conf) => None // Hypatia consumes internally
+      | PanelBus.RepoHealthChanged(_source, _score) => None // Orbital metric, no panel dispatch needed
+      | PanelBus.DatabaseConnectionChanged(_db, connected) =>
+        // When VeriSimDB connection changes, trigger a health check.
+        connected ? Some(VeriSimDB(CheckHealth)) : None
+      | PanelBus.RsrComplianceChanged(_source, _score) => None // Reposystem tracks internally
+      | PanelBus.FarmRepoListUpdated(_count) => None // Farm refresh handled by Farm panel
+      | PanelBus.FleetFixDispatched(_repo, _recipe) => None // Fleet tracks internally
+      | PanelBus.HypatiaFindingsRouted(_json) =>
+        // When Hypatia routes findings, tell Fleet to reload.
+        Some(Fleet(LoadFleet))
+      }
+    })
+    if Array.length(followUps) > 0 {
+      Tea_Cmd.batch(List.fromArray(Array.map(followUps, m => Tea_Cmd.msg(m))))
+    } else {
+      Tea_Cmd.none
+    }
+  } else {
+    Tea_Cmd.none
+  }
+
+  // Merge bus commands with the original command.
+  let finalCmd = switch busCmd {
+  | None => cmd
+  | _ => Tea_Cmd.batch(list{cmd, busCmd})
+  }
+
+  (newModel, finalCmd)
 }
 
 // ===========================================================================
@@ -2480,19 +2641,41 @@ let updateHypatia = (model: model, msg: hypatiaMsg): (model, Tea_Cmd.t<msg>) => 
     switch result {
     | Ok(jsonStr) =>
       switch HypatiaEngine.parseNetworks(jsonStr) {
-      | Ok(networks) => (
-          {
-            ...model,
-            hypatia: {
-              ...hyp,
-              loaded: true,
-              loading: false,
-              error: None,
-              networks,
+      | Ok(networks) => {
+          // S5: Propagate Hypatia neural confidence to Panel-N autonomy.
+          // Average confidence across active networks sets the autonomy ceiling.
+          let activeNets = networks->Array.filter(n =>
+            switch n.status {
+            | NetActive => true
+            | _ => false
+            }
+          )
+          let avgConfidence = if Array.length(activeNets) > 0 {
+            let total = activeNets->Array.reduce(0.0, (acc, n) => acc +. n.confidence)
+            total /. Int.toFloat(Array.length(activeNets))
+          } else {
+            0.0
+          }
+          // Clamp autonomy to the confidence level — can't be more autonomous
+          // than the neural networks are confident.
+          let newAutonomy = Math.min(model.paneN.agency.autonomyLevel, avgConfidence)
+          let newAgency = {...model.paneN.agency, autonomyLevel: newAutonomy}
+          let newPaneN = {...model.paneN, agency: newAgency}
+          (
+            {
+              ...model,
+              paneN: newPaneN,
+              hypatia: {
+                ...hyp,
+                loaded: true,
+                loading: false,
+                error: None,
+                networks,
+              },
             },
-          },
-          Tea_Cmd.none,
-        )
+            Tea_Cmd.none,
+          )
+        }
       | Error(e) => (
           {...model, hypatia: {...hyp, loading: false, error: Some(e)}},
           Tea_Cmd.none,
@@ -6446,18 +6629,19 @@ let updateTentacles = (model: model, msg: tentaclesMsg): (model, Tea_Cmd.t<msg>)
     )
   | DeliverBroadcasts => ({...model, tentacles: {...st, pendingBroadcasts: []}}, Tea_Cmd.none)
   | StartAgentTask(id, task) => {
-      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {
-        ...a,
-        busy: true,
-        currentTask: Some(task),
-        currentPhase: Observe,
-        lastError: None,
-      })
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a =>
+        TentaclesEngine.startTask(a, task)
+      )
       ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
     }
-  | AgentPhaseAdvanced(id, phase) => {
-      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {...a, currentPhase: phase})
-      ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
+  | AgentPhaseAdvanced(id, _phase) => {
+      // S1: Use OODA progression engine — advance through Observe→Orient→Decide→Act.
+      // When the cycle completes (Act→Observe), the agent task finishes automatically.
+      let updatedAgents = TentaclesEngine.updateAgent(st.agents, id, a => {
+        let (advanced, _completed) = TentaclesEngine.advancePhase(a)
+        advanced
+      })
+      ({...model, tentacles: {...st, agents: updatedAgents}}, Tea_Cmd.none)
     }
   | AgentConstraintAdded(id, newConstraint) => {
       let agents = TentaclesEngine.updateAgent(st.agents, id, a => {
@@ -6489,11 +6673,9 @@ let updateTentacles = (model: model, msg: tentaclesMsg): (model, Tea_Cmd.t<msg>)
       ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
     }
   | AgentError(id, err) => {
-      let agents = TentaclesEngine.updateAgent(st.agents, id, a => {
-        ...a,
-        busy: false,
-        lastError: Some(err),
-      })
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a =>
+        TentaclesEngine.failTask(a, err)
+      )
       ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
     }
   | ClearAgentError(id) => {
@@ -6510,6 +6692,215 @@ let updateTentacles = (model: model, msg: tentaclesMsg): (model, Tea_Cmd.t<msg>)
       {...model, tentacles: {...st, ffiConnected: connected, ffiError: error, ffiLastCheck: 0.0}},
       Tea_Cmd.none,
     )
+  }
+}
+
+let updateProtocolSquisher = (model: model, msg: protocolSquisherMsg): (model, Tea_Cmd.t<msg>) => {
+  let ps = model.protocolSquisher
+  switch msg {
+  | SetPsCategory(cat) => ({...model, protocolSquisher: {...ps, activeCategory: cat}}, Tea_Cmd.none)
+  | CheckPsCli => (
+      {...model, protocolSquisher: {...ps, loading: true}},
+      ProtocolSquisherCmd.checkCli(result => ProtocolSquisher(PsCliResult(result))),
+    )
+  | PsCliResult(Ok(_)) => ({...model, protocolSquisher: {...ps, cliAvailable: true, loading: false, error: None}}, Tea_Cmd.none)
+  | PsCliResult(Error(e)) => ({...model, protocolSquisher: {...ps, cliAvailable: false, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | SetAnalyseInput(v) => ({...model, protocolSquisher: {...ps, analyseInput: v}}, Tea_Cmd.none)
+  | RunAnalysis => (
+      {...model, protocolSquisher: {...ps, loading: true, error: None}},
+      ProtocolSquisherCmd.analyse(ps.analyseInput, result => ProtocolSquisher(AnalysisResult(result))),
+    )
+  | AnalysisResult(Ok(json)) =>
+    switch ProtocolSquisherEngine.parseAnalysis(json) {
+    | Ok(result) => (
+        {...model, protocolSquisher: {
+          ...ps,
+          loading: false,
+          lastAnalysis: Some(result),
+          analysisHistory: Array.concat([result], ps.analysisHistory),
+          error: None,
+        }},
+        Tea_Cmd.none,
+      )
+    | Error(e) => ({...model, protocolSquisher: {...ps, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | AnalysisResult(Error(e)) => ({...model, protocolSquisher: {...ps, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | SetCompareLeft(v) => ({...model, protocolSquisher: {...ps, compareLeftInput: v}}, Tea_Cmd.none)
+  | SetCompareRight(v) => ({...model, protocolSquisher: {...ps, compareRightInput: v}}, Tea_Cmd.none)
+  | RunComparison => (
+      {...model, protocolSquisher: {...ps, loading: true, error: None}},
+      ProtocolSquisherCmd.compare(
+        ps.compareLeftInput,
+        ps.compareRightInput,
+        result => ProtocolSquisher(ComparisonResult(result)),
+      ),
+    )
+  | ComparisonResult(Ok(_json)) =>
+    // TODO: parse comparison JSON when format is stabilised
+    ({...model, protocolSquisher: {...ps, loading: false, error: None}}, Tea_Cmd.none)
+  | ComparisonResult(Error(e)) => ({...model, protocolSquisher: {...ps, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  }
+}
+
+let updateMyLang = (model: model, msg: myLangMsg): (model, Tea_Cmd.t<msg>) => {
+  let ml = model.myLang
+  switch msg {
+  | SetMlCategory(cat) => ({...model, myLang: {...ml, activeCategory: cat}}, Tea_Cmd.none)
+  | SetDialect(d) => (
+      {...model, myLang: {...ml, activeDialect: d, editorContent: MyLangEngine.dialectExample(d)}},
+      Tea_Cmd.none,
+    )
+  | CheckMlCli => (
+      {...model, myLang: {...ml, loading: true}},
+      MyLangCmd.checkCli(result => MyLang(MlCliResult(result))),
+    )
+  | MlCliResult(Ok(_)) => ({...model, myLang: {...ml, cliAvailable: true, loading: false, error: None}}, Tea_Cmd.none)
+  | MlCliResult(Error(e)) => ({...model, myLang: {...ml, cliAvailable: false, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | UpdateEditor(v) => ({...model, myLang: {...ml, editorContent: v}}, Tea_Cmd.none)
+  | Compile => (
+      {...model, myLang: {...ml, loading: true, error: None}},
+      MyLangCmd.compile(
+        ml.editorContent,
+        MyLangEngine.dialectLabel(ml.activeDialect),
+        result => MyLang(CompileResult(result)),
+      ),
+    )
+  | CompileResult(Ok(json)) =>
+    switch MyLangEngine.parseCompilation(json) {
+    | Ok(result) => ({...model, myLang: {...ml, loading: false, lastCompilation: Some(result), error: None}}, Tea_Cmd.none)
+    | Error(e) => ({...model, myLang: {...ml, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | CompileResult(Error(e)) => ({...model, myLang: {...ml, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | UpdateReplInput(v) => ({...model, myLang: {...ml, replInput: v}}, Tea_Cmd.none)
+  | EvalRepl =>
+    if ml.replInput === "" {
+      (model, Tea_Cmd.none)
+    } else {
+      (
+        {...model, myLang: {...ml, loading: true, replInput: ""}},
+        MyLangCmd.replEval(
+          ml.replInput,
+          MyLangEngine.dialectLabel(ml.activeDialect),
+          result => MyLang(ReplResult(result)),
+        ),
+      )
+    }
+  | ReplResult(Ok(output)) => {
+      let entry: replEntry = {
+        input: ml.replInput !== "" ? ml.replInput : "(previous input)",
+        output,
+        isError: false,
+      }
+      ({...model, myLang: {...ml, loading: false, replHistory: Array.concat(ml.replHistory, [entry])}}, Tea_Cmd.none)
+    }
+  | ReplResult(Error(e)) => {
+      let entry: replEntry = {
+        input: ml.replInput !== "" ? ml.replInput : "(previous input)",
+        output: e,
+        isError: true,
+      }
+      ({...model, myLang: {...ml, loading: false, replHistory: Array.concat(ml.replHistory, [entry])}}, Tea_Cmd.none)
+    }
+  }
+}
+
+let updateTypeLL = (model: model, msg: typellMsg): (model, Tea_Cmd.t<msg>) => {
+  let tl = model.typell
+  switch msg {
+  | SetTlCategory(cat) => ({...model, typell: {...tl, activeCategory: cat}}, Tea_Cmd.none)
+  | SetViewLayer(vl) => ({...model, typell: {...tl, activeViewLayer: vl}}, Tea_Cmd.none)
+  | CheckTlHealth => (
+      {...model, typell: {...tl, loading: true}},
+      TypeLLCmd.health(result => TypeLL(TlHealthResult(result))),
+    )
+  | TlHealthResult(Ok(_)) => ({...model, typell: {...tl, serverConnected: true, loading: false, error: None}}, Tea_Cmd.none)
+  | TlHealthResult(Error(e)) => ({...model, typell: {...tl, serverConnected: false, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | UpdateCheckerInput(v) => ({...model, typell: {...tl, checkerInput: v}}, Tea_Cmd.none)
+  | RunCheck => {
+      let ctx = if tl.checkerContext !== "" { Some(tl.checkerContext) } else { None }
+      (
+        {...model, typell: {...tl, loading: true, error: None}},
+        TypeLLCmd.check(tl.checkerInput, ctx, result => TypeLL(CheckResult(result))),
+      )
+    }
+  | CheckResult(Ok(json)) =>
+    switch TypeLLEngine.parseCheckResult(json) {
+    | Ok(result) => {
+        let narrative = TypeLLEngine.generateNarrative(result)
+        (
+          {...model, typell: {
+            ...tl,
+            loading: false,
+            lastCheckResult: Some(result),
+            lastNarrative: Some(narrative),
+            queriesServed: tl.queriesServed + 1,
+            error: None,
+          }},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(e) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | CheckResult(Error(e)) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | RunInfer => (
+      {...model, typell: {...tl, loading: true, error: None}},
+      TypeLLCmd.infer(tl.checkerInput, result => TypeLL(InferResult(result))),
+    )
+  | InferResult(Ok(json)) =>
+    switch TypeLLEngine.parseCheckResult(json) {
+    | Ok(result) => {
+        let narrative = TypeLLEngine.generateNarrative(result)
+        (
+          {...model, typell: {
+            ...tl,
+            loading: false,
+            lastCheckResult: Some(result),
+            lastNarrative: Some(narrative),
+            queriesServed: tl.queriesServed + 1,
+            error: None,
+          }},
+          Tea_Cmd.none,
+        )
+      }
+    | Error(e) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | InferResult(Error(e)) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | LoadSignatures => (
+      {...model, typell: {...tl, loading: true}},
+      TypeLLCmd.listSignatures(result => TypeLL(SignaturesLoaded(result))),
+    )
+  | SignaturesLoaded(Ok(_json)) =>
+    // TODO: parse signatures JSON when TypeLL server is implemented
+    ({...model, typell: {...tl, loading: false, error: None}}, Tea_Cmd.none)
+  | SignaturesLoaded(Error(e)) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | LoadUniverses => (
+      {...model, typell: {...tl, loading: true}},
+      TypeLLCmd.universes(result => TypeLL(UniversesLoaded(result))),
+    )
+  | UniversesLoaded(Ok(_json)) =>
+    // TODO: parse universes JSON when TypeLL server is implemented
+    ({...model, typell: {...tl, loading: false, error: None}}, Tea_Cmd.none)
+  | UniversesLoaded(Error(e)) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | SetSignatureFilter(v) => ({...model, typell: {...tl, signatureFilter: v}}, Tea_Cmd.none)
+  | SetTierFilter(t) => ({...model, typell: {...tl, tierFilter: t}}, Tea_Cmd.none)
+  | UpdateRefinementSpec(v) => ({...model, typell: {...tl, refinementSpec: v}}, Tea_Cmd.none)
+  | UpdateRefinementConstraints(v) => ({...model, typell: {...tl, refinementConstraints: v}}, Tea_Cmd.none)
+  | RunRefine => {
+      let constraints = if tl.refinementConstraints !== "" { Some(tl.refinementConstraints) } else { None }
+      (
+        {...model, typell: {...tl, loading: true, error: None}},
+        TypeLLCmd.refine(tl.refinementSpec, constraints, result => TypeLL(RefineResult(result))),
+      )
+    }
+  | RefineResult(Ok(json)) =>
+    switch TypeLLEngine.parseRefinementResult(json) {
+    | Ok(result) => (
+        {...model, typell: {...tl, loading: false, lastRefinement: Some(result), queriesServed: tl.queriesServed + 1, error: None}},
+        Tea_Cmd.none,
+      )
+    | Error(e) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    }
+  | RefineResult(Error(e)) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
   }
 }
 
@@ -6626,6 +7017,9 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | Boj(subMsg) => updateBoj(model, subMsg)
   | CladeBrowser(subMsg) => updateCladeBrowser(model, subMsg)
   | Tentacles(subMsg) => updateTentacles(model, subMsg)
+  | ProtocolSquisher(subMsg) => updateProtocolSquisher(model, subMsg)
+  | MyLang(subMsg) => updateMyLang(model, subMsg)
+  | TypeLL(subMsg) => updateTypeLL(model, subMsg)
   | EnsaidConfig(subMsg) => updateEnsaidConfig(model, subMsg)
   | Undo => {
       // Pop from undo stack, push current to redo.

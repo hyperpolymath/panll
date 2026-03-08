@@ -391,6 +391,36 @@ let allPanels: array<panelMeta> = [
     hasBackend: true, // ECHIDNA V-lang REST adapters
     cladeId: Some("clade-tentacles"),
   },
+  {
+    id: PanelProtocolSquisher,
+    name: "Protocol-Squisher",
+    shortName: "Squisher",
+    description: "13-format schema analysis — transport class classification, compatibility comparison, adapter cost estimation",
+    icon: "layers",
+    connectionStatus: ServiceDisconnected, // CLI checked on demand
+    hasBackend: true, // Invokes protocol-squisher CLI
+    cladeId: Some("protocol-squisher"),
+  },
+  {
+    id: PanelMyLang,
+    name: "My-Lang",
+    shortName: "My-Lang",
+    description: "AI-native language workbench — 4 dialects (Solo, Duet, Ensemble, Me), REPL, compiler, and LSP integration",
+    icon: "code",
+    connectionStatus: ServiceDisconnected, // CLI checked on demand
+    hasBackend: true, // Invokes my-lang CLI
+    cladeId: Some("my-lang"),
+  },
+  {
+    id: PanelTypeLL,
+    name: "TypeLL",
+    shortName: "TypeLL",
+    description: "Verification kernel — dependent, linear, affine, session, and refinement types with progressive disclosure and cross-panel type intelligence",
+    icon: "shield",
+    connectionStatus: ServiceDisconnected, // Server checked on demand
+    hasBackend: true, // TypeLL server at TYPELL_URL
+    cladeId: Some("typell"),
+  },
 ]
 
 /// Look up panel metadata by ID.

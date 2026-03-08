@@ -50,6 +50,9 @@ type panelId =
   | PanelBoj
   | PanelCladeBrowser
   | PanelTentacles
+  | PanelProtocolSquisher
+  | PanelMyLang
+  | PanelTypeLL
 
 /// Connection status for panels backed by external services.
 type connectionStatus =
