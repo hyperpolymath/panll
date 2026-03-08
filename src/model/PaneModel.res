@@ -56,6 +56,8 @@ type paneLState = {
   constraints: array<symbolicConstraint>,
   activeConstraintId: option<string>,
   editorContent: string,
+  /// TypeLL inferred type for the current editor expression (cross-panel intelligence).
+  lastInferredType: option<string>,
 }
 
 /// Pane-N: Neural Stream (Phenomena)

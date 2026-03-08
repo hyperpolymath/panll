@@ -10,6 +10,56 @@ open BojModel
 open BojEngine
 open Tea.Html
 
+// ===========================================================================
+// TypeLL Cross-Panel Type Intelligence
+// ===========================================================================
+
+/// Render TypeLL cross-panel type intelligence result (if available).
+/// Parses the raw JSON via TypeLLEngine.parseCheckResult and displays an
+/// evangeliser-style narrative with proof obligations and linearity notes.
+let viewTypeCheckResult = (lastTypeCheck: option<string>): Tea_Vdom.t<msg> => {
+  switch lastTypeCheck {
+  | None => noNode
+  | Some(json) =>
+    switch TypeLLEngine.parseCheckResult(json) {
+    | Error(_) => noNode
+    | Ok(result) =>
+      let narrative = TypeLLEngine.generateNarrative(result)
+      let borderColour = if result.valid { "border-green-700 bg-green-900/20" } else { "border-red-700 bg-red-900/20" }
+      let labelColour = if result.valid { "text-green-400" } else { "text-red-400" }
+      let statusText = if result.valid { "Type-safe" } else { "Type issues detected" }
+      div(
+        list{Attrs.class_("mt-4 p-3 rounded-lg border " ++ borderColour)},
+        list{
+          div(
+            list{Attrs.class_("flex items-center gap-2 mb-2")},
+            list{
+              span(list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)}, list{text("TypeLL")}),
+              span(list{Attrs.class_("text-xs text-gray-400")}, list{text(statusText)}),
+            },
+          ),
+          div(list{Attrs.class_("text-sm text-gray-300 font-mono mb-1")}, list{text(result.typeSignature)}),
+          div(list{Attrs.class_("text-xs text-gray-400 mb-1")}, list{text(narrative.celebrate)}),
+          if Array.length(result.proofObligations) > 0 {
+            div(list{Attrs.class_("text-xs text-yellow-400 mt-1")}, list{
+              text("Proof obligations: " ++ Array.join(result.proofObligations, ", ")),
+            })
+          } else {
+            noNode
+          },
+          if Array.length(result.linearityIssues) > 0 {
+            div(list{Attrs.class_("text-xs text-orange-400 mt-1")}, list{
+              text("Linearity: " ++ Array.join(result.linearityIssues, ", ")),
+            })
+          } else {
+            noNode
+          },
+        },
+      )
+    }
+  }
+}
+
 /// Render a tab button.
 let renderTab = (label: string, active: bool, onClick: msg): Tea_Vdom.t<msg> => {
   let baseClass = "px-3 py-1.5 text-xs rounded-t border-b-2 transition-colors"
@@ -607,6 +657,8 @@ let renderInvoke = (state: bojState): Tea_Vdom.t<msg> => {
           },
         )
       },
+      // TypeLL type-check result
+      viewTypeCheckResult(state.lastTypeCheck),
     },
   )
 }

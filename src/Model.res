@@ -436,6 +436,7 @@ let init = (): model => {
     constraints: [],
     activeConstraintId: None,
     editorContent: "",
+    lastInferredType: None,
   },
   paneN: {
     tokens: [
@@ -558,6 +559,11 @@ let init = (): model => {
     telemetry: None,
     telemetryVisible: false,
     orchStatus: None,
+    lastTypeCheck: None,
+    proofDisplayActive: false,
+    inferenceStream: [],
+    antiCrashValidation: true,
+    queryCount: 0,
   },
   echidna: {
     connected: false,
@@ -574,6 +580,7 @@ let init = (): model => {
     menuExpanded: false,
     tacticInput: "",
     sessionLoading: false,
+    lastProofObligations: None,
   },
   vab: {
     visible: false,
@@ -680,6 +687,7 @@ let init = (): model => {
   cladeBrowser: {
     ...CladeBrowserModel.defaultState,
     clades: CladeBrowserEngine.builtinClades,
+    permissionRules: CladeBrowserEngine.defaultPermissionRules,
   },
   tentacles: TentaclesEngine.init(),
   protocolSquisher: ProtocolSquisherEngine.defaultState,

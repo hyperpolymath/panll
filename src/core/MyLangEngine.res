@@ -138,4 +138,8 @@ let defaultState: myLangState = {
   replInput: "",
   replHistory: [],
   lastCompilation: None,
+  lastTypeCheck: None,
+  lspConnected: false,
+  lspDiagnostics: [],
+  replSessions: [],
 }

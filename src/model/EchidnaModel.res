@@ -119,4 +119,6 @@ type echidnaState = {
   menuExpanded: bool,
   tacticInput: string,
   sessionLoading: bool,
+  /// TypeLL-generated proof obligations JSON for the last proof input (cross-panel intelligence).
+  lastProofObligations: option<string>,
 }

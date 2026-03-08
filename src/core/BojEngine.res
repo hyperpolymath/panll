@@ -157,4 +157,5 @@ let defaultState: bojState = {
   loading: false,
   error: None,
   filterText: "",
+  lastTypeCheck: None,
 }

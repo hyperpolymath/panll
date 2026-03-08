@@ -57,6 +57,23 @@ type cladeBrowserCategory =
   | CategoryTraits
   | CategoryPanelMap
 
+/// Permission level for cross-clade references.
+type cladePermission =
+  /// Unrestricted — any clade can reference this one.
+  | PermitAll
+  /// Restricted to specific clade IDs.
+  | PermitOnly(array<string>)
+  /// Denied — no cross-clade references allowed.
+  | PermitNone
+
+/// A clade permission rule: which clades can cross-reference a target clade.
+type cladePermissionRule = {
+  /// The clade that is being referenced (target).
+  targetCladeId: string,
+  /// Who is allowed to reference it.
+  permission: cladePermission,
+}
+
 /// Root state for the clade browser.
 type cladeBrowserState = {
   category: cladeBrowserCategory,
@@ -66,6 +83,8 @@ type cladeBrowserState = {
   searchQuery: string,
   loading: bool,
   error: option<string>,
+  /// Cross-clade permission rules (which clades may reference which).
+  permissionRules: array<cladePermissionRule>,
 }
 
 /// Default initial state.
@@ -77,4 +96,5 @@ let defaultState: cladeBrowserState = {
   searchQuery: "",
   loading: false,
   error: None,
+  permissionRules: [],
 }

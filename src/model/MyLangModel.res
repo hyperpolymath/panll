@@ -80,4 +80,13 @@ type myLangState = {
   replHistory: array<replEntry>,
   /// Most recent compilation result.
   lastCompilation: option<compilationResult>,
+  /// TypeLL type-check result JSON for the last compilation (cross-panel intelligence).
+  /// Parsed via TypeLLEngine.parseCheckResult when rendering.
+  lastTypeCheck: option<string>,
+  /// LSP connection status for syntax highlighting and diagnostics.
+  lspConnected: bool,
+  /// LSP diagnostics for the current editor content.
+  lspDiagnostics: array<string>,
+  /// Per-dialect REPL session IDs (dialect → session persistence).
+  replSessions: array<(myLangDialect, string)>,
 }

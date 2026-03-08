@@ -183,4 +183,6 @@ type bojState = {
   error: option<string>,
   /// Filter text for cartridge list.
   filterText: string,
+  /// TypeLL ABI type-check result JSON for the last invocation (cross-panel intelligence).
+  lastTypeCheck: option<string>,
 }

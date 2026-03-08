@@ -80,6 +80,51 @@ let renderConstraintList = (constraints: array<symbolicConstraint>): Tea_Vdom.t<
   )
 }
 
+// ===========================================================================
+// TypeLL Inferred Type Display
+// ===========================================================================
+
+/// Render the TypeLL-inferred type for the current editor expression.
+/// Compact display showing type signature in monospace.
+let viewInferredType = (lastInferredType: option<string>): Tea_Vdom.t<msg> => {
+  switch lastInferredType {
+  | None => noNode
+  | Some(json) =>
+    switch TypeLLEngine.parseCheckResult(json) {
+    | Error(_) => noNode
+    | Ok(result) =>
+      let borderColour = if result.valid { "border-green-700 bg-green-900/20" } else { "border-red-700 bg-red-900/20" }
+      let labelColour = if result.valid { "text-green-400" } else { "text-red-400" }
+      div(
+        list{Attrs.class_("mt-2 p-2 rounded border " ++ borderColour)},
+        list{
+          div(
+            list{Attrs.class_("flex items-center gap-2 mb-1")},
+            list{
+              span(list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)}, list{text("TypeLL")}),
+            },
+          ),
+          div(list{Attrs.class_("text-sm text-gray-300 font-mono")}, list{text(result.typeSignature)}),
+          if Array.length(result.proofObligations) > 0 {
+            div(list{Attrs.class_("text-xs text-yellow-400 mt-1")}, list{
+              text("Proof obligations: " ++ Array.join(result.proofObligations, ", ")),
+            })
+          } else {
+            noNode
+          },
+          if Array.length(result.linearityIssues) > 0 {
+            div(list{Attrs.class_("text-xs text-orange-400 mt-1")}, list{
+              text("Linearity: " ++ Array.join(result.linearityIssues, ", ")),
+            })
+          } else {
+            noNode
+          },
+        },
+      )
+    }
+  }
+}
+
 /// Render the constraint editor
 let renderEditor = (content: string): Tea_Vdom.t<msg> => {
   div(
@@ -198,6 +243,9 @@ let view = (state: paneLState, proofs: array<proofObligation>): Tea_Vdom.t<msg> 
 
       // Editor
       renderEditor(state.editorContent),
+
+      // TypeLL inferred type for editor expression
+      viewInferredType(state.lastInferredType),
     },
   )
 }

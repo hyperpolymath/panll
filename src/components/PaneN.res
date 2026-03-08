@@ -762,6 +762,56 @@ let renderProofScript = (script: array<string>): Tea_Vdom.t<msg> => {
   }
 }
 
+// ===========================================================================
+// TypeLL Proof Obligations Display
+// ===========================================================================
+
+/// Render TypeLL proof obligations result (if available).
+/// Parses the raw JSON via TypeLLEngine.parseCheckResult and displays
+/// proof obligation details with linearity notes.
+let viewProofObligations = (lastProofObligations: option<string>): Tea_Vdom.t<msg> => {
+  switch lastProofObligations {
+  | None => noNode
+  | Some(json) =>
+    switch TypeLLEngine.parseCheckResult(json) {
+    | Error(_) => noNode
+    | Ok(result) =>
+      let narrative = TypeLLEngine.generateNarrative(result)
+      let borderColour = if result.valid { "border-green-700 bg-green-900/20" } else { "border-red-700 bg-red-900/20" }
+      let labelColour = if result.valid { "text-green-400" } else { "text-red-400" }
+      let statusText = if result.valid { "Obligations generated" } else { "No obligations" }
+      div(
+        list{Attrs.class_("mt-4 p-3 rounded-lg border " ++ borderColour)},
+        list{
+          div(
+            list{Attrs.class_("flex items-center gap-2 mb-2")},
+            list{
+              span(list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)}, list{text("TypeLL Proof Obligations")}),
+              span(list{Attrs.class_("text-xs text-gray-400")}, list{text(statusText)}),
+            },
+          ),
+          div(list{Attrs.class_("text-sm text-gray-300 font-mono mb-1")}, list{text(result.typeSignature)}),
+          div(list{Attrs.class_("text-xs text-gray-400 mb-1")}, list{text(narrative.celebrate)}),
+          if Array.length(result.proofObligations) > 0 {
+            div(list{Attrs.class_("text-xs text-yellow-400 mt-1")}, list{
+              text("Proof obligations: " ++ Array.join(result.proofObligations, ", ")),
+            })
+          } else {
+            noNode
+          },
+          if Array.length(result.linearityIssues) > 0 {
+            div(list{Attrs.class_("text-xs text-orange-400 mt-1")}, list{
+              text("Linearity: " ++ Array.join(result.linearityIssues, ", ")),
+            })
+          } else {
+            noNode
+          },
+        },
+      )
+    }
+  }
+}
+
 /// Render the complete ECHIDNA panel — a collapsible container that
 /// composes the connection indicator, prover catalog, proof input,
 /// session controls, interactive session UI, and proof result into
@@ -828,6 +878,8 @@ let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
             | Some(result) => renderProofResult(result)
             | None => noNode
             },
+            // TypeLL proof obligations
+            viewProofObligations(echidna.lastProofObligations),
           },
         )
       } else {

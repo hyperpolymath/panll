@@ -424,3 +424,103 @@ let rootClades = (clades: array<cladeEntry>): array<cladeEntry> => {
 let childrenOf = (clades: array<cladeEntry>, parentId: string): array<cladeEntry> => {
   clades->Array.filter(c => c.parentCladeId == Some(parentId))
 }
+
+// ════════════════════════════════════════════════════════════════════════
+// Clade Permission System
+// ════════════════════════════════════════════════════════════════════════
+//
+// Determines whether one clade may cross-reference another. Used by the
+// Panel Bus and GovernanceEngine to gate cross-panel event delivery.
+
+/// Look up the permission rule for a target clade.
+let findPermissionRule = (
+  rules: array<cladePermissionRule>,
+  targetCladeId: string,
+): option<cladePermissionRule> => {
+  rules->Array.find(r => r.targetCladeId == targetCladeId)
+}
+
+/// Check if a source clade is allowed to reference a target clade.
+/// Default (no rule): PermitAll — open by default.
+let canReference = (
+  rules: array<cladePermissionRule>,
+  sourceCladeId: string,
+  targetCladeId: string,
+): bool => {
+  // A clade can always reference itself.
+  if sourceCladeId == targetCladeId {
+    true
+  } else {
+    switch findPermissionRule(rules, targetCladeId) {
+    | None => true // No rule = open access
+    | Some({permission: PermitAll}) => true
+    | Some({permission: PermitNone}) => false
+    | Some({permission: PermitOnly(allowed)}) =>
+      allowed->Array.some(id => id == sourceCladeId)
+    }
+  }
+}
+
+/// Check if a source panel (by panelId string) can reference a target
+/// panel, resolving both to their clade IDs first.
+let canPanelReference = (
+  clades: array<cladeEntry>,
+  rules: array<cladePermissionRule>,
+  sourcePanelId: string,
+  targetPanelId: string,
+): bool => {
+  // Find the clade for each panel.
+  let sourceCladeId = clades->Array.find(c =>
+    c.panelIds->Array.some(p => p == sourcePanelId)
+  )->Option.map(c => c.id)
+  let targetCladeId = clades->Array.find(c =>
+    c.panelIds->Array.some(p => p == targetPanelId)
+  )->Option.map(c => c.id)
+
+  switch (sourceCladeId, targetCladeId) {
+  | (Some(src), Some(tgt)) => canReference(rules, src, tgt)
+  | _ => true // Unknown panels default to open
+  }
+}
+
+/// Add or update a permission rule for a target clade.
+let setPermission = (
+  rules: array<cladePermissionRule>,
+  targetCladeId: string,
+  permission: cladePermission,
+): array<cladePermissionRule> => {
+  let exists = rules->Array.some(r => r.targetCladeId == targetCladeId)
+  if exists {
+    rules->Array.map(r =>
+      if r.targetCladeId == targetCladeId {
+        {...r, permission}
+      } else {
+        r
+      }
+    )
+  } else {
+    Array.concat(rules, [{targetCladeId, permission}])
+  }
+}
+
+/// Remove a permission rule (reverts to default PermitAll behaviour).
+let removePermission = (
+  rules: array<cladePermissionRule>,
+  targetCladeId: string,
+): array<cladePermissionRule> => {
+  rules->Array.filter(r => r.targetCladeId != targetCladeId)
+}
+
+/// Default permission rules. Security-sensitive clades are restricted.
+let defaultPermissionRules: array<cladePermissionRule> = [
+  // Security panel: only scanners, meta, and ai clades may reference it.
+  {
+    targetCladeId: "security",
+    permission: PermitOnly(["panic-attack", "mass-panic", "fleet", "hypatia", "workspace", "ai", "typell"]),
+  },
+  // Valence Shell: restricted to avoid accidental terminal access.
+  {
+    targetCladeId: "valence-shell",
+    permission: PermitOnly(["workspace", "automation-router", "editor-bridge", "ai"]),
+  },
+]

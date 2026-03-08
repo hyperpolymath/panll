@@ -17,6 +17,8 @@ type paneLMsg =
   | PinConstraint(string)
   | UpdateEditorContent(string)
   | SetActiveConstraint(option<string>)
+  /// TypeLL inferred type for the current editor expression.
+  | ConstraintTypeInferred(result<string, string>)
 
 /// Messages for Pane-N (Neural)
 type paneNMsg =
@@ -99,6 +101,8 @@ type antiCrashMsg =
   | ValidationPassed(neuralToken)
   | ValidationFailed(neuralToken, string)
   | RequestOperatorIntervention(string)
+  /// TypeLL type-level validation result for a token.
+  | TokenTypeCheckResult(result<string, string>)
 
 /// VeriSimDB database backend messages — connection lifecycle, VQL query
 /// execution, entity browsing, drift status retrieval, normalisation,
@@ -125,6 +129,16 @@ type verisimdbMsg =
   | ToggleTelemetryPanel
   | FetchOrchStatus
   | OrchStatusLoaded(result<string, string>)
+  /// TypeLL cross-panel type check result for the last VQL query.
+  | VqlTypeCheckResult(result<string, string>)
+  /// Toggle VQL-DT proof obligation display in Panel-L.
+  | ToggleProofDisplay
+  /// Neural advisor suggestion for the current VQL query.
+  | InferenceSuggestion(string)
+  /// Clear inference suggestions.
+  | ClearInferenceSuggestions
+  /// Toggle Anti-Crash VQL validation.
+  | ToggleAntiCrashValidation
 
 /// ECHIDNA theorem prover backend messages — connection lifecycle, prover
 /// catalog browsing, proof submission/verification, interactive sessions
@@ -163,6 +177,8 @@ type echidnaMsg =
   | UpdateProofInput(string)
   | SelectProver(option<string>)
   | ClearProofResult
+  /// TypeLL-generated proof obligations for the current proof input.
+  | ProofObligationsGenerated(result<string, string>)
 
 /// VAB (Verified Assembly Building) messages — server component assembly,
 /// category navigation, dependency-driven recomputation, and assembly management.
@@ -1479,6 +1495,8 @@ type bojMsg =
   | SetBojFilter(string)
   /// Dismiss the error banner.
   | DismissBojError
+  /// TypeLL ABI type-check result for cartridge invocation.
+  | AbiTypeCheckResult(result<string, string>)
 
 /// ENSAID_CONFIG messages — cross-panel config generation and I/O.
 /// Any panel can trigger a full ENSAID_CONFIG export; the engine assembles
@@ -1584,6 +1602,12 @@ type protocolSquisherMsg =
   | RunComparison
   /// Comparison result from Tauri backend.
   | ComparisonResult(result<string, string>)
+  /// TypeLL cross-panel type check result for the last schema analysis.
+  | SchemaTypeCheckResult(result<string, string>)
+  /// Import IR analysis results as Panel-L constraints.
+  | ImportIrConstraints
+  /// Toggle transport compatibility display in Panel-W.
+  | ToggleTransportDisplay
 
 /// My-Lang AI-native language messages.
 type myLangMsg =
@@ -1607,6 +1631,16 @@ type myLangMsg =
   | EvalRepl
   /// REPL evaluation result from Tauri backend.
   | ReplResult(result<string, string>)
+  /// TypeLL cross-panel type check result for the last compilation.
+  | MlTypeCheckResult(result<string, string>)
+  /// Connect to my-lang LSP server.
+  | ConnectLsp
+  /// LSP connection result.
+  | LspConnected(result<string, string>)
+  /// LSP diagnostics received for current editor content.
+  | LspDiagnosticsReceived(array<string>)
+  /// Request diagnostics from LSP.
+  | RequestDiagnostics
 
 /// TypeLL verification kernel messages.
 type typellMsg =

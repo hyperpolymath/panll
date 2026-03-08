@@ -103,4 +103,12 @@ type protocolSquisherState = {
   lastComparison: option<schemaCompatibilityResult>,
   /// History of analysis results (most recent first).
   analysisHistory: array<analysisResult>,
+  /// TypeLL type-check result JSON for the last schema analysis (cross-panel intelligence).
+  /// Parsed via TypeLLEngine.parseCheckResult when rendering.
+  lastTypeCheck: option<string>,
+  /// IR constraints extracted from the latest analysis and pushed to Panel-L.
+  /// Each string is a constraint expression derived from the schema structure.
+  irConstraints: array<string>,
+  /// Whether transport compatibility data should be shown in Panel-W.
+  transportDisplayActive: bool,
 }

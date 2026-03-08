@@ -150,6 +150,42 @@ let parseAnalysis = (json: string): result<analysisResult, string> => {
   }
 }
 
+/// Extract IR constraints from an analysis result for Panel-L import.
+/// Generates constraint expressions based on schema structure properties.
+let extractIrConstraints = (result: analysisResult): array<string> => {
+  let constraints = []
+  // Transport class constraint.
+  let classLabel = transportClassLabel(result.transportClass)
+  let constraints = Array.concat(constraints, [
+    `transport_class(${result.filePath}) = ${classLabel}`,
+  ])
+  // Overhead ratio constraint.
+  let constraints = if result.overheadRatio > 1.5 {
+    Array.concat(constraints, [
+      `overhead_bound(${result.filePath}) <= 1.5 // current: ${Float.toString(result.overheadRatio)}`,
+    ])
+  } else {
+    constraints
+  }
+  // Recursion constraint.
+  let constraints = if result.hasRecursion {
+    Array.concat(constraints, [
+      `recursion_depth(${result.filePath}) is bounded`,
+    ])
+  } else {
+    constraints
+  }
+  // Field count constraint.
+  let constraints = if result.fieldCount > 50 {
+    Array.concat(constraints, [
+      `field_count(${result.filePath}) <= 50 // current: ${Int.toString(result.fieldCount)}`,
+    ])
+  } else {
+    constraints
+  }
+  constraints
+}
+
 /// Default initial state.
 let defaultState: protocolSquisherState = {
   cliAvailable: false,
@@ -162,4 +198,7 @@ let defaultState: protocolSquisherState = {
   lastAnalysis: None,
   lastComparison: None,
   analysisHistory: [],
+  lastTypeCheck: None,
+  irConstraints: [],
+  transportDisplayActive: false,
 }

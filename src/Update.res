@@ -37,32 +37,60 @@ open Msg
 /// STATE TRANSITION: Pane-L (Logical Constraints)
 /// Manages the set of formal constraints applied to the current inference session.
 /// Handles all 6 paneLMsg variants: add, remove, toggle, pin, edit, set active.
-let updatePaneL = (model: model, msg: paneLMsg): model => {
+let updatePaneL = (model: model, msg: paneLMsg): (model, Tea_Cmd.t<msg>) => {
   let paneL = model.paneL
-  let newPaneL = switch msg {
-  | AddConstraint(c) => {...paneL, constraints: Array.concat(paneL.constraints, [c])}
-  | RemoveConstraint(id) => {
-      ...paneL,
-      constraints: Array.filter(paneL.constraints, c => c.id !== id),
+  switch msg {
+  | AddConstraint(c) => (
+      {...model, paneL: {...paneL, constraints: Array.concat(paneL.constraints, [c])}},
+      Tea_Cmd.none,
+    )
+  | RemoveConstraint(id) => (
+      {...model, paneL: {
+        ...paneL,
+        constraints: Array.filter(paneL.constraints, c => c.id !== id),
+      }},
+      Tea_Cmd.none,
+    )
+  | ToggleConstraint(id) => (
+      {...model, paneL: {
+        ...paneL,
+        constraints: Array.map(paneL.constraints, c =>
+          c.id === id ? {...c, active: !c.active} : c
+        ),
+      }},
+      Tea_Cmd.none,
+    )
+  | PinConstraint(id) => (
+      {...model, paneL: {
+        ...paneL,
+        constraints: Array.map(paneL.constraints, c =>
+          c.id === id ? {...c, pinned: !c.pinned} : c
+        ),
+      }},
+      Tea_Cmd.none,
+    )
+  | UpdateEditorContent(content) => {
+      // Fire TypeLL type inference on the editor content (debounced by TEA — every keystroke
+      // sends a command, but the backend handles deduplication).
+      let cmd = if content !== "" {
+        TypeLLService.inferConstraintType(content, result => PaneL(ConstraintTypeInferred(result)))
+      } else {
+        Tea_Cmd.none
+      }
+      ({...model, paneL: {...paneL, editorContent: content, lastInferredType: None}}, cmd)
     }
-  | ToggleConstraint(id) => {
-      // Functional update: flip the 'active' status of the targeted constraint.
-      ...paneL,
-      constraints: Array.map(paneL.constraints, c =>
-        c.id === id ? {...c, active: !c.active} : c
-      ),
+  | SetActiveConstraint(id) => (
+      {...model, paneL: {...paneL, activeConstraintId: id}},
+      Tea_Cmd.none,
+    )
+  | ConstraintTypeInferred(Ok(json)) => {
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
+      ({...model, paneL: {...paneL, lastInferredType: Some(json)}, typell: newTypell}, Tea_Cmd.none)
     }
-  | PinConstraint(id) => {
-      // Toggle the 'pinned' flag — pinned constraints survive session resets.
-      ...paneL,
-      constraints: Array.map(paneL.constraints, c =>
-        c.id === id ? {...c, pinned: !c.pinned} : c
-      ),
-    }
-  | UpdateEditorContent(content) => {...paneL, editorContent: content}
-  | SetActiveConstraint(id) => {...paneL, activeConstraintId: id}
+  | ConstraintTypeInferred(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
-  {...model, paneL: newPaneL}
 }
 
 /// STATE TRANSITION: Pane-N (Neural/Inference Tokens)
@@ -612,10 +640,34 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     | Ok(_json) => ({...model, verisimdb: {...db, connected: true, queryError: None}}, Tea_Cmd.none)
     | Error(err) => ({...model, verisimdb: {...db, connected: false, queryError: Some(err)}}, Tea_Cmd.none)
     }
-  | SubmitQuery(query) => (
-      {...model, verisimdb: {...db, lastQuery: query, queryResult: None, queryError: None, proofObligations: []}},
-      TauriCmd.queryVeriSimDB(query, result => VeriSimDB(QueryResult(result))),
-    )
+  | SubmitQuery(query) => {
+      // #4: Optionally validate VQL through Anti-Crash before execution.
+      let antiCrashCmd = if db.antiCrashValidation {
+        let token: neuralToken = {content: query, timestamp: 0.0, confidence: 0.5, validated: false}
+        Tea_Cmd.msg(AntiCrash(ValidateToken(token)))
+      } else {
+        Tea_Cmd.none
+      }
+      // #5: Track VQL query count for Vexometer cognitive load.
+      let newDb = {
+        ...db,
+        lastQuery: query,
+        queryResult: None,
+        queryError: None,
+        proofObligations: [],
+        lastTypeCheck: None,
+        inferenceStream: [],
+        queryCount: db.queryCount + 1,
+      }
+      (
+        {...model, verisimdb: newDb},
+        Tea_Cmd.batch(list{
+          TauriCmd.queryVeriSimDB(query, result => VeriSimDB(QueryResult(result))),
+          TypeLLService.checkVqlTypes(query, result => VeriSimDB(VqlTypeCheckResult(result))),
+          antiCrashCmd,
+        }),
+      )
+    }
   | UpdateQueryInput(text) => (
       {...model, verisimdb: {...db, lastQuery: text}},
       Tea_Cmd.none,
@@ -665,7 +717,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       Tea_Cmd.none,
     )
   | ClearQueryResult => (
-      {...model, verisimdb: {...db, queryResult: None, queryError: None, proofObligations: []}},
+      {...model, verisimdb: {...db, queryResult: None, queryError: None, proofObligations: [], lastTypeCheck: None}},
       Tea_Cmd.none,
     )
   | TriggerNormalise(entityId) => (
@@ -721,6 +773,32 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     | Ok(json) => ({...model, verisimdb: {...db, orchStatus: Some(json), queryError: None}}, Tea_Cmd.none)
     | Error(err) => ({...model, verisimdb: {...db, orchStatus: None, queryError: Some(err)}}, Tea_Cmd.none)
     }
+  | VqlTypeCheckResult(Ok(json)) => {
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
+      ({...model, verisimdb: {...db, lastTypeCheck: Some(json)}, typell: newTypell}, Tea_Cmd.none)
+    }
+  | VqlTypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully, don't block VQL workflow
+    (model, Tea_Cmd.none)
+  // #2: Toggle proof obligation display in Panel-L.
+  | ToggleProofDisplay => (
+      {...model, verisimdb: {...db, proofDisplayActive: !db.proofDisplayActive}},
+      Tea_Cmd.none,
+    )
+  // #3: Neural advisor inference suggestion for VQL.
+  | InferenceSuggestion(suggestion) => (
+      {...model, verisimdb: {...db, inferenceStream: Array.concat(db.inferenceStream, [suggestion])}},
+      Tea_Cmd.none,
+    )
+  | ClearInferenceSuggestions => (
+      {...model, verisimdb: {...db, inferenceStream: []}},
+      Tea_Cmd.none,
+    )
+  // #4: Toggle Anti-Crash validation of VQL queries.
+  | ToggleAntiCrashValidation => (
+      {...model, verisimdb: {...db, antiCrashValidation: !db.antiCrashValidation}},
+      Tea_Cmd.none,
+    )
   }
 }
 
@@ -1200,10 +1278,15 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
 
   // --- Proof submission ---
   | SubmitProof => (
-      {...model, echidna: {...ec, proofLoading: true, proofError: None, lastProofResult: None}},
-      TauriCmd.echidnaProve(ec.proofInput, ec.selectedProver, result =>
-        Echidna(ProofResult(result))
-      ),
+      {...model, echidna: {...ec, proofLoading: true, proofError: None, lastProofResult: None, lastProofObligations: None}},
+      Tea_Cmd.batch(list{
+        TauriCmd.echidnaProve(ec.proofInput, ec.selectedProver, result =>
+          Echidna(ProofResult(result))
+        ),
+        TypeLLService.generateProofObligations(ec.proofInput, result =>
+          Echidna(ProofObligationsGenerated(result))
+        ),
+      }),
     )
   | ProofResult(result) =>
     switch result {
@@ -1406,9 +1489,16 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
       Tea_Cmd.none,
     )
   | ClearProofResult => (
-      {...model, echidna: {...ec, lastProofResult: None, proofError: None}},
+      {...model, echidna: {...ec, lastProofResult: None, proofError: None, lastProofObligations: None}},
       Tea_Cmd.none,
     )
+  | ProofObligationsGenerated(Ok(json)) => {
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
+      ({...model, echidna: {...ec, lastProofObligations: Some(json)}, typell: newTypell}, Tea_Cmd.none)
+    }
+  | ProofObligationsGenerated(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -1570,7 +1660,17 @@ let updateAntiCrash = (model: model, msg: antiCrashMsg): (model, Tea_Cmd.t<msg>)
       | None => {...model.vexometer, recentCorrections: model.vexometer.recentCorrections + 1}
       | Some(_) => model.vexometer
       }
-      ({...model, antiCrash: newAntiCrash, paneN: newPaneN, vexometer: newVexometer}, Tea_Cmd.none)
+      // Fire TypeLL type-level validation asynchronously for the token content.
+      let constraintExprs = Array.map(
+        Array.filter(model.paneL.constraints, c => c.active),
+        c => c.expression,
+      )
+      let typellCmd = if Array.length(constraintExprs) > 0 {
+        TypeLLService.validateToken(token.content, constraintExprs, result => AntiCrash(TokenTypeCheckResult(result)))
+      } else {
+        Tea_Cmd.none
+      }
+      ({...model, antiCrash: newAntiCrash, paneN: newPaneN, vexometer: newVexometer}, typellCmd)
     }
   | ValidationPassed(token) => {
       // Token has already been validated externally — mark as validated and add.
@@ -1595,6 +1695,21 @@ let updateAntiCrash = (model: model, msg: antiCrashMsg): (model, Tea_Cmd.t<msg>)
         halted: true,
       }
       ({...model, antiCrash: newAntiCrash}, Tea_Cmd.none)
+    }
+  | TokenTypeCheckResult(Ok(_json)) => {
+      // TypeLL confirmed type safety — increment service counter.
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TokenTypeCheckResult(Error(reason)) => {
+      // TypeLL found a type violation — record it as a type-level constraint failure.
+      let violation = LogicContradiction("TypeLL: " ++ reason)
+      let newAntiCrash = {
+        ...model.antiCrash,
+        violations: Array.concat(model.antiCrash.violations, [violation]),
+      }
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
+      ({...model, antiCrash: newAntiCrash, typell: newTypell}, Tea_Cmd.none)
     }
   }
 }
@@ -6575,15 +6690,21 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
   | SetInvokeArgs(_argsJson) =>
     // Store raw args JSON string — parsed on invocation.
     (model, Tea_Cmd.none)
-  | ExecuteInvoke => (
-      {...model, boj: {...boj, loading: true, invokeResult: None}},
-      BojCmd.invokeCartridge(
-        boj.invokeCartridge,
-        boj.invokeTool,
-        "{}",
-        result => Boj(InvokeResult(result)),
-      ),
-    )
+  | ExecuteInvoke => {
+      let abiSpec = `{"cartridge":"${boj.invokeCartridge}","tool":"${boj.invokeTool}"}`
+      (
+        {...model, boj: {...boj, loading: true, invokeResult: None, lastTypeCheck: None}},
+        Tea_Cmd.batch(list{
+          BojCmd.invokeCartridge(
+            boj.invokeCartridge,
+            boj.invokeTool,
+            "{}",
+            result => Boj(InvokeResult(result)),
+          ),
+          TypeLLService.checkCartridgeAbi(abiSpec, result => Boj(AbiTypeCheckResult(result))),
+        }),
+      )
+    }
   | InvokeResult(Ok(payload)) => {
       let result: BojModel.invokeResult = {success: true, payload, durationMs: 0}
       ({...model, boj: {...boj, loading: false, invokeResult: Some(result), error: None}}, Tea_Cmd.none)
@@ -6594,6 +6715,13 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
     }
   | SetBojFilter(text) => ({...model, boj: {...boj, filterText: text}}, Tea_Cmd.none)
   | DismissBojError => ({...model, boj: {...boj, error: None}}, Tea_Cmd.none)
+  | AbiTypeCheckResult(Ok(json)) => {
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
+      ({...model, boj: {...boj, lastTypeCheck: Some(json)}, typell: newTypell}, Tea_Cmd.none)
+    }
+  | AbiTypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -6707,21 +6835,29 @@ let updateProtocolSquisher = (model: model, msg: protocolSquisherMsg): (model, T
   | PsCliResult(Error(e)) => ({...model, protocolSquisher: {...ps, cliAvailable: false, loading: false, error: Some(e)}}, Tea_Cmd.none)
   | SetAnalyseInput(v) => ({...model, protocolSquisher: {...ps, analyseInput: v}}, Tea_Cmd.none)
   | RunAnalysis => (
-      {...model, protocolSquisher: {...ps, loading: true, error: None}},
-      ProtocolSquisherCmd.analyse(ps.analyseInput, result => ProtocolSquisher(AnalysisResult(result))),
+      {...model, protocolSquisher: {...ps, loading: true, error: None, lastTypeCheck: None}},
+      Tea_Cmd.batch(list{
+        ProtocolSquisherCmd.analyse(ps.analyseInput, result => ProtocolSquisher(AnalysisResult(result))),
+        TypeLLService.checkSchemaTypes(ps.analyseInput, "auto", result => ProtocolSquisher(SchemaTypeCheckResult(result))),
+      }),
     )
   | AnalysisResult(Ok(json)) =>
     switch ProtocolSquisherEngine.parseAnalysis(json) {
-    | Ok(result) => (
-        {...model, protocolSquisher: {
-          ...ps,
-          loading: false,
-          lastAnalysis: Some(result),
-          analysisHistory: Array.concat([result], ps.analysisHistory),
-          error: None,
-        }},
-        Tea_Cmd.none,
-      )
+    | Ok(result) => {
+        // #6: Extract IR constraints from the analysis result automatically.
+        let irConstraints = ProtocolSquisherEngine.extractIrConstraints(result)
+        (
+          {...model, protocolSquisher: {
+            ...ps,
+            loading: false,
+            lastAnalysis: Some(result),
+            analysisHistory: Array.concat([result], ps.analysisHistory),
+            irConstraints,
+            error: None,
+          }},
+          Tea_Cmd.none,
+        )
+      }
     | Error(e) => ({...model, protocolSquisher: {...ps, loading: false, error: Some(e)}}, Tea_Cmd.none)
     }
   | AnalysisResult(Error(e)) => ({...model, protocolSquisher: {...ps, loading: false, error: Some(e)}}, Tea_Cmd.none)
@@ -6739,6 +6875,33 @@ let updateProtocolSquisher = (model: model, msg: protocolSquisherMsg): (model, T
     // TODO: parse comparison JSON when format is stabilised
     ({...model, protocolSquisher: {...ps, loading: false, error: None}}, Tea_Cmd.none)
   | ComparisonResult(Error(e)) => ({...model, protocolSquisher: {...ps, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | SchemaTypeCheckResult(Ok(json)) => {
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
+      ({...model, protocolSquisher: {...ps, lastTypeCheck: Some(json)}, typell: newTypell}, Tea_Cmd.none)
+    }
+  | SchemaTypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
+  // #6: Import IR constraints as Panel-L symbolic constraints.
+  | ImportIrConstraints => {
+      let newConstraints = ps.irConstraints->Array.mapWithIndex((expr, idx) => {
+        let c: symbolicConstraint = {
+          id: `ps-ir-${Int.toString(idx)}`,
+          expression: expr,
+          active: true,
+          pinned: false,
+        }
+        c
+      })
+      let existingConstraints = model.paneL.constraints
+      let merged = Array.concat(existingConstraints, newConstraints)
+      ({...model, paneL: {...model.paneL, constraints: merged}}, Tea_Cmd.none)
+    }
+  // #7: Toggle transport compatibility display in Panel-W.
+  | ToggleTransportDisplay => (
+      {...model, protocolSquisher: {...ps, transportDisplayActive: !ps.transportDisplayActive}},
+      Tea_Cmd.none,
+    )
   }
 }
 
@@ -6746,10 +6909,23 @@ let updateMyLang = (model: model, msg: myLangMsg): (model, Tea_Cmd.t<msg>) => {
   let ml = model.myLang
   switch msg {
   | SetMlCategory(cat) => ({...model, myLang: {...ml, activeCategory: cat}}, Tea_Cmd.none)
-  | SetDialect(d) => (
-      {...model, myLang: {...ml, activeDialect: d, editorContent: MyLangEngine.dialectExample(d)}},
-      Tea_Cmd.none,
-    )
+  | SetDialect(d) => {
+      // #9: Save current REPL session before switching dialect.
+      let savedSessions = ml.replSessions->Array.filter(((dialect, _)) => dialect !== ml.activeDialect)
+      let sessionId = `session-${MyLangEngine.dialectLabel(ml.activeDialect)}`
+      let savedSessions = Array.concat(savedSessions, [(ml.activeDialect, sessionId)])
+      // Restore REPL history for the new dialect (or start fresh).
+      (
+        {...model, myLang: {
+          ...ml,
+          activeDialect: d,
+          editorContent: MyLangEngine.dialectExample(d),
+          replSessions: savedSessions,
+          lspDiagnostics: [], // Clear diagnostics on dialect switch
+        }},
+        Tea_Cmd.none,
+      )
+    }
   | CheckMlCli => (
       {...model, myLang: {...ml, loading: true}},
       MyLangCmd.checkCli(result => MyLang(MlCliResult(result))),
@@ -6757,14 +6933,16 @@ let updateMyLang = (model: model, msg: myLangMsg): (model, Tea_Cmd.t<msg>) => {
   | MlCliResult(Ok(_)) => ({...model, myLang: {...ml, cliAvailable: true, loading: false, error: None}}, Tea_Cmd.none)
   | MlCliResult(Error(e)) => ({...model, myLang: {...ml, cliAvailable: false, loading: false, error: Some(e)}}, Tea_Cmd.none)
   | UpdateEditor(v) => ({...model, myLang: {...ml, editorContent: v}}, Tea_Cmd.none)
-  | Compile => (
-      {...model, myLang: {...ml, loading: true, error: None}},
-      MyLangCmd.compile(
-        ml.editorContent,
-        MyLangEngine.dialectLabel(ml.activeDialect),
-        result => MyLang(CompileResult(result)),
-      ),
-    )
+  | Compile => {
+      let dialectStr = MyLangEngine.dialectLabel(ml.activeDialect)
+      (
+        {...model, myLang: {...ml, loading: true, error: None, lastTypeCheck: None}},
+        Tea_Cmd.batch(list{
+          MyLangCmd.compile(ml.editorContent, dialectStr, result => MyLang(CompileResult(result))),
+          TypeLLService.checkMyLangTypes(ml.editorContent, dialectStr, result => MyLang(MlTypeCheckResult(result))),
+        }),
+      )
+    }
   | CompileResult(Ok(json)) =>
     switch MyLangEngine.parseCompilation(json) {
     | Ok(result) => ({...model, myLang: {...ml, loading: false, lastCompilation: Some(result), error: None}}, Tea_Cmd.none)
@@ -6800,6 +6978,46 @@ let updateMyLang = (model: model, msg: myLangMsg): (model, Tea_Cmd.t<msg>) => {
         isError: true,
       }
       ({...model, myLang: {...ml, loading: false, replHistory: Array.concat(ml.replHistory, [entry])}}, Tea_Cmd.none)
+    }
+  | MlTypeCheckResult(Ok(json)) => {
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
+      ({...model, myLang: {...ml, lastTypeCheck: Some(json)}, typell: newTypell}, Tea_Cmd.none)
+    }
+  | MlTypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
+  // #8: LSP integration for syntax highlighting and diagnostics.
+  | ConnectLsp => (
+      {...model, myLang: {...ml, loading: true}},
+      MyLangCmd.checkCli(result => MyLang(LspConnected(result))),
+    )
+  | LspConnected(Ok(_)) => (
+      {...model, myLang: {...ml, lspConnected: true, loading: false, error: None}},
+      Tea_Cmd.none,
+    )
+  | LspConnected(Error(e)) => (
+      {...model, myLang: {...ml, lspConnected: false, loading: false, error: Some(e)}},
+      Tea_Cmd.none,
+    )
+  | LspDiagnosticsReceived(diagnostics) => (
+      {...model, myLang: {...ml, lspDiagnostics: diagnostics}},
+      Tea_Cmd.none,
+    )
+  | RequestDiagnostics =>
+    if ml.lspConnected {
+      (
+        model,
+        MyLangCmd.compile(
+          ml.editorContent,
+          MyLangEngine.dialectLabel(ml.activeDialect),
+          result => switch result {
+          | Ok(_) => MyLang(LspDiagnosticsReceived([]))
+          | Error(e) => MyLang(LspDiagnosticsReceived([e]))
+          },
+        ),
+      )
+    } else {
+      (model, Tea_Cmd.none)
     }
   }
 }
@@ -6966,7 +7184,7 @@ let updateEnsaidConfig = (model: model, msg: ensaidConfigMsg): (model, Tea_Cmd.t
 ///   - Autonomy Bound (Strict)
 let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   let (newModel, cmd) = switch msg {
-  | PaneL(subMsg) => (updatePaneL(model, subMsg), Tea_Cmd.none)
+  | PaneL(subMsg) => updatePaneL(model, subMsg)
   | PaneN(subMsg) => (updatePaneN(model, subMsg), Tea_Cmd.none)
   | PaneW(subMsg) => updatePaneW(model, subMsg)
   | VeriSimDB(subMsg) => updateVeriSimDB(model, subMsg)
