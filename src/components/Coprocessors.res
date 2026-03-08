@@ -97,33 +97,129 @@ let renderMetricsCard = (metrics: coprocMetrics): Tea_Vdom.t<msg> => {
   )
 }
 
+/// Render a discovered compute device card.
+let renderDeviceCard = (device: computeDevice): Tea_Vdom.t<msg> => {
+  let engineLabel = CoprocessorsEngine.engineLabel(device.engineId)
+  let statusCls = if device.available { "text-emerald-400" } else { "text-gray-500" }
+  div(
+    list{Attrs.class_("p-3 bg-gray-800 rounded border border-gray-700")},
+    list{
+      div(
+        list{Attrs.class_("flex items-center justify-between mb-1")},
+        list{
+          span(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text(device.deviceName)}),
+          span(list{Attrs.class_(`text-xs ${statusCls}`)}, list{text(if device.available { "Online" } else { "Offline" })}),
+        },
+      ),
+      div(
+        list{Attrs.class_("text-xs text-gray-500")},
+        list{text(`${engineLabel} / ${device.deviceType}`)},
+      ),
+    },
+  )
+}
+
+/// Render the last compute result.
+let renderComputeResult = (result: computeQueryResult): Tea_Vdom.t<msg> => {
+  let engineLabel = CoprocessorsEngine.engineLabel(result.engineId)
+  let borderCls = if result.success { "border-emerald-700" } else { "border-red-700" }
+  div(
+    list{Attrs.class_(`p-3 bg-gray-800 rounded border ${borderCls}`)},
+    list{
+      div(
+        list{Attrs.class_("flex items-center justify-between mb-2")},
+        list{
+          span(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text(`${engineLabel}: ${result.operation}`)}),
+          span(
+            list{Attrs.class_("text-xs text-gray-400 font-mono")},
+            list{text(`${Float.toString(result.durationMs)}ms`)},
+          ),
+        },
+      ),
+      div(
+        list{Attrs.class_("text-xs text-gray-400 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto")},
+        list{text(result.result)},
+      ),
+    },
+  )
+}
+
 /// Render the dashboard view.
 let renderDashboard = (state: coprocessorsState): Tea_Vdom.t<msg> => {
-  if Array.length(state.metrics) === 0 {
-    div(
-      list{Attrs.class_("text-center text-gray-500 text-sm py-16")},
-      list{
-        div(list{Attrs.class_("text-4xl mb-4")}, list{text("~")}),
-        div(list{}, list{text("No coprocessor data available")}),
-        div(
-          list{Attrs.class_("mt-2 text-xs")},
-          list{text("Connect to a running IDApTIK game to see coprocessor metrics")},
-        ),
-        button(
-          list{
-            Attrs.class_("mt-4 px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
-            Events.onClick(Coprocessors(RefreshMetrics)),
+  div(
+    list{Attrs.class_("space-y-4")},
+    list{
+      // Control plane: discovered devices
+      div(
+        list{Attrs.class_("space-y-2")},
+        list{
+          div(
+            list{Attrs.class_("flex items-center justify-between")},
+            list{
+              span(list{Attrs.class_("text-xs text-gray-400 font-medium")}, list{text("COMPUTE ENGINES")}),
+              button(
+                list{
+                  Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Events.onClick(Coprocessors(DiscoverDevices)),
+                },
+                list{text("Discover")},
+              ),
+            },
+          ),
+          if Array.length(state.discoveredDevices) === 0 {
+            div(
+              list{Attrs.class_("text-center text-gray-500 text-xs py-4")},
+              list{text("No compute engines discovered. Click Discover to probe Axiom.jl and BoJ.")},
+            )
+          } else {
+            div(
+              list{Attrs.class_("grid grid-cols-2 lg:grid-cols-3 gap-2")},
+              state.discoveredDevices->Array.map(d => renderDeviceCard(d))->List.fromArray,
+            )
           },
-          list{text("Refresh Metrics")},
-        ),
+        },
+      ),
+      // Last compute result
+      switch state.lastComputeResult {
+      | Some(result) =>
+        div(
+          list{Attrs.class_("space-y-2")},
+          list{
+            div(list{Attrs.class_("text-xs text-gray-400 font-medium")}, list{text("LAST COMPUTE RESULT")}),
+            renderComputeResult(result),
+          },
+        )
+      | None => noNode
       },
-    )
-  } else {
-    div(
-      list{Attrs.class_("grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3")},
-      state.metrics->Array.map(m => renderMetricsCard(m))->List.fromArray,
-    )
-  }
+      // Data plane: backend metrics (existing)
+      div(
+        list{Attrs.class_("space-y-2")},
+        list{
+          div(list{Attrs.class_("text-xs text-gray-400 font-medium")}, list{text("BACKEND METRICS")}),
+          if Array.length(state.metrics) === 0 {
+            div(
+              list{Attrs.class_("text-center text-gray-500 text-xs py-4")},
+              list{
+                text("No backend metrics available"),
+                button(
+                  list{
+                    Attrs.class_("ml-2 px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                    Events.onClick(Coprocessors(RefreshMetrics)),
+                  },
+                  list{text("Refresh")},
+                ),
+              },
+            )
+          } else {
+            div(
+              list{Attrs.class_("grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3")},
+              state.metrics->Array.map(m => renderMetricsCard(m))->List.fromArray,
+            )
+          },
+        },
+      ),
+    },
+  )
 }
 
 /// Render the call log view.

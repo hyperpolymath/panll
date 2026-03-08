@@ -567,6 +567,7 @@ let init = (): model => {
     inferenceStream: [],
     antiCrashValidation: true,
     queryCount: 0,
+    bojRouting: false,
   },
   echidna: {
     connected: false,

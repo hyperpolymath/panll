@@ -96,4 +96,5 @@ let defaultState: buildDashboardState = {
   showPassedTests: true,
   loading: false,
   error: None,
+  bojRouting: false,
 }

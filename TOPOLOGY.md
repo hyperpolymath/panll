@@ -41,6 +41,11 @@
           │  Multi-agent coordination │ Panel dispatch │ Task routing    │
           └───────────────────────────────┼───────────────────────────────┘
                                           │
+          ┌───────────────────────────────┼───────────────────────────────┐
+          │           BoJ PRIMARY GATEWAY (bojRouting toggle)             │
+          │  lsp-mcp │ database-mcp │ dap-mcp │ bsp-mcp │ 14 cartridges │
+          └───────────────────────────────┼───────────────────────────────┘
+                                          │
     ┌─────────────────────────────────────┼─────────────────────────────────────┐
     │                        PANEL OVERLAY SYSTEM (41 entries)                  │
     │  ┌──────┐ ┌─────────┐ ┌──────┐ ┌─────┐ ┌──────┐ ┌───────┐ ┌──────────┐  │
@@ -118,7 +123,7 @@ COGNITIVE GOVERNANCE (6)
   Vexometer                         ██████████ 100%    Friction monitoring           D
   Anti-Crash Gate                   ██████████ 100%    Neural token gating           D
   Orbital Drift Aura                ██████████ 100%    Ambient stability indicator   D
-  Feedback-O-Tron                   ████████░░  80%    Submission done, mining TODO  D
+  Feedback-O-Tron                   █████████░  90%    BoJ context snapshot added    D
   Information Humidity              ██████████ 100%    High/Medium/Low adaptation    D
   Dark Start                        ██████████ 100%    Architecture manifold entry   D
 
@@ -128,7 +133,7 @@ BACKEND CONNECTIONS
   Hypatia (Elixir API)              ░░░░░░░░░░   0%    Needs reqwest to Elixir       X
   Aerie (V-lang API)                ░░░░░░░░░░   0%    Needs reqwest to :4000        X
   Provenance (git blame)            ░░░░░░░░░░   0%    Needs blame parsing           X
-  BoJ-Server (Axum API)             ████░░░░░░  40%    Cartridge status queries      D
+  BoJ-Server (Axum API)             ██████░░░░  60%    Gateway: 4 panels routed      D
   Watcher (event hookup)            █████░░░░░  50%    Rust done, frontend TODO      D
   Minter (Rust codegen)             ██████████ 100%    Backend exists                D
 
@@ -136,13 +141,13 @@ BACKEND CONNECTIONS
 FRONTEND:         230 ReScript files │ 26,000+ lines │ 0 errors │ CRG D (Alpha)
 BACKEND:           63 Rust files     │  5,300+ lines │ 0 errors │ CRG D (Alpha)
 TOTAL:            293 source files   │ 31,300+ lines │ 41 panel entries │ 39 clades
-TESTS:            237 passing        │ 0 warnings    │ 22 panels wired
+TESTS:            979 Deno + 28 Rust │ 0 warnings    │ 41 test suites
 ──────────────────────────────────────────────────────────────────────────────────────
 
 OVERALL PROGRESS
   Frontend                          █████████░  98%    41 panels, 39 clades          D
-  Backend Connections                ████░░░░░░  40%    Minter+Watcher done, 5 TODO   D
-  Testing                           ██████░░░░  60%    237 tests passing             D
+  Backend Connections                █████░░░░░  50%    BoJ gateway + coprocessor     D
+  Testing                           ████████░░  85%    979+28 tests, 41 suites       D
   Documentation                     ██████░░░░  60%    TOPOLOGY, manifests, clades   D
 ──────────────────────────────────────────────────────────────────────────────────────
 ```
@@ -164,7 +169,15 @@ TypeLL ────► 7 PANELS (cross-panel type verification + inference)
 
 BoJ ───────► Panel-W (cartridge status → dashboard display)
   │
-  └────────► Provisioner (cartridge isolation → tier selection)
+  ├────────► Provisioner (cartridge isolation → tier selection)
+  │
+  ├────────► Editor Bridge (LSP via lsp-mcp when bojRouting=true)
+  │
+  ├────────► VeriSimDB (VQL queries via database-mcp when bojRouting=true)
+  │
+  ├────────► VM Inspector (DAP debug via dap-mcp when bojRouting=true)
+  │
+  └────────► Build Dashboard (BSP builds via bsp-mcp when bojRouting=true)
 
 7-Tentacles ► ALL PANELS (agentic dispatch → task routing)
 

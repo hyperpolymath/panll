@@ -64,6 +64,8 @@ type paneWMsg =
 type vexometerMsg =
   | RecordCancellation
   | RecordCorrection
+  /// Record a VQL query execution for cognitive load tracking.
+  | RecordVqlQuery
   | RequestVexationIndex
   | UpdateVexationIndex(float)
   | ToggleAntiInflammatory(bool)
@@ -139,6 +141,8 @@ type verisimdbMsg =
   | ClearInferenceSuggestions
   /// Toggle Anti-Crash VQL validation.
   | ToggleAntiCrashValidation
+  /// Toggle BoJ routing for VQL queries (database-mcp cartridge).
+  | ToggleVeriSimBojRouting
 
 /// ECHIDNA theorem prover backend messages — connection lifecycle, prover
 /// catalog browsing, proof submission/verification, interactive sessions
@@ -571,6 +575,8 @@ type workspaceMsg =
   | SetProtection(sessionProtection)
   /// Set execution mode (Live, DryRun, Simulation, Emulation).
   | SetExecutionMode(executionMode)
+  /// Toggle between Live and DryRun execution modes.
+  | ToggleDryRun
   /// Create a panel group.
   | CreateGroup(string, string, array<string>)
   /// Disband a panel group.
@@ -1086,6 +1092,8 @@ type vmInspectorMsg =
   | ToggleMultiVm
   /// Dismiss the error banner.
   | DismissVmError
+  /// Toggle BoJ routing for DAP operations (dap-mcp cartridge).
+  | ToggleVmBojRouting
 
 /// Network Topology messages — topology reading, device selection,
 /// packet flow animation, DNS browsing, and display toggles for the
@@ -1331,6 +1339,8 @@ type editorBridgeMsg =
   | RefreshBridge
   /// Set the diagnostic filter text.
   | SetDiagnosticFilter(string)
+  /// Toggle BoJ routing — route LSP through lsp-mcp cartridge.
+  | ToggleBojRouting
   /// Toggle error visibility.
   | ToggleShowErrors
   /// Toggle warning visibility.
@@ -1379,6 +1389,8 @@ type buildDashboardMsg =
   | ToggleShowPassed
   /// Dismiss the error banner.
   | DismissBuildError
+  /// Toggle BoJ routing for BSP operations (bsp-mcp cartridge).
+  | ToggleBuildBojRouting
 
 /// Release Manager messages — version bumping, changelog generation,
 /// artifact building, signing, publishing, and channel management for

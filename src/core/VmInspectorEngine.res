@@ -80,4 +80,5 @@ let defaultState: vmInspectorState = {
   error: None,
   loading: false,
   multiVmView: false,
+  bojRouting: false,
 }

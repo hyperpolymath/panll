@@ -71,11 +71,108 @@ let renderReportTypeButton = (
   )
 }
 
+/// Render the BoJ context snapshot section for feedback reports.
+/// Captures cartridge server state so maintainers can correlate
+/// user-reported issues with backend conditions.
+let renderBojContext = (boj: BojModel.bojState): Tea_Vdom.t<msg> => {
+  let connectedLabel = boj.connected ? "Connected" : "Disconnected"
+  let connectedColour = boj.connected ? "text-emerald-400" : "text-red-400"
+  let cartridgeCount = Array.length(boj.cartridges)
+  let loadedCount = boj.cartridges->Array.filter(c => c.loaded)->Array.length
+  let federationLabel = boj.umoja.active ? "Active" : "Inactive"
+  let federationColour = boj.umoja.active ? "text-emerald-400" : "text-gray-500"
+  let peerCount = Array.length(boj.umoja.peers)
+
+  let lastResultView = switch boj.invokeResult {
+  | Some(result) =>
+    let statusLabel = result.success ? "OK" : "FAIL"
+    let statusColour = result.success ? "text-emerald-400" : "text-red-400"
+    div(
+      list{Attrs.class_("flex justify-between")},
+      list{
+        span(list{Attrs.class_("text-gray-500")}, list{text("Last Invoke")}),
+        span(
+          list{Attrs.class_(statusColour)},
+          list{text(`${statusLabel} (${Int.toString(result.durationMs)}ms)`)},
+        ),
+      },
+    )
+  | None =>
+    div(
+      list{Attrs.class_("flex justify-between")},
+      list{
+        span(list{Attrs.class_("text-gray-500")}, list{text("Last Invoke")}),
+        span(list{Attrs.class_("text-gray-600")}, list{text("None")}),
+      },
+    )
+  }
+
+  let errorView = switch boj.error {
+  | Some(err) =>
+    div(
+      list{Attrs.class_("flex justify-between")},
+      list{
+        span(list{Attrs.class_("text-gray-500")}, list{text("Error")}),
+        span(
+          list{Attrs.class_("text-red-400 truncate ml-2 max-w-[200px]"), Attrs.title(err)},
+          list{text(err)},
+        ),
+      },
+    )
+  | None => noNode
+  }
+
+  div(
+    list{Attrs.class_("bg-sky-900/20 p-2 rounded")},
+    list{
+      div(
+        list{Attrs.class_("text-sky-400 mb-1")},
+        list{text("BoJ Server")},
+      ),
+      div(
+        list{Attrs.class_("space-y-1")},
+        list{
+          div(
+            list{Attrs.class_("flex justify-between")},
+            list{
+              span(list{Attrs.class_("text-gray-500")}, list{text("Status")}),
+              span(list{Attrs.class_(connectedColour)}, list{text(connectedLabel)}),
+            },
+          ),
+          div(
+            list{Attrs.class_("flex justify-between")},
+            list{
+              span(list{Attrs.class_("text-gray-500")}, list{text("Cartridges")}),
+              span(
+                list{Attrs.class_("text-gray-300")},
+                list{text(`${Int.toString(loadedCount)}/${Int.toString(cartridgeCount)} loaded`)},
+              ),
+            },
+          ),
+          lastResultView,
+          errorView,
+          div(
+            list{Attrs.class_("flex justify-between")},
+            list{
+              span(list{Attrs.class_("text-gray-500")}, list{text("Umoja")}),
+              span(
+                list{Attrs.class_(federationColour)},
+                list{text(`${federationLabel} (${Int.toString(peerCount)} peers)`)},
+              ),
+            },
+          ),
+        },
+      ),
+    },
+  )
+}
+
 /// Render the feedback form
 let renderFeedbackForm = (
   pendingReport: option<string>,
   feedbackError: option<string>,
   selectedType: option<string>,
+  boj: BojModel.bojState,
 ): Tea_Vdom.t<msg> => {
   let reportTypes = [Hallucination, ConstraintViolation, PerformanceIssue, UXFriction, FeatureRequest]
   let errorView = switch feedbackError {
@@ -170,14 +267,14 @@ let renderFeedbackForm = (
                 list{text("CONTEXT SNAPSHOT")},
               ),
               div(
-                list{Attrs.class_("grid grid-cols-3 gap-2 text-xs")},
+                list{Attrs.class_("grid grid-cols-2 gap-2 text-xs")},
                 list{
                   div(
                     list{Attrs.class_("bg-indigo-900/30 p-2 rounded")},
                     list{
                       div(
                         list{Attrs.class_("text-indigo-400")},
-                        list{text("Pane-L")},
+                        list{text("Panel-L")},
                       ),
                       div(
                         list{Attrs.class_("text-gray-500")},
@@ -190,7 +287,7 @@ let renderFeedbackForm = (
                     list{
                       div(
                         list{Attrs.class_("text-emerald-400")},
-                        list{text("Pane-N")},
+                        list{text("Panel-N")},
                       ),
                       div(
                         list{Attrs.class_("text-gray-500")},
@@ -203,7 +300,7 @@ let renderFeedbackForm = (
                     list{
                       div(
                         list{Attrs.class_("text-gray-400")},
-                        list{text("Pane-W")},
+                        list{text("Panel-W")},
                       ),
                       div(
                         list{Attrs.class_("text-gray-500")},
@@ -211,6 +308,7 @@ let renderFeedbackForm = (
                       ),
                     },
                   ),
+                  renderBojContext(boj),
                 },
               ),
             },
@@ -264,9 +362,10 @@ let view = (
   feedbackPending: option<string>,
   feedbackError: option<string>,
   selectedType: option<string>,
+  boj: BojModel.bojState,
 ): Tea_Vdom.t<msg> => {
   switch feedbackPending {
-  | Some(_) => renderFeedbackForm(feedbackPending, feedbackError, selectedType)
+  | Some(_) => renderFeedbackForm(feedbackPending, feedbackError, selectedType, boj)
   | None => renderTriggerButton()
   }
 }

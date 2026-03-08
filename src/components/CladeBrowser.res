@@ -456,6 +456,78 @@ let viewPanelMap = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
   )
 }
 
+/// Render the permission rules for a clade.
+let permissionBadge = (rules: array<cladePermissionRule>, cladeId: string): Tea_Vdom.t<msg> => {
+  let rule = CladeBrowserEngine.findPermissionRule(rules, cladeId)
+  switch rule {
+  | None =>
+    span(
+      list{Attrs.class_("text-xs text-emerald-500 cursor-pointer"),
+        Events.onClick(CladeBrowser(SetCladePermission(cladeId, PermitNone)))},
+      list{text("open")},
+    )
+  | Some({permission: PermitAll}) =>
+    span(
+      list{Attrs.class_("text-xs text-emerald-500 cursor-pointer"),
+        Events.onClick(CladeBrowser(SetCladePermission(cladeId, PermitNone)))},
+      list{text("open")},
+    )
+  | Some({permission: PermitNone}) =>
+    span(
+      list{Attrs.class_("text-xs text-red-400 cursor-pointer"),
+        Events.onClick(CladeBrowser(RemoveCladePermission(cladeId)))},
+      list{text("locked")},
+    )
+  | Some({permission: PermitOnly(allowed)}) =>
+    span(
+      list{Attrs.class_("text-xs text-amber-400 cursor-pointer"),
+        Events.onClick(CladeBrowser(RemoveCladePermission(cladeId)))},
+      list{text(`restricted (${Int.toString(Array.length(allowed))})`)},
+    )
+  }
+}
+
+/// Render the permission rules section.
+let viewPermissions = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
+  div(
+    list{Attrs.class_("mt-4 pt-4 border-t border-gray-700")},
+    list{
+      div(
+        list{Attrs.class_("flex items-center justify-between mb-2")},
+        list{
+          h3(list{Attrs.class_("text-sm font-semibold text-gray-200 m-0")}, list{text("Cross-Clade Permissions")}),
+          span(
+            list{Attrs.class_("text-xs text-gray-500")},
+            list{text(`${Int.toString(Array.length(state.permissionRules))} rules active`)},
+          ),
+        },
+      ),
+      p(
+        list{Attrs.class_("text-xs text-gray-500 mb-3")},
+        list{text("Controls which clades may cross-reference each other via the Panel Bus. Click to toggle.")},
+      ),
+      div(
+        list{Attrs.class_("space-y-1")},
+        state.clades->Array.map(entry =>
+          div(
+            list{Attrs.class_("flex items-center justify-between py-1 px-2 rounded hover:bg-gray-800/50")},
+            list{
+              div(
+                list{Attrs.class_("flex items-center gap-2")},
+                list{
+                  span(list{Attrs.class_("text-xs text-gray-300 font-mono w-36 truncate")}, list{text(entry.id)}),
+                  kindBadge(entry.kind),
+                },
+              ),
+              permissionBadge(state.permissionRules, entry.id),
+            },
+          )
+        )->List.fromArray,
+      ),
+    },
+  )
+}
+
 /// Main view function — renders the complete clade browser panel.
 let view = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
   div(
@@ -488,7 +560,14 @@ let view = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
       | CategoryOverview => viewOverview(state)
       | CategoryByKind => viewByKind(state)
       | CategoryTraits => viewTraits(state)
-      | CategoryPanelMap => viewPanelMap(state)
+      | CategoryPanelMap =>
+        div(
+          list{},
+          list{
+            viewPanelMap(state),
+            viewPermissions(state),
+          },
+        )
       },
     },
   )

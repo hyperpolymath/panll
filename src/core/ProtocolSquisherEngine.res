@@ -150,6 +150,57 @@ let parseAnalysis = (json: string): result<analysisResult, string> => {
   }
 }
 
+/// Parse a schema compatibility comparison result from JSON.
+let parseComparison = (json: string): result<schemaCompatibilityResult, string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let getString = (key: string): string =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | String(s) => s
+            | _ => ""
+            }
+          | None => ""
+          }
+        let getInt = (key: string): int =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Number(n) => Float.toInt(n)
+            | _ => 0
+            }
+          | None => 0
+          }
+        let getBool = (key: string): bool =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Bool(b) => b
+            | _ => false
+            }
+          | None => false
+          }
+
+        Ok({
+          leftPath: getString("left_path"),
+          rightPath: getString("right_path"),
+          leftFormat: parseFormat(getString("left_format")),
+          rightFormat: parseFormat(getString("right_format")),
+          compatible: getBool("compatible"),
+          adapterCost: getInt("adapter_cost"),
+          notes: getString("notes"),
+        })
+      }
+    | _ => Error("Expected JSON object for comparison result")
+    }
+  } catch {
+  | _ => Error("Failed to parse comparison JSON")
+  }
+}
+
 /// Extract IR constraints from an analysis result for Panel-L import.
 /// Generates constraint expressions based on schema structure properties.
 let extractIrConstraints = (result: analysisResult): array<string> => {

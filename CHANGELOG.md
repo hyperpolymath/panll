@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (2026-03-08 — BoJ Primary Gateway)
+- **BoJ primary gateway routing** — 4 panels now route through BoJ cartridges via `bojRouting` toggle
+  - Editor Bridge LSP → `lsp-mcp`: ConnectLsp, RefreshDiagnostics, RefreshSymbols
+  - VeriSimDB → `database-mcp`: CheckHealth, SubmitQuery, ListEntities, SelectEntity, FetchTelemetry, FetchOrchStatus
+  - VM Inspector DAP → `dap-mcp`: StepForward, StepBackward, RunVm
+  - Build Dashboard BSP → `bsp-mcp`: TriggerBuild, RefreshBuildStatus, RunTests
+- **BoJ JSON deserialisers** — `parseCartridges`, `parseTopology`, `parseUmojaStatus` in BojEngine.res
+  - CartridgesResult, TopologyResult, UmojaResult handlers now parse real data (were TODO stubs)
+- **FeedbackOTron BoJ context snapshot** — renders connection status, cartridge counts, last invoke, Umoja status
+- **ToggleDryRun** — proper Live↔DryRun toggle in workspace (was one-way only)
+- **Panel Bus pub/sub** — 10 event topics, event envelopes, subscriber registry (11 defaults), 100-event ring buffer
+- **Clade Tier 1-4 system** — protocols, capabilities, dependencies, isolation, signing, SBOM, sandbox policies
+
+### Added (2026-03-08)
+- **Coprocessor control plane** — Phase 1 orchestration of external compute engines
+  - Rust backend: `query_compute_engine`, `discover_compute_devices` Tauri commands
+  - Device discovery for Axiom.jl (HTTP), BoJ cartridges, and local CPU/WASM
+  - Dashboard UI: discovered devices grid, compute result display, engine query
+  - Model: `computeEngine`, `computeDevice`, `computeQueryResult` types
+  - Engine: `parseComputeResult`, `parseDevices`, `engineLabel` helpers
+- **Clade permission system UI** — interactive cross-clade reference control
+  - Messages: `SetCladePermission`, `RemoveCladePermission`
+  - Panel Map tab: permission badges (open/restricted/locked) with click-to-toggle
+  - Update handler: uses `CladeBrowserEngine.setPermission`/`removePermission`
+- **Protocol-Squisher comparison parsing** — `parseComparison` function for schema compatibility JSON
+  - `ComparisonResult(Ok(json))` handler now parses into `schemaCompatibilityResult`
+- **Clade metadata extensions** (Tier 1.1-1.4)
+  - 13 wire protocols: LSP, DAP, BSP, MCP, REST, gRPC, GraphQL, WebSocket, SSE, TauriIPC, UnixSocket, DBus, Stdio
+  - 14 typed capabilities: Filesystem, Network, Clipboard, ProcessSpawn, Shell, Containerised, Streaming, ProofProduction/Consumption, TypeChecking, SecurityScan, SecretManagement, Visualisation, SessionRecording
+  - Dependency graph: `cladeDependency` with hard/soft requirements
+  - Fault isolation levels: None, Soft, Process, Container
+- **TypeLL cross-panel wiring** — 8 integration points all live
+  - VeriSimDB: VQL type checking on query submit
+  - Protocol-Squisher: schema type checking on analysis
+  - My-Lang: dialect-aware type checking on compile
+  - Anti-Crash: type-level token validation with constraint expressions
+  - Pane-L: constraint type inference on editor changes
+  - BoJ: cartridge ABI type checking on invoke
+  - ECHIDNA: proof obligation generation on proof submit
+- **My-Lang LSP Rust backend** — `mylang_lsp_connect` and `mylang_lsp_diagnostics` Tauri commands
+- **Test coverage: 979 Deno + 28 Rust tests** across 41 suites (was 406 across 27)
+  - New engine suites: TypeLL, Protocol-Squisher, My-Lang, BoJ, Coprocessors, Valence Shell, Game Preview, VM Inspector, Network Topology, Level Architect, Tentacles, CloudGuard, Plaza, Minter, Aerie, AI
+- **Rust test gate in CI** — `cargo test` added to build-validation.yml
+- **.well-known/security.txt** — RFC 9116 security contact
+
 ### Added (2026-02-12)
 - **Tauri Backend Implementation**: All 3 backend commands now fully implemented
   - `validate_inference`: Real constraint parsing with forbidden patterns and type checking

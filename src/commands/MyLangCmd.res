@@ -46,6 +46,45 @@ let compile = (
   })
 }
 
+/// Connect to the my-lang LSP server. Returns connection status JSON.
+let connectLsp = (
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("mylang_lsp_connect", ())
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("LSP connection failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Request diagnostics from the my-lang LSP for a file.
+/// Sends content to the LSP and returns diagnostic JSON.
+let requestDiagnostics = (
+  filePath: string,
+  content: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("mylang_lsp_diagnostics", {"file_path": filePath, "content": content})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("LSP diagnostics request failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 /// Send a line to the REPL. Returns the REPL output.
 let replEval = (
   input: string,

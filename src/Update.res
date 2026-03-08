@@ -631,10 +631,14 @@ let parseTelemetrySnapshot = (json: string): option<telemetrySnapshot> => {
 let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>) => {
   let db = model.verisimdb
   switch msg {
-  | CheckHealth => (
-      model,
-      TauriCmd.checkVeriSimDBHealth(result => VeriSimDB(HealthResult(result))),
-    )
+  | CheckHealth => {
+      let cmd = if db.bojRouting {
+        BojCmd.invokeCartridge("database-mcp", "health", "", result => VeriSimDB(HealthResult(result)))
+      } else {
+        TauriCmd.checkVeriSimDBHealth(result => VeriSimDB(HealthResult(result)))
+      }
+      (model, cmd)
+    }
   | HealthResult(result) =>
     switch result {
     | Ok(_json) => ({...model, verisimdb: {...db, connected: true, queryError: None}}, Tea_Cmd.none)
@@ -659,12 +663,19 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
         inferenceStream: [],
         queryCount: db.queryCount + 1,
       }
+      // Route through BoJ database-mcp cartridge when bojRouting is enabled.
+      let queryCmd = if db.bojRouting {
+        BojCmd.invokeCartridge("database-mcp", "query", query, result => VeriSimDB(QueryResult(result)))
+      } else {
+        TauriCmd.queryVeriSimDB(query, result => VeriSimDB(QueryResult(result)))
+      }
       (
         {...model, verisimdb: newDb},
         Tea_Cmd.batch(list{
-          TauriCmd.queryVeriSimDB(query, result => VeriSimDB(QueryResult(result))),
+          queryCmd,
           TypeLLService.checkVqlTypes(query, result => VeriSimDB(VqlTypeCheckResult(result))),
           antiCrashCmd,
+          Tea_Cmd.msg(Vexometer(RecordVqlQuery)),
         }),
       )
     }
@@ -683,22 +694,36 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       )
     | Error(err) => ({...model, verisimdb: {...db, queryResult: None, queryError: Some(err)}}, Tea_Cmd.none)
     }
-  | ListEntities => (
-      model,
-      TauriCmd.listHexads(50, 0, result => VeriSimDB(EntitiesLoaded(result))),
-    )
+  | ListEntities => {
+      let cmd = if db.bojRouting {
+        BojCmd.invokeCartridge("database-mcp", "list_entities", "{\"limit\":50,\"offset\":0}", result => VeriSimDB(EntitiesLoaded(result)))
+      } else {
+        TauriCmd.listHexads(50, 0, result => VeriSimDB(EntitiesLoaded(result)))
+      }
+      (model, cmd)
+    }
   | EntitiesLoaded(result) =>
     switch result {
     | Ok(_json) => ({...model, verisimdb: {...db, queryError: None}}, Tea_Cmd.none)
     | Error(err) => ({...model, verisimdb: {...db, queryError: Some(err)}}, Tea_Cmd.none)
     }
-  | SelectEntity(entityId) => (
-      {...model, verisimdb: {...db, selectedEntity: Some(entityId), entityDetail: None}},
-      TauriCmd.batch(list{
-        TauriCmd.getDrift(entityId, result => VeriSimDB(DriftLoaded(result))),
-        TauriCmd.getEntityDetail(entityId, result => VeriSimDB(EntityDetailLoaded(result))),
-      }),
-    )
+  | SelectEntity(entityId) => {
+      let (driftCmd, detailCmd) = if db.bojRouting {
+        (
+          BojCmd.invokeCartridge("database-mcp", "drift", entityId, result => VeriSimDB(DriftLoaded(result))),
+          BojCmd.invokeCartridge("database-mcp", "entity_detail", entityId, result => VeriSimDB(EntityDetailLoaded(result))),
+        )
+      } else {
+        (
+          TauriCmd.getDrift(entityId, result => VeriSimDB(DriftLoaded(result))),
+          TauriCmd.getEntityDetail(entityId, result => VeriSimDB(EntityDetailLoaded(result))),
+        )
+      }
+      (
+        {...model, verisimdb: {...db, selectedEntity: Some(entityId), entityDetail: None}},
+        Tea_Cmd.batch(list{driftCmd, detailCmd}),
+      )
+    }
   | DriftLoaded(result) =>
     switch result {
     | Ok(json) =>
@@ -749,10 +774,14 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     | Ok(json) => ({...model, verisimdb: {...db, entityDetail: Some(json), queryError: None}}, Tea_Cmd.none)
     | Error(err) => ({...model, verisimdb: {...db, entityDetail: None, queryError: Some(err)}}, Tea_Cmd.none)
     }
-  | FetchTelemetry => (
-      model,
-      TauriCmd.getTelemetry(result => VeriSimDB(TelemetryLoaded(result))),
-    )
+  | FetchTelemetry => {
+      let cmd = if db.bojRouting {
+        BojCmd.invokeCartridge("database-mcp", "telemetry", "", result => VeriSimDB(TelemetryLoaded(result)))
+      } else {
+        TauriCmd.getTelemetry(result => VeriSimDB(TelemetryLoaded(result)))
+      }
+      (model, cmd)
+    }
   | TelemetryLoaded(result) =>
     switch result {
     | Ok(json) =>
@@ -764,10 +793,14 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       {...model, verisimdb: {...db, telemetryVisible: !db.telemetryVisible}},
       Tea_Cmd.none,
     )
-  | FetchOrchStatus => (
-      model,
-      TauriCmd.getOrchStatus(result => VeriSimDB(OrchStatusLoaded(result))),
-    )
+  | FetchOrchStatus => {
+      let cmd = if db.bojRouting {
+        BojCmd.invokeCartridge("database-mcp", "orch_status", "", result => VeriSimDB(OrchStatusLoaded(result)))
+      } else {
+        TauriCmd.getOrchStatus(result => VeriSimDB(OrchStatusLoaded(result)))
+      }
+      (model, cmd)
+    }
   | OrchStatusLoaded(result) =>
     switch result {
     | Ok(json) => ({...model, verisimdb: {...db, orchStatus: Some(json), queryError: None}}, Tea_Cmd.none)
@@ -797,6 +830,10 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
   // #4: Toggle Anti-Crash validation of VQL queries.
   | ToggleAntiCrashValidation => (
       {...model, verisimdb: {...db, antiCrashValidation: !db.antiCrashValidation}},
+      Tea_Cmd.none,
+    )
+  | ToggleVeriSimBojRouting => (
+      {...model, verisimdb: {...db, bojRouting: !db.bojRouting}},
       Tea_Cmd.none,
     )
   }
@@ -1520,6 +1557,11 @@ let updateVexometer = (model: model, msg: vexometerMsg): (model, Tea_Cmd.t<msg>)
   | RecordCorrection => (
       {...model, vexometer: {...vex, recentCorrections: vex.recentCorrections + 1}},
       TauriCmd.recordVexationEvent("correction", _result => NoOp),
+    )
+  | RecordVqlQuery => (
+      // VQL queries contribute to cognitive load — tracked as a lighter-weight event.
+      model,
+      TauriCmd.recordVexationEvent("vql_query", _result => NoOp),
     )
   | RequestVexationIndex => (
       model,
@@ -4189,6 +4231,14 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
   | CycleWorkspaceMode => ({...model, workspace: {...ws, mode: WorkspaceEngine.cycleMode(ws.mode)}}, Tea_Cmd.none)
   | SetProtection(p) => ({...model, workspace: {...ws, protection: p}}, Tea_Cmd.none)
   | SetExecutionMode(m) => ({...model, workspace: {...ws, executionMode: m}}, Tea_Cmd.none)
+  | ToggleDryRun => {
+      let newMode = switch ws.executionMode {
+      | Live => WorkspaceModel.DryRun
+      | DryRun => WorkspaceModel.Live
+      | other => other
+      }
+      ({...model, workspace: {...ws, executionMode: newMode}}, Tea_Cmd.none)
+    }
   | CreateGroup(id, name, panelIds) =>
     ({...model, workspace: {...ws, groups: WorkspaceEngine.createGroup(ws.groups, id, name, panelIds)}}, Tea_Cmd.none)
   | DisbandGroup(id) =>
@@ -5583,14 +5633,22 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
       {...model, vmInspector: {...vm, loading: false, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | StepForward => (
-      {...model, vmInspector: {...vm, loading: true}},
-      VmInspectorCmd.stepForward(result => VmInspector(StepResult(result))),
-    )
-  | StepBackward => (
-      {...model, vmInspector: {...vm, loading: true}},
-      VmInspectorCmd.stepBackward(result => VmInspector(StepResult(result))),
-    )
+  | StepForward => {
+      let cmd = if vm.bojRouting {
+        BojCmd.invokeCartridge("dap-mcp", "step_forward", "", result => VmInspector(StepResult(result)))
+      } else {
+        VmInspectorCmd.stepForward(result => VmInspector(StepResult(result)))
+      }
+      ({...model, vmInspector: {...vm, loading: true}}, cmd)
+    }
+  | StepBackward => {
+      let cmd = if vm.bojRouting {
+        BojCmd.invokeCartridge("dap-mcp", "step_backward", "", result => VmInspector(StepResult(result)))
+      } else {
+        VmInspectorCmd.stepBackward(result => VmInspector(StepResult(result)))
+      }
+      ({...model, vmInspector: {...vm, loading: true}}, cmd)
+    }
   | StepResult(Ok(_json)) => {
       // TODO: Deserialise new VM state after step, add to history.
       let newStep = vm.totalSteps + 1
@@ -5600,10 +5658,14 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
       {...model, vmInspector: {...vm, loading: false, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | RunVm => (
-      {...model, vmInspector: {...vm, running: true}},
-      VmInspectorCmd.runToBreakpoint(result => VmInspector(RunResult(result))),
-    )
+  | RunVm => {
+      let cmd = if vm.bojRouting {
+        BojCmd.invokeCartridge("dap-mcp", "run", "", result => VmInspector(RunResult(result)))
+      } else {
+        VmInspectorCmd.runToBreakpoint(result => VmInspector(RunResult(result)))
+      }
+      ({...model, vmInspector: {...vm, running: true}}, cmd)
+    }
   | PauseVm => ({...model, vmInspector: {...vm, running: false}}, Tea_Cmd.none)
   | RunResult(Ok(_json)) =>
     // TODO: Deserialise state at breakpoint/end.
@@ -5677,6 +5739,7 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
       Tea_Cmd.none,
     )
   | DismissVmError => ({...model, vmInspector: {...vm, error: None}}, Tea_Cmd.none)
+  | ToggleVmBojRouting => ({...model, vmInspector: {...vm, bojRouting: !vm.bojRouting}}, Tea_Cmd.none)
   }
 }
 
@@ -5990,6 +6053,46 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
       Tea_Cmd.none,
     )
   | DismissCoprocError => ({...model, coprocessors: {...cp, error: None}}, Tea_Cmd.none)
+  | QueryComputeEngine(engineId, operation) => (
+      {...model, coprocessors: {...cp, loading: true}},
+      CoprocessorsCmd.queryComputeEngine(
+        engineId,
+        operation,
+        result => Coprocessors(ComputeEngineResult(result)),
+      ),
+    )
+  | ComputeEngineResult(Ok(json)) => {
+      let parsed = CoprocessorsEngine.parseComputeResult(json, EngineAxiom)
+      switch parsed {
+      | Ok(queryResult) => (
+          {...model, coprocessors: {...cp, loading: false, lastComputeResult: Some(queryResult)}},
+          Tea_Cmd.none,
+        )
+      | Error(_) => (
+          {...model, coprocessors: {...cp, loading: false, error: None}},
+          Tea_Cmd.none,
+        )
+      }
+    }
+  | ComputeEngineResult(Error(err)) => (
+      {...model, coprocessors: {...cp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | DiscoverDevices => (
+      {...model, coprocessors: {...cp, loading: true}},
+      CoprocessorsCmd.discoverDevices(result => Coprocessors(DevicesDiscovered(result))),
+    )
+  | DevicesDiscovered(Ok(json)) => {
+      let devices = CoprocessorsEngine.parseDevices(json)
+      (
+        {...model, coprocessors: {...cp, loading: false, discoveredDevices: devices}},
+        Tea_Cmd.none,
+      )
+    }
+  | DevicesDiscovered(Error(err)) => (
+      {...model, coprocessors: {...cp, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
   }
 }
 
@@ -6246,7 +6349,16 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
     )
   | ConnectLsp => (
       {...model, editorBridge: {...eb, connection: EditorConnecting}},
-      EditorBridgeCmd.connectLsp(eb.lspPort, result => EditorBridge(LspConnected(result))),
+      if eb.bojRouting {
+        // Route through BoJ's lsp-mcp cartridge.
+        let args = `{"port": ${Int.toString(eb.lspPort)}}`
+        Tea_Cmd.batch(list{
+          BojCmd.invokeCartridge("lsp-mcp", "connect", args, result => EditorBridge(LspConnected(result))),
+          Tea_Cmd.msg(Vexometer(RecordVqlQuery)),
+        })
+      } else {
+        EditorBridgeCmd.connectLsp(eb.lspPort, result => EditorBridge(LspConnected(result)))
+      },
     )
   | LspConnected(Ok(info)) => (
       {...model, editorBridge: {...eb, connection: EditorConnected(info), error: None}},
@@ -6258,7 +6370,11 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
     )
   | RefreshDiagnostics => (
       {...model, editorBridge: {...eb, loading: true}},
-      EditorBridgeCmd.readDiagnostics(result => EditorBridge(DiagnosticsReceived(result))),
+      if eb.bojRouting {
+        BojCmd.invokeCartridge("lsp-mcp", "diagnostics", "{}", result => EditorBridge(DiagnosticsReceived(result)))
+      } else {
+        EditorBridgeCmd.readDiagnostics(result => EditorBridge(DiagnosticsReceived(result)))
+      },
     )
   | DiagnosticsReceived(Ok(_json)) =>
     // TODO: Deserialise diagnostics from JSON.
@@ -6280,7 +6396,12 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
     )
   | RefreshSymbols => (
       {...model, editorBridge: {...eb, loading: true}},
-      EditorBridgeCmd.readSymbols(eb.symbolFilter, result => EditorBridge(SymbolsReceived(result))),
+      if eb.bojRouting {
+        let args = `{"query": "${eb.symbolFilter}"}`
+        BojCmd.invokeCartridge("lsp-mcp", "symbols", args, result => EditorBridge(SymbolsReceived(result)))
+      } else {
+        EditorBridgeCmd.readSymbols(eb.symbolFilter, result => EditorBridge(SymbolsReceived(result)))
+      },
     )
   | SymbolsReceived(Ok(_json)) =>
     // TODO: Deserialise symbols from JSON.
@@ -6309,6 +6430,7 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
   | SetSymbolFilter(text) => ({...model, editorBridge: {...eb, symbolFilter: text}}, Tea_Cmd.none)
   | SetEditorKind(editor) => ({...model, editorBridge: {...eb, editorKind: editor}}, Tea_Cmd.none)
   | ToggleAutoSync => ({...model, editorBridge: {...eb, autoSync: !eb.autoSync}}, Tea_Cmd.none)
+  | ToggleBojRouting => ({...model, editorBridge: {...eb, bojRouting: !eb.bojRouting}}, Tea_Cmd.none)
   | DismissBridgeError => ({...model, editorBridge: {...eb, error: None}}, Tea_Cmd.none)
   }
 }
@@ -6322,13 +6444,15 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
   let bd = model.buildDashboard
   switch msg {
   | SetBuildCategory(cat) => ({...model, buildDashboard: {...bd, activeCategory: cat}}, Tea_Cmd.none)
-  | TriggerBuild(target) => (
-      {...model, buildDashboard: {...bd, loading: true}},
-      BuildDashboardCmd.triggerBuild(
-        BuildDashboardEngine.targetLabel(target),
-        result => BuildDashboard(BuildTriggered(result)),
-      ),
-    )
+  | TriggerBuild(target) => {
+      let label = BuildDashboardEngine.targetLabel(target)
+      let cmd = if bd.bojRouting {
+        BojCmd.invokeCartridge("bsp-mcp", "build", label, result => BuildDashboard(BuildTriggered(result)))
+      } else {
+        BuildDashboardCmd.triggerBuild(label, result => BuildDashboard(BuildTriggered(result)))
+      }
+      ({...model, buildDashboard: {...bd, loading: true}}, cmd)
+    }
   | BuildTriggered(Ok(_json)) =>
     // TODO: Deserialise build status update.
     ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
@@ -6336,10 +6460,14 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       {...model, buildDashboard: {...bd, loading: false, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | RefreshBuildStatus => (
-      {...model, buildDashboard: {...bd, loading: true}},
-      BuildDashboardCmd.readBuildStatus(result => BuildDashboard(BuildStatusReceived(result))),
-    )
+  | RefreshBuildStatus => {
+      let cmd = if bd.bojRouting {
+        BojCmd.invokeCartridge("bsp-mcp", "status", "", result => BuildDashboard(BuildStatusReceived(result)))
+      } else {
+        BuildDashboardCmd.readBuildStatus(result => BuildDashboard(BuildStatusReceived(result)))
+      }
+      ({...model, buildDashboard: {...bd, loading: true}}, cmd)
+    }
   | BuildStatusReceived(Ok(_json)) =>
     // TODO: Deserialise build status for all targets.
     ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
@@ -6347,13 +6475,15 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       {...model, buildDashboard: {...bd, loading: false, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | RunTests(target) => (
-      {...model, buildDashboard: {...bd, loading: true}},
-      BuildDashboardCmd.runTests(
-        BuildDashboardEngine.targetLabel(target),
-        result => BuildDashboard(TestsReceived(result)),
-      ),
-    )
+  | RunTests(target) => {
+      let label = BuildDashboardEngine.targetLabel(target)
+      let cmd = if bd.bojRouting {
+        BojCmd.invokeCartridge("bsp-mcp", "test", label, result => BuildDashboard(TestsReceived(result)))
+      } else {
+        BuildDashboardCmd.runTests(label, result => BuildDashboard(TestsReceived(result)))
+      }
+      ({...model, buildDashboard: {...bd, loading: true}}, cmd)
+    }
   | TestsReceived(Ok(_json)) =>
     // TODO: Deserialise test results.
     ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
@@ -6388,6 +6518,7 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
   | ToggleAutoRebuild => ({...model, buildDashboard: {...bd, autoRebuild: !bd.autoRebuild}}, Tea_Cmd.none)
   | ToggleShowPassed => ({...model, buildDashboard: {...bd, showPassedTests: !bd.showPassedTests}}, Tea_Cmd.none)
   | DismissBuildError => ({...model, buildDashboard: {...bd, error: None}}, Tea_Cmd.none)
+  | ToggleBuildBojRouting => ({...model, buildDashboard: {...bd, bojRouting: !bd.bojRouting}}, Tea_Cmd.none)
   }
 }
 
@@ -6651,9 +6782,11 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, boj: {...boj, loading: true}},
       BojCmd.listCartridges(result => Boj(CartridgesResult(result))),
     )
-  | CartridgesResult(Ok(_json)) =>
-    // TODO: Deserialise cartridge list from JSON.
-    ({...model, boj: {...boj, loading: false, error: None}}, Tea_Cmd.none)
+  | CartridgesResult(Ok(json)) =>
+    switch BojEngine.parseCartridges(json) {
+    | Ok(cartridges) => ({...model, boj: {...boj, cartridges, loading: false, error: None}}, Tea_Cmd.none)
+    | Error(err) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
+    }
   | CartridgesResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
   | SelectCartridge(name) => {
       let sel = if name === "" { None } else { Some(name) }
@@ -6681,17 +6814,23 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, boj: {...boj, loading: true}},
       BojCmd.topology(result => Boj(TopologyResult(result))),
     )
-  | TopologyResult(Ok(_json)) =>
-    // TODO: Deserialise topology data.
-    ({...model, boj: {...boj, loading: false, error: None}}, Tea_Cmd.none)
+  | TopologyResult(Ok(json)) =>
+    // Topology diagram is rendered client-side from model state.
+    // Parse validates the server response; diagram string available for future use.
+    switch BojEngine.parseTopology(json) {
+    | Ok(_diagram) => ({...model, boj: {...boj, loading: false, error: None}}, Tea_Cmd.none)
+    | Error(err) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
+    }
   | TopologyResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
   | RefreshUmoja => (
       {...model, boj: {...boj, loading: true}},
       BojCmd.umojaStatus(result => Boj(UmojaResult(result))),
     )
-  | UmojaResult(Ok(_json)) =>
-    // TODO: Deserialise Umoja status.
-    ({...model, boj: {...boj, loading: false, error: None}}, Tea_Cmd.none)
+  | UmojaResult(Ok(json)) =>
+    switch BojEngine.parseUmojaStatus(json) {
+    | Ok(umoja) => ({...model, boj: {...boj, umoja, loading: false, error: None}}, Tea_Cmd.none)
+    | Error(err) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
+    }
   | UmojaResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
   | SetInvokeCartridge(name) => ({...model, boj: {...boj, invokeCartridge: name}}, Tea_Cmd.none)
   | SetInvokeTool(tool) => ({...model, boj: {...boj, invokeTool: tool}}, Tea_Cmd.none)
@@ -6746,6 +6885,14 @@ let updateCladeBrowser = (model: model, msg: cladeBrowserMsg): (model, Tea_Cmd.t
   | UpdateCladeSearch(query) => ({...model, cladeBrowser: {...cb, searchQuery: query}}, Tea_Cmd.none)
   | LoadClades => ({...model, cladeBrowser: {...cb, loading: true}}, Tea_Cmd.none)
   | CladesLoaded(clades) => ({...model, cladeBrowser: {...cb, clades, loading: false, error: None}}, Tea_Cmd.none)
+  | SetCladePermission(targetCladeId, perm) => {
+      let newRules = CladeBrowserEngine.setPermission(cb.permissionRules, targetCladeId, perm)
+      ({...model, cladeBrowser: {...cb, permissionRules: newRules}}, Tea_Cmd.none)
+    }
+  | RemoveCladePermission(targetCladeId) => {
+      let newRules = CladeBrowserEngine.removePermission(cb.permissionRules, targetCladeId)
+      ({...model, cladeBrowser: {...cb, permissionRules: newRules}}, Tea_Cmd.none)
+    }
   }
 }
 
@@ -6879,9 +7026,19 @@ let updateProtocolSquisher = (model: model, msg: protocolSquisherMsg): (model, T
         result => ProtocolSquisher(ComparisonResult(result)),
       ),
     )
-  | ComparisonResult(Ok(_json)) =>
-    // TODO: parse comparison JSON when format is stabilised
-    ({...model, protocolSquisher: {...ps, loading: false, error: None}}, Tea_Cmd.none)
+  | ComparisonResult(Ok(json)) => {
+      let parsed = ProtocolSquisherEngine.parseComparison(json)
+      switch parsed {
+      | Ok(comparison) => (
+          {...model, protocolSquisher: {...ps, loading: false, error: None, lastComparison: Some(comparison)}},
+          Tea_Cmd.none,
+        )
+      | Error(_) => (
+          {...model, protocolSquisher: {...ps, loading: false, error: None}},
+          Tea_Cmd.none,
+        )
+      }
+    }
   | ComparisonResult(Error(e)) => ({...model, protocolSquisher: {...ps, loading: false, error: Some(e)}}, Tea_Cmd.none)
   | SchemaTypeCheckResult(Ok(json)) => {
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
@@ -6997,7 +7154,7 @@ let updateMyLang = (model: model, msg: myLangMsg): (model, Tea_Cmd.t<msg>) => {
   // #8: LSP integration for syntax highlighting and diagnostics.
   | ConnectLsp => (
       {...model, myLang: {...ml, loading: true}},
-      MyLangCmd.checkCli(result => MyLang(LspConnected(result))),
+      MyLangCmd.connectLsp(result => MyLang(LspConnected(result))),
     )
   | LspConnected(Ok(_)) => (
       {...model, myLang: {...ml, lspConnected: true, loading: false, error: None}},
@@ -7013,13 +7170,14 @@ let updateMyLang = (model: model, msg: myLangMsg): (model, Tea_Cmd.t<msg>) => {
     )
   | RequestDiagnostics =>
     if ml.lspConnected {
+      let filePath = "panll://mylang/" ++ MyLangEngine.dialectLabel(ml.activeDialect) ++ "/input"
       (
         model,
-        MyLangCmd.compile(
+        MyLangCmd.requestDiagnostics(
+          filePath,
           ml.editorContent,
-          MyLangEngine.dialectLabel(ml.activeDialect),
           result => switch result {
-          | Ok(_) => MyLang(LspDiagnosticsReceived([]))
+          | Ok(json) => MyLang(LspDiagnosticsReceived([json]))
           | Error(e) => MyLang(LspDiagnosticsReceived([e]))
           },
         ),

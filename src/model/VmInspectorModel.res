@@ -146,4 +146,6 @@ type vmInspectorState = {
   loading: bool,
   /// Whether multi-VM view is active (shows multiple VMs for multiplayer).
   multiVmView: bool,
+  /// Route DAP operations through BoJ's dap-mcp cartridge instead of direct Tauri.
+  bojRouting: bool,
 }

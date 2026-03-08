@@ -130,4 +130,5 @@ let defaultState: editorBridgeState = {
   lspPort: 6008,
   loading: false,
   error: None,
+  bojRouting: false,
 }

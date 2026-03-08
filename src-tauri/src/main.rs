@@ -92,6 +92,9 @@ mod boj;
 /// Routes to TypeLL server at TYPELL_URL (default http://localhost:7800/api/v1).
 mod typell;
 
+/// Coprocessor — Control plane for external compute engines (Axiom.jl, BoJ).
+mod coprocessor;
+
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
 
@@ -1857,6 +1860,73 @@ fn mylang_repl(input: String, dialect: String) -> Result<String, String> {
     }
 }
 
+const DEFAULT_MYLANG_LSP_URL: &str = "http://localhost:7900";
+
+/// Resolve the my-lang LSP URL from environment or default.
+fn mylang_lsp_url() -> String {
+    std::env::var("MYLANG_LSP_URL").unwrap_or_else(|_| DEFAULT_MYLANG_LSP_URL.to_string())
+}
+
+/// Helper — build an HTTP client with the given timeout (seconds).
+fn mylang_lsp_client(timeout_secs: u64) -> Result<reqwest::blocking::Client, String> {
+    reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(timeout_secs))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))
+}
+
+/// Connect to the my-lang LSP server at localhost:7900 (or MYLANG_LSP_URL).
+/// Sends a health-check GET to verify the LSP is reachable and returns
+/// "connected" on success.
+#[tauri::command]
+fn mylang_lsp_connect() -> Result<String, String> {
+    let url = mylang_lsp_url();
+    let client = mylang_lsp_client(5)?;
+
+    match client.get(&url).send() {
+        Ok(resp) if resp.status().is_success() => {
+            Ok(json!({"status": "connected", "url": url}).to_string())
+        }
+        Ok(resp) => Err(format!("LSP returned HTTP {}", resp.status())),
+        Err(e) => Err(format!("Cannot reach my-lang LSP at {}: {}", url, e)),
+    }
+}
+
+/// Request diagnostics from the my-lang LSP for a given file.
+/// Sends a textDocument/didOpen-style POST to the LSP and returns
+/// any diagnostics as a JSON array.
+#[tauri::command]
+fn mylang_lsp_diagnostics(file_path: String, content: String) -> Result<String, String> {
+    let url = format!("{}/diagnostics", mylang_lsp_url());
+    let client = mylang_lsp_client(30)?;
+
+    let body = json!({
+        "jsonrpc": "2.0",
+        "method": "textDocument/didOpen",
+        "params": {
+            "textDocument": {
+                "uri": format!("file://{}", file_path),
+                "languageId": "mylang",
+                "version": 1,
+                "text": content
+            }
+        }
+    });
+
+    match client.post(&url).json(&body).send() {
+        Ok(resp) => {
+            let status = resp.status();
+            let text = resp.text().unwrap_or_default();
+            if status.is_success() {
+                Ok(text)
+            } else {
+                Err(format!("LSP diagnostics returned {}: {}", status, text))
+            }
+        }
+        Err(e) => Err(format!("LSP diagnostics request failed: {}", e)),
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -2010,6 +2080,11 @@ fn main() {
             mylang_check,
             mylang_compile,
             mylang_repl,
+            mylang_lsp_connect,
+            mylang_lsp_diagnostics,
+            // Coprocessor — Control plane for external compute engines
+            coprocessor::commands::query_compute_engine,
+            coprocessor::commands::discover_compute_devices,
         ])
         .setup(|_app| {
             Ok(())

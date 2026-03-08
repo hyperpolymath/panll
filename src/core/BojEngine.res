@@ -136,6 +136,214 @@ let layerProgress = (layers: layerStatus): string => {
   `${Int.toString(count)}/4`
 }
 
+// ============================================================================
+// JSON Parsing Helpers
+// ============================================================================
+
+/// Parse a grade string into a cartridgeGrade variant.
+let parseGrade = (s: string): cartridgeGrade => {
+  switch String.toLowerCase(s) {
+  | "a" | "gradea" | "production" => GradeA
+  | "b" | "gradeb" | "rc" => GradeB
+  | "c" | "gradec" | "beta" => GradeC
+  | _ => GradeD
+  }
+}
+
+/// Parse a protocol string into a protocolColumn variant.
+let parseProtocol = (s: string): option<protocolColumn> => {
+  switch String.toLowerCase(s) {
+  | "mcp" => Some(ProtoMCP)
+  | "lsp" => Some(ProtoLSP)
+  | "dap" => Some(ProtoDAP)
+  | "bsp" => Some(ProtoBSP)
+  | "nesy" => Some(ProtoNeSy)
+  | "agentic" => Some(ProtoAgentic)
+  | "fleet" => Some(ProtoFleet)
+  | "grpc" => Some(ProtoGRPC)
+  | "rest" => Some(ProtoREST)
+  | "graphql" => Some(ProtoGraphQL)
+  | _ => None
+  }
+}
+
+/// Parse a peer state string into a peerState variant.
+let parsePeerState = (s: string): peerState => {
+  switch String.toLowerCase(s) {
+  | "exchanged" => PeerExchanged
+  | "verified" => PeerVerified
+  | "rejected" => PeerRejected
+  | "stale" => PeerStale
+  | _ => PeerPending
+  }
+}
+
+/// Helper: extract a string from a JSON object dict.
+let getStringFromObj = (obj: Dict.t<JSON.t>, key: string): string =>
+  switch Dict.get(obj, key) {
+  | Some(v) =>
+    switch JSON.Classify.classify(v) {
+    | String(s) => s
+    | _ => ""
+    }
+  | None => ""
+  }
+
+/// Helper: extract an int from a JSON object dict.
+let getIntFromObj = (obj: Dict.t<JSON.t>, key: string): int =>
+  switch Dict.get(obj, key) {
+  | Some(v) =>
+    switch JSON.Classify.classify(v) {
+    | Number(n) => Float.toInt(n)
+    | _ => 0
+    }
+  | None => 0
+  }
+
+/// Helper: extract a float from a JSON object dict.
+let getFloatFromObj = (obj: Dict.t<JSON.t>, key: string): float =>
+  switch Dict.get(obj, key) {
+  | Some(v) =>
+    switch JSON.Classify.classify(v) {
+    | Number(n) => n
+    | _ => 0.0
+    }
+  | None => 0.0
+  }
+
+/// Helper: extract a bool from a JSON object dict.
+let getBoolFromObj = (obj: Dict.t<JSON.t>, key: string): bool =>
+  switch Dict.get(obj, key) {
+  | Some(v) =>
+    switch JSON.Classify.classify(v) {
+    | Bool(b) => b
+    | _ => false
+    }
+  | None => false
+  }
+
+/// Parse a single cartridge JSON object into a bojCartridge record.
+let parseCartridgeObj = (obj: Dict.t<JSON.t>): bojCartridge => {
+  // Parse protocols array.
+  let protocols = switch Dict.get(obj, "protocols") {
+  | Some(v) =>
+    switch JSON.Classify.classify(v) {
+    | Array(arr) =>
+      arr->Array.filterMap(item =>
+        switch JSON.Classify.classify(item) {
+        | String(s) => parseProtocol(s)
+        | _ => None
+        }
+      )
+    | _ => []
+    }
+  | None => []
+  }
+  // Parse layers object.
+  let layers = switch Dict.get(obj, "layers") {
+  | Some(v) =>
+    switch JSON.Classify.classify(v) {
+    | Object(layerObj) => {
+        abiReady: getBoolFromObj(layerObj, "abiReady"),
+        ffiReady: getBoolFromObj(layerObj, "ffiReady"),
+        adapterReady: getBoolFromObj(layerObj, "adapterReady"),
+        sharedLibReady: getBoolFromObj(layerObj, "sharedLibReady"),
+      }
+    | _ => {abiReady: false, ffiReady: false, adapterReady: false, sharedLibReady: false}
+    }
+  | None => {abiReady: false, ffiReady: false, adapterReady: false, sharedLibReady: false}
+  }
+  {
+    name: getStringFromObj(obj, "name"),
+    displayName: getStringFromObj(obj, "displayName"),
+    description: getStringFromObj(obj, "description"),
+    grade: parseGrade(getStringFromObj(obj, "grade")),
+    loaded: getBoolFromObj(obj, "loaded"),
+    protocols,
+    layers,
+    soHash: getStringFromObj(obj, "soHash"),
+    restPort: getIntFromObj(obj, "restPort"),
+    grpcPort: getIntFromObj(obj, "grpcPort"),
+    graphqlPort: getIntFromObj(obj, "graphqlPort"),
+  }
+}
+
+/// Parse a JSON string containing an array of cartridge objects.
+let parseCartridges = (json: string): result<array<bojCartridge>, string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Array(arr) =>
+      let cartridges = arr->Array.filterMap(item =>
+        switch JSON.Classify.classify(item) {
+        | Object(obj) => Some(parseCartridgeObj(obj))
+        | _ => None
+        }
+      )
+      Ok(cartridges)
+    | _ => Error("Expected JSON array for cartridges list")
+    }
+  } catch {
+  | _ => Error("Failed to parse cartridges JSON")
+  }
+}
+
+/// Parse a JSON string containing Umoja federation status.
+let parseUmojaStatus = (json: string): result<umojaStatus, string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let peers = switch Dict.get(obj, "peers") {
+        | Some(v) =>
+          switch JSON.Classify.classify(v) {
+          | Array(arr) =>
+            arr->Array.filterMap(item =>
+              switch JSON.Classify.classify(item) {
+              | Object(peerObj) =>
+                Some({
+                  nodeId: getStringFromObj(peerObj, "nodeId"),
+                  address: getStringFromObj(peerObj, "endpoint"),
+                  state: parsePeerState(getStringFromObj(peerObj, "state")),
+                  gossipRound: getIntFromObj(peerObj, "currentRound"),
+                  catalogueDigest: getStringFromObj(peerObj, "catalogueDigest"),
+                  lastSeen: getFloatFromObj(peerObj, "loadFactor"),
+                })
+              | _ => None
+              }
+            )
+          | _ => []
+          }
+        | None => []
+        }
+        Ok({
+          active: getBoolFromObj(obj, "active"),
+          localNodeId: getStringFromObj(obj, "localNodeId"),
+          peers,
+          currentRound: getIntFromObj(obj, "currentRound"),
+        })
+      }
+    | _ => Error("Expected JSON object for Umoja status")
+    }
+  } catch {
+  | _ => Error("Failed to parse Umoja status JSON")
+  }
+}
+
+/// Parse a JSON string containing topology diagram data.
+/// Extracts the "diagram" field as a plain string.
+let parseTopology = (json: string): result<string, string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => Ok(getStringFromObj(obj, "diagram"))
+    | _ => Error("Expected JSON object for topology data")
+    }
+  } catch {
+  | _ => Error("Failed to parse topology JSON")
+  }
+}
+
 /// Default BoJ panel state.
 let defaultState: bojState = {
   serverUrl: "http://localhost:7700/api/v1",

@@ -43,13 +43,13 @@ let renderPaneL = (paneL: paneLState, proofs: array<proofObligation>, visible: b
 }
 
 /// Render Pane-N (Neural Stream) with ECHIDNA theorem prover panel - using full component
-let renderPaneN = (paneN: paneNState, echidna: echidnaState, visible: bool): Tea_Vdom.t<msg> => {
+let renderPaneN = (paneN: paneNState, echidna: echidnaState, ~inferenceStream: array<string>=[], visible: bool): Tea_Vdom.t<msg> => {
   if !visible {
     noNode
   } else {
     div(
       list{Attrs.class_("flex-1 overflow-auto")},
-      list{PaneN.view(paneN, echidna)},
+      list{PaneN.view(paneN, echidna, ~inferenceStream)},
     )
   }
 }
@@ -204,7 +204,7 @@ let view = (model: model): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("flex-1 overflow-auto relative")},
               list{
-                renderPaneL(model.paneL, model.verisimdb.proofObligations, model.paneLVisible),
+                renderPaneL(model.paneL, if model.verisimdb.proofDisplayActive { model.verisimdb.proofObligations } else { [] }, model.paneLVisible),
                 CaptureBar.view("paneL", false, model.capture.captureBarVisible && model.paneLVisible),
               },
             ),
@@ -212,7 +212,7 @@ let view = (model: model): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("flex-1 overflow-auto relative")},
               list{
-                renderPaneN(model.paneN, model.echidna, model.paneNVisible),
+                renderPaneN(model.paneN, model.echidna, ~inferenceStream=model.verisimdb.inferenceStream, model.paneNVisible),
                 CaptureBar.view("paneN", false, model.capture.captureBarVisible && model.paneNVisible),
               },
             ),
@@ -235,6 +235,7 @@ let view = (model: model): Tea_Vdom.t<msg> => {
           model.feedbackPending,
           model.feedbackError,
           model.feedbackReportType,
+          model.boj,
         ),
 
         // Active panel overlay — replaces ad-hoc visible checks on VAB/CloudGuard.

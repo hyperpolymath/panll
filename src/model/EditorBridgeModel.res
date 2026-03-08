@@ -91,4 +91,6 @@ type editorBridgeState = {
   lspPort: int,
   loading: bool,
   error: option<string>,
+  /// Route LSP operations through BoJ's lsp-mcp cartridge instead of direct Tauri.
+  bojRouting: bool,
 }

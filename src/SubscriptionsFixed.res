@@ -33,10 +33,7 @@ let actionToMsg = (action: KeybindingsModel.keybindingAction): msg => {
   | ActionToggleWorkspace => PanelSwitcher(TogglePanel(PanelWorkspace))
   | ActionToggleSecurity => PanelSwitcher(TogglePanel(PanelSecurity))
   | ActionCycleWorkspaceMode => Workspace(CycleWorkspaceMode)
-  | ActionToggleDryRun => Workspace(SetExecutionMode(
-      // Toggle between Live and DryRun.
-      DryRun // Simplified — full toggle needs model access.
-    ))
+  | ActionToggleDryRun => Workspace(ToggleDryRun)
   }
 }
 

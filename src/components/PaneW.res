@@ -579,6 +579,61 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
             },
           ),
           renderTelemetryPanel(db),
+          // Proof obligation display toggle
+          div(
+            list{Attrs.class_("flex items-center gap-2 mt-2")},
+            list{
+              div(
+                list{Attrs.class_("text-[11px] text-gray-400")},
+                list{text("VQL-DT Proof Obligations")},
+              ),
+              button(
+                list{
+                  Attrs.class_("px-2 py-0.5 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
+                  Events.onClick(VeriSimDB(ToggleProofDisplay)),
+                },
+                list{text(if db.proofDisplayActive { "Hide in Panel-L" } else { "Show in Panel-L" })},
+              ),
+            },
+          ),
+          // Anti-Crash validation toggle
+          div(
+            list{Attrs.class_("flex items-center gap-2 mt-2")},
+            list{
+              div(
+                list{Attrs.class_("text-[11px] text-gray-400")},
+                list{text("Anti-Crash VQL Validation")},
+              ),
+              button(
+                list{
+                  Attrs.class_(
+                    if db.antiCrashValidation {
+                      "px-2 py-0.5 text-[10px] bg-green-900/40 hover:bg-green-800/40 rounded text-green-400 border border-green-500/30"
+                    } else {
+                      "px-2 py-0.5 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-400"
+                    },
+                  ),
+                  Events.onClick(VeriSimDB(ToggleAntiCrashValidation)),
+                },
+                list{text(if db.antiCrashValidation { "Active" } else { "Inactive" })},
+              ),
+            },
+          ),
+          // Query count and inference stream summary
+          div(
+            list{Attrs.class_("flex items-center gap-3 mt-2 text-[10px] text-gray-500")},
+            list{
+              span(list{}, list{text(`Queries: ${Int.toString(db.queryCount)}`)}),
+              if Array.length(db.inferenceStream) > 0 {
+                span(
+                  list{Attrs.class_("text-violet-400")},
+                  list{text(`${Int.toString(Array.length(db.inferenceStream))} inference suggestions`)},
+                )
+              } else {
+                noNode
+              },
+            },
+          ),
         },
       )
     }

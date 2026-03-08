@@ -53,7 +53,7 @@
     (vab-engine      "src/core/VabEngine.res"         "Dependency checking + capability computation")
     (vab-component   "src/components/Vab.res"         "KSP-inspired VAB panel view (TEA)")
     (messages        "src/Msg.res"                  "TEA message variants")
-    (update-engine   "src/Update.res"               "State transition kernel (1656 lines)")
+    (update-engine   "src/Update.res"               "State transition kernel (~7500 lines)")
     (view-root       "src/View.res"                 "Root view renderer")
     (storage         "src/Storage.res"              "localStorage persistence")
 
@@ -85,7 +85,7 @@
     ;; Build and test
     (rescript-config "rescript.json"                "ReScript compiler config")
     (deno-config     "deno.json"                    "Deno tasks and import map")
-    (tests           "tests/"                       "Deno.test suite (237 tests)")
+    (tests           "tests/"                       "Deno.test suite (979 tests, 41 suites)")
 
     ;; Design documentation
     (design-docs     "docs/design/"                 "Session design documents (dated)")
@@ -151,7 +151,13 @@
       (verisimdb
         (description "8-modality versioned database")
         (endpoint "http://localhost:8080/api/v1")
-        (capabilities "query, entities, drift, normalise, telemetry, orchestrator"))))
+        (capabilities "query, entities, drift, normalise, telemetry, orchestrator"))
+      (boj-server
+        (description "Bundle of Joy — cartridge server and protocol gateway")
+        (endpoint "http://localhost:8080/boj/v1")
+        (cartridges "lsp-mcp, dap-mcp, bsp-mcp, database-mcp, nesy-mcp, agent-mcp, observe-mcp + 7 more")
+        (routing "4 panels route through BoJ via bojRouting toggle: Editor Bridge, VeriSimDB, VM Inspector, Build Dashboard")
+        (federation "Umoja peer-to-peer federation runtime"))))
 
   ;; ===================================================================
   ;; CRITICAL INVARIANTS
@@ -231,7 +237,7 @@
      ├── src-tauri/                  # Rust/Tauri 2.0 backend (63 Rust files)
      ├── beam/                       # Elixir/BEAM API layer
      ├── scripts/                    # Development tools (mock-echidna.ts)
-     ├── tests/                      # Deno.test suite (237 tests)
+     ├── tests/                      # Deno.test suite (979 tests, 41 suites)
      ├── docs/                       # Documentation and design docs
      │   └── design/                 # Session design documents (dated)
      ├── public/                     # Static assets

@@ -891,7 +891,45 @@ let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
 
 /// Main Pane-N view — renders the neural stream panel and the ECHIDNA
 /// theorem prover panel below it.
-let view = (state: paneNState, echidna: echidnaState): Tea_Vdom.t<msg> => {
+/// Render VQL inference stream suggestions from VeriSimDB.
+let renderInferenceStream = (suggestions: array<string>): Tea_Vdom.t<msg> => {
+  if Array.length(suggestions) == 0 {
+    noNode
+  } else {
+    div(
+      list{Attrs.class_("mt-3 p-3 bg-violet-900/20 border border-violet-500/20 rounded")},
+      list{
+        div(
+          list{Attrs.class_("flex items-center justify-between mb-2")},
+          list{
+            div(
+              list{Attrs.class_("text-xs text-violet-400 font-semibold tracking-wide uppercase")},
+              list{text(`VQL Inference Stream (${Int.toString(Array.length(suggestions))})`)},
+            ),
+            button(
+              list{
+                Attrs.class_("px-2 py-0.5 text-[10px] bg-violet-800/40 hover:bg-violet-700/40 rounded text-violet-300"),
+                Events.onClick(VeriSimDB(ClearInferenceSuggestions)),
+              },
+              list{text("Clear")},
+            ),
+          },
+        ),
+        div(
+          list{Attrs.class_("space-y-1 max-h-32 overflow-y-auto")},
+          suggestions->Array.map(suggestion =>
+            div(
+              list{Attrs.class_("text-xs text-violet-300/80 font-mono pl-2 border-l-2 border-violet-500/30")},
+              list{text(suggestion)},
+            )
+          )->List.fromArray,
+        ),
+      },
+    )
+  }
+}
+
+let view = (state: paneNState, echidna: echidnaState, ~inferenceStream: array<string>=[]): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900"), Attrs.role("region"), Attrs.ariaLabel("Neural Stream Panel")},
     list{
@@ -915,6 +953,9 @@ let view = (state: paneNState, echidna: echidnaState): Tea_Vdom.t<msg> => {
 
       // Token stream
       renderTokenStream(state.tokens),
+
+      // VQL Inference stream (from VeriSimDB)
+      renderInferenceStream(inferenceStream),
 
       // Monologue
       renderMonologue(state.monologue, state.inferenceActive),
