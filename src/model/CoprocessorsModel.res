@@ -62,6 +62,33 @@ type coprocessorsCategory =
   | CoprocHeatmap
   | CoprocSettings
 
+/// Compute engine identity — external services that provide compute.
+type computeEngine =
+  /// Axiom.jl — Julia-based multi-backend compute with SmartBackend dispatch.
+  | EngineAxiom
+  /// BoJ cartridge — Zig FFI compute via cartridge ABI.
+  | EngineBoJ
+  /// Local CPU/WASM — direct in-process compute (Phase 2).
+  | EngineLocal
+
+/// A discovered compute device from a compute engine.
+type computeDevice = {
+  engineId: computeEngine,
+  deviceName: string,
+  deviceType: string,
+  available: bool,
+  capabilities: array<string>,
+}
+
+/// A compute query result from an engine.
+type computeQueryResult = {
+  engineId: computeEngine,
+  operation: string,
+  result: string,
+  durationMs: float,
+  success: bool,
+}
+
 /// Root state for the Coprocessors panel.
 type coprocessorsState = {
   activeCategory: coprocessorsCategory,
@@ -75,4 +102,8 @@ type coprocessorsState = {
   refreshIntervalMs: int,
   loading: bool,
   error: option<string>,
+  /// Control plane: discovered compute devices from external engines.
+  discoveredDevices: array<computeDevice>,
+  /// Control plane: most recent compute query result.
+  lastComputeResult: option<computeQueryResult>,
 }

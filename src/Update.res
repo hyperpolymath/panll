@@ -1803,8 +1803,8 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
 
   // --- Phase 5: Panel Bus event emission (M5) ---
   // Emit cross-panel events based on state transitions detected by
-  // OrbitalSync and GovernanceEngine. These events allow panels to
-  // react to changes in other panels without direct coupling.
+  // OrbitalSync and GovernanceEngine. Events are wrapped in envelopes
+  // with metadata and routed through the subscriber registry.
 
   let busEvents: array<PanelBus.panelEvent> = []
 
@@ -1852,6 +1852,14 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
   } else {
     busEvents
   }
+
+  // Wrap events in envelopes and record in the registry ring buffer.
+  let nowMs = Date.now()
+  let busRegistry = Array.reduce(busEvents, newModel.busRegistry, (reg, evt) => {
+    let (_envelope, updatedReg) = PanelBus.wrapEvent(reg, "governance", evt, nowMs)
+    updatedReg
+  })
+  let newModel = { ...newModel, busRegistry }
 
   // Dispatch follow-up messages for bus events. Each bus event maps to a
   // message that the consuming panel handles. This closes the cross-panel
@@ -7239,6 +7247,18 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | MyLang(subMsg) => updateMyLang(model, subMsg)
   | TypeLL(subMsg) => updateTypeLL(model, subMsg)
   | EnsaidConfig(subMsg) => updateEnsaidConfig(model, subMsg)
+  | Bus(busMsg) =>
+    switch busMsg {
+    | BusSubscribe(cladeId, topics) =>
+      let busRegistry = PanelBus.subscribe(model.busRegistry, cladeId, topics)
+      ({...model, busRegistry}, Tea_Cmd.none)
+    | BusUnsubscribe(cladeId) =>
+      let busRegistry = PanelBus.unsubscribe(model.busRegistry, cladeId)
+      ({...model, busRegistry}, Tea_Cmd.none)
+    | BusClearHistory =>
+      let busRegistry = {...model.busRegistry, recentEvents: [], nextEventId: 1}
+      ({...model, busRegistry}, Tea_Cmd.none)
+    }
   | Undo => {
       // Pop from undo stack, push current to redo.
       // For now, undo/redo stacks store serialised JSON strings.

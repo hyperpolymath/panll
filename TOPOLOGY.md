@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
 <!-- TOPOLOGY.md — Project architecture map and completion dashboard -->
-<!-- Last updated: 2026-03-02 -->
+<!-- Last updated: 2026-03-08 -->
 
 # PanLL eNSAID — Project Topology
 
@@ -22,6 +22,11 @@
                 └─────────────────────────┼────────────────────────┘
                                           │
           ┌───────────────────────────────┼───────────────────────────────┐
+          │        TypeLL VERIFICATION KERNEL (cross-cutting)            │
+          │  Cross-panel type intelligence │ 7 panels wired │ inference  │
+          └───────────────────────────────┼───────────────────────────────┘
+                                          │
+          ┌───────────────────────────────┼───────────────────────────────┐
           │             COGNITIVE GOVERNANCE (always present)             │
           │  Vexometer │ Anti-Crash Gate │ Orbital Drift │ Info Humidity  │
           └───────────────────────────────┼───────────────────────────────┘
@@ -31,14 +36,25 @@
           │  Provenance Map │ Watcher │ Feedback-O-Tron │ Panel Switcher │
           └───────────────────────────────┼───────────────────────────────┘
                                           │
+          ┌───────────────────────────────┼───────────────────────────────┐
+          │          7-TENTACLES AGENTIC ORCHESTRATION                    │
+          │  Multi-agent coordination │ Panel dispatch │ Task routing    │
+          └───────────────────────────────┼───────────────────────────────┘
+                                          │
     ┌─────────────────────────────────────┼─────────────────────────────────────┐
-    │                        PANEL OVERLAY SYSTEM                               │
+    │                        PANEL OVERLAY SYSTEM (41 entries)                  │
     │  ┌──────┐ ┌─────────┐ ┌──────┐ ┌─────┐ ┌──────┐ ┌───────┐ ┌──────────┐  │
     │  │ VAB  │ │CloudGrd │ │ Farm │ │Plaza│ │Hypatia│ │Fleet  │ │Reposystem│  │
     │  └──────┘ └─────────┘ └──────┘ └─────┘ └──────┘ └───────┘ └──────────┘  │
     │  ┌──────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────┐ ┌───────────┐ │
-    │  │Aerie │ │Interfaces│ │Playground│ │  Minter  │ │Provis│ │ Future... │ │
+    │  │Aerie │ │Interfaces│ │Playground│ │  Minter  │ │Provis│ │ My-Lang   │ │
     │  └──────┘ └──────────┘ └──────────┘ └──────────┘ └──────┘ └───────────┘ │
+    │  ┌──────────────┐ ┌──────┐ ┌────────────────────────────────────────┐    │
+    │  │Proto-Squisher│ │ BoJ  │ │ 11× IDApTIK eNSAID panels            │    │
+    │  └──────────────┘ └──────┘ └────────────────────────────────────────┘    │
+    │  ┌──────────────┐                                                        │
+    │  │Clade Browser │  39 clades defined │ inheritance engine                │
+    │  └──────────────┘                                                        │
     └─────────────────────────────────────┼─────────────────────────────────────┘
                                           │
           ┌───────────────────────────────┼───────────────────────────────┐
@@ -56,6 +72,7 @@
     │  - Minter (codegen)   │ │ - QuandleDB       │ │ - Aerie V-lang API    │
     │  - Anti-Crash Gate    │ │ - LithoGlyph      │ │ - NQC proxy (:4000)   │
     │  - Provenance (blame) │ │ - State Orch.     │ │ - panic-attack        │
+    │  - BoJ cartridges     │ │                   │ │ - BoJ-Server (:8080)  │
     └───────────────────────┘ └───────────────────┘ └───────────────────────┘
 ```
 
@@ -69,7 +86,7 @@ CORE PANELS (3)
   Panel-N (Neural Stream + ECHIDNA) ██████████ 100%    Inference, confidence, OODA   D
   Panel-W (World/Barycentre)        ██████████ 100%    Results, VeriSimDB, security  D
 
-PANEL OVERLAYS (11)
+PANEL OVERLAYS (14 + 11 IDApTIK)
   VAB (Verified Assembly Building)  ██████████ 100%    111 components, KSP aesthetic D
   CloudGuard                        ██████████ 100%    Phases 1-6, DNS, SSL, audit  D
   Git-Private-Farm                  ██████████ 100%    Repo inventory, health       D
@@ -81,12 +98,21 @@ PANEL OVERLAYS (11)
   Hypatia                           ██████████ 100%    5 neural nets, 298 repos     D
   Gitbot-Fleet                      ██████████ 100%    6 bots, safety triangle      D
   Panel Minter                      ██████████ 100%    Accessible panel templates   D
+  Protocol-Squisher                 ██████████ 100%    Protocol compression/merge    D
+  My-Lang                           ██████████ 100%    Language playground panel     D
+  BoJ Panel                         ██████████ 100%    Cartridge mgmt, 14 carts     D
+  IDApTIK eNSAID (×11)             ██████████ 100%    11 game-engine panels        D
 
-INFRASTRUCTURE (4)
+CROSS-CUTTING SERVICES (2)
+  TypeLL Verification Kernel        ██████████ 100%    Cross-panel type intel, 7 wired D
+  7-Tentacles Orchestration         ██████████ 100%    Agentic multi-panel dispatch  D
+
+INFRASTRUCTURE (5)
   Panel Switcher                    ██████████ 100%    Unified navigation bar       D
   Provisioner                       ██████████ 100%    Portfolios, config, tiers    D
   Code Provenance Map               ██████████ 100%    Trust surface, 4 palettes    D
   Filesystem Watcher                ██████████ 100%    Rust notify + ReScript cmds  D
+  Clade Browser                     ██████████ 100%    39 clades, inheritance engine D
 
 COGNITIVE GOVERNANCE (6)
   Vexometer                         ██████████ 100%    Friction monitoring           D
@@ -102,13 +128,22 @@ BACKEND CONNECTIONS
   Hypatia (Elixir API)              ░░░░░░░░░░   0%    Needs reqwest to Elixir       X
   Aerie (V-lang API)                ░░░░░░░░░░   0%    Needs reqwest to :4000        X
   Provenance (git blame)            ░░░░░░░░░░   0%    Needs blame parsing           X
+  BoJ-Server (Axum API)             ████░░░░░░  40%    Cartridge status queries      D
   Watcher (event hookup)            █████░░░░░  50%    Rust done, frontend TODO      D
   Minter (Rust codegen)             ██████████ 100%    Backend exists                D
 
 ──────────────────────────────────────────────────────────────────────────────────────
-FRONTEND:         107 ReScript files │ 26,798 lines │ 0 errors │ CRG D (Alpha)
-BACKEND:           20 Rust files     │  5,342 lines │ 0 errors │ CRG D (Alpha)
-TOTAL:            127 source files   │ 32,140 lines │ 14 panels + 4 infra layers
+FRONTEND:         230 ReScript files │ 26,000+ lines │ 0 errors │ CRG D (Alpha)
+BACKEND:           63 Rust files     │  5,300+ lines │ 0 errors │ CRG D (Alpha)
+TOTAL:            293 source files   │ 31,300+ lines │ 41 panel entries │ 39 clades
+TESTS:            237 passing        │ 0 warnings    │ 22 panels wired
+──────────────────────────────────────────────────────────────────────────────────────
+
+OVERALL PROGRESS
+  Frontend                          █████████░  98%    41 panels, 39 clades          D
+  Backend Connections                ████░░░░░░  40%    Minter+Watcher done, 5 TODO   D
+  Testing                           ██████░░░░  60%    237 tests passing             D
+  Documentation                     ██████░░░░  60%    TOPOLOGY, manifests, clades   D
 ──────────────────────────────────────────────────────────────────────────────────────
 ```
 
@@ -123,7 +158,19 @@ Farm ──────► Reposystem (repo inventory → compliance targets)
                         │
                         └──► Panel-N (confidence → reasoning display)
 
+TypeLL ────► 7 PANELS (cross-panel type verification + inference)
+  │
+  └────────► Panel-L (type constraints → formal spec validation)
+
+BoJ ───────► Panel-W (cartridge status → dashboard display)
+  │
+  └────────► Provisioner (cartridge isolation → tier selection)
+
+7-Tentacles ► ALL PANELS (agentic dispatch → task routing)
+
 Watcher ───► ALL PANELS (filesystem events → targeted refresh)
+
+Clade Browser ► ALL PANELS (clade inheritance → panel classification)
 
 Feedback-O-Tron ──► Vexometer (sentiment → friction index)
                         │

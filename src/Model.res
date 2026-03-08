@@ -416,6 +416,9 @@ type model = {
   // TypeLL — Verification kernel (cross-panel type intelligence)
   typell: typellState,
 
+  // Panel Bus — pub/sub subscriber registry and event history
+  busRegistry: PanelBus.subscriberRegistry,
+
   // ENSAID_CONFIG — cross-panel config generation state
   ensaidConfigPreview: option<string>,
   ensaidConfigError: option<string>,
@@ -693,6 +696,7 @@ let init = (): model => {
   protocolSquisher: ProtocolSquisherEngine.defaultState,
   myLang: MyLangEngine.defaultState,
   typell: TypeLLEngine.defaultState,
+  busRegistry: PanelBus.defaultRegistry,
   ensaidConfigPreview: None,
   ensaidConfigError: None,
   undoStack: [],

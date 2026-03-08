@@ -83,6 +83,36 @@ let statCard = (value: string, label: string, colour: string): Tea_Vdom.t<msg> =
   )
 }
 
+/// Render a protocol badge.
+let protocolBadge = (proto: cladeProtocol): Tea_Vdom.t<msg> => {
+  span(
+    list{Attrs.class_("inline-block px-1.5 py-0.5 text-xs rounded border border-sky-500/30 bg-sky-500/10 text-sky-400")},
+    list{text(protocolLabel(proto))},
+  )
+}
+
+/// Render a capability badge.
+let capBadge = (cap: cladeCapability): Tea_Vdom.t<msg> => {
+  span(
+    list{Attrs.class_("inline-block px-1.5 py-0.5 text-xs rounded border border-amber-500/30 bg-amber-500/10 text-amber-400")},
+    list{text(capabilityLabel(cap))},
+  )
+}
+
+/// Render an isolation level badge with colour coding.
+let isolationBadgeView = (iso: cladeIsolation): Tea_Vdom.t<msg> => {
+  let (cls, label) = switch iso {
+  | IsolationNone => ("border-red-500/30 bg-red-500/10 text-red-400", "None")
+  | IsolationSoft => ("border-yellow-500/30 bg-yellow-500/10 text-yellow-400", "Soft")
+  | IsolationProcess => ("border-blue-500/30 bg-blue-500/10 text-blue-400", "Process")
+  | IsolationContainer => ("border-emerald-500/30 bg-emerald-500/10 text-emerald-400", "Container")
+  }
+  span(
+    list{Attrs.class_(`inline-block px-1.5 py-0.5 text-xs rounded border ${cls}`)},
+    list{text(label)},
+  )
+}
+
 /// Render a single clade card.
 let cladeCard = (entry: cladeEntry, isSelected: bool): Tea_Vdom.t<msg> => {
   let borderCls = isSelected ? "border-cyan-500 bg-gray-800/80" : "border-gray-700 bg-gray-800/40"
@@ -92,7 +122,7 @@ let cladeCard = (entry: cladeEntry, isSelected: bool): Tea_Vdom.t<msg> => {
       Events.onClick(CladeBrowser(SelectClade(Some(entry.id)))),
     },
     list{
-      // Header row: name + kind badge + version
+      // Header row: name + kind badge + version + isolation
       div(
         list{Attrs.class_("flex justify-between items-center mb-1")},
         list{
@@ -101,6 +131,7 @@ let cladeCard = (entry: cladeEntry, isSelected: bool): Tea_Vdom.t<msg> => {
             list{
               strong(list{Attrs.class_("text-sm text-gray-100")}, list{text(entry.name)}),
               kindBadge(entry.kind),
+              isolationBadgeView(entry.isolation),
               span(list{Attrs.class_("text-xs text-gray-600")}, list{text("v" ++ entry.version)}),
             },
           ),
@@ -111,6 +142,42 @@ let cladeCard = (entry: cladeEntry, isSelected: bool): Tea_Vdom.t<msg> => {
       p(list{Attrs.class_("text-xs text-gray-300 my-1")}, list{text(entry.summary)}),
       // Traits
       traitBadges(entry.traits),
+      // Protocols (Tier 1.1)
+      if entry.protocols->Array.length > 0 {
+        div(
+          list{Attrs.class_("flex flex-wrap gap-1 mt-1")},
+          entry.protocols->Array.map(protocolBadge)->List.fromArray,
+        )
+      } else {
+        noNode
+      },
+      // Capabilities (Tier 1.2)
+      if entry.capabilities->Array.length > 0 {
+        div(
+          list{Attrs.class_("flex flex-wrap gap-1 mt-1")},
+          entry.capabilities->Array.map(capBadge)->List.fromArray,
+        )
+      } else {
+        noNode
+      },
+      // Dependencies (Tier 1.3)
+      if entry.requires->Array.length > 0 {
+        div(
+          list{Attrs.class_("mt-1 text-xs text-red-400")},
+          list{text("requires: " ++ entry.requires->Array.map(d => d.cladeId)->Array.join(", "))},
+        )
+      } else {
+        noNode
+      },
+      // Enhances (Tier 1.3)
+      if entry.enhances->Array.length > 0 {
+        div(
+          list{Attrs.class_("mt-1 text-xs text-indigo-400")},
+          list{text("enhances: " ++ entry.enhances->Array.join(", "))},
+        )
+      } else {
+        noNode
+      },
       // Panel IDs
       if entry.panelIds->Array.length > 0 {
         div(
@@ -132,14 +199,23 @@ let viewOverview = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
   div(
     list{},
     list{
-      // Stats grid
+      // Stats grid (row 1: counts, row 2: Tier 1 metrics)
       div(
-        list{Attrs.class_("grid grid-cols-4 gap-3 mb-5")},
+        list{Attrs.class_("grid grid-cols-4 gap-3 mb-3")},
         list{
           statCard(Int.toString(total), "Total Clades", "text-cyan-400"),
           statCard(Int.toString(countWithTrait(state.clades, t => t.hasBackend)), "With Backend", "text-green-400"),
           statCard(Int.toString(countWithTrait(state.clades, t => t.hasRealTime)), "Real-Time", "text-amber-400"),
           statCard(Int.toString(countWithTrait(state.clades, t => t.isAmbient)), "Ambient", "text-violet-400"),
+        },
+      ),
+      div(
+        list{Attrs.class_("grid grid-cols-4 gap-3 mb-5")},
+        list{
+          statCard(Int.toString(countWithProtocols(state.clades)), "With Protocols", "text-sky-400"),
+          statCard(Int.toString(countWithCapabilities(state.clades)), "With Capabilities", "text-amber-400"),
+          statCard(Int.toString(countByIsolation(state.clades, IsolationProcess) + countByIsolation(state.clades, IsolationContainer)), "Process/Container", "text-blue-400"),
+          statCard(Int.toString(countWithParent(state.clades)), "With Inheritance", "text-indigo-400"),
         },
       ),
       // Kind distribution
@@ -229,6 +305,9 @@ let viewTraits = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
               th(list{Attrs.class_("text-left p-2 text-gray-400")}, list{text("Work Items")}),
               th(list{Attrs.class_("text-left p-2 text-gray-400")}, list{text("Real-Time")}),
               th(list{Attrs.class_("text-left p-2 text-gray-400")}, list{text("Ambient")}),
+              th(list{Attrs.class_("text-left p-2 text-gray-400")}, list{text("Isolation")}),
+              th(list{Attrs.class_("text-left p-2 text-gray-400")}, list{text("Protocols")}),
+              th(list{Attrs.class_("text-left p-2 text-gray-400")}, list{text("Capabilities")}),
             },
           ),
         },
@@ -246,6 +325,15 @@ let viewTraits = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
               td(list{Attrs.class_("p-2")}, list{check(entry.traits.hasWorkItems)}),
               td(list{Attrs.class_("p-2")}, list{check(entry.traits.hasRealTime)}),
               td(list{Attrs.class_("p-2")}, list{check(entry.traits.isAmbient)}),
+              td(list{Attrs.class_("p-2")}, list{isolationBadgeView(entry.isolation)}),
+              td(
+                list{Attrs.class_("p-2")},
+                list{span(list{Attrs.class_("text-sky-400")}, list{text(Int.toString(entry.protocols->Array.length))})},
+              ),
+              td(
+                list{Attrs.class_("p-2")},
+                list{span(list{Attrs.class_("text-amber-400")}, list{text(Int.toString(entry.capabilities->Array.length))})},
+              ),
             },
           )
         )->List.fromArray,

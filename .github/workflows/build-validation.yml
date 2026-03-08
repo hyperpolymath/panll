@@ -51,3 +51,6 @@ jobs:
       - name: Rust cargo check gate
         run: cargo check --manifest-path src-tauri/Cargo.toml
 
+      - name: Rust test gate
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+

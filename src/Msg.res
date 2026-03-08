@@ -1197,6 +1197,14 @@ type coprocessorsMsg =
   | ToggleAutoRefresh
   /// Dismiss the error banner.
   | DismissCoprocError
+  /// Query an external compute engine (Axiom.jl, BoJ cartridge).
+  | QueryComputeEngine(string, string)
+  /// Compute engine query result.
+  | ComputeEngineResult(result<string, string>)
+  /// Discover available compute devices.
+  | DiscoverDevices
+  /// Device discovery result.
+  | DevicesDiscovered(result<string, string>)
 
 /// Multiplayer Monitor messages — WebSocket lifecycle, player state,
 /// channel subscriptions, state diffs, device locks, latency, and
@@ -1531,6 +1539,19 @@ type cladeBrowserMsg =
   | LoadClades
   /// Clades loaded successfully.
   | CladesLoaded(array<cladeEntry>)
+  /// Set the permission level for a target clade.
+  | SetCladePermission(string, cladePermission)
+  /// Remove a permission rule (revert to PermitAll).
+  | RemoveCladePermission(string)
+
+/// Messages for the Panel Bus — subscriber management.
+type panelBusMsg =
+  /// Subscribe a clade to specific topics.
+  | BusSubscribe(string, array<PanelBus.eventTopic>)
+  /// Unsubscribe a clade from the bus.
+  | BusUnsubscribe(string)
+  /// Clear the event history ring buffer.
+  | BusClearHistory
 
 /// Messages for the 7-Tentacles compiler agent panel.
 type tentaclesMsg =
@@ -1740,6 +1761,7 @@ type msg =
   | MyLang(myLangMsg) // AI-native language workbench
   | TypeLL(typellMsg) // Verification kernel (cross-panel type intelligence)
   | EnsaidConfig(ensaidConfigMsg) // Cross-panel ENSAID_CONFIG generation and I/O
+  | Bus(panelBusMsg) // Panel Bus subscriber management
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

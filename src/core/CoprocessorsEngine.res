@@ -95,6 +95,113 @@ let allBackends: array<coprocessorBackend> = [
 let filterByBackend = (log: array<coprocCallEntry>, backend: coprocessorBackend): array<coprocCallEntry> =>
   log->Array.filter(entry => entry.backend === backend)
 
+/// Human-readable label for a compute engine.
+let engineLabel = (engine: computeEngine): string =>
+  switch engine {
+  | EngineAxiom => "Axiom.jl"
+  | EngineBoJ => "BoJ Cartridge"
+  | EngineLocal => "Local CPU/WASM"
+  }
+
+/// Parse a compute engine query result from JSON.
+let parseComputeResult = (json: string, engine: computeEngine): result<computeQueryResult, string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let getString = (key: string): string =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | String(s) => s
+            | _ => ""
+            }
+          | None => ""
+          }
+        let getFloat = (key: string): float =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Number(n) => n
+            | _ => 0.0
+            }
+          | None => 0.0
+          }
+        let getBool = (key: string): bool =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Bool(b) => b
+            | _ => false
+            }
+          | None => false
+          }
+        Ok({
+          engineId: engine,
+          operation: getString("operation"),
+          result: getString("result"),
+          durationMs: getFloat("duration_ms"),
+          success: getBool("success"),
+        })
+      }
+    | _ => Error("Expected JSON object for compute result")
+    }
+  } catch {
+  | _ => Error("Failed to parse compute result JSON")
+  }
+}
+
+/// Parse discovered devices from JSON array.
+let parseDevices = (json: string): array<computeDevice> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Array(items) =>
+      items->Array.filterMap(item => {
+        switch JSON.Classify.classify(item) {
+        | Object(obj) => {
+            let getString = (key: string): string =>
+              switch Dict.get(obj, key) {
+              | Some(v) =>
+                switch JSON.Classify.classify(v) {
+                | String(s) => s
+                | _ => ""
+                }
+              | None => ""
+              }
+            let getBool = (key: string): bool =>
+              switch Dict.get(obj, key) {
+              | Some(v) =>
+                switch JSON.Classify.classify(v) {
+                | Bool(b) => b
+                | _ => false
+                }
+              | None => false
+              }
+            let engineStr = getString("engine")
+            let engineId = switch engineStr {
+            | "axiom" => EngineAxiom
+            | "boj" => EngineBoJ
+            | _ => EngineLocal
+            }
+            Some({
+              engineId,
+              deviceName: getString("device_name"),
+              deviceType: getString("device_type"),
+              available: getBool("available"),
+              capabilities: [],
+            })
+          }
+        | _ => None
+        }
+      })
+    | _ => []
+    }
+  } catch {
+  | _ => []
+  }
+}
+
 /// Default state for the Coprocessors panel.
 let defaultState: coprocessorsState = {
   activeCategory: CoprocDashboard,
@@ -108,4 +215,6 @@ let defaultState: coprocessorsState = {
   refreshIntervalMs: 2000,
   loading: false,
   error: None,
+  discoveredDevices: [],
+  lastComputeResult: None,
 }

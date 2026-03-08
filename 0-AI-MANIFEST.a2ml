@@ -16,13 +16,14 @@
     (author "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"))
 
   (purpose
-    "Three-pane neurosymbolic workbench built on the Binary Star co-orbit
-     model. Pane-L (Symbolic) holds formal constraints and the proof editor.
-     Pane-N (Neural) streams inference tokens with the ECHIDNA theorem prover
-     advisor. Pane-W (World) hosts the task barycentre, VeriSimDB database
+    "Three-panel neurosymbolic workbench built on the Binary Star co-orbit
+     model. Panel-L (Symbolic) holds formal constraints and the proof editor.
+     Panel-N (Neural) streams inference tokens with the ECHIDNA theorem prover
+     advisor. Panel-W (World) hosts the task barycentre, VeriSimDB database
      tools, and panic-attacker security analysis. The environment enforces
      cognitive governance through Anti-Crash validation, Vexometer operator
-     friction tracking, Orbital synchronisation, and elastic Contractiles.")
+     friction tracking, Orbital synchronisation, and elastic Contractiles.
+     TypeLL provides cross-panel type intelligence as a shared service.")
 
   ;; ===================================================================
   ;; CANONICAL LOCATIONS — these are non-negotiable
@@ -41,9 +42,9 @@
     (neurosym        ".machine_readable/NEUROSYM.scm")
     (playbook        ".machine_readable/PLAYBOOK.scm")
 
-    ;; Source code — ReScript TEA architecture
+    ;; Source code — ReScript TEA architecture (230 ReScript + 63 Rust files)
     (model-root      "src/Model.res"               "Composition root — includes domain modules")
-    (model-panes     "src/model/PaneModel.res"      "Pane-L/N/W state types")
+    (model-panes     "src/model/PaneModel.res"      "Panel-L/N/W state types")
     (model-echidna   "src/model/EchidnaModel.res"   "ECHIDNA prover types")
     (model-verisim   "src/model/VeriSimModel.res"    "VeriSimDB database types")
     (model-governance "src/model/GovernanceModel.res" "AntiCrash, Vexometer, Orbital, Contractiles")
@@ -56,6 +57,25 @@
     (view-root       "src/View.res"                 "Root view renderer")
     (storage         "src/Storage.res"              "localStorage persistence")
 
+    ;; TypeLL — cross-panel type intelligence (CRITICAL service)
+    (typell-model    "src/model/TypeLLModel.res"     "TypeLL state types")
+    (typell-engine   "src/core/TypeLLEngine.res"     "TypeLL inference engine")
+    (typell-cmd      "src/commands/TypeLLCmd.res"     "TypeLL Tauri bridge commands")
+    (typell-service  "src/modules/TypeLLService.res"  "CRITICAL — cross-panel type intelligence service; any panel can call helpers")
+    (typell-view     "src/components/TypeLL.res"      "TypeLL panel view")
+
+    ;; ProtocolSquisher — protocol compression panel
+    (protsquish-model "src/model/ProtocolSquisherModel.res" "ProtocolSquisher state types")
+    (protsquish-engine "src/core/ProtocolSquisherEngine.res" "ProtocolSquisher engine")
+    (protsquish-cmd   "src/commands/ProtocolSquisherCmd.res" "ProtocolSquisher Tauri bridge commands")
+    (protsquish-view  "src/components/ProtocolSquisher.res"  "ProtocolSquisher panel view")
+
+    ;; MyLang — personal language panel
+    (mylang-model    "src/model/MyLangModel.res"     "MyLang state types")
+    (mylang-engine   "src/core/MyLangEngine.res"     "MyLang engine")
+    (mylang-cmd      "src/commands/MyLangCmd.res"     "MyLang Tauri bridge commands")
+    (mylang-view     "src/components/MyLang.res"      "MyLang panel view")
+
     ;; Infrastructure
     (tauri-backend   "src-tauri/src/main.rs"        "Rust/Tauri 2.0 backend commands")
     (tauri-config    "src-tauri/tauri.conf.json"    "Tauri configuration")
@@ -65,7 +85,7 @@
     ;; Build and test
     (rescript-config "rescript.json"                "ReScript compiler config")
     (deno-config     "deno.json"                    "Deno tasks and import map")
-    (tests           "tests/"                       "Deno.test suite (121 tests)")
+    (tests           "tests/"                       "Deno.test suite (237 tests)")
 
     ;; Design documentation
     (design-docs     "docs/design/"                 "Session design documents (dated)")
@@ -108,10 +128,12 @@
       (constraint "VabModel is a leaf module — VabCatalog and VabEngine use VabModel directly to avoid cycles"))
 
 
-    (panes
-      (pane-L "Symbolic Mass — formal constraints, proof editor, symbolic notation")
-      (pane-N "Neural Stream — inference tokens, ECHIDNA advisor, agency monitor")
-      (pane-W "World Barycentre — task canvas, security tools, VeriSimDB, event chain"))
+    (panels
+      (panel-L "Symbolic Mass — formal constraints, proof editor, symbolic notation")
+      (panel-N "Neural Stream — inference tokens, ECHIDNA advisor, agency monitor")
+      (panel-W "World Barycentre — task canvas, security tools, VeriSimDB, event chain")
+      (total-panels 41)
+      (total-clades 39))
 
     (cognitive-governance
       (anti-crash     "Circuit breaker — validates all neural tokens against symbolic constraints")
@@ -157,7 +179,11 @@
     (rule "Author: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>")
     (rule "No TypeScript — ReScript only")
     (rule "No npm/bun — Deno only")
-    (rule "WCAG 2.3 A minimum, AA target, AAA best-effort"))
+    (rule "WCAG 2.3 A minimum, AA target, AAA best-effort")
+
+    ;; TypeLL cross-cutting service
+    (rule "TypeLL is a cross-cutting service, not just a panel — any panel can call TypeLLService helpers")
+    (rule "All panels MUST degrade gracefully when TypeLL is unavailable"))
 
   ;; ===================================================================
   ;; RELATED PROJECTS
@@ -180,29 +206,32 @@
   (structure
     "panll/
      ├── 0-AI-MANIFEST.a2ml         # THIS FILE — universal entry point
-     ├── src/                        # ReScript source (TEA architecture)
+     ├── src/                        # ReScript source (230 files, TEA architecture)
      │   ├── Model.res               # Composition root (includes domain modules)
      │   ├── model/                  # Domain type modules
-     │   │   ├── PaneModel.res       #   Pane-L/N/W state types
+     │   │   ├── PaneModel.res       #   Panel-L/N/W state types
      │   │   ├── EchidnaModel.res    #   ECHIDNA theorem prover types
      │   │   ├── VeriSimModel.res    #   VeriSimDB database types
-     │   │   └── GovernanceModel.res #   Cognitive governance types
+     │   │   ├── GovernanceModel.res #   Cognitive governance types
+     │   │   ├── TypeLLModel.res     #   TypeLL type intelligence types
+     │   │   ├── ProtocolSquisherModel.res # ProtocolSquisher types
+     │   │   └── MyLangModel.res     #   MyLang types
      │   ├── Msg.res                 # TEA message variants
      │   ├── Update.res              # State transition kernel
      │   ├── View.res                # Root view renderer
      │   ├── App.res                 # Application entry point
      │   ├── Storage.res             # Persistence layer
      │   ├── tea/                    # Custom TEA runtime
-     │   ├── components/             # PaneL, PaneN, PaneW, Vexometer, FeedbackOTron
-     │   ├── core/                   # AntiCrash, OrbitalSync, Contractiles, EventChain
+     │   ├── components/             # 41 panels: PanelL, PanelN, PanelW, TypeLL, ProtocolSquisher, MyLang, ...
+     │   ├── core/                   # AntiCrash, OrbitalSync, Contractiles, EventChain, TypeLLEngine, ...
      │   ├── commands/               # Tauri bridge commands
      │   ├── bindings/               # FFI bindings (Tauri)
-     │   ├── modules/                # Module registry
+     │   ├── modules/                # Module registry + TypeLLService (cross-panel)
      │   └── subscriptions/          # Keyboard + polling subscriptions
-     ├── src-tauri/                  # Rust/Tauri 2.0 backend
+     ├── src-tauri/                  # Rust/Tauri 2.0 backend (63 Rust files)
      ├── beam/                       # Elixir/BEAM API layer
      ├── scripts/                    # Development tools (mock-echidna.ts)
-     ├── tests/                      # Deno.test suite (121 tests)
+     ├── tests/                      # Deno.test suite (237 tests)
      ├── docs/                       # Documentation and design docs
      │   └── design/                 # Session design documents (dated)
      ├── public/                     # Static assets
@@ -234,6 +263,6 @@
     (version "2.0.0")
     (media-type "application/a2ml")
     (created "2026-02-09")
-    (last-updated "2026-03-01")
+    (last-updated "2026-03-08")
     (maintained-by "Jonathan D.A. Jewell / hyperpolymath")
     (protocol "https://github.com/hyperpolymath/0-ai-gatekeeper-protocol")))
