@@ -2433,7 +2433,7 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
         settingId,
         overrideValue,
         reason,
-        addedOn: "now", // TODO: use Date.now() ISO 8601 format
+        addedOn: Date.make()->Date.toISOString,
       }
       // Remove any existing exception for the same domain+setting, then add new
       let filtered = cg.exceptions->Array.filter(e =>
@@ -4312,12 +4312,54 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
   | ArrangementsLoaded(_result) =>
     // TODO: parse JSON and merge with built-in arrangements
     (model, Tea_Cmd.none)
-  | CreateSession(_id, _name) =>
-    // TODO: create session with current context
-    (model, Tea_Cmd.none)
-  | ForkSession(_newId, _newName) =>
-    // TODO: fork from active session
-    (model, Tea_Cmd.none)
+  | CreateSession(id, name) => {
+    let now = Date.now()
+    let newSession: session = {
+      id,
+      name,
+      repoPath: None,
+      arrangementId: ws.activeArrangementId,
+      protection: ws.protection,
+      executionMode: ws.executionMode,
+      workspaceMode: ws.mode,
+      checkpoints: [],
+      created: now,
+      lastActive: now,
+      forkedFrom: None,
+    }
+    let sessions = Array.concat(ws.sessions, [newSession])
+    ({...model, workspace: {...ws, sessions, activeSessionId: Some(id)}}, Tea_Cmd.none)
+  }
+  | ForkSession(newId, newName) => {
+    let now = Date.now()
+    let parentSession = ws.sessions->Array.find(s => Some(s.id) === ws.activeSessionId)
+    let forked: session = switch parentSession {
+    | Some(parent) => {
+        ...parent,
+        id: newId,
+        name: newName,
+        created: now,
+        lastActive: now,
+        forkedFrom: Some(parent.id),
+        checkpoints: [],
+      }
+    | None => {
+        id: newId,
+        name: newName,
+        repoPath: None,
+        arrangementId: ws.activeArrangementId,
+        protection: ws.protection,
+        executionMode: ws.executionMode,
+        workspaceMode: ws.mode,
+        checkpoints: [],
+        created: now,
+        lastActive: now,
+        forkedFrom: ws.activeSessionId,
+      }
+    }
+    let sessions = Array.concat(ws.sessions, [forked])
+    ({...model, workspace: {...ws, sessions, activeSessionId: Some(newId)}}, Tea_Cmd.none)
+  }
   | DeleteSession(id) =>
     ({...model, workspace: {...ws, sessions: WorkspaceEngine.deleteSession(ws.sessions, id)}}, Tea_Cmd.none)
   | SwitchSession(id) =>
@@ -4325,9 +4367,18 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
   | SessionsLoaded(_result) =>
     // TODO: parse JSON and populate sessions
     (model, Tea_Cmd.none)
-  | AddCheckpoint(_id, _label) =>
-    // TODO: create checkpoint in active session
-    (model, Tea_Cmd.none)
+  | AddCheckpoint(id, label) => {
+    let now = Date.now()
+    let cp: checkpoint = {id, label, timestamp: now, automatic: false}
+    let sessions = ws.sessions->Array.map(s =>
+      if Some(s.id) === ws.activeSessionId {
+        {...s, checkpoints: Array.concat(s.checkpoints, [cp]), lastActive: now}
+      } else {
+        s
+      }
+    )
+    ({...model, workspace: {...ws, sessions}}, Tea_Cmd.none)
+  }
   | SystemInfoLoaded(result) => {
       switch result {
       | Ok(jsonStr) => {
@@ -4699,9 +4750,24 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
       {...model, panicAttack: {...pa, mode: "checking"}},
       PanicAttackCmd.checkCapability(result => PanicAttack(CapabilityLoaded(result))),
     )
-  | CapabilityLoaded(Ok(json)) =>
-    // TODO: Parse JSON to extract mode and version.
-    ({...model, panicAttack: {...pa, mode: "full", version: Some(json)}}, Tea_Cmd.none)
+  | CapabilityLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let mode = obj->Dict.get("mode")->Option.flatMap(JSON.Decode.string)->Option.getOr("unavailable")
+      let detail = obj->Dict.get("detail")->Option.flatMap(JSON.Decode.string)
+      let binary = obj->Dict.get("binary")->Option.flatMap(JSON.Decode.string)
+      Some((mode, detail, binary))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((mode, _detail, binary)) =>
+      ({...model, panicAttack: {...pa, mode, binaryPath: binary, version: binary}}, Tea_Cmd.none)
+    | None =>
+      ({...model, panicAttack: {...pa, mode: "full", version: Some(jsonStr)}}, Tea_Cmd.none)
+    }
+  }
   | CapabilityLoaded(Error(_err)) =>
     ({...model, panicAttack: {...pa, mode: "unavailable"}}, Tea_Cmd.none)
   | SetTargetPath(path) =>
@@ -4711,9 +4777,38 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
       {...model, panicAttack: {...pa, scanning: true, lastError: None}},
       PanicAttackCmd.assail(pa.targetPath, result => PanicAttack(AssailResult(result))),
     )
-  | AssailResult(Ok(_json)) =>
-    // TODO: Parse JSON into findings array and summary.
-    ({...model, panicAttack: {...pa, scanning: false}}, Tea_Cmd.none)
+  | AssailResult(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let summaryObj = obj->Dict.get("summary")->Option.flatMap(JSON.Decode.object)->Option.getOr(Dict.make())
+      let getInt = (d, key) => d->Dict.get(key)->Option.flatMap(JSON.Decode.float)->Option.map(Float.toInt)
+      let weakPts = getInt(summaryObj, "weak_points")->Option.getOr(0)
+      let critPts = getInt(summaryObj, "critical_weak_points")->Option.getOr(0)
+      let crashes = getInt(summaryObj, "total_crashes")->Option.getOr(0)
+      let robustness = summaryObj->Dict.get("robustness_score")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let filesScanned = getInt(summaryObj, "files_scanned")->Option.getOr(0)
+      let summary: scanSummary = {
+        totalFindings: weakPts,
+        critical: critPts,
+        high: 0,
+        medium: weakPts - critPts,
+        low: 0,
+        info: crashes,
+        filesScanned,
+        language: summaryObj->Dict.get("program")->Option.flatMap(JSON.Decode.string)->Option.getOr("unknown"),
+      }
+      Some(summary, robustness)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(summary, _robustness) =>
+      ({...model, panicAttack: {...pa, scanning: false, summary: Some(summary)}}, Tea_Cmd.none)
+    | None =>
+      ({...model, panicAttack: {...pa, scanning: false}}, Tea_Cmd.none)
+    }
+  }
   | AssailResult(Error(err)) =>
     ({...model, panicAttack: {...pa, scanning: false, lastError: Some(err)}}, Tea_Cmd.none)
   | RunAssault =>
@@ -4721,9 +4816,36 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
       {...model, panicAttack: {...pa, scanning: true, lastError: None}},
       PanicAttackCmd.assault(pa.targetPath, result => PanicAttack(AssaultResult(result))),
     )
-  | AssaultResult(Ok(_json)) =>
-    // TODO: Parse JSON into findings array and summary.
-    ({...model, panicAttack: {...pa, scanning: false}}, Tea_Cmd.none)
+  | AssaultResult(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let summaryObj = obj->Dict.get("summary")->Option.flatMap(JSON.Decode.object)->Option.getOr(Dict.make())
+      let getInt = (d, key) => d->Dict.get(key)->Option.flatMap(JSON.Decode.float)->Option.map(Float.toInt)
+      let weakPts = getInt(summaryObj, "weak_points")->Option.getOr(0)
+      let critPts = getInt(summaryObj, "critical_weak_points")->Option.getOr(0)
+      let crashes = getInt(summaryObj, "total_crashes")->Option.getOr(0)
+      let summary: scanSummary = {
+        totalFindings: weakPts,
+        critical: critPts,
+        high: 0,
+        medium: weakPts - critPts,
+        low: 0,
+        info: crashes,
+        filesScanned: 0,
+        language: summaryObj->Dict.get("program")->Option.flatMap(JSON.Decode.string)->Option.getOr("unknown"),
+      }
+      Some(summary)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(summary) =>
+      ({...model, panicAttack: {...pa, scanning: false, summary: Some(summary)}}, Tea_Cmd.none)
+    | None =>
+      ({...model, panicAttack: {...pa, scanning: false}}, Tea_Cmd.none)
+    }
+  }
   | AssaultResult(Error(err)) =>
     ({...model, panicAttack: {...pa, scanning: false, lastError: Some(err)}}, Tea_Cmd.none)
   | LoadReports =>

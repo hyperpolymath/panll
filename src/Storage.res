@@ -201,7 +201,6 @@ let save = (model: model): unit => {
     let state = extractPersistedState(model)
     let json = serialize(state)
     setItem(storageKey, json)
-    Console.log("State saved to localStorage")
   } catch {
   | exn => Console.error2("Failed to save state:", exn)
   }
@@ -396,7 +395,6 @@ let load = (): option<model> => {
           },
         }
 
-        Console.log("State loaded from localStorage")
         Some(loadedModel)
       }
     }
@@ -415,7 +413,6 @@ let removeItem: string => unit = %raw(`function(key) { localStorage.removeItem(k
 let clear = (): unit => {
   try {
     removeItem(storageKey)
-    Console.log("State cleared from localStorage")
   } catch {
   | exn => Console.error2("Failed to clear state:", exn)
   }
