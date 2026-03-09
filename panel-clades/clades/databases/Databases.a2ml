@@ -10,7 +10,7 @@ short-name = "DB"
 version = "1.0.0"
 kind = "database"
 icon = "database"
-description = "VeriSimDB, QuandleDB, LithoGlyph management — query, browse, hexad inspection."
+description = "VeriSimDB, QuandleDB, LithoGlyph management — query, browse, octad inspection."
 
 [clade-traits]
 has-backend = true
@@ -27,7 +27,7 @@ capabilities = [
   "VeriSimDBQueries",
   "QuandleDBQueries",
   "LithoGlyphQueries",
-  "HexadInspection",
+  "OctadInspection",
   "SchemaExploration",
 ]
 

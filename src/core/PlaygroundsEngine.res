@@ -47,7 +47,7 @@ let defaultSnippets: array<snippet> = [
   {
     id: "vql-hello",
     title: "VQL: Hello VeriSimDB",
-    code: "SELECT * FROM hexads LIMIT 10;",
+    code: "SELECT * FROM octads LIMIT 10;",
     language: LangVql,
     isTutorial: true,
   },

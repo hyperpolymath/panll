@@ -365,21 +365,21 @@ let queryVeriSimDB = (query: string, tagger: result<string, string> => 'msg): Te
   })
 }
 
-/// List hexad (octad) entities from VeriSimDB with pagination.
-/// Invokes `verisimdb_list_hexads` which hits GET /hexads?limit=N&offset=M.
-let listHexads = (
+/// List octad (octad) entities from VeriSimDB with pagination.
+/// Invokes `verisimdb_list_octads` which hits GET /octads?limit=N&offset=M.
+let listOctads = (
   limit: int,
   offset: int,
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_list_hexads", {"limit": limit, "offset": offset})
+    invoke("verisimdb_list_octads", {"limit": limit, "offset": offset})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
     })
     ->Promise.catch(_err => {
-      callbacks.enqueue(tagger(Error("Failed to list hexad entities")))
+      callbacks.enqueue(tagger(Error("Failed to list octad entities")))
       Promise.resolve()
     })
     ->ignore
@@ -423,8 +423,8 @@ let triggerNormalise = (
   })
 }
 
-/// Load full entity detail (all modality data) for a specific hexad.
-/// Invokes `verisimdb_get_entity` which hits GET /hexads/{id}.
+/// Load full entity detail (all modality data) for a specific octad.
+/// Invokes `verisimdb_get_entity` which hits GET /octads/{id}.
 let getEntityDetail = (
   entityId: string,
   tagger: result<string, string> => 'msg,

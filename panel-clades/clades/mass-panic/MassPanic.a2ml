@@ -15,7 +15,7 @@ description = "Organisation-scale batch scanning — assemblyline + BLAKE3 + ima
 [clade-traits]
 has-backend = true           # Invokes panic-attack assemblyline via Tauri
 has-scanning = true          # Core trait: batch scans entire repo directories
-has-persistence = true       # verisimdb hexad persistence + BLAKE3 cache
+has-persistence = true       # verisimdb octad persistence + BLAKE3 cache
 has-work-items = true        # Aggregate findings feed into TSDM
 has-priority-ordering = false
 has-customisation = true     # Incremental mode, notification, filter, sort
@@ -26,7 +26,7 @@ is-readonly = false
 capabilities = [
   "AssemblylineScanning",    # Parallel batch scanning across repos
   "IncrementalBlake3",       # BLAKE3 content fingerprinting for skip-unchanged
-  "VerisimDBPersistence",    # Store results as verisimdb hexads
+  "VerisimDBPersistence",    # Store results as verisimdb octads
   "DeltaReporting",          # Compare runs, show regressions/improvements
   "NotificationPipeline",    # Generate notifications for critical findings
   "RepoDiscovery",           # Auto-discover repos in a directory

@@ -1289,10 +1289,10 @@ fn verisimdb_query(query: String) -> Result<String, String> {
     }
 }
 
-/// GET /hexads — list hexad entities with pagination.
+/// GET /octads — list octad entities with pagination.
 #[tauri::command]
-fn verisimdb_list_hexads(limit: usize, offset: usize) -> Result<String, String> {
-    let url = format!("{}/hexads?limit={}&offset={}", verisimdb_url(), limit, offset);
+fn verisimdb_list_octads(limit: usize, offset: usize) -> Result<String, String> {
+    let url = format!("{}/octads?limit={}&offset={}", verisimdb_url(), limit, offset);
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
         .build()
@@ -1305,10 +1305,10 @@ fn verisimdb_list_hexads(limit: usize, offset: usize) -> Result<String, String> 
             if status.is_success() {
                 Ok(body)
             } else {
-                Err(format!("List hexads failed ({}): {}", status, body))
+                Err(format!("List octads failed ({}): {}", status, body))
             }
         }
-        Err(e) => Err(format!("List hexads request failed: {}", e)),
+        Err(e) => Err(format!("List octads request failed: {}", e)),
     }
 }
 
@@ -1400,7 +1400,7 @@ fn verisimdb_get_drift(entity_id: String) -> Result<String, String> {
 ///
 /// VeriSimDB normalisation re-aligns an entity's modality vectors after drift is detected.
 /// The normaliser recalculates consistency scores, re-validates proofs, and updates the
-/// entity's hexad representation. Returns the normalisation result as JSON.
+/// entity's octad representation. Returns the normalisation result as JSON.
 #[tauri::command]
 fn verisimdb_normalise(entity_id: String) -> Result<String, String> {
     let url = format!("{}/normalizer/trigger/{}", verisimdb_url(), entity_id);
@@ -1423,13 +1423,13 @@ fn verisimdb_normalise(entity_id: String) -> Result<String, String> {
     }
 }
 
-/// GET /hexads/{id} — retrieve full entity detail (all modality data) for a specific hexad.
+/// GET /octads/{id} — retrieve full entity detail (all modality data) for a specific octad.
 ///
-/// Returns the complete hexad representation including all six modality vectors,
+/// Returns the complete octad representation including all six modality vectors,
 /// consistency scores, proof attachments, and drift history for the given entity.
 #[tauri::command]
 fn verisimdb_get_entity(entity_id: String) -> Result<String, String> {
-    let url = format!("{}/hexads/{}", verisimdb_url(), entity_id);
+    let url = format!("{}/octads/{}", verisimdb_url(), entity_id);
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
         .build()
@@ -2007,7 +2007,7 @@ fn main() {
             run_panic_attack_ambush,
             verisimdb_health,
             verisimdb_query,
-            verisimdb_list_hexads,
+            verisimdb_list_octads,
             verisimdb_get_drift,
             verisimdb_normalise,
             verisimdb_get_entity,

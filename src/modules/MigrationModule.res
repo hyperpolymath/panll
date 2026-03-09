@@ -16,7 +16,7 @@
 ///   - feedback-o-tron MCP tools (begin/end observation, review queue)
 ///   - merge-resolver session logs (decision log JSON)
 ///   - Hypatia migration_rules.lgt (proof obligations, migration readiness)
-///   - VeriSimDB hexads (session persistence, cross-repo aggregation)
+///   - VeriSimDB octads (session persistence, cross-repo aggregation)
 
 /// Capabilities supported by the Migration Observatory.
 type migrationCapability =

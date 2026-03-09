@@ -5,7 +5,7 @@
 /// batch scanning panel.
 ///
 /// Mass-panic is a deployment mode of panic-attack: assemblyline batch scanning
-/// with rayon parallelism, incremental BLAKE3 fingerprinting, verisimdb hexad
+/// with rayon parallelism, incremental BLAKE3 fingerprinting, verisimdb octad
 /// persistence, delta reporting, and notification pipeline. This panel provides
 /// a GUI for operations that would otherwise require complex CLI orchestration.
 
@@ -57,7 +57,7 @@ let capabilityLabel = (cap: massPanicCapability): string =>
   switch cap {
   | AssemblylineScanning => "Assemblyline Scanning (rayon parallelism)"
   | IncrementalBlake3 => "Incremental BLAKE3 Fingerprinting"
-  | VerisimDBPersistence => "VerisimDB Hexad Persistence"
+  | VerisimDBPersistence => "VerisimDB Octad Persistence"
   | DeltaReporting => "Delta Reporting (diff between runs)"
   | NotificationPipeline => "Notification Pipeline (markdown + GitHub)"
   | RepoDiscovery => "Repository Discovery (.git detection)"

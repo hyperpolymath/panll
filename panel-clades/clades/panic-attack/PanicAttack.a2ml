@@ -15,7 +15,7 @@ description = "Stress testing and logic-based bug signature detection — 47 lan
 [clade-traits]
 has-backend = true           # Invokes panic-attack CLI via Tauri
 has-scanning = true          # Core trait: scans code for weak points
-has-persistence = true       # Saves reports as JSON, optional verisimdb hexads
+has-persistence = true       # Saves reports as JSON, optional verisimdb octads
 has-work-items = true        # Findings feed into TSDM work items
 has-priority-ordering = false
 has-customisation = true     # Configurable target, severity filter, category filter

@@ -44,7 +44,7 @@ capabilities = [
 
 [clade-connections]
 backend-type = "http"
-default-endpoint = "http://localhost:7700/api/v1"
+default-endpoint = "http://localhost:7700"
 protocols = ["MCP", "REST", "gRPC", "GraphQL"]
 
 [clade-architecture]

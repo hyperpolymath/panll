@@ -698,7 +698,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       let cmd = if db.bojRouting {
         BojCmd.invokeCartridgeWithLatency("database-mcp", "list_entities", "{\"limit\":50,\"offset\":0}", result => VeriSimDB(EntitiesLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
-        TauriCmd.listHexads(50, 0, result => VeriSimDB(EntitiesLoaded(result)))
+        TauriCmd.listOctads(50, 0, result => VeriSimDB(EntitiesLoaded(result)))
       }
       (model, cmd)
     }
