@@ -2742,12 +2742,17 @@ let updatePanelSwitcher = (model: model, msg: panelSwitcherMsg): (model, Tea_Cmd
       (
         {
           ...model,
-          panelSwitcher: {...ps, activePanel: None},
+          panelSwitcher: {...ps, activePanel: None, expandedGroup: None},
           vab: newVab,
           cloudguard: newCg,
         },
         Tea_Cmd.none,
       )
+    }
+  | ExpandGroup(kind) => {
+      // Toggle: collapse if already expanded, otherwise expand.
+      let newExpanded = ps.expandedGroup === Some(kind) ? None : Some(kind)
+      ({...model, panelSwitcher: {...ps, expandedGroup: newExpanded}}, Tea_Cmd.none)
     }
   | HealthCheckResult(panelId, result) => {
       // Update the connectionStatus of the panel that was checked.

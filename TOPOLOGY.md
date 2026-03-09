@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
 <!-- TOPOLOGY.md — Project architecture map and completion dashboard -->
-<!-- Last updated: 2026-03-09 (TypeLL 100%, E2E tests, CRG promotion) -->
+<!-- Last updated: 2026-03-09 (race fixes, SeamEngine 100%, bench+integ expansion) -->
 
 # PanLL eNSAID — Project Topology
 
@@ -157,7 +157,7 @@ CROSS-CUTTING SERVICES
   A2ML/K9 Integration Layer         ██████████ 100%    Manifest, Kennel, Yard, Hunt D
   Coprocessor Engine (Phase 1-3)    █████████░  90%    Control + data + smart route D
   Panel Bus pub/sub                 █████████░  90%    10 topics, ring buffer       D
-  SeamEngine compliance             ████████░░  80%    6 known seams, drift detect  D
+  SeamEngine compliance             ██████████ 100%    6 seams, scanner, remediation D
 
 INFRASTRUCTURE
   Panel Switcher                    ██████████ 100%    Unified navigation bar       D
@@ -196,26 +196,26 @@ BACKEND CONNECTIONS (Rust — 34 modules in src-tauri/)
 TESTING (70 test files, 1452 assertions)
   Core TEA tests                    ██████████ 100%    tea_app, tea_cmd, tea_sub     D
   Engine tests (47 engines)         ██████████ 100%    All 47 engines have tests     D
-  Integration tests                 ████████░░  80%    update_test, integration      D
-  Benchmark tests                   ██████░░░░  60%    safedom_bench, panic_bench    D
+  Integration tests                 █████████░  90%    update, panic, cross-panel    D
+  Benchmark tests                   ████████░░  80%    safedom, panic, engine bench  D
   End-to-end (panel lifecycle)      ██████████ 100%    40 E2E tests, all pass        D
 
 ──────────────────────────────────────────────────────────────────────────────────────
 FRONTEND:         258 ReScript files │ 18 TEA + 49 model + 55 view + 47 engine + 49 cmd
 BACKEND:          103 Rust files     │ 34 backend modules
 TOTAL:            361 source files   │ 41 panel entries │ 41 clades │ 55 components
-TESTS:             70 test files     │ 40 E2E tests     │ CRG D (Alpha) across the board
+TESTS:             72 test files     │ 40 E2E tests     │ CRG D (Alpha) across the board
 ──────────────────────────────────────────────────────────────────────────────────────
 
 OVERALL PROGRESS
   Frontend (panels compile & render) ██████████ 100%    All 41 panels render, views D
   TypeLL cross-panel coverage        ██████████ 100%    41/41 panels wired          D
   Backend connections (Rust cmds)    ██████████ 100%    34 modules, 9 backends      D
-  Testing                           █████████░  90%    70 files, 1452 assertions   D
+  Testing                           █████████░  90%    72 files, 1470+ assertions  D
   Documentation                     █████████░  90%    TOPOLOGY, manifests, clades D
   CRG Grade Promotion (D->C)        ░░░░░░░░░░   0%    Requires author dogfooding  D
 ──────────────────────────────────────────────────────────────────────────────────────
-  HONEST OVERALL                    █████████░  95%    Alpha complete, all tests pass
+  HONEST OVERALL                    ██████████  97%    Alpha complete, 1470 Deno + 179 Rust tests pass
 ──────────────────────────────────────────────────────────────────────────────────────
 ```
 

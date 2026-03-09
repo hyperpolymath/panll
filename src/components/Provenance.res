@@ -182,6 +182,7 @@ let renderPaletteSelector = (active: accessibilityPalette): Tea_Vdom.t<msg> => {
           ),
           Attrs.role("radio"),
           Attrs.ariaSelected(isActive),
+          Attrs.title(`Switch to ${label} colour palette`),
           Events.onClick(Provenance(SetPalette(palette))),
         },
         list{text(label)},

@@ -490,4 +490,5 @@ let init: panelSwitcherState = {
   activePanel: None,
   panelOrder: defaultOrder,
   panels: allPanels,
+  expandedGroup: None,
 }

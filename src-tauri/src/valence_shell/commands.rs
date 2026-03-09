@@ -416,11 +416,16 @@ mod tests {
     static TEST_LOCK: Lazy<tokio::sync::Mutex<()>> = Lazy::new(|| tokio::sync::Mutex::new(()));
 
     /// Ensure test directories exist (re-create if a parallel test removed them).
+    /// This function MUST only be called while holding TEST_LOCK to prevent
+    /// TOCTOU races between the remove and create steps.
     fn cleanup_test_dirs() {
-        let _ = fs::remove_dir_all(PathBuf::from(BASE_DIR).join("recordings"));
-        let _ = fs::remove_dir_all(PathBuf::from(BASE_DIR).join("checkpoints"));
-        let _ = fs::create_dir_all(PathBuf::from(BASE_DIR).join("recordings"));
-        let _ = fs::create_dir_all(PathBuf::from(BASE_DIR).join("checkpoints"));
+        let rec = PathBuf::from(BASE_DIR).join("recordings");
+        let ckp = PathBuf::from(BASE_DIR).join("checkpoints");
+        // Atomic-ish: remove then create without yielding the lock.
+        let _ = fs::remove_dir_all(&rec);
+        let _ = fs::remove_dir_all(&ckp);
+        let _ = fs::create_dir_all(&rec);
+        let _ = fs::create_dir_all(&ckp);
     }
 
     #[tokio::test]
@@ -472,7 +477,6 @@ mod tests {
             serde_json::from_str(content.lines().next().unwrap()).unwrap();
         assert_eq!(header["version"], 2);
         assert_eq!(header["title"], "test-recording");
-        cleanup_test_dirs();
     }
 
     #[tokio::test]
@@ -484,7 +488,6 @@ mod tests {
         assert!(result.is_ok());
         let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
         assert_eq!(json["status"], "stopped");
-        cleanup_test_dirs();
     }
 
     #[tokio::test]
@@ -516,7 +519,6 @@ mod tests {
         let json: Vec<serde_json::Value> = serde_json::from_str(&result.unwrap()).unwrap();
         assert_eq!(json.len(), 1);
         assert_eq!(json[0]["name"], "list-test");
-        cleanup_test_dirs();
     }
 
     #[tokio::test]
@@ -534,7 +536,6 @@ mod tests {
         let list = valence_shell_recordings_list().await.unwrap();
         let recs: Vec<serde_json::Value> = serde_json::from_str(&list).unwrap();
         assert!(recs.is_empty());
-        cleanup_test_dirs();
     }
 
     #[tokio::test]
@@ -559,7 +560,6 @@ mod tests {
         let cps: Vec<serde_json::Value> = serde_json::from_str(&list).unwrap();
         assert_eq!(cps.len(), 1);
         assert_eq!(cps[0]["label"], "before-refactor");
-        cleanup_test_dirs();
     }
 
     #[tokio::test]
@@ -577,7 +577,6 @@ mod tests {
         let restored: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
         assert_eq!(restored["status"], "restored");
         assert_eq!(restored["label"], "restore-test");
-        cleanup_test_dirs();
     }
 
     #[tokio::test]
@@ -623,6 +622,5 @@ mod tests {
         assert_eq!(export["id"], id);
         assert_eq!(export["format"], "svg");
         assert_eq!(export["status"], "export_pending");
-        cleanup_test_dirs();
     }
 }

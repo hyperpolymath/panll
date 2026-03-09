@@ -351,6 +351,8 @@ let renderTriggerButton = (): Tea_Vdom.t<msg> => {
       Attrs.class_(
         "fixed bottom-4 left-4 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-xs text-gray-400 transition-colors",
       ),
+      Attrs.title("Open the Feedback-O-Tron to report an issue or suggest an improvement"),
+      Attrs.ariaLabel("Report Issue"),
       Events.onClick(Feedback(OpenFeedback)),
     },
     list{text("Report Issue")},

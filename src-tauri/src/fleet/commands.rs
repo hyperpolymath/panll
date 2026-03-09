@@ -38,7 +38,23 @@ pub async fn fleet_get_bots() -> Result<String, String> {
 
     match client.get(&url).send().await {
         Ok(resp) if resp.status().is_success() => {
-            resp.text().await.map_err(|e| format!("Body read error: {e}"))
+            let body = resp.text().await.map_err(|e| format!("Body read error: {e}"))?;
+            // Validate the response is actually JSON (not a stray HTML page from
+            // another service on the same port).
+            if serde_json::from_str::<serde_json::Value>(&body).is_ok() {
+                Ok(body)
+            } else {
+                // Non-JSON 200 — likely a different server on this port.
+                let fallback = json!([
+                    { "id": "rhodibot",     "name": "Rhodibot",     "status": "offline", "role": "standards" },
+                    { "id": "echidnabot",   "name": "Echidnabot",   "status": "offline", "role": "verification" },
+                    { "id": "sustainabot",  "name": "Sustainabot",  "status": "offline", "role": "sustainability" },
+                    { "id": "glambot",      "name": "Glambot",      "status": "offline", "role": "presentation" },
+                    { "id": "seambot",      "name": "Seambot",      "status": "offline", "role": "integration" },
+                    { "id": "finishbot",    "name": "Finishbot",    "status": "offline", "role": "completion" },
+                ]);
+                Ok(fallback.to_string())
+            }
         }
         _ => {
             // Fleet server unreachable — return all bots as offline.
@@ -66,7 +82,13 @@ pub async fn fleet_get_findings() -> Result<String, String> {
 
     match client.get(&url).send().await {
         Ok(resp) if resp.status().is_success() => {
-            resp.text().await.map_err(|e| format!("Body read error: {e}"))
+            let body = resp.text().await.map_err(|e| format!("Body read error: {e}"))?;
+            // Validate the response is JSON, not HTML from a stray service.
+            if serde_json::from_str::<serde_json::Value>(&body).is_ok() {
+                Ok(body)
+            } else {
+                Ok("[]".to_string())
+            }
         }
         _ => Ok("[]".to_string()),
     }

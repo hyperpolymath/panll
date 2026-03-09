@@ -338,6 +338,8 @@ mod tests {
 
     #[test]
     fn test_multiplayer_read_diffs() {
+        let _guard = TEST_LOCK.lock().unwrap();
+        reset_state();
         rt().block_on(async {
             let result = multiplayer_read_diffs().await;
             assert!(result.is_ok());
@@ -351,6 +353,8 @@ mod tests {
 
     #[test]
     fn test_multiplayer_read_ets() {
+        let _guard = TEST_LOCK.lock().unwrap();
+        reset_state();
         rt().block_on(async {
             let result = multiplayer_read_ets().await;
             assert!(result.is_ok());

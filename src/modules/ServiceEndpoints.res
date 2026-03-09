@@ -17,7 +17,7 @@ let quandledb = "http://localhost:8081/api/v1"
 let lithoglyph = "http://localhost:8082/api/v1"
 
 /// BoJ (Bundle of Joy) cartridge gateway server.
-let bojServer = "http://localhost:7700/api/v1"
+let bojServer = "http://localhost:7700"
 
 /// ECHIDNA proof assistant / multi-solver dispatch.
 let echidna = "http://localhost:9000/api/v1"

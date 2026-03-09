@@ -215,7 +215,7 @@ description: |
   Each cartridge has declared capabilities and isolation tiers.
 
 gateway:
-  endpoint: "http://localhost:7700/boj/v1"
+  endpoint: "http://localhost:7700"
   cartridges: 17
   routing_toggle: "bojRouting (per-panel boolean)"
   policy: "Panels MUST degrade gracefully when cartridge unavailable"

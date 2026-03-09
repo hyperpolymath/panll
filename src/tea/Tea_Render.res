@@ -512,8 +512,8 @@ let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderS
       Array.forEach(newAttrs, attr => applyAttribute(el, attr, state, domNode))
     }
   | UpdateChildren(childPatches) => {
-      let el: {..} = Obj.magic(domNode)
-      let childNodes: array<domElement> = %raw(`Array.from(el.childNodes)`)
+      let childNodes: array<domElement> = %raw(`Array.from(domNode.childNodes)`)
+      let domObj: {..} = Obj.magic(domNode)
       Array.forEach(childPatches, cp => {
         switch Array.get(childNodes, cp.index) {
         | Some(childNode) => applyPatch(childNode, cp.patch, state)
@@ -521,7 +521,7 @@ let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderS
           switch cp.patch {
           | Replace(newChild) => {
               let newEl = createElement(newChild, state)
-              el["appendChild"](newEl)
+              domObj["appendChild"](newEl)
             }
           | _ => ()
           }
@@ -529,17 +529,17 @@ let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderS
       })
     }
   | UpdateAttrsAndChildren(newAttrs, childPatches) => {
-      let el: {..} = Obj.magic(domNode)
+      let domObj: {..} = Obj.magic(domNode)
       // Update attrs
       switch state.previousVdom {
       | Some(Element(_, oldAttrs, _)) | Some(KeyedElement(_, oldAttrs, _)) =>
-        removeStaleAttrs(el, oldAttrs, newAttrs)
+        removeStaleAttrs(domObj, oldAttrs, newAttrs)
       | _ => ()
       }
       removeElementListeners(state, domNode)
-      Array.forEach(newAttrs, attr => applyAttribute(el, attr, state, domNode))
+      Array.forEach(newAttrs, attr => applyAttribute(domObj, attr, state, domNode))
       // Update children
-      let childNodes: array<domElement> = %raw(`Array.from(el.childNodes)`)
+      let childNodes: array<domElement> = %raw(`Array.from(domNode.childNodes)`)
       Array.forEach(childPatches, cp => {
         switch Array.get(childNodes, cp.index) {
         | Some(childNode) => applyPatch(childNode, cp.patch, state)
@@ -547,7 +547,7 @@ let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderS
           switch cp.patch {
           | Replace(newChild) => {
               let newEl = createElement(newChild, state)
-              el["appendChild"](newEl)
+              domObj["appendChild"](newEl)
             }
           | _ => ()
           }

@@ -29,6 +29,30 @@
   <!-- TEA app mount point -->
   <div id="app"></div>
 
+  <!-- Tauri runtime shim: provides stub __TAURI_INTERNALS__ when running
+       in browser-only mode (dev server, headless testing). All invoke/listen
+       calls get clean Promise rejections instead of crashes. The real Tauri
+       runtime replaces this when running as a desktop app. -->
+  <script>
+    if (!window.__TAURI_INTERNALS__) {
+      window.__TAURI_INTERNALS__ = {
+        __BROWSER_SHIM__: true,
+        transformCallback: function(cb, once) {
+          // Stub: register callback but it will never fire (no backend).
+          var id = Math.random().toString(36).slice(2);
+          window['_' + id] = cb;
+          return id;
+        },
+        invoke: function(cmd) {
+          return Promise.reject(new Error(
+            'No Tauri runtime \u2014 "' + cmd + '" requires the desktop app'
+          ));
+        },
+        metadata: { currentWindow: { label: 'browser' }, currentWebview: { label: 'browser' } }
+      };
+    }
+  </script>
+
   <!-- Load the bundled ReScript application (built by scripts/bundle.ts) -->
   <script type="module" src="app.bundle.js"></script>
 

@@ -85,4 +85,7 @@ type panelSwitcherState = {
   /// Registry of panel metadata indexed by panel ID.
   /// Stored as array (not Map) for ReScript simplicity.
   panels: array<panelMeta>,
+  /// Currently expanded group in the sidebar (kind name, e.g. "ai", "bridge").
+  /// None means all groups are collapsed — only group headers visible.
+  expandedGroup: option<string>,
 }

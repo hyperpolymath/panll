@@ -3,19 +3,55 @@
 /// Tauri Command Integration for TEA
 ///
 /// Provides TEA commands for invoking Tauri backend functions.
+/// In browser-only mode (no Tauri runtime), all commands reject
+/// with a descriptive error instead of crashing.
 
-// External binding to Tauri's invoke function
+// External binding to Tauri's invoke function (raw, unsafe in browser-only)
 @module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+external invokeRaw: (string, 'a) => promise<'b> = "invoke"
+
+/// Detect whether the Tauri runtime is available.
+%%raw(`
+function isTauriRuntime() {
+  return typeof window !== 'undefined' && window.__TAURI_INTERNALS__ != null;
+}
+`)
+@val external isTauriRuntime: unit => bool = "isTauriRuntime"
+
+/// Safe invoke that rejects with "No Tauri runtime" in browser-only mode
+/// instead of crashing on missing __TAURI_INTERNALS__.
+let invoke = (cmd: string, args: 'a): promise<'b> => {
+  if isTauriRuntime() {
+    invokeRaw(cmd, args)
+  } else {
+    Promise.reject(JsError.throwWithMessage(`No Tauri runtime — "${cmd}" requires the desktop app`))
+  }
+}
 
 module Dialog = {
   @module("@tauri-apps/plugin-dialog")
-  external openDialog: JSON.t => promise<Nullable.t<JSON.t>> = "open"
+  external openDialogRaw: JSON.t => promise<Nullable.t<JSON.t>> = "open"
+
+  let openDialog = (opts: JSON.t): promise<Nullable.t<JSON.t>> => {
+    if isTauriRuntime() {
+      openDialogRaw(opts)
+    } else {
+      Promise.reject(JsError.throwWithMessage("No Tauri runtime — dialogs require the desktop app"))
+    }
+  }
 }
 
 module Fs = {
   @module("@tauri-apps/plugin-fs")
-  external readTextFile: string => promise<string> = "readTextFile"
+  external readTextFileRaw: string => promise<string> = "readTextFile"
+
+  let readTextFile = (path: string): promise<string> => {
+    if isTauriRuntime() {
+      readTextFileRaw(path)
+    } else {
+      Promise.reject(JsError.throwWithMessage("No Tauri runtime — filesystem access requires the desktop app"))
+    }
+  }
 }
 
 let decodeDialogPath = (value: JSON.t): option<string> => {

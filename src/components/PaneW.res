@@ -1353,6 +1353,8 @@ let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
               Attrs.class_(
                 "px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded text-sm text-gray-400 transition-colors",
               ),
+              Attrs.title("Toggle between topology graph and code output view"),
+              Attrs.ariaLabel("Switch to Code View"),
               Events.onClick(PaneW(ToggleTopologyView)),
             },
             list{text("Switch to Code View")},

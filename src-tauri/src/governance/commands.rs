@@ -12,7 +12,7 @@
 
 use serde_json::json;
 
-const DEFAULT_BOJ_URL: &str = "http://localhost:7700/api/v1";
+const DEFAULT_BOJ_URL: &str = "http://localhost:7700";
 
 fn boj_url() -> String {
     std::env::var("BOJ_URL").unwrap_or_else(|_| DEFAULT_BOJ_URL.to_string())

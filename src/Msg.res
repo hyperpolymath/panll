@@ -599,6 +599,9 @@ type panelSwitcherMsg =
   | TogglePanel(panelId)
   /// Close whatever panel is currently active (Escape key handler).
   | ClosePanels
+  /// Expand a group in the sidebar (by kind name, e.g. "ai", "bridge").
+  /// Clicking the same group again collapses it.
+  | ExpandGroup(string)
   /// Health check result for a panel's backend service.
   | HealthCheckResult(panelId, result<string, string>)
 

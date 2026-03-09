@@ -355,7 +355,7 @@ Deno.test("layerProgress returns 3/4 for three layers", () => {
 // ---------------------------------------------------------------------------
 
 Deno.test("defaultState has expected server URL", () => {
-  assertEquals(defaultState.serverUrl, "http://localhost:7700/api/v1");
+  assertEquals(defaultState.serverUrl, "http://localhost:7700");
 });
 
 Deno.test("defaultState starts disconnected", () => {
