@@ -1990,22 +1990,22 @@ let recomputeVabStatus = (vab: vabState): vabState => {
 /// Handles server composition: category browsing, component add/remove,
 /// server naming, filter/sort, and assembly management. After every
 /// assembly-modifying action, recomputes dependency warnings and capabilities.
-let updateVab = (model: model, msg: vabMsg): model => {
+let updateVab = (model: model, msg: vabMsg): (model, Tea_Cmd.t<msg>) => {
   let vab = model.vab
-  let newVab = switch msg {
-  | ToggleVab => {...vab, visible: !vab.visible}
-  | SelectCategory(cat) => {...vab, selectedCategory: cat}
+  switch msg {
+  | ToggleVab => ({...model, vab: {...vab, visible: !vab.visible}}, Tea_Cmd.none)
+  | SelectCategory(cat) => ({...model, vab: {...vab, selectedCategory: cat}}, Tea_Cmd.none)
   | AddComponent(id) => {
       // Only add if not already present
       let alreadyPresent = Array.some(vab.server.components, c => c === id)
       if alreadyPresent {
-        vab
+        (model, Tea_Cmd.none)
       } else {
         let server = {
           ...vab.server,
           components: Array.concat(vab.server.components, [id]),
         }
-        recomputeVabStatus({...vab, server})
+        ({...model, vab: recomputeVabStatus({...vab, server})}, Tea_Cmd.none)
       }
     }
   | RemoveComponent(id) => {
@@ -2013,18 +2013,25 @@ let updateVab = (model: model, msg: vabMsg): model => {
         ...vab.server,
         components: Array.filter(vab.server.components, c => c !== id),
       }
-      recomputeVabStatus({...vab, server})
+      ({...model, vab: recomputeVabStatus({...vab, server})}, Tea_Cmd.none)
     }
-  | RenameServer(name) => {...vab, server: {...vab.server, name}}
+  | RenameServer(name) => ({...model, vab: {...vab, server: {...vab.server, name}}}, Tea_Cmd.none)
   | ClearAssembly => {
       let server = {...vab.server, components: []}
-      recomputeVabStatus({...vab, server})
+      ({...model, vab: recomputeVabStatus({...vab, server})}, Tea_Cmd.none)
     }
-  | SetFilterText(text) => {...vab, filterText: text}
-  | SetSortBy(sort) => {...vab, sortBy: sort}
-  | HoverComponent(id) => {...vab, hoveredComponent: id}
+  | SetFilterText(text) => ({...model, vab: {...vab, filterText: text}}, Tea_Cmd.none)
+  | SetSortBy(sort) => ({...model, vab: {...vab, sortBy: sort}}, Tea_Cmd.none)
+  | HoverComponent(id) => ({...model, vab: {...vab, hoveredComponent: id}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "vab", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    (model, Tea_Cmd.none)
   }
-  {...model, vab: newVab}
 }
 
 // ===========================================================================
@@ -4000,6 +4007,14 @@ let updateProvenance = (model: model, msg: provenanceMsg): (model, Tea_Cmd.t<msg
       {...model, provenance: {...prov, enabled}},
       Tea_Cmd.none,
     )
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "provenance", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -10614,6 +10629,14 @@ let updateEnsaidConfig = (model: model, msg: ensaidConfigMsg): (model, Tea_Cmd.t
     )
   | ConfigRead(Error(err)) => ({...model, ensaidConfigError: Some(err)}, Tea_Cmd.none)
   | DismissConfigError => ({...model, ensaidConfigError: None}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "ensaid-config", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -10639,7 +10662,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | View(subMsg) => updateView(model, subMsg)
   | Feedback(subMsg) => updateFeedback(model, subMsg)
   | AntiCrash(subMsg) => updateAntiCrash(model, subMsg)
-  | Vab(subMsg) => (updateVab(model, subMsg), Tea_Cmd.none)
+  | Vab(subMsg) => updateVab(model, subMsg)
   | CloudGuard(subMsg) => updateCloudGuard(model, subMsg)
   | Farm(subMsg) => updateFarm(model, subMsg)
   | Plaza(subMsg) => updatePlaza(model, subMsg)
@@ -10843,6 +10866,14 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
         | Ok(_) => (model, Tea_Cmd.none)
         | Error(_) => (model, Tea_Cmd.none)
         }
+      | TypeCheckResult(Ok(json)) => {
+          let checks = model.typell.panelTypeChecks
+          Dict.set(checks, "observability", json)
+          let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+          ({...model, typell: newTypell}, Tea_Cmd.none)
+        }
+      | TypeCheckResult(Error(_)) =>
+        (model, Tea_Cmd.none)
       }
     }
   | A2ml(a2mlMsg) => {
@@ -10898,6 +10929,14 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
           ({...model, a2mlManifestPaths: paths}, Tea_Cmd.none)
         | Error(_) => (model, Tea_Cmd.none)
         }
+      | TypeCheckResult(Ok(json)) => {
+          let checks = model.typell.panelTypeChecks
+          Dict.set(checks, "a2ml", json)
+          let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+          ({...model, typell: newTypell}, Tea_Cmd.none)
+        }
+      | TypeCheckResult(Error(_)) =>
+        (model, Tea_Cmd.none)
       }
     }
   | K9(k9Msg) => {
@@ -10940,6 +10979,14 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
           ({...model, lastK9Layout: Some(layout)}, Tea_Cmd.none)
         | Error(_) => (model, Tea_Cmd.none)
         }
+      | TypeCheckResult(Ok(json)) => {
+          let checks = model.typell.panelTypeChecks
+          Dict.set(checks, "k9", json)
+          let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+          ({...model, typell: newTypell}, Tea_Cmd.none)
+        }
+      | TypeCheckResult(Error(_)) =>
+        (model, Tea_Cmd.none)
       }
     }
   | AuditSeams => {

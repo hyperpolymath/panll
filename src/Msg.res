@@ -200,6 +200,8 @@ type vabMsg =
   | SetFilterText(string)
   | SetSortBy(vabSortBy)
   | HoverComponent(option<string>)
+  /// TypeLL cross-panel type check result for assembly config types.
+  | TypeCheckResult(result<string, string>)
 
 /// CloudGuard Cloudflare domain security management messages — connection
 /// lifecycle, zone listing, settings read/write, DNS records, DNSSEC,
@@ -488,6 +490,8 @@ type provenanceMsg =
   | AcknowledgeRegion(string, int) // filePath, startLine
   /// Enable or disable the provenance overlay entirely.
   | SetEnabled(bool)
+  /// TypeLL cross-panel type check result for provenance types.
+  | TypeCheckResult(result<string, string>)
 
 /// Watcher messages — filesystem observation infrastructure.
 /// The watcher runs in a Rust background thread and emits events via the
@@ -1652,6 +1656,8 @@ type ensaidConfigMsg =
   | ConfigRead(result<string, string>)
   /// Dismiss error.
   | DismissConfigError
+  /// TypeLL cross-panel type check result for ENSAID config types.
+  | TypeCheckResult(result<string, string>)
 
 /// Clade Browser messages — exploring and customising panel clades.
 type cladeBrowserMsg =
@@ -1855,6 +1861,8 @@ type observabilityMsg =
   | FetchObservabilitySummary
   /// Observability summary result.
   | ObservabilitySummaryResult(result<string, string>)
+  /// TypeLL cross-panel type check result for observability types.
+  | TypeCheckResult(result<string, string>)
 
 /// A2ML manifest messages — loading, validation, and listing of AI manifests.
 type a2mlMsg =
@@ -1870,6 +1878,8 @@ type a2mlMsg =
   | ListManifests
   /// List result.
   | ManifestsListed(result<string, string>)
+  /// TypeLL cross-panel type check result for A2ML manifest types.
+  | TypeCheckResult(result<string, string>)
 
 /// K9 contractile messages — loading, validation, and layout application.
 type k9Msg =
@@ -1885,6 +1895,8 @@ type k9Msg =
   | ApplyLayout(string)
   /// Layout application result.
   | LayoutApplied(result<string, string>)
+  /// TypeLL cross-panel type check result for K9 contractile types.
+  | TypeCheckResult(result<string, string>)
 
 /// The unified message type
 type msg =
