@@ -39,6 +39,10 @@ static CONNECTION_STATE: Lazy<Mutex<ConnectionState>> = Lazy::new(|| {
     Mutex::new(ConnectionState::new())
 });
 
+/// Serialises tests that share `CONNECTION_STATE` so they cannot race.
+#[cfg(test)]
+static TEST_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
 /// Return the current Unix timestamp in seconds.
 fn now_secs() -> u64 {
     SystemTime::now()
@@ -276,6 +280,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_connect_success() {
+        let _guard = TEST_LOCK.lock().unwrap();
         reset_state();
         rt().block_on(async {
             let result = multiplayer_connect("ws://localhost:4000/socket".to_string()).await;
@@ -289,6 +294,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_connect_empty_url() {
+        let _guard = TEST_LOCK.lock().unwrap();
         reset_state();
         rt().block_on(async {
             let result = multiplayer_connect("".to_string()).await;
@@ -299,6 +305,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_disconnect() {
+        let _guard = TEST_LOCK.lock().unwrap();
         reset_state();
         rt().block_on(async {
             // Connect first, then disconnect.
@@ -314,6 +321,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_read_state() {
+        let _guard = TEST_LOCK.lock().unwrap();
         reset_state();
         rt().block_on(async {
             let result = multiplayer_read_state().await;
@@ -356,6 +364,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_reconnection_test_not_connected() {
+        let _guard = TEST_LOCK.lock().unwrap();
         reset_state();
         rt().block_on(async {
             let result = multiplayer_reconnection_test().await;
@@ -366,6 +375,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_reconnection_test_connected() {
+        let _guard = TEST_LOCK.lock().unwrap();
         reset_state();
         rt().block_on(async {
             let _ = multiplayer_connect("ws://localhost:4000/socket".to_string()).await;

@@ -421,6 +421,21 @@ type model = {
   // Panel Bus — pub/sub subscriber registry and event history
   busRegistry: PanelBus.subscriberRegistry,
 
+  // A2ML — last loaded/validated manifest state
+  lastA2mlManifest: option<A2mlEngine.a2mlManifest>,
+  lastA2mlValidation: option<A2mlEngine.a2mlValidationResult>,
+  a2mlManifestPaths: array<string>,
+
+  // K9 — last loaded/validated contractile state
+  lastK9Contractile: option<K9Engine.k9Contractile>,
+  lastK9Layout: option<K9Engine.k9Layout>,
+  k9KennelSchema: option<string>,
+  k9YardContract: option<string>,
+
+  // Compliance seams — exception register and audit state
+  seamRegister: SeamEngine.seamRegister,
+  lastSeamAudit: option<SeamEngine.seamAuditResult>,
+
   // ENSAID_CONFIG — cross-panel config generation state
   ensaidConfigPreview: option<string>,
   ensaidConfigError: option<string>,
@@ -701,6 +716,15 @@ let init = (): model => {
   myLang: MyLangEngine.defaultState,
   typell: TypeLLEngine.defaultState,
   busRegistry: PanelBus.defaultRegistry,
+  lastA2mlManifest: None,
+  lastA2mlValidation: None,
+  a2mlManifestPaths: [],
+  lastK9Contractile: None,
+  lastK9Layout: None,
+  k9KennelSchema: None,
+  k9YardContract: None,
+  seamRegister: SeamEngine.defaultRegister,
+  lastSeamAudit: None,
   ensaidConfigPreview: None,
   ensaidConfigError: None,
   undoStack: [],

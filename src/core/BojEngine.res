@@ -367,4 +367,5 @@ let defaultState: bojState = {
   filterText: "",
   lastTypeCheck: None,
   latencyLog: [],
+  umojaAddPeerInput: "",
 }

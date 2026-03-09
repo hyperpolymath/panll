@@ -300,6 +300,10 @@ pub async fn release_bump_version(bump_type: String) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use once_cell::sync::Lazy;
+
+    /// Serialise tests that share filesystem state to prevent race conditions.
+    static TEST_LOCK: Lazy<std::sync::Mutex<()>> = Lazy::new(|| std::sync::Mutex::new(()));
 
     /// Helper: create a tokio runtime for async command tests.
     fn rt() -> tokio::runtime::Runtime {
@@ -393,6 +397,7 @@ mod tests {
 
     #[test]
     fn test_release_publish_valid() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         rt().block_on(async {
             let result = release_publish("0.2.0-test".to_string(), "dev".to_string()).await;
             assert!(result.is_ok());
@@ -417,6 +422,7 @@ mod tests {
 
     #[test]
     fn test_release_read_history() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         rt().block_on(async {
             let result = release_read_history().await;
             assert!(result.is_ok());
@@ -429,6 +435,7 @@ mod tests {
 
     #[test]
     fn test_release_bump_version_patch() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_version_file();
         rt().block_on(async {
             let result = release_bump_version("patch".to_string()).await;
@@ -443,6 +450,7 @@ mod tests {
 
     #[test]
     fn test_release_bump_version_minor() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_version_file();
         rt().block_on(async {
             let result = release_bump_version("minor".to_string()).await;
@@ -455,6 +463,7 @@ mod tests {
 
     #[test]
     fn test_release_bump_version_major() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_version_file();
         rt().block_on(async {
             let result = release_bump_version("major".to_string()).await;

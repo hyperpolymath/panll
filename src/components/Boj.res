@@ -484,11 +484,87 @@ let renderTopology = (state: bojState): Tea_Vdom.t<msg> => {
 // Federation Tab
 // ============================================================================
 
+/// Format a relative time string from a Unix timestamp (seconds).
+let relativeTime = (timestamp: float): string => {
+  let now = Date.now() /. 1000.0
+  let diff = now -. timestamp
+  if diff < 0.0 {
+    "just now"
+  } else if diff < 60.0 {
+    `${Int.toString(Float.toInt(diff))}s ago`
+  } else if diff < 3600.0 {
+    `${Int.toString(Float.toInt(diff /. 60.0))}m ago`
+  } else if diff < 86400.0 {
+    `${Int.toString(Float.toInt(diff /. 3600.0))}h ago`
+  } else {
+    `${Int.toString(Float.toInt(diff /. 86400.0))}d ago`
+  }
+}
+
+/// Determine catalogue sync status by comparing a peer's digest against
+/// the local node's digest (first peer with Verified state, or local node).
+let catalogueSyncLabel = (state: bojState, peer: umojaPeer): (string, string) => {
+  // Compare against the first verified peer's digest as a proxy for local.
+  // If the local catalogue digest is not tracked separately, we compare
+  // against the most common digest among verified peers.
+  let localDigest = state.umoja.peers
+    ->Array.find(p => p.state === PeerVerified && p.nodeId !== peer.nodeId)
+    ->Option.map(p => p.catalogueDigest)
+    ->Option.getOr("")
+  if peer.catalogueDigest === "" {
+    ("unknown", "text-gray-600")
+  } else if localDigest === "" || peer.catalogueDigest === localDigest {
+    ("in sync", "text-green-400")
+  } else {
+    ("differs", "text-amber-400")
+  }
+}
+
+/// Render per-peer action buttons based on peer state.
+let renderPeerActions = (peer: umojaPeer): Tea_Vdom.t<msg> => {
+  let disconnectBtn = switch peer.state {
+  | PeerVerified | PeerExchanged =>
+    button(
+      list{
+        Attrs.class_("px-2 py-0.5 text-xs bg-red-900/40 text-red-300 rounded border border-red-800 hover:bg-red-800/50"),
+        Events.onClick(Boj(UmojaDisconnectPeer(peer.nodeId))),
+        Attrs.ariaLabel(`Disconnect peer ${peer.nodeId}`),
+      },
+      list{text("Disconnect")},
+    )
+  | PeerPending | PeerRejected | PeerStale => noNode
+  }
+  let syncBtn = switch peer.state {
+  | PeerVerified =>
+    button(
+      list{
+        Attrs.class_("px-2 py-0.5 text-xs bg-cyan-900/40 text-cyan-300 rounded border border-cyan-800 hover:bg-cyan-800/50"),
+        Events.onClick(Boj(UmojaSyncCatalogue(peer.nodeId))),
+        Attrs.ariaLabel(`Sync catalogue with peer ${peer.nodeId}`),
+      },
+      list{text("Sync Catalogue")},
+    )
+  | PeerPending | PeerExchanged | PeerRejected | PeerStale => noNode
+  }
+  let metricsBtn = button(
+    list{
+      Attrs.class_("px-2 py-0.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600"),
+      Events.onClick(Boj(UmojaPeerMetrics(peer.nodeId))),
+      Attrs.ariaLabel(`View metrics for peer ${peer.nodeId}`),
+    },
+    list{text("Metrics")},
+  )
+  div(
+    list{Attrs.class_("flex gap-1 ml-auto")},
+    list{syncBtn, disconnectBtn, metricsBtn},
+  )
+}
+
 let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("space-y-3")},
+    list{Attrs.class_("space-y-4")},
     list{
-      // Status
+      // Status bar
       div(
         list{Attrs.class_("flex items-center gap-3")},
         list{
@@ -512,25 +588,72 @@ let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-      // Peer list
+      // Add Peer section
+      div(
+        list{Attrs.class_("bg-gray-800/30 border border-gray-700 rounded p-3")},
+        list{
+          div(list{Attrs.class_("text-xs text-gray-400 mb-2")}, list{text("Add Peer")}),
+          div(
+            list{Attrs.class_("flex items-center gap-2")},
+            list{
+              input(
+                list{
+                  Attrs.class_("flex-1 px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700"),
+                  Attrs.placeholder("Peer address (e.g. 192.168.1.100:9876 or [::1]:9876)"),
+                  Attrs.value(state.umojaAddPeerInput),
+                  Events.onInput(v => Boj(UmojaAddPeerInput(v))),
+                },
+                list{},
+              ),
+              button(
+                list{
+                  Attrs.class_("px-3 py-1.5 text-xs bg-indigo-900/50 text-indigo-300 rounded border border-indigo-700 hover:bg-indigo-800/50"),
+                  Events.onClick(Boj(UmojaAddPeer(state.umojaAddPeerInput))),
+                  Attrs.disabled(state.umojaAddPeerInput === ""),
+                  Attrs.ariaLabel("Add peer to federation"),
+                },
+                list{text("Add")},
+              ),
+            },
+          ),
+        },
+      ),
+      // Peer list with management controls
       if Array.length(state.umoja.peers) > 0 {
         div(
           list{Attrs.class_("space-y-1")},
           state.umoja.peers
           ->Array.map(peer => {
+            let (syncStatus, syncColour) = catalogueSyncLabel(state, peer)
             div(
               list{Attrs.class_("flex items-center gap-3 bg-gray-800/30 border border-gray-700 rounded px-3 py-2")},
               list{
+                // Peer state badge
                 span(
-                  list{Attrs.class_(`text-xs ${peerStateColour(peer.state)}`)},
+                  list{Attrs.class_(`text-xs font-medium ${peerStateColour(peer.state)}`)},
                   list{text(peerStateLabel(peer.state))},
                 ),
+                // Node ID
                 span(list{Attrs.class_("text-xs text-gray-300")}, list{text(peer.nodeId)}),
+                // Address
                 span(list{Attrs.class_("text-xs text-gray-500")}, list{text(peer.address)}),
+                // Last seen (relative time)
                 span(
-                  list{Attrs.class_("text-xs text-gray-600 ml-auto font-mono truncate max-w-48")},
+                  list{Attrs.class_("text-xs text-gray-600")},
+                  list{text(peer.lastSeen > 0.0 ? relativeTime(peer.lastSeen) : "never")},
+                ),
+                // Catalogue sync status
+                span(
+                  list{Attrs.class_(`text-xs ${syncColour}`)},
+                  list{text(syncStatus)},
+                ),
+                // Catalogue digest (truncated)
+                span(
+                  list{Attrs.class_("text-xs text-gray-700 font-mono truncate max-w-32")},
                   list{text(peer.catalogueDigest)},
                 ),
+                // Per-peer action buttons
+                renderPeerActions(peer),
               },
             )
           })
@@ -539,16 +662,29 @@ let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
       } else {
         div(
           list{Attrs.class_("text-xs text-gray-500 italic")},
-          list{text("No peers discovered. Start the Umoja federation layer to begin gossip.")},
+          list{text("No peers discovered. Add a peer or start the Umoja federation layer to begin gossip.")},
         )
       },
-      // Refresh
-      button(
+      // Action buttons row
+      div(
+        list{Attrs.class_("flex gap-2")},
         list{
-          Attrs.class_("px-3 py-1.5 text-xs bg-indigo-900/50 text-indigo-300 rounded border border-indigo-700 hover:bg-indigo-800/50"),
-          Events.onClick(Boj(RefreshUmoja)),
+          button(
+            list{
+              Attrs.class_("px-3 py-1.5 text-xs bg-amber-900/50 text-amber-300 rounded border border-amber-700 hover:bg-amber-800/50"),
+              Events.onClick(Boj(UmojaTriggerGossip)),
+              Attrs.ariaLabel("Trigger manual gossip round"),
+            },
+            list{text("Trigger Gossip Round")},
+          ),
+          button(
+            list{
+              Attrs.class_("px-3 py-1.5 text-xs bg-indigo-900/50 text-indigo-300 rounded border border-indigo-700 hover:bg-indigo-800/50"),
+              Events.onClick(Boj(RefreshUmoja)),
+            },
+            list{text("Refresh Federation")},
+          ),
         },
-        list{text("Refresh Federation")},
       ),
     },
   )

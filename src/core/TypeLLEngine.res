@@ -377,4 +377,5 @@ let defaultState: typellState = {
   serviceActive: true,
   queriesServed: 0,
   bojRouting: false,
+  panelTypeChecks: Dict.make(),
 }

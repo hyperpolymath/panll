@@ -125,3 +125,53 @@ let applyRefinement = (
 ): Tea_Cmd.t<'msg> => {
   TypeLLCmd.refine(baseType, Some(constraints), tagger)
 }
+
+/// Check types for configuration data (CloudGuard, Provisioner, Workspace, etc.).
+let checkConfigTypes = (
+  configJson: string,
+  domain: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  let context = `{"language":"config","domain":"${domain}","features":["dependent","refinement"]}`
+  TypeLLCmd.check(configJson, Some(context), tagger)
+}
+
+/// Check types for security policy data (Trustfile, attack vectors, directives).
+let checkSecurityTypes = (
+  policyData: string,
+  domain: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  let context = `{"language":"policy","domain":"${domain}","features":["dependent","linear","proof-carrying"]}`
+  TypeLLCmd.check(policyData, Some(context), tagger)
+}
+
+/// Check types for game data (levels, topology, VM state, puzzles).
+let checkGameDataTypes = (
+  gameData: string,
+  domain: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  let context = `{"language":"game-data","domain":"${domain}","features":["dependent","session"]}`
+  TypeLLCmd.check(gameData, Some(context), tagger)
+}
+
+/// Check types for code or source expressions (playground, REPL, commands).
+let checkCodeTypes = (
+  source: string,
+  language: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  let context = `{"language":"${language}","features":["dependent","effect"]}`
+  TypeLLCmd.check(source, Some(context), tagger)
+}
+
+/// Check types for metadata (tags, clades, manifests, migration specs).
+let checkMetadataTypes = (
+  metadata: string,
+  domain: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  let context = `{"language":"metadata","domain":"${domain}","features":["dependent"]}`
+  TypeLLCmd.check(metadata, Some(context), tagger)
+}

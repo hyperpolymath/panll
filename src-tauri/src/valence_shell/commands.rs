@@ -409,6 +409,11 @@ pub async fn valence_shell_recording_export(id: String, format: String) -> Resul
 #[cfg(test)]
 mod tests {
     use super::*;
+    use once_cell::sync::Lazy;
+
+    /// Serialises filesystem tests so parallel `cleanup_test_dirs()` calls
+    /// cannot race with each other.
+    static TEST_LOCK: Lazy<tokio::sync::Mutex<()>> = Lazy::new(|| tokio::sync::Mutex::new(()));
 
     /// Ensure test directories exist (re-create if a parallel test removed them).
     fn cleanup_test_dirs() {
@@ -448,6 +453,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_record_start_creates_cast_file() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let result = valence_shell_record_start("test-recording".to_string()).await;
         assert!(result.is_ok());
@@ -471,6 +477,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_record_stop_appends_stop_event() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let _ = valence_shell_record_start("stop-test".to_string()).await;
         let result = valence_shell_record_stop().await;
@@ -482,6 +489,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_record_stop_no_recording_returns_error() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let result = valence_shell_record_stop().await;
         assert!(result.is_err());
@@ -490,6 +498,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_recordings_list_empty() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let result = valence_shell_recordings_list().await;
         assert!(result.is_ok());
@@ -499,6 +508,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_recordings_list_after_create() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let _ = valence_shell_record_start("list-test".to_string()).await;
         let result = valence_shell_recordings_list().await;
@@ -511,6 +521,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_recording_delete() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let start = valence_shell_record_start("delete-test".to_string()).await.unwrap();
         let json: serde_json::Value = serde_json::from_str(&start).unwrap();
@@ -528,6 +539,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_recording_delete_not_found() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let result = valence_shell_recording_delete("nonexistent".to_string()).await;
         assert!(result.is_err());
@@ -535,6 +547,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_checkpoint_create_and_list() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let result = valence_shell_checkpoint_create("before-refactor".to_string()).await;
         assert!(result.is_ok());
@@ -551,6 +564,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_checkpoint_restore() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let create = valence_shell_checkpoint_create("restore-test".to_string())
             .await
@@ -568,6 +582,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_checkpoint_restore_not_found() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let result = valence_shell_checkpoint_restore("nonexistent".to_string()).await;
         assert!(result.is_err());
@@ -585,6 +600,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_recording_export_not_found() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let result =
             valence_shell_recording_export("nonexistent".to_string(), "gif".to_string()).await;
@@ -593,6 +609,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_recording_export_success() {
+        let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
         let start = valence_shell_record_start("export-test".to_string())
             .await

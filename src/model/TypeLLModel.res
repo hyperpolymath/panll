@@ -232,4 +232,7 @@ type typellState = {
   queriesServed: int,
   /// When true, TypeLL operations route through BoJ nesy-mcp cartridge instead of direct HTTP.
   bojRouting: bool,
+  /// Cross-panel TypeLL results keyed by panel name. Panels without their own
+  /// lastTypeCheck field store results here via TypeCheckResult handlers.
+  panelTypeChecks: Dict.t<string>,
 }

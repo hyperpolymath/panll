@@ -257,6 +257,8 @@ type cloudguardMsg =
   | SetSettingFilter(string)
   | ToggleAuditPanel
   | ToggleDiffPanel
+  /// TypeLL cross-panel type check result for settings JSON types.
+  | TypeCheckResult(result<string, string>)
 
 /// Git-Private-Farm panel messages — repo inventory loading, filtering,
 /// and category navigation. The farm backend reads local JSON, no HTTP.
@@ -271,6 +273,8 @@ type farmMsg =
   | SetFarmFilter(string)
   /// Change the sort order.
   | SetFarmSort(farmSortBy)
+  /// TypeLL cross-panel type check result for repo manifest types.
+  | TypeCheckResult(result<string, string>)
 
 /// Palimpsest Plaza panel messages — PMPL licensing adoption, compliance
 /// scanning, and governance. The plaza backend scans local filesystem.
@@ -287,6 +291,8 @@ type plazaMsg =
   | SetPlazaCategory(plazaCategory)
   /// Update the text filter.
   | SetPlazaFilter(string)
+  /// TypeLL cross-panel type check result for compliance spec types.
+  | TypeCheckResult(result<string, string>)
 
 /// Hypatia neurosymbolic scanner messages — network status, scan results,
 /// learning cycle, quarantine, and category navigation.
@@ -301,6 +307,8 @@ type hypatiaMsg =
   | SetHypatiaCategory(hypatiaCategory)
   /// Update the scan results text filter.
   | SetHypatiaFilter(string)
+  /// TypeLL cross-panel type check result for scan config types.
+  | TypeCheckResult(result<string, string>)
 
 /// Gitbot-Fleet panel messages — bot status, findings queue, dispatch,
 /// and safety triangle navigation.
@@ -315,6 +323,8 @@ type fleetMsg =
   | SetFleetCategory(fleetCategory)
   /// Update the findings text filter.
   | SetFleetFilter(string)
+  /// TypeLL cross-panel type check result for bot dispatch types.
+  | TypeCheckResult(result<string, string>)
 
 /// Reposystem RSR compliance messages.
 type reposystemMsg =
@@ -322,6 +332,8 @@ type reposystemMsg =
   | ScanAllLoaded(result<string, string>)
   | SetRsrCategory(reposystemCategory)
   | SetRsrFilter(string)
+  /// TypeLL cross-panel type check result for RSR compliance types.
+  | TypeCheckResult(result<string, string>)
 
 /// Aerie network diagnostics messages.
 type aerieMsg =
@@ -331,12 +343,16 @@ type aerieMsg =
   | SetAerieCategory(aerieCategory)
   /// Toggle BoJ routing for overlay operations (observe-mcp cartridge).
   | ToggleAerieBojRouting
+  /// TypeLL cross-panel type check result for network config types.
+  | TypeCheckResult(result<string, string>)
 
 /// Interfaces ABI/FFI inventory messages.
 type interfacesMsg =
   | ScanInterfaces
   | InterfacesLoaded(result<string, string>)
   | SetIfaceCategory(interfacesCategory)
+  /// TypeLL cross-panel type check result for ABI/FFI binding types.
+  | TypeCheckResult(result<string, string>)
 
 /// Playgrounds code sandbox messages.
 type playgroundsMsg =
@@ -346,6 +362,8 @@ type playgroundsMsg =
   | Execute
   | ExecuteResult(result<string, string>)
   | LoadSnippet(string)
+  /// TypeLL cross-panel type check result for sandbox code types.
+  | TypeCheckResult(result<string, string>)
 
 /// Panel Minter messages — wizard state transitions for creating new panel
 /// modules with accessibility and proof hooks baked in by default.
@@ -380,6 +398,8 @@ type minterMsg =
   | ResetMinter
   /// Export current minter config to ENSAID_CONFIG.a2ml (adds panel entry).
   | ExportToEnsaidConfig
+  /// TypeLL cross-panel type check result for panel spec types.
+  | TypeCheckResult(result<string, string>)
 
 /// Provisioner messages — portfolio bundling, panel configuration,
 /// installation lifecycle, and isolation tier management.
@@ -410,6 +430,8 @@ type provisionerMsg =
   | SaveCustomPortfolio
   /// Export panel configs and portfolios to ENSAID_CONFIG.a2ml.
   | ExportProvisionerConfig
+  /// TypeLL cross-panel type check result for portfolio config types.
+  | TypeCheckResult(result<string, string>)
 
 /// Code MRI VoiceTag messages — tag CRUD, voice input lifecycle, file I/O,
 /// and filter controls. VoiceTag is an ambient annotation system (Layer 0)
@@ -445,6 +467,8 @@ type voiceTagMsg =
   | VoiceError(string)
   /// Set current file path (when user opens a file).
   | SetCurrentFile(string)
+  /// TypeLL cross-panel type check result for tag schema types.
+  | TypeCheckResult(result<string, string>)
 
 /// Provenance Map messages — code trust surface lifecycle.
 /// The provenance map is ambient (always visible), not a panel overlay.
@@ -528,6 +552,8 @@ type aiMsg =
   | SetSystemPrompt(string)
   /// Mark a provider as quota-exhausted (429 received).
   | MarkQuotaExhausted(aiProviderId)
+  /// TypeLL cross-panel type check result for prompt types.
+  | TypeCheckResult(result<string, string>)
 
 /// Repo Loader messages — repository scanning, panel configuration,
 /// directory picking, and recent repo management.
@@ -558,6 +584,8 @@ type repoLoaderMsg =
   | SetRepoSearchText(string)
   /// Switch category tab.
   | SetRepoCategory(repoLoaderCategory)
+  /// TypeLL cross-panel type check result for repo config types.
+  | TypeCheckResult(result<string, string>)
 
 /// Panel switcher messages — unified panel navigation replacing ad-hoc
 /// `visible: bool` toggles on individual overlays. The panel bar dispatches
@@ -633,6 +661,8 @@ type workspaceMsg =
   | ResetAllPanels
   /// Export workspace config (mode, protection, execution, arrangement) to ENSAID_CONFIG.a2ml.
   | ExportWorkspaceConfig
+  /// TypeLL cross-panel type check result for arrangement types.
+  | TypeCheckResult(result<string, string>)
 
 /// Capture messages — screenshots, recordings, demos, cloning (DD-022).
 type captureMsg =
@@ -688,6 +718,8 @@ type captureMsg =
   | SetCaptureCategory(captureCategory)
   /// Remove a capture entry.
   | RemoveCapture(string)
+  /// TypeLL cross-panel type check result for capture config types.
+  | TypeCheckResult(result<string, string>)
 
 /// Security messages — redaction, vault, 2FA, Trustfile (DD-026/027).
 type securityMsg =
@@ -729,6 +761,8 @@ type securityMsg =
   | ToggleShoulderSafe
   /// Set security category tab.
   | SetSecurityCategory(securityCategory)
+  /// TypeLL cross-panel type check result for trustfile types.
+  | TypeCheckResult(result<string, string>)
 
 /// Migration Observatory messages — migration health, sessions, submissions, merges.
 type migrationMsg =
@@ -768,6 +802,8 @@ type migrationMsg =
   | AcceptMerge(string)
   /// Refresh migration health data.
   | RefreshMigrationHealth
+  /// TypeLL cross-panel type check result for migration types.
+  | TypeCheckResult(result<string, string>)
 
 /// panic-attack panel messages — scanning, report management, filtering,
 /// comparison, and capability probing for the stress testing panel.
@@ -814,6 +850,8 @@ type panicAttackMsg =
   | ToggleDiffView
   /// Dismiss error.
   | DismissError
+  /// TypeLL cross-panel type check result for attack vector types.
+  | TypeCheckResult(result<string, string>)
 
 /// Mass-panic panel messages — assemblyline batch scanning, repo discovery,
 /// incremental BLAKE3, verisimdb persistence, delta reporting, notifications.
@@ -887,6 +925,8 @@ type massPanicMsg =
   | TakeSnapshot(string)
   /// Snapshot taken.
   | SnapshotTaken(result<string, string>)
+  /// TypeLL cross-panel type check result for batch config types.
+  | TypeCheckResult(result<string, string>)
 
 /// TSDM directive panel messages — axis reordering, tier customisation,
 /// cleanup configuration, work item aggregation, and directive persistence.
@@ -933,6 +973,8 @@ type tsdmMsg =
   | WorkItemsCollected(result<string, string>)
   /// Dismiss error.
   | DismissTsdmError
+  /// TypeLL cross-panel type check result for directive types.
+  | TypeCheckResult(result<string, string>)
 
 /// Valence Shell messages — terminal PTY lifecycle, input handling,
 /// session recording, checkpoint management, approval gate, and Claude
@@ -1006,6 +1048,8 @@ type valenceShellMsg =
   | ToggleSplitView
   /// Dismiss the error banner.
   | DismissError
+  /// TypeLL cross-panel type check result for command types.
+  | TypeCheckResult(result<string, string>)
 
 /// Game Preview messages — dev server lifecycle, game loop control,
 /// overlay management, gameplay recording, and render stats for the
@@ -1061,6 +1105,8 @@ type gamePreviewMsg =
   | DeviceInteractionEvent(deviceInteraction)
   /// Dismiss the error banner.
   | DismissGameError
+  /// TypeLL cross-panel type check result for game config types.
+  | TypeCheckResult(result<string, string>)
 
 /// VM Inspector messages — VM state reading, step execution, breakpoint
 /// management, timeline navigation, and state export for the reversible
@@ -1100,6 +1146,8 @@ type vmInspectorMsg =
   | DismissVmError
   /// Toggle BoJ routing for DAP operations (dap-mcp cartridge).
   | ToggleVmBojRouting
+  /// TypeLL cross-panel type check result for VM state types.
+  | TypeCheckResult(result<string, string>)
 
 /// Network Topology messages — topology reading, device selection,
 /// packet flow animation, DNS browsing, and display toggles for the
@@ -1133,6 +1181,8 @@ type networkTopologyMsg =
   | TopologySvgExported(result<string, string>)
   /// Dismiss the error banner.
   | DismissTopoError
+  /// TypeLL cross-panel type check result for topology types.
+  | TypeCheckResult(result<string, string>)
 
 /// Level Architect messages — grid editing, entity placement, patrol
 /// editing, defence flag toggling, asset browsing, validation, undo/redo,
@@ -1182,6 +1232,8 @@ type levelArchitectMsg =
   | TogglePatrolPaths
   /// Dismiss the error banner.
   | DismissArchitectError
+  /// TypeLL cross-panel type check result for level data types.
+  | TypeCheckResult(result<string, string>)
 
 /// Coprocessors messages — metrics refresh, call log, heatmap,
 /// backend toggling, and filter controls for the IDApTIK coprocessor
@@ -1221,6 +1273,26 @@ type coprocessorsMsg =
   | DevicesDiscovered(result<string, string>)
   /// Toggle BoJ routing for compute operations (agent-mcp cartridge).
   | ToggleCoprocBojRouting
+  /// Phase 2: Load the Zig FFI shared library for local GPU/CPU dispatch.
+  | LoadLocalFfi
+  /// Phase 2: FFI load result.
+  | LocalFfiLoaded(result<string, string>)
+  /// Phase 2: Dispatch a compute operation to local GPU/CPU via Zig FFI.
+  | DispatchLocal(string, string)
+  /// Phase 2: Local dispatch result.
+  | LocalDispatchResult(result<string, string>)
+  /// Phase 2: Query local system resources (CPU, GPU memory).
+  | QueryLocalResources
+  /// Phase 2: Local resources result.
+  | LocalResourcesResult(result<string, string>)
+  /// Phase 3: Set the routing strategy.
+  | SetRoutingStrategy(routingStrategy)
+  /// Phase 3: Smart route a compute operation (auto-selects local vs remote).
+  | SmartDispatch(string, string)
+  /// Phase 3: Smart routing result.
+  | SmartDispatchResult(result<string, string>)
+  /// TypeLL cross-panel type check result for compute types.
+  | TypeCheckResult(result<string, string>)
 
 /// Multiplayer Monitor messages — WebSocket lifecycle, player state,
 /// channel subscriptions, state diffs, device locks, latency, and
@@ -1258,6 +1330,8 @@ type multiplayerMonitorMsg =
   | ReconnectionTestResult(result<string, string>)
   /// Dismiss the error banner.
   | DismissMultiplayerError
+  /// TypeLL cross-panel type check result for Phoenix types.
+  | TypeCheckResult(result<string, string>)
 
 /// DLC Workshop messages — puzzle CRUD, composer, testing, asset browsing,
 /// packaging, import/export for the IDApTIK DLC puzzle pack panel.
@@ -1312,6 +1386,8 @@ type dlcWorkshopMsg =
   | SetDifficultyFilter(option<puzzleDifficulty>)
   /// Dismiss the error banner.
   | DismissWorkshopError
+  /// TypeLL cross-panel type check result for puzzle spec types.
+  | TypeCheckResult(result<string, string>)
 
 /// Editor Bridge messages — editor detection, LSP lifecycle, diagnostics,
 /// symbols, open files, jump-to-line, and settings for the external code
@@ -1363,6 +1439,8 @@ type editorBridgeMsg =
   | ToggleAutoSync
   /// Dismiss the error banner.
   | DismissBridgeError
+  /// TypeLL cross-panel type check result for LSP diagnostics types.
+  | TypeCheckResult(result<string, string>)
 
 /// Build Dashboard messages — build triggering, status reading, test
 /// running, error display, and history for the IDApTIK build monitoring panel.
@@ -1399,6 +1477,8 @@ type buildDashboardMsg =
   | DismissBuildError
   /// Toggle BoJ routing for BSP operations (bsp-mcp cartridge).
   | ToggleBuildBojRouting
+  /// TypeLL cross-panel type check result for build config types.
+  | TypeCheckResult(result<string, string>)
 
 /// Release Manager messages — version bumping, changelog generation,
 /// artifact building, signing, publishing, and channel management for
@@ -1438,6 +1518,8 @@ type releaseManagerMsg =
   | ReleasesLoaded(result<string, string>)
   /// Dismiss the error banner.
   | DismissReleaseError
+  /// TypeLL cross-panel type check result for release types.
+  | TypeCheckResult(result<string, string>)
 
 /// Automation Router messages — rule management, execution, approval gates,
 /// history, and configuration for the hybrid cross-panel workflow orchestrator.
@@ -1482,6 +1564,8 @@ type automationRouterMsg =
   | ExportAutomationConfig
   /// Toggle BoJ routing for automation operations (agent-mcp cartridge).
   | ToggleAutomationBojRouting
+  /// TypeLL cross-panel type check result for rule types.
+  | TypeCheckResult(result<string, string>)
 
 /// BoJ messages — Bundle of Joy cartridge server interaction.
 type bojMsg =
@@ -1511,6 +1595,28 @@ type bojMsg =
   | RefreshUmoja
   /// Umoja status result.
   | UmojaResult(result<string, string>)
+  /// Disconnect a peer from the Umoja federation.
+  | UmojaDisconnectPeer(string)
+  /// Sync catalogue with a specific peer.
+  | UmojaSyncCatalogue(string)
+  /// View metrics for a specific peer.
+  | UmojaPeerMetrics(string)
+  /// Update the add-peer input field.
+  | UmojaAddPeerInput(string)
+  /// Add a new peer to the Umoja federation.
+  | UmojaAddPeer(string)
+  /// Trigger a manual gossip round.
+  | UmojaTriggerGossip
+  /// Result of adding a peer.
+  | UmojaAddPeerResult(result<string, string>)
+  /// Result of disconnecting a peer.
+  | UmojaDisconnectPeerResult(result<string, string>)
+  /// Result of triggering gossip round.
+  | UmojaTriggerGossipResult(result<string, string>)
+  /// Result of catalogue sync.
+  | UmojaSyncCatalogueResult(result<string, string>)
+  /// Result of peer metrics query.
+  | UmojaPeerMetricsResult(result<string, string>)
   /// Set the cartridge for invocation.
   | SetInvokeCartridge(string)
   /// Set the tool name for invocation.
@@ -1565,6 +1671,8 @@ type cladeBrowserMsg =
   | SetCladePermission(string, cladePermission)
   /// Remove a permission rule (revert to PermitAll).
   | RemoveCladePermission(string)
+  /// TypeLL cross-panel type check result for clade spec types.
+  | TypeCheckResult(result<string, string>)
 
 /// Messages for the Panel Bus — subscriber management.
 type panelBusMsg =
@@ -1609,6 +1717,8 @@ type tentaclesMsg =
   | CheckFfiBridge
   /// FFI bridge health check result.
   | FfiBridgeResult(bool, option<string>)
+  /// TypeLL cross-panel type check result for agent task types.
+  | TypeCheckResult(result<string, string>)
 
 /// Keybindings messages — rebinding, recording, reset.
 type keybindingsMsg =
@@ -1730,6 +1840,52 @@ type typellMsg =
   /// Toggle BoJ routing for TypeLL operations (nesy-mcp cartridge).
   | ToggleTypellBojRouting
 
+/// Observability messages — SARIF export and OpenTelemetry trace collection
+/// via the observe-mcp BoJ cartridge.
+type observabilityMsg =
+  /// Export a panic-attack report as SARIF via observe-mcp.
+  | ExportSarifViaObserveMcp(string)
+  /// SARIF export result.
+  | SarifExportResult(result<string, string>)
+  /// Export BoJ latency entries as OpenTelemetry traces.
+  | ExportOtelTraces
+  /// OTEL trace export result.
+  | OtelExportResult(result<string, string>)
+  /// Fetch observability summary (active exporters, trace counts).
+  | FetchObservabilitySummary
+  /// Observability summary result.
+  | ObservabilitySummaryResult(result<string, string>)
+
+/// A2ML manifest messages — loading, validation, and listing of AI manifests.
+type a2mlMsg =
+  /// Load a specific A2ML manifest file.
+  | LoadManifest(string)
+  /// Manifest loaded result.
+  | ManifestLoaded(result<string, string>)
+  /// Validate a manifest file.
+  | ValidateManifest(string)
+  /// Validation result.
+  | ManifestValidated(result<string, string>)
+  /// List all A2ML manifests in the repo.
+  | ListManifests
+  /// List result.
+  | ManifestsListed(result<string, string>)
+
+/// K9 contractile messages — loading, validation, and layout application.
+type k9Msg =
+  /// Load a K9 contractile file.
+  | LoadContractile(string)
+  /// Contractile loaded result.
+  | ContractileLoaded(result<string, string>)
+  /// Validate a contractile file.
+  | ValidateContractile(string)
+  /// Validation result.
+  | ContractileValidated(result<string, string>)
+  /// Apply a K9 layout by name.
+  | ApplyLayout(string)
+  /// Layout application result.
+  | LayoutApplied(result<string, string>)
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -1789,6 +1945,14 @@ type msg =
   | EnsaidConfig(ensaidConfigMsg) // Cross-panel ENSAID_CONFIG generation and I/O
   | Bus(panelBusMsg) // Panel Bus subscriber management
   | RecordBojLatency(string, string, float) // cartridge, tool, elapsed ms
+  | GovernanceNesyResult(result<string, string>) // nesy-mcp governance query response
+  | GovernanceNesyValidateResult(result<string, string>) // nesy-mcp adjustment validation
+  | GovernanceNesyProbeResult(result<string, string>) // nesy-mcp stability probe
+  | Observability(observabilityMsg) // SARIF export and OpenTelemetry via observe-mcp
+  | A2ml(a2mlMsg) // AI manifest parsing and validation
+  | K9(k9Msg) // K9 contractile configuration and layout
+  | AuditSeams // Run compliance seam audit against exception register
+  | SeamAuditResult(SeamEngine.seamAuditResult) // Result of seam audit
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

@@ -8,6 +8,14 @@
   <!-- Compiled Tailwind CSS (built from src/styles/input.css via tailwind.config.js) -->
   <link rel="stylesheet" href="styles.css">
 
+  <!-- DOMPurify: DOM-parser-based XSS sanitisation (Layer 1 of SafeDOM defence-in-depth).
+       cure53/DOMPurify v3.3.2 — OWASP-recommended, handles mXSS, DOM clobbering, SVG/MathML.
+       If this fails to load, SafeDOM falls back to built-in regex sanitiser (Layer 2). -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.3.2/purify.min.js"
+          integrity="sha384-ZSs6LKr2GoUPDyHrN+rCQgyHL1yUyok5xMniSrgeRG7rUvA6vTmxronM1eZOfjgz"
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
+
   <style>
     /* App mount container — not part of Tailwind, needed before stylesheet loads */
     #app {

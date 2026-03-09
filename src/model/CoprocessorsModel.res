@@ -89,6 +89,47 @@ type computeQueryResult = {
   success: bool,
 }
 
+/// Routing strategy for compute dispatch.
+type routingStrategy =
+  /// Use local Zig FFI (fastest, no network).
+  | RouteLocal
+  /// Use remote Axiom.jl (most capable).
+  | RouteRemote
+  /// Use BoJ cartridge (unified API).
+  | RouteBoj
+  /// Smart routing — engine decides based on load, capabilities, availability.
+  | RouteAutomatic
+
+/// Local dispatch state for Phase 2.
+type localDispatchState = {
+  /// Whether the Zig FFI shared library (.so) is loaded.
+  ffiLoaded: bool,
+  /// Path to the Zig FFI .so file.
+  ffiPath: string,
+  /// Available local devices (GPU, CPU cores).
+  localDevices: array<computeDevice>,
+  /// Current CPU utilisation (0.0–1.0).
+  cpuUtilisation: float,
+  /// Available GPU memory in MB (0 if no GPU).
+  gpuMemoryMb: int,
+  /// Number of pending local dispatches.
+  pendingDispatches: int,
+}
+
+/// Routing decision record — tracks why a particular route was chosen.
+type routingDecision = {
+  /// The operation that was routed.
+  operation: string,
+  /// The route that was chosen.
+  chosenRoute: routingStrategy,
+  /// Human-readable reason for the choice.
+  reason: string,
+  /// Estimated latency for this route in milliseconds.
+  latencyEstimateMs: float,
+  /// Timestamp when the decision was made.
+  timestamp: float,
+}
+
 /// Root state for the Coprocessors panel.
 type coprocessorsState = {
   activeCategory: coprocessorsCategory,
@@ -108,4 +149,10 @@ type coprocessorsState = {
   lastComputeResult: option<computeQueryResult>,
   /// When true, compute operations route through BoJ agent-mcp cartridge instead of direct HTTP.
   bojRouting: bool,
+  /// Phase 2: Local dispatch state.
+  localDispatch: localDispatchState,
+  /// Phase 3: Active routing strategy.
+  routingStrategy: routingStrategy,
+  /// Phase 3: Recent routing decisions for audit trail.
+  routingHistory: array<routingDecision>,
 }

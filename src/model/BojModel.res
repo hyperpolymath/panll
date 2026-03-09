@@ -195,4 +195,6 @@ type bojState = {
   lastTypeCheck: option<string>,
   /// Recent invocation latency log (last 100 entries).
   latencyLog: array<bojLatencyEntry>,
+  /// Umoja add-peer input field value.
+  umojaAddPeerInput: string,
 }

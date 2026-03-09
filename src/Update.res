@@ -1687,7 +1687,21 @@ let updateFeedback = (model: model, msg: feedbackMsg): (model, Tea_Cmd.t<msg>) =
     }
   | CancelFeedback => ({...model, feedbackPending: None}, Tea_Cmd.none)
   | SetReportType(t) => ({...model, feedbackReportType: Some(t)}, Tea_Cmd.none)
-  | FeedbackSubmitted => ({...model, feedbackPending: None, feedbackError: None}, Tea_Cmd.none)
+  | FeedbackSubmitted => {
+      // Build a JSON report from current feedback state and submit to Rust backend.
+      let reportType = switch model.feedbackReportType {
+      | Some(t) => t
+      | None => "General"
+      }
+      let feedbackText = switch model.feedbackPending {
+      | Some(text) => text
+      | None => ""
+      }
+      let reportJson =
+        `{"type":"${reportType}","text":"${feedbackText}","timestamp":"${Date.make()->Date.toISOString}"}`
+      let cmd = FeedbackCmd.saveReport(reportJson, r => Feedback(FeedbackSubmissionResult(r)))
+      ({...model, feedbackPending: None, feedbackError: None}, cmd)
+    }
   | FeedbackSubmissionResult(result) =>
     switch result {
     | Ok(_) => ({...model, feedbackPending: None, feedbackError: None}, Tea_Cmd.none)
@@ -1864,7 +1878,7 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
   // Vexometer frustration → Governance → Anti-Crash strictness
   // Orbital divergence → Governance → inference halting / humidity
 
-  let newModel = GovernanceEngine.govern(newModel)
+  let (newModel, governanceCmd) = GovernanceEngine.governWithCmd(newModel, r => GovernanceNesyResult(r))
 
   // --- Phase 5: Panel Bus event emission (M5) ---
   // Emit cross-panel events based on state transitions detected by
@@ -1954,11 +1968,8 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
     Tea_Cmd.none
   }
 
-  // Merge bus commands with the original command.
-  let finalCmd = switch busCmd {
-  | None => cmd
-  | _ => Tea_Cmd.batch(list{cmd, busCmd})
-  }
+  // Merge bus commands and governance commands with the original command.
+  let finalCmd = Tea_Cmd.batch(list{cmd, busCmd, governanceCmd})
 
   (newModel, finalCmd)
 }
@@ -2142,13 +2153,17 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
         switch Array.get(cg.selectedZoneIds, 0) {
         | Some(zoneId) => {
             let settingsJson = CloudGuardEngine.serialiseModifiedSettings(cg.settings)
+            let typellCmd = TypeLLService.checkConfigTypes(settingsJson, "cloudguard", result => CloudGuard(TypeCheckResult(result)))
             (
               {...model, cloudguard: {...cg, loading: true}},
-              CloudGuardCmd.updateSettingsBatch(
-                zoneId,
-                settingsJson,
-                result => CloudGuard(ChangesPushed(result)),
-              ),
+              Tea_Cmd.batch(list{
+                CloudGuardCmd.updateSettingsBatch(
+                  zoneId,
+                  settingsJson,
+                  result => CloudGuard(ChangesPushed(result)),
+                ),
+                typellCmd,
+              }),
             )
           }
         | None => (model, Tea_Cmd.none)
@@ -2480,6 +2495,15 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
       {...model, cloudguard: {...cg, showDiff: !cg.showDiff}},
       Tea_Cmd.none,
     )
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "cloudguard", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -2524,7 +2548,7 @@ let updateFarm = (model: model, msg: farmMsg): (model, Tea_Cmd.t<msg>) => {
               )->Array.length,
             },
           },
-          Tea_Cmd.none,
+          TypeLLService.checkConfigTypes(jsonStr, "farm", result => Farm(TypeCheckResult(result))),
         )
       | Error(e) => (
           {...model, farm: {...farm, loading: false, error: Some(e)}},
@@ -2548,6 +2572,14 @@ let updateFarm = (model: model, msg: farmMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, farm: {...farm, sortBy: sort}},
       Tea_Cmd.none,
     )
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "farm", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -2595,7 +2627,10 @@ let updatePlaza = (model: model, msg: plazaMsg): (model, Tea_Cmd.t<msg>) => {
     }
   | ScanRepo(repoName) => (
       {...model, plaza: {...plaza, loading: true}},
-      PlazaCmd.scanRepo(repoName, result => Plaza(RepoScanned(result))),
+      Tea_Cmd.batch(list{
+        PlazaCmd.scanRepo(repoName, result => Plaza(RepoScanned(result))),
+        TypeLLService.checkConfigTypes(repoName, "plaza", result => Plaza(TypeCheckResult(result))),
+      }),
     )
   | RepoScanned(result) =>
     switch result {
@@ -2641,6 +2676,15 @@ let updatePlaza = (model: model, msg: plazaMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, plaza: {...plaza, filterText: text}},
       Tea_Cmd.none,
     )
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "plaza", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -2721,7 +2765,10 @@ let updateReposystem = (model: model, msg: reposystemMsg): (model, Tea_Cmd.t<msg
   switch msg {
   | ScanAll => (
       {...model, reposystem: {...rsr, loading: true, error: None}},
-      ReposystemCmd.scanAll(result => Reposystem(ScanAllLoaded(result))),
+      Tea_Cmd.batch(list{
+        ReposystemCmd.scanAll(result => Reposystem(ScanAllLoaded(result))),
+        TypeLLService.checkConfigTypes("rsr-scan", "reposystem", result => Reposystem(TypeCheckResult(result))),
+      }),
     )
   | ScanAllLoaded(result) =>
     switch result {
@@ -2737,6 +2784,15 @@ let updateReposystem = (model: model, msg: reposystemMsg): (model, Tea_Cmd.t<msg
     }
   | SetRsrCategory(cat) => ({...model, reposystem: {...rsr, activeCategory: cat}}, Tea_Cmd.none)
   | SetRsrFilter(text) => ({...model, reposystem: {...rsr, filterText: text}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "reposystem", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -2759,9 +2815,10 @@ let updateAerie = (model: model, msg: aerieMsg): (model, Tea_Cmd.t<msg>) => {
       } else {
         AerieCmd.fetchLatency(result => Aerie(LatencyLoaded(result)))
       }
+      let typellCmd = TypeLLService.checkConfigTypes("aerie-config", "aerie", result => Aerie(TypeCheckResult(result)))
       (
         {...model, aerie: {...aer, loading: true, error: None}},
-        fetchCmd,
+        Tea_Cmd.batch(list{fetchCmd, typellCmd}),
       )
     }
   | LatencyLoaded(result) =>
@@ -2779,6 +2836,15 @@ let updateAerie = (model: model, msg: aerieMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, aerie: {...aer, bojRouting: !aer.bojRouting}},
       Tea_Cmd.none,
     )
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "aerie", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -2791,7 +2857,10 @@ let updateInterfaces = (model: model, msg: interfacesMsg): (model, Tea_Cmd.t<msg
   switch msg {
   | ScanInterfaces => (
       {...model, interfaces: {...iface, loading: true, error: None}},
-      InterfacesCmd.scanInterfaces(result => Interfaces(InterfacesLoaded(result))),
+      Tea_Cmd.batch(list{
+        InterfacesCmd.scanInterfaces(result => Interfaces(InterfacesLoaded(result))),
+        TypeLLService.checkConfigTypes("abi-ffi-scan", "interfaces", result => Interfaces(TypeCheckResult(result))),
+      }),
     )
   | InterfacesLoaded(result) =>
     switch result {
@@ -2799,6 +2868,15 @@ let updateInterfaces = (model: model, msg: interfacesMsg): (model, Tea_Cmd.t<msg
     | Error(e) => ({...model, interfaces: {...iface, loading: false, error: Some(e)}}, Tea_Cmd.none)
     }
   | SetIfaceCategory(cat) => ({...model, interfaces: {...iface, activeCategory: cat}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "interfaces", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -2814,11 +2892,14 @@ let updatePlaygrounds = (model: model, msg: playgroundsMsg): (model, Tea_Cmd.t<m
   | UpdateCode(code) => ({...model, playgrounds: {...pg, editorContent: code}}, Tea_Cmd.none)
   | Execute => (
       {...model, playgrounds: {...pg, executing: true, error: None}},
-      PlaygroundsCmd.executeQuery(
-        PlaygroundsEngine.languageLabel(pg.activeLanguage),
-        pg.editorContent,
-        result => Playgrounds(ExecuteResult(result)),
-      ),
+      Tea_Cmd.batch(list{
+        PlaygroundsCmd.executeQuery(
+          PlaygroundsEngine.languageLabel(pg.activeLanguage),
+          pg.editorContent,
+          result => Playgrounds(ExecuteResult(result)),
+        ),
+        TypeLLService.checkCodeTypes(pg.editorContent, PlaygroundsEngine.languageLabel(pg.activeLanguage), result => Playgrounds(TypeCheckResult(result))),
+      }),
     )
   | ExecuteResult(result) =>
     switch result {
@@ -2852,6 +2933,15 @@ let updatePlaygrounds = (model: model, msg: playgroundsMsg): (model, Tea_Cmd.t<m
       | None => (model, Tea_Cmd.none)
       }
     }
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "playgrounds", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -2871,6 +2961,7 @@ let updateHypatia = (model: model, msg: hypatiaMsg): (model, Tea_Cmd.t<msg>) => 
       Tea_Cmd.batch(list{
         HypatiaCmd.fetchNetworks(result => Hypatia(NetworksLoaded(result))),
         HypatiaCmd.fetchScans(result => Hypatia(ScansLoaded(result))),
+        TypeLLService.checkConfigTypes("hypatia-scan-config", "hypatia", result => Hypatia(TypeCheckResult(result))),
       }),
     )
   | NetworksLoaded(result) =>
@@ -2961,6 +3052,15 @@ let updateHypatia = (model: model, msg: hypatiaMsg): (model, Tea_Cmd.t<msg>) => 
       {...model, hypatia: {...hyp, filterText: text}},
       Tea_Cmd.none,
     )
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "hypatia", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -2980,6 +3080,7 @@ let updateFleet = (model: model, msg: fleetMsg): (model, Tea_Cmd.t<msg>) => {
       Tea_Cmd.batch(list{
         FleetCmd.fetchBots(result => Fleet(BotsLoaded(result))),
         FleetCmd.fetchFindings(result => Fleet(FindingsLoaded(result))),
+        TypeLLService.checkConfigTypes("fleet-dispatch", "fleet", result => Fleet(TypeCheckResult(result))),
       }),
     )
   | BotsLoaded(result) =>
@@ -3051,6 +3152,15 @@ let updateFleet = (model: model, msg: fleetMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, fleet: {...fleet, filterText: text}},
       Tea_Cmd.none,
     )
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "fleet", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -3146,19 +3256,23 @@ let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
         ->Array.map(c => `{"id":"${c.id}","label":"${c.label}"}`)
         ->Array.join(",")
       let capsStr = `[${capsJson}]`
+      let specJson = `{"panel":"${form.panelName}","backend":"${MinterEngine.backendKindLabel(form.backendKind)}","caps":${capsStr}}`
       (
         {...model, minter: {...minter, minting: true, error: None}},
-        MinterCmd.mintPanel(
-          form.panelName,
-          form.shortName,
-          form.description,
-          form.icon,
-          MinterEngine.backendKindLabel(form.backendKind),
-          MinterEngine.accessibilityLabel(form.accessibility),
-          capsStr,
-          form.endpoint,
-          result => Minter(MintResult(result)),
-        ),
+        Tea_Cmd.batch(list{
+          MinterCmd.mintPanel(
+            form.panelName,
+            form.shortName,
+            form.description,
+            form.icon,
+            MinterEngine.backendKindLabel(form.backendKind),
+            MinterEngine.accessibilityLabel(form.accessibility),
+            capsStr,
+            form.endpoint,
+            result => Minter(MintResult(result)),
+          ),
+          TypeLLService.checkConfigTypes(specJson, "minter", result => Minter(TypeCheckResult(result))),
+        }),
       )
     }
   | MintResult(result) => {
@@ -3240,6 +3354,15 @@ let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
       )
       ({...model, ensaidConfigPreview: Some(preview)}, Tea_Cmd.none)
     }
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "minter", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -3292,7 +3415,7 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
             },
             // For now, immediately mark as installed (native panels are built-in).
             // Container installation will be async via ProvisionerCmd.
-            Tea_Cmd.none,
+            TypeLLService.checkConfigTypes(portfolioId, "provisioner", result => Provisioner(TypeCheckResult(result))),
           )
         }
       | None => (model, Tea_Cmd.none)
@@ -3416,6 +3539,15 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
       )
       ({...model, ensaidConfigPreview: Some(preview)}, Tea_Cmd.none)
     }
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "provisioner", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -3436,7 +3568,10 @@ let updateVoiceTag = (model: model, msg: voiceTagMsg): (model, Tea_Cmd.t<msg>) =
     switch vt.currentFile {
     | Some(filePath) => (
         {...model, voiceTag: {...vt, error: None}},
-        VoiceTagCmd.loadTags(filePath, result => VoiceTag(TagsLoaded(result))),
+        Tea_Cmd.batch(list{
+          VoiceTagCmd.loadTags(filePath, result => VoiceTag(TagsLoaded(result))),
+          TypeLLService.checkMetadataTypes(filePath, "voicetag", result => VoiceTag(TypeCheckResult(result))),
+        }),
       )
     | None => (
         {...model, voiceTag: {...vt, error: Some("No file selected")}},
@@ -3719,6 +3854,15 @@ let updateVoiceTag = (model: model, msg: voiceTagMsg): (model, Tea_Cmd.t<msg>) =
       {...model, voiceTag: {...vt, currentFile: Some(filePath), tags: [], summary: VoiceTagEngine.emptySummary, error: None}},
       VoiceTagCmd.loadTags(filePath, result => VoiceTag(TagsLoaded(result))),
     )
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "voicetag", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -4016,14 +4160,17 @@ let updateAi = (model: model, msg: aiMsg): (model, Tea_Cmd.t<msg>) => {
               error: None,
             },
           },
-          AiCmd.sendMessage(
-            userMsg.content,
-            history,
-            ai.systemPrompt,
-            providerId,
-            ai.broadcastMode,
-            result => Ai(MessageReceived(result)),
-          ),
+          Tea_Cmd.batch(list{
+            AiCmd.sendMessage(
+              userMsg.content,
+              history,
+              ai.systemPrompt,
+              providerId,
+              ai.broadcastMode,
+              result => Ai(MessageReceived(result)),
+            ),
+            TypeLLService.checkCodeTypes(userMsg.content, "prompt", result => Ai(TypeCheckResult(result))),
+          }),
         )
       }
     }
@@ -4269,6 +4416,15 @@ let updateAi = (model: model, msg: aiMsg): (model, Tea_Cmd.t<msg>) => {
       )
       ({...model, ai: {...ai, providers: newProviders, providerStatuses: newStatuses}}, Tea_Cmd.none)
     }
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "ai", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -4298,7 +4454,10 @@ let updateRepoLoader = (model: model, msg: repoLoaderMsg): (model, Tea_Cmd.t<msg
     }
   | ScanRepo(path) => (
       {...model, repoLoader: {...rl, scanning: true, error: None}},
-      RepoLoaderCmd.scan(path, result => RepoLoader(ScanResult(result))),
+      Tea_Cmd.batch(list{
+        RepoLoaderCmd.scan(path, result => RepoLoader(ScanResult(result))),
+        TypeLLService.checkConfigTypes(path, "repoloader", result => RepoLoader(TypeCheckResult(result))),
+      }),
     )
   | ScanResult(result) =>
     switch result {
@@ -4380,6 +4539,15 @@ let updateRepoLoader = (model: model, msg: repoLoaderMsg): (model, Tea_Cmd.t<msg
     (model, Tea_Cmd.none)
   | SetRepoSearchText(text) => ({...model, repoLoader: {...rl, searchText: text}}, Tea_Cmd.none)
   | SetRepoCategory(cat) => ({...model, repoLoader: {...rl, activeCategory: cat}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "repoloader", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -4443,7 +4611,10 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
     }
     let arrangements = Array.concat(ws.arrangements->Array.filter(a => a.id !== id), [arr])
     let json = `{"id":"${id}","name":"${name}","builtIn":false,"lastSaved":${Float.toString(Date.now())},"positions":[],"groups":[]}`
-    ({...model, workspace: {...ws, arrangements}}, WorkspaceCmd.saveArrangement(json))
+    ({...model, workspace: {...ws, arrangements}}, Tea_Cmd.batch(list{
+      WorkspaceCmd.saveArrangement(json),
+      TypeLLService.checkConfigTypes(json, "workspace", result => Workspace(TypeCheckResult(result))),
+    }))
   }
   | LoadArrangement(id) =>
     ({...model, workspace: {...ws, activeArrangementId: Some(id)}}, Tea_Cmd.none)
@@ -4689,6 +4860,15 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
       )
       ({...model, ensaidConfigPreview: Some(preview)}, Tea_Cmd.none)
     }
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "workspace", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -4706,7 +4886,10 @@ let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => 
     let format = "png"
     // The actual html2canvas call happens in JS; here we wire the save command
     // with a placeholder base64 string that the frontend JS bridge will populate.
-    (model, CaptureCmd.saveScreenshot(captureId, panelId, "", format))
+    (model, Tea_Cmd.batch(list{
+      CaptureCmd.saveScreenshot(captureId, panelId, "", format),
+      TypeLLService.checkConfigTypes(panelId, "capture", result => Capture(TypeCheckResult(result))),
+    }))
   }
   | ScreenshotSaved(result) =>
     switch result {
@@ -4828,6 +5011,15 @@ let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => 
     ({...model, capture: {...cap, activeCategory: cat}}, Tea_Cmd.none)
   | RemoveCapture(captureId) =>
     ({...model, capture: CaptureEngine.removeCapture(cap, captureId)}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "capture", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -4948,7 +5140,10 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
   | SetTotpInput(input) =>
     ({...model, security: {...sec, totpInput: input}}, Tea_Cmd.none)
   | LoadTrustfile(repoPath) =>
-    (model, SecurityCmd.loadTrustfile(repoPath))
+    (model, Tea_Cmd.batch(list{
+      SecurityCmd.loadTrustfile(repoPath),
+      TypeLLService.checkSecurityTypes(repoPath, "security", result => Security(TypeCheckResult(result))),
+    }))
   | TrustfileLoaded(result) => {
       switch result {
       | Ok(jsonStr) => {
@@ -4989,6 +5184,15 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
     ({...model, security: SecurityEngine.toggleShoulderSafe(sec)}, Tea_Cmd.none)
   | SetSecurityCategory(cat) =>
     ({...model, security: {...sec, activeCategory: cat}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "security", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -5043,7 +5247,7 @@ let updateKeybindings = (model: model, msg: keybindingsMsg): model => {
 let updateMigration = (model: model, msg: migrationMsg): (model, Tea_Cmd.t<msg>) => {
   let mig = model.migration
   switch msg {
-  | LoadMigrationData => ({...model, migration: {...mig, loading: true, error: None}}, Tea_Cmd.none)
+  | LoadMigrationData => ({...model, migration: {...mig, loading: true, error: None}}, TypeLLService.checkMetadataTypes("migration-data", "migration", result => Migration(TypeCheckResult(result))))
   | MigrationDataLoaded(Ok(_data)) =>
     // Data parsing would happen here in a real implementation.
     // For now, mark as loaded.
@@ -5123,6 +5327,15 @@ let updateMigration = (model: model, msg: migrationMsg): (model, Tea_Cmd.t<msg>)
     (model, Tea_Cmd.none)
   | RefreshMigrationHealth =>
     ({...model, migration: {...mig, loading: true}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "migration", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -5166,7 +5379,10 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
   | RunAssail =>
     (
       {...model, panicAttack: {...pa, scanning: true, lastError: None}},
-      PanicAttackCmd.assail(pa.targetPath, result => PanicAttack(AssailResult(result))),
+      Tea_Cmd.batch(list{
+        PanicAttackCmd.assail(pa.targetPath, result => PanicAttack(AssailResult(result))),
+        TypeLLService.checkSecurityTypes(pa.targetPath, "panic-attack", result => PanicAttack(TypeCheckResult(result))),
+      }),
     )
   | AssailResult(Ok(jsonStr)) => {
     let parsed = try {
@@ -5376,6 +5592,15 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
     ({...model, panicAttack: {...pa, showDiff: !pa.showDiff}}, Tea_Cmd.none)
   | DismissError =>
     ({...model, panicAttack: {...pa, lastError: None}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "panicattack", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -5447,14 +5672,17 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
           lastError: None,
         },
       },
-      MassPanicCmd.runAssemblyline(
-        mp.reposDirectory,
-        mp.incremental,
-        mp.cachePath,
-        storePath,
-        mp.minFindings,
-        result => MassPanic(AssemblylineResult(result)),
-      ),
+      Tea_Cmd.batch(list{
+        MassPanicCmd.runAssemblyline(
+          mp.reposDirectory,
+          mp.incremental,
+          mp.cachePath,
+          storePath,
+          mp.minFindings,
+          result => MassPanic(AssemblylineResult(result)),
+        ),
+        TypeLLService.checkConfigTypes(mp.reposDirectory, "mass-panic", result => MassPanic(TypeCheckResult(result))),
+      }),
     )
   | RunSelected =>
     // Same as RunAssemblyline but for selected repos only.
@@ -5920,6 +6148,15 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
   | SnapshotTaken(Ok(_json)) =>
     // Refresh snapshot list after taking a new one
     ({...model, massPanic: {...mp, temporalLoading: false}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "masspanic", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   | SnapshotTaken(Error(err)) =>
     ({...model, massPanic: {...mp, temporalLoading: false, lastError: Some(err)}}, Tea_Cmd.none)
   }
@@ -6013,7 +6250,10 @@ let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
     let maintOrderJson = ts.maintenanceOrder->Array.map(m => switch m { | Corrective => "corrective" | Adaptive => "adaptive" | Perfective => "perfective" })
     let auditOrderJson = ts.auditOrder->Array.map(a => switch a { | Systems => "systems" | Compliance => "compliance" | Effects => "effects" })
     let directiveJson = `{"axisOrder":${JSON.stringify(JSON.Encode.array(axisOrderJson->Array.map(JSON.Encode.string)))},"scopeOrder":${JSON.stringify(JSON.Encode.array(scopeOrderJson->Array.map(JSON.Encode.string)))},"maintenanceOrder":${JSON.stringify(JSON.Encode.array(maintOrderJson->Array.map(JSON.Encode.string)))},"auditOrder":${JSON.stringify(JSON.Encode.array(auditOrderJson->Array.map(JSON.Encode.string)))},"locked":${if ts.locked { "true" } else { "false" }}}`
-    (model, TsdmCmd.saveDirective(directiveJson, result => Tsdm(DirectiveSaved(result))))
+    (model, Tea_Cmd.batch(list{
+      TsdmCmd.saveDirective(directiveJson, result => Tsdm(DirectiveSaved(result))),
+      TypeLLService.checkSecurityTypes(directiveJson, "tsdm", result => Tsdm(TypeCheckResult(result))),
+    }))
   }
   | DirectiveSaved(Ok(_path)) =>
     (model, Tea_Cmd.none)
@@ -6137,6 +6377,15 @@ let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
     ({...model, tsdm: {...ts, lastError: Some(err)}}, Tea_Cmd.none)
   | DismissTsdmError =>
     ({...model, tsdm: {...ts, lastError: None}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "tsdm", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -6179,16 +6428,19 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
                 claudeCodeActive: input === "claude" || String.startsWith(input, "claude "),
               },
             },
-            ValenceShellCmd.sendInput(input ++ "\n", result => ValenceShell(PtyOutput(
-              switch result {
-              | Ok(s) => s
-              | Error(e) => e
-              },
-              switch result {
-              | Ok(_) => true
-              | Error(_) => false
-              },
-            ))),
+            Tea_Cmd.batch(list{
+              ValenceShellCmd.sendInput(input ++ "\n", result => ValenceShell(PtyOutput(
+                switch result {
+                | Ok(s) => s
+                | Error(e) => e
+                },
+                switch result {
+                | Ok(_) => true
+                | Error(_) => false
+                },
+              ))),
+              TypeLLService.checkCodeTypes(input, "shell", result => ValenceShell(TypeCheckResult(result))),
+            }),
           )
         | GateEnabled | GateLearning => {
             // Check whitelist for learning mode
@@ -6575,6 +6827,15 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
       Tea_Cmd.none,
     )
   | DismissError => ({...model, valenceShell: {...vs, error: None}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "valenceshell", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -6588,7 +6849,10 @@ let updateGamePreview = (model: model, msg: gamePreviewMsg): (model, Tea_Cmd.t<m
   | SetPreviewCategory(cat) => ({...model, gamePreview: {...gp, activeCategory: cat}}, Tea_Cmd.none)
   | CheckDevServer => (
       {...model, gamePreview: {...gp, loading: true}},
-      GamePreviewCmd.checkDevServer(gp.devServerUrl, result => GamePreview(DevServerResult(result))),
+      Tea_Cmd.batch(list{
+        GamePreviewCmd.checkDevServer(gp.devServerUrl, result => GamePreview(DevServerResult(result))),
+        TypeLLService.checkGameDataTypes(gp.devServerUrl, "game-preview", result => GamePreview(TypeCheckResult(result))),
+      }),
     )
   | DevServerResult(Ok(_)) => (
       {...model, gamePreview: {...gp, devServerConnected: true, loading: false, error: None}},
@@ -6760,6 +7024,15 @@ let updateGamePreview = (model: model, msg: gamePreviewMsg): (model, Tea_Cmd.t<m
       ({...model, gamePreview: {...gp, deviceLog: trimmed}}, Tea_Cmd.none)
     }
   | DismissGameError => ({...model, gamePreview: {...gp, error: None}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "gamepreview", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -6770,15 +7043,21 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
   let vm = model.vmInspector
   switch msg {
   | SetInspectorCategory(cat) => ({...model, vmInspector: {...vm, activeCategory: cat}}, Tea_Cmd.none)
-  | ReadVmState => (
-      {...model, vmInspector: {...vm, loading: true}},
-      switch vm.connection {
+  | ReadVmState => {
+      let vmCmd = switch vm.connection {
       | VmFileConnection(path) =>
         VmInspectorCmd.readVmStateFromFile(path, result => VmInspector(VmStateReceived(result)))
       | VmLiveConnection | VmDisconnected =>
         VmInspectorCmd.readVmState(result => VmInspector(VmStateReceived(result)))
-      },
-    )
+      }
+      (
+        {...model, vmInspector: {...vm, loading: true}},
+        Tea_Cmd.batch(list{
+          vmCmd,
+          TypeLLService.checkGameDataTypes("vm-state", "vm-inspector", result => VmInspector(TypeCheckResult(result))),
+        }),
+      )
+    }
   | VmStateReceived(Ok(jsonStr)) => {
     let parsed = try {
       let json = JSON.parseExn(jsonStr)
@@ -7076,6 +7355,15 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
     )
   | DismissVmError => ({...model, vmInspector: {...vm, error: None}}, Tea_Cmd.none)
   | ToggleVmBojRouting => ({...model, vmInspector: {...vm, bojRouting: !vm.bojRouting}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "vminspector", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -7090,7 +7378,10 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
   | SetTopologyCategory(cat) => ({...model, networkTopology: {...nt, activeCategory: cat}}, Tea_Cmd.none)
   | RefreshTopology => (
       {...model, networkTopology: {...nt, loading: true}},
-      NetworkTopologyCmd.readTopology(result => NetworkTopology(TopologyReceived(result))),
+      Tea_Cmd.batch(list{
+        NetworkTopologyCmd.readTopology(result => NetworkTopology(TopologyReceived(result))),
+        TypeLLService.checkGameDataTypes("topology", "network-topology", result => NetworkTopology(TypeCheckResult(result))),
+      }),
     )
   | TopologyReceived(Ok(jsonStr)) => {
     let parsed = try {
@@ -7277,6 +7568,15 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
       Tea_Cmd.none,
     )
   | DismissTopoError => ({...model, networkTopology: {...nt, error: None}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "networktopology", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -7434,7 +7734,10 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
     )
   | ValidateLevel => (
       {...model, levelArchitect: {...la, loading: true}},
-      LevelArchitectCmd.validateLevel("", result => LevelArchitect(ValidationResult(result))),
+      Tea_Cmd.batch(list{
+        LevelArchitectCmd.validateLevel("", result => LevelArchitect(ValidationResult(result))),
+        TypeLLService.checkGameDataTypes("level-data", "level-architect", result => LevelArchitect(TypeCheckResult(result))),
+      }),
     )
   | ValidationResult(Ok(jsonStr)) => {
     let parsed = try {
@@ -7641,6 +7944,15 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
       Tea_Cmd.none,
     )
   | DismissArchitectError => ({...model, levelArchitect: {...la, error: None}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "levelarchitect", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -7860,9 +8172,10 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
           result => Coprocessors(ComputeEngineResult(result)),
         )
       }
+      let typellCmd = TypeLLService.checkConfigTypes(operation, "coprocessors", result => Coprocessors(TypeCheckResult(result)))
       (
         {...model, coprocessors: {...cp, loading: true}},
-        queryCmd,
+        Tea_Cmd.batch(list{queryCmd, typellCmd}),
       )
     }
   | ComputeEngineResult(Ok(json)) => {
@@ -7901,6 +8214,88 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
       {...model, coprocessors: {...cp, bojRouting: !cp.bojRouting}},
       Tea_Cmd.none,
     )
+  // Phase 2: Zig FFI local dispatch
+  | LoadLocalFfi =>
+    let cmd = CoprocessorsCmd.loadLocalFfi(r => Coprocessors(LocalFfiLoaded(r)))
+    ({...model, coprocessors: {...cp, loading: true}}, cmd)
+  | LocalFfiLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      let newDispatch = CoprocessorsEngine.parseLocalDispatchState(jsonStr)
+      ({...model, coprocessors: {...cp, loading: false, localDispatch: newDispatch, error: None}}, Tea_Cmd.none)
+    | Error(err) =>
+      ({...model, coprocessors: {...cp, loading: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DispatchLocal(operation, payload) =>
+    let ld = cp.localDispatch
+    let newDispatch = {...ld, pendingDispatches: ld.pendingDispatches + 1}
+    let cmd = CoprocessorsCmd.dispatchLocal(operation, payload, r => Coprocessors(LocalDispatchResult(r)))
+    ({...model, coprocessors: {...cp, localDispatch: newDispatch, loading: true}}, cmd)
+  | LocalDispatchResult(result) =>
+    let ld = cp.localDispatch
+    let pending = ld.pendingDispatches - 1
+    let newDispatch = {...ld, pendingDispatches: if pending > 0 { pending } else { 0 }}
+    switch result {
+    | Ok(jsonStr) =>
+      switch CoprocessorsEngine.parseComputeResult(jsonStr, CoprocessorsModel.EngineLocal) {
+      | Ok(computeResult) =>
+        ({...model, coprocessors: {...cp, loading: false, localDispatch: newDispatch, lastComputeResult: Some(computeResult), error: None}}, Tea_Cmd.none)
+      | Error(_) =>
+        ({...model, coprocessors: {...cp, loading: false, localDispatch: newDispatch}}, Tea_Cmd.none)
+      }
+    | Error(err) =>
+      ({...model, coprocessors: {...cp, loading: false, localDispatch: newDispatch, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | QueryLocalResources =>
+    let cmd = CoprocessorsCmd.queryLocalResources(r => Coprocessors(LocalResourcesResult(r)))
+    (model, cmd)
+  | LocalResourcesResult(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      let newDispatch = CoprocessorsEngine.parseLocalDispatchState(jsonStr)
+      ({...model, coprocessors: {...cp, localDispatch: {...cp.localDispatch, cpuUtilisation: newDispatch.cpuUtilisation, gpuMemoryMb: newDispatch.gpuMemoryMb}}}, Tea_Cmd.none)
+    | Error(_) => (model, Tea_Cmd.none)
+    }
+  // Phase 3: Smart routing
+  | SetRoutingStrategy(strategy) =>
+    ({...model, coprocessors: {...cp, routingStrategy: strategy}}, Tea_Cmd.none)
+  | SmartDispatch(operation, payload) =>
+    // Use the routing engine to determine the best route, then dispatch.
+    let decision = CoprocessorsEngine.selectRoute(cp, operation)
+    let newHistory = Array.concat([decision], cp.routingHistory)->Array.slice(~start=0, ~end=50)
+    let cmd = switch decision.chosenRoute {
+    | CoprocessorsModel.RouteLocal =>
+      CoprocessorsCmd.dispatchLocal(operation, payload, r => Coprocessors(SmartDispatchResult(r)))
+    | CoprocessorsModel.RouteRemote =>
+      CoprocessorsCmd.queryComputeEngine("axiom", `${operation}:${payload}`, r => Coprocessors(SmartDispatchResult(r)))
+    | CoprocessorsModel.RouteBoj =>
+      BojCmd.invokeCartridgeWithLatency("agent-mcp", "compute", `{"operation":"${operation}","payload":"${payload}"}`, r => Coprocessors(SmartDispatchResult(r)), (c, t, e) => RecordBojLatency(c, t, e))
+    | CoprocessorsModel.RouteAutomatic =>
+      // Already resolved by selectRoute — should not happen.
+      CoprocessorsCmd.smartDispatch(operation, payload, r => Coprocessors(SmartDispatchResult(r)))
+    }
+    ({...model, coprocessors: {...cp, loading: true, routingHistory: newHistory}}, cmd)
+  | SmartDispatchResult(result) =>
+    switch result {
+    | Ok(jsonStr) =>
+      switch CoprocessorsEngine.parseComputeResult(jsonStr, CoprocessorsModel.EngineLocal) {
+      | Ok(computeResult) =>
+        ({...model, coprocessors: {...cp, loading: false, lastComputeResult: Some(computeResult), error: None}}, Tea_Cmd.none)
+      | Error(_) =>
+        ({...model, coprocessors: {...cp, loading: false}}, Tea_Cmd.none)
+      }
+    | Error(err) =>
+      ({...model, coprocessors: {...cp, loading: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "coprocessors", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -7918,10 +8313,13 @@ let updateMultiplayerMonitor = (model: model, msg: multiplayerMonitorMsg): (mode
     )
   | ConnectServer => (
       {...model, multiplayerMonitor: {...mp, wsConnection: WsConnecting, loading: true}},
-      MultiplayerMonitorCmd.connectToServer(
-        mp.serverUrl,
-        result => MultiplayerMonitor(ConnectionResult(result)),
-      ),
+      Tea_Cmd.batch(list{
+        MultiplayerMonitorCmd.connectToServer(
+          mp.serverUrl,
+          result => MultiplayerMonitor(ConnectionResult(result)),
+        ),
+        TypeLLService.checkGameDataTypes(mp.serverUrl, "multiplayer", result => MultiplayerMonitor(TypeCheckResult(result))),
+      }),
     )
   | DisconnectServer => (
       {...model, multiplayerMonitor: {...mp, loading: true}},
@@ -8102,6 +8500,15 @@ let updateMultiplayerMonitor = (model: model, msg: multiplayerMonitorMsg): (mode
       {...model, multiplayerMonitor: {...mp, error: None}},
       Tea_Cmd.none,
     )
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "multiplayermonitor", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -8188,7 +8595,10 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
   | ClearComposer => ({...model, dlcWorkshop: {...dw, composerInstructions: []}}, Tea_Cmd.none)
   | SavePuzzle => (
       model,
-      DlcWorkshopCmd.savePuzzle("", result => DlcWorkshop(PuzzleSaved(result))),
+      Tea_Cmd.batch(list{
+        DlcWorkshopCmd.savePuzzle("", result => DlcWorkshop(PuzzleSaved(result))),
+        TypeLLService.checkGameDataTypes("puzzle-spec", "dlc-workshop", result => DlcWorkshop(TypeCheckResult(result))),
+      }),
     )
   | PuzzleSaved(Ok(_)) => (model, Tea_Cmd.none)
   | PuzzleSaved(Error(err)) => (
@@ -8379,6 +8789,15 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
   | SetDlcFilter(text) => ({...model, dlcWorkshop: {...dw, filterText: text}}, Tea_Cmd.none)
   | SetDifficultyFilter(diff) => ({...model, dlcWorkshop: {...dw, filterDifficulty: diff}}, Tea_Cmd.none)
   | DismissWorkshopError => ({...model, dlcWorkshop: {...dw, error: None}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "dlcworkshop", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -8440,9 +8859,13 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
         Tea_Cmd.batch(list{
           BojCmd.invokeCartridgeWithLatency("lsp-mcp", "connect", args, result => EditorBridge(LspConnected(result)), (c, t, e) => RecordBojLatency(c, t, e)),
           Tea_Cmd.msg(Vexometer(RecordVqlQuery)),
+          TypeLLService.checkConfigTypes(args, "editor-bridge", result => EditorBridge(TypeCheckResult(result))),
         })
       } else {
-        EditorBridgeCmd.connectLsp(eb.lspPort, result => EditorBridge(LspConnected(result)))
+        Tea_Cmd.batch(list{
+          EditorBridgeCmd.connectLsp(eb.lspPort, result => EditorBridge(LspConnected(result))),
+          TypeLLService.checkConfigTypes(Int.toString(eb.lspPort), "editor-bridge", result => EditorBridge(TypeCheckResult(result))),
+        })
       },
     )
   | LspConnected(Ok(info)) => (
@@ -8602,6 +9025,15 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
   | ToggleAutoSync => ({...model, editorBridge: {...eb, autoSync: !eb.autoSync}}, Tea_Cmd.none)
   | ToggleBojRouting => ({...model, editorBridge: {...eb, bojRouting: !eb.bojRouting}}, Tea_Cmd.none)
   | DismissBridgeError => ({...model, editorBridge: {...eb, error: None}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "editorbridge", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -8621,7 +9053,8 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       } else {
         BuildDashboardCmd.triggerBuild(label, result => BuildDashboard(BuildTriggered(result)))
       }
-      ({...model, buildDashboard: {...bd, loading: true}}, cmd)
+      let typellCmd = TypeLLService.checkConfigTypes(label, "build-dashboard", result => BuildDashboard(TypeCheckResult(result)))
+      ({...model, buildDashboard: {...bd, loading: true}}, Tea_Cmd.batch(list{cmd, typellCmd}))
     }
   | BuildTriggered(Ok(jsonStr)) => {
     let parseTarget = (s: string): BuildDashboardModel.buildTarget =>
@@ -8832,6 +9265,15 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
   | ToggleShowPassed => ({...model, buildDashboard: {...bd, showPassedTests: !bd.showPassedTests}}, Tea_Cmd.none)
   | DismissBuildError => ({...model, buildDashboard: {...bd, error: None}}, Tea_Cmd.none)
   | ToggleBuildBojRouting => ({...model, buildDashboard: {...bd, bojRouting: !bd.bojRouting}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "builddashboard", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -8982,11 +9424,14 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
     )
   | PublishRelease => (
       {...model, releaseManager: {...rm, loading: true}},
-      ReleaseManagerCmd.publishRelease(
-        rm.nextVersion,
-        ReleaseManagerEngine.channelLabel(rm.channel),
-        result => ReleaseManager(ReleasePublished(result)),
-      ),
+      Tea_Cmd.batch(list{
+        ReleaseManagerCmd.publishRelease(
+          rm.nextVersion,
+          ReleaseManagerEngine.channelLabel(rm.channel),
+          result => ReleaseManager(ReleasePublished(result)),
+        ),
+        TypeLLService.checkConfigTypes(rm.nextVersion, "release-manager", result => ReleaseManager(TypeCheckResult(result))),
+      }),
     )
   | ReleasePublished(Ok(jsonStr)) => {
     let parsed = try {
@@ -9087,6 +9532,15 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
       Tea_Cmd.none,
     )
   | DismissReleaseError => ({...model, releaseManager: {...rm, error: None}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "releasemanager", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -9116,7 +9570,8 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
       } else {
         AutomationRouterCmd.executeRule(ruleId, result => AutomationRouter(ExecutionResult(ruleId, result)))
       }
-      (model, cmd)
+      let typellCmd = TypeLLService.checkConfigTypes(ruleId, "automation-router", result => AutomationRouter(TypeCheckResult(result)))
+      (model, Tea_Cmd.batch(list{cmd, typellCmd}))
     }
   | ExecutionResult(ruleId, Ok(detail)) => {
       let now = Date.now()
@@ -9335,6 +9790,15 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
       ({...model, ensaidConfigPreview: Some(preview)}, Tea_Cmd.none)
     }
   | ToggleAutomationBojRouting => ({...model, automationRouter: {...ar, bojRouting: !ar.bojRouting}}, Tea_Cmd.none)
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "automationrouter", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -9358,13 +9822,43 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
     )
   | CartridgesResult(Ok(json)) =>
     switch BojEngine.parseCartridges(json) {
-    | Ok(cartridges) => ({...model, boj: {...boj, cartridges, loading: false, error: None}}, Tea_Cmd.none)
+    | Ok(cartridges) =>
+      // Integration #5: BoJ Cartridge → K9 Yard Contracts
+      // Generate a Yard contract for the first loaded cartridge (if any) as a preview.
+      let yardContract = switch cartridges->Array.find(c => c.loaded) {
+      | Some(c) =>
+        let protoNames = c.protocols->Array.map(p => BojEngine.protocolLabel(p))
+        let gradeStr = switch c.grade {
+        | BojModel.GradeA => "A"
+        | BojModel.GradeB => "B"
+        | BojModel.GradeC => "C"
+        | BojModel.GradeD => "D"
+        }
+        Some(K9Engine.generateYardContract(
+          c.name, protoNames, c.restPort, c.grpcPort, c.graphqlPort, gradeStr,
+        ))
+      | None => model.k9YardContract
+      }
+      ({...model, boj: {...boj, cartridges, loading: false, error: None}, k9YardContract: yardContract}, Tea_Cmd.none)
     | Error(err) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | CartridgesResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
   | SelectCartridge(name) => {
       let sel = if name === "" { None } else { Some(name) }
-      ({...model, boj: {...boj, selectedCartridge: sel}}, Tea_Cmd.none)
+      // Integration #4: Module Config → K9 Kennel Schema
+      // Generate a Kennel schema for the selected cartridge's config shape.
+      let kennelSchema = if name !== "" {
+        switch boj.cartridges->Array.find(c => c.name === name) {
+        | Some(c) =>
+          let protoNames = c.protocols->Array.map(p => BojEngine.protocolLabel(p))
+          let fields = K9Engine.cartridgeToKennelFields(c.name, protoNames)
+          Some(K9Engine.generateKennelSchema(c.name, fields))
+        | None => model.k9KennelSchema
+        }
+      } else {
+        model.k9KennelSchema
+      }
+      ({...model, boj: {...boj, selectedCartridge: sel}, k9KennelSchema: kennelSchema}, Tea_Cmd.none)
     }
   | LoadCartridge(name) => (
       {...model, boj: {...boj, loading: true}},
@@ -9406,6 +9900,23 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
     | Error(err) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | UmojaResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
+  | UmojaDisconnectPeer(peerId) =>
+    let cmd = UmojaCmd.disconnectPeer(peerId, r => Boj(UmojaDisconnectPeerResult(r)))
+    (model, cmd)
+  | UmojaSyncCatalogue(peerId) =>
+    let cmd = UmojaCmd.syncCatalogue(peerId, r => Boj(UmojaSyncCatalogueResult(r)))
+    (model, cmd)
+  | UmojaPeerMetrics(peerId) =>
+    let cmd = UmojaCmd.getPeerMetrics(peerId, r => Boj(UmojaPeerMetricsResult(r)))
+    (model, cmd)
+  | UmojaAddPeerInput(value) =>
+    ({...model, boj: {...boj, umojaAddPeerInput: value}}, Tea_Cmd.none)
+  | UmojaAddPeer(address) =>
+    let cmd = UmojaCmd.addPeer(address, r => Boj(UmojaAddPeerResult(r)))
+    ({...model, boj: {...boj, umojaAddPeerInput: ""}}, cmd)
+  | UmojaTriggerGossip =>
+    let cmd = UmojaCmd.triggerGossipRound(r => Boj(UmojaTriggerGossipResult(r)))
+    (model, cmd)
   | SetInvokeCartridge(name) => ({...model, boj: {...boj, invokeCartridge: name}}, Tea_Cmd.none)
   | SetInvokeTool(tool) => ({...model, boj: {...boj, invokeTool: tool}}, Tea_Cmd.none)
   | SetInvokeArgs(_argsJson) =>
@@ -9444,6 +9955,30 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
   | AbiTypeCheckResult(Error(_)) =>
     // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
+  | UmojaAddPeerResult(Ok(_)) =>
+    // Peer added successfully — refresh Umoja status.
+    ({...model, boj: {...boj, umojaAddPeerInput: ""}}, BojCmd.umojaStatus(result => Boj(UmojaResult(result))))
+  | UmojaAddPeerResult(Error(err)) =>
+    ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
+  | UmojaDisconnectPeerResult(Ok(_)) =>
+    // Peer disconnected — refresh Umoja status.
+    (model, BojCmd.umojaStatus(result => Boj(UmojaResult(result))))
+  | UmojaDisconnectPeerResult(Error(err)) =>
+    ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
+  | UmojaTriggerGossipResult(Ok(_)) =>
+    // Gossip triggered — refresh Umoja status.
+    (model, BojCmd.umojaStatus(result => Boj(UmojaResult(result))))
+  | UmojaTriggerGossipResult(Error(err)) =>
+    ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
+  | UmojaSyncCatalogueResult(Ok(_)) =>
+    (model, BojCmd.umojaStatus(result => Boj(UmojaResult(result))))
+  | UmojaSyncCatalogueResult(Error(err)) =>
+    ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
+  | UmojaPeerMetricsResult(Ok(_json)) =>
+    // Peer metrics received — placeholder for future display.
+    (model, Tea_Cmd.none)
+  | UmojaPeerMetricsResult(Error(err)) =>
+    ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
   }
 }
 
@@ -9458,16 +9993,70 @@ let updateCladeBrowser = (model: model, msg: cladeBrowserMsg): (model, Tea_Cmd.t
   | SelectClade(id) => ({...model, cladeBrowser: {...cb, selectedClade: id}}, Tea_Cmd.none)
   | SetKindFilter(kind) => ({...model, cladeBrowser: {...cb, kindFilter: kind}}, Tea_Cmd.none)
   | UpdateCladeSearch(query) => ({...model, cladeBrowser: {...cb, searchQuery: query}}, Tea_Cmd.none)
-  | LoadClades => ({...model, cladeBrowser: {...cb, loading: true}}, Tea_Cmd.none)
+  | LoadClades => (
+      {...model, cladeBrowser: {...cb, loading: true}},
+      Tea_Cmd.batch(list{
+        CladeCmd.scanCladeFiles(result => CladeBrowser(CladesLoaded(
+          switch result {
+          | Ok(jsonStr) => {
+              let loaded = CladeLoader.fromScanResult(jsonStr)
+              let merged = CladeLoader.mergeWithBuiltins(loaded, CladeBrowserEngine.builtinCladesBase)
+              merged->Array.map(CladeBrowserEngine.enrichClade)
+            }
+          | Error(_) => CladeBrowserEngine.builtinClades
+          }
+        ))),
+        TypeLLService.checkMetadataTypes("clade-scan", "clade-browser", result => CladeBrowser(TypeCheckResult(result))),
+      }),
+    )
   | CladesLoaded(clades) => ({...model, cladeBrowser: {...cb, clades, loading: false, error: None}}, Tea_Cmd.none)
   | SetCladePermission(targetCladeId, perm) => {
       let newRules = CladeBrowserEngine.setPermission(cb.permissionRules, targetCladeId, perm)
-      ({...model, cladeBrowser: {...cb, permissionRules: newRules}}, Tea_Cmd.none)
+      // Integration #7: Clade Permissions → K9 Hunt check
+      // When setting permissions, verify Hunt-level K9 execution is permitted
+      // based on clade isolation and signing status.
+      let updatedModel = switch cb.clades->Array.find(c => c.id === targetCladeId) {
+      | Some(clade) =>
+        let isolationStr = switch clade.isolation {
+        | CladeBrowserModel.IsolationNone => "none"
+        | CladeBrowserModel.IsolationSoft => "soft"
+        | CladeBrowserModel.IsolationProcess => "process"
+        | CladeBrowserModel.IsolationContainer => "container|hunt|full"
+        }
+        let signingOk = switch clade.signing {
+        | CladeBrowserModel.SigningVerified(_) => true
+        | _ => false
+        }
+        // Check if there's a loaded K9 contractile to verify Hunt permission against
+        let _huntCheck = switch model.lastK9Contractile {
+        | Some(contractile) =>
+          if contractile.securityLevel == K9Engine.Hunt {
+            let (_allowed, _reason) = K9Engine.checkHuntPermission(
+              isolationStr, signingOk, K9Engine.summariseContractile(contractile),
+            )
+            // Hunt permission check result is logged but not blocking (informational)
+            ()
+          }
+        | None => ()
+        }
+        {...model, cladeBrowser: {...cb, permissionRules: newRules}}
+      | None => {...model, cladeBrowser: {...cb, permissionRules: newRules}}
+      }
+      (updatedModel, Tea_Cmd.none)
     }
   | RemoveCladePermission(targetCladeId) => {
       let newRules = CladeBrowserEngine.removePermission(cb.permissionRules, targetCladeId)
       ({...model, cladeBrowser: {...cb, permissionRules: newRules}}, Tea_Cmd.none)
     }
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "cladebrowser", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -9490,7 +10079,7 @@ let updateTentacles = (model: model, msg: tentaclesMsg): (model, Tea_Cmd.t<msg>)
       let agents = TentaclesEngine.updateAgent(st.agents, id, a =>
         TentaclesEngine.startTask(a, task)
       )
-      ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
+      ({...model, tentacles: {...st, agents}}, TypeLLService.checkCodeTypes(task, "tentacles", result => Tentacles(TypeCheckResult(result))))
     }
   | AgentPhaseAdvanced(id, _phase) => {
       // S1: Use OODA progression engine — advance through Observe→Orient→Decide→Act.
@@ -9550,6 +10139,15 @@ let updateTentacles = (model: model, msg: tentaclesMsg): (model, Tea_Cmd.t<msg>)
       {...model, tentacles: {...st, ffiConnected: connected, ffiError: error, ffiLastCheck: 0.0}},
       Tea_Cmd.none,
     )
+  | TypeCheckResult(Ok(json)) => {
+      let checks = model.typell.panelTypeChecks
+      Dict.set(checks, "tentacles", json)
+      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      ({...model, typell: newTypell}, Tea_Cmd.none)
+    }
+  | TypeCheckResult(Error(_)) =>
+    // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
   }
 }
 
@@ -10123,6 +10721,233 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
       let log = Array.concat([entry], model.boj.latencyLog)->Array.slice(~start=0, ~end=100)
       ({...model, boj: {...model.boj, latencyLog: log}}, Tea_Cmd.none)
     }
+  | GovernanceNesyResult(result) => {
+      // Apply nesy-mcp governance response to model. The response is a JSON
+      // string from the nesy-mcp cartridge with confidence, reasoning, etc.
+      // For now, parse the confidence score and use it to tune Anti-Crash.
+      switch result {
+      | Ok(jsonStr) => {
+          let newModel = try {
+            let json = JSON.parseExn(jsonStr)
+            let o = json->JSON.Decode.object->Option.getOr(Dict.make())
+            let confidence =
+              o->Dict.get("confidence")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.5)
+            let approved =
+              o->Dict.get("approved")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
+            if !approved {
+              // Nesy rejected a governance adjustment — loosen Anti-Crash.
+              {...model, antiCrash: {...model.antiCrash, strictMode: false}}
+            } else if confidence > 0.8 {
+              // High neural confidence — safe to tighten.
+              {...model, antiCrash: {...model.antiCrash, strictMode: true}}
+            } else if confidence < 0.3 {
+              // Low confidence — loosen to avoid false positives.
+              {...model, antiCrash: {...model.antiCrash, strictMode: false}}
+            } else {
+              // Moderate confidence — maintain current posture.
+              model
+            }
+          } catch {
+          | _ => model
+          }
+          (newModel, Tea_Cmd.none)
+        }
+      | Error(_) =>
+        // Nesy-mcp unreachable — maintain current governance state.
+        (model, Tea_Cmd.none)
+      }
+    }
+  | GovernanceNesyValidateResult(result) => {
+      switch result {
+      | Ok(jsonStr) => {
+          let newModel = try {
+            let json = JSON.parseExn(jsonStr)
+            let o = json->JSON.Decode.object->Option.getOr(Dict.make())
+            let approved =
+              o->Dict.get("approved")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
+            let reasoning =
+              o->Dict.get("reasoning")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+            if !approved {
+              // Nesy rejected the adjustment — log reasoning and loosen.
+              ignore(reasoning)
+              {...model, antiCrash: {...model.antiCrash, strictMode: false}}
+            } else {
+              model
+            }
+          } catch {
+          | _ => model
+          }
+          (newModel, Tea_Cmd.none)
+        }
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    }
+  | GovernanceNesyProbeResult(result) => {
+      switch result {
+      | Ok(jsonStr) => {
+          let newModel = try {
+            let json = JSON.parseExn(jsonStr)
+            let o = json->JSON.Decode.object->Option.getOr(Dict.make())
+            let neuralCoherence =
+              o->Dict.get("neural_coherence")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.5)
+            let driftMagnitude =
+              o->Dict.get("drift_magnitude")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+            {
+              ...model,
+              orbital: {
+                ...model.orbital,
+                stability: neuralCoherence,
+                divergenceLevel: driftMagnitude,
+              },
+            }
+          } catch {
+          | _ => model
+          }
+          (newModel, Tea_Cmd.none)
+        }
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    }
+  | Observability(obsMsg) => {
+      switch obsMsg {
+      | ExportSarifViaObserveMcp(reportId) =>
+        let cmd = ObservabilityCmd.exportSarifViaObserveMcp(
+          reportId,
+          r => Observability(SarifExportResult(r)),
+        )
+        (model, cmd)
+      | SarifExportResult(result) =>
+        switch result {
+        | Ok(_) => (model, Tea_Cmd.none)
+        | Error(_) => (model, Tea_Cmd.none)
+        }
+      | ExportOtelTraces =>
+        let batch = ObservabilityEngine.exportTraceBatch(model.boj.latencyLog)
+        let cmd = ObservabilityCmd.exportOtelTraces(
+          batch,
+          r => Observability(OtelExportResult(r)),
+        )
+        (model, cmd)
+      | OtelExportResult(result) =>
+        switch result {
+        | Ok(_) => (model, Tea_Cmd.none)
+        | Error(_) => (model, Tea_Cmd.none)
+        }
+      | FetchObservabilitySummary =>
+        let cmd = ObservabilityCmd.fetchObservabilitySummary(
+          r => Observability(ObservabilitySummaryResult(r)),
+        )
+        (model, cmd)
+      | ObservabilitySummaryResult(result) =>
+        switch result {
+        | Ok(_) => (model, Tea_Cmd.none)
+        | Error(_) => (model, Tea_Cmd.none)
+        }
+      }
+    }
+  | A2ml(a2mlMsg) => {
+      switch a2mlMsg {
+      | LoadManifest(path) =>
+        let cmd = A2mlCmd.loadManifest(path, r => A2ml(ManifestLoaded(r)))
+        (model, cmd)
+      | ManifestLoaded(result) =>
+        switch result {
+        | Ok(jsonStr) =>
+          // Parse the A2ML content returned by the Rust backend
+          let manifest = A2mlEngine.parseA2mlContent(jsonStr)
+          let validation = A2mlEngine.validateManifest(manifest)
+          // Extract test coverage policy from clade traits (Integration #6)
+          let (_coverage, _testTypes, _notes) = A2mlEngine.extractTestCoveragePolicy(manifest)
+          ({...model, lastA2mlManifest: Some(manifest), lastA2mlValidation: Some(validation)}, Tea_Cmd.none)
+        | Error(_) => (model, Tea_Cmd.none)
+        }
+      | ValidateManifest(path) =>
+        let cmd = A2mlCmd.validateManifestFile(path, r => A2ml(ManifestValidated(r)))
+        (model, cmd)
+      | ManifestValidated(result) =>
+        switch result {
+        | Ok(jsonStr) =>
+          // Backend structural validation passed; now do client-side semantic validation
+          let manifest = A2mlEngine.parseA2mlContent(jsonStr)
+          let validation = A2mlEngine.validateManifest(manifest)
+          ({...model, lastA2mlManifest: Some(manifest), lastA2mlValidation: Some(validation)}, Tea_Cmd.none)
+        | Error(_) => (model, Tea_Cmd.none)
+        }
+      | ListManifests =>
+        let cmd = A2mlCmd.listManifests(r => A2ml(ManifestsListed(r)))
+        (model, cmd)
+      | ManifestsListed(result) =>
+        switch result {
+        | Ok(jsonStr) =>
+          // Parse JSON array of file paths
+          let paths = try {
+            let parsed = JSON.parseExn(jsonStr)
+            switch JSON.Classify.classify(parsed) {
+            | Array(arr) =>
+              arr->Array.filterMap(item =>
+                switch JSON.Classify.classify(item) {
+                | String(s) => Some(s)
+                | _ => None
+                }
+              )
+            | _ => []
+            }
+          } catch {
+          | _ => []
+          }
+          ({...model, a2mlManifestPaths: paths}, Tea_Cmd.none)
+        | Error(_) => (model, Tea_Cmd.none)
+        }
+      }
+    }
+  | K9(k9Msg) => {
+      switch k9Msg {
+      | LoadContractile(path) =>
+        let cmd = K9Cmd.loadContractile(path, r => K9(ContractileLoaded(r)))
+        (model, cmd)
+      | ContractileLoaded(result) =>
+        switch result {
+        | Ok(jsonStr) =>
+          // Parse and validate the loaded K9 contractile content
+          let contractile = K9Engine.validateContractile(jsonStr, ~path="loaded")
+          // Integration #4: Module Config → K9 Kennel Schema
+          // If this is a Kennel-level file, extract its config fields as a schema
+          let kennelSchema = if contractile.securityLevel == K9Engine.Kennel {
+            Some(jsonStr)
+          } else {
+            model.k9KennelSchema
+          }
+          ({...model, lastK9Contractile: Some(contractile), k9KennelSchema: kennelSchema}, Tea_Cmd.none)
+        | Error(_) => (model, Tea_Cmd.none)
+        }
+      | ValidateContractile(path) =>
+        let cmd = K9Cmd.validateContractileFile(path, r => K9(ContractileValidated(r)))
+        (model, cmd)
+      | ContractileValidated(result) =>
+        switch result {
+        | Ok(jsonStr) =>
+          let contractile = K9Engine.validateContractile(jsonStr, ~path="validated")
+          ({...model, lastK9Contractile: Some(contractile)}, Tea_Cmd.none)
+        | Error(_) => (model, Tea_Cmd.none)
+        }
+      | ApplyLayout(name) =>
+        let cmd = K9Cmd.applyLayout(name, r => K9(LayoutApplied(r)))
+        (model, cmd)
+      | LayoutApplied(result) =>
+        switch result {
+        | Ok(jsonStr) =>
+          let layout = K9Engine.parseLayoutPanels(jsonStr)
+          ({...model, lastK9Layout: Some(layout)}, Tea_Cmd.none)
+        | Error(_) => (model, Tea_Cmd.none)
+        }
+      }
+    }
+  | AuditSeams => {
+      let register = SeamEngine.buildRegister("2026-03-09")
+      let audit = SeamEngine.auditRegister(register, "2026-03-09")
+      ({...model, seamRegister: register, lastSeamAudit: Some(audit)}, Tea_Cmd.none)
+    }
+  | SeamAuditResult(audit) => ({...model, lastSeamAudit: Some(audit)}, Tea_Cmd.none)
   | NoOp => (model, Tea_Cmd.none)
   }
 

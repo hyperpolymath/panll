@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# PanLL-specific Hypatia scan rules
+
+rules:
+  - id: SAFEDOM-001
+    name: "innerHTML usage outside SafeDOM"
+    description: >
+      Direct innerHTML assignment bypasses SafeDOM's 4-layer defence-in-depth
+      (DOMPurify, regex sanitiser, nesting validator, Trusted Types).
+      All DOM content injection MUST go through SafeDOMCore.mount() or
+      SafeMount.mountRawHtml().
+    severity: high
+    category: security
+    pattern: '\.innerHTML\s*='
+    exclude_paths:
+      - "src/core/SafeDOMCore.res"
+      - "src/core/SafeMount.res"
+      - "src/core/DOMPurify.res"
+      - "src/core/TrustedTypes.res"
+      - "node_modules/"
+      - "tests/"
+    languages:
+      - rescript
+      - javascript
+    remediation: >
+      Use SafeDOMCore.mount(selector, html) or SafeMount.mountRawHtml(selector, html)
+      instead of direct innerHTML assignment. These functions apply DOMPurify sanitisation,
+      regex pattern filtering, structural validation, and Trusted Types enforcement.
+    references:
+      - "src/core/SafeDOMCore.res"
+      - "contractiles/safedom-enforcement.ncl"
+      - "OWASP XSS Prevention Cheat Sheet"
+
+  - id: SAFEDOM-002
+    name: "outerHTML usage"
+    description: >
+      Direct outerHTML assignment bypasses SafeDOM. Use SafeDOMCore.mount() instead.
+    severity: high
+    category: security
+    pattern: '\.outerHTML\s*='
+    exclude_paths:
+      - "src/core/SafeDOMCore.res"
+      - "node_modules/"
+      - "tests/"
+    languages:
+      - rescript
+      - javascript
+    remediation: "Use SafeDOMCore.mount() instead of direct outerHTML assignment."
+
+  - id: SAFEDOM-003
+    name: "document.write usage"
+    description: >
+      document.write bypasses all DOM sanitisation. Never use in production code.
+    severity: critical
+    category: security
+    pattern: 'document\.write\s*\('
+    exclude_paths:
+      - "node_modules/"
+      - "tests/"
+    languages:
+      - rescript
+      - javascript
+    remediation: "Use SafeDOMCore.mount() instead of document.write()."

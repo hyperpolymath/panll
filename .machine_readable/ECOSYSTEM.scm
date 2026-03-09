@@ -2,8 +2,8 @@
 ;; ECOSYSTEM.scm - PanLL's position in the hyperpolymath ecosystem
 
 (ecosystem
-  (version "1.0.0")
-  (last-updated "2026-02-09")
+  (version "1.1.0")
+  (last-updated "2026-03-09")
   (format-spec "hyperpolymath/rsr-template-repo/spec/ECOSYSTEM-FORMAT-SPEC.adoc")
 
   (identity
@@ -80,9 +80,9 @@
 
     ((project "rsr-template-repo")
      (relationship "template-source")
-     (nature "PanLL should follow RSR (Repository Structure Requirements) template")
-     (integration-status "partial")
-     (notes "Has AI manifest, PMPL license, but missing .machine_readable/ SCM files (being added now)"))
+     (nature "PanLL follows RSR (Repository Structure Requirements) template")
+     (integration-status "active")
+     (notes "Has AI manifest, PMPL license, .machine_readable/ SCM files, TOPOLOGY.md, all 15 applicable workflows"))
 
     ((project "scaffoldia")
      (relationship "potential-tool")
@@ -117,8 +117,8 @@
     ((project "verisimdb")
      (relationship "primary-backend-module")
      (nature "VeriSimDB is PanLL's first database backend. VQL-DT maps to PanLL's three-pane layout: Pane-L = proof obligations and type constraints, Pane-N = agentic inference ('you need a CITATION proof here'), Pane-W = query results, drift heatmaps, entity explorer. PanLL makes VQL-DT accessible to non-specialist users.")
-     (integration-status "planned")
-     (notes "Anti-Crash circuit breaker validates VQL queries before execution. Vexometer monitors cognitive load during complex VQL-DT sessions. Architecture proven by NQC Web UI (nextgen-databases/nqc/web/) and FormBD Studio (Tauri 2.0 + ReScript proof assistant). This is the neurosymbolic agentic DbVisualizer."))
+     (integration-status "active")
+     (notes "VeriSimDB panel wired with TypeLL cross-panel intelligence. BoJ database-mcp cartridge routes VQL queries when bojRouting=true."))
 
     ((project "quandledb")
      (relationship "future-backend-module")
@@ -141,24 +141,25 @@
     ((project "gitbot-fleet")
      (relationship "automation-orchestration-module")
      (nature "PanLL as command center for gitbot-fleet (rhodibot, echidnabot, sustainabot, glambot, seambot, finishbot). Visualize bot activity, override decisions, review findings.")
-     (integration-status "future")
-     (notes "Anti-Crash validates bot actions before execution. Pane-N shows bot reasoning chains. Extends existing gitbot-fleet → hypatia → verisimdb pipeline with human oversight."))
+     (integration-status "partial")
+     (notes "Fleet panel wired with 6 bots and safety triangle. Seambot integration relevant for compliance seam detection. BoJ agent-mcp cartridge routes automation through BoJ gateway."))
+
+    ((project "boj-server")
+     (relationship "primary-backend-gateway")
+     (nature "BoJ (Bundle of Joy) server provides 17 cartridges as MCP-compatible backend services. PanLL's BoJ panel and primary gateway route through BoJ cartridges.")
+     (integration-status "active")
+     (notes "17 cartridges (all Grade D Alpha), bojRouting toggle for 5 panels (lsp-mcp, database-mcp, dap-mcp, bsp-mcp, agent-mcp). Per-invocation latency tracking. Umoja federation for multi-instance coordination."))
 
     ((project "idaptik")
      (relationship "game-development-module")
-     (nature "PanLL as development environment for IDApTIK game. Level architect integration via VeriSimDB, emulator/simulator panels for game testing.")
-     (integration-status "future")
-     (notes "Already uses VeriSimDB for level data persistence. PanLL provides: level editor panel, game state inspector, A2ML data viewer, sync server monitor."))
+     (nature "PanLL as development environment for IDApTIK game. 11 IDApTIK eNSAID panels with full Rust backends.")
+     (integration-status "active")
+     (notes "11 panels wired: Valence Shell, Game Preview, VM Inspector, Network Topology, Level Architect, Multiplayer Monitor, DLC Workshop, Release Manager, Editor Bridge, Build Dashboard, Coprocessors. All have Rust backends with Tauri commands."))
 
-    ;; TODO (2026-02-27): COMPREHENSIVE MODULE AUDIT NEEDED
-    ;; The projects listed above were identified ad-hoc during a VeriSimDB session.
-    ;; Many more hyperpolymath projects likely map to PanLL modules — airie (network
-    ;; analysis/simulation/emulation), proven (BGP/crypto), stapeln (containers),
-    ;; ambientops, and others. A dedicated session should systematically walk the
-    ;; full ~265 repo ecosystem and map each candidate to PanLL's three-pane model
-    ;; (Pane-L constraints, Pane-N agent reasoning, Pane-W results/visualisation).
-    ;; This will also identify which projects are pure backends vs which need their
-    ;; own PanLL panels, and prevent duplication or missed integrations.
+    ;; NOTE (2026-03-09): 41 panels now wired. Comprehensive module audit still
+    ;; pending for remaining ~265 repo ecosystem mapping. Known candidates:
+    ;; airie (network analysis), proven (BGP/crypto), stapeln (containers),
+    ;; ambientops. See PanLL MEMORY.md for integration principle.
     )
 
   (dependencies
@@ -196,24 +197,19 @@
        (criticality "critical")))
 
     (libraries
-      ((name "rescript-tea")
-       (version "0.16.0")
-       (purpose "The Elm Architecture (TEA) state management")
-       (license "MIT")
-       (criticality "critical")
-       (migration-note "Migrating from custom TEA to this official library"))
-
-      ((name "rescript-webapi")
-       (version "0.10.0")
-       (purpose "Browser API bindings")
-       (license "MIT")
-       (criticality "medium"))
-
       ((name "@rescript/core")
        (version "1.6.1")
        (purpose "ReScript standard library")
        (license "MIT")
-       (criticality "high")))
+       (criticality "high"))
+
+      ((name "custom-tea")
+       (version "internal")
+       (purpose "Custom TEA (The Elm Architecture) — 8 modules, ~1011 lines, VDOM diffing, ARIA, message queue")
+       (license "PMPL-1.0-or-later")
+       (criticality "critical")
+       (note "ADR accepted: custom TEA in src/tea/ is permanent. rescript-tea@0.16.0 removed (unmaintained, incompatible).")))
+
 
     (dev-dependencies
       ((name "Deno.test")
@@ -250,8 +246,8 @@
 
   (roadmap-highlights
     ((milestone "v0.2.0")
-     (target "Q1 2026")
-     (focus "Enhanced UI & functional components"))
+     (target "Q2 2026")
+     (focus "TypeLL cross-panel intelligence, backend connections, Coprocessor Phase 2/3, A2ML/K9 integrations"))
 
     ((milestone "v0.3.0")
      (target "Q2 2026")

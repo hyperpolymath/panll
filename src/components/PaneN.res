@@ -860,6 +860,8 @@ let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
                   renderTacticSuggestionRibbon(echidna.tacticSuggestions),
                   renderTacticInput(echidna),
                   renderProofScript(session.proofScript),
+                  // CI/CD-style visual proof pipeline
+                  ProofChain.view(session),
                 },
               )
             | None => noNode

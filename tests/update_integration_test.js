@@ -13,7 +13,7 @@
  * - Nested variants: { TAG: "AntiCrash", _0: { TAG: "ValidationPassed", _0: token } }
  */
 
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals, assert } from "jsr:@std/assert";
 import { init as initModel } from "../src/Model.res.js";
 import * as Update from "../src/Update.res.js";
 
@@ -174,8 +174,9 @@ Deno.test("Update - Vexometer RequestVexationIndex generates command", () => {
 
   // Command should be generated (not Tea_Cmd.none)
   // Tea_Cmd.none compiles to "None", a Call compiles to { TAG: "Call", _0: fn }
+  // applyContractiles may wrap in Batch, so accept either Call or Batch
   assertEquals(typeof cmd, "object");
-  assertEquals(cmd.TAG, "Call");
+  assert(cmd.TAG === "Call" || cmd.TAG === "Batch", `Expected Call or Batch, got ${cmd.TAG}`);
 });
 
 Deno.test("Update - PaneW ImportEventChain parses input", () => {

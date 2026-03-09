@@ -108,13 +108,16 @@ let standardProgram = (
         state.renderState = Some(renderState)
       }
     | (None, _) => {
-        // No container - try to mount to #app
-        switch Tea_Render.mount("#app", vdom, dispatch) {
-        | Some(renderState) => {
+        // No container - validate and mount to #app via SafeMount
+        switch SafeMount.validateAndFind("#app") {
+        | Error(reason) => Console.warn(reason)
+        | Ok(container) => {
+            let renderState = Tea_Render.createState(dispatch)
+            Tea_Render.render(container, vdom, renderState)
             state.renderState = Some(renderState)
-            state.container = Tea_Render.querySelector("#app")
+            state.container = Some(container)
+            SafeMount.trace("tea-app-init", "mounted to #app")
           }
-        | None => Console.warn("No #app element found - rendering disabled")
         }
       }
     }
@@ -140,6 +143,9 @@ let standardProgram = (
       state.subscriptionCleanup = Tea_Sub.enable(newSub, dispatch)
     }
   }
+
+  // Initialise safety layers (DOMPurify, Trusted Types, MountTracer)
+  let _safetyReport = SafeMount.initSafety()
 
   // Initial render
   render()

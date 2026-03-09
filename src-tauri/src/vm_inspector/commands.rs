@@ -541,6 +541,10 @@ pub async fn vm_inspector_read_file(path: String) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use once_cell::sync::Lazy;
+
+    /// Serialise tests that share the global VM to prevent race conditions.
+    static TEST_LOCK: Lazy<std::sync::Mutex<()>> = Lazy::new(|| std::sync::Mutex::new(()));
 
     /// Helper: reset the global VM to default state.
     /// Recovers from a poisoned mutex (previous test panic).
@@ -579,6 +583,7 @@ mod tests {
 
     #[test]
     fn test_default_state() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         let vm = VM.lock().unwrap_or_else(|e| e.into_inner());
         assert_eq!(vm.pc, 0);
@@ -590,6 +595,7 @@ mod tests {
 
     #[test]
     fn test_push_and_pop() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
             instr_op("PUSH", 42),
@@ -614,6 +620,7 @@ mod tests {
 
     #[test]
     fn test_add() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
             instr_op("PUSH", 10),
@@ -633,6 +640,7 @@ mod tests {
 
     #[test]
     fn test_sub() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
             instr_op("PUSH", 50),
@@ -651,6 +659,7 @@ mod tests {
 
     #[test]
     fn test_swap() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
             instr_op("PUSH", 1),
@@ -669,6 +678,7 @@ mod tests {
 
     #[test]
     fn test_noop() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![instr("NOOP"), instr("NOOP")]);
         {
@@ -682,6 +692,7 @@ mod tests {
 
     #[test]
     fn test_negate() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![instr_op("PUSH", 7), instr("NEGATE")]);
         {
@@ -696,6 +707,7 @@ mod tests {
 
     #[test]
     fn test_step_backward_restores_state() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
             instr_op("PUSH", 100),
@@ -724,6 +736,7 @@ mod tests {
 
     #[test]
     fn test_load_and_store() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
             instr_op("PUSH", 99),   // value to store
@@ -745,6 +758,7 @@ mod tests {
 
     #[test]
     fn test_stack_underflow_error() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![instr("POP")]);
         {
@@ -757,6 +771,7 @@ mod tests {
 
     #[test]
     fn test_div_by_zero_error() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
             instr_op("PUSH", 10),
@@ -803,6 +818,7 @@ mod tests {
 
     #[test]
     fn test_tier_counts_tracked() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
             instr_op("PUSH", 5),  // tier 0
@@ -826,6 +842,7 @@ mod tests {
 
     #[test]
     fn test_end_of_program_halts() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![instr("NOOP")]);
         {
@@ -840,6 +857,7 @@ mod tests {
 
     #[test]
     fn test_history_ring_buffer_limit() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         {
             let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
@@ -853,6 +871,7 @@ mod tests {
 
     #[test]
     fn test_xor_and_or() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
             instr_op("PUSH", 0xFF),
@@ -871,6 +890,7 @@ mod tests {
 
     #[test]
     fn test_bitwise_flip() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![instr_op("PUSH", 0), instr("FLIP")]);
         {
@@ -885,6 +905,7 @@ mod tests {
 
     #[test]
     fn test_mul() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
             instr_op("PUSH", 6),
@@ -903,6 +924,7 @@ mod tests {
 
     #[test]
     fn test_state_serialisation() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         {
             let vm = VM.lock().unwrap_or_else(|e| e.into_inner());

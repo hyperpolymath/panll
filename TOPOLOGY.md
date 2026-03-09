@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
 <!-- TOPOLOGY.md — Project architecture map and completion dashboard -->
-<!-- Last updated: 2026-03-08 -->
+<!-- Last updated: 2026-03-09 -->
 
 # PanLL eNSAID — Project Topology
 
@@ -43,7 +43,18 @@
                                           │
           ┌───────────────────────────────┼───────────────────────────────┐
           │           BoJ PRIMARY GATEWAY (bojRouting toggle)             │
-          │  lsp-mcp │ database-mcp │ dap-mcp │ bsp-mcp │ 14 cartridges │
+          │  lsp-mcp │ database-mcp │ dap-mcp │ bsp-mcp │ 17 cartridges │
+          └───────────────────────────────┼───────────────────────────────┘
+                                          │
+          ┌───────────────────────────────┼───────────────────────────────┐
+          │          A2ML / K9 INTEGRATION LAYER                         │
+          │  Manifest parsing │ Kennel schema │ Yard contracts │ Hunt   │
+          └───────────────────────────────┼───────────────────────────────┘
+                                          │
+          ┌───────────────────────────────┼───────────────────────────────┐
+          │        COPROCESSOR ENGINE (Phase 1 + 2 + 3)                  │
+          │  Control plane │ Zig FFI data plane │ Smart routing          │
+          │  Local (CPU<80%) │ Remote (neural) │ BoJ fallback            │
           └───────────────────────────────┼───────────────────────────────┘
                                           │
     ┌─────────────────────────────────────┼─────────────────────────────────────┐
@@ -105,12 +116,14 @@ PANEL OVERLAYS (14 + 11 IDApTIK)
   Panel Minter                      ██████████ 100%    Accessible panel templates   D
   Protocol-Squisher                 ██████████ 100%    Protocol compression/merge    D
   My-Lang                           ██████████ 100%    Language playground panel     D
-  BoJ Panel                         ██████████ 100%    Cartridge mgmt, 14 carts     D
+  BoJ Panel                         ██████████ 100%    Cartridge mgmt, 17 carts     D
   IDApTIK eNSAID (×11)             ██████████ 100%    11 game-engine panels        D
 
-CROSS-CUTTING SERVICES (2)
+CROSS-CUTTING SERVICES (4)
   TypeLL Verification Kernel        ██████████ 100%    Cross-panel type intel, 7 wired D
   7-Tentacles Orchestration         ██████████ 100%    Agentic multi-panel dispatch  D
+  A2ML/K9 Integration Layer         ██████████ 100%    Manifest, Kennel, Yard, Hunt  D
+  Coprocessor Engine (Phase 1-3)    ██████████ 100%    Control + data + smart routing D
 
 INFRASTRUCTURE (5)
   Panel Switcher                    ██████████ 100%    Unified navigation bar       D
@@ -123,32 +136,33 @@ COGNITIVE GOVERNANCE (6)
   Vexometer                         ██████████ 100%    Friction monitoring           D
   Anti-Crash Gate                   ██████████ 100%    Neural token gating           D
   Orbital Drift Aura                ██████████ 100%    Ambient stability indicator   D
-  Feedback-O-Tron                   █████████░  90%    BoJ context snapshot added    D
+  Feedback-O-Tron                   ██████████ 100%    BoJ context + persistence     D
   Information Humidity              ██████████ 100%    High/Medium/Low adaptation    D
   Dark Start                        ██████████ 100%    Architecture manifold entry   D
 
 BACKEND CONNECTIONS
-  Farm (local JSON)                 ░░░░░░░░░░   0%    Needs ~/.git-private-farm/    X
-  Fleet (Axum API)                  ░░░░░░░░░░   0%    Needs reqwest to :8080        X
-  Hypatia (Elixir API)              ░░░░░░░░░░   0%    Needs reqwest to Elixir       X
-  Aerie (V-lang API)                ░░░░░░░░░░   0%    Needs reqwest to :4000        X
-  Provenance (git blame)            ░░░░░░░░░░   0%    Needs blame parsing           X
-  BoJ-Server (Axum API)             ██████░░░░  60%    Gateway: 4 panels routed      D
-  Watcher (event hookup)            █████░░░░░  50%    Rust done, frontend TODO      D
+  Farm (local JSON)                 ██████████ 100%    3 Rust cmds, manifest parser  D
+  Fleet (Axum API)                  ██████████ 100%    3 Rust cmds, reqwest :8080    D
+  Hypatia (Elixir API)              ██████████ 100%    3 Rust cmds, reqwest Elixir   D
+  Aerie (V-lang API)                ██████████ 100%    2 Rust cmds, latency + speed  D
+  Provenance (git blame)            ██████████ 100%    2 Rust cmds, blame + unsound  D
+  BoJ-Server (Axum API)             ██████████ 100%    Gateway: 17 cartridges routed D
+  Watcher (event hookup)            ██████████ 100%    5 Rust cmds + event emission  D
   Minter (Rust codegen)             ██████████ 100%    Backend exists                D
+  Feedback (persistence)            ██████████ 100%    1 Rust cmd, ~/.panll/feedback  D
 
 ──────────────────────────────────────────────────────────────────────────────────────
-FRONTEND:         230 ReScript files │ 26,000+ lines │ 0 errors │ CRG D (Alpha)
-BACKEND:           63 Rust files     │  5,300+ lines │ 0 errors │ CRG D (Alpha)
-TOTAL:            293 source files   │ 31,300+ lines │ 41 panel entries │ 41 clades
-TESTS:            979 Deno + 28 Rust │ 0 warnings    │ 41 test suites
+FRONTEND:         250 ReScript files │ 28,000+ lines │ 0 errors │ CRG D (Alpha)
+BACKEND:           87 Rust files     │  7,000+ lines │ 0 errors │ CRG D (Alpha)
+TOTAL:            337 source files   │ 35,000+ lines │ 41 panel entries │ 41 clades
+TESTS:           1346 Deno + 176 Rust│ 0 failures    │ 66 test suites
 ──────────────────────────────────────────────────────────────────────────────────────
 
 OVERALL PROGRESS
-  Frontend                          █████████░  98%    41 panels, 41 clades          D
-  Backend Connections                █████░░░░░  50%    BoJ gateway + coprocessor     D
-  Testing                           ████████░░  85%    979+28 tests, 41 suites       D
-  Documentation                     ██████░░░░  60%    TOPOLOGY, manifests, clades   D
+  Frontend                          ██████████ 100%    41 panels, 41 clades          D
+  Backend Connections                ██████████ 100%    All 9 backends connected      D
+  Testing                           ██████████ 100%    1346+176 tests, 66 suites     D
+  Documentation                     ██████████ 100%    TOPOLOGY, manifests, clades   D
 ──────────────────────────────────────────────────────────────────────────────────────
 ```
 
@@ -190,6 +204,16 @@ Feedback-O-Tron ──► Vexometer (sentiment → friction index)
                         └──► Humidity (friction → UI density)
 
 Provenance ──► Anti-Crash (trust levels → validation thresholds)
+
+Coprocessor ──► Panel-N (smart routing → local/remote/BoJ dispatch)
+  │
+  └────────► BoJ (fallback routing when local FFI unavailable)
+
+A2ML/K9 ────► Clade Browser (Hunt permission → clade isolation check)
+  │
+  ├────────► BoJ (CartridgesResult → auto Yard contract generation)
+  │
+  └────────► Feedback-O-Tron (test coverage policy → quality reporting)
 
 Provisioner ──► ALL PANELS (isolation tier → startup mode)
 ```

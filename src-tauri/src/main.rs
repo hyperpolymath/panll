@@ -99,6 +99,12 @@ mod typell;
 /// Ephemeral data stored under /tmp/panll/ (recordings, checkpoints).
 mod valence_shell;
 
+/// Clade Scanner — reads `.a2ml` clade definition files from `panel-clades/clades/`.
+mod clade_scanner;
+
+/// Governance — nesy-MCP bridge for neural governance validation.
+mod governance;
+
 /// Coprocessor — Control plane for external compute engines (Axiom.jl, BoJ).
 mod coprocessor;
 
@@ -119,6 +125,37 @@ mod dlc_workshop;
 
 /// Release Manager — IDApTIK versioning, changelog, and distribution.
 mod release_manager;
+
+/// Umoja — peer management for the federation gossip protocol.
+mod umoja;
+
+/// Observability — SARIF export and OpenTelemetry trace collection via observe-mcp.
+mod observability;
+
+/// A2ML — AI manifest parsing and validation engine.
+mod a2ml;
+
+/// K9 — contractile configuration validation and layout application.
+mod k9;
+
+/// Fleet — Gitbot-Fleet bot orchestration dashboard bridge.
+/// Routes to fleet Axum API at FLEET_URL (default http://localhost:8080/api/v1).
+mod fleet;
+
+/// Hypatia — Neurosymbolic scanner bridge for CI/CD intelligence.
+/// Routes to Hypatia Elixir Phoenix API at HYPATIA_URL (default http://localhost:4040/api/v1).
+mod hypatia;
+
+/// Aerie — Network diagnostics (latency probes, speed tests).
+/// Runs in-process using std::net and reqwest — no external service needed.
+mod aerie;
+
+/// Provenance — Git blame analysis and unsound marker detection.
+/// Uses std::process::Command to run git and regex to scan for dangerous patterns.
+mod provenance;
+
+/// Feedback — Persistent feedback report storage under ~/.panll/feedback/.
+mod feedback;
 
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
@@ -2115,9 +2152,21 @@ fn main() {
             mylang_repl,
             mylang_lsp_connect,
             mylang_lsp_diagnostics,
-            // Coprocessor — Control plane for external compute engines
+            // Clade Scanner — A2ML clade file loading
+            clade_scanner::commands::scan_clade_files,
+            // Governance — nesy-MCP neural validation
+            governance::commands::governance_nesy_query,
+            governance::commands::governance_nesy_validate,
+            governance::commands::governance_nesy_probe,
+            // Coprocessor — Control plane + data plane + smart routing
             coprocessor::commands::query_compute_engine,
             coprocessor::commands::discover_compute_devices,
+            coprocessor::commands::coprocessor_dispatch_local,
+            coprocessor::commands::coprocessor_check_ffi,
+            coprocessor::commands::coprocessor_benchmark,
+            coprocessor::commands::coprocessor_load_ffi,
+            coprocessor::commands::coprocessor_local_resources,
+            coprocessor::commands::coprocessor_smart_dispatch,
             // Game Preview — IDApTIK engine preview and recording
             game_preview::commands::game_preview_check_server,
             game_preview::commands::game_preview_control,
@@ -2173,6 +2222,40 @@ fn main() {
             release_manager::commands::release_publish,
             release_manager::commands::release_read_history,
             release_manager::commands::release_bump_version,
+            // Umoja — peer management for federation gossip protocol
+            umoja::commands::umoja_add_peer,
+            umoja::commands::umoja_disconnect_peer,
+            umoja::commands::umoja_trigger_gossip,
+            umoja::commands::umoja_sync_catalogue,
+            umoja::commands::umoja_peer_metrics,
+            // Observability — SARIF export and OpenTelemetry traces via observe-mcp
+            observability::commands::observe_export_sarif,
+            observability::commands::observe_export_traces,
+            observability::commands::observe_summary,
+            // A2ML — AI manifest parsing and validation
+            a2ml::commands::a2ml_load_manifest,
+            a2ml::commands::a2ml_validate,
+            a2ml::commands::a2ml_list,
+            // K9 — contractile configuration and layout
+            k9::commands::k9_load_contractile,
+            k9::commands::k9_validate,
+            k9::commands::k9_apply_layout,
+            // Fleet — Gitbot-Fleet bot orchestration
+            fleet::commands::fleet_get_bots,
+            fleet::commands::fleet_get_findings,
+            fleet::commands::fleet_dispatch,
+            // Hypatia — Neurosymbolic scanner
+            hypatia::commands::hypatia_get_networks,
+            hypatia::commands::hypatia_get_scans,
+            hypatia::commands::hypatia_scan_repo,
+            // Aerie — Network diagnostics
+            aerie::commands::aerie_get_latency,
+            aerie::commands::aerie_speed_test,
+            // Provenance — Git blame and unsound marker scanning
+            provenance::commands::provenance_analyse_file,
+            provenance::commands::provenance_scan_unsound,
+            // Feedback — Persistent report storage
+            feedback::commands::feedback_save_report,
         ])
         .setup(|_app| {
             Ok(())
