@@ -66,7 +66,7 @@ let averageLatency = (players: array<connectedPlayer>): int => {
 let defaultState: multiplayerMonitorState = {
   activeCategory: MultiplayerDashboard,
   wsConnection: WsDisconnected,
-  serverUrl: "ws://localhost:4000/socket/websocket",
+  serverUrl: ServiceEndpoints.multiplayerMonitor,
   players: [],
   channels: [],
   stateDiffs: [],

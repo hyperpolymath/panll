@@ -32,7 +32,7 @@ let verisimdb: moduleConfig = {
   name: "VeriSimDB",
   version: "0.1.0-beta",
   description: "Octad multimodal database with cross-modal drift detection",
-  endpoint: "http://localhost:8080/api/v1",
+  endpoint: ServiceEndpoints.verisimdb,
   capabilities: [
     QueryExecution,
     DriftDetection,
@@ -76,7 +76,7 @@ let quandledb: moduleConfig = {
   name: "QuandleDB",
   version: "0.0.1-alpha",
   description: "Algebraic database with quandle-structured queries",
-  endpoint: "http://localhost:8081/api/v1",
+  endpoint: ServiceEndpoints.quandledb,
   capabilities: [
     QueryExecution,
     Playground,
@@ -108,7 +108,7 @@ let lithoglyph: moduleConfig = {
   name: "LithoGlyph",
   version: "0.0.1-alpha",
   description: "Graph pattern database for archaeological petroglyphs",
-  endpoint: "http://localhost:8082/api/v1",
+  endpoint: ServiceEndpoints.lithoglyph,
   capabilities: [
     QueryExecution,
     Playground,

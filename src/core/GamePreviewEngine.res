@@ -58,7 +58,7 @@ let executionLabel = (exec: gameExecutionState): string =>
 /// Default state for the Game Preview panel.
 let defaultState: gamePreviewState = {
   devServerConnected: false,
-  devServerUrl: "http://localhost:8080",
+  devServerUrl: ServiceEndpoints.gamePreviewDev,
   execution: GameRunning,
   activeCategory: PreviewLive,
   activeOverlays: [],

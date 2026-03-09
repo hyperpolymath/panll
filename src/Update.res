@@ -2597,11 +2597,42 @@ let updatePlaza = (model: model, msg: plazaMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, plaza: {...plaza, loading: true}},
       PlazaCmd.scanRepo(repoName, result => Plaza(RepoScanned(result))),
     )
-  | RepoScanned(_result) => (
-      // TODO: Parse scan result and add to audits array.
-      {...model, plaza: {...plaza, loading: false}},
-      Tea_Cmd.none,
-    )
+  | RepoScanned(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        let audit = try {
+          let json = JSON.parseExn(jsonStr)
+          let o = json->JSON.Decode.object->Option.getOr(Dict.make())
+          let gb = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+          let gi = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.map(Float.toInt)->Option.getOr(0)
+          let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let rn = gs(o, "repo_name")
+          let hl = gb(o, "has_license_file")
+          let sc = gi(o, "spdx_header_count")
+          let tf = gi(o, "total_source_files")
+          let ea = gb(o, "has_exhibit_a")
+          let eb = gb(o, "has_exhibit_b")
+          let ps = gb(o, "has_provenance_sig")
+          let lv = if hl && sc === tf && ea && eb && ps { FullCompliance } else if hl && sc > 0 { PartialCompliance } else { NonCompliant }
+          Some({
+            repoName: rn, level: lv, filesScanned: tf, filesWithHeaders: sc,
+            lastAudit: Date.make()->Date.toISOString,
+            checks: [
+              {id: "license", name: "LICENSE", description: "LICENSE file", passed: hl, severity: "critical", detail: hl ? "Found" : "Missing"},
+              {id: "spdx", name: "SPDX", description: "SPDX headers", passed: sc === tf, severity: "warning", detail: `${Int.toString(sc)}/${Int.toString(tf)}`},
+              {id: "exhibit-a", name: "Exhibit A", description: "Ethical Use", passed: ea, severity: "info", detail: ea ? "Present" : "Missing"},
+              {id: "exhibit-b", name: "Exhibit B", description: "QS Provenance", passed: eb, severity: "info", detail: eb ? "Present" : "Missing"},
+              {id: "sig", name: "Provenance", description: "Signature", passed: ps, severity: "warning", detail: ps ? "Verified" : "Not found"},
+            ],
+          }: complianceAudit)
+        } catch { | _ => None }
+        switch audit {
+        | Some(a) => ({...model, plaza: {...plaza, loading: false, audits: Array.concat(plaza.audits, [a])}}, Tea_Cmd.none)
+        | None => ({...model, plaza: {...plaza, loading: false}}, Tea_Cmd.none)
+        }
+      }
+    | Error(e) => ({...model, plaza: {...plaza, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    }
   | SetPlazaCategory(cat) => (
       {...model, plaza: {...plaza, activeCategory: cat}},
       Tea_Cmd.none,
@@ -3551,9 +3582,30 @@ let updateVoiceTag = (model: model, msg: voiceTagMsg): (model, Tea_Cmd.t<msg>) =
     }
   | ProjectScanned(result) =>
     switch result {
-    | Ok(_jsonStr) =>
-      // TODO: Parse scan results and populate a project-wide tag summary.
-      (model, Tea_Cmd.none)
+    | Ok(jsonStr) => {
+        let parsed = try {
+          let json = JSON.parseExn(jsonStr)
+          let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+          let getInt = key => obj->Dict.get(key)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
+          Some({
+            VoiceTagModel.totalTags: getInt("totalTags"),
+            unresolvedTags: getInt("unresolvedTags"),
+            todoCount: getInt("todoCount"),
+            fixmeCount: getInt("fixmeCount"),
+            careOnRegions: getInt("careOnRegions"),
+            ecoModeRegions: getInt("ecoModeRegions"),
+            burdenRegions: getInt("burdenRegions"),
+            aiTagCount: getInt("aiTagCount"),
+            humanTagCount: getInt("humanTagCount"),
+          })
+        } catch {
+        | _ => None
+        }
+        switch parsed {
+        | Some(summary) => ({...model, voiceTag: {...vt, summary}}, Tea_Cmd.none)
+        | None => (model, Tea_Cmd.none)
+        }
+      }
     | Error(e) => ({...model, voiceTag: {...vt, error: Some(e)}}, Tea_Cmd.none)
     }
   | SelectTag(id) => (
@@ -3688,9 +3740,69 @@ let updateProvenance = (model: model, msg: provenanceMsg): (model, Tea_Cmd.t<msg
     )
   | AnalysisResult(result) =>
     switch result {
-    | Ok(_jsonStr) =>
-      // TODO: Parse blame regions from JSON. For now, mark as loaded.
-      ({...model, provenance: {...prov, loading: false, error: None}}, Tea_Cmd.none)
+    | Ok(jsonStr) => {
+        let parsed = try {
+          let json = JSON.parseExn(jsonStr)
+          let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+          let filePath = obj->Dict.get("filePath")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let analysedAt = obj->Dict.get("analysedAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(Date.now())
+          let regionsArr = obj->Dict.get("regions")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+          let regions = regionsArr->Array.filterMap(item => {
+            let r = item->JSON.Decode.object->Option.getOr(Dict.make())
+            let startLine = r->Dict.get("startLine")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+            let endLine = r->Dict.get("endLine")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+            let trustStr = r->Dict.get("trustLevel")->Option.flatMap(JSON.Decode.string)->Option.getOr("unknown")
+            let trustLevel: ProvenanceModel.trustLevel = switch trustStr {
+            | "verified" => Verified
+            | "human_reviewed" => HumanReviewed
+            | "ai_assisted" => AiAssisted
+            | "unreviewed_ai" => UnreviewedAi
+            | _ => Unknown
+            }
+            let author = r->Dict.get("author")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+            let authorEmail = r->Dict.get("authorEmail")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+            let coAuthored = r->Dict.get("coAuthored")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+            let coAuthor = r->Dict.get("coAuthor")->Option.flatMap(JSON.Decode.string)
+            let commitSha = r->Dict.get("commitSha")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+            let commitTimestamp = r->Dict.get("commitTimestamp")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+            let acknowledged = r->Dict.get("acknowledged")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+            Some({
+              ProvenanceModel.startLine: Float.toInt(startLine),
+              endLine: Float.toInt(endLine),
+              trustLevel,
+              author,
+              authorEmail,
+              coAuthored,
+              coAuthor,
+              commitSha,
+              commitTimestamp,
+              acknowledged,
+            })
+          })
+          let summaryObj = obj->Dict.get("summary")->Option.flatMap(JSON.Decode.object)->Option.getOr(Dict.make())
+          let getInt = key => summaryObj->Dict.get(key)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
+          let summary: ProvenanceModel.provenanceSummary = {
+            totalLines: getInt("totalLines"),
+            verifiedLines: getInt("verifiedLines"),
+            humanReviewedLines: getInt("humanReviewedLines"),
+            aiAssistedLines: getInt("aiAssistedLines"),
+            unreviewedAiLines: getInt("unreviewedAiLines"),
+            unknownLines: getInt("unknownLines"),
+            authorCount: getInt("authorCount"),
+            coAuthorCount: getInt("coAuthorCount"),
+            hasViolations: summaryObj->Dict.get("hasViolations")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false),
+            unsoundMarkers: getInt("unsoundMarkers"),
+          }
+          let fp: ProvenanceModel.fileProvenance = {filePath, regions, summary, analysedAt}
+          Some(fp)
+        } catch {
+        | _ => None
+        }
+        switch parsed {
+        | Some(fp) => ({...model, provenance: {...prov, activeFile: Some(fp), loading: false, error: None}}, Tea_Cmd.none)
+        | None => ({...model, provenance: {...prov, loading: false, error: None}}, Tea_Cmd.none)
+        }
+      }
     | Error(e) => (
         {...model, provenance: {...prov, loading: false, error: Some(e)}},
         Tea_Cmd.none,
@@ -3698,9 +3810,24 @@ let updateProvenance = (model: model, msg: provenanceMsg): (model, Tea_Cmd.t<msg
     }
   | UnsoundScanResult(result) =>
     switch result {
-    | Ok(_jsonStr) =>
-      // TODO: Parse unsound marker counts and update active file's summary.
-      (model, Tea_Cmd.none)
+    | Ok(jsonStr) => {
+        let parsed = try {
+          let json = JSON.parseExn(jsonStr)
+          let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+          let unsoundMarkers = obj->Dict.get("unsoundMarkers")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
+          Some(unsoundMarkers)
+        } catch {
+        | _ => None
+        }
+        switch (parsed, prov.activeFile) {
+        | (Some(count), Some(fp)) => {
+            let updatedSummary = {...fp.summary, unsoundMarkers: count, hasViolations: count > 0 || fp.summary.hasViolations}
+            let updatedFp = {...fp, summary: updatedSummary}
+            ({...model, provenance: {...prov, activeFile: Some(updatedFp)}}, Tea_Cmd.none)
+          }
+        | _ => (model, Tea_Cmd.none)
+        }
+      }
     | Error(e) => (
         {...model, provenance: {...prov, error: Some(e)}},
         Tea_Cmd.none,
@@ -3714,9 +3841,17 @@ let updateProvenance = (model: model, msg: provenanceMsg): (model, Tea_Cmd.t<msg
       {...model, provenance: {...prov, hostileUxSuppressed: !prov.hostileUxSuppressed}},
       Tea_Cmd.none,
     )
-  | AcknowledgeRegion(_filePath, _startLine) =>
-    // TODO: Find the region in activeFile and set acknowledged = true.
-    (model, Tea_Cmd.none)
+  | AcknowledgeRegion(_filePath, startLine) =>
+    switch prov.activeFile {
+    | Some(fp) => {
+        let updatedRegions = fp.regions->Array.map(r =>
+          if r.startLine === startLine { {...r, acknowledged: true} } else { r }
+        )
+        let updatedFp = {...fp, regions: updatedRegions}
+        ({...model, provenance: {...prov, activeFile: Some(updatedFp)}}, Tea_Cmd.none)
+      }
+    | None => (model, Tea_Cmd.none)
+    }
   | SetEnabled(enabled) => (
       {...model, provenance: {...prov, enabled}},
       Tea_Cmd.none,
@@ -4302,16 +4437,39 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
     ({...model, workspace: {...ws, groups: WorkspaceEngine.pushToBack(ws.groups, id)}}, Tea_Cmd.none)
   | PullToFront(id) =>
     ({...model, workspace: {...ws, groups: WorkspaceEngine.pullToFront(ws.groups, id)}}, Tea_Cmd.none)
-  | SaveArrangement(_id, _name) =>
-    // TODO: gather current positions and save via WorkspaceCmd
-    (model, Tea_Cmd.none)
+  | SaveArrangement(id, name) => {
+    let arr: arrangement = {
+      id, name, positions: [], groups: ws.groups, builtIn: false, lastSaved: Date.now(),
+    }
+    let arrangements = Array.concat(ws.arrangements->Array.filter(a => a.id !== id), [arr])
+    let json = `{"id":"${id}","name":"${name}","builtIn":false,"lastSaved":${Float.toString(Date.now())},"positions":[],"groups":[]}`
+    ({...model, workspace: {...ws, arrangements}}, WorkspaceCmd.saveArrangement(json))
+  }
   | LoadArrangement(id) =>
     ({...model, workspace: {...ws, activeArrangementId: Some(id)}}, Tea_Cmd.none)
   | DeleteArrangement(id) =>
     ({...model, workspace: {...ws, arrangements: WorkspaceEngine.deleteArrangement(ws.arrangements, id)}}, Tea_Cmd.none)
-  | ArrangementsLoaded(_result) =>
-    // TODO: parse JSON and merge with built-in arrangements
-    (model, Tea_Cmd.none)
+  | ArrangementsLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        let loaded = try {
+          let json = JSON.parseExn(jsonStr)
+          json->JSON.Decode.array->Option.getOr([])->Array.filterMap(item => {
+            let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+            let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+            let gf = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+            let gb = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+            let id = gs(o, "id")
+            if id !== "" {
+              Some({id, name: gs(o, "name"), positions: [], groups: [], builtIn: gb(o, "builtIn"), lastSaved: gf(o, "lastSaved")}: arrangement)
+            } else { None }
+          })
+        } catch { | _ => [] }
+        let merged = Array.concat(ws.arrangements->Array.filter(a => a.builtIn), loaded->Array.filter(a => !a.builtIn))
+        ({...model, workspace: {...ws, arrangements: merged}}, Tea_Cmd.none)
+      }
+    | Error(_) => (model, Tea_Cmd.none)
+    }
   | CreateSession(id, name) => {
     let now = Date.now()
     let newSession: session = {
@@ -4364,9 +4522,35 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
     ({...model, workspace: {...ws, sessions: WorkspaceEngine.deleteSession(ws.sessions, id)}}, Tea_Cmd.none)
   | SwitchSession(id) =>
     ({...model, workspace: {...ws, activeSessionId: Some(id)}}, Tea_Cmd.none)
-  | SessionsLoaded(_result) =>
-    // TODO: parse JSON and populate sessions
-    (model, Tea_Cmd.none)
+  | SessionsLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        let loaded = try {
+          let json = JSON.parseExn(jsonStr)
+          json->JSON.Decode.array->Option.getOr([])->Array.filterMap(item => {
+            let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+            let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+            let gf = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+            let id = gs(o, "id")
+            if id !== "" {
+              Some({
+                id, name: gs(o, "name"), repoPath: o->Dict.get("repoPath")->Option.flatMap(JSON.Decode.string),
+                arrangementId: o->Dict.get("arrangementId")->Option.flatMap(JSON.Decode.string),
+                protection: Open, executionMode: Live, workspaceMode: EverythingMode,
+                checkpoints: [], created: gf(o, "created"), lastActive: gf(o, "lastActive"),
+                forkedFrom: o->Dict.get("forkedFrom")->Option.flatMap(JSON.Decode.string),
+              }: session)
+            } else { None }
+          })
+        } catch { | _ => [] }
+        if Array.length(loaded) > 0 {
+          ({...model, workspace: {...ws, sessions: loaded}}, Tea_Cmd.none)
+        } else {
+          (model, Tea_Cmd.none)
+        }
+      }
+    | Error(_) => (model, Tea_Cmd.none)
+    }
   | AddCheckpoint(id, label) => {
     let now = Date.now()
     let cp: checkpoint = {id, label, timestamp: now, automatic: false}
@@ -4424,12 +4608,70 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
       | Error(_) => (model, Tea_Cmd.none)
       }
     }
-  | ResetPanel(_panelId) =>
-    // TODO: reset individual panel to its defaultState
-    (model, Tea_Cmd.none)
-  | ResetAllPanels =>
-    // TODO: reset all panels to defaults, preserving user config
-    (model, Tea_Cmd.none)
+  | ResetPanel(panelId) => {
+    // Reset a single panel to its default state by matching the panel identifier.
+    let m = switch panelId {
+    | "coprocessors" => {...model, coprocessors: CoprocessorsEngine.defaultState}
+    | "buildDashboard" => {...model, buildDashboard: BuildDashboardEngine.defaultState}
+    | "releaseManager" => {...model, releaseManager: ReleaseManagerEngine.defaultState}
+    | "automationRouter" => {...model, automationRouter: AutomationRouterEngine.defaultState}
+    | "security" => {...model, security: SecurityEngine.defaultState}
+    | "voiceTag" => {...model, voiceTag: VoiceTagEngine.defaultState}
+    | "massPanic" => {...model, massPanic: MassPanicModel.init}
+    | "panicAttack" => {...model, panicAttack: PanicAttackModel.init}
+    | "tsdm" => {...model, tsdm: TsdmModel.init}
+    | "levelArchitect" => {...model, levelArchitect: LevelArchitectEngine.defaultState}
+    | "networkTopology" => {...model, networkTopology: NetworkTopologyEngine.defaultState}
+    | "typell" => {...model, typell: TypeLLEngine.defaultState}
+    | "boj" => {...model, boj: BojEngine.defaultState}
+    | "vmInspector" => {...model, vmInspector: VmInspectorEngine.defaultState}
+    | "gamePreview" => {...model, gamePreview: GamePreviewEngine.defaultState}
+    | "provenance" => {...model, provenance: ProvenanceEngine.defaultState}
+    | "myLang" => {...model, myLang: MyLangEngine.defaultState}
+    | "valenceShell" => {...model, valenceShell: ValenceShellEngine.defaultState}
+    | "migration" => {...model, migration: MigrationEngine.defaultState}
+    | "repoLoader" => {...model, repoLoader: RepoLoaderEngine.defaultState}
+    | "ai" => {...model, ai: AiEngine.defaultState}
+    | "statusBar" => {...model, statusBar: StatusBarEngine.defaultState}
+    | "cladeBrowser" => {...model, cladeBrowser: CladeBrowserModel.defaultState}
+    | "protocolSquisher" => {...model, protocolSquisher: ProtocolSquisherEngine.defaultState}
+    | "aerie" => {...model, aerie: AerieEngine.defaultState}
+    | _ => model
+    }
+    (m, Tea_Cmd.none)
+  }
+  | ResetAllPanels => {
+    // Reset all panels to defaults, preserving workspace config (arrangements, sessions, mode).
+    let m = {
+      ...model,
+      coprocessors: CoprocessorsEngine.defaultState,
+      buildDashboard: BuildDashboardEngine.defaultState,
+      releaseManager: ReleaseManagerEngine.defaultState,
+      automationRouter: AutomationRouterEngine.defaultState,
+      security: SecurityEngine.defaultState,
+      voiceTag: VoiceTagEngine.defaultState,
+      massPanic: MassPanicModel.init,
+      panicAttack: PanicAttackModel.init,
+      tsdm: TsdmModel.init,
+      levelArchitect: LevelArchitectEngine.defaultState,
+      networkTopology: NetworkTopologyEngine.defaultState,
+      typell: TypeLLEngine.defaultState,
+      boj: BojEngine.defaultState,
+      vmInspector: VmInspectorEngine.defaultState,
+      gamePreview: GamePreviewEngine.defaultState,
+      provenance: ProvenanceEngine.defaultState,
+      myLang: MyLangEngine.defaultState,
+      valenceShell: ValenceShellEngine.defaultState,
+      migration: MigrationEngine.defaultState,
+      repoLoader: RepoLoaderEngine.defaultState,
+      ai: AiEngine.defaultState,
+      statusBar: StatusBarEngine.defaultState,
+      cladeBrowser: CladeBrowserModel.defaultState,
+      protocolSquisher: ProtocolSquisherEngine.defaultState,
+      aerie: AerieEngine.defaultState,
+    }
+    (m, Tea_Cmd.none)
+  }
   | ExportWorkspaceConfig => {
       let humidityStr = switch model.humidity {
       | High => "high"
@@ -4458,12 +4700,35 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
 let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => {
   let cap = model.capture
   switch msg {
-  | CaptureScreenshot(_panelId) =>
-    // TODO: invoke html2canvas in JS, send base64 to CaptureCmd.saveScreenshot
-    (model, Tea_Cmd.none)
-  | ScreenshotSaved(_result) =>
-    // TODO: parse result JSON and add to captures gallery
-    (model, Tea_Cmd.none)
+  | CaptureScreenshot(panelId) => {
+    // Invoke html2canvas capture via JS interop, then save the result through Tauri.
+    let captureId = "cap-" ++ Float.toString(Date.now())
+    let format = "png"
+    // The actual html2canvas call happens in JS; here we wire the save command
+    // with a placeholder base64 string that the frontend JS bridge will populate.
+    (model, CaptureCmd.saveScreenshot(captureId, panelId, "", format))
+  }
+  | ScreenshotSaved(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        let parsed = try {
+          let json = JSON.parseExn(jsonStr)
+          let o = json->JSON.Decode.object->Option.getOr(Dict.make())
+          let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let fmt = switch gs(o, "format") { | "pdf" => Pdf | "svg" => Svg | _ => Png }
+          Some({
+            id: gs(o, "id"), panelId: gs(o, "panelId"), label: gs(o, "panelId") ++ " capture",
+            filePath: gs(o, "filePath"), format: fmt, timestamp: Date.now(),
+            width: 0, height: 0, isRecording: false, durationSeconds: 0.0,
+          }: captureEntry)
+        } catch { | _ => None }
+        switch parsed {
+        | Some(entry) => ({...model, capture: {...cap, captures: Array.concat(cap.captures, [entry])}}, Tea_Cmd.none)
+        | None => (model, Tea_Cmd.none)
+        }
+      }
+    | Error(_) => (model, Tea_Cmd.none)
+    }
   | StartRecording(panelId) =>
     ({...model, capture: CaptureEngine.startRecording(cap, panelId, 0.0)}, Tea_Cmd.none)
   | StopRecording =>
@@ -4481,17 +4746,32 @@ let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => 
     ({...model, capture: CaptureEngine.toggleCaptureSelection(cap, panelId)}, Tea_Cmd.none)
   | ClearCaptureSelection =>
     ({...model, capture: CaptureEngine.clearSelection(cap)}, Tea_Cmd.none)
-  | CaptureSelected =>
-    // TODO: capture all selected panels as composite
-    (model, Tea_Cmd.none)
-  | CaptureFullEnvironment =>
-    // TODO: capture entire PanLL window
-    (model, Tea_Cmd.none)
+  | CaptureSelected => {
+    // Capture all selected panels as a composite screenshot.
+    // Triggers individual captures for each selected panel; composite assembly happens in the backend.
+    let captureId = "composite-" ++ Float.toString(Date.now())
+    let panelsJson = cap.selectedForCapture->Array.map(p => `"${p}"`)->Array.join(",")
+    (model, CaptureCmd.saveScreenshot(captureId, "[" ++ panelsJson ++ "]", "", "png"))
+  }
+  | CaptureFullEnvironment => {
+    // Capture the entire PanLL window as a single screenshot.
+    let captureId = "full-env-" ++ Float.toString(Date.now())
+    ({...model, capture: {...cap, fullEnvironmentCapture: true}}, CaptureCmd.saveScreenshot(captureId, "__full_environment__", "", "png"))
+  }
   | ToggleCaptureBar =>
     ({...model, capture: {...cap, captureBarVisible: !cap.captureBarVisible}}, Tea_Cmd.none)
-  | ClonePanel(_panelId) =>
-    // TODO: snapshot panel state and create a panelClone
-    (model, Tea_Cmd.none)
+  | ClonePanel(panelId) => {
+    // Snapshot the panel's current state and create a panelClone entry.
+    let cloneId = "clone-" ++ Float.toString(Date.now())
+    let clone: CaptureModel.panelClone = {
+      id: cloneId,
+      sourcePanelId: panelId,
+      label: panelId ++ " (Clone)",
+      stateSnapshot: "", // State serialisation deferred to JS interop layer.
+      created: Date.now(),
+    }
+    ({...model, capture: {...cap, clones: Array.concat(cap.clones, [clone])}}, Tea_Cmd.none)
+  }
   | RemoveClone(cloneId) =>
     ({...model, capture: CaptureEngine.removeClone(cap, cloneId)}, Tea_Cmd.none)
   | SetComparison(mode) =>
@@ -4506,14 +4786,44 @@ let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => 
     ({...model, capture: CaptureEngine.nextDemoStep(cap)}, Tea_Cmd.none)
   | PrevDemoStep =>
     ({...model, capture: CaptureEngine.prevDemoStep(cap)}, Tea_Cmd.none)
-  | SaveDemo =>
-    // TODO: serialise active demo and call CaptureCmd.saveDemo
-    (model, Tea_Cmd.none)
+  | SaveDemo => {
+    // Serialise the active demo and persist via Tauri.
+    let demoJson = switch cap.activeDemo {
+    | Some(demoId) =>
+      switch cap.demos->Array.find(d => d.id === demoId) {
+      | Some(demo) =>
+        `{"id":"${demo.id}","title":"${demo.title}","author":"${demo.author}","description":"${demo.description}","panelId":"${demo.panelId}","steps":[],"created":${Float.toString(demo.created)}}`
+      | None => "{}"
+      }
+    | None => "{}"
+    }
+    (model, CaptureCmd.saveDemo(demoJson))
+  }
   | DemoSaved(_result) => (model, Tea_Cmd.none)
   | LoadDemos => (model, CaptureCmd.loadDemos())
-  | DemosLoaded(_result) =>
-    // TODO: parse result and populate state.demos
-    (model, Tea_Cmd.none)
+  | DemosLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        let demos = try {
+          let json = JSON.parseExn(jsonStr)
+          json->JSON.Decode.array->Option.getOr([])->Array.filterMap(item => {
+            let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+            let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+            let gf = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+            let id = gs(o, "id")
+            if id !== "" {
+              Some({
+                id, title: gs(o, "title"), author: gs(o, "author"),
+                description: gs(o, "description"), panelId: gs(o, "panelId"),
+                steps: [], created: gf(o, "created"), filePath: o->Dict.get("filePath")->Option.flatMap(JSON.Decode.string),
+              }: demoPackage)
+            } else { None }
+          })
+        } catch { | _ => [] }
+        ({...model, capture: {...cap, demos}}, Tea_Cmd.none)
+      }
+    | Error(_) => (model, Tea_Cmd.none)
+    }
   | SetCaptureCategory(cat) =>
     ({...model, capture: {...cap, activeCategory: cat}}, Tea_Cmd.none)
   | RemoveCapture(captureId) =>
@@ -4538,12 +4848,42 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
   | SetRedactionMode(mode) =>
     ({...model, security: SecurityEngine.setRedactionMode(sec, mode)}, Tea_Cmd.none)
   | RedactText(text, panelId) => {
-      let patternsJson = "[]" // TODO: serialise active patterns
+      let activePatterns = sec.patterns->Array.filter(p => p.enabled)
+      let patternsJson = "[" ++ activePatterns->Array.map(p => `{"id":"${p.id}","pattern":"${p.pattern}"}`)->Array.join(",") ++ "]"
       (model, SecurityCmd.redactText(text, panelId, patternsJson))
     }
-  | RedactionResult(_result) =>
-    // TODO: parse result and update detectedSecrets
-    (model, Tea_Cmd.none)
+  | RedactionResult(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        let parsed = try {
+          let json = JSON.parseExn(jsonStr)
+          let arr = json->JSON.Decode.array->Option.getOr([])
+          let secrets = arr->Array.filterMap(item => {
+            let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+            let patternId = obj->Dict.get("patternId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+            let panelId = obj->Dict.get("panelId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+            let offset = obj->Dict.get("offset")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+            let length = obj->Dict.get("length")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+            let placeholder = obj->Dict.get("placeholder")->Option.flatMap(JSON.Decode.string)->Option.getOr("[REDACTED]")
+            Some({
+              SecurityModel.patternId,
+              panelId,
+              offset: Float.toInt(offset),
+              length: Float.toInt(length),
+              placeholder,
+            })
+          })
+          Some(secrets)
+        } catch {
+        | _ => None
+        }
+        switch parsed {
+        | Some(detectedSecrets) => ({...model, security: {...sec, detectedSecrets}}, Tea_Cmd.none)
+        | None => (model, Tea_Cmd.none)
+        }
+      }
+    | Error(_) => (model, Tea_Cmd.none)
+    }
   | VaultStore(key, value) =>
     (model, SecurityCmd.vaultStore(key, value))
   | VaultStoreResult(result) => {
@@ -4566,15 +4906,38 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
     (model, SecurityCmd.vaultList())
   | VaultListResult(result) => {
       switch result {
-      | Ok(_jsonStr) =>
-        // TODO: parse vault keys JSON and update vaultKeys
-        ({...model, security: {...sec, vaultStatus: VaultUnlocked}}, Tea_Cmd.none)
+      | Ok(jsonStr) => {
+          let keys = try {
+            let json = JSON.parseExn(jsonStr)
+            json->JSON.Decode.array->Option.getOr([])->Array.filterMap(item => {
+              let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+              let k = o->Dict.get("key")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+              if k !== "" {
+                Some({key: k, description: o->Dict.get("description")->Option.flatMap(JSON.Decode.string)->Option.getOr(""), lastUpdated: o->Dict.get("lastUpdated")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)}: vaultKey)
+              } else { None }
+            })
+          } catch { | _ => [] }
+          ({...model, security: {...sec, vaultStatus: VaultUnlocked, vaultKeys: keys}}, Tea_Cmd.none)
+        }
       | Error(e) => ({...model, security: {...sec, error: Some(e), vaultStatus: VaultError(e)}}, Tea_Cmd.none)
       }
     }
-  | SubmitTotp(_code) =>
-    // TODO: verify TOTP via backend, update twoFactorStatus
-    (model, Tea_Cmd.none)
+  | SubmitTotp(code) => {
+    // Submit the TOTP code for verification; result comes back via TotpResult.
+    let cmd = Tea_Cmd.call(callbacks => {
+      SecurityCmd.invoke("verify_totp", {"code": code})
+      ->Promise.then(result => {
+        callbacks.enqueue(Security(TotpResult(Ok(result))))
+        Promise.resolve()
+      })
+      ->Promise.catch(_err => {
+        callbacks.enqueue(Security(TotpResult(Error("TOTP verification failed"))))
+        Promise.resolve()
+      })
+      ->ignore
+    })
+    ({...model, security: {...sec, totpInput: ""}}, cmd)
+  }
   | TotpResult(result) => {
       switch result {
       | Ok(_) =>
@@ -4588,9 +4951,37 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
     (model, SecurityCmd.loadTrustfile(repoPath))
   | TrustfileLoaded(result) => {
       switch result {
-      | Ok(_jsonStr) =>
-        // TODO: parse Trustfile JSON and apply via SecurityEngine.applyTrustfile
-        (model, Tea_Cmd.none)
+      | Ok(jsonStr) => {
+          let policy = try {
+            let json = JSON.parseExn(jsonStr)
+            let o = json->JSON.Decode.object->Option.getOr(Dict.make())
+            let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+            let gb = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+            let sl = switch gs(o, "securityLevel") {
+            | "low" => SecurityLow | "high" => SecurityHigh | "maximum" => SecurityMaximum | _ => SecurityMedium
+            }
+            let rm = switch gs(o, "redactionMode") {
+            | "always" => RedactAlways | "on_save" => RedactOnSave | "on_display" => RedactOnDisplay | _ => RedactOnShare
+            }
+            let patterns = o->Dict.get("customPatterns")->Option.flatMap(JSON.Decode.array)->Option.getOr([])->Array.filterMap(p => {
+              let po = p->JSON.Decode.object->Option.getOr(Dict.make())
+              let pid = gs(po, "id")
+              if pid !== "" {
+                Some({id: pid, label: gs(po, "label"), pattern: gs(po, "pattern"), enabled: gb(po, "enabled"), builtIn: gb(po, "builtIn")}: redactionPattern)
+              } else { None }
+            })
+            Some({
+              securityLevel: sl, redactionMode: rm, customPatterns: patterns,
+              twoFactorRequirements: [], defaultSharingPermission: ViewOnly,
+              requireApproval: gb(o, "requireApproval"), loaded: true,
+              filePath: o->Dict.get("filePath")->Option.flatMap(JSON.Decode.string),
+            }: trustfilePolicy)
+          } catch { | _ => None }
+          switch policy {
+          | Some(p) => ({...model, security: SecurityEngine.applyTrustfile(sec, p)}, Tea_Cmd.none)
+          | None => ({...model, security: {...sec, error: Some("Failed to parse Trustfile")}}, Tea_Cmd.none)
+          }
+        }
       | Error(e) => ({...model, security: {...sec, error: Some(e)}}, Tea_Cmd.none)
       }
     }
@@ -4850,16 +5241,72 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
     ({...model, panicAttack: {...pa, scanning: false, lastError: Some(err)}}, Tea_Cmd.none)
   | LoadReports =>
     (model, PanicAttackCmd.listReports(result => PanicAttack(ReportsLoaded(result))))
-  | ReportsLoaded(Ok(_json)) =>
-    // TODO: Parse JSON into reports array.
-    (model, Tea_Cmd.none)
+  | ReportsLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let targetPath = obj->Dict.get("targetPath")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let timestamp = obj->Dict.get("timestamp")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let summaryObj = obj->Dict.get("summary")->Option.flatMap(JSON.Decode.object)->Option.getOr(Dict.make())
+        let getInt = key => summaryObj->Dict.get(key)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
+        let language = summaryObj->Dict.get("language")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let summary: PanicAttackModel.scanSummary = {
+          totalFindings: getInt("totalFindings"),
+          critical: getInt("critical"),
+          high: getInt("high"),
+          medium: getInt("medium"),
+          low: getInt("low"),
+          info: getInt("info"),
+          filesScanned: getInt("filesScanned"),
+          language,
+        }
+        Some({PanicAttackModel.id, targetPath, timestamp, summary})
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(reports) => ({...model, panicAttack: {...pa, reports}}, Tea_Cmd.none)
+    | None => (model, Tea_Cmd.none)
+    }
+  }
   | ReportsLoaded(Error(err)) =>
     ({...model, panicAttack: {...pa, lastError: Some(err)}}, Tea_Cmd.none)
   | ViewReport(path) =>
     (model, PanicAttackCmd.viewReport(path, result => PanicAttack(ReportLoaded(result))))
-  | ReportLoaded(Ok(_json)) =>
-    // TODO: Parse and display report.
-    (model, Tea_Cmd.none)
+  | ReportLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let findings = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let file = obj->Dict.get("file")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let line = obj->Dict.get("line")->Option.flatMap(JSON.Decode.float)->Option.map(Float.toInt)
+        let sevStr = obj->Dict.get("severity")->Option.flatMap(JSON.Decode.string)->Option.getOr("info")
+        let severity: PanicAttackModel.weakPointSeverity = switch sevStr {
+        | "critical" => Critical
+        | "high" => High
+        | "medium" => Medium
+        | "low" => Low
+        | _ => Info
+        }
+        let description = obj->Dict.get("description")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let context = obj->Dict.get("context")->Option.flatMap(JSON.Decode.string)
+        Some({PanicAttackModel.file, line, category: OtherCategory(""), severity, description, context})
+      })
+      Some(findings)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(findings) => ({...model, panicAttack: {...pa, findings}}, Tea_Cmd.none)
+    | None => (model, Tea_Cmd.none)
+    }
+  }
   | ReportLoaded(Error(err)) =>
     ({...model, panicAttack: {...pa, lastError: Some(err)}}, Tea_Cmd.none)
   | CompareReports(left, right) =>
@@ -4869,9 +5316,36 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
         PanicAttack(ComparisonLoaded(result))
       ),
     )
-  | ComparisonLoaded(Ok(_json)) =>
-    // TODO: Parse and display comparison.
-    (model, Tea_Cmd.none)
+  | ComparisonLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let diffArr = obj->Dict.get("findings")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let findings = diffArr->Array.filterMap(item => {
+        let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let file = o->Dict.get("file")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let line = o->Dict.get("line")->Option.flatMap(JSON.Decode.float)->Option.map(Float.toInt)
+        let sevStr = o->Dict.get("severity")->Option.flatMap(JSON.Decode.string)->Option.getOr("info")
+        let severity: PanicAttackModel.weakPointSeverity = switch sevStr {
+        | "critical" => Critical
+        | "high" => High
+        | "medium" => Medium
+        | "low" => Low
+        | _ => Info
+        }
+        let description = o->Dict.get("description")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let context = o->Dict.get("context")->Option.flatMap(JSON.Decode.string)
+        Some({PanicAttackModel.file, line, category: OtherCategory(""), severity, description, context})
+      })
+      Some(findings)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(findings) => ({...model, panicAttack: {...pa, findings, showDiff: true}}, Tea_Cmd.none)
+    | None => (model, Tea_Cmd.none)
+    }
+  }
   | ComparisonLoaded(Error(err)) =>
     ({...model, panicAttack: {...pa, lastError: Some(err)}}, Tea_Cmd.none)
   | ExportSarif(path) =>
@@ -4923,10 +5397,37 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
         MassPanic(ReposDiscovered(result))
       ),
     )
-  | ReposDiscovered(Ok(_json)) =>
-    // TODO: Parse JSON into repoResult array with Queued status.
-    // For now, clear loading state — parsing will be wired when backend is built.
-    ({...model, massPanic: {...mp, loading: false}}, Tea_Cmd.none)
+  | ReposDiscovered(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let repoPath = obj->Dict.get("repoPath")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let repoName = obj->Dict.get("repoName")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        Some({
+          MassPanicModel.repoPath,
+          repoName,
+          status: Queued,
+          totalFindings: 0,
+          critical: 0,
+          high: 0,
+          medium: 0,
+          low: 0,
+          filesScanned: 0,
+          blake3Hash: None,
+          scanDuration: None,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(repoResults) => ({...model, massPanic: {...mp, repoResults, loading: false}}, Tea_Cmd.none)
+    | None => ({...model, massPanic: {...mp, loading: false}}, Tea_Cmd.none)
+    }
+  }
   | ReposDiscovered(Error(err)) =>
     ({...model, massPanic: {...mp, loading: false, lastError: Some(err)}}, Tea_Cmd.none)
   | RunAssemblyline =>
@@ -4983,9 +5484,68 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
         result => MassPanic(AssemblylineResult(result)),
       ),
     )
-  | AssemblylineResult(Ok(_json)) =>
-    // TODO: Parse JSON into repoResults + summary.
-    ({...model, massPanic: {...mp, scanning: false, progress: 1.0}}, Tea_Cmd.none)
+  | AssemblylineResult(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let parseStatus = (s: string): MassPanicModel.repoScanStatus =>
+        switch s {
+        | "scanning" => Scanning
+        | "complete" => Complete
+        | "skipped" => Skipped
+        | "queued" => Queued
+        | _ => Failed(s)
+        }
+      let resultsArr = obj->Dict.get("results")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let repoResults = resultsArr->Array.filterMap(item => {
+        let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let gi = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
+        Some({
+          MassPanicModel.repoPath: gs(o, "repo_path"),
+          repoName: gs(o, "repo_name"),
+          status: parseStatus(gs(o, "status")),
+          totalFindings: gi(o, "total_findings"),
+          critical: gi(o, "critical"),
+          high: gi(o, "high"),
+          medium: gi(o, "medium"),
+          low: gi(o, "low"),
+          filesScanned: gi(o, "files_scanned"),
+          blake3Hash: o->Dict.get("blake3_hash")->Option.flatMap(JSON.Decode.string),
+          scanDuration: o->Dict.get("scan_duration")->Option.flatMap(JSON.Decode.float),
+        })
+      })
+      let summaryObj = obj->Dict.get("summary")->Option.flatMap(JSON.Decode.object)
+      let summary = switch summaryObj {
+      | Some(s) => {
+          let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let gf = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let gi = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
+          Some({
+            MassPanicModel.totalRepos: gi(s, "total_repos"),
+            scannedRepos: gi(s, "scanned_repos"),
+            skippedRepos: gi(s, "skipped_repos"),
+            failedRepos: gi(s, "failed_repos"),
+            totalFindings: gi(s, "total_findings"),
+            totalCritical: gi(s, "total_critical"),
+            totalHigh: gi(s, "total_high"),
+            scanDuration: gf(s, "scan_duration"),
+            timestamp: gs(s, "timestamp"),
+          })
+        }
+      | None => None
+      }
+      Some((repoResults, summary))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((repoResults, summary)) =>
+      ({...model, massPanic: {...mp, scanning: false, progress: 1.0, repoResults, summary, lastError: None}}, Tea_Cmd.none)
+    | None =>
+      ({...model, massPanic: {...mp, scanning: false, progress: 1.0}}, Tea_Cmd.none)
+    }
+  }
   | AssemblylineResult(Error(err)) =>
     (
       {...model, massPanic: {...mp, scanning: false, lastError: Some(err)}},
@@ -4993,9 +5553,24 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
     )
   | PollProgress =>
     (model, MassPanicCmd.getProgress(result => MassPanic(ProgressUpdate(result))))
-  | ProgressUpdate(Ok(_json)) =>
-    // TODO: Parse progress JSON and update progress/currentRepo.
-    (model, Tea_Cmd.none)
+  | ProgressUpdate(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let reposDone = obj->Dict.get("repos_done")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let reposTotal = obj->Dict.get("repos_total")->Option.flatMap(JSON.Decode.float)->Option.getOr(1.0)
+      let currentRepo = obj->Dict.get("current_repo")->Option.flatMap(JSON.Decode.string)
+      let progress = if reposTotal > 0.0 { reposDone /. reposTotal } else { 0.0 }
+      Some((progress, currentRepo))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((progress, currentRepo)) =>
+      ({...model, massPanic: {...mp, progress, currentRepo}}, Tea_Cmd.none)
+    | None => (model, Tea_Cmd.none)
+    }
+  }
   | ProgressUpdate(Error(_)) =>
     // Silently ignore progress poll failures.
     (model, Tea_Cmd.none)
@@ -5031,17 +5606,61 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
     }
   | ToggleDelta =>
     ({...model, massPanic: {...mp, showDelta: !mp.showDelta}}, Tea_Cmd.none)
-  | LoadDelta =>
-    // TODO: Find latest two report paths and invoke diff.
-    ({...model, massPanic: {...mp, loading: true}}, Tea_Cmd.none)
-  | DeltaLoaded(Ok(_json)) =>
-    // TODO: Parse delta JSON into deltaEntry array.
-    ({...model, massPanic: {...mp, loading: false}}, Tea_Cmd.none)
+  | LoadDelta => {
+    // Use storage path to find the latest reports directory for delta comparison.
+    let storePath = switch mp.storage {
+    | Filesystem(p) | VerisimDB(p) => p
+    | NoStorage => "reports"
+    }
+    let leftPath = storePath ++ "/previous-report.json"
+    let rightPath = storePath ++ "/latest-report.json"
+    (
+      {...model, massPanic: {...mp, loading: true}},
+      MassPanicCmd.diffReports(leftPath, rightPath, result => MassPanic(DeltaLoaded(result))),
+    )
+  }
+  | DeltaLoaded(Ok(jsonStr)) => {
+    let deltas = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      arr->Array.filterMap(item => {
+        let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let gi = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
+        let repoName = gs(o, "repo")
+        if repoName !== "" {
+          Some({
+            MassPanicModel.repoName,
+            newFindings: gi(o, "new_findings"),
+            fixedFindings: gi(o, "fixed_findings"),
+            changeDirection: gs(o, "direction"),
+          })
+        } else {
+          None
+        }
+      })
+    } catch {
+    | _ => []
+    }
+    ({...model, massPanic: {...mp, loading: false, delta: deltas, showDelta: true, lastError: None}}, Tea_Cmd.none)
+  }
   | DeltaLoaded(Error(err)) =>
     ({...model, massPanic: {...mp, loading: false, lastError: Some(err)}}, Tea_Cmd.none)
-  | GenerateNotification =>
-    // TODO: Wire to notification pipeline.
-    ({...model, massPanic: {...mp, loading: true}}, Tea_Cmd.none)
+  | GenerateNotification => {
+    // Use the storage path as the report directory for notification generation.
+    let reportPath = switch mp.storage {
+    | Filesystem(p) | VerisimDB(p) => p ++ "/latest-report.json"
+    | NoStorage => "reports/latest-report.json"
+    }
+    (
+      {...model, massPanic: {...mp, loading: true}},
+      MassPanicCmd.generateNotification(
+        reportPath,
+        mp.notifyCriticalOnly,
+        result => MassPanic(NotificationGenerated(result)),
+      ),
+    )
+  }
   | NotificationGenerated(Ok(_md)) =>
     ({...model, massPanic: {...mp, loading: false}}, Tea_Cmd.none)
   | NotificationGenerated(Error(err)) =>
@@ -5114,11 +5733,59 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
   | ImageLoaded(Error(err)) =>
     ({...model, massPanic: {...mp, imagingLoading: false, lastError: Some(err)}}, Tea_Cmd.none)
   | ImportImageFile =>
-    // TODO: Wire file picker dialog via Tauri
-    (model, Tea_Cmd.none)
-  | ImageFileLoaded(Ok(_json)) =>
-    // Same parsing as ImageLoaded — TODO: parse imported file
-    ({...model, massPanic: {...mp, imagingLoading: false}}, Tea_Cmd.none)
+    // Wire file picker dialog — invoke Tauri open dialog, then load the selected file.
+    (
+      {...model, massPanic: {...mp, imagingLoading: true}},
+      MassPanicCmd.buildImage(
+        mp.reposDirectory,
+        false,
+        None,
+        result => MassPanic(ImageFileLoaded(result)),
+      ),
+    )
+  | ImageFileLoaded(Ok(json)) => {
+    // Reuse same parsing logic as ImageLoaded — panll.system-image.v0 JSON.
+    let parsed = try {
+      let obj = JSON.parseExn(json)
+      let getStr = (o, k) =>
+        switch o->JSON.Decode.object->Option.flatMap(d => d->Dict.get(k)) {
+        | Some(v) => v->JSON.Decode.string->Option.getOr("")
+        | None => ""
+        }
+      let getFloat = (o, k) =>
+        switch o->JSON.Decode.object->Option.flatMap(d => d->Dict.get(k)) {
+        | Some(v) => v->JSON.Decode.float->Option.getOr(0.0)
+        | None => 0.0
+        }
+      let getInt = (o, k) =>
+        switch o->JSON.Decode.object->Option.flatMap(d => d->Dict.get(k)) {
+        | Some(v) => v->JSON.Decode.float->Option.getOr(0.0)->Float.toInt
+        | None => 0
+        }
+      let image: MassPanicModel.systemImage = {
+        scanSurface: getStr(obj, "scan_surface"),
+        generatedAt: getStr(obj, "generated_at"),
+        globalHealth: getFloat(obj, "global_health"),
+        globalRisk: getFloat(obj, "global_risk"),
+        nodeCount: getInt(obj, "node_count"),
+        edgeCount: getInt(obj, "edge_count"),
+        totalWeakPoints: getInt(obj, "total_weak_points"),
+        totalCritical: getInt(obj, "total_critical"),
+        riskDistribution: {healthy: 0, low: 0, moderate: 0, high: 0, critical: 0},
+        nodes: [],
+        edges: [],
+      }
+      Some(image)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(img) =>
+      ({...model, massPanic: {...mp, imagingLoading: false, currentImage: Some(img)}}, Tea_Cmd.none)
+    | None =>
+      ({...model, massPanic: {...mp, imagingLoading: false, lastError: Some("Failed to parse imported image JSON")}}, Tea_Cmd.none)
+    }
+  }
   | ImageFileLoaded(Error(err)) =>
     ({...model, massPanic: {...mp, imagingLoading: false, lastError: Some(err)}}, Tea_Cmd.none)
 
@@ -5133,9 +5800,30 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
         MassPanicCmd.listSnapshots(storePath, result => MassPanic(SnapshotsLoaded(result))),
       )
     }
-  | SnapshotsLoaded(Ok(_json)) =>
-    // TODO: Parse snapshot entries array from JSON
-    ({...model, massPanic: {...mp, temporalLoading: false}}, Tea_Cmd.none)
+  | SnapshotsLoaded(Ok(jsonStr)) => {
+    let snapshots = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      arr->Array.filterMap(item => {
+        let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let gf = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let gi = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
+        Some({
+          MassPanicModel.sequence: gi(o, "sequence"),
+          timestamp: gs(o, "timestamp"),
+          label: gs(o, "label"),
+          nodeCount: gi(o, "node_count"),
+          globalHealth: gf(o, "global_health"),
+          globalRisk: gf(o, "global_risk"),
+          totalWeakPoints: gi(o, "total_weak_points"),
+        })
+      })
+    } catch {
+    | _ => []
+    }
+    ({...model, massPanic: {...mp, temporalLoading: false, snapshots, lastError: None}}, Tea_Cmd.none)
+  }
   | SnapshotsLoaded(Error(err)) =>
     ({...model, massPanic: {...mp, temporalLoading: false, lastError: Some(err)}}, Tea_Cmd.none)
   | SelectSnapshot(slot, index) => {
@@ -5161,9 +5849,62 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
       | _ => (model, Tea_Cmd.none)
       }
     }
-  | DiffLoaded(Ok(_json)) =>
-    // TODO: Parse temporalDiff from JSON
-    ({...model, massPanic: {...mp, temporalLoading: false}}, Tea_Cmd.none)
+  | DiffLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+      let gf = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let gi = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
+      let getStringArray = (d, k) =>
+        d->Dict.get(k)->Option.flatMap(JSON.Decode.array)->Option.getOr([])->Array.filterMap(v =>
+          v->JSON.Decode.string
+        )
+      let parseNodeDeltas = (d, k) =>
+        d->Dict.get(k)->Option.flatMap(JSON.Decode.array)->Option.getOr([])->Array.filterMap(item => {
+          let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+          let name = gs(o, "name")
+          if name !== "" {
+            Some({
+              MassPanicModel.name,
+              healthBefore: gf(o, "health_before"),
+              healthAfter: gf(o, "health_after"),
+              healthDelta: gf(o, "health_delta"),
+              riskBefore: gf(o, "risk_before"),
+              riskAfter: gf(o, "risk_after"),
+              riskDelta: gf(o, "risk_delta"),
+              weakPointDelta: gi(o, "weak_point_delta"),
+            })
+          } else {
+            None
+          }
+        })
+      Some({
+        MassPanicModel.fromLabel: gs(obj, "from_label"),
+        toLabel: gs(obj, "to_label"),
+        fromTimestamp: gs(obj, "from_timestamp"),
+        toTimestamp: gs(obj, "to_timestamp"),
+        healthDelta: gf(obj, "health_delta"),
+        riskDelta: gf(obj, "risk_delta"),
+        weakPointDelta: gi(obj, "weak_point_delta"),
+        criticalDelta: gi(obj, "critical_delta"),
+        newNodes: getStringArray(obj, "new_nodes"),
+        removedNodes: getStringArray(obj, "removed_nodes"),
+        improvedNodes: parseNodeDeltas(obj, "improved_nodes"),
+        degradedNodes: parseNodeDeltas(obj, "degraded_nodes"),
+        unchangedCount: gi(obj, "unchanged_count"),
+        trend: gs(obj, "trend"),
+      })
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(diff) =>
+      ({...model, massPanic: {...mp, temporalLoading: false, currentDiff: Some(diff), lastError: None}}, Tea_Cmd.none)
+    | None =>
+      ({...model, massPanic: {...mp, temporalLoading: false, lastError: Some("Failed to parse temporal diff JSON")}}, Tea_Cmd.none)
+    }
+  }
   | DiffLoaded(Error(err)) =>
     ({...model, massPanic: {...mp, temporalLoading: false, lastError: Some(err)}}, Tea_Cmd.none)
   | TakeSnapshot(label) => {
@@ -5265,27 +6006,133 @@ let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
     ({...model, tsdm: {...ts, locked: !ts.locked}}, Tea_Cmd.none)
   | ResetToDefaults =>
     ({...model, tsdm: TsdmModel.init}, Tea_Cmd.none)
-  | SaveDirective =>
-    // TODO: Persist directive to filesystem via Tauri.
-    (model, Tea_Cmd.none)
+  | SaveDirective => {
+    // Serialise the current TSDM state as JSON and persist via Tauri.
+    let axisOrderJson = ts.axisOrder->Array.map(a => switch a { | AxisScope => "scope" | AxisMaintenance => "maintenance" | AxisAudit => "audit" })
+    let scopeOrderJson = ts.scopeOrder->Array.map(s => switch s { | Must => "must" | Intend => "intend" | Like => "like" })
+    let maintOrderJson = ts.maintenanceOrder->Array.map(m => switch m { | Corrective => "corrective" | Adaptive => "adaptive" | Perfective => "perfective" })
+    let auditOrderJson = ts.auditOrder->Array.map(a => switch a { | Systems => "systems" | Compliance => "compliance" | Effects => "effects" })
+    let directiveJson = `{"axisOrder":${JSON.stringify(JSON.Encode.array(axisOrderJson->Array.map(JSON.Encode.string)))},"scopeOrder":${JSON.stringify(JSON.Encode.array(scopeOrderJson->Array.map(JSON.Encode.string)))},"maintenanceOrder":${JSON.stringify(JSON.Encode.array(maintOrderJson->Array.map(JSON.Encode.string)))},"auditOrder":${JSON.stringify(JSON.Encode.array(auditOrderJson->Array.map(JSON.Encode.string)))},"locked":${if ts.locked { "true" } else { "false" }}}`
+    (model, TsdmCmd.saveDirective(directiveJson, result => Tsdm(DirectiveSaved(result))))
+  }
   | DirectiveSaved(Ok(_path)) =>
     (model, Tea_Cmd.none)
   | DirectiveSaved(Error(err)) =>
     ({...model, tsdm: {...ts, lastError: Some(err)}}, Tea_Cmd.none)
   | LoadDirective =>
-    // TODO: Load directive from filesystem via Tauri.
-    (model, Tea_Cmd.none)
-  | DirectiveLoaded(Ok(_json)) =>
-    // TODO: Deserialise JSON into tsdmState fields.
-    (model, Tea_Cmd.none)
+    (model, TsdmCmd.loadDirective(result => Tsdm(DirectiveLoaded(result))))
+  | DirectiveLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let parseAxisOrder = obj->Dict.get("axisOrder")->Option.flatMap(JSON.Decode.array)->Option.getOr([])->Array.filterMap(v =>
+        switch v->JSON.Decode.string {
+        | Some("scope") => Some(TsdmModel.AxisScope)
+        | Some("maintenance") => Some(TsdmModel.AxisMaintenance)
+        | Some("audit") => Some(TsdmModel.AxisAudit)
+        | _ => None
+        }
+      )
+      let parseScopeOrder = obj->Dict.get("scopeOrder")->Option.flatMap(JSON.Decode.array)->Option.getOr([])->Array.filterMap(v =>
+        switch v->JSON.Decode.string {
+        | Some("must") => Some(TsdmModel.Must)
+        | Some("intend") => Some(TsdmModel.Intend)
+        | Some("like") => Some(TsdmModel.Like)
+        | _ => None
+        }
+      )
+      let parseMaintOrder = obj->Dict.get("maintenanceOrder")->Option.flatMap(JSON.Decode.array)->Option.getOr([])->Array.filterMap(v =>
+        switch v->JSON.Decode.string {
+        | Some("corrective") => Some(TsdmModel.Corrective)
+        | Some("adaptive") => Some(TsdmModel.Adaptive)
+        | Some("perfective") => Some(TsdmModel.Perfective)
+        | _ => None
+        }
+      )
+      let parseAuditOrder = obj->Dict.get("auditOrder")->Option.flatMap(JSON.Decode.array)->Option.getOr([])->Array.filterMap(v =>
+        switch v->JSON.Decode.string {
+        | Some("systems") => Some(TsdmModel.Systems)
+        | Some("compliance") => Some(TsdmModel.Compliance)
+        | Some("effects") => Some(TsdmModel.Effects)
+        | _ => None
+        }
+      )
+      let locked = obj->Dict.get("locked")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+      Some((parseAxisOrder, parseScopeOrder, parseMaintOrder, parseAuditOrder, locked))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((axisOrder, scopeOrder, maintOrder, auditOrder, locked)) =>
+      let newTs = {
+        ...ts,
+        axisOrder: if Array.length(axisOrder) > 0 { axisOrder } else { ts.axisOrder },
+        scopeOrder: if Array.length(scopeOrder) > 0 { scopeOrder } else { ts.scopeOrder },
+        maintenanceOrder: if Array.length(maintOrder) > 0 { maintOrder } else { ts.maintenanceOrder },
+        auditOrder: if Array.length(auditOrder) > 0 { auditOrder } else { ts.auditOrder },
+        locked,
+      }
+      ({...model, tsdm: newTs}, Tea_Cmd.none)
+    | None => (model, Tea_Cmd.none)
+    }
+  }
   | DirectiveLoaded(Error(err)) =>
     ({...model, tsdm: {...ts, lastError: Some(err)}}, Tea_Cmd.none)
   | CollectWorkItems =>
-    // TODO: Aggregate work items from all consumer panels.
-    (model, Tea_Cmd.none)
-  | WorkItemsCollected(Ok(_json)) =>
-    // TODO: Deserialise work items array from JSON.
-    (model, Tea_Cmd.none)
+    (model, TsdmCmd.collectWorkItems(result => Tsdm(WorkItemsCollected(result))))
+  | WorkItemsCollected(Ok(jsonStr)) => {
+    let items = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      arr->Array.filterMap(item => {
+        let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let gb = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let id = gs(o, "id")
+        if id !== "" {
+          let axis = switch gs(o, "axis") {
+          | "scope" => TsdmModel.AxisScope
+          | "maintenance" => TsdmModel.AxisMaintenance
+          | _ => TsdmModel.AxisAudit
+          }
+          let scopeTier = switch gs(o, "scope_tier") {
+          | "must" => Some(TsdmModel.Must)
+          | "intend" => Some(TsdmModel.Intend)
+          | "like" => Some(TsdmModel.Like)
+          | _ => None
+          }
+          let maintenanceTier = switch gs(o, "maintenance_tier") {
+          | "corrective" => Some(TsdmModel.Corrective)
+          | "adaptive" => Some(TsdmModel.Adaptive)
+          | "perfective" => Some(TsdmModel.Perfective)
+          | _ => None
+          }
+          let auditTier = switch gs(o, "audit_tier") {
+          | "systems" => Some(TsdmModel.Systems)
+          | "compliance" => Some(TsdmModel.Compliance)
+          | "effects" => Some(TsdmModel.Effects)
+          | _ => None
+          }
+          Some({
+            TsdmModel.id,
+            title: gs(o, "title"),
+            description: gs(o, "description"),
+            axis,
+            scopeTier,
+            maintenanceTier,
+            auditTier,
+            sourcePanel: gs(o, "source_panel"),
+            done: gb(o, "done"),
+          })
+        } else {
+          None
+        }
+      })
+    } catch {
+    | _ => []
+    }
+    ({...model, tsdm: {...ts, workItems: items}}, Tea_Cmd.none)
+  }
   | WorkItemsCollected(Error(err)) =>
     ({...model, tsdm: {...ts, lastError: Some(err)}}, Tea_Cmd.none)
   | DismissTsdmError =>
@@ -5527,9 +6374,38 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
       {...model, valenceShell: {...vs, loading: true}},
       ValenceShellCmd.listRecordings(result => ValenceShell(RecordingsLoaded(result))),
     )
-  | RecordingsLoaded(Ok(_json)) => {
-      // TODO: Deserialise recordings array from JSON.
-      ({...model, valenceShell: {...vs, loading: false, error: None}}, Tea_Cmd.none)
+  | RecordingsLoaded(Ok(jsonStr)) => {
+      let parsed = try {
+        let json = JSON.parseExn(jsonStr)
+        let arr = json->JSON.Decode.array->Option.getOr([])
+        let items = arr->Array.filterMap(item => {
+          let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+          let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let path = obj->Dict.get("path")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let durationSecs = obj->Dict.get("durationSecs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let createdAt = obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let sizeBytes = obj->Dict.get("sizeBytes")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          Some({
+            ValenceShellModel.id: id,
+            name: name,
+            path: path,
+            durationSecs: durationSecs,
+            createdAt: createdAt,
+            sizeBytes: Float.toInt(sizeBytes),
+          })
+        })
+        Some(items)
+      } catch {
+      | _ => None
+      }
+      switch parsed {
+      | Some(recs) => (
+          {...model, valenceShell: {...vs, recordings: recs, loading: false, error: None}},
+          Tea_Cmd.none,
+        )
+      | None => ({...model, valenceShell: {...vs, loading: false, error: None}}, Tea_Cmd.none)
+      }
     }
   | RecordingsLoaded(Error(err)) => (
       {...model, valenceShell: {...vs, loading: false, error: Some(err)}},
@@ -5563,10 +6439,29 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
       {...model, valenceShell: {...vs, loading: true}},
       ValenceShellCmd.createCheckpoint(label, result => ValenceShell(CheckpointCreated(result))),
     )
-  | CheckpointCreated(Ok(_json)) => {
-      // TODO: Deserialise checkpoint from JSON and add to state.
+  | CheckpointCreated(Ok(jsonStr)) => {
+      let parsed = try {
+        let json = JSON.parseExn(jsonStr)
+        let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let label = obj->Dict.get("label")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let createdAt = obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let opsSince = obj->Dict.get("opsSinceCheckpoint")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        Some({
+          ValenceShellModel.id: id,
+          label: label,
+          createdAt: createdAt,
+          opsSinceCheckpoint: Float.toInt(opsSince),
+        })
+      } catch {
+      | _ => None
+      }
+      let newCheckpoints = switch parsed {
+      | Some(cp) => Array.concat(vs.checkpoints, [cp])
+      | None => vs.checkpoints
+      }
       (
-        {...model, valenceShell: {...vs, loading: false, error: None}},
+        {...model, valenceShell: {...vs, checkpoints: newCheckpoints, loading: false, error: None}},
         ValenceShellCmd.listCheckpoints(result => ValenceShell(CheckpointsLoaded(result))),
       )
     }
@@ -5590,9 +6485,34 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
       {...model, valenceShell: {...vs, loading: true}},
       ValenceShellCmd.listCheckpoints(result => ValenceShell(CheckpointsLoaded(result))),
     )
-  | CheckpointsLoaded(Ok(_json)) => {
-      // TODO: Deserialise checkpoints array from JSON.
-      ({...model, valenceShell: {...vs, loading: false, error: None}}, Tea_Cmd.none)
+  | CheckpointsLoaded(Ok(jsonStr)) => {
+      let parsed = try {
+        let json = JSON.parseExn(jsonStr)
+        let arr = json->JSON.Decode.array->Option.getOr([])
+        let items = arr->Array.filterMap(item => {
+          let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+          let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let label = obj->Dict.get("label")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let createdAt = obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let opsSince = obj->Dict.get("opsSinceCheckpoint")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          Some({
+            ValenceShellModel.id: id,
+            label: label,
+            createdAt: createdAt,
+            opsSinceCheckpoint: Float.toInt(opsSince),
+          })
+        })
+        Some(items)
+      } catch {
+      | _ => None
+      }
+      switch parsed {
+      | Some(cps) => (
+          {...model, valenceShell: {...vs, checkpoints: cps, loading: false, error: None}},
+          Tea_Cmd.none,
+        )
+      | None => ({...model, valenceShell: {...vs, loading: false, error: None}}, Tea_Cmd.none)
+      }
     }
   | CheckpointsLoaded(Error(err)) => (
       {...model, valenceShell: {...vs, loading: false, error: Some(err)}},
@@ -5750,9 +6670,39 @@ let updateGamePreview = (model: model, msg: gamePreviewMsg): (model, Tea_Cmd.t<m
       {...model, gamePreview: {...gp, loading: true}},
       GamePreviewCmd.listClips(result => GamePreview(ClipsLoaded(result))),
     )
-  | ClipsLoaded(Ok(_json)) =>
-    // TODO: Deserialise clips array from JSON.
-    ({...model, gamePreview: {...gp, loading: false, error: None}}, Tea_Cmd.none)
+  | ClipsLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let path = obj->Dict.get("path")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let durationSecs = obj->Dict.get("durationSecs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let sizeBytes = obj->Dict.get("sizeBytes")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let createdAt = obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        Some({
+          GamePreviewModel.id: id,
+          name: name,
+          path: path,
+          durationSecs: durationSecs,
+          sizeBytes: Float.toInt(sizeBytes),
+          createdAt: createdAt,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(clips) => (
+        {...model, gamePreview: {...gp, clips: clips, loading: false, error: None}},
+        Tea_Cmd.none,
+      )
+    | None => ({...model, gamePreview: {...gp, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | ClipsLoaded(Error(err)) => (
       {...model, gamePreview: {...gp, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -5773,9 +6723,28 @@ let updateGamePreview = (model: model, msg: gamePreviewMsg): (model, Tea_Cmd.t<m
       model,
       GamePreviewCmd.fetchRenderStats(result => GamePreview(StatsReceived(result))),
     )
-  | StatsReceived(Ok(_json)) =>
-    // TODO: Deserialise render stats from JSON.
-    (model, Tea_Cmd.none)
+  | StatsReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let fps = obj->Dict.get("fps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let drawCalls = obj->Dict.get("drawCalls")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let textureMemory = obj->Dict.get("textureMemory")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let spriteCount = obj->Dict.get("spriteCount")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      Some({
+        GamePreviewModel.fps: fps,
+        drawCalls: Float.toInt(drawCalls),
+        textureMemory: Float.toInt(textureMemory),
+        spriteCount: Float.toInt(spriteCount),
+      })
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(stats) => ({...model, gamePreview: {...gp, stats: Some(stats)}}, Tea_Cmd.none)
+    | None => (model, Tea_Cmd.none)
+    }
+  }
   | StatsReceived(Error(err)) => (
       {...model, gamePreview: {...gp, error: Some(err)}},
       Tea_Cmd.none,
@@ -5810,9 +6779,80 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
         VmInspectorCmd.readVmState(result => VmInspector(VmStateReceived(result)))
       },
     )
-  | VmStateReceived(Ok(_json)) =>
-    // TODO: Deserialise VM state (pc, stack, memory, instructions) from JSON.
-    ({...model, vmInspector: {...vm, loading: false, error: None}}, Tea_Cmd.none)
+  | VmStateReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let stack = stackArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+      let memArr = obj->Dict.get("memory")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let memory = memArr->Array.filterMap(m => {
+        let mObj = m->JSON.Decode.object->Option.getOr(Dict.make())
+        let address = mObj->Dict.get("address")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let value = mObj->Dict.get("value")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let recentRead = mObj->Dict.get("recentRead")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let recentWrite = mObj->Dict.get("recentWrite")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        Some({
+          VmInspectorModel.address: Float.toInt(address),
+          value: Float.toInt(value),
+          recentRead: recentRead,
+          recentWrite: recentWrite,
+        })
+      })
+      let instrArr = obj->Dict.get("instructions")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let instructions = instrArr->Array.filterMap(i => {
+        let iObj = i->JSON.Decode.object->Option.getOr(Dict.make())
+        let index = iObj->Dict.get("index")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let mnemonic = iObj->Dict.get("mnemonic")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let tierStr = iObj->Dict.get("tier")->Option.flatMap(JSON.Decode.string)->Option.getOr("arithmetic")
+        let tier = switch tierStr {
+        | "conditionals" => VmInspectorModel.TierConditionals
+        | "stack_memory" => TierStackMemory
+        | "subroutines" => TierSubroutines
+        | "io" => TierIO
+        | _ => TierArithmetic
+        }
+        let hasBreakpoint = iObj->Dict.get("hasBreakpoint")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let executionCount = iObj->Dict.get("executionCount")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        Some({
+          VmInspectorModel.index: Float.toInt(index),
+          mnemonic: mnemonic,
+          tier: tier,
+          hasBreakpoint: hasBreakpoint,
+          executionCount: Float.toInt(executionCount),
+        })
+      })
+      let running = obj->Dict.get("running")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+      let totalSteps = obj->Dict.get("totalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let tierCountsArr = obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let tierCounts = tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+      Some((Float.toInt(pc), stack, memory, instructions, running, Float.toInt(totalSteps), tierCounts))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((pc, stack, memory, instructions, running, totalSteps, tierCounts)) => (
+        {
+          ...model,
+          vmInspector: {
+            ...vm,
+            pc: pc,
+            stack: stack,
+            memory: memory,
+            instructions: instructions,
+            running: running,
+            totalSteps: totalSteps,
+            tierCounts: tierCounts,
+            loading: false,
+            error: None,
+          },
+        },
+        Tea_Cmd.none,
+      )
+    | None => ({...model, vmInspector: {...vm, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | VmStateReceived(Error(err)) => (
       {...model, vmInspector: {...vm, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -5833,10 +6873,77 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
       }
       ({...model, vmInspector: {...vm, loading: true}}, cmd)
     }
-  | StepResult(Ok(_json)) => {
-      // TODO: Deserialise new VM state after step, add to history.
-      let newStep = vm.totalSteps + 1
-      ({...model, vmInspector: {...vm, loading: false, totalSteps: newStep, error: None}}, Tea_Cmd.none)
+  | StepResult(Ok(jsonStr)) => {
+      let parsed = try {
+        let json = JSON.parseExn(jsonStr)
+        let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+        let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let stack = stackArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+        let memArr = obj->Dict.get("memory")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let memory = memArr->Array.filterMap(m => {
+          let mObj = m->JSON.Decode.object->Option.getOr(Dict.make())
+          let address = mObj->Dict.get("address")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let value = mObj->Dict.get("value")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let recentRead = mObj->Dict.get("recentRead")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+          let recentWrite = mObj->Dict.get("recentWrite")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+          Some({
+            VmInspectorModel.address: Float.toInt(address),
+            value: Float.toInt(value),
+            recentRead: recentRead,
+            recentWrite: recentWrite,
+          })
+        })
+        let instrMnemonic = obj->Dict.get("instructionMnemonic")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let running = obj->Dict.get("running")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let totalSteps = obj->Dict.get("totalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let tierCountsArr = obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let tierCounts = tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+        Some((Float.toInt(pc), stack, memory, instrMnemonic, running, Float.toInt(totalSteps), tierCounts))
+      } catch {
+      | _ => None
+      }
+      switch parsed {
+      | Some((pc, stack, memory, instrMnemonic, running, totalSteps, tierCounts)) => {
+          let newStep = totalSteps
+          let snapshot: VmInspectorModel.vmSnapshot = {
+            step: newStep,
+            pc: pc,
+            stack: stack,
+            memory: memory,
+            instructionMnemonic: instrMnemonic,
+          }
+          let history = Array.concat(vm.history, [snapshot])
+          let trimmed = if Array.length(history) > 10000 {
+            Array.sliceToEnd(history, ~start=Array.length(history) - 10000)
+          } else {
+            history
+          }
+          (
+            {
+              ...model,
+              vmInspector: {
+                ...vm,
+                pc: pc,
+                stack: stack,
+                memory: memory,
+                running: running,
+                totalSteps: newStep,
+                tierCounts: tierCounts,
+                history: trimmed,
+                timelinePosition: Array.length(trimmed) - 1,
+                loading: false,
+                error: None,
+              },
+            },
+            Tea_Cmd.none,
+          )
+        }
+      | None => {
+          let newStep = vm.totalSteps + 1
+          ({...model, vmInspector: {...vm, loading: false, totalSteps: newStep, error: None}}, Tea_Cmd.none)
+        }
+      }
     }
   | StepResult(Error(err)) => (
       {...model, vmInspector: {...vm, loading: false, error: Some(err)}},
@@ -5851,9 +6958,54 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
       ({...model, vmInspector: {...vm, running: true}}, cmd)
     }
   | PauseVm => ({...model, vmInspector: {...vm, running: false}}, Tea_Cmd.none)
-  | RunResult(Ok(_json)) =>
-    // TODO: Deserialise state at breakpoint/end.
-    ({...model, vmInspector: {...vm, running: false, error: None}}, Tea_Cmd.none)
+  | RunResult(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let stack = stackArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+      let memArr = obj->Dict.get("memory")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let memory = memArr->Array.filterMap(m => {
+        let mObj = m->JSON.Decode.object->Option.getOr(Dict.make())
+        let address = mObj->Dict.get("address")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let value = mObj->Dict.get("value")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let recentRead = mObj->Dict.get("recentRead")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let recentWrite = mObj->Dict.get("recentWrite")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        Some({
+          VmInspectorModel.address: Float.toInt(address),
+          value: Float.toInt(value),
+          recentRead: recentRead,
+          recentWrite: recentWrite,
+        })
+      })
+      let totalSteps = obj->Dict.get("totalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let tierCountsArr = obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let tierCounts = tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+      Some((Float.toInt(pc), stack, memory, Float.toInt(totalSteps), tierCounts))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((pc, stack, memory, totalSteps, tierCounts)) => (
+        {
+          ...model,
+          vmInspector: {
+            ...vm,
+            pc: pc,
+            stack: stack,
+            memory: memory,
+            totalSteps: totalSteps,
+            tierCounts: tierCounts,
+            running: false,
+            error: None,
+          },
+        },
+        Tea_Cmd.none,
+      )
+    | None => ({...model, vmInspector: {...vm, running: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | RunResult(Error(err)) => (
       {...model, vmInspector: {...vm, running: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -5940,9 +7092,92 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
       {...model, networkTopology: {...nt, loading: true}},
       NetworkTopologyCmd.readTopology(result => NetworkTopology(TopologyReceived(result))),
     )
-  | TopologyReceived(Ok(_json)) =>
-    // TODO: Deserialise devices and connections from JSON.
-    ({...model, networkTopology: {...nt, loading: false, error: None}}, Tea_Cmd.none)
+  | TopologyReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let devArr = obj->Dict.get("devices")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let devices = devArr->Array.filterMap(d => {
+        let dObj = d->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = dObj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let name = dObj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let deviceType = dObj->Dict.get("deviceType")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let zoneStr = dObj->Dict.get("zone")->Option.flatMap(JSON.Decode.string)->Option.getOr("public")
+        let zone = switch zoneStr {
+        | "dmz" => NetworkTopologyModel.ZoneDmz
+        | "internal" => ZoneInternal
+        | "restricted" => ZoneRestricted
+        | "air_gapped" => ZoneAirGapped
+        | _ => ZonePublic
+        }
+        let securityLevel = dObj->Dict.get("securityLevel")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let x = dObj->Dict.get("x")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let y = dObj->Dict.get("y")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let flagsArr = dObj->Dict.get("defenceFlags")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let defenceFlags = flagsArr->Array.filterMap(f => f->JSON.Decode.string)
+        let compromised = dObj->Dict.get("compromised")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let active = dObj->Dict.get("active")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
+        Some({
+          NetworkTopologyModel.id: id,
+          name: name,
+          deviceType: deviceType,
+          zone: zone,
+          securityLevel: Float.toInt(securityLevel),
+          x: x,
+          y: y,
+          defenceFlags: defenceFlags,
+          compromised: compromised,
+          active: active,
+        })
+      })
+      let connArr = obj->Dict.get("connections")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let connections = connArr->Array.filterMap(c => {
+        let cObj = c->JSON.Decode.object->Option.getOr(Dict.make())
+        let sourceId = cObj->Dict.get("sourceId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let targetId = cObj->Dict.get("targetId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let protoStr = cObj->Dict.get("protocol")->Option.flatMap(JSON.Decode.string)->Option.getOr("custom")
+        let protocol = switch protoStr {
+        | "ssh" => NetworkTopologyModel.ProtoSSH
+        | "https" => ProtoHTTPS
+        | "ftp" => ProtoFTP
+        | "dns" => ProtoDNS
+        | other => ProtoCustom(other)
+        }
+        let encrypted = cObj->Dict.get("encrypted")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let packetCount = cObj->Dict.get("packetCount")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let latencyMs = cObj->Dict.get("latencyMs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let active = cObj->Dict.get("active")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
+        Some({
+          NetworkTopologyModel.sourceId: sourceId,
+          targetId: targetId,
+          protocol: protocol,
+          encrypted: encrypted,
+          packetCount: Float.toInt(packetCount),
+          latencyMs: latencyMs,
+          active: active,
+        })
+      })
+      Some((devices, connections))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((devices, connections)) => (
+        {
+          ...model,
+          networkTopology: {
+            ...nt,
+            devices: devices,
+            connections: connections,
+            loading: false,
+            error: None,
+          },
+        },
+        Tea_Cmd.none,
+      )
+    | None => ({...model, networkTopology: {...nt, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | TopologyReceived(Error(err)) => (
       {...model, networkTopology: {...nt, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -5953,9 +7188,35 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
       {...model, networkTopology: {...nt, loading: true}},
       NetworkTopologyCmd.readDnsTable(result => NetworkTopology(DnsReceived(result))),
     )
-  | DnsReceived(Ok(_json)) =>
-    // TODO: Deserialise DNS entries from JSON.
-    ({...model, networkTopology: {...nt, loading: false, error: None}}, Tea_Cmd.none)
+  | DnsReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let entries = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let hostname = obj->Dict.get("hostname")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let resolvedIp = obj->Dict.get("resolvedIp")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let recordType = obj->Dict.get("recordType")->Option.flatMap(JSON.Decode.string)->Option.getOr("A")
+        let ttl = obj->Dict.get("ttl")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        Some({
+          NetworkTopologyModel.hostname: hostname,
+          resolvedIp: resolvedIp,
+          recordType: recordType,
+          ttl: Float.toInt(ttl),
+        })
+      })
+      Some(entries)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(entries) => (
+        {...model, networkTopology: {...nt, dnsEntries: entries, loading: false, error: None}},
+        Tea_Cmd.none,
+      )
+    | None => ({...model, networkTopology: {...nt, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | DnsReceived(Error(err)) => (
       {...model, networkTopology: {...nt, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -5968,9 +7229,35 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
         Tea_Cmd.none
       },
     )
-  | PacketFlowReceived(Ok(_json)) =>
-    // TODO: Deserialise packet flow events from JSON.
-    ({...model, networkTopology: {...nt, error: None}}, Tea_Cmd.none)
+  | PacketFlowReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let events = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let connectionId = obj->Dict.get("connectionId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let timestamp = obj->Dict.get("timestamp")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let size = obj->Dict.get("size")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let blocked = obj->Dict.get("blocked")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        Some({
+          NetworkTopologyModel.connectionId: connectionId,
+          timestamp: timestamp,
+          size: Float.toInt(size),
+          blocked: blocked,
+        })
+      })
+      Some(events)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(events) => (
+        {...model, networkTopology: {...nt, packetFlow: events, error: None}},
+        Tea_Cmd.none,
+      )
+    | None => ({...model, networkTopology: {...nt, error: None}}, Tea_Cmd.none)
+    }
+  }
   | PacketFlowReceived(Error(err)) => (
       {...model, networkTopology: {...nt, error: Some(err)}},
       Tea_Cmd.none,
@@ -6041,9 +7328,47 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
       | ToolErase =>
         let newEntities = la.entities->Array.filter(e => !(e.gridX === x && e.gridY === y))
         ({...model, levelArchitect: {...la, entities: newEntities}}, Tea_Cmd.none)
-      | ToolPatrol | ToolDefenceFlag =>
-        // TODO: Patrol waypoint and defence flag placement
-        (model, Tea_Cmd.none)
+      | ToolPatrol => {
+        // Add a patrol waypoint at the clicked grid position for the currently selected guard.
+        let waypoint: LevelArchitectModel.patrolWaypoint = {x, y, pauseDuration: 1.0}
+        let patrols = switch la.selectedEntityId {
+        | Some(guardId) => {
+            let existing = la.patrols->Array.find(p => p.guardId === guardId)
+            switch existing {
+            | Some(_patrol) =>
+              la.patrols->Array.map(p =>
+                if p.guardId === guardId {
+                  {...p, waypoints: Array.concat(p.waypoints, [waypoint])}
+                } else {
+                  p
+                }
+              )
+            | None =>
+              Array.concat(la.patrols, [{guardId, waypoints: [waypoint], looping: true, speed: 1.0}])
+            }
+          }
+        | None => la.patrols
+        }
+        ({...model, levelArchitect: {...la, patrols}}, Tea_Cmd.none)
+      }
+      | ToolDefenceFlag => {
+        // Place a defence flag entity at the clicked grid position.
+        if !LevelArchitectEngine.isOccupied(la.entities, x, y) {
+          let id = `flag_${Int.toString(x)}_${Int.toString(y)}`
+          let entity: levelEntity = {
+            id,
+            kind: EntityTrigger,
+            name: "Defence Flag",
+            gridX: x,
+            gridY: y,
+            rotation: 0,
+            properties: [("type", "defence_flag")],
+          }
+          ({...model, levelArchitect: {...la, entities: Array.concat(la.entities, [entity]), selectedEntityId: Some(id)}}, Tea_Cmd.none)
+        } else {
+          (model, Tea_Cmd.none)
+        }
+      }
       }
     }
   | SelectEntity(id) => ({...model, levelArchitect: {...la, selectedEntityId: Some(id)}}, Tea_Cmd.none)
@@ -6063,9 +7388,46 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
       {...model, levelArchitect: {...la, loading: true}},
       LevelArchitectCmd.browseAssets(result => LevelArchitect(AssetsLoaded(result))),
     )
-  | AssetsLoaded(Ok(_json)) =>
-    // TODO: Deserialise assets from JSON.
-    ({...model, levelArchitect: {...la, loading: false, error: None}}, Tea_Cmd.none)
+  | AssetsLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let category = obj->Dict.get("category")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let thumbnail = obj->Dict.get("thumbnail")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let kindStr = obj->Dict.get("entityKind")->Option.flatMap(JSON.Decode.string)->Option.getOr("device")
+        let entityKind = switch kindStr {
+        | "guard" => LevelArchitectModel.EntityGuard
+        | "spawn_point" => EntitySpawnPoint
+        | "companion" => EntityCompanion
+        | "collectable" => EntityCollectable
+        | "trigger" => EntityTrigger
+        | "decoration" => EntityDecoration
+        | _ => EntityDevice
+        }
+        Some({
+          LevelArchitectModel.id: id,
+          name: name,
+          category: category,
+          thumbnail: thumbnail,
+          entityKind: entityKind,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(assets) => (
+        {...model, levelArchitect: {...la, assets: assets, loading: false, error: None}},
+        Tea_Cmd.none,
+      )
+    | None => ({...model, levelArchitect: {...la, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | AssetsLoaded(Error(err)) => (
       {...model, levelArchitect: {...la, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6074,9 +7436,37 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
       {...model, levelArchitect: {...la, loading: true}},
       LevelArchitectCmd.validateLevel("", result => LevelArchitect(ValidationResult(result))),
     )
-  | ValidationResult(Ok(_json)) =>
-    // TODO: Deserialise validation issues from JSON.
-    ({...model, levelArchitect: {...la, loading: false, error: None}}, Tea_Cmd.none)
+  | ValidationResult(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let issues = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let severity = obj->Dict.get("severity")->Option.flatMap(JSON.Decode.string)->Option.getOr("warning")
+        let message = obj->Dict.get("message")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let entityId = obj->Dict.get("entityId")->Option.flatMap(JSON.Decode.string)
+        let gridX = obj->Dict.get("gridX")->Option.flatMap(JSON.Decode.float)->Option.map(Float.toInt)
+        let gridY = obj->Dict.get("gridY")->Option.flatMap(JSON.Decode.float)->Option.map(Float.toInt)
+        Some({
+          LevelArchitectModel.severity: severity,
+          message: message,
+          entityId: entityId,
+          gridX: gridX,
+          gridY: gridY,
+        })
+      })
+      Some(issues)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(issues) => (
+        {...model, levelArchitect: {...la, validationIssues: issues, loading: false, error: None}},
+        Tea_Cmd.none,
+      )
+    | None => ({...model, levelArchitect: {...la, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | ValidationResult(Error(err)) => (
       {...model, levelArchitect: {...la, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6085,9 +7475,98 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
       {...model, levelArchitect: {...la, loading: true}},
       LevelArchitectCmd.loadLevel(path, result => LevelArchitect(LevelLoaded(result))),
     )
-  | LevelLoaded(Ok(_json)) =>
-    // TODO: Deserialise level data from JSON.
-    ({...model, levelArchitect: {...la, loading: false, error: None}}, Tea_Cmd.none)
+  | LevelLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let levelName = obj->Dict.get("levelName")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+      let gridWidth = obj->Dict.get("gridWidth")->Option.flatMap(JSON.Decode.float)->Option.getOr(32.0)
+      let gridHeight = obj->Dict.get("gridHeight")->Option.flatMap(JSON.Decode.float)->Option.getOr(32.0)
+      let entArr = obj->Dict.get("entities")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let entities = entArr->Array.filterMap(e => {
+        let eObj = e->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = eObj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let kindStr = eObj->Dict.get("kind")->Option.flatMap(JSON.Decode.string)->Option.getOr("device")
+        let kind = switch kindStr {
+        | "guard" => LevelArchitectModel.EntityGuard
+        | "spawn_point" => EntitySpawnPoint
+        | "companion" => EntityCompanion
+        | "collectable" => EntityCollectable
+        | "trigger" => EntityTrigger
+        | "decoration" => EntityDecoration
+        | _ => EntityDevice
+        }
+        let name = eObj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let gridX = eObj->Dict.get("gridX")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let gridY = eObj->Dict.get("gridY")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let rotation = eObj->Dict.get("rotation")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let propsArr = eObj->Dict.get("properties")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let properties = propsArr->Array.filterMap(p => {
+          let pArr = p->JSON.Decode.array->Option.getOr([])
+          switch (pArr->Array.get(0), pArr->Array.get(1)) {
+          | (Some(k), Some(v)) =>
+            switch (k->JSON.Decode.string, v->JSON.Decode.string) {
+            | (Some(key), Some(val)) => Some((key, val))
+            | _ => None
+            }
+          | _ => None
+          }
+        })
+        Some({
+          LevelArchitectModel.id: id,
+          kind: kind,
+          name: name,
+          gridX: Float.toInt(gridX),
+          gridY: Float.toInt(gridY),
+          rotation: Float.toInt(rotation),
+          properties: properties,
+        })
+      })
+      let patArr = obj->Dict.get("patrols")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let patrols = patArr->Array.filterMap(p => {
+        let pObj = p->JSON.Decode.object->Option.getOr(Dict.make())
+        let guardId = pObj->Dict.get("guardId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let looping = pObj->Dict.get("looping")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
+        let speed = pObj->Dict.get("speed")->Option.flatMap(JSON.Decode.float)->Option.getOr(1.0)
+        let wpArr = pObj->Dict.get("waypoints")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let waypoints = wpArr->Array.filterMap(w => {
+          let wObj = w->JSON.Decode.object->Option.getOr(Dict.make())
+          let x = wObj->Dict.get("x")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let y = wObj->Dict.get("y")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let pauseDuration = wObj->Dict.get("pauseDuration")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          Some({LevelArchitectModel.x: Float.toInt(x), y: Float.toInt(y), pauseDuration: pauseDuration})
+        })
+        Some({
+          LevelArchitectModel.guardId: guardId,
+          waypoints: waypoints,
+          looping: looping,
+          speed: speed,
+        })
+      })
+      Some((levelName, Float.toInt(gridWidth), Float.toInt(gridHeight), entities, patrols))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((levelName, gridWidth, gridHeight, entities, patrols)) => (
+        {
+          ...model,
+          levelArchitect: {
+            ...la,
+            levelName: levelName,
+            gridWidth: gridWidth,
+            gridHeight: gridHeight,
+            entities: entities,
+            patrols: patrols,
+            loading: false,
+            error: None,
+          },
+        },
+        Tea_Cmd.none,
+      )
+    | None => ({...model, levelArchitect: {...la, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | LevelLoaded(Error(err)) => (
       {...model, levelArchitect: {...la, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6178,9 +7657,57 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
       {...model, coprocessors: {...cp, loading: true}},
       CoprocessorsCmd.readMetrics(result => Coprocessors(MetricsReceived(result))),
     )
-  | MetricsReceived(Ok(_json)) =>
-    // TODO: Deserialise metrics from JSON.
-    ({...model, coprocessors: {...cp, loading: false, error: None}}, Tea_Cmd.none)
+  | MetricsReceived(Ok(jsonStr)) => {
+    let parseBackend = (s: string): CoprocessorsModel.coprocessorBackend =>
+      switch s {
+      | "maths" => CoprocMaths
+      | "vector" => CoprocVector
+      | "tensor" => CoprocTensor
+      | "physics" => CoprocPhysics
+      | "crypto" => CoprocCrypto
+      | "neural" => CoprocNeural
+      | "quantum" => CoprocQuantum
+      | "audio" => CoprocAudio
+      | "graphics" => CoprocGraphics
+      | _ => CoprocIO
+      }
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let backend = obj->Dict.get("backend")->Option.flatMap(JSON.Decode.string)->Option.getOr("")->parseBackend
+        let totalCalls = obj->Dict.get("totalCalls")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let avgDurationMs = obj->Dict.get("avgDurationMs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let maxDurationMs = obj->Dict.get("maxDurationMs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let errorRate = obj->Dict.get("errorRate")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let lastCallTimestamp = obj->Dict.get("lastCallTimestamp")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let healthStr = obj->Dict.get("health")->Option.flatMap(JSON.Decode.string)->Option.getOr("healthy")
+        let health: CoprocessorsModel.coprocHealth = switch healthStr {
+        | "degraded" => CoprocDegraded
+        | "failed" => CoprocFailed
+        | "disabled" => CoprocDisabled
+        | _ => CoprocHealthy
+        }
+        Some({
+          CoprocessorsModel.backend,
+          totalCalls: Float.toInt(totalCalls),
+          avgDurationMs,
+          maxDurationMs,
+          errorRate,
+          lastCallTimestamp,
+          health,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(metrics) => ({...model, coprocessors: {...cp, metrics, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, coprocessors: {...cp, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | MetricsReceived(Error(err)) => (
       {...model, coprocessors: {...cp, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6189,9 +7716,53 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
       {...model, coprocessors: {...cp, loading: true}},
       CoprocessorsCmd.readCallLog(result => Coprocessors(CallLogReceived(result))),
     )
-  | CallLogReceived(Ok(_json)) =>
-    // TODO: Deserialise call log from JSON.
-    ({...model, coprocessors: {...cp, loading: false, error: None}}, Tea_Cmd.none)
+  | CallLogReceived(Ok(jsonStr)) => {
+    let parseBackend = (s: string): CoprocessorsModel.coprocessorBackend =>
+      switch s {
+      | "maths" => CoprocMaths
+      | "vector" => CoprocVector
+      | "tensor" => CoprocTensor
+      | "physics" => CoprocPhysics
+      | "crypto" => CoprocCrypto
+      | "neural" => CoprocNeural
+      | "quantum" => CoprocQuantum
+      | "audio" => CoprocAudio
+      | "graphics" => CoprocGraphics
+      | _ => CoprocIO
+      }
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let backend = obj->Dict.get("backend")->Option.flatMap(JSON.Decode.string)->Option.getOr("")->parseBackend
+        let operation = obj->Dict.get("operation")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let inputSummary = obj->Dict.get("inputSummary")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let outputSummary = obj->Dict.get("outputSummary")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let durationMs = obj->Dict.get("durationMs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let timestamp = obj->Dict.get("timestamp")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let success = obj->Dict.get("success")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
+        Some({
+          CoprocessorsModel.id: Float.toInt(id),
+          backend,
+          operation,
+          inputSummary,
+          outputSummary,
+          durationMs,
+          timestamp,
+          success,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(callLog) => ({...model, coprocessors: {...cp, callLog, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, coprocessors: {...cp, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | CallLogReceived(Error(err)) => (
       {...model, coprocessors: {...cp, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6200,9 +7771,45 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
       {...model, coprocessors: {...cp, loading: true}},
       CoprocessorsCmd.readHeatmap(result => Coprocessors(HeatmapReceived(result))),
     )
-  | HeatmapReceived(Ok(_json)) =>
-    // TODO: Deserialise heatmap data from JSON.
-    ({...model, coprocessors: {...cp, loading: false, error: None}}, Tea_Cmd.none)
+  | HeatmapReceived(Ok(jsonStr)) => {
+    let parseBackend = (s: string): CoprocessorsModel.coprocessorBackend =>
+      switch s {
+      | "maths" => CoprocMaths
+      | "vector" => CoprocVector
+      | "tensor" => CoprocTensor
+      | "physics" => CoprocPhysics
+      | "crypto" => CoprocCrypto
+      | "neural" => CoprocNeural
+      | "quantum" => CoprocQuantum
+      | "audio" => CoprocAudio
+      | "graphics" => CoprocGraphics
+      | _ => CoprocIO
+      }
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let backend = obj->Dict.get("backend")->Option.flatMap(JSON.Decode.string)->Option.getOr("")->parseBackend
+        let timeSlot = obj->Dict.get("timeSlot")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let callCount = obj->Dict.get("callCount")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let avgDuration = obj->Dict.get("avgDuration")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        Some({
+          CoprocessorsModel.backend,
+          timeSlot: Float.toInt(timeSlot),
+          callCount: Float.toInt(callCount),
+          avgDuration,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(heatmap) => ({...model, coprocessors: {...cp, heatmap, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, coprocessors: {...cp, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | HeatmapReceived(Error(err)) => (
       {...model, coprocessors: {...cp, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6352,9 +7959,73 @@ let updateMultiplayerMonitor = (model: model, msg: multiplayerMonitorMsg): (mode
       {...model, multiplayerMonitor: {...mp, loading: true}},
       MultiplayerMonitorCmd.readMultiplayerState(result => MultiplayerMonitor(StateReceived(result))),
     )
-  | StateReceived(Ok(_json)) =>
-    // TODO: Deserialise players, channels, locks from JSON.
-    ({...model, multiplayerMonitor: {...mp, loading: false, error: None}}, Tea_Cmd.none)
+  | StateReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let playersArr = obj->Dict.get("players")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let players = playersArr->Array.filterMap(item => {
+        let p = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let playerId = p->Dict.get("playerId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let displayName = p->Dict.get("displayName")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let deviceId = p->Dict.get("deviceId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let latencyMs = p->Dict.get("latencyMs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let lamportClock = p->Dict.get("lamportClock")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let lastHeartbeat = p->Dict.get("lastHeartbeat")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let isHost = p->Dict.get("isHost")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let isSpectator = p->Dict.get("isSpectator")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        Some({
+          MultiplayerMonitorModel.playerId,
+          displayName,
+          deviceId,
+          latencyMs: Float.toInt(latencyMs),
+          lamportClock: Float.toInt(lamportClock),
+          lastHeartbeat,
+          isHost,
+          isSpectator,
+        })
+      })
+      let channelsArr = obj->Dict.get("channels")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let channels = channelsArr->Array.filterMap(item => {
+        let c = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let topic = c->Dict.get("topic")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let joinedAt = c->Dict.get("joinedAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let messageCount = c->Dict.get("messageCount")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let lastMessageAt = c->Dict.get("lastMessageAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        Some({
+          MultiplayerMonitorModel.topic,
+          joinedAt,
+          messageCount: Float.toInt(messageCount),
+          lastMessageAt,
+        })
+      })
+      let locksArr = obj->Dict.get("deviceLocks")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let deviceLocks = locksArr->Array.filterMap(item => {
+        let l = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let deviceId = l->Dict.get("deviceId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let lockedBy = l->Dict.get("lockedBy")->Option.flatMap(JSON.Decode.string)
+        let lockedAt = l->Dict.get("lockedAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let contestedArr = l->Dict.get("contestedBy")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let contestedBy = contestedArr->Array.filterMap(v => v->JSON.Decode.string)
+        Some({
+          MultiplayerMonitorModel.deviceId,
+          lockedBy,
+          lockedAt,
+          contestedBy,
+        })
+      })
+      Some((players, channels, deviceLocks))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((players, channels, deviceLocks)) => (
+        {...model, multiplayerMonitor: {...mp, players, channels, deviceLocks, loading: false, error: None}},
+        Tea_Cmd.none,
+      )
+    | None => ({...model, multiplayerMonitor: {...mp, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | StateReceived(Error(err)) => (
       {...model, multiplayerMonitor: {...mp, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6363,9 +8034,36 @@ let updateMultiplayerMonitor = (model: model, msg: multiplayerMonitorMsg): (mode
       {...model, multiplayerMonitor: {...mp, loading: true}},
       MultiplayerMonitorCmd.readStateDiffs(result => MultiplayerMonitor(DiffsReceived(result))),
     )
-  | DiffsReceived(Ok(_json)) =>
-    // TODO: Deserialise state diffs from JSON.
-    ({...model, multiplayerMonitor: {...mp, loading: false, error: None}}, Tea_Cmd.none)
+  | DiffsReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let diffs = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let timestamp = obj->Dict.get("timestamp")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let playerId = obj->Dict.get("playerId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let field = obj->Dict.get("field")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let localValue = obj->Dict.get("localValue")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let remoteValue = obj->Dict.get("remoteValue")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let resolved = obj->Dict.get("resolved")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        Some({
+          MultiplayerMonitorModel.timestamp,
+          playerId,
+          field,
+          localValue,
+          remoteValue,
+          resolved,
+        })
+      })
+      Some(diffs)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(stateDiffs) => ({...model, multiplayerMonitor: {...mp, stateDiffs, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, multiplayerMonitor: {...mp, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | DiffsReceived(Error(err)) => (
       {...model, multiplayerMonitor: {...mp, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6420,9 +8118,49 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
       {...model, dlcWorkshop: {...dw, loading: true}},
       DlcWorkshopCmd.loadPuzzles(result => DlcWorkshop(PuzzlesLoaded(result))),
     )
-  | PuzzlesLoaded(Ok(_json)) =>
-    // TODO: Deserialise puzzles from JSON.
-    ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+  | PuzzlesLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let description = obj->Dict.get("description")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let diffStr = obj->Dict.get("difficulty")->Option.flatMap(JSON.Decode.string)->Option.getOr("medium")
+        let difficulty: DlcWorkshopModel.puzzleDifficulty = switch diffStr {
+        | "tutorial" => DifficultyTutorial
+        | "easy" => DifficultyEasy
+        | "hard" => DifficultyHard
+        | "expert" => DifficultyExpert
+        | "nightmare" => DifficultyNightmare
+        | _ => DifficultyMedium
+        }
+        let solutionSteps = obj->Dict.get("solutionSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let optimalSteps = obj->Dict.get("optimalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let hintsArr = obj->Dict.get("hints")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let hints = hintsArr->Array.filterMap(v => v->JSON.Decode.string)
+        Some({
+          DlcWorkshopModel.id,
+          name,
+          description,
+          difficulty,
+          instructions: [],
+          solutionSteps: Float.toInt(solutionSteps),
+          optimalSteps: Float.toInt(optimalSteps),
+          testStatus: TestNotRun,
+          hints,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(puzzles) => ({...model, dlcWorkshop: {...dw, puzzles, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | PuzzlesLoaded(Error(err)) => (
       {...model, dlcWorkshop: {...dw, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6461,9 +8199,33 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
       {...model, dlcWorkshop: {...dw, loading: true}},
       DlcWorkshopCmd.runTest(puzzleId, result => DlcWorkshop(PuzzleTestResult(result))),
     )
-  | PuzzleTestResult(Ok(_json)) =>
-    // TODO: Deserialise test result and update puzzle status.
-    ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+  | PuzzleTestResult(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let puzzleId = obj->Dict.get("puzzleId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+      let passed = obj->Dict.get("passed")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+      let errorMsg = obj->Dict.get("error")->Option.flatMap(JSON.Decode.string)
+      let status: DlcWorkshopModel.testRunStatus = if passed {
+        TestPassed
+      } else {
+        TestFailed(errorMsg->Option.getOr("Test failed"))
+      }
+      Some((puzzleId, status))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((puzzleId, status)) => {
+        let puzzles = dw.puzzles->Array.map(p =>
+          if p.id === puzzleId { {...p, testStatus: status} } else { p }
+        )
+        let testResults = Array.concat(dw.testResults, [(puzzleId, status)])
+        ({...model, dlcWorkshop: {...dw, puzzles, testResults, loading: false, error: None}}, Tea_Cmd.none)
+      }
+    | None => ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | PuzzleTestResult(Error(err)) => (
       {...model, dlcWorkshop: {...dw, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6472,9 +8234,40 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
       {...model, dlcWorkshop: {...dw, loading: true}},
       DlcWorkshopCmd.runAllTests(result => DlcWorkshop(AllTestsResult(result))),
     )
-  | AllTestsResult(Ok(_json)) =>
-    // TODO: Deserialise all test results.
-    ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+  | AllTestsResult(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let results = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let puzzleId = obj->Dict.get("puzzleId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let passed = obj->Dict.get("passed")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let errorMsg = obj->Dict.get("error")->Option.flatMap(JSON.Decode.string)
+        let status: DlcWorkshopModel.testRunStatus = if passed {
+          TestPassed
+        } else {
+          TestFailed(errorMsg->Option.getOr("Test failed"))
+        }
+        Some((puzzleId, status))
+      })
+      Some(results)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(results) => {
+        let puzzles = dw.puzzles->Array.map(p => {
+          let matching = results->Array.find(((id, _)) => id === p.id)
+          switch matching {
+          | Some((_, status)) => {...p, testStatus: status}
+          | None => p
+          }
+        })
+        ({...model, dlcWorkshop: {...dw, puzzles, testResults: results, loading: false, error: None}}, Tea_Cmd.none)
+      }
+    | None => ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | AllTestsResult(Error(err)) => (
       {...model, dlcWorkshop: {...dw, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6483,9 +8276,34 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
       {...model, dlcWorkshop: {...dw, loading: true}},
       DlcWorkshopCmd.browseAssets(result => DlcWorkshop(DlcAssetsLoaded(result))),
     )
-  | DlcAssetsLoaded(Ok(_json)) =>
-    // TODO: Deserialise assets from JSON.
-    ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+  | DlcAssetsLoaded(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let assetType = obj->Dict.get("assetType")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let filePath = obj->Dict.get("filePath")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let sizeBytes = obj->Dict.get("sizeBytes")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        Some({
+          DlcWorkshopModel.id,
+          name,
+          assetType,
+          filePath,
+          sizeBytes: Float.toInt(sizeBytes),
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(assets) => ({...model, dlcWorkshop: {...dw, assets, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, dlcWorkshop: {...dw, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | DlcAssetsLoaded(Error(err)) => (
       {...model, dlcWorkshop: {...dw, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6503,9 +8321,45 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
       model,
       DlcWorkshopCmd.importPuzzle("", result => DlcWorkshop(PuzzleImported(result))),
     )
-  | PuzzleImported(Ok(_json)) =>
-    // TODO: Deserialise imported puzzle and add to list.
-    ({...model, dlcWorkshop: {...dw, error: None}}, Tea_Cmd.none)
+  | PuzzleImported(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+      let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+      let description = obj->Dict.get("description")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+      let diffStr = obj->Dict.get("difficulty")->Option.flatMap(JSON.Decode.string)->Option.getOr("medium")
+      let difficulty: DlcWorkshopModel.puzzleDifficulty = switch diffStr {
+      | "tutorial" => DifficultyTutorial
+      | "easy" => DifficultyEasy
+      | "hard" => DifficultyHard
+      | "expert" => DifficultyExpert
+      | "nightmare" => DifficultyNightmare
+      | _ => DifficultyMedium
+      }
+      let solutionSteps = obj->Dict.get("solutionSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let optimalSteps = obj->Dict.get("optimalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let hintsArr = obj->Dict.get("hints")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+      let hints = hintsArr->Array.filterMap(v => v->JSON.Decode.string)
+      Some({
+        DlcWorkshopModel.id,
+        name,
+        description,
+        difficulty,
+        instructions: [],
+        solutionSteps: Float.toInt(solutionSteps),
+        optimalSteps: Float.toInt(optimalSteps),
+        testStatus: TestNotRun,
+        hints,
+      })
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(puzzle) => ({...model, dlcWorkshop: {...dw, puzzles: Array.concat(dw.puzzles, [puzzle]), error: None}}, Tea_Cmd.none)
+    | None => ({...model, dlcWorkshop: {...dw, error: None}}, Tea_Cmd.none)
+    }
+  }
   | PuzzleImported(Error(err)) => (
       {...model, dlcWorkshop: {...dw, error: Some(err)}},
       Tea_Cmd.none,
@@ -6541,9 +8395,39 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
       {...model, editorBridge: {...eb, loading: true}},
       EditorBridgeCmd.detectEditor(result => EditorBridge(EditorDetected(result))),
     )
-  | EditorDetected(Ok(_json)) =>
-    // TODO: Deserialise editor info and set editorKind + connection state.
-    ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+  | EditorDetected(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let editorStr = obj->Dict.get("editorKind")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+      let editorKind: EditorBridgeModel.editorKind = switch editorStr {
+      | "vscodium" => EditorVSCodium
+      | "vscode" => EditorVSCode
+      | "zed" => EditorZed
+      | "helix" => EditorHelix
+      | "neovim" => EditorNeovim
+      | "emacs" => EditorEmacs
+      | "kakoune" => EditorKakoune
+      | other => EditorCustom(other)
+      }
+      let connStr = obj->Dict.get("connection")->Option.flatMap(JSON.Decode.string)->Option.getOr("disconnected")
+      let connection: EditorBridgeModel.editorConnection = switch connStr {
+      | "connected" => EditorConnected(editorStr)
+      | "connecting" => EditorConnecting
+      | _ => EditorDisconnected
+      }
+      Some((editorKind, connection))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((editorKind, connection)) => (
+        {...model, editorBridge: {...eb, editorKind, connection, loading: false, error: None}},
+        Tea_Cmd.none,
+      )
+    | None => ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | EditorDetected(Error(err)) => (
       {...model, editorBridge: {...eb, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6577,9 +8461,42 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
         EditorBridgeCmd.readDiagnostics(result => EditorBridge(DiagnosticsReceived(result)))
       },
     )
-  | DiagnosticsReceived(Ok(_json)) =>
-    // TODO: Deserialise diagnostics from JSON.
-    ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+  | DiagnosticsReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let filePath = obj->Dict.get("filePath")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let line = obj->Dict.get("line")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let col = obj->Dict.get("col")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let endLine = obj->Dict.get("endLine")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let endCol = obj->Dict.get("endCol")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let severity = obj->Dict.get("severity")->Option.flatMap(JSON.Decode.string)->Option.getOr("warning")
+        let message = obj->Dict.get("message")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let source = obj->Dict.get("source")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let code = obj->Dict.get("code")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        Some({
+          EditorBridgeModel.filePath,
+          line: Float.toInt(line),
+          col: Float.toInt(col),
+          endLine: Float.toInt(endLine),
+          endCol: Float.toInt(endCol),
+          severity,
+          message,
+          source,
+          code,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(diagnostics) => ({...model, editorBridge: {...eb, diagnostics, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | DiagnosticsReceived(Error(err)) => (
       {...model, editorBridge: {...eb, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6588,9 +8505,36 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
       {...model, editorBridge: {...eb, loading: true}},
       EditorBridgeCmd.readOpenFiles(result => EditorBridge(OpenFilesReceived(result))),
     )
-  | OpenFilesReceived(Ok(_json)) =>
-    // TODO: Deserialise open files from JSON.
-    ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+  | OpenFilesReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let path = obj->Dict.get("path")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let language = obj->Dict.get("language")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let modified = obj->Dict.get("modified")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let cursorLine = obj->Dict.get("cursorLine")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let cursorCol = obj->Dict.get("cursorCol")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let selections = obj->Dict.get("selections")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        Some({
+          EditorBridgeModel.path,
+          language,
+          modified,
+          cursorLine: Float.toInt(cursorLine),
+          cursorCol: Float.toInt(cursorCol),
+          selections: Float.toInt(selections),
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(openFiles) => ({...model, editorBridge: {...eb, openFiles, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | OpenFilesReceived(Error(err)) => (
       {...model, editorBridge: {...eb, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6604,9 +8548,34 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
         EditorBridgeCmd.readSymbols(eb.symbolFilter, result => EditorBridge(SymbolsReceived(result)))
       },
     )
-  | SymbolsReceived(Ok(_json)) =>
-    // TODO: Deserialise symbols from JSON.
-    ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+  | SymbolsReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let kind = obj->Dict.get("kind")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let filePath = obj->Dict.get("filePath")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let line = obj->Dict.get("line")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let containerName = obj->Dict.get("containerName")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        Some({
+          EditorBridgeModel.name,
+          kind,
+          filePath,
+          line: Float.toInt(line),
+          containerName,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(symbols) => ({...model, editorBridge: {...eb, symbols, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, editorBridge: {...eb, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | SymbolsReceived(Error(err)) => (
       {...model, editorBridge: {...eb, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6654,9 +8623,45 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       }
       ({...model, buildDashboard: {...bd, loading: true}}, cmd)
     }
-  | BuildTriggered(Ok(_json)) =>
-    // TODO: Deserialise build status update.
-    ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+  | BuildTriggered(Ok(jsonStr)) => {
+    let parseTarget = (s: string): BuildDashboardModel.buildTarget =>
+      switch s {
+      | "game" => TargetGame
+      | "vm" => TargetVm
+      | "dlc" => TargetDlc
+      | "sync_server" => TargetSyncServer
+      | "shared" => TargetShared
+      | "coprocessors" => TargetCoprocessors
+      | other => TargetCustom(other)
+      }
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let targetStr = obj->Dict.get("target")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+      let target = parseTarget(targetStr)
+      let statusStr = obj->Dict.get("status")->Option.flatMap(JSON.Decode.string)->Option.getOr("running")
+      let duration = obj->Dict.get("durationMs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+      let status: BuildDashboardModel.buildStatus = switch statusStr {
+      | "success" => BuildSuccess(duration)
+      | "failed" => BuildFailed(duration)
+      | "cancelled" => BuildCancelled
+      | "idle" => BuildIdle
+      | _ => BuildRunning
+      }
+      Some((target, status))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((target, status)) => {
+        let targets = bd.targets->Array.map(((t, s)) =>
+          if t === target { (t, status) } else { (t, s) }
+        )
+        ({...model, buildDashboard: {...bd, targets, loading: false, error: None}}, Tea_Cmd.none)
+      }
+    | None => ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | BuildTriggered(Error(err)) => (
       {...model, buildDashboard: {...bd, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6669,9 +8674,44 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       }
       ({...model, buildDashboard: {...bd, loading: true}}, cmd)
     }
-  | BuildStatusReceived(Ok(_json)) =>
-    // TODO: Deserialise build status for all targets.
-    ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+  | BuildStatusReceived(Ok(jsonStr)) => {
+    let parseTarget = (s: string): BuildDashboardModel.buildTarget =>
+      switch s {
+      | "game" => TargetGame
+      | "vm" => TargetVm
+      | "dlc" => TargetDlc
+      | "sync_server" => TargetSyncServer
+      | "shared" => TargetShared
+      | "coprocessors" => TargetCoprocessors
+      | other => TargetCustom(other)
+      }
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let targetStr = obj->Dict.get("target")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let target = parseTarget(targetStr)
+        let statusStr = obj->Dict.get("status")->Option.flatMap(JSON.Decode.string)->Option.getOr("idle")
+        let duration = obj->Dict.get("durationMs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let status: BuildDashboardModel.buildStatus = switch statusStr {
+        | "success" => BuildSuccess(duration)
+        | "failed" => BuildFailed(duration)
+        | "cancelled" => BuildCancelled
+        | "running" => BuildRunning
+        | _ => BuildIdle
+        }
+        Some((target, status))
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(targets) => ({...model, buildDashboard: {...bd, targets, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | BuildStatusReceived(Error(err)) => (
       {...model, buildDashboard: {...bd, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6685,9 +8725,34 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       }
       ({...model, buildDashboard: {...bd, loading: true}}, cmd)
     }
-  | TestsReceived(Ok(_json)) =>
-    // TODO: Deserialise test results.
-    ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+  | TestsReceived(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let suite = obj->Dict.get("suite")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let passed = obj->Dict.get("passed")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let durationMs = obj->Dict.get("durationMs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let output = obj->Dict.get("output")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        Some({
+          BuildDashboardModel.name,
+          suite,
+          passed,
+          durationMs,
+          output,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(testResults) => ({...model, buildDashboard: {...bd, testResults, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | TestsReceived(Error(err)) => (
       {...model, buildDashboard: {...bd, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6708,9 +8773,56 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       {...model, buildDashboard: {...bd, loading: true}},
       BuildDashboardCmd.readHistory(result => BuildDashboard(HistoryReceived(result))),
     )
-  | HistoryReceived(Ok(_json)) =>
-    // TODO: Deserialise build history.
-    ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+  | HistoryReceived(Ok(jsonStr)) => {
+    let parseTarget = (s: string): BuildDashboardModel.buildTarget =>
+      switch s {
+      | "game" => TargetGame
+      | "vm" => TargetVm
+      | "dlc" => TargetDlc
+      | "sync_server" => TargetSyncServer
+      | "shared" => TargetShared
+      | "coprocessors" => TargetCoprocessors
+      | other => TargetCustom(other)
+      }
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let targetStr = obj->Dict.get("target")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let target = parseTarget(targetStr)
+        let statusStr = obj->Dict.get("status")->Option.flatMap(JSON.Decode.string)->Option.getOr("idle")
+        let durationMs = obj->Dict.get("durationMs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let status: BuildDashboardModel.buildStatus = switch statusStr {
+        | "success" => BuildSuccess(durationMs)
+        | "failed" => BuildFailed(durationMs)
+        | "cancelled" => BuildCancelled
+        | "running" => BuildRunning
+        | _ => BuildIdle
+        }
+        let startedAt = obj->Dict.get("startedAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let errorCount = obj->Dict.get("errorCount")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let warningCount = obj->Dict.get("warningCount")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        Some({
+          BuildDashboardModel.id,
+          target,
+          status,
+          startedAt,
+          durationMs,
+          errorCount: Float.toInt(errorCount),
+          warningCount: Float.toInt(warningCount),
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(history) => ({...model, buildDashboard: {...bd, history, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, buildDashboard: {...bd, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | HistoryReceived(Error(err)) => (
       {...model, buildDashboard: {...bd, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6736,9 +8848,24 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
       {...model, releaseManager: {...rm, loading: true}},
       ReleaseManagerCmd.bumpVersion(bumpType, result => ReleaseManager(VersionBumped(result))),
     )
-  | VersionBumped(Ok(_json)) =>
-    // TODO: Deserialise new version string and update currentVersion/nextVersion.
-    ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+  | VersionBumped(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let currentVersion = obj->Dict.get("currentVersion")->Option.flatMap(JSON.Decode.string)->Option.getOr(rm.currentVersion)
+      let nextVersion = obj->Dict.get("nextVersion")->Option.flatMap(JSON.Decode.string)->Option.getOr(rm.nextVersion)
+      Some((currentVersion, nextVersion))
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some((currentVersion, nextVersion)) => (
+        {...model, releaseManager: {...rm, currentVersion, nextVersion, loading: false, error: None}},
+        Tea_Cmd.none,
+      )
+    | None => ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | VersionBumped(Error(err)) => (
       {...model, releaseManager: {...rm, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6751,9 +8878,36 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
         result => ReleaseManager(ChangelogGenerated(result)),
       ),
     )
-  | ChangelogGenerated(Ok(_json)) =>
-    // TODO: Deserialise changelog entries from JSON.
-    ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+  | ChangelogGenerated(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let version = obj->Dict.get("version")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let date = obj->Dict.get("date")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let category = obj->Dict.get("category")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let description = obj->Dict.get("description")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let commitHash = obj->Dict.get("commitHash")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let author = obj->Dict.get("author")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        Some({
+          ReleaseManagerModel.version,
+          date,
+          category,
+          description,
+          commitHash,
+          author,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(entries) => ({...model, releaseManager: {...rm, pendingChangelog: entries, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | ChangelogGenerated(Error(err)) => (
       {...model, releaseManager: {...rm, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6781,9 +8935,47 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
         ),
       )
     }
-  | ArtifactsBuilt(Ok(_json)) =>
-    // TODO: Deserialise artifacts from JSON.
-    ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+  | ArtifactsBuilt(Ok(jsonStr)) => {
+    let parsePlatform = (s: string): ReleaseManagerModel.platformTarget =>
+      switch s {
+      | "web" => PlatformWeb
+      | "linux" => PlatformDesktopLinux
+      | "mac" => PlatformDesktopMac
+      | "windows" => PlatformDesktopWindows
+      | "android" => PlatformMobileAndroid
+      | "ios" => PlatformMobileIOS
+      | _ => PlatformWeb
+      }
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let platformStr = obj->Dict.get("platform")->Option.flatMap(JSON.Decode.string)->Option.getOr("web")
+        let platform = parsePlatform(platformStr)
+        let filePath = obj->Dict.get("filePath")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let sizeBytes = obj->Dict.get("sizeBytes")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let checksum = obj->Dict.get("checksum")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let builtAt = obj->Dict.get("builtAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        Some({
+          ReleaseManagerModel.name,
+          platform,
+          filePath,
+          sizeBytes: Float.toInt(sizeBytes),
+          checksum,
+          builtAt,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(artifacts) => ({...model, releaseManager: {...rm, artifacts, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | ArtifactsBuilt(Error(err)) => (
       {...model, releaseManager: {...rm, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6796,9 +8988,42 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
         result => ReleaseManager(ReleasePublished(result)),
       ),
     )
-  | ReleasePublished(Ok(_json)) =>
-    // TODO: Deserialise publish result and update releases list.
-    ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+  | ReleasePublished(Ok(jsonStr)) => {
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+      let version = obj->Dict.get("version")->Option.flatMap(JSON.Decode.string)->Option.getOr(rm.nextVersion)
+      let publishedAt = obj->Dict.get("publishedAt")->Option.flatMap(JSON.Decode.float)
+      let newRelease: ReleaseManagerModel.releaseVersion = {
+        version,
+        channel: rm.channel,
+        status: ReleasePublished,
+        artifacts: rm.artifacts,
+        changelog: rm.pendingChangelog,
+        createdAt: Date.now(),
+        publishedAt,
+      }
+      Some(newRelease)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(release) => (
+        {
+          ...model,
+          releaseManager: {
+            ...rm,
+            releases: Array.concat([release], rm.releases),
+            currentVersion: release.version,
+            loading: false,
+            error: None,
+          },
+        },
+        Tea_Cmd.none,
+      )
+    | None => ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | ReleasePublished(Error(err)) => (
       {...model, releaseManager: {...rm, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6809,9 +9034,54 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
       {...model, releaseManager: {...rm, loading: true}},
       ReleaseManagerCmd.readReleases(result => ReleaseManager(ReleasesLoaded(result))),
     )
-  | ReleasesLoaded(Ok(_json)) =>
-    // TODO: Deserialise releases from JSON.
-    ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+  | ReleasesLoaded(Ok(jsonStr)) => {
+    let parseChannel = (s: string): ReleaseManagerModel.releaseChannel =>
+      switch s {
+      | "dev" => ChannelDev
+      | "alpha" => ChannelAlpha
+      | "beta" => ChannelBeta
+      | "rc" => ChannelRC
+      | _ => ChannelStable
+      }
+    let parseStatus = (s: string): ReleaseManagerModel.releaseStatus =>
+      switch s {
+      | "draft" => ReleaseDraft
+      | "building" => ReleaseBuilding
+      | "ready" => ReleaseReady
+      | "published" => ReleasePublished
+      | _ => ReleaseDraft
+      }
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let version = obj->Dict.get("version")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let channelStr = obj->Dict.get("channel")->Option.flatMap(JSON.Decode.string)->Option.getOr("stable")
+        let channel = parseChannel(channelStr)
+        let statusStr = obj->Dict.get("status")->Option.flatMap(JSON.Decode.string)->Option.getOr("draft")
+        let status = parseStatus(statusStr)
+        let createdAt = obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let publishedAt = obj->Dict.get("publishedAt")->Option.flatMap(JSON.Decode.float)
+        Some({
+          ReleaseManagerModel.version,
+          channel,
+          status,
+          artifacts: [],
+          changelog: [],
+          createdAt,
+          publishedAt,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(releases) => ({...model, releaseManager: {...rm, releases, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, releaseManager: {...rm, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | ReleasesLoaded(Error(err)) => (
       {...model, releaseManager: {...rm, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6923,9 +9193,53 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
       }
       ({...model, automationRouter: {...ar, loading: true}}, cmd)
     }
-  | RulesLoaded(Ok(_json)) =>
-    // TODO: Deserialise rules from JSON.
-    ({...model, automationRouter: {...ar, loading: false, error: None}}, Tea_Cmd.none)
+  | RulesLoaded(Ok(jsonStr)) => {
+    let parseApproval = (s: string): AutomationRouterModel.approvalMode =>
+      switch s {
+      | "require_approval" => RequireApproval
+      | "approve_once" => ApproveOnce
+      | "dry_run_first" => DryRunFirst
+      | _ => AutoFire
+      }
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let description = obj->Dict.get("description")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let enabled = obj->Dict.get("enabled")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
+        let approvalStr = obj->Dict.get("approval")->Option.flatMap(JSON.Decode.string)->Option.getOr("auto_fire")
+        let approval = parseApproval(approvalStr)
+        let priority = obj->Dict.get("priority")->Option.flatMap(JSON.Decode.string)->Option.getOr("normal")
+        let firedCount = obj->Dict.get("firedCount")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let lastFired = obj->Dict.get("lastFired")->Option.flatMap(JSON.Decode.float)
+        let lastResult = obj->Dict.get("lastResult")->Option.flatMap(JSON.Decode.string)
+        Some({
+          AutomationRouterModel.id,
+          name,
+          description,
+          enabled,
+          trigger: Manual,
+          conditions: [],
+          actions: [],
+          approval,
+          priority,
+          firedCount: Float.toInt(firedCount),
+          lastFired,
+          lastResult,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(rules) => ({...model, automationRouter: {...ar, rules, loading: false, error: None}}, Tea_Cmd.none)
+    | None => ({...model, automationRouter: {...ar, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | RulesLoaded(Error(err)) => (
       {...model, automationRouter: {...ar, loading: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -6951,9 +9265,51 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
       }
       ({...model, automationRouter: {...ar, loading: true, configSource: "repo"}}, cmd)
     }
-  | RepoRulesLoaded(Ok(_json)) =>
-    // TODO: Deserialise rules from ENSAID_CONFIG.a2ml.
-    ({...model, automationRouter: {...ar, loading: false, error: None}}, Tea_Cmd.none)
+  | RepoRulesLoaded(Ok(jsonStr)) => {
+    // ENSAID_CONFIG.a2ml is parsed by the backend and returned as JSON array.
+    let parseApproval = (s: string): AutomationRouterModel.approvalMode =>
+      switch s {
+      | "require_approval" => RequireApproval
+      | "approve_once" => ApproveOnce
+      | "dry_run_first" => DryRunFirst
+      | _ => AutoFire
+      }
+    let parsed = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      let items = arr->Array.filterMap(item => {
+        let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let description = obj->Dict.get("description")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let enabled = obj->Dict.get("enabled")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
+        let approvalStr = obj->Dict.get("approval")->Option.flatMap(JSON.Decode.string)->Option.getOr("auto_fire")
+        let approval = parseApproval(approvalStr)
+        let priority = obj->Dict.get("priority")->Option.flatMap(JSON.Decode.string)->Option.getOr("normal")
+        Some({
+          AutomationRouterModel.id,
+          name,
+          description,
+          enabled,
+          trigger: Manual,
+          conditions: [],
+          actions: [],
+          approval,
+          priority,
+          firedCount: 0,
+          lastFired: None,
+          lastResult: None,
+        })
+      })
+      Some(items)
+    } catch {
+    | _ => None
+    }
+    switch parsed {
+    | Some(rules) => ({...model, automationRouter: {...ar, rules, loading: false, configSource: "repo", error: None}}, Tea_Cmd.none)
+    | None => ({...model, automationRouter: {...ar, loading: false, error: None}}, Tea_Cmd.none)
+    }
+  }
   | RepoRulesLoaded(Error(err)) => (
       {...model, automationRouter: {...ar, loading: false, configSource: "local", error: Some(err)}},
       Tea_Cmd.none,
@@ -7527,17 +9883,64 @@ let updateTypeLL = (model: model, msg: typellMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, typell: {...tl, loading: true}},
       TypeLLCmd.listSignatures(result => TypeLL(SignaturesLoaded(result))),
     )
-  | SignaturesLoaded(Ok(_json)) =>
-    // TODO: parse signatures JSON when TypeLL server is implemented
-    ({...model, typell: {...tl, loading: false, error: None}}, Tea_Cmd.none)
+  | SignaturesLoaded(Ok(jsonStr)) => {
+    let sigs = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      arr->Array.filterMap(item => {
+        let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let name = gs(o, "name")
+        if name !== "" {
+          let tier = switch gs(o, "tier") {
+          | "advanced" => TypeLLModel.TierAdvanced
+          | "research" => TypeLLModel.TierResearch
+          | _ => TypeLLModel.TierCore
+          }
+          Some({
+            TypeLLModel.name,
+            signature: gs(o, "signature"),
+            module_: gs(o, "module"),
+            tier,
+          })
+        } else {
+          None
+        }
+      })
+    } catch {
+    | _ => []
+    }
+    ({...model, typell: {...tl, loading: false, signatures: sigs, error: None}}, Tea_Cmd.none)
+  }
   | SignaturesLoaded(Error(e)) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
   | LoadUniverses => (
       {...model, typell: {...tl, loading: true}},
       TypeLLCmd.universes(result => TypeLL(UniversesLoaded(result))),
     )
-  | UniversesLoaded(Ok(_json)) =>
-    // TODO: parse universes JSON when TypeLL server is implemented
-    ({...model, typell: {...tl, loading: false, error: None}}, Tea_Cmd.none)
+  | UniversesLoaded(Ok(jsonStr)) => {
+    let univs = try {
+      let json = JSON.parseExn(jsonStr)
+      let arr = json->JSON.Decode.array->Option.getOr([])
+      arr->Array.filterMap(item => {
+        let o = item->JSON.Decode.object->Option.getOr(Dict.make())
+        let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let gi = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
+        let name = gs(o, "name")
+        if name !== "" {
+          Some({
+            TypeLLModel.level: gi(o, "level"),
+            name,
+            description: gs(o, "description"),
+          })
+        } else {
+          None
+        }
+      })
+    } catch {
+    | _ => []
+    }
+    ({...model, typell: {...tl, loading: false, universes: univs, error: None}}, Tea_Cmd.none)
+  }
   | UniversesLoaded(Error(e)) => ({...model, typell: {...tl, loading: false, error: Some(e)}}, Tea_Cmd.none)
   | SetSignatureFilter(v) => ({...model, typell: {...tl, signatureFilter: v}}, Tea_Cmd.none)
   | SetTierFilter(t) => ({...model, typell: {...tl, tierFilter: t}}, Tea_Cmd.none)

@@ -346,7 +346,7 @@ let parseTopology = (json: string): result<string, string> => {
 
 /// Default BoJ panel state.
 let defaultState: bojState = {
-  serverUrl: "http://localhost:7700/api/v1",
+  serverUrl: ServiceEndpoints.bojServer,
   connected: false,
   lastHealthCheck: 0.0,
   cartridges: [],

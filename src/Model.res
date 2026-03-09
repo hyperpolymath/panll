@@ -549,7 +549,7 @@ let init = (): model => {
   ],
   verisimdb: {
     connected: false,
-    endpoint: "http://localhost:8080/api/v1",
+    endpoint: ServiceEndpoints.verisimdb,
     lastQuery: "",
     queryResult: None,
     queryError: None,
@@ -573,7 +573,7 @@ let init = (): model => {
   },
   echidna: {
     connected: false,
-    endpoint: "http://localhost:9000/api/v1",
+    endpoint: ServiceEndpoints.echidna,
     version: None,
     provers: [],
     lastProofResult: None,

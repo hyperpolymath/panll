@@ -105,6 +105,21 @@ mod coprocessor;
 /// Game Preview — IDApTIK game engine preview and recording.
 mod game_preview;
 
+/// Network Topology — IDApTIK in-game network topology viewer.
+mod network_topology;
+
+/// Level Architect — IDApTIK visual level design tool.
+mod level_architect;
+
+/// Multiplayer Monitor — IDApTIK Phoenix sync server monitoring.
+mod multiplayer_monitor;
+
+/// DLC Workshop — IDApTIK DLC puzzle pack creation and testing.
+mod dlc_workshop;
+
+/// Release Manager — IDApTIK versioning, changelog, and distribution.
+mod release_manager;
+
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
 
@@ -2112,6 +2127,17 @@ fn main() {
             game_preview::commands::game_preview_stats,
             game_preview::commands::game_preview_clips_list,
             game_preview::commands::game_preview_clip_delete,
+            // Network Topology — IDApTIK in-game network viewer
+            network_topology::commands::read_network_topology,
+            network_topology::commands::read_dns_table,
+            network_topology::commands::read_packet_flow,
+            network_topology::commands::export_topology_svg,
+            // Level Architect — IDApTIK level design tool
+            level_architect::commands::load_level,
+            level_architect::commands::save_level,
+            level_architect::commands::export_level_config,
+            level_architect::commands::browse_level_assets,
+            level_architect::commands::validate_level,
             // Valence Shell — PTY sessions, recordings, checkpoints
             valence_shell::commands::valence_shell_check,
             valence_shell::commands::valence_shell_spawn,
@@ -2125,6 +2151,28 @@ fn main() {
             valence_shell::commands::valence_shell_checkpoints_list,
             valence_shell::commands::valence_shell_screenshot,
             valence_shell::commands::valence_shell_recording_export,
+            // Multiplayer Monitor — Phoenix sync server monitoring
+            multiplayer_monitor::commands::multiplayer_connect,
+            multiplayer_monitor::commands::multiplayer_disconnect,
+            multiplayer_monitor::commands::multiplayer_read_state,
+            multiplayer_monitor::commands::multiplayer_read_diffs,
+            multiplayer_monitor::commands::multiplayer_read_ets,
+            multiplayer_monitor::commands::multiplayer_reconnection_test,
+            // DLC Workshop — Puzzle pack creation and testing
+            dlc_workshop::commands::dlc_load_puzzles,
+            dlc_workshop::commands::dlc_save_puzzle,
+            dlc_workshop::commands::dlc_run_test,
+            dlc_workshop::commands::dlc_run_all_tests,
+            dlc_workshop::commands::dlc_browse_assets,
+            dlc_workshop::commands::dlc_package,
+            dlc_workshop::commands::dlc_import_puzzle,
+            dlc_workshop::commands::dlc_export_puzzle,
+            // Release Manager — Versioning, changelog, distribution
+            release_manager::commands::release_generate_changelog,
+            release_manager::commands::release_build_artifacts,
+            release_manager::commands::release_publish,
+            release_manager::commands::release_read_history,
+            release_manager::commands::release_bump_version,
         ])
         .setup(|_app| {
             Ok(())
