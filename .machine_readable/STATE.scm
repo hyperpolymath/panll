@@ -4,7 +4,7 @@
 (state
   (metadata
     (version "1.0.0")
-    (last-updated "2026-03-09")
+    (last-updated "2026-03-09-audit")
     (format-spec "hyperpolymath/rsr-template-repo/spec/STATE-FORMAT-SPEC.adoc"))
 
   (project-context
@@ -18,26 +18,41 @@
     (author "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>")
     (build-command "deno task res:build")
     (source-files
-      (total 537)
-      (rescript 250)
-      (rust 87)
-      (other 200))
+      (total 361)
+      (rescript 258)
+      (rust 103)
+      (note "258 .res files in src/, 103 .rs files in src-tauri/. Previous count of 537 included compiled .res.js outputs."))
     (panels 41)
+    (panel-components 55)
     (clades 41)
-    (tests 1346)
-    (rust-tests 176)
+    (test-files 69)
+    (test-suites 69)
+    (rust-backend-modules 34)
+    (core-engines 47)
+    (tea-modules 18)
+    (model-files 49)
+    (command-files 49)
     (build-status "0 errors, 0 warnings"))
 
   (current-position
     (milestone "v0.2.0 - TypeLL Cross-Panel Intelligence & Backend Connections")
     (completion-percentage
-      (frontend 100)
-      (backend-connections 100)
-      (testing 100)
-      (overall 100))
+      (frontend 90)
+      (backend-connections 80)
+      (typell-coverage 17)
+      (testing 70)
+      (documentation 60)
+      (overall 70))
     (phase "development")
-    (current-focus "TypeLL remaining 34 panels, v0.2.0 release prep")
-    (status-summary "100% all categories — 41 panels, 41 clades, 1522 total tests (1346 Deno + 176 Rust), all 9 backends connected, 66 test suites, 4 docs, 0 errors 0 warnings")
+    (current-focus "TypeLL remaining 34 panels, CRG D→C promotion, honest audit")
+    (status-summary "70% overall — 41 panels wired (55 components), 41 clades, 69 test files, 258 ReScript + 103 Rust source files, TypeLL covers 7/41 panels (17%), 34 Rust backend modules, 0 build errors")
+    (honesty-notes
+      ("Previous STATE.scm claimed 100% across all categories — overstated")
+      ("Source file count was 537 but included compiled .res.js; actual is 361 .res + .rs files")
+      ("Test count claimed 1346 Deno tests — this is assertion count not file count; 69 test files on disk")
+      ("TypeLL cross-panel intelligence covers only 7/41 panels = 17% — not 100%")
+      ("All 41 panels compile and render; but many lack deep backend integration beyond stubs")
+      ("CRG grade D (Alpha) is accurate — no panel has reached C (Beta) yet"))
 
     (work-completed
       ("Custom TEA implementation with full Model-Update-View cycle")
