@@ -278,6 +278,10 @@ include MenuBarModel
 /// LLM-callable as MCP tools, user-runnable standalone.
 include ScriptGistModel
 
+/// Re-export Stapeln container assembly types (constraints, pipeline status,
+/// validation, artifact formats, component catalog, panel state).
+include StapelnModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -491,6 +495,9 @@ type model = {
 
   // Script Gist — portable computation gists (saveable, LLM-callable, user-runnable)
   scriptGist: scriptGistState,
+
+  // Stapeln — container stack assembly pipeline (constraints, reasoning, artifacts)
+  stapeln: stapelnState,
 }
 
 /// Initial model state - "Dark Start" mode
@@ -1166,4 +1173,5 @@ let init = (): model => {
   tiling: TilingEngine.defaultState,
   focusDimming: FocusDimmingEngine.defaultState,
   scriptGist: ScriptGistEngine.defaultState,
+  stapeln: StapelnEngine.defaultState,
 }

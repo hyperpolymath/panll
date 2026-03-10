@@ -2085,6 +2085,33 @@ type focusDimmingMsg =
   /// Set the custom dim opacity for Smart Memory Mode.
   | SetDimOpacity(float)
 
+/// Stapeln messages — container assembly pipeline operations.
+type stapelnMsg =
+  /// Set the pipeline backend URL.
+  | SetPipelineUrl(string)
+  /// Initiate connection to the stapeln backend.
+  | Connect
+  /// Connection result (true = connected, false = failed).
+  | Connected(bool)
+  /// Update a constraint field by key and value.
+  | UpdateConstraint(string, string)
+  /// Request validation of the current assembly.
+  | RequestValidation
+  /// Validation results received from backend.
+  | ValidationReceived(validationSummary)
+  /// Request artifact generation in specified format.
+  | RequestGenerate(string)
+  /// Generated artifact content received from backend.
+  | GenerateReceived(string)
+  /// Refresh pipeline status from backend.
+  | RefreshStatus
+  /// Pipeline status received from backend.
+  | StatusReceived(pipelineStatus)
+  /// Switch the active tab ("constraints" | "reasoning" | "results").
+  | SetActiveTab(string)
+  /// Dismiss the error banner.
+  | DismissError
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -2158,6 +2185,7 @@ type msg =
   | AccessibilityCtrl(accessibilityMsg) // Accessibility toolbar preferences
   | Tiling(tilingMsg) // Multi-monitor panel detachment and tiling
   | FocusDimming(focusDimmingMsg) // Focus-aware dimming and Smart Memory Mode
+  | Stapeln(stapelnMsg) // Stapeln container assembly pipeline
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage
