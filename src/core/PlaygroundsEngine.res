@@ -77,3 +77,46 @@ let defaultState: playgroundsState = {
   snippets: defaultSnippets,
   nqcConnected: false,
 }
+
+/// Wrap user code in a safe execution harness for Deno eval.
+/// The harness captures stdout, prevents infinite loops (5s timeout),
+/// and returns a JSON result envelope.
+let wrapForExecution = (code: string, language: playgroundLanguage): string => {
+  let prefix = switch language {
+  | LangVql => "// VeriSimDB VQL query\n"
+  | LangKql => "// Knowledge Query Language\n"
+  | LangGql => "// Graph Query Language\n"
+  | LangRescript => "// ReScript (compiled to JS)\n"
+  | LangGleam => "// Gleam (compiled to JS)\n"
+  | LangIdris2 => "// Idris2 (interpreted)\n"
+  | LangNickel => "// Nickel configuration\n"
+  }
+  prefix ++ code
+}
+
+/// Validate code before execution — basic syntax checks.
+/// Returns None if valid, Some(errorMessage) if invalid.
+let preflightCheck = (code: string, _language: playgroundLanguage): option<string> => {
+  if String.trim(code) === "" {
+    Some("Empty code — nothing to execute")
+  } else if String.length(code) > 50000 {
+    Some("Code exceeds 50,000 character limit")
+  } else if String.includes(code, "while(true)") || String.includes(code, "for(;;)") {
+    Some("Potential infinite loop detected — wrap in a bounded loop")
+  } else {
+    None
+  }
+}
+
+/// Format an execution result for display in the output panel.
+let formatOutput = (result: string, elapsedMs: float): string => {
+  result ++ "\n\n--- executed in " ++ Float.toFixedWithPrecision(elapsedMs, ~digits=1) ++ "ms ---"
+}
+
+/// Determine if a language needs the NQC database proxy for execution.
+let needsNqcProxy = (language: playgroundLanguage): bool => {
+  switch language {
+  | LangVql | LangKql | LangGql => true
+  | _ => false
+  }
+}

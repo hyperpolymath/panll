@@ -197,7 +197,7 @@ Deno.test("Integration — ResetAllPanels resets panel state cleanly", () => {
   assert(m.paneL.constraints.length > 0, "Should have constraint before reset");
 
   // Reset all panels
-  m = dispatch(m, "ResetAllPanels");
+  m = dispatch(m, { TAG: "Workspace", _0: "ResetAllPanels" });
 
   // Panel subsystems should be reset
   assertExists(m.typell);
@@ -346,7 +346,8 @@ Deno.test("Integration — Adding constraints preserves existing state", () => {
     },
   });
 
-  assertEquals(m.paneL.constraints.length, 2, "Both constraints should be present");
+  // Default state has 7 constraints, plus 2 added = 9
+  assertEquals(m.paneL.constraints.length, 9, "Default + added constraints should be present");
 
   // Adding a token shouldn't affect constraints
   m = dispatch(m, {
@@ -354,7 +355,7 @@ Deno.test("Integration — Adding constraints preserves existing state", () => {
     _0: { TAG: "ValidationPassed", _0: makeToken("post-constraints", 0.9) },
   });
 
-  assertEquals(m.paneL.constraints.length, 2, "Constraints preserved after token ingestion");
+  assertEquals(m.paneL.constraints.length, 9, "Constraints preserved after token ingestion");
 });
 
 Deno.test("Integration — Information humidity defaults to Medium", () => {

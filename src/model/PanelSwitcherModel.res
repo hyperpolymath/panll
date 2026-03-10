@@ -47,12 +47,15 @@ type panelId =
   | PanelBuildDashboard
   | PanelReleaseManager
   | PanelAutomationRouter
+  | PanelScriptGist
   | PanelBoj
   | PanelCladeBrowser
   | PanelTentacles
   | PanelProtocolSquisher
   | PanelMyLang
   | PanelTypeLL
+  /// In-application help system — searchable guides, glossary, onboarding.
+  | PanelHelp
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

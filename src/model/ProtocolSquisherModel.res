@@ -13,6 +13,7 @@
 /// Dependency: leaf module — no imports from other PanLL models.
 
 /// Serialisation format that protocol-squisher can analyse.
+/// Includes both wire-protocol formats and enterprise architecture model interchange.
 type schemaFormat =
   | Protobuf
   | Avro
@@ -27,6 +28,11 @@ type schemaFormat =
   | RustFormat
   | ReScriptFormat
   | PythonFormat
+  // Enterprise architecture model interchange formats
+  | XMI            // OMG XML Metadata Interchange (MOF/UML/SysML serialisation)
+  | ArchiMateExchange // The Open Group ArchiMate Model Exchange File Format
+  | BPMN_XML       // OMG BPMN 2.0 XML serialisation
+  | SBVR           // OMG Semantics of Business Vocabulary and Rules
 
 /// Transport class — higher tier means more efficient wire representation.
 type transportClass =

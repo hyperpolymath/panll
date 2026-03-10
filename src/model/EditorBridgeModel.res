@@ -6,8 +6,11 @@
 /// editor — this panel shows development context without duplicating
 /// the editing surface.
 
-/// Supported editor integrations.
+/// Supported editor and modeling tool integrations.
+/// Includes code editors (LSP), enterprise architecture tools (XMI/ArchiMate),
+/// and diagram/design tools (model exchange protocols).
 type editorKind =
+  // Code editors (LSP protocol)
   | EditorVSCodium
   | EditorVSCode
   | EditorZed
@@ -15,6 +18,13 @@ type editorKind =
   | EditorNeovim
   | EditorEmacs
   | EditorKakoune
+  // Enterprise architecture & modeling tools (XMI/model exchange)
+  | EditorVisualParadigm   // Visual Paradigm Enterprise (UML, ArchiMate, BPMN, SysML)
+  | EditorSparxEA          // Sparx Enterprise Architect (UML, SysML, ArchiMate)
+  | EditorArchi            // Archi (open-source ArchiMate modeling tool)
+  | EditorCamundaModeler   // Camunda Modeler (BPMN/DMN process modeling)
+  | EditorMagicDraw        // Dassault MagicDraw / Cameo (UML/SysML)
+  // Custom
   | EditorCustom(string)
 
 /// Editor connection state.

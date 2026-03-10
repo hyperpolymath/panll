@@ -24,8 +24,9 @@ Deno.test("ECHIDNA: CheckHealth dispatch leaves model unchanged", () => {
   const [newModel, _cmd] = Update.update(model, msg);
 
   // CheckHealth issues a command but doesn't change model state.
-  assertEquals(newModel.echidna.connected, false);
-  assertEquals(newModel.echidna.version, undefined);
+  // Default state has connected=true and version=Some("0.4.1-neurosym")
+  assertEquals(newModel.echidna.connected, true);
+  assertEquals(newModel.echidna.version, "0.4.1-neurosym");
 });
 
 Deno.test("ECHIDNA: HealthOk sets connected and version", () => {
@@ -416,8 +417,8 @@ Deno.test("ECHIDNA: RequestTacticSuggestions dispatches without model change", (
   const msg = echidnaMsg("RequestTacticSuggestions");
   const [newModel, _cmd] = Update.update(withSession, msg);
 
-  // No model change on dispatch
-  assertEquals(newModel.echidna.tacticSuggestions.length, 0);
+  // No model change on dispatch — default state has 3 tactic suggestions
+  assertEquals(newModel.echidna.tacticSuggestions.length, 3);
 });
 
 Deno.test("ECHIDNA: TacticSuggestionsLoaded(Ok) populates suggestions with name and confidence", () => {

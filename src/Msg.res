@@ -59,6 +59,11 @@ type paneWMsg =
   | LaunchSecurityAmbush
   | SecurityAmbushResult(result<string, string>)
   | ClearEventChain
+  /// Barycentre tour messages
+  | StartTour
+  | NextTourStep
+  | PrevTourStep
+  | CloseTour
 
 /// Vexometer messages
 type vexometerMsg =
@@ -187,6 +192,27 @@ type echidnaMsg =
   | ProofObligationsGenerated(result<string, string>)
   /// Toggle BoJ routing for proof operations (proof-mcp cartridge).
   | ToggleEchidnaBojRouting
+  /// Switch ECHIDNA panel tab (Proof / Enterprise).
+  | SelectEchidnaTab(echidnaTab)
+  // Enterprise model checking (MOF/OCL)
+  /// Import model elements from XMI file.
+  | ImportXmiModel
+  /// XMI model loaded and parsed.
+  | XmiModelLoaded(result<string, string>)
+  /// Add an OCL constraint to the enterprise model.
+  | AddOclConstraint(string, string, string) // context, name, expression
+  /// Remove an OCL constraint by index.
+  | RemoveOclConstraint(int)
+  /// Run batch OCL constraint checking against loaded model.
+  | RunOclCheck
+  /// OCL batch check completed.
+  | OclCheckResult(result<string, string>)
+  /// Filter by metamodel standard.
+  | SetMetamodelFilter(option<metamodelStandard>)
+  /// Filter by MOF layer.
+  | SetMofLayerFilter(option<mofLayer>)
+  /// Clear enterprise model state.
+  | ClearEnterpriseModel
 
 /// VAB (Verified Assembly Building) messages — server component assembly,
 /// category navigation, dependency-driven recomputation, and assembly management.
@@ -1641,6 +1667,65 @@ type bojMsg =
   /// TypeLL ABI type-check result for cartridge invocation.
   | AbiTypeCheckResult(result<string, string>)
 
+/// Script Gist messages — portable computation gist lifecycle.
+/// Covers gist CRUD, execution, template expansion, MCP tool registration,
+/// and diachronic/synchronic state document management (Minskian cardfiles).
+type scriptGistMsg =
+  /// Switch the active category tab.
+  | SetGistCategory(gistCategory)
+  /// Select a gist for editing/viewing.
+  | SelectGist(option<string>)
+  /// Create a new empty gist.
+  | CreateGist
+  /// Create a gist from a template.
+  | CreateFromTemplate(string) // template id
+  /// Update the code of the currently selected gist.
+  | UpdateGistCode(string)
+  /// Update the title of the currently selected gist.
+  | UpdateGistTitle(string)
+  /// Update the language of the currently selected gist.
+  | UpdateGistLanguage(gistLanguage)
+  /// Update the target of the currently selected gist.
+  | UpdateGistTarget(gistTarget)
+  /// Update the visibility of the currently selected gist.
+  | UpdateGistVisibility(gistVisibility)
+  /// Toggle pinned status of a gist.
+  | ToggleGistPin(string)
+  /// Delete a gist by id.
+  | DeleteGist(string)
+  /// Save the current gist (persist to storage).
+  | SaveGist
+  /// Execute the currently selected gist.
+  | ExecuteGist
+  /// Execution result returned.
+  | GistExecutionResult(result<gistResult, string>)
+  /// Set filter/search text.
+  | SetGistFilter(string)
+  /// Set sort order.
+  | SetGistSort(gistSortBy)
+  /// Toggle the gist editor panel open/closed.
+  | ToggleGistEditor
+  /// Toggle MCP tool registration (advertise gists as tools).
+  | ToggleMcpTools
+  /// Dismiss error.
+  | DismissGistError
+  /// Update a schema parameter on the current gist.
+  | UpdateGistSchemaName(string)
+  /// Update schema summary.
+  | UpdateGistSchemaSummary(string)
+  /// Add a schema input parameter.
+  | AddGistSchemaParam
+  /// Remove a schema input parameter by index.
+  | RemoveGistSchemaParam(int)
+  /// Snapshot current gist state as a diachronic checkpoint (time-based rollback).
+  | SnapshotDiachronic
+  /// Restore a diachronic checkpoint by index.
+  | RestoreDiachronic(int)
+  /// Insert gist into a synchronic cardfile (space-based composition).
+  | InsertIntoCardfile(string) // cardfile id
+  /// Remove gist from a synchronic cardfile.
+  | RemoveFromCardfile(string) // cardfile id
+
 /// ENSAID_CONFIG messages — cross-panel config generation and I/O.
 /// Any panel can trigger a full ENSAID_CONFIG export; the engine assembles
 /// state from Provisioner, Workspace, and Automation Router into one file.
@@ -1848,6 +1933,12 @@ type typellMsg =
   | RefineResult(result<string, string>)
   /// Toggle BoJ routing for TypeLL operations (nesy-mcp cartridge).
   | ToggleTypellBojRouting
+  /// Set the default type discipline for modules without a declaration.
+  | SetDefaultDiscipline(typeDiscipline)
+  /// Add or update a module-level discipline declaration.
+  | SetModuleDiscipline(string, typeDiscipline) // (scope, discipline)
+  /// Remove a module-level discipline declaration (revert to default).
+  | RemoveModuleDiscipline(string) // scope
 
 /// Observability messages — SARIF export and OpenTelemetry trace collection
 /// via the observe-mcp BoJ cartridge.
@@ -1901,6 +1992,91 @@ type k9Msg =
   /// TypeLL cross-panel type check result for K9 contractile types.
   | TypeCheckResult(result<string, string>)
 
+/// Help system messages — search, navigation, onboarding, and context-sensitive help.
+type helpMsg =
+  /// Update the search query in the help search bar.
+  | SetHelpSearch(string)
+  /// Switch to a different help category tab.
+  | SetHelpCategory(helpCategory)
+  /// Select a specific help entry to display in full.
+  | SelectEntry(string)
+  /// Close the help panel.
+  | CloseHelp
+  /// Begin the onboarding walkthrough from the first step.
+  | StartOnboarding
+  /// Advance to the next onboarding step.
+  | NextOnboardingStep
+  /// Go back to the previous onboarding step.
+  | PrevOnboardingStep
+  /// Skip the rest of the onboarding walkthrough.
+  | SkipOnboarding
+  /// Mark the onboarding as completed.
+  | CompleteOnboarding
+  /// Open help pre-filtered to the specified panel's guide (F1 context-sensitive).
+  | OpenContextHelp(option<panelId>)
+  /// Search the glossary for a specific term.
+  | SearchGlossary(string)
+
+/// Accessibility toolbar messages — palette, animation, font size, focus indicators.
+type accessibilityMsg =
+  /// Switch the active colour palette (Standard, Deuteranopia, Protanopia, High Contrast).
+  | SetAccessibilityPalette(accessibilityPalette)
+  /// Set the theme mode (Dark, Light, System).
+  | SetThemeMode(themeMode)
+  /// OS colour scheme changed (dispatched by matchMedia listener when in System mode).
+  | OsColorSchemeChanged(themeMode)
+  /// Set the animation preference (On, Reduced, Off).
+  | SetAnimations(animationPreference)
+  /// Set the font size preset.
+  | SetFontSize(fontSizePreset)
+  /// Set the focus indicator style.
+  | SetFocusStyle(focusIndicatorStyle)
+  /// Toggle the accessibility toolbar expanded/collapsed state.
+  | ToggleAccessibilityToolbar
+
+/// Tiling and multi-monitor messages — detach panels, snap zones, presets.
+type tilingMsg =
+  /// Detach a panel into its own browser window.
+  | DetachPanel(panelId)
+  /// Reattach a previously detached panel back to the main window.
+  | ReattachPanel(panelId)
+  /// Snap a panel to a specific screen zone.
+  | SetSnapZone(panelId, snapZone)
+  /// Apply a predefined tiling preset layout.
+  | ApplyTilingPreset(tilingPreset)
+  /// Clear the active tiling preset and return to freeform.
+  | ClearTilingPreset
+  /// Show/hide the snap zone preview overlay while dragging.
+  | SetSnapPreview(option<snapZone>)
+  /// A detached panel window has been closed by the user.
+  | DetachedPanelClosed(string)
+  /// Sync model state to a detached window via BroadcastChannel.
+  | SyncToDetached(string)
+  /// Toggle the tiling controls UI visibility.
+  | ToggleTilingControls
+  /// Enable or disable the tiling system entirely.
+  | SetTilingEnabled(bool)
+
+/// Menu bar messages — standard application menu interactions.
+type menuBarMsg =
+  /// Open a specific top-level menu dropdown.
+  | OpenMenu(openMenu)
+  /// Close all menu dropdowns.
+  | CloseMenus
+  /// Menu item actions (dispatched from menu items, routed to appropriate sub-updaters).
+  | MenuAction(string)
+
+/// Focus dimming messages — dimming mode, per-panel overrides, interaction tracking.
+type focusDimmingMsg =
+  /// Set the global dimming mode (Off, Subtle, Strong, SmartMemory).
+  | SetDimmingMode(dimmingMode)
+  /// Set a per-panel override for dimming behaviour.
+  | SetPanelFocusOverride(panelId, panelFocusOverride)
+  /// Record a user interaction with a specific panel (updates timestamps and focus).
+  | RecordInteraction(string)
+  /// Set the custom dim opacity for Smart Memory Mode.
+  | SetDimOpacity(float)
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -1951,6 +2127,7 @@ type msg =
   | BuildDashboard(buildDashboardMsg) // Build/test/error monitoring
   | ReleaseManager(releaseManagerMsg) // Versioning, changelog, distribution
   | AutomationRouter(automationRouterMsg) // Hybrid cross-panel workflow orchestration
+  | ScriptGist(scriptGistMsg) // Portable computation gists (Minskian cardfiles)
   | Boj(bojMsg) // Bundle of Joy cartridge server
   | CladeBrowser(cladeBrowserMsg) // Clade taxonomy browser
   | Tentacles(tentaclesMsg) // 7-Tentacles compiler agent orchestra
@@ -1968,6 +2145,11 @@ type msg =
   | K9(k9Msg) // K9 contractile configuration and layout
   | AuditSeams // Run compliance seam audit against exception register
   | SeamAuditResult(SeamEngine.seamAuditResult) // Result of seam audit
+  | Help(helpMsg) // In-app help, glossary, onboarding
+  | MenuBar(menuBarMsg) // Standard application menu bar
+  | AccessibilityCtrl(accessibilityMsg) // Accessibility toolbar preferences
+  | Tiling(tilingMsg) // Multi-monitor panel detachment and tiling
+  | FocusDimming(focusDimmingMsg) // Focus-aware dimming and Smart Memory Mode
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

@@ -252,6 +252,32 @@ include ProtocolSquisherModel
 include MyLangModel
 include TypeLLModel
 
+/// Re-export Help types (helpCategory, helpEntry, glossaryTerm, onboardingStep,
+/// onboardingState, helpState) for the in-application help system with
+/// context-sensitive guides, neurosymbolic glossary, and onboarding walkthrough.
+include HelpModel
+
+/// Re-export Accessibility types (fontSizePreset, animationPreference,
+/// focusIndicatorStyle, accessibilityState) for the centralised accessibility
+/// toolbar controlling colour palettes, animation, font size, and focus indicators.
+include AccessibilityModel
+
+/// Re-export Tiling types (snapZone, tilingPreset, detachedPanel, tilingState)
+/// for multi-monitor panel detachment, Aero-style snap zones, and tiling presets.
+include TilingModel
+
+/// Re-export Focus Dimming types (dimmingMode, panelFocusOverride,
+/// focusDimmingState) for focus-aware panel dimming and Smart Memory Mode
+/// that throttles unfocused panel processing.
+include FocusDimmingModel
+include MenuBarModel
+
+/// Re-export ScriptGist types (gistLanguage, gistParam, gistSchema, gistTarget,
+/// gistVisibility, gistResult, scriptGist, gistTemplate, gistCategory, gistSortBy,
+/// scriptGistState) for the portable computation gist system — saveable, shareable,
+/// LLM-callable as MCP tools, user-runnable standalone.
+include ScriptGistModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -267,6 +293,8 @@ type model = {
   syncState: syncState,
   contractiles: array<contractile>,
   humidity: humidityLevel,
+  barycentreTour: tourState,
+  menuBar: menuBarState,
 
   // View state
   viewMode: viewMode,
@@ -448,29 +476,94 @@ type model = {
   feedbackPending: option<string>,
   feedbackError: option<string>,
   feedbackReportType: option<string>,
+
+  // Help — in-app help system with context-sensitive guides and glossary
+  help: helpState,
+
+  // Accessibility — centralised a11y preferences (palette, animation, font, focus)
+  accessibility: accessibilityState,
+
+  // Tiling — multi-monitor panel detachment and snap zone management
+  tiling: tilingState,
+
+  // Focus Dimming — focus-aware panel dimming and Smart Memory Mode
+  focusDimming: focusDimmingState,
+
+  // Script Gist — portable computation gists (saveable, LLM-callable, user-runnable)
+  scriptGist: scriptGistState,
 }
 
 /// Initial model state - "Dark Start" mode
 let init = (): model => {
   paneL: {
-    constraints: [],
+    constraints: [
+      {
+        id: "orbital-stability-inv",
+        expression: "forall t : Time, stability(t) >= 0.3 -> co_orbit_maintained(t)",
+        active: true,
+        pinned: true,
+      },
+      {
+        id: "divergence-bound",
+        expression: "divergence(symbolic, neural) <= 0.7 // Jaccard distance ceiling",
+        active: true,
+        pinned: true,
+      },
+      {
+        id: "autonomy-ceiling",
+        expression: "agency.autonomyLevel <= 0.8 // Human-in-the-loop bound",
+        active: true,
+        pinned: false,
+      },
+      {
+        id: "trust-propagation",
+        expression: "forall a b : Artifact, depends(a, b) -> trust(a) <= trust(b)",
+        active: true,
+        pinned: false,
+      },
+      {
+        id: "vexation-anti-inflammatory",
+        expression: "vexometer.index > 0.6 -> enable_anti_inflammatory()",
+        active: true,
+        pinned: false,
+      },
+      {
+        id: "type-safety-invariant",
+        expression: "forall expr : Expr, type_check(expr) = Ok(t) -> eval(expr) : t",
+        active: false,
+        pinned: false,
+      },
+      {
+        id: "sync-latency-bound",
+        expression: "sync_latency(L, N, W) <= 2000ms // Cross-pane coherence",
+        active: true,
+        pinned: false,
+      },
+    ],
     activeConstraintId: None,
-    editorContent: "",
+    editorContent: "// Symbolic Mass — Tractatus Editor\n// Define constraints that govern the Binary Star co-orbit.\n//\n// Active constraints feed into the barycentre position\n// and inform ECHIDNA's proof obligations.\n\ntype orbital_invariant =\n  | StabilityBound(float)    // Minimum stability threshold\n  | DivergenceLimit(float)   // Maximum symbolic-neural drift\n  | AutonomyCeiling(float)   // Human-in-the-loop guarantee\n  | TrustPropagation         // Provenance chain integrity\n\nlet verify_co_orbit : orbital_invariant -> result<proof, counterexample> =\n  fun inv -> match inv with\n  | StabilityBound(min) ->\n      if orbital.stability >= min then Ok(QED)\n      else Error(DriftDetected(orbital.stability, min))\n  | DivergenceLimit(max) ->\n      let d = jaccard_distance(paneL.tokens, paneN.tokens) in\n      if d <= max then Ok(WithinBound(d))\n      else Error(Diverged(d, max))\n  | AutonomyCeiling(cap) ->\n      assert(agency.autonomyLevel <= cap);\n      Ok(HumanInLoop)\n  | TrustPropagation ->\n      forall_chain(provenance.artifacts, fun a b ->\n        trust(a) <= trust(b))\n",
     lastInferredType: None,
   },
   paneN: {
     tokens: [
-      {content: "Initialising formal verification context...", timestamp: 0.0, confidence: 0.95, validated: true},
-      {content: "Loading Coq prover backend", timestamp: 0.1, confidence: 0.88, validated: true},
-      {content: "forall n : nat, n + 0 = n", timestamp: 0.2, confidence: 0.92, validated: true},
-      {content: "Tactic suggestion: induction on n", timestamp: 0.3, confidence: 0.78, validated: false},
-      {content: "Proof obligation discharged", timestamp: 0.4, confidence: 0.97, validated: true},
+      {id: "t-0", content: "Initialising formal verification context...", timestamp: 0.0, confidence: 0.95, validated: true, source: NeuralInference, category: Observation, emittedDuring: Observe, causedBy: [], proofHash: None},
+      {id: "t-1", content: "Loading Coq prover backend", timestamp: 0.1, confidence: 0.88, validated: true, source: EchidnaProver, category: Observation, emittedDuring: Observe, causedBy: ["t-0"], proofHash: None},
+      {id: "t-2", content: "forall n : nat, n + 0 = n", timestamp: 0.2, confidence: 0.92, validated: true, source: EchidnaProver, category: Hypothesis, emittedDuring: Orient, causedBy: ["t-1"], proofHash: None},
+      {id: "t-3", content: "Tactic suggestion: induction on n", timestamp: 0.3, confidence: 0.78, validated: false, source: EchidnaProver, category: Abduction, emittedDuring: Orient, causedBy: ["t-2"], proofHash: None},
+      {id: "t-4", content: "Proof obligation discharged", timestamp: 0.4, confidence: 0.97, validated: true, source: EchidnaProver, category: ProofStep, emittedDuring: Decide, causedBy: ["t-2", "t-3"], proofHash: Some("sha256:a1b2c3...")},
+      {id: "t-5", content: "Checking orbital stability invariant...", timestamp: 0.5, confidence: 0.91, validated: true, source: TypeLLKernel, category: Observation, emittedDuring: Observe, causedBy: [], proofHash: None},
+      {id: "t-6", content: "Divergence bound verified: 0.23 <= 0.7", timestamp: 0.6, confidence: 0.94, validated: true, source: TypeLLKernel, category: ProofStep, emittedDuring: Decide, causedBy: ["t-5"], proofHash: Some("sha256:d4e5f6...")},
+      {id: "t-7", content: "Trust propagation: 4 artifacts in chain", timestamp: 0.7, confidence: 0.86, validated: true, source: NeuralInference, category: Deduction, emittedDuring: Orient, causedBy: ["t-4", "t-6"], proofHash: None},
+      {id: "t-8", content: "Autonomy ceiling: 0.0 <= 0.8 (human in loop)", timestamp: 0.8, confidence: 0.99, validated: true, source: AntiCrashGate, category: Observation, emittedDuring: Act, causedBy: [], proofHash: None},
+      {id: "t-9", content: "7 constraints active, 6 satisfied, 1 pending", timestamp: 0.9, confidence: 0.93, validated: true, source: NeuralInference, category: Synthesis, emittedDuring: Act, causedBy: ["t-7", "t-8"], proofHash: None},
     ],
-    inferenceActive: false,
-    monologue: "ECHIDNA neural advisor active. Awaiting proof session...",
+    inferenceActive: true,
+    nextTokenId: 10,
+    activeCausalChain: ["t-9"],
+    monologue: "ECHIDNA neural advisor active. Processing 7 symbolic constraints from Panel-L.\n\n[OBSERVE] Scanning constraint set: orbital-stability-inv, divergence-bound, autonomy-ceiling, trust-propagation, vexation-anti-inflammatory, type-safety-invariant (disabled), sync-latency-bound.\n\n[ORIENT] Symbolic mass density: moderate (editor content ~180 tokens). Barycentre currently balanced — both stars contributing mass. Divergence level low: symbolic and neural streams share vocabulary overlap.\n\n[DECIDE] Recommend verifying trust-propagation constraint against current provenance chain. The forall quantifier over artifact dependencies requires inductive proof — dispatching to Coq backend.\n\n[ACT] Dispatched proof obligation: trust_propagation_inductive to Coq. Estimated completion: <200ms. Monitoring sync latency for cross-pane coherence bound (2000ms ceiling).\n\nContractile status: orbital-stability STRICT (elasticity 0.2), vexation-ceiling ADAPTIVE (elasticity 0.5), divergence-limit WARN (elasticity 0.3), autonomy-bound STRICT (elasticity 0.4). All within elastic bounds.\n\nNext: Awaiting Coq discharge for trust propagation. Will update inference manifold on completion.",
     agency: {
-      phase: Observe,
-      autonomyLevel: 0.0,
+      phase: Orient,
+      autonomyLevel: 0.15,
       lastOperatorInput: 0.0,
     },
   },
@@ -516,6 +609,10 @@ let init = (): model => {
     stability: 1.0,
     divergenceLevel: 0.0,
     driftAuraColour: "indigo",
+    symbolicMass: 0.0,
+    neuralStream: 0.0,
+    barycentrePosition: 0.0,
+    syncHealth: 1.0,
   },
   syncState: {
     lastSymbolicHash: "",
@@ -563,22 +660,50 @@ let init = (): model => {
     },
   ],
   verisimdb: {
-    connected: false,
+    connected: true,
     endpoint: ServiceEndpoints.verisimdb,
-    lastQuery: "",
+    lastQuery: "SELECT * FROM entities WHERE modality = 'graph' LIMIT 10",
     queryResult: None,
     queryError: None,
-    entities: [],
+    entities: [
+      "orbital-stability-proof",
+      "trust-chain-artifact-001",
+      "divergence-metric-snapshot",
+      "provenance-graph-root",
+      "temporal-drift-log",
+    ],
     selectedEntity: None,
-    driftStatus: None,
-    driftScores: None,
-    proofObligations: [],
+    driftStatus: Some("Nominal — all 8 modalities within tolerance"),
+    driftScores: Some({
+      graph: 0.03,
+      vector: 0.07,
+      tensor: 0.02,
+      semantic: 0.11,
+      document: 0.04,
+      temporal: 0.06,
+      provenance: 0.01,
+      spatial: 0.05,
+    }),
+    proofObligations: [
+      {
+        proofType: "invariant",
+        contractName: "orbital-stability",
+        status: "verified",
+        proofHash: "a1b2c3d4e5f6",
+      },
+      {
+        proofType: "temporal",
+        contractName: "drift-bound",
+        status: "pending",
+        proofHash: "f6e5d4c3b2a1",
+      },
+    ],
     dbMenuExpanded: false,
     normalisingEntity: None,
     entityDetail: None,
     telemetry: None,
     telemetryVisible: false,
-    orchStatus: None,
+    orchStatus: Some("Orchestrator online — 5 entities indexed"),
     lastTypeCheck: None,
     proofDisplayActive: false,
     inferenceStream: [],
@@ -587,22 +712,60 @@ let init = (): model => {
     bojRouting: false,
   },
   echidna: {
-    connected: false,
+    connected: true,
     endpoint: ServiceEndpoints.echidna,
-    version: None,
-    provers: [],
+    version: Some("0.4.1-neurosym"),
+    provers: [
+      {name: "Coq", tier: "ITP", complexity: "CoC"},
+      {name: "Lean 4", tier: "ITP", complexity: "DTT"},
+      {name: "Z3", tier: "SMT", complexity: "QF_LIA"},
+      {name: "Isabelle/HOL", tier: "ITP", complexity: "HOL"},
+      {name: "CVC5", tier: "SMT", complexity: "QF_UFLIA"},
+    ],
     lastProofResult: None,
     proofError: None,
     proofLoading: false,
     session: None,
-    tacticSuggestions: [],
-    selectedProver: None,
+    tacticSuggestions: [
+      {
+        tactic: "induction",
+        args: ["n"],
+        confidence: 0.92,
+        aspectTags: ["structural", "recursive"],
+        description: "Structural induction on the natural number argument",
+      },
+      {
+        tactic: "apply",
+        args: ["trust_transitive"],
+        confidence: 0.85,
+        aspectTags: ["rewriting", "chain"],
+        description: "Apply trust transitivity lemma to close provenance chain goal",
+      },
+      {
+        tactic: "simpl",
+        args: [],
+        confidence: 0.78,
+        aspectTags: ["simplification"],
+        description: "Simplify the current goal using reduction rules",
+      },
+    ],
+    selectedProver: Some("Coq"),
     proofInput: "",
     menuExpanded: false,
+    activeTab: EchidnaProofTab,
     tacticInput: "",
     sessionLoading: false,
     lastProofObligations: None,
     bojRouting: false,
+    enterpriseModel: {
+      elements: [],
+      constraints: [],
+      checkResults: [],
+      checking: false,
+      activeMetamodel: None,
+      activeLayer: None,
+      lastXmiImport: None,
+    },
   },
   vab: {
     visible: false,
@@ -665,11 +828,155 @@ let init = (): model => {
     selectedRepo: None,
   },
   reposystem: ReposystemEngine.defaultState,
-  aerie: AerieEngine.defaultState,
+  aerie: {
+    loaded: true,
+    loading: false,
+    error: None,
+    probes: [
+      {
+        endpoint: "1.1.1.1",
+        label: "Cloudflare DNS",
+        protocol: "ICMP",
+        active: true,
+      },
+      {
+        endpoint: "8.8.8.8",
+        label: "Google DNS",
+        protocol: "ICMP",
+        active: true,
+      },
+      {
+        endpoint: "api.github.com",
+        label: "GitHub API",
+        protocol: "HTTPS",
+        active: true,
+      },
+    ],
+    latencyResults: [
+      {
+        endpoint: "1.1.1.1",
+        rttMs: 4.2,
+        jitterMs: 0.8,
+        packetLoss: 0.0,
+        timestamp: "2026-03-09T10:30:00Z",
+      },
+      {
+        endpoint: "8.8.8.8",
+        rttMs: 12.7,
+        jitterMs: 1.3,
+        packetLoss: 0.0,
+        timestamp: "2026-03-09T10:30:00Z",
+      },
+      {
+        endpoint: "api.github.com",
+        rttMs: 28.4,
+        jitterMs: 3.1,
+        packetLoss: 0.0,
+        timestamp: "2026-03-09T10:30:00Z",
+      },
+    ],
+    speedTests: [],
+    bgpRoutes: [],
+    activeCategory: AerieDashboard,
+    bgpAnomalyCount: 0,
+    bojRouting: false,
+  },
   interfaces: InterfacesEngine.defaultState,
   playgrounds: PlaygroundsEngine.defaultState,
   hypatia: HypatiaEngine.defaultState,
-  fleet: FleetEngine.defaultState,
+  fleet: {
+    loaded: true,
+    loading: false,
+    error: None,
+    bots: [
+      {
+        id: Rhodibot,
+        status: BotActive,
+        queuedFindings: 3,
+        processedFindings: 47,
+        confidenceThreshold: 0.85,
+        lastActivity: "2026-03-09T10:30:00Z",
+      },
+      {
+        id: Echidnabot,
+        status: BotActive,
+        queuedFindings: 7,
+        processedFindings: 112,
+        confidenceThreshold: 0.90,
+        lastActivity: "2026-03-09T10:28:00Z",
+      },
+      {
+        id: Sustainabot,
+        status: BotIdle,
+        queuedFindings: 0,
+        processedFindings: 23,
+        confidenceThreshold: 0.80,
+        lastActivity: "2026-03-09T09:45:00Z",
+      },
+      {
+        id: Glambot,
+        status: BotActive,
+        queuedFindings: 2,
+        processedFindings: 31,
+        confidenceThreshold: 0.75,
+        lastActivity: "2026-03-09T10:25:00Z",
+      },
+      {
+        id: Seambot,
+        status: BotIdle,
+        queuedFindings: 0,
+        processedFindings: 18,
+        confidenceThreshold: 0.82,
+        lastActivity: "2026-03-09T08:50:00Z",
+      },
+      {
+        id: Finishbot,
+        status: BotActive,
+        queuedFindings: 1,
+        processedFindings: 9,
+        confidenceThreshold: 0.88,
+        lastActivity: "2026-03-09T10:15:00Z",
+      },
+    ],
+    findings: [
+      {
+        id: "HYP-2026-0142",
+        repoName: "proven",
+        summary: "4,566 believe_me instances — formal verification undermined",
+        tier: Eliminate,
+        confidence: 0.97,
+        assignedBot: Some(Echidnabot),
+        resolved: false,
+      },
+      {
+        id: "HYP-2026-0143",
+        repoName: "boj-server",
+        summary: "Missing SPDX headers in 3 cartridge source files",
+        tier: Control,
+        confidence: 0.91,
+        assignedBot: Some(Rhodibot),
+        resolved: false,
+      },
+      {
+        id: "HYP-2026-0144",
+        repoName: "panll",
+        summary: "Documentation coverage below 60% threshold",
+        tier: Substitute,
+        confidence: 0.84,
+        assignedBot: Some(Glambot),
+        resolved: false,
+      },
+    ],
+    health: Some({
+      activeBots: 4,
+      totalQueued: 13,
+      totalProcessed: 240,
+      avgConfidence: 0.88,
+      triangleCounts: (1, 1, 1),
+    }),
+    activeCategory: FleetDashboard,
+    filterText: "",
+  },
   minter: MinterEngine.defaultState,
   provisioner: ProvisionerEngine.defaultState,
   voiceTag: VoiceTagEngine.defaultState,
@@ -705,7 +1012,105 @@ let init = (): model => {
   buildDashboard: BuildDashboardEngine.defaultState,
   releaseManager: ReleaseManagerEngine.defaultState,
   automationRouter: AutomationRouterEngine.defaultState,
-  boj: BojEngine.defaultState,
+  boj: {
+    serverUrl: ServiceEndpoints.bojServer,
+    connected: true,
+    lastHealthCheck: 1709942400.0,
+    cartridges: [
+      {
+        name: "database-mcp",
+        displayName: "Database MCP",
+        description: "VeriSimDB query routing and schema introspection",
+        grade: GradeD,
+        loaded: true,
+        protocols: [ProtoMCP, ProtoREST, ProtoGRPC, ProtoGraphQL],
+        layers: {abiReady: true, ffiReady: true, adapterReady: true, sharedLibReady: true},
+        soHash: "sha256:a1b2c3d4",
+        restPort: 7701,
+        grpcPort: 7702,
+        graphqlPort: 7703,
+      },
+      {
+        name: "proof-mcp",
+        displayName: "Proof MCP",
+        description: "ECHIDNA proof dispatch and tactic suggestions",
+        grade: GradeD,
+        loaded: true,
+        protocols: [ProtoMCP, ProtoNeSy],
+        layers: {abiReady: true, ffiReady: true, adapterReady: true, sharedLibReady: true},
+        soHash: "sha256:e5f6a7b8",
+        restPort: 7711,
+        grpcPort: 7712,
+        graphqlPort: 7713,
+      },
+      {
+        name: "observe-mcp",
+        displayName: "Observe MCP",
+        description: "Network telemetry and Aerie probe routing",
+        grade: GradeD,
+        loaded: true,
+        protocols: [ProtoMCP, ProtoREST],
+        layers: {abiReady: true, ffiReady: true, adapterReady: false, sharedLibReady: true},
+        soHash: "sha256:c9d0e1f2",
+        restPort: 7721,
+        grpcPort: 0,
+        graphqlPort: 0,
+      },
+      {
+        name: "fleet-mcp",
+        displayName: "Fleet MCP",
+        description: "Gitbot-fleet orchestration and dispatch",
+        grade: GradeD,
+        loaded: true,
+        protocols: [ProtoMCP, ProtoFleet, ProtoAgentic],
+        layers: {abiReady: true, ffiReady: true, adapterReady: true, sharedLibReady: true},
+        soHash: "sha256:34567890",
+        restPort: 7731,
+        grpcPort: 7732,
+        graphqlPort: 7733,
+      },
+      {
+        name: "security-mcp",
+        displayName: "Security MCP",
+        description: "Panic-attack fuzzing and vulnerability scanning",
+        grade: GradeD,
+        loaded: false,
+        protocols: [ProtoMCP, ProtoREST],
+        layers: {abiReady: true, ffiReady: true, adapterReady: false, sharedLibReady: true},
+        soHash: "sha256:abcdef01",
+        restPort: 0,
+        grpcPort: 0,
+        graphqlPort: 0,
+      },
+    ],
+    selectedCartridge: None,
+    umoja: {
+      active: true,
+      localNodeId: "panll-primary-001",
+      peers: [
+        {
+          nodeId: "boj-worker-002",
+          address: "127.0.0.1:7750",
+          state: PeerVerified,
+          gossipRound: 12,
+          catalogueDigest: "sha256:fedcba98",
+          lastSeen: 1709942380.0,
+        },
+      ],
+      currentRound: 12,
+    },
+    activeCategory: Dashboard,
+    invokeCartridge: "",
+    invokeTool: "",
+    invokeArgs: [],
+    invokeResult: None,
+    loading: false,
+    error: None,
+    filterText: "",
+    lastTypeCheck: None,
+    latencyLog: [],
+    umojaAddPeerInput: "",
+  },
   cladeBrowser: {
     ...CladeBrowserModel.defaultState,
     clades: CladeBrowserEngine.builtinClades,
@@ -730,7 +1135,15 @@ let init = (): model => {
   undoStack: [],
   redoStack: [],
   humidity: Medium,
-  viewMode: DarkStart,
+  barycentreTour: {
+    active: false,
+    currentStep: TourIntro,
+    completed: false,
+  },
+  menuBar: {
+    activeMenu: None,
+  },
+  viewMode: Standard,
   paneLVisible: true,
   paneNVisible: true,
   paneWVisible: true,
@@ -740,4 +1153,9 @@ let init = (): model => {
   feedbackPending: None,
   feedbackError: None,
   feedbackReportType: Some("FeatureRequest"),
+  help: HelpEngine.defaultState,
+  accessibility: AccessibilityEngine.defaultState,
+  tiling: TilingEngine.defaultState,
+  focusDimming: FocusDimmingEngine.defaultState,
+  scriptGist: ScriptGistEngine.defaultState,
 }

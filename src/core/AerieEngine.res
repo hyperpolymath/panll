@@ -4,6 +4,7 @@
 
 open AerieModel
 
+/// Human-readable label for an Aerie category tab.
 let categoryLabel = (cat: aerieCategory): string =>
   switch cat {
   | AerieDashboard => "Dashboard"
@@ -36,6 +37,7 @@ let avgLatency = (results: array<latencyResult>): float => {
   }
 }
 
+/// Default Aerie panel state — disconnected, no data loaded.
 let defaultState: aerieState = {
   loaded: false,
   loading: false,

@@ -5,16 +5,59 @@
 /// TypeLL exposes a JSON-RPC-style API at TYPELL_URL (default http://localhost:7800/api/v1).
 /// These bindings wrap the 7 Tauri commands defined in src-tauri/src/typell/commands.rs.
 ///
+/// In browser-only mode (no Tauri runtime), commands fall back to direct
+/// fetch() calls against the TypeLL server URL.
+///
 /// Unlike most panels which are self-contained, TypeLL commands are also called
 /// by other panels through TypeLLService — making TypeLL a cross-cutting concern.
 
 @module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+external invokeRaw: (string, 'a) => promise<'b> = "invoke"
+
+/// Detect whether the real Tauri runtime is available (not the browser shim).
+%%raw(`
+function hasTauri() {
+  return typeof window !== 'undefined'
+    && window.__TAURI_INTERNALS__ != null
+    && !window.__TAURI_INTERNALS__.__BROWSER_SHIM__;
+}
+`)
+@val external hasTauri: unit => bool = "hasTauri"
+
+/// GET helper for TypeLL direct fetch (bypasses Tauri invoke).
+let fetchGet: string => promise<string> = %raw(`
+  function(path) {
+    return fetch("http://localhost:7800/api/v1" + path)
+      .then(function(r) {
+        if (!r.ok) throw new Error("TypeLL returned " + r.status);
+        return r.text();
+      });
+  }
+`)
+
+/// POST helper for TypeLL direct fetch (bypasses Tauri invoke).
+let fetchPost: (string, string) => promise<string> = %raw(`
+  function(path, body) {
+    return fetch("http://localhost:7800/api/v1" + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: body
+    }).then(function(r) {
+      if (!r.ok) throw new Error("TypeLL returned " + r.status);
+      return r.text();
+    });
+  }
+`)
 
 /// Check TypeLL server health.
 let health = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("typell_health", ())
+    let p = if hasTauri() {
+      invokeRaw("typell_health", ())
+    } else {
+      fetchGet("/health")
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -34,12 +77,14 @@ let check = (
   context: option<string>,
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
-  let args = switch context {
-  | Some(ctx) => {"expression": expression, "context": ctx}
-  | None => {"expression": expression, "context": ""}
-  }
+  let ctx = context->Option.getOr("")
   Tea_Cmd.call(callbacks => {
-    invoke("typell_check", args)
+    let p = if hasTauri() {
+      invokeRaw("typell_check", {"expression": expression, "context": ctx})
+    } else {
+      fetchPost("/check", `{"expression":${JSON.stringifyAny(expression)->Option.getOr("\"\"")}, "context":${JSON.stringifyAny(ctx)->Option.getOr("{}")}}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -56,7 +101,12 @@ let check = (
 /// POST /infer — returns the most general type.
 let infer = (expression: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("typell_infer", {"expression": expression})
+    let p = if hasTauri() {
+      invokeRaw("typell_infer", {"expression": expression})
+    } else {
+      fetchPost("/infer", `{"expression":${JSON.stringifyAny(expression)->Option.getOr("\"\"")}}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -76,12 +126,14 @@ let refine = (
   constraints: option<string>,
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
-  let args = switch constraints {
-  | Some(c) => {"spec": spec, "constraints": c}
-  | None => {"spec": spec, "constraints": ""}
-  }
+  let cons = constraints->Option.getOr("")
   Tea_Cmd.call(callbacks => {
-    invoke("typell_refine", args)
+    let p = if hasTauri() {
+      invokeRaw("typell_refine", {"spec": spec, "constraints": cons})
+    } else {
+      fetchPost("/refine", `{"spec":${JSON.stringifyAny(spec)->Option.getOr("\"\"")}, "constraints":${JSON.stringifyAny(cons)->Option.getOr("[]")}}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -98,7 +150,12 @@ let refine = (
 /// POST /compute — evaluates normalisation, unification, etc.
 let compute = (term: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("typell_compute", {"term": term})
+    let p = if hasTauri() {
+      invokeRaw("typell_compute", {"term": term})
+    } else {
+      fetchPost("/compute", `{"term":${JSON.stringifyAny(term)->Option.getOr("\"\"")}}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -115,7 +172,12 @@ let compute = (term: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
 /// GET /signatures — returns the signature catalogue.
 let listSignatures = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("typell_list_signatures", ())
+    let p = if hasTauri() {
+      invokeRaw("typell_list_signatures", ())
+    } else {
+      fetchGet("/signatures")
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -132,7 +194,12 @@ let listSignatures = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> =
 /// GET /universes — returns the hierarchy of type universes.
 let universes = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("typell_universes", ())
+    let p = if hasTauri() {
+      invokeRaw("typell_universes", ())
+    } else {
+      fetchGet("/universes")
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()

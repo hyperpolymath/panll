@@ -102,8 +102,8 @@ Deno.test("E2E: Model.init() busRegistry exists", () => {
 // 2. Panel Registry — every panel can be looked up
 // ============================================================================
 
-Deno.test("E2E: PanelRegistry has all 41 registered panels", () => {
-  assertEquals(allPanels.length, 41);
+Deno.test("E2E: PanelRegistry has all 43 registered panels", () => {
+  assertEquals(allPanels.length, 43);
 });
 
 Deno.test("E2E: Every registered panel can be found by ID", () => {
@@ -150,7 +150,7 @@ Deno.test("E2E: SaveState message does not crash", () => {
 
 Deno.test("E2E: ResetAllPanels message produces a valid model", () => {
   const model = init();
-  const [newModel, _cmd] = update(model, "ResetAllPanels");
+  const [newModel, _cmd] = update(model, { TAG: "Workspace", _0: "ResetAllPanels" });
   assertExists(newModel, "ResetAllPanels should produce a valid model");
 });
 
@@ -429,7 +429,7 @@ Deno.test("E2E: 8-message smoke test does not crash", () => {
     "SaveState",
     { TAG: "View", _0: "TogglePaneL" },
     "NoOp",
-    "ResetAllPanels",
+    { TAG: "Workspace", _0: "ResetAllPanels" },
   ];
   for (const msg of messages) {
     const [newModel, _cmd] = update(model, msg);

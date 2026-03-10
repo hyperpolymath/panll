@@ -169,6 +169,11 @@ let builtinCladesBase: array<cladeEntry> = [
     longDescription: "Event-driven rule engine for automating workflows across panels with approval gates.",
     traits: { hasPersistence: true, hasBackend: true, hasWorkItems: true, hasRealTime: false, isAmbient: false },
     panelIds: ["PanelAutomationRouter"], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: [] },
+  { id: "script-gist", name: "Script Gist", kind: "tool", version: "1.0.0",
+    summary: "Portable computation gists — Minskian diachronic/synchronic cardfiles",
+    longDescription: "Saveable, shareable script and schema drafting board. Gists are LLM-callable as MCP tools, runnable standalone, composable into cardfiles. Diachronic (time/scripts) and synchronic (space/schemata) state documents with rollback.",
+    traits: { hasPersistence: true, hasBackend: false, hasWorkItems: true, hasRealTime: false, isAmbient: false },
+    panelIds: ["PanelScriptGist"], consumedBy: ["automation-router", "boj"], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: ["automation-router", "playgrounds"], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["playgrounds", "automation-router"] },
   { id: "boj", name: "BoJ — Bundle of Joy", kind: "bridge", version: "1.0.0",
     summary: "Unified cartridge server — 17 domains, Umoja federation",
     longDescription: "Protocol backbone bridging all domains through Idris2 ABI, Zig FFI, V-lang adapter.",
@@ -349,6 +354,61 @@ let builtinCladesBase: array<cladeEntry> = [
     longDescription: "PanLL's verification backbone. Provides type checking, inference, refinement, and proof obligation generation to every panel. Progressive disclosure (RAW/FOLDED/GLYPHED/WYSIWYG) from rescript-evangeliser makes advanced type systems accessible.",
     traits: { hasPersistence: false, hasBackend: true, hasWorkItems: false, hasRealTime: true, isAmbient: true },
     panelIds: ["PanelTypeLL"], consumedBy: ["databases", "protocol-squisher", "my-lang", "boj", "playgrounds"], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["ai", "clade-tentacles"] },
+  { id: "echidna", name: "ECHIDNA", kind: "ai", version: "1.0.0",
+    summary: "ECHIDNA multi-solver theorem prover — proof dispatch, tactic suggestions, enterprise model checking",
+    longDescription: "Multi-solver theorem prover integrating proof dispatch, automated tactic suggestions, and enterprise-grade model checking across multiple backends.",
+    traits: { hasPersistence: false, hasBackend: true, hasWorkItems: false, hasRealTime: true, isAmbient: false },
+    panelIds: ["PanelEchidna"], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["typell", "ai"] },
+  { id: "help", name: "Help", kind: "meta", version: "1.0.0",
+    summary: "In-application help system with context-sensitive guides, glossary, and onboarding",
+    longDescription: "Context-sensitive help overlay with searchable glossary, onboarding walkthroughs, and per-panel guidance.",
+    traits: { hasPersistence: false, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: false },
+    panelIds: ["PanelHelp"], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: [] },
+  { id: "accessibility", name: "Accessibility", kind: "meta", version: "1.0.0",
+    summary: "Centralised accessibility toolbar — colour palettes, font size, animation, focus indicators",
+    longDescription: "Global accessibility controls including high-contrast colour palettes, font scaling, reduced motion, focus indicator customisation, and screen reader hints.",
+    traits: { hasPersistence: false, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: true },
+    panelIds: [], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["workspace"] },
+  { id: "menu-bar", name: "Menu Bar", kind: "meta", version: "1.0.0",
+    summary: "Standard application menu bar — File, Edit, View, Panel, Tools, Help",
+    longDescription: "Top-level application menu with keyboard navigation, command palette integration, and dynamic menu items contributed by loaded panels.",
+    traits: { hasPersistence: false, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: true },
+    panelIds: [], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["workspace"] },
+  { id: "status-bar", name: "Status Bar", kind: "meta", version: "1.0.0",
+    summary: "VS Code-style status bar with configurable widgets",
+    longDescription: "Bottom status bar with configurable widget slots for build status, git branch, language mode, encoding, notifications, and panel-contributed indicators.",
+    traits: { hasPersistence: false, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: true },
+    panelIds: [], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["workspace"] },
+  { id: "vexometer", name: "Vexometer", kind: "viewer", version: "1.0.0",
+    summary: "Cognitive load meter — Friction of Things index with anti-inflammatory mode",
+    longDescription: "Ambient cognitive load gauge tracking Friction of Things index across all panels. Anti-inflammatory mode automatically reduces complexity when cognitive load exceeds thresholds.",
+    traits: { hasPersistence: false, hasBackend: false, hasWorkItems: false, hasRealTime: true, isAmbient: true },
+    panelIds: [], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["accessibility"] },
+  { id: "provenance", name: "Provenance", kind: "scanner", version: "1.0.0",
+    summary: "Qubes-style code trust surface — ambient provenance map",
+    longDescription: "Ambient provenance overlay showing trust levels for code and dependencies using a Qubes-inspired colour-coded trust surface.",
+    traits: { hasPersistence: true, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: true },
+    panelIds: [], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["security", "panic-attack"] },
+  { id: "feedback", name: "Feedback-O-Tron", kind: "meta", version: "1.0.0",
+    summary: "Feedback-O-Tron — user feedback aggregation and sentiment analysis",
+    longDescription: "Collects user feedback from in-app prompts and external channels, aggregates sentiment analysis, and surfaces actionable insights.",
+    traits: { hasPersistence: true, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: false },
+    panelIds: [], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: [] },
+  { id: "keybindings", name: "Keybindings", kind: "meta", version: "1.0.0",
+    summary: "Customisable keyboard shortcuts system",
+    longDescription: "Central keyboard shortcut registry with conflict detection, per-panel keymaps, vim/emacs presets, and exportable configuration.",
+    traits: { hasPersistence: true, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: false },
+    panelIds: [], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["workspace", "accessibility"] },
+  { id: "tiling", name: "Tiling", kind: "meta", version: "1.0.0",
+    summary: "Multi-monitor panel detachment and Aero-style snap zones",
+    longDescription: "Panel layout engine supporting multi-monitor detachment, snap zones, split views, and serialisable tiling configurations.",
+    traits: { hasPersistence: false, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: false },
+    panelIds: [], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["workspace"] },
+  { id: "focus-dimming", name: "Focus Dimming", kind: "meta", version: "1.0.0",
+    summary: "Focus-aware panel dimming and Smart Memory Mode",
+    longDescription: "Ambient focus system that dims inactive panels and activates Smart Memory Mode to reduce resource usage for off-screen or background panels.",
+    traits: { hasPersistence: false, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: true },
+    panelIds: [], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["workspace", "accessibility"] },
 ]
 
 // ════════════════════════════════════════════════════════════════════════
@@ -820,6 +880,121 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     withDefaults(
       ~protocols=[ProtoTauriIPC],
       ~capabilities=[CapFilesystem],
+      entry,
+    )
+  | "coprocessors" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC, ProtoWebSocket],
+      ~capabilities=[CapStreaming, CapVisualisation],
+      ~enhances=["game-preview", "vm-inspector"],
+      ~isolation=IsolationProcess,
+      entry,
+    )
+  | "dlc-workshop" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC],
+      ~capabilities=[CapFilesystem, CapVisualisation],
+      ~enhances=["game-preview", "level-architect"],
+      entry,
+    )
+  | "plaza" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~capabilities=[CapNetwork, CapFilesystem],
+      ~enhances=["reposystem", "farm"],
+      entry,
+    )
+  | "provisioner" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC],
+      ~capabilities=[CapFilesystem],
+      ~enhances=["minter", "workspace"],
+      entry,
+    )
+  | "reposystem" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC, ProtoREST],
+      ~capabilities=[CapFilesystem, CapSecurityScan],
+      ~enhances=["farm", "fleet"],
+      entry,
+    )
+  | "migration" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC, ProtoLSP],
+      ~capabilities=[CapFilesystem, CapTypeChecking],
+      ~enhances=["editor-bridge", "build-dashboard"],
+      entry,
+    )
+  | "echidna" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoGRPC, ProtoTauriIPC, ProtoStdio],
+      ~capabilities=[CapProofProduction, CapProofConsumption, CapTypeChecking, CapStreaming],
+      ~isolation=IsolationProcess,
+      ~requires=[{cladeId: "databases", required: false, reason: "VeriSimDB backing store for proof certificates"}],
+      ~enhances=["typell", "databases"],
+      entry,
+    )
+  | "help" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC],
+      entry,
+    )
+  | "accessibility" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC],
+      ~enhances=["workspace"],
+      entry,
+    )
+  | "menu-bar" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC],
+      ~enhances=["workspace", "keybindings"],
+      entry,
+    )
+  | "status-bar" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC],
+      ~capabilities=[CapStreaming],
+      ~enhances=["workspace", "build-dashboard"],
+      entry,
+    )
+  | "vexometer" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC],
+      ~capabilities=[CapStreaming, CapVisualisation],
+      ~enhances=["accessibility", "workspace"],
+      entry,
+    )
+  | "provenance" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC, ProtoREST],
+      ~capabilities=[CapSecurityScan, CapFilesystem],
+      ~enhances=["security", "panic-attack"],
+      entry,
+    )
+  | "feedback" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC, ProtoREST],
+      ~capabilities=[CapFilesystem],
+      entry,
+    )
+  | "keybindings" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC],
+      ~capabilities=[CapFilesystem],
+      ~enhances=["workspace", "menu-bar"],
+      entry,
+    )
+  | "tiling" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC],
+      ~enhances=["workspace"],
+      entry,
+    )
+  | "focus-dimming" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC],
+      ~enhances=["workspace", "accessibility"],
       entry,
     )
   | _ => entry

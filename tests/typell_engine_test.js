@@ -233,12 +233,13 @@ Deno.test("categoryLabel returns correct strings", () => {
 // allCategories
 // ============================================================================
 
-Deno.test("allCategories has 4 entries", () => {
-  assertEquals(allCategories.length, 4);
+Deno.test("allCategories has 5 entries", () => {
+  assertEquals(allCategories.length, 5);
   assertEquals(allCategories[0], "TlChecker");
   assertEquals(allCategories[1], "TlExplorer");
   assertEquals(allCategories[2], "TlRefinement");
-  assertEquals(allCategories[3], "TlGuide");
+  assertEquals(allCategories[3], "TlDiscipline");
+  assertEquals(allCategories[4], "TlGuide");
 });
 
 // ============================================================================

@@ -22,6 +22,7 @@ type decoder<'a> = JSON.t => result<'a, error>
 
 // Primitive decoders
 
+/// Decode a JSON string value.
 let string: decoder<string> = json => {
   switch json {
   | String(s) => Ok(s)
@@ -29,6 +30,7 @@ let string: decoder<string> = json => {
   }
 }
 
+/// Decode a JSON integer value.
 let int: decoder<int> = json => {
   switch json {
   | Number(n) =>
@@ -42,6 +44,7 @@ let int: decoder<int> = json => {
   }
 }
 
+/// Decode a JSON float/number value.
 let float: decoder<float> = json => {
   switch json {
   | Number(n) => Ok(n)
@@ -49,6 +52,7 @@ let float: decoder<float> = json => {
   }
 }
 
+/// Decode a JSON boolean value.
 let bool: decoder<bool> = json => {
   switch json {
   | Boolean(b) => Ok(b)
@@ -56,6 +60,7 @@ let bool: decoder<bool> = json => {
   }
 }
 
+/// Decode a JSON null, returning the provided default value.
 let null = (default: 'a): decoder<'a> => {
   json => {
     switch json {
@@ -67,6 +72,7 @@ let null = (default: 'a): decoder<'a> => {
 
 // Object decoders
 
+/// Decode a field from a JSON object by name.
 let field = (name: string, decoder: decoder<'a>): decoder<'a> => {
   json => {
     switch json {
@@ -84,6 +90,7 @@ let field = (name: string, decoder: decoder<'a>): decoder<'a> => {
   }
 }
 
+/// Decode an optional field. Returns `None` if the field is missing or null.
 let optionalField = (name: string, decoder: decoder<'a>): decoder<option<'a>> => {
   json => {
     switch json {
@@ -105,6 +112,7 @@ let optionalField = (name: string, decoder: decoder<'a>): decoder<option<'a>> =>
   }
 }
 
+/// Decode a value at a nested path within a JSON object.
 let at = (path: array<string>, decoder: decoder<'a>): decoder<'a> => {
   json => {
     let current = ref(json)
@@ -130,6 +138,7 @@ let at = (path: array<string>, decoder: decoder<'a>): decoder<'a> => {
 
 // Array decoders
 
+/// Decode a JSON array, applying the given decoder to each element.
 let array = (decoder: decoder<'a>): decoder<array<'a>> => {
   json => {
     switch json {
@@ -156,6 +165,7 @@ let array = (decoder: decoder<'a>): decoder<array<'a>> => {
   }
 }
 
+/// Decode a value at a specific array index.
 let index = (i: int, decoder: decoder<'a>): decoder<'a> => {
   json => {
     switch json {
@@ -175,6 +185,7 @@ let index = (i: int, decoder: decoder<'a>): decoder<'a> => {
 
 // Combinators
 
+/// Transform a decoded value with a function.
 let map = (decoder: decoder<'a>, f: 'a => 'b): decoder<'b> => {
   json => {
     switch decoder(json) {
@@ -184,6 +195,7 @@ let map = (decoder: decoder<'a>, f: 'a => 'b): decoder<'b> => {
   }
 }
 
+/// Combine two decoders with a function.
 let map2 = (f: ('a, 'b) => 'c, d1: decoder<'a>, d2: decoder<'b>): decoder<'c> => {
   json => {
     switch (d1(json), d2(json)) {
@@ -194,6 +206,7 @@ let map2 = (f: ('a, 'b) => 'c, d1: decoder<'a>, d2: decoder<'b>): decoder<'c> =>
   }
 }
 
+/// Combine three decoders with a function.
 let map3 = (
   f: ('a, 'b, 'c) => 'd,
   d1: decoder<'a>,
@@ -210,6 +223,7 @@ let map3 = (
   }
 }
 
+/// Combine four decoders with a function.
 let map4 = (
   f: ('a, 'b, 'c, 'd) => 'e,
   d1: decoder<'a>,
@@ -228,6 +242,7 @@ let map4 = (
   }
 }
 
+/// Combine five decoders with a function.
 let map5 = (
   f: ('a, 'b, 'c, 'd, 'e) => 'f,
   d1: decoder<'a>,
@@ -248,6 +263,7 @@ let map5 = (
   }
 }
 
+/// Chain decoders: decode a value, then use it to select the next decoder.
 let andThen = (decoder: decoder<'a>, f: 'a => decoder<'b>): decoder<'b> => {
   json => {
     switch decoder(json) {
@@ -257,6 +273,7 @@ let andThen = (decoder: decoder<'a>, f: 'a => decoder<'b>): decoder<'b> => {
   }
 }
 
+/// Try each decoder in order, returning the first success.
 let oneOf = (decoders: array<decoder<'a>>): decoder<'a> => {
   json => {
     let errors = ref([])
@@ -276,6 +293,7 @@ let oneOf = (decoders: array<decoder<'a>>): decoder<'a> => {
   }
 }
 
+/// Make a decoder optional: returns `Some(value)` on success, `None` on failure.
 let optional = (decoder: decoder<'a>): decoder<option<'a>> => {
   json => {
     switch decoder(json) {
@@ -285,6 +303,7 @@ let optional = (decoder: decoder<'a>): decoder<option<'a>> => {
   }
 }
 
+/// Decode a nullable value: returns `None` for JSON null, otherwise decodes with the given decoder.
 let nullable = (decoder: decoder<'a>): decoder<option<'a>> => {
   json => {
     switch json {
@@ -298,18 +317,22 @@ let nullable = (decoder: decoder<'a>): decoder<option<'a>> => {
   }
 }
 
+/// A decoder that always succeeds with the given value.
 let succeed = (value: 'a): decoder<'a> => {
   _json => Ok(value)
 }
 
+/// A decoder that always fails with the given message.
 let fail = (message: string): decoder<'a> => {
   json => Error(Failure(message, json))
 }
 
+/// A decoder that returns the raw JSON value unchanged.
 let value: decoder<JSON.t> = json => Ok(json)
 
 // Decoding from string
 
+/// Parse a JSON string and run a decoder on the result.
 let decodeString = (decoder: decoder<'a>, jsonString: string): result<'a, error> => {
   switch JSON.parseExn(jsonString) {
   | exception _ => Error(Failure("Invalid JSON", JSON.Encode.null))
@@ -319,10 +342,12 @@ let decodeString = (decoder: decoder<'a>, jsonString: string): result<'a, error>
 
 // Error formatting
 
+/// Format a decoder error as a human-readable string with path context.
 let rec errorToString = (error: error): string => {
   errorToStringHelp(error, [])
 }
 
+/// Internal helper for error formatting with accumulated path context.
 and errorToStringHelp = (error: error, context: array<string>): string => {
   switch error {
   | Failure(msg, _json) =>

@@ -59,6 +59,7 @@ let stringToOodaPhase = (str: string): oodaPhase => {
 let viewModeToString = (mode: viewMode): string => {
   switch mode {
   | Standard => "Standard"
+  | LightMode => "LightMode"
   | Ambient => "Ambient"
   | Zen => "Zen"
   | DarkStart => "DarkStart"
@@ -68,6 +69,7 @@ let viewModeToString = (mode: viewMode): string => {
 // Convert string to viewMode
 let stringToViewMode = (str: string): viewMode => {
   switch str {
+  | "LightMode" => LightMode
   | "Ambient" => Ambient
   | "Zen" => Zen
   | "DarkStart" => DarkStart
@@ -121,12 +123,46 @@ let toJsonObject = (state: persistedState): JSON.t => {
     d->Dict.set("pinned", JSON.Encode.bool(c.pinned))
     JSON.Encode.object(d)
   })
+  let sourceToString = (s: tokenSource): string => switch s {
+  | NeuralInference => "neural"
+  | EchidnaProver => "echidna"
+  | TypeLLKernel => "typell"
+  | VeriSimInference => "verisim"
+  | AntiCrashGate => "anticrash"
+  | OperatorInput => "operator"
+  | OrbitalSync => "orbital"
+  }
+  let categoryToString = (c: tokenCategory): string => switch c {
+  | Observation => "observation"
+  | Hypothesis => "hypothesis"
+  | Deduction => "deduction"
+  | Abduction => "abduction"
+  | ProofStep => "proof"
+  | Violation => "violation"
+  | Correction => "correction"
+  | Synthesis => "synthesis"
+  }
+  let phaseToString = (p: oodaPhase): string => switch p {
+  | Observe => "observe"
+  | Orient => "orient"
+  | Decide => "decide"
+  | Act => "act"
+  }
   let tokens = state.neuralTokens->Array.map(t => {
     let d = Dict.make()
+    d->Dict.set("id", JSON.Encode.string(t.id))
     d->Dict.set("content", JSON.Encode.string(t.content))
     d->Dict.set("timestamp", JSON.Encode.float(t.timestamp))
     d->Dict.set("confidence", JSON.Encode.float(t.confidence))
     d->Dict.set("validated", JSON.Encode.bool(t.validated))
+    d->Dict.set("source", JSON.Encode.string(sourceToString(t.source)))
+    d->Dict.set("category", JSON.Encode.string(categoryToString(t.category)))
+    d->Dict.set("emittedDuring", JSON.Encode.string(phaseToString(t.emittedDuring)))
+    d->Dict.set("causedBy", JSON.Encode.array(t.causedBy->Array.map(JSON.Encode.string)))
+    switch t.proofHash {
+    | Some(h) => d->Dict.set("proofHash", JSON.Encode.string(h))
+    | None => ()
+    }
     JSON.Encode.object(d)
   })
   let eventChainEvents = state.eventChain->Array.map(e => {
@@ -286,14 +322,52 @@ let load = (): option<model> => {
         }
 
         // Parse neural tokens
+        let parseSource = (s: string): tokenSource => switch s {
+        | "echidna" => EchidnaProver
+        | "typell" => TypeLLKernel
+        | "verisim" => VeriSimInference
+        | "anticrash" => AntiCrashGate
+        | "operator" => OperatorInput
+        | "orbital" => OrbitalSync
+        | _ => NeuralInference
+        }
+        let parseCategory = (s: string): tokenCategory => switch s {
+        | "hypothesis" => Hypothesis
+        | "deduction" => Deduction
+        | "abduction" => Abduction
+        | "proof" => ProofStep
+        | "violation" => Violation
+        | "correction" => Correction
+        | "synthesis" => Synthesis
+        | _ => Observation
+        }
+        let parsePhase = (s: string): oodaPhase => switch s {
+        | "orient" => Orient
+        | "decide" => Decide
+        | "act" => Act
+        | _ => Observe
+        }
         let neuralTokens = switch getArray(parsed, "neuralTokens") {
         | Some(arr) =>
           arr->Array.map(item => {
+            let causedBy = switch getArray(item, "causedBy") {
+            | Some(ids) => ids->Array.filterMap(v => v->JSON.Decode.string)
+            | None => []
+            }
             {
+              id: getString(item, "id", ""),
               content: getString(item, "content", ""),
               timestamp: getFloat(item, "timestamp", 0.0),
               confidence: getFloat(item, "confidence", 0.0),
               validated: getBool(item, "validated", false),
+              source: parseSource(getString(item, "source", "neural")),
+              category: parseCategory(getString(item, "category", "observation")),
+              emittedDuring: parsePhase(getString(item, "emittedDuring", "observe")),
+              causedBy,
+              proofHash: switch getField(item, "proofHash") {
+              | Some(v) => v->JSON.Decode.string
+              | None => None
+              },
             }
           })
         | None => []
@@ -372,6 +446,11 @@ let load = (): option<model> => {
           paneN: {
             ...baseModel.paneN,
             tokens: neuralTokens,
+            nextTokenId: Array.length(neuralTokens),
+            activeCausalChain: switch neuralTokens->Array.at(-1) {
+            | Some(last) => [last.id]
+            | None => []
+            },
           },
           paneW: {
             ...baseModel.paneW,

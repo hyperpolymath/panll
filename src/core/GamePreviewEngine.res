@@ -71,3 +71,43 @@ let defaultState: gamePreviewState = {
   error: None,
   loading: false,
 }
+
+/// Generate the PixiJS embed script tag content for the game preview iframe.
+/// This produces a minimal bootstrap that loads the IDApTIK game engine
+/// and connects the dev server hot-reload socket.
+let pixiBootstrapScript = (devServerUrl: string): string => {
+  "const app = new PIXI.Application();" ++
+  "await app.init({ width: 800, height: 600, backgroundColor: 0x1a1a2e });" ++
+  "document.getElementById('game-root').appendChild(app.canvas);" ++
+  "const ws = new WebSocket('" ++ devServerUrl ++ "/ws');" ++
+  "ws.onmessage = (e) => { if (e.data === 'reload') { location.reload(); } };" ++
+  "app.ticker.add(() => { /* game loop placeholder */ });"
+}
+
+/// Generate a srcdoc HTML string for the game preview iframe.
+/// Embeds PixiJS from CDN and runs the bootstrap script.
+let iframeSrcDoc = (devServerUrl: string): string => {
+  "<!DOCTYPE html>" ++
+  "<html><head>" ++
+  "<script src='https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.mjs' type='module'></script>" ++
+  "<style>body{margin:0;overflow:hidden;background:#1a1a2e}</style>" ++
+  "</head><body>" ++
+  "<div id='game-root'></div>" ++
+  "<script type='module'>" ++ pixiBootstrapScript(devServerUrl) ++ "</script>" ++
+  "</body></html>"
+}
+
+/// Default render stats for the performance tab.
+let defaultRenderStats: renderStats = {
+  fps: 60.0,
+  drawCalls: 0,
+  textureMemory: 0,
+  spriteCount: 0,
+}
+
+/// Format render stats as a human-readable summary line.
+let renderStatsLabel = (stats: renderStats): string => {
+  Float.toFixedWithPrecision(stats.fps, ~digits=1) ++ " FPS | " ++
+  Int.toString(stats.drawCalls) ++ " draws | " ++
+  Int.toString(stats.spriteCount) ++ " sprites"
+}

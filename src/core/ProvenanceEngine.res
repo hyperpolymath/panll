@@ -235,3 +235,98 @@ let defaultState: provenanceState = {
   loading: false,
   error: None,
 }
+
+/// Build a simple provenance DAG from a set of file provenances.
+/// Each file becomes a SourceNode, and files that import from each other
+/// get edges. This is the naive version — the real one would parse imports.
+let buildDag = (files: array<fileProvenance>): provenanceDag => {
+  let nodes = files->Array.map(fp => {
+    let trust = if fp.summary.verifiedLines > fp.summary.totalLines / 2 {
+      Verified
+    } else if fp.summary.humanReviewedLines > fp.summary.totalLines / 2 {
+      HumanReviewed
+    } else if fp.summary.aiAssistedLines > fp.summary.totalLines / 2 {
+      AiAssisted
+    } else if fp.summary.unreviewedAiLines > 0 {
+      UnreviewedAi
+    } else {
+      Unknown
+    }
+    {
+      id: fp.filePath,
+      label: fp.filePath,
+      kind: SourceNode,
+      trustLevel: trust,
+      contentHash: "",
+      createdAt: fp.analysedAt,
+      verified: fp.summary.unsoundMarkers === 0 && trust === Verified,
+    }
+  })
+  {
+    nodes,
+    edges: [],
+    roots: nodes->Array.map(n => n.id),
+    leaves: nodes->Array.map(n => n.id),
+    computedAt: Date.now(),
+  }
+}
+
+/// Find all transitive dependencies (ancestors) of a node in the DAG.
+let ancestors = (dag: provenanceDag, nodeId: string): array<string> => {
+  let rec walk = (current: string, visited: array<string>): array<string> => {
+    if visited->Array.some(v => v === current) {
+      visited
+    } else {
+      let visited = Array.concat(visited, [current])
+      dag.edges
+      ->Array.filter(e => e.toId === current)
+      ->Array.reduce(visited, (acc, e) => walk(e.fromId, acc))
+    }
+  }
+  walk(nodeId, [])->Array.filter(id => id !== nodeId)
+}
+
+/// Find all transitive dependents (descendants) of a node in the DAG.
+let descendants = (dag: provenanceDag, nodeId: string): array<string> => {
+  let rec walk = (current: string, visited: array<string>): array<string> => {
+    if visited->Array.some(v => v === current) {
+      visited
+    } else {
+      let visited = Array.concat(visited, [current])
+      dag.edges
+      ->Array.filter(e => e.fromId === current)
+      ->Array.reduce(visited, (acc, e) => walk(e.toId, acc))
+    }
+  }
+  walk(nodeId, [])->Array.filter(id => id !== nodeId)
+}
+
+/// Compute the "blast radius" — if a node's trust is compromised, how many
+/// downstream nodes are affected? Returns (directCount, transitiveCount).
+let blastRadius = (dag: provenanceDag, nodeId: string): (int, int) => {
+  let direct = dag.edges->Array.filter(e => e.fromId === nodeId)->Array.length
+  let transitive = descendants(dag, nodeId)->Array.length
+  (direct, transitive)
+}
+
+/// Label for a DAG node kind.
+let dagNodeKindLabel = (kind: dagNodeKind): string => {
+  switch kind {
+  | SourceNode => "Source"
+  | BuildNode => "Build"
+  | DependencyNode => "Dependency"
+  | ProofNode => "Proof"
+  | AttestationNode => "Attestation"
+  }
+}
+
+/// CSS colour class for a DAG node kind.
+let dagNodeKindColour = (kind: dagNodeKind): string => {
+  switch kind {
+  | SourceNode => "text-blue-400"
+  | BuildNode => "text-amber-400"
+  | DependencyNode => "text-purple-400"
+  | ProofNode => "text-green-400"
+  | AttestationNode => "text-cyan-400"
+  }
+}

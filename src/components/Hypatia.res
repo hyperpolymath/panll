@@ -205,6 +205,7 @@ let renderLearningCycle = (cycle: learningCycle): Tea_Vdom.t<msg> => {
 // Category Tabs
 // ============================================================================
 
+/// Render the category tab bar (Dashboard, Scans, Quarantine, Neural, Recipes).
 let renderTabs = (active: hypatiaCategory): Tea_Vdom.t<msg> => {
   let tabs: array<hypatiaCategory> = [HypatiaDashboard, HypatiaScans, HypatiaQuarantine, HypatiaNeural, HypatiaRecipes]
   div(
@@ -236,6 +237,7 @@ let renderTabs = (active: hypatiaCategory): Tea_Vdom.t<msg> => {
 // Main View
 // ============================================================================
 
+/// Main Hypatia panel view — full-screen overlay with neural gauges, scan results, and recipes.
 let view = (hypatia: hypatiaState): Tea_Vdom.t<msg> => {
   div(
     list{

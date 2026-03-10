@@ -1,17 +1,38 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL TypeLL Model — types for the verification kernel panel and service layer.
+/// PanLL TypeLL Model — Unified type system kernel.
 ///
 /// TypeLL is to PanLL what LLVM is to Clang — the formal verification backbone.
-/// It provides dependent, linear, affine, session, and refinement types across
-/// every language and tool PanLL touches.
+/// It merges linear, affine, and dependent types into a single cohesive framework:
 ///
-/// The panel exposes TypeLL's capabilities directly, while the service layer
-/// (TypeLLService.res) lets any panel query TypeLL for type intelligence.
+/// ## Unified Type System Design
+///
+/// **Core idea:** Dependent types describe *properties* of values while
+/// linear/affine types track *usage* of values. The unified system lets you
+/// combine both: `linear Vec (n + m) a` is a dependent-linear type that
+/// tracks both length *and* consumption.
+///
+/// **Gradual linearity:** Affine by default (like Rust). Opt-in to linear
+/// (exactly once) or unrestricted (unlimited). QTT quantifiers (0, 1, ω)
+/// make this formal.
+///
+/// **Type discipline modes:** Modules declare their default discipline:
+///   `#![affine]`     — Rust-like: use at most once (default)
+///   `#![linear]`     — Strict: use exactly once
+///   `#![dependent]`  — Full dependent types (Idris-like)
+///   `#![refined]`    — Refinement types (Liquid-like)
+///   `#![unrestricted]` — Standard types, no usage tracking
+///
+/// **Inference strategy:**
+///   1. Aggressively infer linearity/affinity from usage patterns
+///   2. Infer simple dependent types (array lengths from literals)
+///   3. Explicit annotations only for complex constraints
+///   4. IDE tactics for interactive dependent type construction
+///
+/// **Effect polymorphism:** Effects (IO, State, Except) tracked as part
+/// of the type: `fn id {e} (x : a @ e) -> a @ e`
 ///
 /// ## View Layers (from rescript-evangeliser)
-///
-/// Progressive disclosure makes advanced type systems accessible:
 ///
 ///   RAW     — Full type signatures, unmodified. For experts.
 ///   FOLDED  — Categorised and collapsible. For working developers.
@@ -23,6 +44,13 @@
 ///   Tier 1 (Core):     Dependent, Linear, Session, Proof-Carrying
 ///   Tier 2 (Advanced): QTT, Effects, Modal, Affine
 ///   Tier 3 (Research): HoTT, Equality Saturation, Category-Theoretic
+///
+/// ## Inspirations
+///
+///   Idris 2   — Linear types via QTT + dependent types natively
+///   ATS       — Dependent types with linear logic for systems programming
+///   Rust      — Affine types in practice (borrow checker)
+///   Linear Haskell — Linear types in a non-dependent setting
 ///
 /// Dependency: leaf module — no imports from other PanLL models.
 
@@ -73,6 +101,99 @@ type typeFeature =
   | CategoryTheoreticTypes
 
 // ============================================================================
+// Unified Type System — Gradual Linearity & Type Discipline Modes
+// ============================================================================
+
+/// Usage quantifier from Quantitative Type Theory (QTT).
+/// Tracks how many times a value may be used — the core of gradual linearity.
+type usageQuantifier =
+  /// Zero uses: the value is erased at runtime (proof-only, compile-time witness).
+  | UsageZero
+  /// Exactly one use: strict linear consumption (no dup, no drop).
+  | UsageOne
+  /// Unrestricted: unlimited uses (standard functional programming).
+  | UsageOmega
+
+/// Type discipline mode — declared per module/file to set the default type
+/// system behaviour. Inspired by Rust's edition system and Idris' quantity annotations.
+type typeDiscipline =
+  /// Affine by default: values used at most once, may be discarded. Like Rust.
+  | DisciplineAffine
+  /// Linear: values used exactly once. Strict resource tracking.
+  | DisciplineLinear
+  /// Dependent: full dependent types with value-level computation in types.
+  | DisciplineDependent
+  /// Refined: base types narrowed by predicate constraints (Liquid types).
+  | DisciplineRefined
+  /// Unrestricted: no usage tracking, standard types. Escape hatch.
+  | DisciplineUnrestricted
+
+/// A unified type expression in the combined system.
+/// Represents "dependent linear types" — types that carry both value
+/// properties (dependent) and usage discipline (linear/affine/QTT).
+type unifiedTypeExpr = {
+  /// The base type expression (e.g., "Vec n a", "IO String", "Nat -> Nat").
+  baseExpr: string,
+  /// Usage quantifier for this type (0, 1, or omega).
+  usage: usageQuantifier,
+  /// Type discipline in effect for this expression.
+  discipline: typeDiscipline,
+  /// Dependent indices — value-level terms that appear in the type.
+  /// e.g., for `Vec n a`, indices would be ["n"].
+  dependentIndices: array<string>,
+  /// Effect annotations — which effects this type may perform.
+  /// e.g., ["IO", "State s", "Except e"].
+  effects: array<string>,
+  /// Refinement predicates — constraints narrowing the type.
+  /// e.g., for `{x : Nat | x > 0}`, predicates would be ["x > 0"].
+  refinements: array<string>,
+}
+
+/// Inference hint — what TypeLL inferred vs what was annotated.
+type inferenceSource =
+  /// Fully inferred from usage patterns (no annotation needed).
+  | Inferred
+  /// Explicitly annotated by the programmer.
+  | Annotated
+  /// Partially inferred, partially annotated.
+  | Mixed
+  /// Inferred from a tactic suggestion (IDE-assisted).
+  | TacticAssisted
+
+/// Result of unified type analysis — richer than a simple typeCheckResult,
+/// this captures the full combined type system picture.
+type unifiedTypeAnalysis = {
+  /// The unified type expression.
+  typeExpr: unifiedTypeExpr,
+  /// How the type was determined.
+  source: inferenceSource,
+  /// Whether linearity constraints are satisfied.
+  linearitySatisfied: bool,
+  /// Whether dependent indices are well-founded.
+  indicesWellFounded: bool,
+  /// Whether refinement predicates are satisfiable.
+  refinementsSatisfiable: bool,
+  /// Proof obligations arising from dependent types.
+  proofObligations: array<string>,
+  /// Usage violations: where the quantifier was breached.
+  usageViolations: array<string>,
+  /// Effect leaks: effects not declared in the type signature.
+  effectLeaks: array<string>,
+}
+
+/// A type discipline declaration for a module or file scope.
+type disciplineDeclaration = {
+  /// The scope this discipline applies to (module name or file path).
+  scope: string,
+  /// The declared discipline.
+  discipline: typeDiscipline,
+  /// Whether inference is permitted to relax the discipline.
+  inferenceAllowed: bool,
+  /// Override features enabled beyond the discipline default.
+  enabledFeatures: array<typeFeature>,
+}
+
+// ============================================================================
 // Evangeliser Glyphs — visual symbols for type concepts
 // ============================================================================
 
@@ -111,6 +232,14 @@ type typeCheckResult = {
   activeFeatures: array<typeFeature>,
   /// Type tier of the highest feature used.
   maxTier: typeTier,
+  /// Usage quantifier determined for this expression (QTT).
+  usage: usageQuantifier,
+  /// Which type discipline was in effect during checking.
+  discipline: typeDiscipline,
+  /// How the result was inferred/annotated.
+  inferenceSource: inferenceSource,
+  /// Unified type analysis (full combined system picture), if available.
+  unifiedAnalysis: option<unifiedTypeAnalysis>,
 }
 
 /// A type signature entry from the server.
@@ -181,6 +310,8 @@ type typellCategory =
   | TlExplorer
   /// Refinement lab — apply refinement types interactively.
   | TlRefinement
+  /// Discipline — configure module type disciplines and view unified analysis.
+  | TlDiscipline
   /// Type guide — educational reference for type system tiers.
   | TlGuide
 
@@ -224,6 +355,14 @@ type typellState = {
   refinementConstraints: string,
   /// Most recent refinement result.
   lastRefinement: option<refinementResult>,
+
+  // Discipline state
+  /// Active type discipline declarations for known modules.
+  disciplineDeclarations: array<disciplineDeclaration>,
+  /// Default discipline for new/unconfigured modules.
+  defaultDiscipline: typeDiscipline,
+  /// Most recent unified type analysis result.
+  lastUnifiedAnalysis: option<unifiedTypeAnalysis>,
 
   // Cross-panel state
   /// Whether TypeLL is providing type intelligence to other panels.

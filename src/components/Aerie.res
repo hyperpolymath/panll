@@ -9,6 +9,7 @@ open Model
 open Msg
 open Tea.Html
 
+/// Render a single latency measurement card showing RTT, jitter, quality, and packet loss.
 let renderLatencyCard = (result: latencyResult): Tea_Vdom.t<msg> => {
   let color = AerieEngine.latencyColor(result.rttMs)
   let quality = AerieEngine.latencyQuality(result.rttMs)
@@ -35,6 +36,7 @@ let renderLatencyCard = (result: latencyResult): Tea_Vdom.t<msg> => {
   )
 }
 
+/// Render the category tab bar (Dashboard, Speed Tests, BGP, Probes).
 let renderTabs = (active: aerieCategory): Tea_Vdom.t<msg> => {
   let tabs: array<aerieCategory> = [AerieDashboard, AerieSpeedTests, AerieBgp, AerieProbes]
   div(
@@ -53,6 +55,7 @@ let renderTabs = (active: aerieCategory): Tea_Vdom.t<msg> => {
   )
 }
 
+/// Main Aerie panel view — full-screen overlay for network diagnostics and BGP forensics.
 let view = (aerie: aerieState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("fixed inset-0 bg-gray-950/95 z-40 flex flex-col"), Attrs.role("dialog"), Attrs.ariaLabel("Aerie network diagnostics panel")},

@@ -544,6 +544,99 @@ let view = (tl: typellState): Tea_Vdom.t<msg> => {
                 },
               },
             )
+          // ── Discipline Tab ──
+          | TlDiscipline =>
+            div(
+              list{Attrs.class_("space-y-4")},
+              list{
+                div(
+                  list{Attrs.class_("text-sm text-gray-400 mb-2")},
+                  list{text("Type discipline modes control the default type system behaviour per module. Affine by default (like Rust), with opt-in linear, dependent, refined, or unrestricted modes.")},
+                ),
+                // Default discipline selector
+                div(
+                  list{Attrs.class_("p-3 bg-gray-900 border border-gray-700 rounded-lg")},
+                  list{
+                    div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wide mb-2")}, list{text("Default Discipline")}),
+                    div(
+                      list{Attrs.class_("flex flex-wrap gap-2")},
+                      TypeLLEngine.allDisciplines->Array.map(d => {
+                        let isActive = d === tl.defaultDiscipline
+                        button(
+                          list{
+                            Attrs.class_(`px-3 py-1.5 text-xs rounded transition-colors ${isActive ? TypeLLEngine.disciplineColour(d) ++ " font-medium" : "text-gray-500 hover:text-gray-300 bg-gray-800"}`),
+                            Events.onClick(TypeLL(SetDefaultDiscipline(d))),
+                          },
+                          list{text(TypeLLEngine.disciplineDirective(d))},
+                        )
+                      })->List.fromArray,
+                    ),
+                  },
+                ),
+                // Active declarations
+                div(
+                  list{Attrs.class_("p-3 bg-gray-900 border border-gray-700 rounded-lg")},
+                  list{
+                    div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wide mb-2")}, list{text("Module Declarations (" ++ Int.toString(Array.length(tl.disciplineDeclarations)) ++ ")")}),
+                    if Array.length(tl.disciplineDeclarations) === 0 {
+                      div(list{Attrs.class_("text-xs text-gray-600")}, list{text("No module-level discipline declarations yet. Modules inherit the default.")})
+                    } else {
+                      div(
+                        list{Attrs.class_("space-y-1")},
+                        tl.disciplineDeclarations->Array.map(decl =>
+                          div(
+                            list{Attrs.class_("flex items-center justify-between px-2 py-1 bg-gray-800/40 rounded text-xs")},
+                            list{
+                              span(list{Attrs.class_("text-gray-300 font-mono")}, list{text(decl.scope)}),
+                              span(list{Attrs.class_(TypeLLEngine.disciplineColour(decl.discipline) ++ " px-2 py-0.5 rounded")}, list{text(TypeLLEngine.disciplineDirective(decl.discipline))}),
+                            },
+                          )
+                        )->List.fromArray,
+                      )
+                    },
+                  },
+                ),
+                // QTT quantifier reference
+                div(
+                  list{Attrs.class_("p-3 bg-gray-900 border border-gray-700 rounded-lg")},
+                  list{
+                    div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wide mb-2")}, list{text("QTT Usage Quantifiers")}),
+                    div(
+                      list{Attrs.class_("grid grid-cols-3 gap-3")},
+                      list{
+                        div(list{Attrs.class_("text-center p-2 bg-gray-800/40 rounded")}, list{
+                          div(list{Attrs.class_("text-lg font-mono text-purple-400")}, list{text("0")}),
+                          div(list{Attrs.class_("text-[10px] text-gray-500")}, list{text("Erased at runtime")}),
+                          div(list{Attrs.class_("text-[10px] text-gray-600")}, list{text("Proof-only witness")}),
+                        }),
+                        div(list{Attrs.class_("text-center p-2 bg-gray-800/40 rounded")}, list{
+                          div(list{Attrs.class_("text-lg font-mono text-red-400")}, list{text("1")}),
+                          div(list{Attrs.class_("text-[10px] text-gray-500")}, list{text("Exactly once")}),
+                          div(list{Attrs.class_("text-[10px] text-gray-600")}, list{text("Linear consumption")}),
+                        }),
+                        div(list{Attrs.class_("text-center p-2 bg-gray-800/40 rounded")}, list{
+                          div(list{Attrs.class_("text-lg font-mono text-green-400")}, list{text("w")}),
+                          div(list{Attrs.class_("text-[10px] text-gray-500")}, list{text("Unrestricted")}),
+                          div(list{Attrs.class_("text-[10px] text-gray-600")}, list{text("Standard FP")}),
+                        }),
+                      },
+                    ),
+                  },
+                ),
+                // Unified analysis result (if available)
+                switch tl.lastUnifiedAnalysis {
+                | Some(analysis) =>
+                  div(
+                    list{Attrs.class_("p-3 bg-gray-900 border border-gray-700 rounded-lg")},
+                    list{
+                      div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wide mb-2")}, list{text("Last Unified Analysis")}),
+                      div(list{Attrs.class_("text-xs text-gray-300 font-mono")}, list{text(TypeLLEngine.unifiedAnalysisSummary(analysis))}),
+                    },
+                  )
+                | None => noNode
+                },
+              },
+            )
           // ── Guide Tab ──
           | TlGuide =>
             div(

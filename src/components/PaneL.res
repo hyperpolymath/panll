@@ -48,6 +48,14 @@ let renderConstraint = (c: symbolicConstraint): Tea_Vdom.t<msg> => {
                 },
                 list{text(c.pinned ? "unpin" : "pin")},
               ),
+              button(
+                list{
+                  Attrs.class_("text-xs text-gray-500 hover:text-red-400"),
+                  Events.onClick(PaneL(RemoveConstraint(c.id))),
+                  Attrs.ariaLabel("Remove constraint " ++ c.id),
+                },
+                list{text("x")},
+              ),
             },
           ),
         },
@@ -56,16 +64,50 @@ let renderConstraint = (c: symbolicConstraint): Tea_Vdom.t<msg> => {
   )
 }
 
-/// Render the constraint list
+/// Render the constraint list with active count and add button
 let renderConstraintList = (constraints: array<symbolicConstraint>): Tea_Vdom.t<msg> => {
+  let activeCount = constraints->Array.filter(c => c.active)->Array.length
+  let totalCount = Array.length(constraints)
+
   div(
     list{Attrs.class_("mb-4")},
     list{
       div(
-        list{Attrs.class_("text-xs text-gray-500 mb-2")},
-        list{text("ACTIVE CONSTRAINTS")},
+        list{Attrs.class_("flex items-center justify-between mb-2")},
+        list{
+          div(
+            list{Attrs.class_("flex items-center gap-2")},
+            list{
+              div(
+                list{Attrs.class_("text-xs text-gray-500")},
+                list{text("ACTIVE CONSTRAINTS")},
+              ),
+              if totalCount > 0 {
+                span(
+                  list{Attrs.class_("text-xs px-1.5 py-0.5 rounded bg-indigo-900/40 text-indigo-400 font-mono")},
+                  list{text(Int.toString(activeCount) ++ "/" ++ Int.toString(totalCount))},
+                )
+              } else {
+                noNode
+              },
+            },
+          ),
+          button(
+            list{
+              Attrs.class_("text-xs px-2 py-0.5 bg-indigo-900/30 hover:bg-indigo-800/40 text-indigo-400 rounded border border-indigo-800/50"),
+              Events.onClick(PaneL(AddConstraint({
+                id: "user-" ++ Int.toString(totalCount + 1),
+                expression: "// New constraint",
+                active: true,
+                pinned: false,
+              }))),
+              Attrs.ariaLabel("Add new constraint"),
+            },
+            list{text("+ Add")},
+          ),
+        },
       ),
-      if Array.length(constraints) === 0 {
+      if totalCount === 0 {
         div(
           list{Attrs.class_("text-gray-600 text-sm italic")},
           list{text("No constraints defined")},
@@ -215,6 +257,53 @@ let renderProofObligations = (proofs: array<proofObligation>): Tea_Vdom.t<msg> =
   }
 }
 
+/// Render the symbolic mass density bar — shows how much constraint
+/// content is feeding into the barycentre calculation.
+let renderMassDensityBar = (constraints: array<symbolicConstraint>, editorContent: string): Tea_Vdom.t<msg> => {
+  let activeConstraints = constraints->Array.filter(c => c.active)->Array.length
+  let tokenCount = String.split(editorContent, " ")
+    ->Array.filter(t => String.length(String.trim(t)) > 0)
+    ->Array.length
+  let mass = Math.min(1.0, Int.toFloat(tokenCount) /. 500.0)
+  let massPercent = Int.toString(Int.fromFloat(mass *. 100.0))
+  let barWidth = massPercent ++ "%"
+  let barColour = if mass > 0.5 {
+    "bg-indigo-500"
+  } else if mass > 0.2 {
+    "bg-indigo-600"
+  } else {
+    "bg-indigo-800"
+  }
+
+  div(
+    list{Attrs.class_("mb-4 p-2 rounded bg-gray-800/50 border border-gray-700/50")},
+    list{
+      div(
+        list{Attrs.class_("flex items-center justify-between mb-1")},
+        list{
+          div(
+            list{Attrs.class_("text-xs text-gray-500")},
+            list{text("MASS DENSITY")},
+          ),
+          div(
+            list{Attrs.class_("text-xs font-mono text-indigo-400")},
+            list{text(massPercent ++ "% (" ++ Int.toString(tokenCount) ++ " tokens, " ++ Int.toString(activeConstraints) ++ " active)")},
+          ),
+        },
+      ),
+      div(
+        list{Attrs.class_("w-full h-1.5 bg-gray-700 rounded-full overflow-hidden")},
+        list{
+          div(
+            list{Attrs.class_(`h-full ${barColour} rounded-full transition-all`), Attrs.style("width", barWidth)},
+            list{},
+          ),
+        },
+      ),
+    },
+  )
+}
+
 /// Main Pane-L view
 let view = (state: paneLState, proofs: array<proofObligation>): Tea_Vdom.t<msg> => {
   div(
@@ -234,6 +323,9 @@ let view = (state: paneLState, proofs: array<proofObligation>): Tea_Vdom.t<msg> 
           ),
         },
       ),
+
+      // Mass density indicator
+      renderMassDensityBar(state.constraints, state.editorContent),
 
       // Constraint list
       renderConstraintList(state.constraints),

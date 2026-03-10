@@ -245,7 +245,6 @@ let view = (prov: provenanceState): Tea_Vdom.t<msg> => {
             list{Attrs.class_("px-3 py-1 bg-gray-900/60 border-b border-gray-800 flex items-center gap-2")},
             list{
               span(list{Attrs.class_("text-xs text-gray-600")}, list{text("Provenance: no file selected")}),
-              renderPaletteSelector(prov.palette),
               renderHostileUxToggle(prov.hostileUxSuppressed),
             },
           )

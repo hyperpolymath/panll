@@ -10,6 +10,7 @@ open Model
 open Msg
 open Tea.Html
 
+/// Render the language selector radio group (VQL, KQL, GQL, ReScript, Gleam, Idris2, Nickel).
 let renderLanguageSelector = (active: playgroundLanguage): Tea_Vdom.t<msg> => {
   let langs: array<playgroundLanguage> = [LangVql, LangKql, LangGql, LangRescript, LangGleam, LangIdris2, LangNickel]
   div(
@@ -36,6 +37,7 @@ let renderLanguageSelector = (active: playgroundLanguage): Tea_Vdom.t<msg> => {
   )
 }
 
+/// Render the category tab bar (Editor, NQC Console, Snippets, Tutorials).
 let renderTabs = (active: playgroundsCategory): Tea_Vdom.t<msg> => {
   let tabs: array<playgroundsCategory> = [PlayEditor, PlayNqc, PlaySnippets, PlayTutorials]
   div(
@@ -54,6 +56,7 @@ let renderTabs = (active: playgroundsCategory): Tea_Vdom.t<msg> => {
   )
 }
 
+/// Main Playgrounds panel view — full-screen overlay with code editor, NQC console, and snippets.
 let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("fixed inset-0 bg-gray-950/95 z-40 flex flex-col"), Attrs.role("dialog"), Attrs.ariaLabel("Playgrounds code sandbox")},

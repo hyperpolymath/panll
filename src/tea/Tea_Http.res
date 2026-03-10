@@ -20,7 +20,7 @@ type error =
 /// HTTP header
 type header = {name: string, value: string}
 
-/// Create a header
+/// Create an HTTP header key-value pair.
 let header = (name: string, value: string): header => {name, value}
 
 /// Format an error to a human-readable string

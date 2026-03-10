@@ -690,6 +690,7 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
 // Security Tools (existing)
 // ===========================================================================
 
+/// Render the security tools menu with panic-attacker and trace-agent buttons.
 let renderSecurityTools = (state: paneWState): Tea_Vdom.t<msg> => {
   let tools = [
     ("panic-attacker", "panic-attacker"),
@@ -743,6 +744,7 @@ let renderSecurityTools = (state: paneWState): Tea_Vdom.t<msg> => {
   )
 }
 
+/// Render the security dialog overlay for configuring and launching security scans.
 let renderSecurityDialog = (state: paneWState): Tea_Vdom.t<msg> => {
   if !state.securityDialogOpen {
     text("")
@@ -955,6 +957,7 @@ let renderSecurityDialog = (state: paneWState): Tea_Vdom.t<msg> => {
   }
 }
 
+/// Render the security study view with event chain timeline and analysis results.
 let renderSecurityStudyView = (state: paneWState): Tea_Vdom.t<msg> => {
   if !state.securityViewActive {
     text("")
@@ -1005,6 +1008,7 @@ let renderSecurityStudyView = (state: paneWState): Tea_Vdom.t<msg> => {
   }
 }
 
+/// Render the event chain panel showing security event timeline, summary, and controls.
 let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
   let eventCount = Array.length(state.eventChain)
   let summaryView = switch state.eventChainSummary {
@@ -1214,25 +1218,331 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
   )
 }
 
-let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
-  let stabilityPercent = Int.toString(Int.fromFloat(orbital.stability *. 100.0))
-  let divergencePercent = Int.toString(Int.fromFloat(orbital.divergenceLevel *. 100.0))
+// ===========================================================================
+// Barycentre Tour — Guided Walkthrough
+// ===========================================================================
+
+/// Tour step content: title, explanation, and what to look at.
+let tourStepContent = (step: tourStep): (string, string) => {
+  switch step {
+  | TourIntro => (
+      "Welcome to the Task Barycentre",
+      "The Barycentre is the gravitational centre of your work. Like a binary star system, your symbolic reasoning (Panel-L) and neural inference (Panel-N) co-orbit around a shared centre of mass. This view shows you where that centre is and how healthy the orbit is.",
+    )
+  | TourBinaryStar => (
+      "The Binary Star System",
+      "The indigo star represents your Symbolic Panel (formal logic, constraints, type-checked code). The emerald star represents your Neural Panel (AI inference, natural language, creative output). They orbit each other — when balanced, your work is strongest.",
+    )
+  | TourBarycentrePosition => (
+      "Barycentre Position",
+      "The golden diamond shows where the centre of gravity currently sits. If it drifts toward Symbolic, you may be over-constraining. If it drifts toward Neural, you may lack formal grounding. The position bar below the diagram shows this as a spectrum.",
+    )
+  | TourOrbitalMetrics => (
+      "Orbital Metrics",
+      "Four gauges measure orbit health: Stability (how steady the co-orbit is), Divergence (how far apart the stars have drifted), Symbolic Mass (density of your formal content), and Neural Stream (throughput of inference). Green is healthy, amber needs attention, red means intervention needed.",
+    )
+  | TourContractiles => (
+      "Contractile Boundaries",
+      "Contractiles are elastic adaptive constraints that keep the orbit safe. Each one has an enforcement level (Strict/Warn/Adaptive) and an elasticity score. When a contractile is violated, it appears red. Elastic contractiles can stretch — rigid ones halt immediately.",
+    )
+  | TourSyncHealth => (
+      "Synchronisation Health",
+      "Sync Health measures how well the three panels communicate. Low latency and fresh hash states mean healthy sync. When sync degrades, the drift aura shifts from indigo to amber, and the system sheds visual complexity (Information Humidity drops) to reduce cognitive load.",
+    )
+  | TourComplete => (
+      "Tour Complete",
+      "You now understand the Task Barycentre. Use it to monitor your work balance, catch drift early, and understand when the system adapts to protect you. Click the tour button anytime to revisit.",
+    )
+  }
+}
+
+/// Tour step number (1-indexed, for display).
+let tourStepNumber = (step: tourStep): int => {
+  switch step {
+  | TourIntro => 1
+  | TourBinaryStar => 2
+  | TourBarycentrePosition => 3
+  | TourOrbitalMetrics => 4
+  | TourContractiles => 5
+  | TourSyncHealth => 6
+  | TourComplete => 7
+  }
+}
+
+/// Render the tour overlay card.
+let renderTourOverlay = (tour: tourState): Tea_Vdom.t<msg> => {
+  if !tour.active {
+    noNode
+  } else {
+    let (title, body) = tourStepContent(tour.currentStep)
+    let stepNum = tourStepNumber(tour.currentStep)
+    let isFirst = tour.currentStep === TourIntro
+    let isLast = tour.currentStep === TourComplete
+
+    div(
+      list{
+        Attrs.class_("absolute inset-0 z-50 flex items-end justify-center pb-4 pointer-events-none"),
+      },
+      list{
+        div(
+          list{
+            Attrs.class_(
+              "pointer-events-auto w-[90%] max-w-lg bg-gray-900/95 border border-indigo-700/60 rounded-xl shadow-2xl shadow-indigo-900/30 p-5 backdrop-blur-sm",
+            ),
+            Attrs.role("dialog"),
+            Attrs.ariaLabel("Barycentre tour"),
+          },
+          list{
+            // Step indicator
+            div(
+              list{Attrs.class_("flex items-center justify-between mb-3")},
+              list{
+                span(
+                  list{Attrs.class_("text-xs text-indigo-400 font-mono")},
+                  list{text(`Step ${Int.toString(stepNum)} of 7`)},
+                ),
+                button(
+                  list{
+                    Attrs.class_("text-gray-500 hover:text-gray-300 text-xs px-2 py-1"),
+                    Events.onClick(PaneW(CloseTour)),
+                  },
+                  list{text("Skip tour")},
+                ),
+              },
+            ),
+            // Progress dots
+            div(
+              list{Attrs.class_("flex gap-1.5 mb-4")},
+              [1, 2, 3, 4, 5, 6, 7]
+              ->Array.map(n => {
+                let active = n <= stepNum
+                div(
+                  list{
+                    Attrs.class_(
+                      `h-1 flex-1 rounded-full transition-all ${active ? "bg-indigo-500" : "bg-gray-700"}`,
+                    ),
+                  },
+                  list{},
+                )
+              })
+              ->List.fromArray,
+            ),
+            // Title
+            div(
+              list{Attrs.class_("text-sm font-semibold text-gray-100 mb-2")},
+              list{text(title)},
+            ),
+            // Body
+            div(
+              list{Attrs.class_("text-xs text-gray-400 leading-relaxed mb-4")},
+              list{text(body)},
+            ),
+            // Navigation
+            div(
+              list{Attrs.class_("flex items-center justify-between")},
+              list{
+                if isFirst {
+                  div(list{}, list{})
+                } else {
+                  button(
+                    list{
+                      Attrs.class_("px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
+                      Events.onClick(PaneW(PrevTourStep)),
+                    },
+                    list{text("Back")},
+                  )
+                },
+                button(
+                  list{
+                    Attrs.class_(
+                      `px-4 py-1.5 text-xs rounded font-medium ${isLast
+                        ? "bg-indigo-600 hover:bg-indigo-500 text-white"
+                        : "bg-indigo-600 hover:bg-indigo-500 text-white"}`,
+                    ),
+                    Events.onClick(
+                      if isLast { PaneW(CloseTour) } else { PaneW(NextTourStep) },
+                    ),
+                  },
+                  list{text(if isLast { "Finish" } else { "Next" })},
+                ),
+              },
+            ),
+          },
+        ),
+      },
+    )
+  }
+}
+
+// ===========================================================================
+// Metric Gauge Component
+// ===========================================================================
+
+/// Render a circular-style metric gauge with label, value, and colour coding.
+let renderMetricGauge = (
+  label: string,
+  value: float,
+  unit: string,
+  ~lowColour: string="text-red-400",
+  ~midColour: string="text-amber-300",
+  ~highColour: string="text-emerald-400",
+  ~invert: bool=false,
+): Tea_Vdom.t<msg> => {
+  let displayValue = Int.toString(Int.fromFloat(value *. 100.0))
+  let effective = if invert { 1.0 -. value } else { value }
+  let colour = if effective >= 0.7 {
+    highColour
+  } else if effective >= 0.4 {
+    midColour
+  } else {
+    lowColour
+  }
+  let barWidth = Float.toFixed(value *. 100.0, ~digits=0)
 
   div(
-    list{Attrs.class_("h-full flex flex-col items-center justify-center")},
+    list{Attrs.class_("flex flex-col items-center gap-1")},
     list{
-      // Binary Star diagram
+      // Value
       div(
-        list{Attrs.class_("relative")},
+        list{Attrs.class_(`text-xl font-light ${colour}`)},
+        list{text(`${displayValue}${unit}`)},
+      ),
+      // Bar
+      div(
+        list{Attrs.class_("w-full h-1.5 bg-gray-800 rounded-full overflow-hidden")},
+        list{
+          div(
+            list{
+              Attrs.class_(`h-full rounded-full transition-all duration-700 ${if effective >= 0.7 {
+                "bg-emerald-500"
+              } else if effective >= 0.4 {
+                "bg-amber-500"
+              } else {
+                "bg-red-500"
+              }}`),
+              Attrs.style("width", `${barWidth}%`),
+            },
+            list{},
+          ),
+        },
+      ),
+      // Label
+      div(
+        list{Attrs.class_("text-[10px] text-gray-500 text-center")},
+        list{text(label)},
+      ),
+    },
+  )
+}
+
+// ===========================================================================
+// Contractile Status Row
+// ===========================================================================
+
+/// Render a compact contractile status indicator.
+let renderContractileRow = (c: contractile): Tea_Vdom.t<msg> => {
+  let (statusColour, statusIcon) = switch c.status {
+  | Satisfied => ("text-emerald-400", "[OK]")
+  | Violated(_) => ("text-red-400", "[!!]")
+  | Pending => ("text-gray-500", "[..]")
+  | Suspended => ("text-gray-600", "[--]")
+  }
+  let enfLabel = switch c.enforcement {
+  | Strict => "Strict"
+  | Warn => "Warn"
+  | Adaptive => "Adapt"
+  }
+  let elasticityBar = Float.toFixed(c.elasticity *. 100.0, ~digits=0)
+
+  div(
+    list{Attrs.class_("flex items-center gap-2 py-1 px-2 bg-gray-900/50 rounded text-[10px]")},
+    list{
+      span(list{Attrs.class_(`font-mono ${statusColour}`)}, list{text(statusIcon)}),
+      span(list{Attrs.class_("text-gray-300 flex-1 truncate")}, list{text(c.name)}),
+      span(list{Attrs.class_("text-gray-600")}, list{text(enfLabel)}),
+      // Elasticity mini-bar
+      div(
+        list{Attrs.class_("w-10 h-1 bg-gray-800 rounded-full overflow-hidden")},
+        list{
+          div(
+            list{
+              Attrs.class_("h-full bg-indigo-500/60 rounded-full"),
+              Attrs.style("width", `${elasticityBar}%`),
+            },
+            list{},
+          ),
+        },
+      ),
+    },
+  )
+}
+
+// ===========================================================================
+// Enhanced Binary Star Topology View
+// ===========================================================================
+
+/// Render the Binary Star topology diagram with full orbital metrics,
+/// barycentre position indicator, contractile status, sync health, and
+/// guided tour.
+let renderTopologyView = (orbital: orbitalState, contractiles: array<contractile>, tour: tourState): Tea_Vdom.t<msg> => {
+  // Barycentre position as a CSS percentage offset from centre.
+  // -1.0 maps to 15%, 0.0 maps to 50%, +1.0 maps to 85%.
+  let baryPct = Float.toFixed(50.0 +. orbital.barycentrePosition *. 35.0, ~digits=1)
+
+  div(
+    list{Attrs.class_("h-full flex flex-col items-center overflow-y-auto py-4 relative")},
+    list{
+      // Section title
+      div(
+        list{Attrs.class_("text-center mb-2")},
+        list{
+          div(
+            list{Attrs.class_("text-sm font-semibold text-gray-300 tracking-wide")},
+            list{text("Task Barycentre")},
+          ),
+          div(
+            list{Attrs.class_("text-[10px] text-gray-600")},
+            list{text("Binary Star Co-Orbit Monitor")},
+          ),
+        },
+      ),
+
+      // Tour start button (if not active)
+      if !tour.active {
+        div(
+          list{Attrs.class_("mb-3")},
+          list{
+            button(
+              list{
+                Attrs.class_(
+                  "px-3 py-1 text-[10px] bg-indigo-900/50 hover:bg-indigo-800/50 border border-indigo-700/40 rounded-full text-indigo-300 transition-colors",
+                ),
+                Attrs.title("Take a guided tour of the Task Barycentre"),
+                Events.onClick(PaneW(StartTour)),
+              },
+              list{text(if tour.completed { "Retake Tour" } else { "Take the Tour" })},
+            ),
+          },
+        )
+      } else {
+        noNode
+      },
+
+      // ─── Binary Star Diagram ───
+      div(
+        list{
+          Attrs.class_("relative w-full max-w-md mx-auto"),
+          Attrs.style("height", "200px"),
+        },
         list{
           // Orbital path (ellipse)
           div(
             list{
               Attrs.class_(
-                "absolute inset-0 border-2 border-dashed border-gray-700 rounded-full",
+                "absolute border-2 border-dashed border-gray-700/50 rounded-full",
               ),
-              Attrs.style("width", "300px"),
-              Attrs.style("height", "150px"),
+              Attrs.style("width", "320px"),
+              Attrs.style("height", "140px"),
               Attrs.style("top", "50%"),
               Attrs.style("left", "50%"),
               Attrs.style("transform", "translate(-50%, -50%)"),
@@ -1240,13 +1550,15 @@ let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
             list{},
           ),
 
-          // Symbolic star (left)
+          // Symbolic star (left) — size scales with symbolicMass
           div(
             list{
               Attrs.class_(
-                "absolute w-20 h-20 rounded-full bg-indigo-600/60 border-2 border-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/30",
+                "absolute rounded-full bg-indigo-600/60 border-2 border-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/30 transition-all duration-500",
               ),
-              Attrs.style("left", "-60px"),
+              Attrs.style("width", `${Int.toString(60 + Int.fromFloat(orbital.symbolicMass *. 30.0))}px`),
+              Attrs.style("height", `${Int.toString(60 + Int.fromFloat(orbital.symbolicMass *. 30.0))}px`),
+              Attrs.style("left", "10%"),
               Attrs.style("top", "50%"),
               Attrs.style("transform", "translateY(-50%)"),
             },
@@ -1259,7 +1571,7 @@ let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
                     list{text("L")},
                   ),
                   div(
-                    list{Attrs.class_("text-indigo-300 text-[10px]")},
+                    list{Attrs.class_("text-indigo-300 text-[9px]")},
                     list{text("Symbolic")},
                   ),
                 },
@@ -1267,13 +1579,15 @@ let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
             },
           ),
 
-          // Neural star (right)
+          // Neural star (right) — size scales with neuralStream
           div(
             list{
               Attrs.class_(
-                "absolute w-20 h-20 rounded-full bg-emerald-600/60 border-2 border-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/30",
+                "absolute rounded-full bg-emerald-600/60 border-2 border-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all duration-500",
               ),
-              Attrs.style("right", "-60px"),
+              Attrs.style("width", `${Int.toString(60 + Int.fromFloat(orbital.neuralStream *. 30.0))}px`),
+              Attrs.style("height", `${Int.toString(60 + Int.fromFloat(orbital.neuralStream *. 30.0))}px`),
+              Attrs.style("right", "10%"),
               Attrs.style("top", "50%"),
               Attrs.style("transform", "translateY(-50%)"),
             },
@@ -1286,7 +1600,7 @@ let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
                     list{text("N")},
                   ),
                   div(
-                    list{Attrs.class_("text-emerald-300 text-[10px]")},
+                    list{Attrs.class_("text-emerald-300 text-[9px]")},
                     list{text("Neural")},
                   ),
                 },
@@ -1294,59 +1608,156 @@ let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
             },
           ),
 
-          // Barycentre (center)
+          // Barycentre marker (diamond) — positioned dynamically on the axis
           div(
             list{
               Attrs.class_(
-                "w-12 h-12 rounded-full bg-gray-600/60 border-2 border-gray-400 flex items-center justify-center",
+                "absolute w-8 h-8 bg-amber-500/70 border-2 border-amber-300 shadow-lg shadow-amber-500/40 flex items-center justify-center transition-all duration-700",
               ),
+              Attrs.style("top", "50%"),
+              Attrs.style("left", baryPct ++ "%"),
+              Attrs.style("transform", "translate(-50%, -50%) rotate(45deg)"),
             },
             list{
               div(
-                list{Attrs.class_("text-gray-300 text-xs font-bold")},
+                list{
+                  Attrs.class_("text-amber-100 text-[9px] font-bold"),
+                  Attrs.style("transform", "rotate(-45deg)"),
+                },
                 list{text("W")},
               ),
             },
           ),
+
+          // Drift aura glow (subtle ring around the diagram)
+          div(
+            list{
+              Attrs.class_(
+                `absolute rounded-full pointer-events-none transition-all duration-1000 ${if orbital.driftAuraColour === "indigo" {
+                  "shadow-[0_0_40px_rgba(99,102,241,0.15)]"
+                } else {
+                  "shadow-[0_0_40px_rgba(245,158,11,0.2)]"
+                }}`,
+              ),
+              Attrs.style("width", "340px"),
+              Attrs.style("height", "160px"),
+              Attrs.style("top", "50%"),
+              Attrs.style("left", "50%"),
+              Attrs.style("transform", "translate(-50%, -50%)"),
+            },
+            list{},
+          ),
         },
       ),
 
-      // Metrics
+      // ─── Barycentre Position Bar ───
       div(
-        list{Attrs.class_("mt-12 grid grid-cols-2 gap-8 text-center")},
+        list{Attrs.class_("w-full max-w-sm mx-auto mt-2 px-4")},
         list{
           div(
-            list{},
+            list{Attrs.class_("flex justify-between text-[9px] text-gray-600 mb-0.5")},
             list{
-              div(
-                list{Attrs.class_("text-2xl font-light text-indigo-300")},
-                list{text(stabilityPercent ++ "%")},
-              ),
-              div(
-                list{Attrs.class_("text-xs text-gray-500")},
-                list{text("Orbital Stability (σ)")},
-              ),
+              span(list{}, list{text("Symbolic")}),
+              span(list{}, list{text("Balanced")}),
+              span(list{}, list{text("Neural")}),
             },
           ),
           div(
-            list{},
+            list{Attrs.class_("h-2 bg-gray-800 rounded-full relative overflow-hidden")},
             list{
+              // Gradient background
               div(
-                list{Attrs.class_("text-2xl font-light text-amber-300")},
-                list{text(divergencePercent ++ "%")},
+                list{
+                  Attrs.class_("absolute inset-0 opacity-30"),
+                  Attrs.style("background", "linear-gradient(to right, rgb(99,102,241), rgb(107,114,128), rgb(16,185,129))"),
+                },
+                list{},
               ),
+              // Position marker
               div(
-                list{Attrs.class_("text-xs text-gray-500")},
-                list{text("Divergence Level")},
+                list{
+                  Attrs.class_("absolute top-0 bottom-0 w-1 bg-amber-400 rounded-full transition-all duration-700"),
+                  Attrs.style("left", baryPct ++ "%"),
+                  Attrs.style("transform", "translateX(-50%)"),
+                },
+                list{},
               ),
             },
           ),
         },
       ),
 
-      // Toggle button
+      // ─── Metric Gauges Grid ───
       div(
-        list{Attrs.class_("mt-8")},
+        list{Attrs.class_("w-full max-w-md mx-auto mt-4 grid grid-cols-4 gap-3 px-4")},
+        list{
+          renderMetricGauge("Stability", orbital.stability, "%"),
+          renderMetricGauge("Divergence", orbital.divergenceLevel, "%", ~invert=true),
+          renderMetricGauge("Sym. Mass", orbital.symbolicMass, "%"),
+          renderMetricGauge("Neu. Stream", orbital.neuralStream, "%"),
+        },
+      ),
+
+      // ─── Sync Health Bar ───
+      div(
+        list{Attrs.class_("w-full max-w-md mx-auto mt-3 px-4")},
+        list{
+          div(
+            list{Attrs.class_("flex items-center gap-2")},
+            list{
+              span(list{Attrs.class_("text-[10px] text-gray-500")}, list{text("Sync Health")}),
+              div(
+                list{Attrs.class_("flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden")},
+                list{
+                  div(
+                    list{
+                      Attrs.class_(
+                        `h-full rounded-full transition-all duration-500 ${if orbital.syncHealth >= 0.8 {
+                          "bg-emerald-500"
+                        } else if orbital.syncHealth >= 0.5 {
+                          "bg-amber-500"
+                        } else {
+                          "bg-red-500"
+                        }}`,
+                      ),
+                      Attrs.style("width", `${Float.toFixed(orbital.syncHealth *. 100.0, ~digits=0)}%`),
+                    },
+                    list{},
+                  ),
+                },
+              ),
+              span(
+                list{Attrs.class_("text-[10px] text-gray-500 font-mono")},
+                list{text(`${Int.toString(Int.fromFloat(orbital.syncHealth *. 100.0))}%`)},
+              ),
+            },
+          ),
+        },
+      ),
+
+      // ─── Contractile Boundaries ───
+      div(
+        list{Attrs.class_("w-full max-w-md mx-auto mt-3 px-4")},
+        list{
+          div(
+            list{Attrs.class_("flex items-center gap-2 mb-1.5")},
+            list{
+              span(list{Attrs.class_("text-[10px] text-gray-500 font-semibold uppercase tracking-wider")}, list{text("Contractiles")}),
+              span(list{Attrs.class_("text-[9px] text-gray-600")}, list{text("(elastic adaptive boundaries)")}),
+            },
+          ),
+          div(
+            list{Attrs.class_("space-y-1")},
+            contractiles
+            ->Array.map(c => renderContractileRow(c))
+            ->List.fromArray,
+          ),
+        },
+      ),
+
+      // ─── Action Bar ───
+      div(
+        list{Attrs.class_("mt-4 flex gap-2")},
         list{
           button(
             list{
@@ -1357,10 +1768,13 @@ let renderTopologyView = (orbital: orbitalState): Tea_Vdom.t<msg> => {
               Attrs.ariaLabel("Switch to Code View"),
               Events.onClick(PaneW(ToggleTopologyView)),
             },
-            list{text("Switch to Code View")},
+            list{text("Code View")},
           ),
         },
       ),
+
+      // ─── Tour Overlay ───
+      renderTourOverlay(tour),
     },
   )
 }
@@ -1443,7 +1857,7 @@ let renderContentView = (state: paneWState, db: verisimdbState): Tea_Vdom.t<msg>
 }
 
 /// Main Pane-W view
-let view = (state: paneWState, orbital: orbitalState, db: verisimdbState): Tea_Vdom.t<msg> => {
+let view = (state: paneWState, orbital: orbitalState, db: verisimdbState, ~contractiles: array<contractile>=[], ~tour: tourState={active: false, currentStep: TourIntro, completed: false}): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900"), Attrs.role("region"), Attrs.ariaLabel("Task Barycentre Panel")},
     list{
@@ -1464,7 +1878,7 @@ let view = (state: paneWState, orbital: orbitalState, db: verisimdbState): Tea_V
 
       // Content
       if state.topologyView {
-        renderTopologyView(orbital)
+        renderTopologyView(orbital, contractiles, tour)
       } else {
         renderContentView(state, db)
       },

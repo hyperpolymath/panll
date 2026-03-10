@@ -362,6 +362,16 @@ let allPanels: array<panelMeta> = [
     cladeId: Some("automation-router"),
   },
   {
+    id: PanelScriptGist,
+    name: "Script Gist",
+    shortName: "Gist",
+    description: "Portable computation gists — Minskian diachronic scripts (time) and synchronic schemata (space) as cardfiles, LLM-callable via MCP",
+    icon: "file-code",
+    connectionStatus: ServiceConnected, // Local gist engine, always available
+    hasBackend: false, // Pure TEA state + optional Tauri persistence
+    cladeId: Some("script-gist"),
+  },
+  {
     id: PanelBoj,
     name: "BoJ",
     shortName: "BoJ",
@@ -420,6 +430,16 @@ let allPanels: array<panelMeta> = [
     connectionStatus: ServiceDisconnected, // Server checked on demand
     hasBackend: true, // TypeLL server at TYPELL_URL
     cladeId: Some("typell"),
+  },
+  {
+    id: PanelHelp,
+    name: "Help",
+    shortName: "Help",
+    description: "In-application help — searchable guides, neurosymbolic glossary, keyboard shortcuts, onboarding walkthrough",
+    icon: "help-circle",
+    connectionStatus: ServiceConnected, // Local content, always available
+    hasBackend: false, // All content is static, no backend service
+    cladeId: None, // Meta panel, not part of any clade
   },
 ]
 

@@ -25,6 +25,11 @@ let editorLabel = (editor: editorKind): string =>
   | EditorNeovim => "Neovim"
   | EditorEmacs => "Emacs"
   | EditorKakoune => "Kakoune"
+  | EditorVisualParadigm => "Visual Paradigm"
+  | EditorSparxEA => "Sparx EA"
+  | EditorArchi => "Archi"
+  | EditorCamundaModeler => "Camunda Modeler"
+  | EditorMagicDraw => "MagicDraw"
   | EditorCustom(name) => name
   }
 

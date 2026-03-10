@@ -10,10 +10,12 @@
 @module("@tauri-apps/api/core")
 external invokeRaw: (string, 'a) => promise<'b> = "invoke"
 
-/// Detect whether the Tauri runtime is available.
+/// Detect whether the real Tauri runtime is available (not the browser shim).
 %%raw(`
 function isTauriRuntime() {
-  return typeof window !== 'undefined' && window.__TAURI_INTERNALS__ != null;
+  return typeof window !== 'undefined'
+    && window.__TAURI_INTERNALS__ != null
+    && !window.__TAURI_INTERNALS__.__BROWSER_SHIM__;
 }
 `)
 @val external isTauriRuntime: unit => bool = "isTauriRuntime"
@@ -27,6 +29,38 @@ let invoke = (cmd: string, args: 'a): promise<'b> => {
     Promise.reject(JsError.throwWithMessage(`No Tauri runtime — "${cmd}" requires the desktop app`))
   }
 }
+
+// ===========================================================================
+// Direct HTTP helpers for browser-only mode
+// ===========================================================================
+
+/// ECHIDNA base URL for direct browser fetch.
+let echidnaUrl = "http://localhost:9000/api/v1"
+
+/// GET helper for ECHIDNA direct fetch (bypasses Tauri invoke).
+let echidnaGet: string => promise<string> = %raw(`
+  function(path) {
+    return fetch("http://localhost:9000/api/v1" + path)
+      .then(function(r) {
+        if (!r.ok) throw new Error("ECHIDNA returned " + r.status);
+        return r.text();
+      });
+  }
+`)
+
+/// POST helper for ECHIDNA direct fetch (bypasses Tauri invoke).
+let echidnaPost: (string, string) => promise<string> = %raw(`
+  function(path, body) {
+    return fetch("http://localhost:9000/api/v1" + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: body
+    }).then(function(r) {
+      if (!r.ok) throw new Error("ECHIDNA returned " + r.status);
+      return r.text();
+    });
+  }
+`)
 
 module Dialog = {
   @module("@tauri-apps/plugin-dialog")
@@ -520,15 +554,17 @@ let getOrchStatus = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> =>
 
 /// Check ECHIDNA prover health status.
 /// Invokes the `echidna_health` Tauri command which hits GET /health.
+/// In browser mode, calls ECHIDNA directly via fetch.
 let checkEchidnaHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("echidna_health", ())
+    let p = if isTauriRuntime() { invoke("echidna_health", ()) } else { echidnaGet("/health") }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
     })
     ->Promise.catch(_err => {
-      callbacks.enqueue(tagger(Error("ECHIDNA health check failed")))
+      callbacks.enqueue(tagger(Error("ECHIDNA health check failed — server not running on localhost:9000")))
       Promise.resolve()
     })
     ->ignore
@@ -537,15 +573,17 @@ let checkEchidnaHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'ms
 
 /// List available provers from the ECHIDNA catalog.
 /// Invokes `echidna_list_provers` which hits GET /provers.
+/// In browser mode, calls ECHIDNA directly via fetch.
 let listEchidnaProvers = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("echidna_list_provers", ())
+    let p = if isTauriRuntime() { invoke("echidna_list_provers", ()) } else { echidnaGet("/provers") }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
     })
     ->Promise.catch(_err => {
-      callbacks.enqueue(tagger(Error("ECHIDNA prover listing failed")))
+      callbacks.enqueue(tagger(Error("ECHIDNA prover listing failed — server not running on localhost:9000")))
       Promise.resolve()
     })
     ->ignore
@@ -560,11 +598,20 @@ let echidnaProve = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let payload = Dict.fromArray([
-      ("content", JSON.Encode.string(content)),
-      ("prover", optionToJson(prover)),
-    ])
-    invoke("echidna_prove", JSON.Encode.object(payload))
+    let p = if isTauriRuntime() {
+      let payload = Dict.fromArray([
+        ("content", JSON.Encode.string(content)),
+        ("prover", optionToJson(prover)),
+      ])
+      invoke("echidna_prove", JSON.Encode.object(payload))
+    } else {
+      let proverJson = switch prover {
+      | Some(pv) => JSON.stringifyAny(pv)->Option.getOr("null")
+      | None => "null"
+      }
+      echidnaPost("/prove", `{"content":${JSON.stringifyAny(content)->Option.getOr("\"\"")}, "prover":${proverJson}}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -584,7 +631,12 @@ let echidnaVerify = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("echidna_verify", {"content": content})
+    let p = if isTauriRuntime() {
+      invoke("echidna_verify", {"content": content})
+    } else {
+      echidnaPost("/verify", `{"content":${JSON.stringifyAny(content)->Option.getOr("\"\"")}}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -604,7 +656,13 @@ let echidnaSearchTheorems = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("echidna_search_theorems", {"query": query})
+    let encoded = query->String.replaceAll(" ", "%20")
+    let p = if isTauriRuntime() {
+      invoke("echidna_search_theorems", {"query": query})
+    } else {
+      echidnaGet(`/search?q=${encoded}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -629,7 +687,12 @@ let createEchidnaSession = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("echidna_create_session", {"goal": goal, "prover": prover})
+    let p = if isTauriRuntime() {
+      invoke("echidna_create_session", {"goal": goal, "prover": prover})
+    } else {
+      echidnaPost("/proofs", `{"goal":${JSON.stringifyAny(goal)->Option.getOr("\"\"")}, "prover":${JSON.stringifyAny(prover)->Option.getOr("\"\"")}}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -649,7 +712,12 @@ let getEchidnaSession = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("echidna_get_session", {"session_id": sessionId})
+    let p = if isTauriRuntime() {
+      invoke("echidna_get_session", {"session_id": sessionId})
+    } else {
+      echidnaGet(`/proofs/${sessionId}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -671,12 +739,18 @@ let applyEchidnaTactic = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let payload = Dict.fromArray([
-      ("session_id", JSON.Encode.string(sessionId)),
-      ("name", JSON.Encode.string(name)),
-      ("args", JSON.Encode.array(Array.map(args, JSON.Encode.string))),
-    ])
-    invoke("echidna_apply_tactic", JSON.Encode.object(payload))
+    let p = if isTauriRuntime() {
+      let payload = Dict.fromArray([
+        ("session_id", JSON.Encode.string(sessionId)),
+        ("name", JSON.Encode.string(name)),
+        ("args", JSON.Encode.array(Array.map(args, JSON.Encode.string))),
+      ])
+      invoke("echidna_apply_tactic", JSON.Encode.object(payload))
+    } else {
+      let argsJson = JSON.stringifyAny(args)->Option.getOr("[]")
+      echidnaPost(`/proofs/${sessionId}/tactics`, `{"name":${JSON.stringifyAny(name)->Option.getOr("\"\"")}, "args":${argsJson}}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -697,7 +771,12 @@ let suggestEchidnaTactics = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("echidna_suggest_tactics", {"session_id": sessionId, "limit": limit})
+    let p = if isTauriRuntime() {
+      invoke("echidna_suggest_tactics", {"session_id": sessionId, "limit": limit})
+    } else {
+      echidnaGet(`/proofs/${sessionId}/tactics/suggest?limit=${Int.toString(limit)}`)
+    }
+    p
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()

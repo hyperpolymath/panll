@@ -23,12 +23,17 @@ let formatLabel = (fmt: schemaFormat): string =>
   | RustFormat => "Rust"
   | ReScriptFormat => "ReScript"
   | PythonFormat => "Python"
+  | XMI => "XMI (OMG)"
+  | ArchiMateExchange => "ArchiMate Exchange"
+  | BPMN_XML => "BPMN 2.0 XML"
+  | SBVR => "SBVR"
   }
 
 /// All supported formats.
 let allFormats: array<schemaFormat> = [
   Protobuf, Avro, FlatBuffers, CapnProto, Thrift, MessagePack,
   Bebop, JsonSchema, GraphQL, Toml, RustFormat, ReScriptFormat, PythonFormat,
+  XMI, ArchiMateExchange, BPMN_XML, SBVR,
 ]
 
 /// Human-readable label for a transport class.
@@ -77,6 +82,10 @@ let parseFormat = (s: string): schemaFormat =>
   | "rust" => RustFormat
   | "rescript" => ReScriptFormat
   | "python" => PythonFormat
+  | "xmi" | "xml-metadata-interchange" => XMI
+  | "archimate" | "archimate-exchange" => ArchiMateExchange
+  | "bpmn" | "bpmn-xml" | "bpmn2" => BPMN_XML
+  | "sbvr" => SBVR
   | _ => JsonSchema
   }
 

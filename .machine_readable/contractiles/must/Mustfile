@@ -66,3 +66,11 @@ checks:
   - name: no-banned-patterns
     description: "No believe_me, sorry, Admitted, or unsafe without SAFETY comment in source."
     run: "bash -uc '! rg -l \"believe_me|\\bsorry\\b|\\bAdmitted\\b\" src/ src-tauri/src/'"
+
+  - name: no-handwritten-js-in-src
+    description: "No hand-written .js files in src/ — JS is a build output, not source. ReScript compiles to JS."
+    run: "bash -uc 'js_files=$(find src/ -name \"*.js\" -not -path \"*/lib/*\" -not -path \"*/node_modules/*\" 2>/dev/null); if [ -n \"$js_files\" ]; then echo \"Hand-written JS found: $js_files\"; exit 1; fi'"
+
+  - name: typell-feature-extraction
+    description: "TypeLL parseCheckResult must extract features (not hardcoded empty)."
+    run: "bash -uc '! rg \"activeFeatures: \\[\\]\" src/core/TypeLLEngine.res'"

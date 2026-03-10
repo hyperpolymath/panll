@@ -149,10 +149,48 @@ let sync = (model: Model.model, state: syncState): (syncState, Model.orbitalStat
   let stability = calculateStability(divergence, state.syncLatency)
   let auraColour = getDriftAuraColour(stability)
 
+  // Symbolic mass: derived from constraint editor content density PLUS active
+  // constraint count.  Each active constraint adds mass equivalent to ~20 tokens,
+  // reflecting the formal weight constraints carry in the symbolic–neural loop.
+  // Normalise effective token count to 0.0–1.0 (cap at 500 tokens for max mass).
+  let symTokenCount = String.split(model.paneL.editorContent, " ")
+    ->Array.filter(t => String.length(String.trim(t)) > 0)
+    ->Array.length
+  let activeConstraintCount = model.paneL.constraints
+    ->Array.filter(c => c.active)
+    ->Array.length
+  let effectiveTokens = symTokenCount + activeConstraintCount * 20
+  let symbolicMass = Math.min(1.0, Int.toFloat(effectiveTokens) /. 500.0)
+
+  // Neural stream: derived from monologue density.
+  // Normalise to 0.0–1.0 (cap at 500 tokens).
+  let neuTokenCount = String.split(model.paneN.monologue, " ")
+    ->Array.filter(t => String.length(String.trim(t)) > 0)
+    ->Array.length
+  let neuralStream = Math.min(1.0, Int.toFloat(neuTokenCount) /. 500.0)
+
+  // Barycentre position: centre of mass between symbolic and neural.
+  // -1.0 = all symbolic, 0.0 = balanced, +1.0 = all neural.
+  let totalMass = symbolicMass +. neuralStream
+  let barycentrePosition = if totalMass < 0.001 {
+    0.0
+  } else {
+    (neuralStream -. symbolicMass) /. totalMass
+  }
+
+  // Sync health: composite of latency freshness and event throughput.
+  let latencyHealth = Math.max(0.0, 1.0 -. state.syncLatency /. 2000.0)
+  let eventFreshness = if Array.length(newEvents) > 0 { 0.9 } else { 1.0 }
+  let syncHealth = latencyHealth *. eventFreshness
+
   let orbital: Model.orbitalState = {
     stability,
     divergenceLevel: divergence,
     driftAuraColour: auraColour,
+    symbolicMass,
+    neuralStream,
+    barycentrePosition,
+    syncHealth,
   }
 
   (newState, orbital)

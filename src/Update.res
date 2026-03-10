@@ -31,6 +31,78 @@ open Model
 open Msg
 
 // ===========================================================================
+// Undo/Redo Snapshot Helpers
+// ===========================================================================
+
+/// Maximum number of entries in each undo/redo stack.
+let undoStackLimit = 50
+
+/// Serialize a lightweight snapshot of core model state to a JSON string.
+/// We avoid serializing the entire model to keep snapshots small and avoid
+/// circular-reference issues. Only the fields users care about undoing are
+/// captured: the three panels, echidna proof input, orbital metrics, and
+/// contractile statuses.
+let snapshotToJson: model => string = %raw(`
+  function snapshotToJson(m) {
+    return JSON.stringify({
+      paneL: m.paneL,
+      paneN: { monologue: m.paneN.monologue, inferenceActive: m.paneN.inferenceActive },
+      paneW: { content: m.paneW.content },
+      echidnaProofInput: m.echidna.proofInput,
+      orbital: m.orbital,
+      contractiles: m.contractiles
+    });
+  }
+`)
+
+/// Restore a snapshot JSON string back onto the model. Fields not captured in
+/// the snapshot are left untouched so transient UI state (menus, loading flags,
+/// connection status, etc.) is preserved across undo/redo.
+let restoreSnapshot: (model, string) => model = %raw(`
+  function restoreSnapshot(m, json) {
+    try {
+      var s = JSON.parse(json);
+      return Object.assign({}, m, {
+        paneL: s.paneL != null ? s.paneL : m.paneL,
+        paneN: Object.assign({}, m.paneN, s.paneN || {}),
+        paneW: Object.assign({}, m.paneW, { content: s.paneW != null ? s.paneW.content : m.paneW.content }),
+        echidna: Object.assign({}, m.echidna, { proofInput: s.echidnaProofInput != null ? s.echidnaProofInput : m.echidna.proofInput }),
+        orbital: s.orbital != null ? s.orbital : m.orbital,
+        contractiles: s.contractiles != null ? s.contractiles : m.contractiles
+      });
+    } catch (_e) {
+      return m;
+    }
+  }
+`)
+
+/// Push a snapshot of the current model onto the undo stack (capped at
+/// `undoStackLimit`). Returns a new model with the updated stacks — the
+/// redo stack is cleared because a new action invalidates the redo history.
+let pushUndoSnapshot = (model: model): model => {
+  let snapshot = snapshotToJson(model)
+  let stack = Array.concat(model.undoStack, [snapshot])
+  // Cap at limit by dropping oldest entries.
+  let trimmed = if Array.length(stack) > undoStackLimit {
+    Array.slice(stack, ~start=Array.length(stack) - undoStackLimit, ~end=Array.length(stack))
+  } else {
+    stack
+  }
+  {...model, undoStack: trimmed, redoStack: []}
+}
+
+// ===========================================================================
+// Error Logging
+// ===========================================================================
+
+/// Log a degraded service warning to the console. Called from Error(_) branches
+/// that previously swallowed errors silently. This gives operators visibility
+/// into which services are failing without disrupting the user experience.
+let logDegradedService = (service: string, context: string): unit => {
+  Console.warn(`[PanLL] Service degraded: ${service} — ${context}`)
+}
+
+// ===========================================================================
 // Pane Sub-Updaters
 // ===========================================================================
 
@@ -38,12 +110,38 @@ open Msg
 /// Manages the set of formal constraints applied to the current inference session.
 /// Handles all 6 paneLMsg variants: add, remove, toggle, pin, edit, set active.
 let updatePaneL = (model: model, msg: paneLMsg): (model, Tea_Cmd.t<msg>) => {
+  // Push undo snapshot for user-initiated constraint changes.
+  let model = switch msg {
+  | AddConstraint(_) | RemoveConstraint(_) | ToggleConstraint(_) | PinConstraint(_) =>
+    pushUndoSnapshot(model)
+  | _ => model
+  }
   let paneL = model.paneL
   switch msg {
-  | AddConstraint(c) => (
-      {...model, paneL: {...paneL, constraints: Array.concat(paneL.constraints, [c])}},
-      Tea_Cmd.none,
-    )
+  | AddConstraint(c) => {
+      let newModel = {...model, paneL: {...paneL, constraints: Array.concat(paneL.constraints, [c])}}
+      // When the new constraint is active, dispatch a proof obligation to ECHIDNA
+      // via the Panel-N monologue so the neural layer can begin verification.
+      let cmd = if c.active {
+        Tea_Cmd.call(callbacks => {
+          let proverLabel = switch model.echidna.selectedProver {
+          | Some(p) => p
+          | None => "default prover"
+          }
+          callbacks.enqueue(PaneN(UpdateMonologue(
+            model.paneN.monologue ++
+            "\n\n[DISPATCH] New proof obligation: " ++
+            c.expression ++
+            " \u2192 dispatching to " ++
+            proverLabel ++
+            "..."
+          )))
+        })
+      } else {
+        Tea_Cmd.none
+      }
+      (newModel, cmd)
+    }
   | RemoveConstraint(id) => (
       {...model, paneL: {
         ...paneL,
@@ -51,15 +149,34 @@ let updatePaneL = (model: model, msg: paneLMsg): (model, Tea_Cmd.t<msg>) => {
       }},
       Tea_Cmd.none,
     )
-  | ToggleConstraint(id) => (
-      {...model, paneL: {
-        ...paneL,
-        constraints: Array.map(paneL.constraints, c =>
-          c.id === id ? {...c, active: !c.active} : c
-        ),
-      }},
-      Tea_Cmd.none,
-    )
+  | ToggleConstraint(id) => {
+      let newConstraints = Array.map(paneL.constraints, c =>
+        c.id === id ? {...c, active: !c.active} : c
+      )
+      let newModel = {...model, paneL: {...paneL, constraints: newConstraints}}
+      // If the toggled constraint became active, dispatch an ECHIDNA proof obligation
+      // to complete the symbolic-neural feedback loop.
+      let toggledConstraint = Array.find(newConstraints, c => c.id === id)
+      let cmd = switch toggledConstraint {
+      | Some(c) if c.active =>
+        Tea_Cmd.call(callbacks => {
+          let proverLabel = switch model.echidna.selectedProver {
+          | Some(p) => p
+          | None => "default prover"
+          }
+          callbacks.enqueue(PaneN(UpdateMonologue(
+            model.paneN.monologue ++
+            "\n\n[DISPATCH] Constraint reactivated: " ++
+            c.expression ++
+            " \u2192 dispatching to " ++
+            proverLabel ++
+            "..."
+          )))
+        })
+      | _ => Tea_Cmd.none
+      }
+      (newModel, cmd)
+    }
   | PinConstraint(id) => (
       {...model, paneL: {
         ...paneL,
@@ -87,9 +204,10 @@ let updatePaneL = (model: model, msg: paneLMsg): (model, Tea_Cmd.t<msg>) => {
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
       ({...model, paneL: {...paneL, lastInferredType: Some(json)}, typell: newTypell}, Tea_Cmd.none)
     }
-  | ConstraintTypeInferred(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | ConstraintTypeInferred(Error(_)) => {
+    logDegradedService("TypeLL", "constraint type inference failed")
     (model, Tea_Cmd.none)
+  }
   }
 }
 
@@ -99,8 +217,13 @@ let updatePaneL = (model: model, msg: paneLMsg): (model, Tea_Cmd.t<msg>) => {
 let updatePaneN = (model: model, msg: paneNMsg): model => {
   let paneN = model.paneN
   let newPaneN = switch msg {
-  | ReceiveToken(token) => {...paneN, tokens: Array.concat(paneN.tokens, [token])}
-  | ClearTokens => {...paneN, tokens: []}
+  | ReceiveToken(token) => {
+      ...paneN,
+      tokens: Array.concat(paneN.tokens, [token]),
+      nextTokenId: paneN.nextTokenId + 1,
+      activeCausalChain: [token.id],
+    }
+  | ClearTokens => {...paneN, tokens: [], nextTokenId: 0, activeCausalChain: []}
   | SetInferenceActive(active) => {...paneN, inferenceActive: active}
   | UpdateMonologue(text) => {...paneN, monologue: text}
   | UpdateAgency(agency) => {...paneN, agency}
@@ -174,6 +297,41 @@ let updatePaneW = (model: model, msg: paneWMsg): (model, Tea_Cmd.t<msg>) => {
         eventChainInput: "",
         eventChainError: None,
       }},
+      Tea_Cmd.none,
+    )
+
+  // --- Barycentre tour ---
+  | StartTour => (
+      {...model, barycentreTour: {active: true, currentStep: TourIntro, completed: model.barycentreTour.completed}},
+      Tea_Cmd.none,
+    )
+  | NextTourStep => {
+      let next = switch model.barycentreTour.currentStep {
+      | TourIntro => TourBinaryStar
+      | TourBinaryStar => TourBarycentrePosition
+      | TourBarycentrePosition => TourOrbitalMetrics
+      | TourOrbitalMetrics => TourContractiles
+      | TourContractiles => TourSyncHealth
+      | TourSyncHealth => TourComplete
+      | TourComplete => TourComplete
+      }
+      let completed = next === TourComplete
+      ({...model, barycentreTour: {active: !completed, currentStep: next, completed: completed || model.barycentreTour.completed}}, Tea_Cmd.none)
+    }
+  | PrevTourStep => {
+      let prev = switch model.barycentreTour.currentStep {
+      | TourIntro => TourIntro
+      | TourBinaryStar => TourIntro
+      | TourBarycentrePosition => TourBinaryStar
+      | TourOrbitalMetrics => TourBarycentrePosition
+      | TourContractiles => TourOrbitalMetrics
+      | TourSyncHealth => TourContractiles
+      | TourComplete => TourSyncHealth
+      }
+      ({...model, barycentreTour: {...model.barycentreTour, currentStep: prev}}, Tea_Cmd.none)
+    }
+  | CloseTour => (
+      {...model, barycentreTour: {...model.barycentreTour, active: false}},
       Tea_Cmd.none,
     )
 
@@ -647,7 +805,8 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
   | SubmitQuery(query) => {
       // #4: Optionally validate VQL through Anti-Crash before execution.
       let antiCrashCmd = if db.antiCrashValidation {
-        let token: neuralToken = {content: query, timestamp: 0.0, confidence: 0.5, validated: false}
+        let tokenId = "t-" ++ Int.toString(model.paneN.nextTokenId)
+        let token: neuralToken = {id: tokenId, content: query, timestamp: 0.0, confidence: 0.5, validated: false, source: VeriSimInference, category: Observation, emittedDuring: model.paneN.agency.phase, causedBy: model.paneN.activeCausalChain, proofHash: None}
         Tea_Cmd.msg(AntiCrash(ValidateToken(token)))
       } else {
         Tea_Cmd.none
@@ -810,9 +969,10 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
       ({...model, verisimdb: {...db, lastTypeCheck: Some(json)}, typell: newTypell}, Tea_Cmd.none)
     }
-  | VqlTypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully, don't block VQL workflow
+  | VqlTypeCheckResult(Error(_)) => {
+    logDegradedService("TypeLL", "VQL type check failed — VQL workflow continues unblocked")
     (model, Tea_Cmd.none)
+  }
   // #2: Toggle proof obligation display in Panel-L.
   | ToggleProofDisplay => (
       {...model, verisimdb: {...db, proofDisplayActive: !db.proofDisplayActive}},
@@ -1546,11 +1706,81 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
       ({...model, echidna: {...ec, lastProofObligations: Some(json)}, typell: newTypell}, Tea_Cmd.none)
     }
-  | ProofObligationsGenerated(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | ProofObligationsGenerated(Error(_)) => {
+    logDegradedService("TypeLL", "proof obligation generation failed")
     (model, Tea_Cmd.none)
+  }
   | ToggleEchidnaBojRouting => (
       {...model, echidna: {...ec, bojRouting: !ec.bojRouting}},
+      Tea_Cmd.none,
+    )
+
+  // --- Tab switching ---
+  | SelectEchidnaTab(tab) => (
+      {...model, echidna: {...ec, activeTab: tab}},
+      Tea_Cmd.none,
+    )
+
+  // --- Enterprise model checking (MOF/OCL) ---
+  | ImportXmiModel => (model, Tea_Cmd.none) // Tauri file dialog → parse XMI → XmiModelLoaded
+  | XmiModelLoaded(Ok(json)) => {
+      // Parse XMI JSON into model elements (simplified — real parser needed)
+      let em = ec.enterpriseModel
+      ({...model, echidna: {...ec, enterpriseModel: {...em, lastXmiImport: Some(json)}}}, Tea_Cmd.none)
+    }
+  | XmiModelLoaded(Error(_)) => {
+    logDegradedService("ECHIDNA", "XMI model import failed")
+    (model, Tea_Cmd.none)
+  }
+  | AddOclConstraint(context, name, expression) => {
+      let em = ec.enterpriseModel
+      let newConstraint: oclConstraint = {
+        context,
+        name,
+        expression,
+        severity: OclInvariant,
+        layer: M1_Model,
+        metamodel: UML,
+      }
+      ({...model, echidna: {...ec, enterpriseModel: {...em, constraints: Array.concat(em.constraints, [newConstraint])}}}, Tea_Cmd.none)
+    }
+  | RemoveOclConstraint(index) => {
+      let em = ec.enterpriseModel
+      let filtered = em.constraints->Array.filterWithIndex((_c, i) => i !== index)
+      ({...model, echidna: {...ec, enterpriseModel: {...em, constraints: filtered}}}, Tea_Cmd.none)
+    }
+  | RunOclCheck => {
+      let em = ec.enterpriseModel
+      ({...model, echidna: {...ec, enterpriseModel: {...em, checking: true}}}, Tea_Cmd.none)
+      // In production: dispatch to ECHIDNA backend for constraint checking
+    }
+  | OclCheckResult(Ok(_json)) => {
+      let em = ec.enterpriseModel
+      ({...model, echidna: {...ec, enterpriseModel: {...em, checking: false}}}, Tea_Cmd.none)
+    }
+  | OclCheckResult(Error(_)) => {
+      logDegradedService("ECHIDNA", "OCL constraint check failed")
+      let em = ec.enterpriseModel
+      ({...model, echidna: {...ec, enterpriseModel: {...em, checking: false}}}, Tea_Cmd.none)
+    }
+  | SetMetamodelFilter(filter) => {
+      let em = ec.enterpriseModel
+      ({...model, echidna: {...ec, enterpriseModel: {...em, activeMetamodel: filter}}}, Tea_Cmd.none)
+    }
+  | SetMofLayerFilter(filter) => {
+      let em = ec.enterpriseModel
+      ({...model, echidna: {...ec, enterpriseModel: {...em, activeLayer: filter}}}, Tea_Cmd.none)
+    }
+  | ClearEnterpriseModel => (
+      {...model, echidna: {...ec, enterpriseModel: {
+        elements: [],
+        constraints: [],
+        checkResults: [],
+        checking: false,
+        activeMetamodel: None,
+        activeLayer: None,
+        lastXmiImport: None,
+      }}},
       Tea_Cmd.none,
     )
   }
@@ -1729,7 +1959,12 @@ let updateAntiCrash = (model: model, msg: antiCrashMsg): (model, Tea_Cmd.t<msg>)
       )
       // If the token passed validation, add it to the neural stream.
       let newPaneN = switch validatedToken {
-      | Some(vt) => {...model.paneN, tokens: Array.concat(model.paneN.tokens, [vt])}
+      | Some(vt) => {
+          ...model.paneN,
+          tokens: Array.concat(model.paneN.tokens, [vt]),
+          nextTokenId: model.paneN.nextTokenId + 1,
+          activeCausalChain: [vt.id],
+        }
       | None => model.paneN
       }
       // M4: Anti-Crash → Governance feedback. When a token is rejected,
@@ -1754,7 +1989,12 @@ let updateAntiCrash = (model: model, msg: antiCrashMsg): (model, Tea_Cmd.t<msg>)
   | ValidationPassed(token) => {
       // Token has already been validated externally — mark as validated and add.
       let validatedToken = {...token, validated: true}
-      let newPaneN = {...model.paneN, tokens: Array.concat(model.paneN.tokens, [validatedToken])}
+      let newPaneN = {
+        ...model.paneN,
+        tokens: Array.concat(model.paneN.tokens, [validatedToken]),
+        nextTokenId: model.paneN.nextTokenId + 1,
+        activeCausalChain: [validatedToken.id],
+      }
       ({...model, paneN: newPaneN}, Tea_Cmd.none)
     }
   | ValidationFailed(_token, reason) => {
@@ -1906,6 +2146,37 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
     busEvents
   }
 
+  // Emit inference activity change if Hypatia confidence shifted.
+  let busEvents = if newModel.paneN.inferenceActive !== model.paneN.inferenceActive {
+    Array.concat(busEvents, [
+      PanelBus.HypatiaConfidenceUpdated("paneN-inference", newModel.paneN.inferenceActive ? 1.0 : 0.0),
+    ])
+  } else {
+    busEvents
+  }
+
+  // Emit ECHIDNA proof dispatch if a proof result just arrived.
+  let busEvents = if newModel.echidna.lastProofResult !== model.echidna.lastProofResult {
+    switch newModel.echidna.lastProofResult {
+    | Some(_result) =>
+      Array.concat(busEvents, [
+        PanelBus.HypatiaConfidenceUpdated("echidna-proof", 0.95),
+      ])
+    | None => busEvents
+    }
+  } else {
+    busEvents
+  }
+
+  // Emit fleet dispatch when fleet findings change.
+  let busEvents = if Array.length(newModel.fleet.findings) !== Array.length(model.fleet.findings) {
+    Array.concat(busEvents, [
+      PanelBus.FarmRepoListUpdated(Array.length(newModel.fleet.findings)),
+    ])
+  } else {
+    busEvents
+  }
+
   // Emit compliance change if contractile statuses changed.
   let violatedCount = Array.filter(newModel.contractiles, c => {
     switch c.status {
@@ -2029,8 +2300,10 @@ let updateVab = (model: model, msg: vabMsg): (model, Tea_Cmd.t<msg>) => {
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
+  | TypeCheckResult(Error(_)) => {
+    logDegradedService("TypeLL", "cross-panel type check failed")
     (model, Tea_Cmd.none)
+  }
   }
 }
 
@@ -2585,8 +2858,10 @@ let updateFarm = (model: model, msg: farmMsg): (model, Tea_Cmd.t<msg>) => {
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
+  | TypeCheckResult(Error(_)) => {
+    logDegradedService("TypeLL", "cross-panel type check failed")
     (model, Tea_Cmd.none)
+  }
   }
 }
 
@@ -4018,8 +4293,10 @@ let updateProvenance = (model: model, msg: provenanceMsg): (model, Tea_Cmd.t<msg
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
+  | TypeCheckResult(Error(_)) => {
+    logDegradedService("TypeLL", "cross-panel type check failed")
     (model, Tea_Cmd.none)
+  }
   }
 }
 
@@ -4806,6 +5083,7 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
     | "buildDashboard" => {...model, buildDashboard: BuildDashboardEngine.defaultState}
     | "releaseManager" => {...model, releaseManager: ReleaseManagerEngine.defaultState}
     | "automationRouter" => {...model, automationRouter: AutomationRouterEngine.defaultState}
+    | "scriptGist" => {...model, scriptGist: ScriptGistEngine.defaultState}
     | "security" => {...model, security: SecurityEngine.defaultState}
     | "voiceTag" => {...model, voiceTag: VoiceTagEngine.defaultState}
     | "massPanic" => {...model, massPanic: MassPanicModel.init}
@@ -4839,6 +5117,7 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
       buildDashboard: BuildDashboardEngine.defaultState,
       releaseManager: ReleaseManagerEngine.defaultState,
       automationRouter: AutomationRouterEngine.defaultState,
+      scriptGist: ScriptGistEngine.defaultState,
       security: SecurityEngine.defaultState,
       voiceTag: VoiceTagEngine.defaultState,
       massPanic: MassPanicModel.init,
@@ -9823,6 +10102,154 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
 }
 
 // ===========================================================================
+// ScriptGist Sub-Updater — Portable computation gists (Minskian cardfiles)
+// ===========================================================================
+
+let updateScriptGist = (model: model, msg: scriptGistMsg): (model, Tea_Cmd.t<msg>) => {
+  let sg = model.scriptGist
+  switch msg {
+  | SetGistCategory(cat) => ({...model, scriptGist: {...sg, activeCategory: cat}}, Tea_Cmd.none)
+  | SelectGist(id) => ({...model, scriptGist: {...sg, selectedGistId: id}}, Tea_Cmd.none)
+  | CreateGist => {
+      let id = "gist-" ++ Float.toString(Date.now())
+      let gist = ScriptGistEngine.newGist(id, "Untitled Gist", GistReScript)
+      ({...model, scriptGist: {...sg, gists: Array.concat(sg.gists, [gist]), selectedGistId: Some(id), editorOpen: true}}, Tea_Cmd.none)
+    }
+  | CreateFromTemplate(tplId) => {
+      let id = "gist-" ++ Float.toString(Date.now())
+      switch sg.templates->Array.find(t => t.id === tplId) {
+      | Some(tpl) => {
+          let gist: scriptGist = {
+            ...ScriptGistEngine.newGist(id, tpl.name, tpl.language),
+            code: tpl.templateCode,
+            target: tpl.target,
+            tags: ["from-template"],
+          }
+          ({...model, scriptGist: {...sg, gists: Array.concat(sg.gists, [gist]), selectedGistId: Some(id), editorOpen: true}}, Tea_Cmd.none)
+        }
+      | None => ({...model, scriptGist: {...sg, error: Some("Template not found: " ++ tplId)}}, Tea_Cmd.none)
+      }
+    }
+  | UpdateGistCode(code) => {
+      let gists = sg.gists->Array.map(g =>
+        if Some(g.id) === sg.selectedGistId { {...g, code, modifiedAt: Date.now(), version: g.version + 1} } else { g }
+      )
+      ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
+    }
+  | UpdateGistTitle(title) => {
+      let gists = sg.gists->Array.map(g =>
+        if Some(g.id) === sg.selectedGistId { {...g, title, modifiedAt: Date.now()} } else { g }
+      )
+      ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
+    }
+  | UpdateGistLanguage(lang) => {
+      let gists = sg.gists->Array.map(g =>
+        if Some(g.id) === sg.selectedGistId { {...g, language: lang, target: ScriptGistEngine.defaultTarget(lang), modifiedAt: Date.now()} } else { g }
+      )
+      ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
+    }
+  | UpdateGistTarget(target) => {
+      let gists = sg.gists->Array.map(g =>
+        if Some(g.id) === sg.selectedGistId { {...g, target, modifiedAt: Date.now()} } else { g }
+      )
+      ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
+    }
+  | UpdateGistVisibility(vis) => {
+      let gists = sg.gists->Array.map(g =>
+        if Some(g.id) === sg.selectedGistId { {...g, visibility: vis, modifiedAt: Date.now()} } else { g }
+      )
+      ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
+    }
+  | ToggleGistPin(id) => {
+      let gists = sg.gists->Array.map(g =>
+        if g.id === id { {...g, pinned: !g.pinned} } else { g }
+      )
+      ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
+    }
+  | DeleteGist(id) => {
+      let gists = sg.gists->Array.filter(g => g.id !== id)
+      let selectedGistId = if sg.selectedGistId === Some(id) { None } else { sg.selectedGistId }
+      ({...model, scriptGist: {...sg, gists, selectedGistId}}, Tea_Cmd.none)
+    }
+  | SaveGist => (model, Tea_Cmd.none) // TODO: persist to filesystem via Tauri
+  | ExecuteGist => ({...model, scriptGist: {...sg, executing: true}}, Tea_Cmd.none) // TODO: dispatch to target
+  | GistExecutionResult(result) => {
+      switch result {
+      | Ok(gistResult) => ({...model, scriptGist: {...sg, executing: false, lastResult: Some(gistResult)}}, Tea_Cmd.none)
+      | Error(err) => ({...model, scriptGist: {...sg, executing: false, error: Some(err)}}, Tea_Cmd.none)
+      }
+    }
+  | SetGistFilter(text) => ({...model, scriptGist: {...sg, filterText: text}}, Tea_Cmd.none)
+  | SetGistSort(sortBy) => ({...model, scriptGist: {...sg, sortBy}}, Tea_Cmd.none)
+  | ToggleGistEditor => ({...model, scriptGist: {...sg, editorOpen: !sg.editorOpen}}, Tea_Cmd.none)
+  | ToggleMcpTools => ({...model, scriptGist: {...sg, mcpToolsActive: !sg.mcpToolsActive}}, Tea_Cmd.none)
+  | DismissGistError => ({...model, scriptGist: {...sg, error: None}}, Tea_Cmd.none)
+  | UpdateGistSchemaName(name) => {
+      let gists = sg.gists->Array.map(g =>
+        if Some(g.id) === sg.selectedGistId { {...g, schema: {...g.schema, toolName: name}} } else { g }
+      )
+      ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
+    }
+  | UpdateGistSchemaSummary(summary) => {
+      let gists = sg.gists->Array.map(g =>
+        if Some(g.id) === sg.selectedGistId { {...g, schema: {...g.schema, summary}} } else { g }
+      )
+      ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
+    }
+  | AddGistSchemaParam => {
+      let param: gistParam = {name: "param", description: "", schemaType: "string", required: false, defaultValue: None}
+      let gists = sg.gists->Array.map(g =>
+        if Some(g.id) === sg.selectedGistId {
+          {...g, schema: {...g.schema, inputs: Array.concat(g.schema.inputs, [param])}}
+        } else { g }
+      )
+      ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
+    }
+  | RemoveGistSchemaParam(idx) => {
+      let gists = sg.gists->Array.map(g =>
+        if Some(g.id) === sg.selectedGistId {
+          let inputs = g.schema.inputs->Array.filterWithIndex((_p, i) => i !== idx)
+          {...g, schema: {...g.schema, inputs}}
+        } else { g }
+      )
+      ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
+    }
+  | SnapshotDiachronic => {
+      let checkpoint: diachronicCheckpoint = {
+        index: Array.length(sg.diachronicHistory),
+        timestamp: Date.now(),
+        label: "Checkpoint #" ++ Int.toString(Array.length(sg.diachronicHistory) + 1),
+        snapshot: "", // serialised externally when persistence is wired
+      }
+      ({...model, scriptGist: {...sg, diachronicHistory: Array.concat(sg.diachronicHistory, [checkpoint])}}, Tea_Cmd.none)
+    }
+  | RestoreDiachronic(_idx) => (model, Tea_Cmd.none) // TODO: deserialise snapshot
+  | InsertIntoCardfile(cardfileId) => {
+      switch sg.selectedGistId {
+      | Some(gistId) => {
+          let cardfiles = sg.cardfiles->Array.map(cf =>
+            if cf.id === cardfileId { ScriptGistEngine.addGistToCardfile(cf, gistId) } else { cf }
+          )
+          ({...model, scriptGist: {...sg, cardfiles}}, Tea_Cmd.none)
+        }
+      | None => (model, Tea_Cmd.none)
+      }
+    }
+  | RemoveFromCardfile(cardfileId) => {
+      switch sg.selectedGistId {
+      | Some(gistId) => {
+          let cardfiles = sg.cardfiles->Array.map(cf =>
+            if cf.id === cardfileId { ScriptGistEngine.removeGistFromCardfile(cf, gistId) } else { cf }
+          )
+          ({...model, scriptGist: {...sg, cardfiles}}, Tea_Cmd.none)
+        }
+      | None => (model, Tea_Cmd.none)
+      }
+    }
+  }
+}
+
+// ===========================================================================
 // BoJ Sub-Updater — Bundle of Joy cartridge server
 // ===========================================================================
 
@@ -10584,6 +11011,251 @@ let updateTypeLL = (model: model, msg: typellMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, typell: {...tl, bojRouting: !tl.bojRouting}},
       Tea_Cmd.none,
     )
+  | SetDefaultDiscipline(d) => (
+      {...model, typell: {...tl, defaultDiscipline: d}},
+      Tea_Cmd.none,
+    )
+  | SetModuleDiscipline(scope, discipline) => {
+      let existing = tl.disciplineDeclarations->Array.filter(d => d.scope !== scope)
+      let decl: disciplineDeclaration = {
+        scope,
+        discipline,
+        inferenceAllowed: true,
+        enabledFeatures: TypeLLEngine.disciplineImpliedFeatures(discipline),
+      }
+      ({...model, typell: {...tl, disciplineDeclarations: Array.concat(existing, [decl])}}, Tea_Cmd.none)
+    }
+  | RemoveModuleDiscipline(scope) => {
+      let filtered = tl.disciplineDeclarations->Array.filter(d => d.scope !== scope)
+      ({...model, typell: {...tl, disciplineDeclarations: filtered}}, Tea_Cmd.none)
+    }
+  }
+}
+
+/// Update handler for the in-application help system.
+/// Manages search, category filtering, entry navigation, glossary lookup,
+/// and the onboarding walkthrough.
+let updateHelp = (model: model, msg: helpMsg): (model, Tea_Cmd.t<msg>) => {
+  let h = model.help
+  switch msg {
+  | SetHelpSearch(query) =>
+    let allEntries = HelpContent.allEntries()
+    let filtered = if query === "" {
+      HelpEngine.filterByCategory(h.activeCategory, allEntries)
+    } else {
+      HelpEngine.searchEntries(query, allEntries)
+    }
+    ({...model, help: {...h, searchQuery: query, filteredEntries: filtered}}, Tea_Cmd.none)
+  | SetHelpCategory(cat) =>
+    let allEntries = HelpContent.allEntries()
+    let filtered = HelpEngine.filterByCategory(cat, allEntries)
+    ({...model, help: {...h, activeCategory: cat, filteredEntries: filtered, activeEntry: None}}, Tea_Cmd.none)
+  | SelectEntry(id) =>
+    ({...model, help: {...h, activeEntry: Some(id)}}, Tea_Cmd.none)
+  | CloseHelp =>
+    ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: None}}, Tea_Cmd.none)
+  | StartOnboarding =>
+    let onboarding = {...h.onboarding, active: true, currentStep: 0}
+    ({...model, help: {...h, onboarding}}, Tea_Cmd.none)
+  | NextOnboardingStep =>
+    let onboarding = HelpEngine.nextOnboardingStep(h.onboarding)
+    ({...model, help: {...h, onboarding}}, Tea_Cmd.none)
+  | PrevOnboardingStep =>
+    let onboarding = HelpEngine.prevOnboardingStep(h.onboarding)
+    ({...model, help: {...h, onboarding}}, Tea_Cmd.none)
+  | SkipOnboarding =>
+    let onboarding = {...h.onboarding, active: false, completedOnce: true}
+    ({...model, help: {...h, onboarding}}, Tea_Cmd.none)
+  | CompleteOnboarding =>
+    let onboarding = {...h.onboarding, active: false, completedOnce: true}
+    ({...model, help: {...h, onboarding}}, Tea_Cmd.none)
+  | OpenContextHelp(panelId) =>
+    let allEntries = HelpContent.allEntries()
+    let filtered = HelpEngine.filterByPanel(panelId, allEntries)
+    let newHelp = {
+      ...h,
+      contextPanelId: panelId,
+      filteredEntries: filtered,
+      activeCategory: PanelGuide,
+      activeEntry: None,
+    }
+    ({
+      ...model,
+      help: newHelp,
+      panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)},
+    }, Tea_Cmd.none)
+  | SearchGlossary(query) =>
+    let glossary = HelpEngine.searchGlossary(query, HelpContent.allGlossaryTerms())
+    ({...model, help: {...h, glossary, activeCategory: Glossary}}, Tea_Cmd.none)
+  }
+}
+
+/// Update handler for menu bar interactions.
+/// Routes menu actions to appropriate sub-updaters or panel activations.
+let updateMenuBar = (model: model, msg: menuBarMsg): (model, Tea_Cmd.t<msg>) => {
+  switch msg {
+  | OpenMenu(menu) => ({...model, menuBar: {activeMenu: Some(menu)}}, Tea_Cmd.none)
+  | CloseMenus => ({...model, menuBar: {activeMenu: None}}, Tea_Cmd.none)
+  | MenuAction(actionId) =>
+    // Close the menu first, then route the action.
+    let model = {...model, menuBar: {activeMenu: None}}
+    switch actionId {
+    // File actions
+    | "file:save-state" => (model, Tea_Cmd.none) // Routed to SaveState in main update
+    | "file:open-repo" => (model, Tea_Cmd.none) // Would open RepoLoader panel
+    | "file:export-ensaid" => (model, Tea_Cmd.none)
+    | "file:import-chain" => (model, Tea_Cmd.none)
+    | "file:import-panic" => (model, Tea_Cmd.none)
+    | "file:preferences" => (model, Tea_Cmd.none)
+    // Edit actions
+    | "edit:undo" => (model, Tea_Cmd.none) // Routed to Undo
+    | "edit:redo" => (model, Tea_Cmd.none) // Routed to Redo
+    | "edit:clear-chain" => ({...model, paneW: {...model.paneW, eventChain: [], eventChainSummary: None, eventChainTimeline: None, eventChainInput: "", eventChainError: None}}, Tea_Cmd.none)
+    | "edit:reset-panel" => (model, Tea_Cmd.none)
+    // View actions
+    | "view:toggle-pane-l" => ({...model, paneLVisible: !model.paneLVisible}, Tea_Cmd.none)
+    | "view:toggle-pane-n" => ({...model, paneNVisible: !model.paneNVisible}, Tea_Cmd.none)
+    | "view:toggle-pane-w" => ({...model, paneWVisible: !model.paneWVisible}, Tea_Cmd.none)
+    | "view:toggle-panel-bar" => ({...model, panelBarVisible: !model.panelBarVisible}, Tea_Cmd.none)
+    | "view:toggle-topology" => ({...model, paneW: {...model.paneW, topologyView: !model.paneW.topologyView}}, Tea_Cmd.none)
+    | "view:fullscreen" => ({...model, fullscreenActive: !model.fullscreenActive}, Tea_Cmd.none)
+    | "view:light-mode" => ({...model, viewMode: model.viewMode === LightMode ? Standard : LightMode}, Tea_Cmd.none)
+    | "view:zen" => ({...model, viewMode: Zen}, Tea_Cmd.none)
+    | "view:dark-start" => ({...model, viewMode: DarkStart}, Tea_Cmd.none)
+    | "view:accessibility" => ({...model, accessibility: {...model.accessibility, toolbarExpanded: true}}, Tea_Cmd.none)
+    // Panel actions — open panels via panel switcher
+    | "panel:ai" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelAi)}}, Tea_Cmd.none)
+    | "panel:vab" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelVab)}}, Tea_Cmd.none)
+    | "panel:cloudguard" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelCloudGuard)}}, Tea_Cmd.none)
+    | "panel:hypatia" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHypatia)}}, Tea_Cmd.none)
+    | "panel:reposystem" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelReposystem)}}, Tea_Cmd.none)
+    | "panel:build-dashboard" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelBuildDashboard)}}, Tea_Cmd.none)
+    | "panel:editor-bridge" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelEditorBridge)}}, Tea_Cmd.none)
+    | "panel:release-manager" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelReleaseManager)}}, Tea_Cmd.none)
+    | "panel:workspace" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelWorkspace)}}, Tea_Cmd.none)
+    | "panel:capture" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelCapture)}}, Tea_Cmd.none)
+    | "panel:security" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelSecurity)}}, Tea_Cmd.none)
+    | "panel:boj" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelBoj)}}, Tea_Cmd.none)
+    | "panel:typell" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelTypeLL)}}, Tea_Cmd.none)
+    | "panel:provenance" => (model, Tea_Cmd.none) // Provenance is core infrastructure — will become a panel
+    // Tools actions — open tool panels
+    | "tools:panic-attack" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelPanicAttack)}}, Tea_Cmd.none)
+    | "tools:mass-panic" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelMassPanic)}}, Tea_Cmd.none)
+    | "tools:tsdm" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelTsdm)}}, Tea_Cmd.none)
+    | "tools:clade-browser" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelCladeBrowser)}}, Tea_Cmd.none)
+    | "tools:network-topology" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelNetworkTopology)}}, Tea_Cmd.none)
+    | "tools:vm-inspector" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelVmInspector)}}, Tea_Cmd.none)
+    | "tools:coprocessors" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelCoprocessors)}}, Tea_Cmd.none)
+    | "tools:automation" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelAutomationRouter)}}, Tea_Cmd.none)
+    | "tools:tentacles" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelTentacles)}}, Tea_Cmd.none)
+    | "tools:protocol-squisher" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelProtocolSquisher)}}, Tea_Cmd.none)
+    | "tools:mof-ocl" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none) // Routes to ECHIDNA enterprise model tab (coming)
+    | "tools:echidna" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none) // ECHIDNA doesn't have a panel slot yet — route to Help
+    | "tools:keybindings" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelWorkspace)}}, Tea_Cmd.none)
+    | "panel:echidna" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none) // ECHIDNA panel slot needed
+    | "panel:interfaces" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelInterfaces)}}, Tea_Cmd.none)
+    | "panel:protocol-squisher" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelProtocolSquisher)}}, Tea_Cmd.none)
+    // Help actions
+    | "help:tour" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none)
+    | "help:glossary" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none)
+    | "help:barycentre-tour" => ({...model, barycentreTour: {active: true, currentStep: TourIntro, completed: model.barycentreTour.completed}, paneW: {...model.paneW, topologyView: true}}, Tea_Cmd.none)
+    | "help:about" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none)
+    | _ => (model, Tea_Cmd.none)
+    }
+  }
+}
+
+/// Update handler for accessibility preferences.
+/// Manages colour palette, animation, font size, and focus indicator changes.
+let updateAccessibility = (model: model, msg: accessibilityMsg): (model, Tea_Cmd.t<msg>) => {
+  let a = model.accessibility
+  // Helper: update state and persist to localStorage in one step.
+  let withSave = (newA: accessibilityState) => {
+    ({...model, accessibility: newA}, AccessibilityEngine.saveCmd(newA))
+  }
+  switch msg {
+  | SetAccessibilityPalette(palette) => {
+    let newA = {...a, palette}
+    // Also update provenance palette for backward compatibility
+    ({...model, accessibility: newA, provenance: {...model.provenance, palette}}, AccessibilityEngine.saveCmd(newA))
+  }
+  | SetThemeMode(theme) => {
+    let resolvedTheme = switch theme {
+    | ThemeSystem => AccessibilityEngine.detectOsColorScheme()
+    | other => other
+    }
+    withSave({...a, theme, resolvedTheme})
+  }
+  | OsColorSchemeChanged(osTheme) =>
+    // Only update resolvedTheme if user is in System mode.
+    if a.theme === ThemeSystem {
+      ({...model, accessibility: {...a, resolvedTheme: osTheme}}, Tea_Cmd.none)
+    } else {
+      (model, Tea_Cmd.none)
+    }
+  | SetAnimations(pref) =>
+    withSave({...a, animations: pref})
+  | SetFontSize(size) => {
+    let newA = {...a, fontSize: size}
+    ({...model, accessibility: newA}, Tea_Cmd.batch(list{
+      AccessibilityEngine.saveCmd(newA),
+      AccessibilityEngine.applyFontSizeCmd(size),
+    }))
+  }
+  | SetFocusStyle(style) =>
+    withSave({...a, focusStyle: style})
+  | ToggleAccessibilityToolbar =>
+    // Don't persist toolbar expanded state — it's transient.
+    ({...model, accessibility: {...a, toolbarExpanded: !a.toolbarExpanded}}, Tea_Cmd.none)
+  }
+}
+
+/// Update handler for multi-monitor tiling and panel detachment.
+/// Manages detached windows, snap zones, and tiling presets.
+let updateTiling = (model: model, msg: tilingMsg): (model, Tea_Cmd.t<msg>) => {
+  let t = model.tiling
+  switch msg {
+  | DetachPanel(_panelId) =>
+    // Panel detachment via window.open — future implementation
+    // For now, just record the intent
+    (model, Tea_Cmd.none)
+  | ReattachPanel(_panelId) =>
+    (model, Tea_Cmd.none)
+  | SetSnapZone(_panelId, _zone) =>
+    (model, Tea_Cmd.none)
+  | ApplyTilingPreset(preset) =>
+    ({...model, tiling: {...t, activePreset: Some(preset)}}, Tea_Cmd.none)
+  | ClearTilingPreset =>
+    ({...model, tiling: {...t, activePreset: None}}, Tea_Cmd.none)
+  | SetSnapPreview(zone) =>
+    ({...model, tiling: {...t, snapPreview: zone}}, Tea_Cmd.none)
+  | DetachedPanelClosed(windowName) =>
+    let state = TilingEngine.markDetachedDead(windowName, t)
+    ({...model, tiling: state}, Tea_Cmd.none)
+  | SyncToDetached(_data) =>
+    (model, Tea_Cmd.none)
+  | ToggleTilingControls =>
+    ({...model, tiling: {...t, controlsVisible: !t.controlsVisible}}, Tea_Cmd.none)
+  | SetTilingEnabled(enabled) =>
+    ({...model, tiling: {...t, tilingEnabled: enabled}}, Tea_Cmd.none)
+  }
+}
+
+/// Update handler for focus dimming and Smart Memory Mode.
+/// Manages dimming mode, per-panel overrides, and interaction tracking.
+let updateFocusDimming = (model: model, msg: focusDimmingMsg): (model, Tea_Cmd.t<msg>) => {
+  let fd = model.focusDimming
+  switch msg {
+  | SetDimmingMode(mode) =>
+    ({...model, focusDimming: {...fd, mode}}, Tea_Cmd.none)
+  | SetPanelFocusOverride(panelId, override) =>
+    let state = FocusDimmingEngine.setOverride(panelId, override, fd)
+    ({...model, focusDimming: state}, Tea_Cmd.none)
+  | RecordInteraction(panelKey) =>
+    let state = FocusDimmingEngine.recordInteraction(fd, panelKey, Date.now())
+    ({...model, focusDimming: state}, Tea_Cmd.none)
+  | SetDimOpacity(opacity) =>
+    ({...model, focusDimming: {...fd, dimOpacity: opacity}}, Tea_Cmd.none)
   }
 }
 
@@ -10640,8 +11312,10 @@ let updateEnsaidConfig = (model: model, msg: ensaidConfigMsg): (model, Tea_Cmd.t
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
+  | TypeCheckResult(Error(_)) => {
+    logDegradedService("TypeLL", "cross-panel type check failed")
     (model, Tea_Cmd.none)
+  }
   }
 }
 
@@ -10705,12 +11379,18 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | BuildDashboard(subMsg) => updateBuildDashboard(model, subMsg)
   | ReleaseManager(subMsg) => updateReleaseManager(model, subMsg)
   | AutomationRouter(subMsg) => updateAutomationRouter(model, subMsg)
+  | ScriptGist(subMsg) => updateScriptGist(model, subMsg)
   | Boj(subMsg) => updateBoj(model, subMsg)
   | CladeBrowser(subMsg) => updateCladeBrowser(model, subMsg)
   | Tentacles(subMsg) => updateTentacles(model, subMsg)
   | ProtocolSquisher(subMsg) => updateProtocolSquisher(model, subMsg)
   | MyLang(subMsg) => updateMyLang(model, subMsg)
   | TypeLL(subMsg) => updateTypeLL(model, subMsg)
+  | Help(subMsg) => updateHelp(model, subMsg)
+  | MenuBar(subMsg) => updateMenuBar(model, subMsg)
+  | AccessibilityCtrl(subMsg) => updateAccessibility(model, subMsg)
+  | Tiling(subMsg) => updateTiling(model, subMsg)
+  | FocusDimming(subMsg) => updateFocusDimming(model, subMsg)
   | EnsaidConfig(subMsg) => updateEnsaidConfig(model, subMsg)
   | Bus(busMsg) =>
     switch busMsg {
@@ -10725,14 +11405,54 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
       ({...model, busRegistry}, Tea_Cmd.none)
     }
   | Undo => {
-      // Pop from undo stack, push current to redo.
-      // For now, undo/redo stacks store serialised JSON strings.
-      // Full snapshot undo is a future enhancement.
-      (model, Tea_Cmd.none)
+      let len = Array.length(model.undoStack)
+      if len === 0 {
+        (model, Tea_Cmd.none)
+      } else {
+        // Pop the most recent snapshot from undoStack.
+        let snapshot = model.undoStack[len - 1]
+        let remainingUndo = Array.slice(model.undoStack, ~start=0, ~end=len - 1)
+        // Push current state onto redoStack (capped).
+        let currentSnapshot = snapshotToJson(model)
+        let newRedo = Array.concat(model.redoStack, [currentSnapshot])
+        let trimmedRedo = if Array.length(newRedo) > undoStackLimit {
+          Array.slice(newRedo, ~start=Array.length(newRedo) - undoStackLimit, ~end=Array.length(newRedo))
+        } else {
+          newRedo
+        }
+        switch snapshot {
+        | Some(s) => {
+            let restored = restoreSnapshot(model, s)
+            ({...restored, undoStack: remainingUndo, redoStack: trimmedRedo}, Tea_Cmd.none)
+          }
+        | None => (model, Tea_Cmd.none)
+        }
+      }
     }
   | Redo => {
-      // Pop from redo stack, push current to undo.
-      (model, Tea_Cmd.none)
+      let len = Array.length(model.redoStack)
+      if len === 0 {
+        (model, Tea_Cmd.none)
+      } else {
+        // Pop the most recent snapshot from redoStack.
+        let snapshot = model.redoStack[len - 1]
+        let remainingRedo = Array.slice(model.redoStack, ~start=0, ~end=len - 1)
+        // Push current state onto undoStack (capped).
+        let currentSnapshot = snapshotToJson(model)
+        let newUndo = Array.concat(model.undoStack, [currentSnapshot])
+        let trimmedUndo = if Array.length(newUndo) > undoStackLimit {
+          Array.slice(newUndo, ~start=Array.length(newUndo) - undoStackLimit, ~end=Array.length(newUndo))
+        } else {
+          newUndo
+        }
+        switch snapshot {
+        | Some(s) => {
+            let restored = restoreSnapshot(model, s)
+            ({...restored, undoStack: trimmedUndo, redoStack: remainingRedo}, Tea_Cmd.none)
+          }
+        | None => (model, Tea_Cmd.none)
+        }
+      }
     }
   | SaveState => {
       // Imperative: persist current state to localStorage.

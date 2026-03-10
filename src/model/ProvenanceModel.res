@@ -124,3 +124,60 @@ type provenanceState = {
   /// Error from the last analysis attempt.
   error: option<string>,
 }
+
+/// Node in the provenance DAG — represents a single artefact in the supply chain.
+type dagNodeKind =
+  /// Source code file with trust analysis.
+  | SourceNode
+  /// Build artefact (compiled output, bundle, .so).
+  | BuildNode
+  /// External dependency (crate, npm package, opam package).
+  | DependencyNode
+  /// Proof artefact (ECHIDNA discharge, Coq proof term).
+  | ProofNode
+  /// Signing/attestation event (SLSA, Sigstore, in-toto).
+  | AttestationNode
+
+/// A single node in the provenance DAG.
+type dagNode = {
+  /// Unique node identifier (content-addressable hash preferred).
+  id: string,
+  /// Human-readable label for the node.
+  label: string,
+  /// The kind of artefact this node represents.
+  kind: dagNodeKind,
+  /// Trust level inherited from provenance analysis.
+  trustLevel: trustLevel,
+  /// SHA-256 or BLAKE3 content hash.
+  contentHash: string,
+  /// Timestamp of artefact creation (Unix ms).
+  createdAt: float,
+  /// Whether this node has been formally verified.
+  verified: bool,
+}
+
+/// An edge in the provenance DAG — a dependency or derivation relationship.
+type dagEdge = {
+  /// Source node ID (the dependency).
+  fromId: string,
+  /// Target node ID (the dependent).
+  toId: string,
+  /// Relationship label (e.g. "compiles-to", "depends-on", "proves", "signs").
+  relation: string,
+  /// Whether this edge has been verified (e.g. hash chain intact).
+  verified: bool,
+}
+
+/// The complete provenance DAG for a project or workspace.
+type provenanceDag = {
+  /// All nodes in the graph.
+  nodes: array<dagNode>,
+  /// All edges in the graph.
+  edges: array<dagEdge>,
+  /// The root node IDs (entry points with no incoming edges).
+  roots: array<string>,
+  /// The leaf node IDs (final artefacts with no outgoing edges).
+  leaves: array<string>,
+  /// When this DAG was last computed.
+  computedAt: float,
+}

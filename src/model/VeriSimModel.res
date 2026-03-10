@@ -12,22 +12,34 @@
 
 /// Proof obligation from a VQL-DT query result certificate
 type proofObligation = {
+  /// Proof strategy type (e.g. "contract", "invariant", "temporal").
   proofType: string,
+  /// Name of the contract this obligation belongs to.
   contractName: string,
-  status: string, // "verified" | "failed" | "pending"
+  /// Verification status: "verified", "failed", or "pending".
+  status: string,
+  /// Hash of the proof certificate for this obligation.
   proofHash: string,
 }
 
 /// Parsed drift scores for each modality — used by the drift heatmap.
 /// Each score is 0.0 (no drift) to 1.0 (maximum drift).
 type driftScores = {
+  /// Drift in the graph modality (0.0 = no drift, 1.0 = maximum drift).
   graph: float,
+  /// Drift in the vector modality.
   vector: float,
+  /// Drift in the tensor modality.
   tensor: float,
+  /// Drift in the semantic modality.
   semantic: float,
+  /// Drift in the document modality.
   document: float,
+  /// Drift in the temporal modality.
   temporal: float,
+  /// Drift in the provenance modality.
   provenance: float,
+  /// Drift in the spatial modality.
   spatial: float,
 }
 
@@ -36,14 +48,23 @@ type driftScores = {
 /// This data helps understand how the database is used and where to focus
 /// development effort. Users can also see this to understand their own workload.
 type telemetrySnapshot = {
+  /// ISO 8601 timestamp when this snapshot was generated.
   generatedAt: string,
+  /// Per-modality usage heatmap: (modality name, usage intensity).
   modalityHeatmap: array<(string, float)>,
+  /// Most common query patterns: (pattern description, count).
   queryPatterns: array<(string, int)>,
+  /// Average query duration across all queries in milliseconds.
   avgQueryDurationMs: float,
+  /// Number of drift events detected in the snapshot period.
   driftDetectedCount: int,
+  /// Success rate of normalisation operations (0.0-1.0).
   normaliseSuccessRate: float,
+  /// Proof type usage counts: (proof type, count).
   proofTypeUsage: array<(string, int)>,
+  /// Total number of entities in the database.
   entityCount: int,
+  /// Privacy notice text confirming no PII is collected.
   privacyNotice: string,
 }
 
@@ -51,21 +72,37 @@ type telemetrySnapshot = {
 /// drift detection, normalisation, and telemetry for the VeriSimDB database
 /// integration. The telemetry field is opt-in and shows aggregate-only metrics.
 type verisimdbState = {
+  /// Whether the VeriSimDB backend is reachable.
   connected: bool,
+  /// Base URL of the VeriSimDB API endpoint.
   endpoint: string,
+  /// Text of the most recently submitted VQL query.
   lastQuery: string,
+  /// JSON result from the last successful query.
   queryResult: option<string>,
+  /// Error message from the last failed query.
   queryError: option<string>,
+  /// List of entity names loaded from the database.
   entities: array<string>,
+  /// Currently selected entity for detail view.
   selectedEntity: option<string>,
+  /// Human-readable drift status summary.
   driftStatus: option<string>,
+  /// Per-modality drift scores for the heatmap.
   driftScores: option<driftScores>,
+  /// Proof obligations from the last VQL-DT query certificate.
   proofObligations: array<proofObligation>,
+  /// Whether the VeriSimDB menu dropdown is expanded.
   dbMenuExpanded: bool,
+  /// Entity currently being normalised (None = idle).
   normalisingEntity: option<string>,
+  /// JSON detail for the selected entity.
   entityDetail: option<string>,
+  /// Opt-in telemetry snapshot (aggregate-only metrics).
   telemetry: option<telemetrySnapshot>,
+  /// Whether the telemetry panel is visible.
   telemetryVisible: bool,
+  /// Orchestrator status message.
   orchStatus: option<string>,
   /// TypeLL type-check result JSON for the last VQL query (cross-panel intelligence).
   /// Parsed via TypeLLEngine.parseCheckResult when rendering.

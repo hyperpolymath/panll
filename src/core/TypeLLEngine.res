@@ -141,11 +141,12 @@ let categoryLabel = (cat: typellCategory): string =>
   | TlChecker => "Checker"
   | TlExplorer => "Explorer"
   | TlRefinement => "Refinement"
+  | TlDiscipline => "Discipline"
   | TlGuide => "Guide"
   }
 
 /// All category tabs.
-let allCategories: array<typellCategory> = [TlChecker, TlExplorer, TlRefinement, TlGuide]
+let allCategories: array<typellCategory> = [TlChecker, TlExplorer, TlRefinement, TlDiscipline, TlGuide]
 
 // ============================================================================
 // Evangeliser Narrative Generation
@@ -251,6 +252,163 @@ let filterBySearch = (sigs: array<typeSignatureEntry>, query: string): array<typ
   }
 
 // ============================================================================
+// Unified Type System — Discipline, Quantifiers, Feature Extraction
+// ============================================================================
+
+/// Label for a usage quantifier.
+let usageLabel = (u: usageQuantifier): string =>
+  switch u {
+  | UsageZero => "0 (erased)"
+  | UsageOne => "1 (linear)"
+  | UsageOmega => "omega (unrestricted)"
+  }
+
+/// Short symbol for a usage quantifier.
+let usageSymbol = (u: usageQuantifier): string =>
+  switch u {
+  | UsageZero => "0"
+  | UsageOne => "1"
+  | UsageOmega => "w"
+  }
+
+/// Label for a type discipline.
+let disciplineLabel = (d: typeDiscipline): string =>
+  switch d {
+  | DisciplineAffine => "Affine (default)"
+  | DisciplineLinear => "Linear"
+  | DisciplineDependent => "Dependent"
+  | DisciplineRefined => "Refined"
+  | DisciplineUnrestricted => "Unrestricted"
+  }
+
+/// Short directive for a discipline (as it would appear in a source file).
+let disciplineDirective = (d: typeDiscipline): string =>
+  switch d {
+  | DisciplineAffine => "#![affine]"
+  | DisciplineLinear => "#![linear]"
+  | DisciplineDependent => "#![dependent]"
+  | DisciplineRefined => "#![refined]"
+  | DisciplineUnrestricted => "#![unrestricted]"
+  }
+
+/// Colour for a discipline badge.
+let disciplineColour = (d: typeDiscipline): string =>
+  switch d {
+  | DisciplineAffine => "text-amber-400 bg-amber-900/30"
+  | DisciplineLinear => "text-red-400 bg-red-900/30"
+  | DisciplineDependent => "text-purple-400 bg-purple-900/30"
+  | DisciplineRefined => "text-cyan-400 bg-cyan-900/30"
+  | DisciplineUnrestricted => "text-gray-400 bg-gray-800/50"
+  }
+
+/// Label for an inference source.
+let inferenceSourceLabel = (s: inferenceSource): string =>
+  switch s {
+  | Inferred => "Inferred"
+  | Annotated => "Annotated"
+  | Mixed => "Mixed"
+  | TacticAssisted => "Tactic-assisted"
+  }
+
+/// Which features are implied by a discipline.
+let disciplineImpliedFeatures = (d: typeDiscipline): array<typeFeature> =>
+  switch d {
+  | DisciplineAffine => [AffineTypes]
+  | DisciplineLinear => [LinearTypes, QuantitativeTypeTheory]
+  | DisciplineDependent => [DependentTypes, ProofCarryingCode]
+  | DisciplineRefined => [DependentTypes]
+  | DisciplineUnrestricted => []
+  }
+
+/// All disciplines in order.
+let allDisciplines: array<typeDiscipline> = [
+  DisciplineAffine, DisciplineLinear, DisciplineDependent, DisciplineRefined, DisciplineUnrestricted,
+]
+
+/// Parse a feature code string (e.g., "dep", "lin", "aff") to a typeFeature.
+let parseFeatureCode = (code: string): option<typeFeature> =>
+  switch code {
+  | "dep" | "dependent" => Some(DependentTypes)
+  | "lin" | "linear" => Some(LinearTypes)
+  | "sess" | "session" => Some(SessionTypes)
+  | "pcc" | "proof-carrying" => Some(ProofCarryingCode)
+  | "qtt" | "quantitative" => Some(QuantitativeTypeTheory)
+  | "eff" | "effect" => Some(EffectSystems)
+  | "mod" | "modal" => Some(ModalTypes)
+  | "aff" | "affine" => Some(AffineTypes)
+  | "hott" => Some(HomotopyTypeTheory)
+  | "eqsat" => Some(EqualitySaturation)
+  | "cat" | "category" => Some(CategoryTheoreticTypes)
+  | _ => None
+  }
+
+/// Determine the max tier from a set of active features.
+let computeMaxTier = (features: array<typeFeature>): typeTier => {
+  let hasResearch = features->Array.some(f => featureTier(f) === TierResearch)
+  let hasAdvanced = features->Array.some(f => featureTier(f) === TierAdvanced)
+  if hasResearch { TierResearch }
+  else if hasAdvanced { TierAdvanced }
+  else { TierCore }
+}
+
+/// Parse a usage string to a quantifier.
+let parseUsage = (s: string): usageQuantifier =>
+  switch s {
+  | "0" | "zero" | "erased" => UsageZero
+  | "1" | "one" | "linear" => UsageOne
+  | _ => UsageOmega
+  }
+
+/// Parse a discipline string.
+let parseDiscipline = (s: string): typeDiscipline =>
+  switch s {
+  | "affine" => DisciplineAffine
+  | "linear" => DisciplineLinear
+  | "dependent" => DisciplineDependent
+  | "refined" => DisciplineRefined
+  | "unrestricted" => DisciplineUnrestricted
+  | _ => DisciplineAffine // Affine by default
+  }
+
+/// Parse an inference source string.
+let parseInferenceSource = (s: string): inferenceSource =>
+  switch s {
+  | "annotated" => Annotated
+  | "mixed" => Mixed
+  | "tactic" | "tactic-assisted" => TacticAssisted
+  | _ => Inferred
+  }
+
+/// Build a default unified type expression.
+let defaultUnifiedTypeExpr: unifiedTypeExpr = {
+  baseExpr: "",
+  usage: UsageOmega,
+  discipline: DisciplineAffine,
+  dependentIndices: [],
+  effects: [],
+  refinements: [],
+}
+
+/// Summarise a unified type analysis result as a single line.
+let unifiedAnalysisSummary = (analysis: unifiedTypeAnalysis): string => {
+  let parts = []
+  let parts = if analysis.linearitySatisfied { parts } else { Array.concat(parts, ["linearity violated"]) }
+  let parts = if analysis.indicesWellFounded { parts } else { Array.concat(parts, ["indices not well-founded"]) }
+  let parts = if analysis.refinementsSatisfiable { parts } else { Array.concat(parts, ["refinements unsatisfiable"]) }
+  let parts = if Array.length(analysis.usageViolations) > 0 {
+    Array.concat(parts, [Int.toString(Array.length(analysis.usageViolations)) ++ " usage violations"])
+  } else { parts }
+  let parts = if Array.length(analysis.effectLeaks) > 0 {
+    Array.concat(parts, [Int.toString(Array.length(analysis.effectLeaks)) ++ " effect leaks"])
+  } else { parts }
+  if Array.length(parts) === 0 {
+    disciplineLabel(analysis.typeExpr.discipline) ++ " | " ++ usageSymbol(analysis.typeExpr.usage) ++ " | OK"
+  } else {
+    disciplineLabel(analysis.typeExpr.discipline) ++ " | " ++ Array.join(parts, ", ")
+  }
+}
+
+// ============================================================================
 // JSON Parsing
 // ============================================================================
 
@@ -294,6 +452,14 @@ let parseCheckResult = (json: string): result<typeCheckResult, string> => {
           | None => []
           }
 
+        // Extract feature codes and compute tier
+        let featureCodes = getStringArray("features")
+        let activeFeatures = featureCodes->Array.filterMap(parseFeatureCode)
+        let maxTier = computeMaxTier(activeFeatures)
+        let usage = parseUsage(getString("usage"))
+        let discipline = parseDiscipline(getString("discipline"))
+        let inferSrc = parseInferenceSource(getString("inference_source"))
+
         Ok({
           valid: getBool("valid"),
           typeSignature: getString("type_signature"),
@@ -302,8 +468,12 @@ let parseCheckResult = (json: string): result<typeCheckResult, string> => {
           effects: getStringArray("effects"),
           linearityIssues: getStringArray("linearity_issues"),
           sessionNotes: getStringArray("session_notes"),
-          activeFeatures: [], // Parsed from feature codes if present
-          maxTier: TierCore,
+          activeFeatures,
+          maxTier,
+          usage,
+          discipline,
+          inferenceSource: inferSrc,
+          unifiedAnalysis: None, // Parsed separately if the server provides it
         })
       }
     | _ => Error("Expected JSON object for type check result")
@@ -374,6 +544,9 @@ let defaultState: typellState = {
   refinementSpec: "",
   refinementConstraints: "",
   lastRefinement: None,
+  disciplineDeclarations: [],
+  defaultDiscipline: DisciplineAffine, // Affine by default, as per unified type system design
+  lastUnifiedAnalysis: None,
   serviceActive: true,
   queriesServed: 0,
   bojRouting: false,

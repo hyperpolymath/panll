@@ -154,11 +154,73 @@ let neurosymbolicSubscriptions = (_model: model): Tea_Sub.t<msg> => {
   })
 }
 
-/// Combined subscriptions.
+/// S3: Token drip-feed — synthetic token emission for neural stream animation.
+/// When inference is active, emits a lightweight "heartbeat" token every 3 seconds
+/// so the neural stream shows visible activity even between real inference bursts.
+/// The token content cycles through OODA status lines to give contextual feedback.
+let tokenDripFeed = (model: model): Tea_Sub.t<msg> => {
+  if model.paneN.inferenceActive {
+    Tea_Sub.batch(list{
+      Tea_Time.every(3000.0, time => {
+        let phaseLabel = switch model.paneN.agency.phase {
+        | Observe => "OBSERVE"
+        | Orient => "ORIENT"
+        | Decide => "DECIDE"
+        | Act => "ACT"
+        }
+        let tokenContent = "[" ++ phaseLabel ++ "] Heartbeat @ " ++ Float.toString(time)
+        let tokenId = "t-" ++ Int.toString(model.paneN.nextTokenId)
+        PaneN(ReceiveToken({
+          id: tokenId,
+          content: tokenContent,
+          timestamp: time,
+          confidence: 0.5,
+          validated: false,
+          source: NeuralInference,
+          category: Observation,
+          emittedDuring: model.paneN.agency.phase,
+          causedBy: model.paneN.activeCausalChain,
+          proofHash: None,
+        }))
+      }),
+    })
+  } else {
+    Tea_Sub.none
+  }
+}
+
+/// S4: OODA phase cycling — automatic phase progression for the neural agent.
+/// Cycles Observe → Orient → Decide → Act → Observe every 8 seconds when
+/// inference is active. This gives the appearance of an active deliberation
+/// loop and keeps the agency monitor visually responsive.
+let oodaPhaseCycling = (model: model): Tea_Sub.t<msg> => {
+  if model.paneN.inferenceActive {
+    Tea_Sub.batch(list{
+      Tea_Time.every(8000.0, _time => {
+        let nextPhase = switch model.paneN.agency.phase {
+        | Observe => Orient
+        | Orient => Decide
+        | Decide => Act
+        | Act => Observe
+        }
+        PaneN(UpdateAgency({
+          ...model.paneN.agency,
+          phase: nextPhase,
+        }))
+      }),
+    })
+  } else {
+    Tea_Sub.none
+  }
+}
+
+/// Combined subscriptions — all subscription layers merged.
 let all = (model: model): Tea_Sub.t<msg> => {
   Tea_Sub.batch(list{
     subscriptions(model),
     inferenceSubscriptions(model),
     neurosymbolicSubscriptions(model),
+    tokenDripFeed(model),
+    oodaPhaseCycling(model),
   })
 }

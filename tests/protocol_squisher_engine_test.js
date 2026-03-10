@@ -40,8 +40,8 @@ Deno.test("formatLabel returns correct strings for all formats", () => {
 
 // -- allFormats --
 
-Deno.test("allFormats has 13 entries", () => {
-  assertEquals(allFormats.length, 13);
+Deno.test("allFormats has 17 entries", () => {
+  assertEquals(allFormats.length, 17);
 });
 
 Deno.test("allFormats contains all expected format variants", () => {
@@ -49,6 +49,7 @@ Deno.test("allFormats contains all expected format variants", () => {
     "Protobuf", "Avro", "FlatBuffers", "CapnProto", "Thrift",
     "MessagePack", "Bebop", "JsonSchema", "GraphQL", "Toml",
     "RustFormat", "ReScriptFormat", "PythonFormat",
+    "XMI", "ArchiMateExchange", "BPMN_XML", "SBVR",
   ];
   for (const fmt of expected) {
     assert(allFormats.includes(fmt), `allFormats missing ${fmt}`);
