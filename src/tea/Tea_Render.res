@@ -81,7 +81,13 @@ let applyAttribute = (el: {..}, attr: attribute<'msg>, state: renderState<'msg>,
     if key === "" {
       () // noProp — skip
     } else if key === "class" {
-      el["className"] = value
+      // SVG elements have a read-only className (SVGAnimatedString).
+      // Use setAttribute for SVG; direct property for HTML.
+      if el["namespaceURI"] === svgNS {
+        el["setAttribute"]("class", value)
+      } else {
+        el["className"] = value
+      }
     } else if key === "value" {
       el["value"] = value
     } else if key === "checked" {
@@ -354,6 +360,7 @@ let rec diff = (oldVdom: t<'msg>, newVdom: t<'msg>): patch<'msg> => {
   }
 }
 
+/// Diff two arrays of child nodes, producing a patch per index.
 and diffChildren = (oldChildren: array<t<'msg>>, newChildren: array<t<'msg>>): array<childPatch<'msg>> => {
   let maxLen = Pervasives.max(Array.length(oldChildren), Array.length(newChildren))
   Array.fromInitializer(~length=maxLen, i => {
@@ -387,7 +394,12 @@ let removeStaleAttrs = (el: {..}, oldAttrs: array<attribute<'msg>>, newAttrs: ar
       switch kind {
       | "prop" =>
         if key === "class" {
-          el["className"] = ""
+          // SVG elements have a read-only className (SVGAnimatedString)
+          if el["namespaceURI"] === svgNS {
+            el["setAttribute"]("class", "")
+          } else {
+            el["className"] = ""
+          }
         } else if key === "checked" || key === "disabled" || key === "readonly"
           || key === "required" || key === "autofocus" || key === "multiple"
           || key === "selected" || key === "hidden" {
