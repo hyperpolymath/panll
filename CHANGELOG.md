@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (2026-03-10)
+- **SVG className crash** — `Tea_Render.res` was setting `el.className` on SVG elements which throws because `SVGAnimatedString` is read-only. Now uses `setAttribute("class", ...)` for SVG elements. This was causing the grey screen on startup.
+
+### Added (2026-03-10 — Neural Stream Enrichment)
+- **Enriched neural token model** — tokens now carry full provenance metadata:
+  - `source`: 7 subsystem types (NeuralInference, EchidnaProver, TypeLLKernel, VeriSimInference, AntiCrashGate, OperatorInput, OrbitalSync)
+  - `category`: 8 semantic types (Observation, Hypothesis, Deduction, Abduction, ProofStep, Violation, Correction, Synthesis)
+  - `emittedDuring`: OODA phase tracking (Observe/Orient/Decide/Act)
+  - `causedBy`: causal chain links forming an inference DAG
+  - `proofHash`: optional proof certificate hash
+- **OODA phase timeline** — horizontal coloured bar showing phase distribution across tokens
+- **Source distribution bar** — colour-coded breakdown of subsystem contributions
+- **Causal inference graph** — compact DAG display showing how tokens are causally linked
+- **Interactive token filtering** — clickable chips for source/category/phase, confidence threshold slider, validated-only and proof-only toggles, clear button, filtered count indicator
+- **Menu bar actions wired** — import chain/panic report, reset panels, preferences, ECHIDNA/provenance panel routing
+- **New modules** — Accessibility, Help, MenuBar, ScriptGist, Tiling, FocusDimming, WindowBridge
+
 ### Added (2026-03-08 — BoJ Primary Gateway)
 - **BoJ primary gateway routing** — 4 panels now route through BoJ cartridges via `bojRouting` toggle
   - Editor Bridge LSP → `lsp-mcp`: ConnectLsp, RefreshDiagnostics, RefreshSymbols

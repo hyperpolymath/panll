@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
 <!-- TOPOLOGY.md — Project architecture map and completion dashboard -->
-<!-- Last updated: 2026-03-09 (race fixes, SeamEngine 100%, bench+integ expansion) -->
+<!-- Last updated: 2026-03-10 (Neural Stream enrichment, token filtering, menu wiring) -->
 
 # PanLL eNSAID — Project Topology
 
@@ -129,7 +129,7 @@ COMPONENT                          STATUS              NOTES                    
 ──────────────────────────────────  ──────────────────  ─────────────────────────── ───
 CORE PANELS (3)
   Panel-L (Symbolic Mass)           ██████████ 100%    Constraints, editor, proofs   D
-  Panel-N (Neural Stream + ECHIDNA) ██████████ 100%    Inference, confidence, OODA   D
+  Panel-N (Neural Stream + ECHIDNA) ██████████ 100%    Token provenance, filters, DAG D
   Panel-W (World/Barycentre)        ██████████ 100%    Results, VeriSimDB, security  D
 
 PANEL OVERLAYS (14 general + 11 IDApTIK + 3 meta)

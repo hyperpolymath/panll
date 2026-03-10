@@ -25,6 +25,9 @@
 *.adoc text
 *.ncl text
 *.scm text linguist-language=Scheme
+*.a2ml text
+*.css text
+*.html text
 
 # Binary artifacts
 *.wasm binary
@@ -38,7 +41,7 @@
 *.icns binary
 *.ctp binary
 
-# Generated files
+# Generated files — excluded from GitHub language stats and diffs
 *.res.js linguist-generated=true
 *.resi.js linguist-generated=true
 lib/bs/** linguist-generated=true
@@ -46,3 +49,7 @@ deno.lock linguist-generated=true
 package-lock.json linguist-generated=true
 src-tauri/Cargo.lock linguist-generated=true
 **/mix.lock linguist-generated=true
+public/styles.css linguist-generated=true
+
+# Vendor — excluded from language stats
+node_modules/** linguist-vendored=true

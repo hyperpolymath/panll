@@ -54,8 +54,16 @@ runtime/.env.*
 # Hypatia scanning artifacts
 .hypatia/
 
+# PanLL local state (session storage, feedback logs)
+.panll/
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+
 # IDE and OS files
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
+*.kate-swp

@@ -227,6 +227,51 @@ let updatePaneN = (model: model, msg: paneNMsg): model => {
   | SetInferenceActive(active) => {...paneN, inferenceActive: active}
   | UpdateMonologue(text) => {...paneN, monologue: text}
   | UpdateAgency(agency) => {...paneN, agency}
+  | ToggleSourceFilter(source) => {
+      let current = paneN.filters.sources
+      let has = current->Array.some(s => s === source)
+      let newSources = if has {
+        current->Array.filter(s => s !== source)
+      } else {
+        Array.concat(current, [source])
+      }
+      {...paneN, filters: {...paneN.filters, sources: newSources}}
+    }
+  | ToggleCategoryFilter(cat) => {
+      let current = paneN.filters.categories
+      let has = current->Array.some(c => c === cat)
+      let newCats = if has {
+        current->Array.filter(c => c !== cat)
+      } else {
+        Array.concat(current, [cat])
+      }
+      {...paneN, filters: {...paneN.filters, categories: newCats}}
+    }
+  | TogglePhaseFilter(phase) => {
+      let current = paneN.filters.phases
+      let has = current->Array.some(p => p === phase)
+      let newPhases = if has {
+        current->Array.filter(p => p !== phase)
+      } else {
+        Array.concat(current, [phase])
+      }
+      {...paneN, filters: {...paneN.filters, phases: newPhases}}
+    }
+  | SetConfidenceThreshold(threshold) =>
+      {...paneN, filters: {...paneN.filters, confidenceThreshold: threshold}}
+  | ToggleValidatedOnly =>
+      {...paneN, filters: {...paneN.filters, validatedOnly: !paneN.filters.validatedOnly}}
+  | ToggleProofOnly =>
+      {...paneN, filters: {...paneN.filters, proofOnly: !paneN.filters.proofOnly}}
+  | ClearFilters =>
+      {...paneN, filters: {
+        sources: [],
+        categories: [],
+        phases: [],
+        confidenceThreshold: 0.0,
+        validatedOnly: false,
+        proofOnly: false,
+      }}
   }
   {...model, paneN: newPaneN}
 }
@@ -11103,15 +11148,77 @@ let updateMenuBar = (model: model, msg: menuBarMsg): (model, Tea_Cmd.t<msg>) => 
     // File actions
     | "file:save-state" => (model, Tea_Cmd.none) // Routed to SaveState in main update
     | "file:open-repo" => (model, Tea_Cmd.none) // Would open RepoLoader panel
-    | "file:export-ensaid" => (model, Tea_Cmd.none)
-    | "file:import-chain" => (model, Tea_Cmd.none)
-    | "file:import-panic" => (model, Tea_Cmd.none)
-    | "file:preferences" => (model, Tea_Cmd.none)
+    | "file:new-workspace" => {
+      // Reset to initial state but keep viewMode as Standard (not DarkStart).
+      let fresh = Model.init()
+      ({...fresh, viewMode: Standard}, Tea_Cmd.none)
+    }
+    | "file:export-ensaid" => {
+      // No backend export yet — route to Help panel with status message.
+      ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none)
+    }
+    | "file:export-chain" => {
+      // No backend export yet — route to Help panel with status message.
+      ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none)
+    }
+    | "file:import-chain" => (
+      // Open file dialog to import an event chain JSON file (same as PaneW import button).
+      model,
+      TauriCmd.openEventChainFile(result => PaneW(EventChainFileLoaded(result))),
+    )
+    | "file:import-panic" => (
+      // Open file dialog to import a panic-attacker report file (same as PaneW import button).
+      model,
+      TauriCmd.openPanicAttackerReportFile(result =>
+        PaneW(PanicAttackerReportPathLoaded(result))
+      ),
+    )
+    | "file:preferences" => (
+      // Open the Workspace panel — that's where preferences live.
+      {...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelWorkspace)}},
+      Tea_Cmd.none,
+    )
+    | "file:print" => (model, Tea_Cmd.none) // No print backend — intentional no-op
     // Edit actions
-    | "edit:undo" => (model, Tea_Cmd.none) // Routed to Undo
-    | "edit:redo" => (model, Tea_Cmd.none) // Routed to Redo
+    | "edit:undo" => (model, Tea_Cmd.none) // Handled by main update loop — MenuAction routes through parent
+    | "edit:redo" => (model, Tea_Cmd.none) // Handled by main update loop — MenuAction routes through parent
     | "edit:clear-chain" => ({...model, paneW: {...model.paneW, eventChain: [], eventChainSummary: None, eventChainTimeline: None, eventChainInput: "", eventChainError: None}}, Tea_Cmd.none)
-    | "edit:reset-panel" => (model, Tea_Cmd.none)
+    | "edit:find" => (model, Tea_Cmd.none) // No find UI yet — awaiting search panel implementation
+    | "edit:replace" => (model, Tea_Cmd.none) // No find/replace UI yet — awaiting search panel implementation
+    | "edit:reset-panel" => {
+      // Reset all panels to defaults via the Workspace handler's logic.
+      // Inline the same reset as Workspace(ResetAllPanels) since we can't recurse.
+      let m = {
+        ...model,
+        coprocessors: CoprocessorsEngine.defaultState,
+        buildDashboard: BuildDashboardEngine.defaultState,
+        releaseManager: ReleaseManagerEngine.defaultState,
+        automationRouter: AutomationRouterEngine.defaultState,
+        scriptGist: ScriptGistEngine.defaultState,
+        security: SecurityEngine.defaultState,
+        voiceTag: VoiceTagEngine.defaultState,
+        massPanic: MassPanicModel.init,
+        panicAttack: PanicAttackModel.init,
+        tsdm: TsdmModel.init,
+        levelArchitect: LevelArchitectEngine.defaultState,
+        networkTopology: NetworkTopologyEngine.defaultState,
+        typell: TypeLLEngine.defaultState,
+        boj: BojEngine.defaultState,
+        vmInspector: VmInspectorEngine.defaultState,
+        gamePreview: GamePreviewEngine.defaultState,
+        provenance: ProvenanceEngine.defaultState,
+        myLang: MyLangEngine.defaultState,
+        valenceShell: ValenceShellEngine.defaultState,
+        migration: MigrationEngine.defaultState,
+        repoLoader: RepoLoaderEngine.defaultState,
+        ai: AiEngine.defaultState,
+        statusBar: StatusBarEngine.defaultState,
+        cladeBrowser: CladeBrowserModel.defaultState,
+        protocolSquisher: ProtocolSquisherEngine.defaultState,
+        aerie: AerieEngine.defaultState,
+      }
+      (m, Tea_Cmd.none)
+    }
     // View actions
     | "view:toggle-pane-l" => ({...model, paneLVisible: !model.paneLVisible}, Tea_Cmd.none)
     | "view:toggle-pane-n" => ({...model, paneNVisible: !model.paneNVisible}, Tea_Cmd.none)
@@ -11137,7 +11244,7 @@ let updateMenuBar = (model: model, msg: menuBarMsg): (model, Tea_Cmd.t<msg>) => 
     | "panel:security" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelSecurity)}}, Tea_Cmd.none)
     | "panel:boj" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelBoj)}}, Tea_Cmd.none)
     | "panel:typell" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelTypeLL)}}, Tea_Cmd.none)
-    | "panel:provenance" => (model, Tea_Cmd.none) // Provenance is core infrastructure — will become a panel
+    | "panel:provenance" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none) // Provenance panel slot needed — routes to Help for now
     // Tools actions — open tool panels
     | "tools:panic-attack" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelPanicAttack)}}, Tea_Cmd.none)
     | "tools:mass-panic" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelMassPanic)}}, Tea_Cmd.none)

@@ -466,9 +466,239 @@ let renderCausalGraph = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
   }
 }
 
-/// Render the token stream with OODA timeline, source distribution,
+/// Apply filter state to a token array — returns only tokens matching all active filters.
+let applyFilters = (tokens: array<neuralToken>, filters: tokenFilters): array<neuralToken> => {
+  tokens->Array.filter(token => {
+    let passSource = Array.length(filters.sources) === 0 ||
+      filters.sources->Array.some(s => s === token.source)
+    let passCategory = Array.length(filters.categories) === 0 ||
+      filters.categories->Array.some(c => c === token.category)
+    let passPhase = Array.length(filters.phases) === 0 ||
+      filters.phases->Array.some(p => p === token.emittedDuring)
+    let passConfidence = token.confidence >= filters.confidenceThreshold
+    let passValidated = !filters.validatedOnly || token.validated
+    let passProof = !filters.proofOnly || token.proofHash !== None
+    passSource && passCategory && passPhase && passConfidence && passValidated && passProof
+  })
+}
+
+/// Source filter chip — name and colour for each source type.
+let sourceChipInfo = (source: tokenSource): (string, string, string) => switch source {
+| NeuralInference => ("Neural", "bg-emerald-800 text-emerald-300", "bg-emerald-600 text-white")
+| EchidnaProver => ("ECHIDNA", "bg-indigo-800 text-indigo-300", "bg-indigo-600 text-white")
+| TypeLLKernel => ("TypeLL", "bg-violet-800 text-violet-300", "bg-violet-600 text-white")
+| VeriSimInference => ("VeriSim", "bg-cyan-800 text-cyan-300", "bg-cyan-600 text-white")
+| AntiCrashGate => ("AntiCrash", "bg-red-800 text-red-300", "bg-red-600 text-white")
+| OperatorInput => ("Operator", "bg-amber-800 text-amber-300", "bg-amber-600 text-white")
+| OrbitalSync => ("Orbital", "bg-blue-800 text-blue-300", "bg-blue-600 text-white")
+}
+
+/// Category filter chip label.
+let categoryChipLabel = (cat: tokenCategory): string => switch cat {
+| Observation => "Obs"
+| Hypothesis => "Hyp"
+| Deduction => "Ded"
+| Abduction => "Abd"
+| ProofStep => "Proof"
+| Violation => "Viol"
+| Correction => "Corr"
+| Synthesis => "Synth"
+}
+
+/// Render the interactive filter bar — source chips, category chips, phase chips,
+/// confidence slider, validated/proof toggles.
+let renderFilterBar = (filters: tokenFilters, totalCount: int, filteredCount: int): Tea_Vdom.t<msg> => {
+  let allSources: array<tokenSource> = [
+    NeuralInference, EchidnaProver, TypeLLKernel, VeriSimInference,
+    AntiCrashGate, OperatorInput, OrbitalSync,
+  ]
+  let allCategories: array<tokenCategory> = [
+    Observation, Hypothesis, Deduction, Abduction,
+    ProofStep, Violation, Correction, Synthesis,
+  ]
+  let allPhases: array<oodaPhase> = [Observe, Orient, Decide, Act]
+  let hasActiveFilters =
+    Array.length(filters.sources) > 0 ||
+    Array.length(filters.categories) > 0 ||
+    Array.length(filters.phases) > 0 ||
+    filters.confidenceThreshold > 0.0 ||
+    filters.validatedOnly ||
+    filters.proofOnly
+
+  div(
+    list{Attrs.class_("mb-3 p-2 bg-gray-900/50 rounded border border-gray-800")},
+    list{
+      // Header with count and clear button
+      div(
+        list{Attrs.class_("flex items-center justify-between mb-2")},
+        list{
+          div(
+            list{Attrs.class_("text-[10px] text-gray-500 uppercase tracking-wider")},
+            list{text("Filters")},
+          ),
+          div(
+            list{Attrs.class_("flex items-center gap-2")},
+            list{
+              if hasActiveFilters {
+                span(
+                  list{Attrs.class_("text-[10px] text-amber-500")},
+                  list{text(Int.toString(filteredCount) ++ "/" ++ Int.toString(totalCount))},
+                )
+              } else {
+                noNode
+              },
+              if hasActiveFilters {
+                button(
+                  list{
+                    Attrs.class_("text-[10px] text-gray-500 hover:text-gray-300 px-1"),
+                    Events.onClick(PaneN(ClearFilters)),
+                  },
+                  list{text("Clear")},
+                )
+              } else {
+                noNode
+              },
+            },
+          ),
+        },
+      ),
+      // Source filter chips
+      div(
+        list{Attrs.class_("flex flex-wrap gap-1 mb-1.5")},
+        allSources
+        ->Array.map(source => {
+          let (label, inactiveClass, activeClass) = sourceChipInfo(source)
+          let isActive = filters.sources->Array.some(s => s === source)
+          let chipClass = if isActive { activeClass } else { inactiveClass ++ " opacity-50" }
+          button(
+            list{
+              Attrs.class_(`px-1.5 py-0.5 rounded text-[9px] font-medium cursor-pointer transition-opacity ${chipClass}`),
+              Events.onClick(PaneN(ToggleSourceFilter(source))),
+              Attrs.ariaPressed(isActive),
+              Attrs.ariaLabel("Filter by " ++ label),
+            },
+            list{text(label)},
+          )
+        })
+        ->List.fromArray,
+      ),
+      // Category filter chips
+      div(
+        list{Attrs.class_("flex flex-wrap gap-1 mb-1.5")},
+        allCategories
+        ->Array.map(cat => {
+          let label = categoryChipLabel(cat)
+          let isActive = filters.categories->Array.some(c => c === cat)
+          let chipClass = if isActive {
+            "bg-gray-600 text-white"
+          } else {
+            "bg-gray-800 text-gray-500 opacity-50"
+          }
+          button(
+            list{
+              Attrs.class_(`px-1.5 py-0.5 rounded text-[9px] font-medium cursor-pointer transition-opacity ${chipClass}`),
+              Events.onClick(PaneN(ToggleCategoryFilter(cat))),
+              Attrs.ariaPressed(isActive),
+              Attrs.ariaLabel("Filter by " ++ label),
+            },
+            list{text(label)},
+          )
+        })
+        ->List.fromArray,
+      ),
+      // Phase filter chips + toggles row
+      div(
+        list{Attrs.class_("flex items-center gap-2 mb-1.5")},
+        list{
+          // OODA phase chips
+          div(
+            list{Attrs.class_("flex gap-1")},
+            allPhases
+            ->Array.map(phase => {
+              let label = phaseLabel(phase)
+              let isActive = filters.phases->Array.some(p => p === phase)
+              let colour = switch phase {
+              | Observe => if isActive { "bg-cyan-600 text-white" } else { "bg-cyan-900 text-cyan-600 opacity-50" }
+              | Orient => if isActive { "bg-amber-600 text-white" } else { "bg-amber-900 text-amber-600 opacity-50" }
+              | Decide => if isActive { "bg-violet-600 text-white" } else { "bg-violet-900 text-violet-600 opacity-50" }
+              | Act => if isActive { "bg-emerald-600 text-white" } else { "bg-emerald-900 text-emerald-600 opacity-50" }
+              }
+              button(
+                list{
+                  Attrs.class_(`px-1.5 py-0.5 rounded text-[9px] font-bold cursor-pointer transition-opacity ${colour}`),
+                  Events.onClick(PaneN(TogglePhaseFilter(phase))),
+                  Attrs.ariaPressed(isActive),
+                },
+                list{text(label)},
+              )
+            })
+            ->List.fromArray,
+          ),
+          // Validated-only toggle
+          button(
+            list{
+              Attrs.class_(
+                "px-1.5 py-0.5 rounded text-[9px] cursor-pointer " ++
+                if filters.validatedOnly { "bg-emerald-700 text-emerald-200" } else { "bg-gray-800 text-gray-600 opacity-50" }
+              ),
+              Events.onClick(PaneN(ToggleValidatedOnly)),
+              Attrs.ariaPressed(filters.validatedOnly),
+              Attrs.ariaLabel("Show validated tokens only"),
+            },
+            list{text("Validated")},
+          ),
+          // Proof-only toggle
+          button(
+            list{
+              Attrs.class_(
+                "px-1.5 py-0.5 rounded text-[9px] cursor-pointer " ++
+                if filters.proofOnly { "bg-emerald-700 text-emerald-200" } else { "bg-gray-800 text-gray-600 opacity-50" }
+              ),
+              Events.onClick(PaneN(ToggleProofOnly)),
+              Attrs.ariaPressed(filters.proofOnly),
+              Attrs.ariaLabel("Show proof-bearing tokens only"),
+            },
+            list{text("Proof #")},
+          ),
+        },
+      ),
+      // Confidence threshold slider
+      div(
+        list{Attrs.class_("flex items-center gap-2")},
+        list{
+          span(
+            list{Attrs.class_("text-[9px] text-gray-600 w-16")},
+            list{text("Conf >= " ++ Int.toString(Int.fromFloat(filters.confidenceThreshold *. 100.0)) ++ "%")},
+          ),
+          input(
+            list{
+              Attrs.type_("range"),
+              Attrs.class_("flex-1 h-1 accent-emerald-500"),
+              Attrs.min("0"),
+              Attrs.max("100"),
+              Attrs.step("5"),
+              Attrs.value(Int.toString(Int.fromFloat(filters.confidenceThreshold *. 100.0))),
+              Events.onInput(value => {
+                let v = Int.fromString(value)->Option.getOr(0)
+                PaneN(SetConfidenceThreshold(Float.fromInt(v) /. 100.0))
+              }),
+              Attrs.ariaLabel("Confidence threshold"),
+            },
+            list{},
+          ),
+        },
+      ),
+    },
+  )
+}
+
+/// Render the token stream with filters, OODA timeline, source distribution,
 /// causal graph, and the full token log.
-let renderTokenStream = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
+let renderTokenStream = (tokens: array<neuralToken>, filters: tokenFilters): Tea_Vdom.t<msg> => {
+  let filtered = applyFilters(tokens, filters)
+  let totalCount = Array.length(tokens)
+  let filteredCount = Array.length(filtered)
+
   div(
     list{Attrs.class_("mb-4")},
     list{
@@ -476,31 +706,42 @@ let renderTokenStream = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
         list{Attrs.class_("text-xs text-gray-500 mb-2 flex items-center justify-between")},
         list{
           text("TOKEN STREAM"),
-          if Array.length(tokens) > 0 {
+          if totalCount > 0 {
             span(
               list{Attrs.class_("text-[10px] text-gray-600")},
-              list{text(Int.toString(Array.length(tokens)) ++ " tokens")},
+              list{text(Int.toString(totalCount) ++ " tokens")},
             )
           } else {
             noNode
           },
         },
       ),
-      if Array.length(tokens) === 0 {
+      // Filter bar (always visible when there are tokens)
+      if totalCount > 0 {
+        renderFilterBar(filters, totalCount, filteredCount)
+      } else {
+        noNode
+      },
+      if totalCount === 0 {
         div(
           list{Attrs.class_("text-gray-600 text-sm italic")},
           list{text("No tokens received")},
+        )
+      } else if filteredCount === 0 {
+        div(
+          list{Attrs.class_("text-amber-600/60 text-sm italic")},
+          list{text("No tokens match current filters")},
         )
       } else {
         div(
           list{},
           list{
-            // OODA phase timeline
-            renderOodaTimeline(tokens),
-            // Source distribution bar
-            renderSourceDistribution(tokens),
-            // Causal inference graph
-            renderCausalGraph(tokens),
+            // OODA phase timeline (shows filtered tokens)
+            renderOodaTimeline(filtered),
+            // Source distribution bar (shows filtered tokens)
+            renderSourceDistribution(filtered),
+            // Causal inference graph (shows filtered tokens)
+            renderCausalGraph(filtered),
             // Token log
             div(
               list{
@@ -508,7 +749,7 @@ let renderTokenStream = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
                 Attrs.role("log"),
                 Attrs.ariaLabel("Token Stream"),
               },
-              tokens->Array.map(renderToken)->List.fromArray,
+              filtered->Array.map(renderToken)->List.fromArray,
             ),
           },
         )
@@ -1647,7 +1888,7 @@ let view = (state: paneNState, echidna: echidnaState, ~inferenceStream: array<st
       renderAgencyMonitor(state.agency),
 
       // Token stream
-      renderTokenStream(state.tokens),
+      renderTokenStream(state.tokens, state.filters),
 
       // VQL Inference stream (from VeriSimDB)
       renderInferenceStream(inferenceStream),

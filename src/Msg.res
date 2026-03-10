@@ -27,6 +27,14 @@ type paneNMsg =
   | SetInferenceActive(bool)
   | UpdateMonologue(string)
   | UpdateAgency(agencyState)
+  /// Token stream filter controls.
+  | ToggleSourceFilter(tokenSource)
+  | ToggleCategoryFilter(tokenCategory)
+  | TogglePhaseFilter(oodaPhase)
+  | SetConfidenceThreshold(float)
+  | ToggleValidatedOnly
+  | ToggleProofOnly
+  | ClearFilters
 
 /// Messages for Pane-W (World/Barycentre) – the security and event chain pane that
 /// aggregates panic-attacker data and renders the central canvas.

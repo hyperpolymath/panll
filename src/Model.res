@@ -560,6 +560,14 @@ let init = (): model => {
     inferenceActive: true,
     nextTokenId: 10,
     activeCausalChain: ["t-9"],
+    filters: {
+      sources: [],
+      categories: [],
+      phases: [],
+      confidenceThreshold: 0.0,
+      validatedOnly: false,
+      proofOnly: false,
+    },
     monologue: "ECHIDNA neural advisor active. Processing 7 symbolic constraints from Panel-L.\n\n[OBSERVE] Scanning constraint set: orbital-stability-inv, divergence-bound, autonomy-ceiling, trust-propagation, vexation-anti-inflammatory, type-safety-invariant (disabled), sync-latency-bound.\n\n[ORIENT] Symbolic mass density: moderate (editor content ~180 tokens). Barycentre currently balanced — both stars contributing mass. Divergence level low: symbolic and neural streams share vocabulary overlap.\n\n[DECIDE] Recommend verifying trust-propagation constraint against current provenance chain. The forall quantifier over artifact dependencies requires inductive proof — dispatching to Coq backend.\n\n[ACT] Dispatched proof obligation: trust_propagation_inductive to Coq. Estimated completion: <200ms. Monitoring sync latency for cross-pane coherence bound (2000ms ceiling).\n\nContractile status: orbital-stability STRICT (elasticity 0.2), vexation-ceiling ADAPTIVE (elasticity 0.5), divergence-limit WARN (elasticity 0.3), autonomy-bound STRICT (elasticity 0.4). All within elastic bounds.\n\nNext: Awaiting Coq discharge for trust propagation. Will update inference manifold on completion.",
     agency: {
       phase: Orient,

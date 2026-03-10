@@ -4,7 +4,7 @@
 (state
   (metadata
     (version "1.0.0")
-    (last-updated "2026-03-09-audit")
+    (last-updated "2026-03-10-neural-stream")
     (format-spec "hyperpolymath/rsr-template-repo/spec/STATE-FORMAT-SPEC.adoc"))
 
   (project-context
@@ -32,7 +32,8 @@
     (tea-modules 18)
     (model-files 49)
     (command-files 49)
-    (build-status "0 errors, 0 warnings"))
+    (build-status "0 errors, 7 warnings (unused vars)")
+    (test-count 1687))
 
   (current-position
     (milestone "v0.2.0 - TypeLL Cross-Panel Intelligence & Backend Connections")
@@ -45,7 +46,7 @@
       (overall 95))
     (phase "alpha-complete")
     (current-focus "CRG D→C promotion (requires author dogfooding), remaining polish")
-    (status-summary "95% overall — 41 panels wired (55 components), 41 clades, 70 test files (incl. 40 E2E), 258 ReScript + 103 Rust source files, TypeLL covers 41/41 panels (100%), 34 Rust backend modules, 1452 assertions, 0 build errors")
+    (status-summary "95% overall — 42 panels wired (55+ components), 42 clades, 70+ test files (incl. 40 E2E), 270+ ReScript + 103 Rust source files, TypeLL covers 41/41 panels (100%), 34 Rust backend modules, 1687 assertions, 0 build errors")
     (honesty-notes
       ("Source file count is 361 (.res + .rs); previous count of 537 included compiled .res.js outputs")
       ("Test count of 1452 is individual assertions across 70 test files (not 1452 test files)")
@@ -284,6 +285,25 @@
        ("Security penetration testing against SafeDOM"))))
 
   (session-history
+    ((session-id "2026-03-10-opus-neural-stream-enrichment")
+     (date "2026-03-10")
+     (agent "Claude Opus 4.6")
+     (focus "Neural Stream world-leading enrichment, token filtering, menu wiring, VQL-dt++ docs")
+     (outcomes
+       ("SVG className crash fix in Tea_Render.res — was causing grey screen on startup (SVGAnimatedString is read-only)")
+       ("Enriched neuralToken type: 7 sources (NeuralInference/EchidnaProver/TypeLLKernel/VeriSimInference/AntiCrashGate/OperatorInput/OrbitalSync), 8 categories, OODA phase tracking, causal chains, proof hashes")
+       ("OODA phase timeline visualisation — horizontal coloured bar showing phase distribution across tokens")
+       ("Source distribution bar — colour-coded subsystem contribution breakdown")
+       ("Causal inference graph — compact DAG showing token causality links")
+       ("Interactive token filtering: source/category/phase chips, confidence slider, validated-only/proof-only toggles, clear button")
+       ("tokenFilters type + applyFilters function — all visualisations respond to active filters")
+       ("Full serialisation/deserialisation for enriched tokens in Storage.res")
+       ("SubscriptionsFixed.res updated: heartbeat tokens carry all 11 fields")
+       ("Menu bar stub actions wired: file:import-chain, file:import-panic, edit:reset-panel, file:preferences, panel routing")
+       ("VQL-dt++ integration: Appendix E in VQL-SPEC.adoc, comparison tables in TypeLL vision doc")
+       ("Stapeln containerisation decision recorded: NO for core panels L/N/W, YES for backend services")
+       ("1687 Deno tests passing (was 1452), 0 build errors")))
+
     ((session-id "2026-03-09-opus-typell-100-e2e")
      (date "2026-03-09")
      (agent "Claude Opus 4.6")

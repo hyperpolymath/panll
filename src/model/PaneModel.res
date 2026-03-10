@@ -133,6 +133,23 @@ type paneLState = {
   lastInferredType: option<string>,
 }
 
+/// Filter state for the Neural Stream — controls which tokens are visible.
+/// Each filter is a set of active values; if empty, all values pass.
+type tokenFilters = {
+  /// Active source filters — empty means show all sources.
+  sources: array<tokenSource>,
+  /// Active category filters — empty means show all categories.
+  categories: array<tokenCategory>,
+  /// Active OODA phase filters — empty means show all phases.
+  phases: array<oodaPhase>,
+  /// Minimum confidence threshold (0.0–1.0). Tokens below this are hidden.
+  confidenceThreshold: float,
+  /// Whether to show only validated tokens.
+  validatedOnly: bool,
+  /// Whether to show only tokens with proof hashes.
+  proofOnly: bool,
+}
+
 /// Pane-N: Neural Stream (Phenomena)
 type paneNState = {
   /// Accumulated neural tokens from the inference stream.
@@ -149,6 +166,8 @@ type paneNState = {
   /// reasoning thread. New tokens reference these as their `causedBy`.
   /// Reset when the agent enters a new OODA Observe phase.
   activeCausalChain: array<string>,
+  /// Token stream filter state — controls which tokens are displayed.
+  filters: tokenFilters,
 }
 
 /// Pane-W: World/Task Barycentre
