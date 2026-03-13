@@ -2112,6 +2112,31 @@ type stapelnMsg =
   /// Dismiss the error banner.
   | DismissError
 
+/// Evangeliser messages — JS→ReScript pattern detection and teaching.
+type evangeliserMsg =
+  /// Set the JS code input for scanning.
+  | SetJsInput(string)
+  /// Run the pattern scanner on the current JS input.
+  | RunScan
+  /// Scan completed (or failed).
+  | ScanComplete(result<evangeliserAnalysis, string>)
+  /// Switch the active tab.
+  | SetTab(evangeliserTab)
+  /// Set the view layer (RAW, FOLDED, GLYPHED, WYSIWYG).
+  | SetViewLayer(evangeliserViewLayer)
+  /// Set the minimum confidence threshold.
+  | SetMinConfidence(float)
+  /// Set the difficulty filter.
+  | SetDifficultyFilter(option<evangeliserDifficulty>)
+  /// Toggle a category in the constraint filter.
+  | ToggleCategory(evangeliserCategory)
+  /// Select a match in the results view.
+  | SelectMatch(option<int>)
+  /// Set the pattern filter text.
+  | SetFilterText(string)
+  /// Dismiss error.
+  | DismissError
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -2186,6 +2211,7 @@ type msg =
   | Tiling(tilingMsg) // Multi-monitor panel detachment and tiling
   | FocusDimming(focusDimmingMsg) // Focus-aware dimming and Smart Memory Mode
   | Stapeln(stapelnMsg) // Stapeln container assembly pipeline
+  | Evangeliser(evangeliserMsg) // ReScript Evangeliser — JS→ReScript teaching
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

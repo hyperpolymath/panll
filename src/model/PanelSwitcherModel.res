@@ -54,6 +54,8 @@ type panelId =
   | PanelProtocolSquisher
   | PanelMyLang
   | PanelTypeLL
+  /// ReScript Evangeliser — JS→ReScript transformation teaching panel.
+  | PanelEvangeliser
   /// In-application help system — searchable guides, glossary, onboarding.
   | PanelHelp
 

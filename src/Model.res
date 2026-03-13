@@ -282,6 +282,12 @@ include ScriptGistModel
 /// validation, artifact formats, component catalog, panel state).
 include StapelnModel
 
+/// Re-export Evangeliser types (evangeliserCategory, evangeliserDifficulty,
+/// evangeliserGlyph, evangeliserNarrative, evangeliserPattern, evangeliserMatch,
+/// evangeliserAnalysis, evangeliserConstraints, evangeliserTab, evangeliserViewLayer,
+/// evangeliserState) for the JS→ReScript transformation teaching panel.
+include EvangeliserModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -498,6 +504,9 @@ type model = {
 
   // Stapeln — container stack assembly pipeline (constraints, reasoning, artifacts)
   stapeln: stapelnState,
+
+  // Evangeliser — JS→ReScript pattern teaching with celebrate/minimize/better narratives
+  evangeliser: evangeliserState,
 }
 
 /// Initial model state - "Dark Start" mode
@@ -1174,4 +1183,5 @@ let init = (): model => {
   focusDimming: FocusDimmingEngine.defaultState,
   scriptGist: ScriptGistEngine.defaultState,
   stapeln: StapelnEngine.defaultState,
+  evangeliser: EvangeliserEngine.defaultState,
 }

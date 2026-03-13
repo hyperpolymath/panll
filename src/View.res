@@ -258,6 +258,7 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelProtocolSquisher) => ProtocolSquisher.view(model.protocolSquisher)
   | Some(PanelMyLang) => MyLang.view(model.myLang)
   | Some(PanelTypeLL) => TypeLL.view(model.typell)
+  | Some(PanelEvangeliser) => Evangeliser.view(model.evangeliser)
   | Some(PanelHelp) => Help.view(model.help)
   }
 }

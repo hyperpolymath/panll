@@ -432,6 +432,16 @@ let allPanels: array<panelMeta> = [
     cladeId: Some("typell"),
   },
   {
+    id: PanelEvangeliser,
+    name: "Evangeliser",
+    shortName: "Evan",
+    description: "ReScript Evangeliser — JS-to-ReScript transformation teaching with 52 patterns, Makaton glyphs, and celebrate/minimize/better narratives",
+    icon: "sparkles",
+    connectionStatus: ServiceConnected, // Pure local logic, always available
+    hasBackend: false, // All pattern matching runs client-side
+    cladeId: Some("evangeliser"),
+  },
+  {
     id: PanelHelp,
     name: "Help",
     shortName: "Help",
