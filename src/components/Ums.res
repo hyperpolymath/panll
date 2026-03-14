@@ -545,7 +545,48 @@ let renderApiReference = (state: umsState): Tea_Vdom.t<msg> => {
 }
 
 /// Main view function for the Universal Modding Studio panel.
-let view = (state: umsState): Tea_Vdom.t<msg> => {
+/// Render a Level Architect summary card showing entity count and validation status.
+let renderLevelArchitectSummary = (la: levelArchitectState): Tea_Vdom.t<msg> => {
+  let entityCount = Array.length(la.entities)
+  let validationBadge = switch la.umsValidation {
+  | Some(v) if v.allPassed =>
+    span(list{Attrs.class_("text-xs text-emerald-400")}, list{text("ABI: ALL PASSED")})
+  | Some(_) =>
+    span(list{Attrs.class_("text-xs text-red-400")}, list{text("ABI: HAS FAILURES")})
+  | None =>
+    span(list{Attrs.class_("text-xs text-gray-500")}, list{text("ABI: Not validated")})
+  }
+  div(
+    list{Attrs.class_("p-3 bg-gray-800/50 rounded border border-gray-700/50")},
+    list{
+      div(
+        list{Attrs.class_("flex items-center justify-between mb-1")},
+        list{
+          span(list{Attrs.class_("text-xs font-medium text-gray-300")}, list{text("Level Architect")}),
+          button(
+            list{
+              Attrs.class_("text-xs text-cyan-400 hover:text-cyan-300 cursor-pointer"),
+              Events.onClick(Ums(NavigateToPanel(PanelLevelArchitect))),
+            },
+            list{text("Open")},
+          ),
+        },
+      ),
+      div(
+        list{Attrs.class_("flex items-center gap-3 text-xs")},
+        list{
+          span(list{Attrs.class_("text-gray-400")}, list{text(`${Int.toString(entityCount)} entities`)}),
+          span(list{Attrs.class_("text-gray-400")}, list{text(`${la.levelName}`)}),
+          validationBadge,
+        },
+      ),
+    },
+  )
+}
+
+/// Main view function for the Universal Modding Studio panel.
+/// Accepts both UMS state and Level Architect state for cross-panel data display.
+let view = (state: umsState, ~levelArchitect: levelArchitectState): Tea_Vdom.t<msg> => {
   /// Selected project name for the header subtitle.
   let projectName = switch state.selectedProjectId {
   | Some(id) =>
@@ -647,6 +688,11 @@ let view = (state: umsState): Tea_Vdom.t<msg> => {
       } else {
         noNode
       },
+      // Level Architect cross-panel summary
+      div(
+        list{Attrs.class_("px-4 py-2 border-b border-gray-800/50")},
+        list{renderLevelArchitectSummary(levelArchitect)},
+      ),
       // Cross-panel navigation — quick-launch related eNSAID panels
       div(
         list{Attrs.class_("flex items-center gap-2 px-4 py-2 border-b border-gray-800/50")},

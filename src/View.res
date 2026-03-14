@@ -342,7 +342,7 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelCoprocessors) => Coprocessors.view(model.coprocessors)
   | Some(PanelMultiplayerMonitor) => MultiplayerMonitor.view(model.multiplayerMonitor)
   | Some(PanelDlcWorkshop) => DlcWorkshop.view(model.dlcWorkshop)
-  | Some(PanelUms) => Ums.view(model.ums)
+  | Some(PanelUms) => Ums.view(model.ums, ~levelArchitect=model.levelArchitect)
   | Some(PanelEditorBridge) => EditorBridge.view(model.editorBridge)
   | Some(PanelBuildDashboard) => BuildDashboard.view(model.buildDashboard)
   | Some(PanelReleaseManager) => ReleaseManager.view(model.releaseManager)
