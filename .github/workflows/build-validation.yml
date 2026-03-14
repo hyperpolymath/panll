@@ -54,3 +54,14 @@ jobs:
       - name: Rust test gate
         run: cargo test --manifest-path src-tauri/Cargo.toml -- --test-threads=1
 
+      - name: Setup Rust toolchain for PCC
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+        with:
+          toolchain: stable
+
+      - name: Build Panel Contract Compiler
+        run: cargo build --release --manifest-path tools/pcc/Cargo.toml
+
+      - name: Panel wiring verification gate
+        run: ./tools/pcc/target/release/panll panel verify --repo-root .
+
