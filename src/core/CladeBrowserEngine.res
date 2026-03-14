@@ -920,9 +920,9 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
   | "ums" =>
     withDefaults(
       ~protocols=[ProtoTauriIPC, ProtoREST],
-      ~capabilities=[CapFilesystem, CapVisualisation, CapCompute],
+      ~capabilities=[CapFilesystem, CapVisualisation, CapProofProduction, CapTypeChecking],
       ~enhances=["level-architect", "dlc-workshop", "game-preview", "vm-inspector"],
-      ~requires=["level-architect"],
+      ~requires=[{cladeId: "level-architect", required: true, reason: "UMS validates levels via Level Architect's Idris2 ABI"}],
       entry,
     )
   | "plaza" =>
