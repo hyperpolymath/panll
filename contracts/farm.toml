@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Farm — repository admin registry and maintenance hub
+
+panel_id = "Farm"
+module_name = "Farm"
+model_slice = "farm"
+msg_namespace = "farmMsg"
+view_route = "PanelFarm"
+short_name = "Farm"
+clade_id = "farm"
+has_backend = false

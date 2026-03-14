@@ -75,6 +75,64 @@ type panelId =
   /// Universal Modding Studio — unified hub for IDApTIK game content creation,
   /// ABI validation, asset pipeline, mod distribution, and cross-panel orchestration.
   | PanelUms
+  /// Unit Test Runner — ReScript test execution, coverage heatmap, diff-aware.
+  | PanelUnitTestRunner
+  /// Functional Tester — end-to-end game workflow simulation.
+  | PanelFunctionalTester
+  /// Regression Guard — snapshot comparison and golden-file testing.
+  | PanelRegressionGuard
+  /// Performance Profiler — frame budget, GC pressure, memory flamegraphs.
+  | PanelPerformanceProfiler
+  /// Load Tester — Phoenix channel stress testing, concurrent simulation.
+  | PanelLoadTester
+  /// Soak Monitor — long-running session memory trend and leak detection.
+  | PanelSoakMonitor
+  /// Compatibility Matrix — browser/device/resolution test matrix.
+  | PanelCompatibilityMatrix
+  /// Exploratory Workbench — freeform play session recording, anomaly detection.
+  | PanelExploratoryWorkbench
+  /// Beta Feedback Hub — feedback-o-tron integration, sentiment, triage.
+  | PanelBetaFeedbackHub
+  /// Balance Analyser — game balance stats, Monte Carlo, difficulty curves.
+  | PanelBalanceAnalyser
+  /// Typing Bridge — TypeLL type constraints for game state.
+  | PanelTypingBridge
+  /// Neurosymbolic Bridge — guard AI behaviour reasoning via ECHIDNA.
+  | PanelNeurosymBridge
+  /// Agentic Bridge — automated playtesting agents with OODA loop.
+  | PanelAgenticBridge
+  /// Automation Bridge — CI/CD pipeline orchestration for game builds.
+  | PanelAutomationBridge
+  /// Database Bridge — VeriSimDB game state persistence.
+  | PanelDatabaseBridge
+  /// Protocol Bridge — multiplayer sync protocol analysis.
+  | PanelProtocolBridge
+  /// Proofs Bridge — proven repo formal verification integration.
+  | PanelProofsBridge
+  /// Scripting Bridge — VM instruction scripting REPL.
+  | PanelScriptingBridge
+  /// Generator Mode — parametric procedural world builder.
+  | PanelGeneratorMode
+  /// Architect Mode — PixiJS fine-grained level editor with L/N/W.
+  | PanelArchitectMode
+  /// Guard AI Tuner — guard patrol, alert threshold, spawn rate tuning.
+  | PanelGuardAiTuner
+  /// Device Network Designer — wire devices, configure security levels.
+  | PanelDeviceNetworkDesigner
+  /// Asset Manager — PixiJS sprites, sounds, level templates.
+  | PanelAssetManager
+  /// Playtest Recorder — record + replay sessions, annotate moments.
+  | PanelPlaytestRecorder
+  /// Code Review — PR review, inline comments, approval gates.
+  | PanelCodeReview
+  /// Merge Coordinator — branch management, conflict resolution.
+  | PanelMergeCoordinator
+  /// Team Dashboard — who's working on what, activity feed.
+  | PanelTeamDashboard
+  /// Debugging Workbench — Tea_Debug frontend, time-travel state inspection.
+  | PanelDebuggingWorkbench
+  /// Wiring Inspector — PCC constraint state, obligation graph, bottleneck analysis.
+  | PanelWiringInspector
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

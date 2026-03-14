@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Code Review — PR review, inline comments, approval gates
+
+panel_id = "Code Review"
+module_name = "CodeReview"
+model_slice = "codeReview"
+msg_namespace = "codeReviewMsg"
+view_route = "PanelCodeReview"
+short_name = "CR"
+clade_id = "code-review"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for ECHIDNA — multi-solver theorem prover
+
+panel_id = "ECHIDNA"
+module_name = "Echidna"
+model_slice = "echidna"
+msg_namespace = "echidnaMsg"
+view_route = "PanelEchidna"
+short_name = "ECH"
+clade_id = "echidna"
+has_backend = true

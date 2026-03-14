@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Merge Coordinator — branch management, conflict resolution, merge queue
+
+panel_id = "Merge Coordinator"
+module_name = "MergeCoordinator"
+model_slice = "mergeCoordinator"
+msg_namespace = "mergeCoordinatorMsg"
+view_route = "PanelMergeCoordinator"
+short_name = "Merge"
+clade_id = "merge-coordinator"
+has_backend = true

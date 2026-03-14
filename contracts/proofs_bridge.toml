@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Proofs Bridge — proven repo formal verification integration
+
+panel_id = "Proofs Bridge"
+module_name = "ProofsBridge"
+model_slice = "proofsBridge"
+msg_namespace = "proofsBridgeMsg"
+view_route = "PanelProofsBridge"
+short_name = "PfB"
+clade_id = "proofs-bridge"
+has_backend = true

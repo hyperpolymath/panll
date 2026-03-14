@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Language Forge — nextgen-languages portfolio monitoring
+
+panel_id = "Language Forge"
+module_name = "LanguageForge"
+model_slice = "languageForge"
+msg_namespace = "languageForgeMsg"
+view_route = "PanelLanguageForge"
+short_name = "Forge"
+clade_id = "language-forge"
+has_backend = false

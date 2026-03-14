@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for DLC Workshop — create, test, and package DLC puzzle packs
+
+panel_id = "DLC Workshop"
+module_name = "DlcWorkshop"
+model_slice = "dlcWorkshop"
+msg_namespace = "dlcWorkshopMsg"
+view_route = "PanelDlcWorkshop"
+short_name = "DLC"
+clade_id = "dlc-workshop"
+has_backend = true

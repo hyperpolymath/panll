@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Provisioner — portfolio bundles, panel configuration, isolation tier management
+
+panel_id = "Provisioner"
+module_name = "Provisioner"
+model_slice = "provisioner"
+msg_namespace = "provisionerMsg"
+view_route = "PanelProvisioner"
+short_name = "Prov"
+clade_id = "provisioner"
+has_backend = false

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Beta Feedback Hub — feedback-o-tron integration, sentiment, triage
+
+panel_id = "Beta Feedback Hub"
+module_name = "BetaFeedbackHub"
+model_slice = "betaFeedbackHub"
+msg_namespace = "betaFeedbackHubMsg"
+view_route = "PanelBetaFeedbackHub"
+short_name = "Beta"
+clade_id = "beta-feedback-hub"
+has_backend = true

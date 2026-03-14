@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for 7-Tentacles — compiler agent orchestra with OODA reasoning
+
+panel_id = "7-Tentacles"
+module_name = "Tentacles"
+model_slice = "tentacles"
+msg_namespace = "tentaclesMsg"
+view_route = "PanelTentacles"
+short_name = "Tentacles"
+clade_id = "clade-tentacles"
+has_backend = true

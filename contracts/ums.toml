@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Universal Modding Studio — unified IDApTIK game content creation hub
+
+panel_id = "Universal Modding Studio"
+module_name = "Ums"
+model_slice = "ums"
+msg_namespace = "umsMsg"
+view_route = "PanelUms"
+short_name = "UMS"
+clade_id = "ums"
+has_backend = true

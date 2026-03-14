@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Guard AI Tuner — guard patrol, alert threshold, spawn rate tuning
+
+panel_id = "Guard AI Tuner"
+module_name = "GuardAiTuner"
+model_slice = "guardAiTuner"
+msg_namespace = "guardAiTunerMsg"
+view_route = "PanelGuardAiTuner"
+short_name = "GAI"
+clade_id = "guard-ai-tuner"
+has_backend = true

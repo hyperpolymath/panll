@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Code MRI — voice-activated code annotation
+
+panel_id = "Code MRI"
+module_name = "VoiceTag"
+model_slice = "voiceTag"
+msg_namespace = "voiceTagMsg"
+view_route = "PanelVoiceTag"
+short_name = "MRI"
+clade_id = "voicetag"
+has_backend = false

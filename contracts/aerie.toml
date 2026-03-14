@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Aerie — network diagnostics and BGP forensics
+
+panel_id = "Aerie"
+module_name = "Aerie"
+model_slice = "aerie"
+msg_namespace = "aerieMsg"
+view_route = "PanelAerie"
+short_name = "Net"
+clade_id = "aerie"
+has_backend = true

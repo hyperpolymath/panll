@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Playtest Recorder — record and replay game sessions
+
+panel_id = "Playtest Recorder"
+module_name = "PlaytestRecorder"
+model_slice = "playtestRecorder"
+msg_namespace = "playtestRecorderMsg"
+view_route = "PanelPlaytestRecorder"
+short_name = "Play"
+clade_id = "playtest-recorder"
+has_backend = true

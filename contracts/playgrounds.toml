@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Playgrounds — code sandbox, NQC console, tutorials
+
+panel_id = "Playgrounds"
+module_name = "Playgrounds"
+model_slice = "playgrounds"
+msg_namespace = "playgroundsMsg"
+view_route = "PanelPlaygrounds"
+short_name = "Play"
+clade_id = "playgrounds"
+has_backend = true

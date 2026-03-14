@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Architect Mode — PixiJS fine-grained level editor with L/N/W
+
+panel_id = "Architect Mode"
+module_name = "ArchitectMode"
+model_slice = "architectMode"
+msg_namespace = "architectModeMsg"
+view_route = "PanelArchitectMode"
+short_name = "Arch"
+clade_id = "architect-mode"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Build Dashboard — monitor builds, tests, errors, compilation status
+
+panel_id = "Build Dashboard"
+module_name = "BuildDashboard"
+model_slice = "buildDashboard"
+msg_namespace = "buildDashboardMsg"
+view_route = "PanelBuildDashboard"
+short_name = "Bld"
+clade_id = "build-dashboard"
+has_backend = true

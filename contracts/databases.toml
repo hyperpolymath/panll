@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Databases — VeriSimDB, QuandleDB, LithoGlyph management
+
+panel_id = "Databases"
+module_name = "Databases"
+model_slice = "databases"
+msg_namespace = "databasesMsg"
+view_route = "PanelDatabases"
+short_name = "DB"
+clade_id = "databases"
+has_backend = true

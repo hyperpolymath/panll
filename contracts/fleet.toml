@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Fleet — gitbot fleet orchestration and dispatch
+
+panel_id = "Fleet"
+module_name = "Fleet"
+model_slice = "fleet"
+msg_namespace = "fleetMsg"
+view_route = "PanelFleet"
+short_name = "Fleet"
+clade_id = "fleet"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Neurosymbolic Bridge — guard AI behaviour reasoning via ECHIDNA
+
+panel_id = "Neurosymbolic Bridge"
+module_name = "NeurosymBridge"
+model_slice = "neurosymBridge"
+msg_namespace = "neurosymBridgeMsg"
+view_route = "PanelNeurosymBridge"
+short_name = "NsB"
+clade_id = "neurosym-bridge"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Asset Manager — PixiJS sprites, sounds, level templates
+
+panel_id = "Asset Manager"
+module_name = "AssetManager"
+model_slice = "assetManager"
+msg_namespace = "assetManagerMsg"
+view_route = "PanelAssetManager"
+short_name = "Asset"
+clade_id = "asset-manager"
+has_backend = true

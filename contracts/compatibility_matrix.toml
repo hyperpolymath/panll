@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Compatibility Matrix — browser, device, resolution test matrix
+
+panel_id = "Compatibility Matrix"
+module_name = "CompatibilityMatrix"
+model_slice = "compatibilityMatrix"
+msg_namespace = "compatibilityMatrixMsg"
+view_route = "PanelCompatibilityMatrix"
+short_name = "Compat"
+clade_id = "compatibility-matrix"
+has_backend = true

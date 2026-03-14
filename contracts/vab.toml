@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for VAB — Verified Assembly Building server component composer
+
+panel_id = "VAB"
+module_name = "Vab"
+model_slice = "vab"
+msg_namespace = "vabMsg"
+view_route = "PanelVab"
+short_name = "VAB"
+clade_id = "vab"
+has_backend = false

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Help — in-application help, searchable guides, glossary, onboarding
+
+panel_id = "Help"
+module_name = "Help"
+model_slice = "help"
+msg_namespace = "helpMsg"
+view_route = "PanelHelp"
+short_name = "Help"
+clade_id = "help"
+has_backend = false

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Device Network Designer — wire devices, configure security levels
+
+panel_id = "Device Network Designer"
+module_name = "DeviceNetworkDesigner"
+model_slice = "deviceNetworkDesigner"
+msg_namespace = "deviceNetworkDesignerMsg"
+view_route = "PanelDeviceNetworkDesigner"
+short_name = "DND"
+clade_id = "device-network-designer"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Game Preview — live IDApTIK game preview with hot-reload
+
+panel_id = "Game Preview"
+module_name = "GamePreview"
+model_slice = "gamePreview"
+msg_namespace = "gamePreviewMsg"
+view_route = "PanelGamePreview"
+short_name = "Game"
+clade_id = "game-preview"
+has_backend = true

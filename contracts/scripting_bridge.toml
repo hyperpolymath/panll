@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Scripting Bridge — VM instruction scripting REPL
+
+panel_id = "Scripting Bridge"
+module_name = "ScriptingBridge"
+model_slice = "scriptingBridge"
+msg_namespace = "scriptingBridgeMsg"
+view_route = "PanelScriptingBridge"
+short_name = "ScB"
+clade_id = "scripting-bridge"
+has_backend = true

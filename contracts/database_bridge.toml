@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Database Bridge — VeriSimDB game state persistence
+
+panel_id = "Database Bridge"
+module_name = "DatabaseBridge"
+model_slice = "databaseBridge"
+msg_namespace = "databaseBridgeMsg"
+view_route = "PanelDatabaseBridge"
+short_name = "DbB"
+clade_id = "database-bridge"
+has_backend = true

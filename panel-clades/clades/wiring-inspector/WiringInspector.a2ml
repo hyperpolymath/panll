@@ -1,0 +1,19 @@
+(clade
+  (id "wiring-inspector")
+  (name "WiringInspector")
+  (kind "infrastructure")
+  (parent "infrastructure")
+  (description "Constraint-aware panel wiring verification powered by the Panel Contract Compiler")
+  (traits
+    (has-backend true)
+    (has-persistence false)
+    (has-customisation true)
+    (is-readonly true))
+  (capabilities
+    (WiringVerification "Run PCC against all panel contracts")
+    (BottleneckAnalysis "Identify primary wiring bottleneck per panel")
+    (ObligationGraph "Dependency graph of wiring obligations"))
+  (bot-lifecycle
+    (minted-by "minter")
+    (structure-validated-by "rhodibot")
+    (wiring-validated-by "seambot")))

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Generator Mode — parametric procedural world builder
+
+panel_id = "Generator Mode"
+module_name = "GeneratorMode"
+model_slice = "generatorMode"
+msg_namespace = "generatorModeMsg"
+view_route = "PanelGeneratorMode"
+short_name = "Gen"
+clade_id = "generator-mode"
+has_backend = true

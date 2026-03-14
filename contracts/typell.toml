@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for TypeLL — verification kernel with dependent, linear, affine, session, refinement types
+
+panel_id = "TypeLL"
+module_name = "TypeLL"
+model_slice = "typell"
+msg_namespace = "typellMsg"
+view_route = "PanelTypeLL"
+short_name = "TypeLL"
+clade_id = "typell"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Functional Tester — end-to-end game workflow simulation
+
+panel_id = "Functional Tester"
+module_name = "FunctionalTester"
+model_slice = "functionalTester"
+msg_namespace = "functionalTesterMsg"
+view_route = "PanelFunctionalTester"
+short_name = "FT"
+clade_id = "functional-tester"
+has_backend = true

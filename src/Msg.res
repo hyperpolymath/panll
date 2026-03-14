@@ -2364,6 +2364,216 @@ type ambientOpsMsg =
   /// Dismiss error banner.
   | DismissOpsError
 
+/// Unit Test Runner messages — test execution, coverage, diff-aware testing.
+type unitTestRunnerMsg =
+  | SetUtrTab(unitTestTab)
+  | UtrStarted
+  | UtrCompleted(result<string, string>)
+  | DismissUtrError
+
+/// Functional Tester messages — end-to-end game workflow simulation.
+type functionalTesterMsg =
+  | SetFtTab(functionalTestTab)
+  | FtStarted
+  | FtCompleted(result<string, string>)
+  | DismissFtError
+
+/// Regression Guard messages — snapshot comparison and golden-file testing.
+type regressionGuardMsg =
+  | SetRgTab(regressionTab)
+  | RgStarted
+  | RgCompleted(result<string, string>)
+  | DismissRgError
+
+/// Performance Profiler messages — frame budget, GC pressure, memory flamegraphs.
+type performanceProfilerMsg =
+  | SetPpTab(performanceTab)
+  | PpStarted
+  | PpCompleted(result<string, string>)
+  | DismissPpError
+
+/// Load Tester messages — Phoenix channel stress testing, concurrent simulation.
+type loadTesterMsg =
+  | SetLtTab(loadTestTab)
+  | LtStarted
+  | LtCompleted(result<string, string>)
+  | DismissLtError
+
+/// Soak Monitor messages — long-running session memory trend and leak detection.
+type soakMonitorMsg =
+  | SetSmTab(soakTab)
+  | SmStarted
+  | SmCompleted(result<string, string>)
+  | DismissSmError
+
+/// Compatibility Matrix messages — browser/device/resolution test matrix.
+type compatibilityMatrixMsg =
+  | SetCmTab(compatibilityTab)
+  | CmStarted
+  | CmCompleted(result<string, string>)
+  | DismissCmError
+
+/// Exploratory Workbench messages — freeform play session recording, anomaly detection.
+type exploratoryWorkbenchMsg =
+  | SetEwTab(exploratoryTab)
+  | EwStarted
+  | EwCompleted(result<string, string>)
+  | DismissEwError
+
+/// Beta Feedback Hub messages — feedback-o-tron integration, sentiment, triage.
+type betaFeedbackHubMsg =
+  | SetBfhTab(betaFeedbackTab)
+  | BfhStarted
+  | BfhCompleted(result<string, string>)
+  | DismissBfhError
+
+/// Balance Analyser messages — game balance stats, Monte Carlo, difficulty curves.
+type balanceAnalyserMsg =
+  | SetBaTab(balanceTab)
+  | BaStarted
+  | BaCompleted(result<string, string>)
+  | DismissBaError
+
+/// Typing Bridge messages — TypeLL type constraints for game state.
+type typingBridgeMsg =
+  | SetTbTab(typingBridgeTab)
+  | TbStarted
+  | TbCompleted(result<string, string>)
+  | DismissTbError
+
+/// Neurosymbolic Bridge messages — guard AI behaviour reasoning via ECHIDNA.
+type neurosymBridgeMsg =
+  | SetNbTab(neurosymBridgeTab)
+  | NbStarted
+  | NbCompleted(result<string, string>)
+  | DismissNbError
+
+/// Agentic Bridge messages — automated playtesting agents with OODA loop.
+type agenticBridgeMsg =
+  | SetAbTab(agenticBridgeTab)
+  | AbStarted
+  | AbCompleted(result<string, string>)
+  | DismissAbError
+
+/// Automation Bridge messages — CI/CD pipeline orchestration for game builds.
+type automationBridgeMsg =
+  | SetAutoBTab(automationBridgeTab)
+  | AutoBStarted
+  | AutoBCompleted(result<string, string>)
+  | DismissAutoBError
+
+/// Database Bridge messages — VeriSimDB game state persistence.
+type databaseBridgeMsg =
+  | SetDbBTab(databaseBridgeTab)
+  | DbBStarted
+  | DbBCompleted(result<string, string>)
+  | DismissDbBError
+
+/// Protocol Bridge messages — multiplayer sync protocol analysis.
+type protocolBridgeMsg =
+  | SetPbTab(protocolBridgeTab)
+  | PbStarted
+  | PbCompleted(result<string, string>)
+  | DismissPbError
+
+/// Proofs Bridge messages — proven repo formal verification integration.
+type proofsBridgeMsg =
+  | SetPrBTab(proofsBridgeTab)
+  | PrBStarted
+  | PrBCompleted(result<string, string>)
+  | DismissPrBError
+
+/// Scripting Bridge messages — VM instruction scripting REPL.
+type scriptingBridgeMsg =
+  | SetScBTab(scriptingBridgeTab)
+  | ScBStarted
+  | ScBCompleted(result<string, string>)
+  | DismissScBError
+
+/// Generator Mode messages — parametric procedural world builder.
+type generatorModeMsg =
+  | SetGenCategory(generatorModeCategory)
+  | GenStarted
+  | GenCompleted(result<string, string>)
+  | DismissGenError
+
+/// Architect Mode messages — PixiJS fine-grained level editor with L/N/W.
+type architectModeMsg =
+  | SetArchModeCategory(architectModeCategory)
+  | ArchModeStarted
+  | ArchModeCompleted(result<string, string>)
+  | DismissArchModeError
+
+/// Guard AI Tuner messages — guard patrol, alert threshold, spawn rate tuning.
+type guardAiTunerMsg =
+  | SetGatCategory(guardAiTunerCategory)
+  | GatStarted
+  | GatCompleted(result<string, string>)
+  | DismissGatError
+
+/// Device Network Designer messages — wire devices, configure security levels.
+type deviceNetworkDesignerMsg =
+  | SetDndCategory(deviceNetworkDesignerCategory)
+  | DndStarted
+  | DndCompleted(result<string, string>)
+  | DismissDndError
+
+/// Asset Manager messages — PixiJS sprites, sounds, level templates.
+type assetManagerMsg =
+  | SetAmCategory(assetManagerCategory)
+  | AmStarted
+  | AmCompleted(result<string, string>)
+  | DismissAmError
+
+/// Playtest Recorder messages — record + replay sessions, annotate moments.
+type playtestRecorderMsg =
+  | SetPrCategory(playtestRecorderCategory)
+  | PrStarted
+  | PrCompleted(result<string, string>)
+  | DismissPrError
+
+/// Code Review messages — PR review, inline comments, approval gates.
+type codeReviewMsg =
+  | SetCrTab(codeReviewTab)
+  | SetCrFilter(string)
+  | SelectPr(string)
+  | ApprovePr
+  | DismissCrError
+
+/// Merge Coordinator messages — branch management, conflict resolution, merge queue.
+type mergeCoordinatorMsg =
+  | SetMcTab(mergeCoordinatorTab)
+  | SelectBranch(string)
+  | ResolveConflict(string, string)
+  | DismissMcError
+
+/// Team Dashboard messages — team presence, activity feed, progress tracking.
+type teamDashboardMsg =
+  | SetTdTab(teamDashboardTab)
+  | SetTdFilter(string)
+  | DismissTdError
+
+/// Debugging Workbench messages — time-travel debugging, state inspection, watches.
+type debuggingWorkbenchMsg =
+  | SetDwTab(debuggingWorkbenchTab)
+  | DwStepBack
+  | DwStepForward
+  | DwGoToSnapshot(int)
+  | DwCaptureSnapshot
+  | DwAddWatch
+  | DwRemoveWatch(string)
+  | DwClearConsole
+  | DismissDwError
+
+/// Wiring Inspector messages — PCC verification lifecycle and UI state.
+type wiringInspectorMsg =
+  | RunVerification
+  | VerificationResult(result<string, string>)
+  | RunSingleVerification(string)
+  | SingleVerificationResult(result<string, string>)
+  | SelectPanel(option<string>)
+  | SetFilterStatus(option<string>)
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -2447,6 +2657,40 @@ type msg =
   | VerificationDashboard(verificationDashboardMsg) // Proof/test/benchmark/fuzzing status
   | Observatory(observatoryMsg) // Integrative dashboard — cross-panel health and resources
   | AmbientOps(ambientOpsMsg) // Hospital-model sysadmin — clinician, network, hardware
+  // Game Testing panels
+  | UnitTestRunner(unitTestRunnerMsg) // ReScript test execution, coverage heatmap
+  | FunctionalTester(functionalTesterMsg) // End-to-end game workflow simulation
+  | RegressionGuard(regressionGuardMsg) // Snapshot comparison and golden-file testing
+  | PerformanceProfiler(performanceProfilerMsg) // Frame budget, GC pressure, flamegraphs
+  | LoadTester(loadTesterMsg) // Phoenix channel stress testing
+  | SoakMonitor(soakMonitorMsg) // Long-running session memory trend
+  | CompatibilityMatrix(compatibilityMatrixMsg) // Browser/device/resolution test matrix
+  | ExploratoryWorkbench(exploratoryWorkbenchMsg) // Freeform play session recording
+  | BetaFeedbackHub(betaFeedbackHubMsg) // Feedback-o-tron integration, sentiment
+  | BalanceAnalyser(balanceAnalyserMsg) // Game balance stats, Monte Carlo
+  // Bridge panels
+  | TypingBridge(typingBridgeMsg) // TypeLL type constraints for game state
+  | NeurosymBridge(neurosymBridgeMsg) // Guard AI behaviour reasoning via ECHIDNA
+  | AgenticBridge(agenticBridgeMsg) // Automated playtesting agents with OODA
+  | AutomationBridge(automationBridgeMsg) // CI/CD pipeline orchestration
+  | DatabaseBridge(databaseBridgeMsg) // VeriSimDB game state persistence
+  | ProtocolBridge(protocolBridgeMsg) // Multiplayer sync protocol analysis
+  | ProofsBridge(proofsBridgeMsg) // Proven repo formal verification
+  | ScriptingBridge(scriptingBridgeMsg) // VM instruction scripting REPL
+  // Game-specific panels
+  | GeneratorMode(generatorModeMsg) // Parametric procedural world builder
+  | ArchitectMode(architectModeMsg) // PixiJS fine-grained level editor
+  | GuardAiTuner(guardAiTunerMsg) // Guard patrol, alert threshold tuning
+  | DeviceNetworkDesigner(deviceNetworkDesignerMsg) // Wire devices, security levels
+  | AssetManager(assetManagerMsg) // PixiJS sprites, sounds, templates
+  | PlaytestRecorder(playtestRecorderMsg) // Record + replay sessions
+  // Team / collaboration panels
+  | CodeReview(codeReviewMsg) // PR review, inline comments, approval gates
+  | MergeCoordinator(mergeCoordinatorMsg) // Branch management, conflict resolution
+  | TeamDashboard(teamDashboardMsg) // Team presence, activity feed, progress
+  | DebuggingWorkbench(debuggingWorkbenchMsg) // Time-travel debugging, state inspection
+  // Infrastructure panels
+  | WiringInspector(wiringInspectorMsg) // PCC constraint state and bottleneck analysis
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

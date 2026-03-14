@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Team Dashboard — team presence, activity feed, progress tracking
+
+panel_id = "Team Dashboard"
+module_name = "TeamDashboard"
+model_slice = "teamDashboard"
+msg_namespace = "teamDashboardMsg"
+view_route = "PanelTeamDashboard"
+short_name = "Team"
+clade_id = "team-dashboard"
+has_backend = false

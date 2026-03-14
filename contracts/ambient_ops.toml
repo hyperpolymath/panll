@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for AmbientOps — hospital-model sysadmin tools
+
+panel_id = "AmbientOps"
+module_name = "AmbientOps"
+model_slice = "ambientOps"
+msg_namespace = "ambientOpsMsg"
+view_route = "PanelAmbientOps"
+short_name = "Ops"
+clade_id = "ambientops"
+has_backend = true

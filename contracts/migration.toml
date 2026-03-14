@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Migration — ReScript Migration Observatory
+
+panel_id = "Migration"
+module_name = "Migration"
+model_slice = "migration"
+msg_namespace = "migrationMsg"
+view_route = "PanelMigration"
+short_name = "Mig"
+clade_id = "migration"
+has_backend = true

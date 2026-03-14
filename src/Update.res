@@ -284,32 +284,17 @@ let updatePaneN = (model: model, msg: paneNMsg): model => {
 /// Extracts mode, binary path, and status detail from the backend probe result.
 /// Expected JSON shape: { "mode": "full"|"fallback"|"unavailable",
 ///   "binary_path": "/path/to/binary", "status_detail": "..." }
-let parsePanicAttackerCapability = (json: string): (string, option<string>, option<string>) => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getStr = (key: string): option<string> =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => Some(s)
-            | _ => None
-            }
-          | None => None
-          }
-        let mode = switch getStr("mode") {
-        | Some(m) => m
-        | None => "unknown"
-        }
-        (mode, getStr("binary_path"), getStr("status_detail"))
-      }
-    | _ => ("unknown", None, None)
-    }
-  } catch {
-  | _ => ("unknown", None, None)
-  }
-}
+/// Tea_Json decoder for panic-attacker capability response.
+let panicAttackerCapabilityDecoder: Tea_Json.decoder<(string, option<string>, option<string>)> =
+  Tea_Json.map3(
+    (mode, binary, detail) => (mode, binary, detail),
+    Decoders.fieldWithDefault("mode", Tea_Json.string, "unknown"),
+    Decoders.optionalFieldDecoder("binary_path", Tea_Json.string),
+    Decoders.optionalFieldDecoder("status_detail", Tea_Json.string),
+  )
+
+let parsePanicAttackerCapability = (json: string): (string, option<string>, option<string>) =>
+  Decoders.decodeWithDefault(panicAttackerCapabilityDecoder, ("unknown", None, None), json)
 
 // ===========================================================================
 // Pane-W Sub-Updater
@@ -589,98 +574,52 @@ let updatePaneW = (model: model, msg: paneWMsg): (model, Tea_Cmd.t<msg>) => {
 /// Parse proof obligations from a VQL-DT JSON response.
 /// VQL-DT queries return a `proof_certificate` object with an array of proofs.
 /// Each proof has type, contract, verified status, and hash fields.
-let parseProofObligations = (json: string): array<proofObligation> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    // Look for proof_certificate.proofs in the response
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) =>
-      switch Dict.get(obj, "proof_certificate") {
-      | Some(cert) =>
-        switch JSON.Classify.classify(cert) {
-        | Object(certObj) =>
-          switch Dict.get(certObj, "proofs") {
-          | Some(proofsVal) =>
-            switch JSON.Classify.classify(proofsVal) {
-            | Array(proofArr) =>
-              proofArr->Array.filterMap(p =>
-                switch JSON.Classify.classify(p) {
-                | Object(proofObj) => {
-                    let getStr = (key: string): string =>
-                      switch Dict.get(proofObj, key) {
-                      | Some(v) =>
-                        switch JSON.Classify.classify(v) {
-                        | String(s) => s
-                        | _ => ""
-                        }
-                      | None => ""
-                      }
-                    let proofType = getStr("type")
-                    let status = if getStr("verified") == "true" { "verified" } else { "pending" }
-                    Some({
-                      proofType,
-                      contractName: getStr("contract"),
-                      status,
-                      proofHash: getStr("hash"),
-                    })
-                  }
-                | _ => None
-                }
-              )
-            | _ => []
-            }
-          | None => []
-          }
-        | _ => []
-        }
-      | None => []
-      }
-    | _ => []
-    }
-  } catch {
-  | _ => []
-  }
-}
+/// Tea_Json decoder for a single proof obligation.
+let proofObligationDecoder: Tea_Json.decoder<proofObligation> =
+  Tea_Json.map4(
+    (proofType, contractName, verifiedStr, proofHash) => {
+      let status = if verifiedStr == "true" { "verified" } else { "pending" }
+      {proofType, contractName, status, proofHash}
+    },
+    Decoders.stringField("type"),
+    Decoders.stringField("contract"),
+    Decoders.stringField("verified"),
+    Decoders.stringField("hash"),
+  )
+
+let parseProofObligations = (json: string): array<proofObligation> =>
+  Decoders.decodeWithDefault(
+    Tea_Json.at(["proof_certificate", "proofs"], Decoders.lenientArray(proofObligationDecoder)),
+    [],
+    json,
+  )
 
 /// Parse drift scores from a drift status JSON response.
 /// Returns structured drift scores for all 8 octad modalities.
-let parseDriftScores = (json: string): option<driftScores> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getFloat = (key: string): float =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Number(n) => n
-            | _ => 0.0
-            }
-          | None => 0.0
-          }
-        Some({
-          graph: getFloat("graph"),
-          vector: getFloat("vector"),
-          tensor: getFloat("tensor"),
-          semantic: getFloat("semantic"),
-          document: getFloat("document"),
-          temporal: getFloat("temporal"),
-          provenance: getFloat("provenance"),
-          spatial: getFloat("spatial"),
-        })
-      }
-    | _ => None
-    }
-  } catch {
-  | _ => None
-  }
-}
+/// Tea_Json decoder for drift scores across all 8 octad modalities.
+let driftScoresDecoder: Tea_Json.decoder<driftScores> =
+  Decoders.map8(
+    (graph, vector, tensor, semantic, document, temporal, provenance, spatial) =>
+      {graph, vector, tensor, semantic, document, temporal, provenance, spatial},
+    Decoders.floatField("graph"),
+    Decoders.floatField("vector"),
+    Decoders.floatField("tensor"),
+    Decoders.floatField("semantic"),
+    Decoders.floatField("document"),
+    Decoders.floatField("temporal"),
+    Decoders.floatField("provenance"),
+    Decoders.floatField("spatial"),
+  )
+
+let parseDriftScores = (json: string): option<driftScores> =>
+  Decoders.decodeOption(driftScoresDecoder, json)
 
 /// Parse a telemetry snapshot from the VeriSimDB reporter JSON response.
 /// Extracts aggregate-only product development metrics — no PII or query content.
 let parseTelemetrySnapshot = (json: string): option<telemetrySnapshot> => {
-  try {
-    let parsed = JSON.parseExn(json)
+  switch Decoders.decodeOption(Tea_Json.value, json) {
+  | Some(parsedValue) =>
+    let parsed = parsedValue
     switch JSON.Classify.classify(parsed) {
     | Object(obj) => {
         // Helper to safely extract nested fields.
@@ -817,8 +756,7 @@ let parseTelemetrySnapshot = (json: string): option<telemetrySnapshot> => {
       }
     | _ => None
     }
-  } catch {
-  | _ => None
+  | None => None
   }
 }
 
@@ -1050,32 +988,15 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
 
 /// Parse the ECHIDNA version string from a health check JSON response.
 /// Expected shape: `{ "status": "ok", "version": "0.4.2" }`.
-let parseEchidnaVersion = (json: string): option<string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) =>
-      switch Dict.get(obj, "version") {
-      | Some(v) =>
-        switch JSON.Classify.classify(v) {
-        | String(s) => Some(s)
-        | _ => None
-        }
-      | None => None
-      }
-    | _ => None
-    }
-  } catch {
-  | _ => None
-  }
-}
+let parseEchidnaVersion = (json: string): option<string> =>
+  Decoders.decodeOption(Tea_Json.field("version", Tea_Json.string), json)
 
 /// Parse the ECHIDNA prover catalog from a list provers JSON response.
 /// Expected shape: `[{ "name": "z3", "tier": "SMT", "complexity": "NP" }, ...]`
 /// or `{ "provers": [...] }` wrapper.
 let parseEchidnaProvers = (json: string): array<echidnaProver> => {
-  try {
-    let parsed = JSON.parseExn(json)
+  switch Decoders.decodeOption(Tea_Json.value, json) {
+  | Some(parsed) =>
     // Helper to extract a prover record from a JSON object.
     let parseProver = (obj: Dict.t<JSON.t>): option<echidnaProver> => {
       let getStr = (key: string): string =>
@@ -1120,8 +1041,7 @@ let parseEchidnaProvers = (json: string): array<echidnaProver> => {
       }
     | _ => []
     }
-  } catch {
-  | _ => []
+  | None => []
   }
 }
 
@@ -1129,8 +1049,8 @@ let parseEchidnaProvers = (json: string): array<echidnaProver> => {
 /// Maps trust_level integers (1-5) to the echidnaTrustLevel variant,
 /// parses the axiom report, and extracts prover telemetry.
 let parseEchidnaDispatchResult = (json: string): option<echidnaDispatchResult> => {
-  try {
-    let parsed = JSON.parseExn(json)
+  switch Decoders.decodeOption(Tea_Json.value, json) {
+  | Some(parsed) =>
     switch JSON.Classify.classify(parsed) {
     | Object(obj) => {
         let getStr = (key: string): string =>
@@ -1267,8 +1187,7 @@ let parseEchidnaDispatchResult = (json: string): option<echidnaDispatchResult> =
       }
     | _ => None
     }
-  } catch {
-  | _ => None
+  | None => None
   }
 }
 
@@ -1295,8 +1214,8 @@ let parseProofStatus = (s: string): echidnaProofStatus => {
 ///   "complete": false, "tactics_applied": [...],
 ///   "time_elapsed": 1.23, "error_message": null }`
 let parseEchidnaSession = (json: string): option<echidnaSessionState> => {
-  try {
-    let parsed = JSON.parseExn(json)
+  switch Decoders.decodeOption(Tea_Json.value, json) {
+  | Some(parsed) =>
     switch JSON.Classify.classify(parsed) {
     | Object(obj) => {
         let getStr = (key: string): string =>
@@ -1371,16 +1290,15 @@ let parseEchidnaSession = (json: string): option<echidnaSessionState> => {
       }
     | _ => None
     }
-  } catch {
-  | _ => None
+  | None => None
   }
 }
 
 /// Parse a TacticResponse JSON into (success, updated session state).
 /// Expected shape: `{ "success": true, "proof_state": { ...ProofResponse... } }`
 let parseTacticResponse = (json: string): option<(bool, echidnaSessionState)> => {
-  try {
-    let parsed = JSON.parseExn(json)
+  switch Decoders.decodeOption(Tea_Json.value, json) {
+  | Some(parsed) =>
     switch JSON.Classify.classify(parsed) {
     | Object(obj) => {
         let success = switch Dict.get(obj, "success") {
@@ -1405,8 +1323,7 @@ let parseTacticResponse = (json: string): option<(bool, echidnaSessionState)> =>
       }
     | _ => None
     }
-  } catch {
-  | _ => None
+  | None => None
   }
 }
 
@@ -1414,8 +1331,8 @@ let parseTacticResponse = (json: string): option<(bool, echidnaSessionState)> =>
 /// Expected shape: `[{ "name": "intro", "args": ["x"], "description": "...",
 ///   "confidence": 0.85 }, ...]`
 let parseTacticSuggestions = (json: string): array<echidnaTacticSuggestion> => {
-  try {
-    let parsed = JSON.parseExn(json)
+  switch Decoders.decodeOption(Tea_Json.value, json) {
+  | Some(parsed) =>
     switch JSON.Classify.classify(parsed) {
     | Array(arr) =>
       arr->Array.filterMap(item =>
@@ -1472,8 +1389,7 @@ let parseTacticSuggestions = (json: string): array<echidnaTacticSuggestion> => {
       )
     | _ => []
     }
-  } catch {
-  | _ => []
+  | None => []
   }
 }
 
@@ -2971,8 +2887,9 @@ let updatePlaza = (model: model, msg: plazaMsg): (model, Tea_Cmd.t<msg>) => {
   | RepoScanned(result) =>
     switch result {
     | Ok(jsonStr) => {
-        let audit = try {
-          let json = JSON.parseExn(jsonStr)
+        let audit = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          
           let o = json->JSON.Decode.object->Option.getOr(Dict.make())
           let gb = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
           let gi = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.map(Float.toInt)->Option.getOr(0)
@@ -2996,7 +2913,9 @@ let updatePlaza = (model: model, msg: plazaMsg): (model, Tea_Cmd.t<msg>) => {
               {id: "sig", name: "Provenance", description: "Signature", passed: ps, severity: "warning", detail: ps ? "Verified" : "Not found"},
             ],
           }: complianceAudit)
-        } catch { | _ => None }
+        
+        | None => None
+        }
         switch audit {
         | Some(a) => ({...model, plaza: {...plaza, loading: false, audits: Array.concat(plaza.audits, [a])}}, Tea_Cmd.none)
         | None => ({...model, plaza: {...plaza, loading: false}}, Tea_Cmd.none)
@@ -3959,8 +3878,9 @@ let updateVoiceTag = (model: model, msg: voiceTagMsg): (model, Tea_Cmd.t<msg>) =
     | Ok(jsonStr) => {
         // Parse the .mri.json content. For now, extract tags array from JSON.
         // Full parsing deferred to when we have proper JSON codec — store raw.
-        try {
-          let parsed = JSON.parseExn(jsonStr)
+                switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(parsed) =>
+          
           switch JSON.Classify.classify(parsed) {
           | JSON.Classify.Object(dict) => {
               let tags = switch dict->Dict.get("tags") {
@@ -4069,8 +3989,8 @@ let updateVoiceTag = (model: model, msg: voiceTagMsg): (model, Tea_Cmd.t<msg>) =
             }
           | _ => ({...model, voiceTag: {...vt, tags: [], error: None}}, Tea_Cmd.none)
           }
-        } catch {
-        | _ => (
+        
+        | None => (
             {...model, voiceTag: {...vt, error: Some("Failed to parse .mri.json")}},
             Tea_Cmd.none,
           )
@@ -4094,8 +4014,9 @@ let updateVoiceTag = (model: model, msg: voiceTagMsg): (model, Tea_Cmd.t<msg>) =
   | ProjectScanned(result) =>
     switch result {
     | Ok(jsonStr) => {
-        let parsed = try {
-          let json = JSON.parseExn(jsonStr)
+        let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          
           let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
           let getInt = key => obj->Dict.get(key)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
           Some({
@@ -4109,8 +4030,8 @@ let updateVoiceTag = (model: model, msg: voiceTagMsg): (model, Tea_Cmd.t<msg>) =
             aiTagCount: getInt("aiTagCount"),
             humanTagCount: getInt("humanTagCount"),
           })
-        } catch {
-        | _ => None
+        
+        | None => None
         }
         switch parsed {
         | Some(summary) => ({...model, voiceTag: {...vt, summary}}, Tea_Cmd.none)
@@ -4261,8 +4182,9 @@ let updateProvenance = (model: model, msg: provenanceMsg): (model, Tea_Cmd.t<msg
   | AnalysisResult(result) =>
     switch result {
     | Ok(jsonStr) => {
-        let parsed = try {
-          let json = JSON.parseExn(jsonStr)
+        let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          
           let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
           let filePath = obj->Dict.get("filePath")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
           let analysedAt = obj->Dict.get("analysedAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(Date.now())
@@ -4315,8 +4237,8 @@ let updateProvenance = (model: model, msg: provenanceMsg): (model, Tea_Cmd.t<msg
           }
           let fp: ProvenanceModel.fileProvenance = {filePath, regions, summary, analysedAt}
           Some(fp)
-        } catch {
-        | _ => None
+        
+        | None => None
         }
         switch parsed {
         | Some(fp) => ({...model, provenance: {...prov, activeFile: Some(fp), loading: false, error: None}}, Tea_Cmd.none)
@@ -4331,13 +4253,14 @@ let updateProvenance = (model: model, msg: provenanceMsg): (model, Tea_Cmd.t<msg
   | UnsoundScanResult(result) =>
     switch result {
     | Ok(jsonStr) => {
-        let parsed = try {
-          let json = JSON.parseExn(jsonStr)
+        let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          
           let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
           let unsoundMarkers = obj->Dict.get("unsoundMarkers")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
           Some(unsoundMarkers)
-        } catch {
-        | _ => None
+        
+        | None => None
         }
         switch (parsed, prov.activeFile) {
         | (Some(count), Some(fp)) => {
@@ -4430,8 +4353,9 @@ let updateWatcher = (model: model, msg: watcherMsg): (model, Tea_Cmd.t<msg>) => 
     | Ok(jsonStr) => {
         // Parse the status JSON to update watcher state.
         // The Rust side returns { running, watched_paths, event_count }.
-        try {
-          let json = JSON.parseExn(jsonStr)
+                switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          
           switch JSON.Classify.classify(json) {
           | JSON.Classify.Object(dict) => {
               let running = switch dict->Dict.get("running") {
@@ -4465,8 +4389,8 @@ let updateWatcher = (model: model, msg: watcherMsg): (model, Tea_Cmd.t<msg>) => 
             }
           | _ => (model, Tea_Cmd.none)
           }
-        } catch {
-        | _ => (model, Tea_Cmd.none)
+        
+        | None => (model, Tea_Cmd.none)
         }
       }
     | Error(e) => (
@@ -4645,8 +4569,9 @@ let updateAi = (model: model, msg: aiMsg): (model, Tea_Cmd.t<msg>) => {
   | ProviderChecked(id, result) => {
       let newStatus = switch result {
       | Ok(jsonStr) => {
-          try {
-            let parsed = JSON.parseExn(jsonStr)
+                    switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+          | Some(parsed) =>
+            
             switch JSON.Classify.classify(parsed) {
             | Object(obj) =>
               switch Dict.get(obj, "status") {
@@ -4672,8 +4597,8 @@ let updateAi = (model: model, msg: aiMsg): (model, Tea_Cmd.t<msg>) => {
               }
             | _ => AiProviderError("Invalid response")
             }
-          } catch {
-          | _ => AiProviderError("Parse error")
+          
+          | None => AiProviderError("Parse error")
           }
         }
       | Error(e) => AiProviderError(e)
@@ -4752,8 +4677,9 @@ let updateAi = (model: model, msg: aiMsg): (model, Tea_Cmd.t<msg>) => {
   | ContextBuilt(result) =>
     switch result {
     | Ok(jsonStr) => {
-        try {
-          let parsed = JSON.parseExn(jsonStr)
+                switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(parsed) =>
+          
           switch JSON.Classify.classify(parsed) {
           | Object(obj) =>
             switch Dict.get(obj, "context") {
@@ -4776,8 +4702,8 @@ let updateAi = (model: model, msg: aiMsg): (model, Tea_Cmd.t<msg>) => {
             }
           | _ => (model, Tea_Cmd.none)
           }
-        } catch {
-        | _ => (model, Tea_Cmd.none)
+        
+        | None => (model, Tea_Cmd.none)
         }
       }
     | Error(_) => (model, Tea_Cmd.none)
@@ -5009,8 +4935,9 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
   | ArrangementsLoaded(result) =>
     switch result {
     | Ok(jsonStr) => {
-        let loaded = try {
-          let json = JSON.parseExn(jsonStr)
+        let loaded = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          
           json->JSON.Decode.array->Option.getOr([])->Array.filterMap(item => {
             let o = item->JSON.Decode.object->Option.getOr(Dict.make())
             let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
@@ -5021,7 +4948,9 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
               Some({id, name: gs(o, "name"), positions: [], groups: [], builtIn: gb(o, "builtIn"), lastSaved: gf(o, "lastSaved")}: arrangement)
             } else { None }
           })
-        } catch { | _ => [] }
+        
+        | None => []
+        }
         let merged = Array.concat(ws.arrangements->Array.filter(a => a.builtIn), loaded->Array.filter(a => !a.builtIn))
         ({...model, workspace: {...ws, arrangements: merged}}, Tea_Cmd.none)
       }
@@ -5082,8 +5011,9 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
   | SessionsLoaded(result) =>
     switch result {
     | Ok(jsonStr) => {
-        let loaded = try {
-          let json = JSON.parseExn(jsonStr)
+        let loaded = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          
           json->JSON.Decode.array->Option.getOr([])->Array.filterMap(item => {
             let o = item->JSON.Decode.object->Option.getOr(Dict.make())
             let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
@@ -5099,7 +5029,9 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
               }: session)
             } else { None }
           })
-        } catch { | _ => [] }
+        
+        | None => []
+        }
         if Array.length(loaded) > 0 {
           ({...model, workspace: {...ws, sessions: loaded}}, Tea_Cmd.none)
         } else {
@@ -5123,8 +5055,9 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
   | SystemInfoLoaded(result) => {
       switch result {
       | Ok(jsonStr) => {
-          let parsed = try {
-            let json = JSON.parseExn(jsonStr)
+          let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+          | Some(json) =>
+            
             let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
             let getFloat = key =>
               obj->Dict.get(key)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
@@ -5136,8 +5069,8 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
               diskUsed: getFloat("disk_used"),
               uptimeSeconds: getFloat("uptime_seconds"),
             })
-          } catch {
-          | _ => None
+          
+          | None => None
           }
           switch parsed {
           | Some(info) => (
@@ -5282,8 +5215,9 @@ let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => 
   | ScreenshotSaved(result) =>
     switch result {
     | Ok(jsonStr) => {
-        let parsed = try {
-          let json = JSON.parseExn(jsonStr)
+        let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          
           let o = json->JSON.Decode.object->Option.getOr(Dict.make())
           let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
           let fmt = switch gs(o, "format") { | "pdf" => Pdf | "svg" => Svg | _ => Png }
@@ -5292,7 +5226,9 @@ let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => 
             filePath: gs(o, "filePath"), format: fmt, timestamp: Date.now(),
             width: 0, height: 0, isRecording: false, durationSeconds: 0.0,
           }: captureEntry)
-        } catch { | _ => None }
+        
+        | None => None
+        }
         switch parsed {
         | Some(entry) => ({...model, capture: {...cap, captures: Array.concat(cap.captures, [entry])}}, Tea_Cmd.none)
         | None => (model, Tea_Cmd.none)
@@ -5375,8 +5311,9 @@ let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => 
   | DemosLoaded(result) =>
     switch result {
     | Ok(jsonStr) => {
-        let demos = try {
-          let json = JSON.parseExn(jsonStr)
+        let demos = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          
           json->JSON.Decode.array->Option.getOr([])->Array.filterMap(item => {
             let o = item->JSON.Decode.object->Option.getOr(Dict.make())
             let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
@@ -5390,7 +5327,9 @@ let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => 
               }: demoPackage)
             } else { None }
           })
-        } catch { | _ => [] }
+        
+        | None => []
+        }
         ({...model, capture: {...cap, demos}}, Tea_Cmd.none)
       }
     | Error(_) => (model, Tea_Cmd.none)
@@ -5435,8 +5374,9 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
   | RedactionResult(result) =>
     switch result {
     | Ok(jsonStr) => {
-        let parsed = try {
-          let json = JSON.parseExn(jsonStr)
+        let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          
           let arr = json->JSON.Decode.array->Option.getOr([])
           let secrets = arr->Array.filterMap(item => {
             let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -5454,8 +5394,8 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
             })
           })
           Some(secrets)
-        } catch {
-        | _ => None
+        
+        | None => None
         }
         switch parsed {
         | Some(detectedSecrets) => ({...model, security: {...sec, detectedSecrets}}, Tea_Cmd.none)
@@ -5487,8 +5427,9 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
   | VaultListResult(result) => {
       switch result {
       | Ok(jsonStr) => {
-          let keys = try {
-            let json = JSON.parseExn(jsonStr)
+          let keys = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+          | Some(json) =>
+            
             json->JSON.Decode.array->Option.getOr([])->Array.filterMap(item => {
               let o = item->JSON.Decode.object->Option.getOr(Dict.make())
               let k = o->Dict.get("key")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
@@ -5496,7 +5437,9 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
                 Some({key: k, description: o->Dict.get("description")->Option.flatMap(JSON.Decode.string)->Option.getOr(""), lastUpdated: o->Dict.get("lastUpdated")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)}: vaultKey)
               } else { None }
             })
-          } catch { | _ => [] }
+          
+          | None => []
+          }
           ({...model, security: {...sec, vaultStatus: VaultUnlocked, vaultKeys: keys}}, Tea_Cmd.none)
         }
       | Error(e) => ({...model, security: {...sec, error: Some(e), vaultStatus: VaultError(e)}}, Tea_Cmd.none)
@@ -5535,8 +5478,9 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
   | TrustfileLoaded(result) => {
       switch result {
       | Ok(jsonStr) => {
-          let policy = try {
-            let json = JSON.parseExn(jsonStr)
+          let policy = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+          | Some(json) =>
+            
             let o = json->JSON.Decode.object->Option.getOr(Dict.make())
             let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
             let gb = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
@@ -5559,7 +5503,9 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
               requireApproval: gb(o, "requireApproval"), loaded: true,
               filePath: o->Dict.get("filePath")->Option.flatMap(JSON.Decode.string),
             }: trustfilePolicy)
-          } catch { | _ => None }
+          
+          | None => None
+          }
           switch policy {
           | Some(p) => ({...model, security: SecurityEngine.applyTrustfile(sec, p)}, Tea_Cmd.none)
           | None => ({...model, security: {...sec, error: Some("Failed to parse Trustfile")}}, Tea_Cmd.none)
@@ -5761,15 +5707,16 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
       PanicAttackCmd.checkCapability(result => PanicAttack(CapabilityLoaded(result))),
     )
   | CapabilityLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let mode = obj->Dict.get("mode")->Option.flatMap(JSON.Decode.string)->Option.getOr("unavailable")
       let detail = obj->Dict.get("detail")->Option.flatMap(JSON.Decode.string)
       let binary = obj->Dict.get("binary")->Option.flatMap(JSON.Decode.string)
       Some((mode, detail, binary))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((mode, _detail, binary)) =>
@@ -5791,8 +5738,9 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
       }),
     )
   | AssailResult(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let summaryObj = obj->Dict.get("summary")->Option.flatMap(JSON.Decode.object)->Option.getOr(Dict.make())
       let getInt = (d, key) => d->Dict.get(key)->Option.flatMap(JSON.Decode.float)->Option.map(Float.toInt)
@@ -5812,8 +5760,8 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
         language: summaryObj->Dict.get("program")->Option.flatMap(JSON.Decode.string)->Option.getOr("unknown"),
       }
       Some(summary, robustness)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(summary, _robustness) =>
@@ -5830,8 +5778,9 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
       PanicAttackCmd.assault(pa.targetPath, result => PanicAttack(AssaultResult(result))),
     )
   | AssaultResult(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let summaryObj = obj->Dict.get("summary")->Option.flatMap(JSON.Decode.object)->Option.getOr(Dict.make())
       let getInt = (d, key) => d->Dict.get(key)->Option.flatMap(JSON.Decode.float)->Option.map(Float.toInt)
@@ -5849,8 +5798,8 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
         language: summaryObj->Dict.get("program")->Option.flatMap(JSON.Decode.string)->Option.getOr("unknown"),
       }
       Some(summary)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(summary) =>
@@ -5864,8 +5813,9 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
   | LoadReports =>
     (model, PanicAttackCmd.listReports(result => PanicAttack(ReportsLoaded(result))))
   | ReportsLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -5888,8 +5838,8 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
         Some({PanicAttackModel.id, targetPath, timestamp, summary})
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(reports) => ({...model, panicAttack: {...pa, reports}}, Tea_Cmd.none)
@@ -5901,8 +5851,9 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
   | ViewReport(path) =>
     (model, PanicAttackCmd.viewReport(path, result => PanicAttack(ReportLoaded(result))))
   | ReportLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let findings = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -5921,8 +5872,8 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
         Some({PanicAttackModel.file, line, category: OtherCategory(""), severity, description, context})
       })
       Some(findings)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(findings) => ({...model, panicAttack: {...pa, findings}}, Tea_Cmd.none)
@@ -5939,8 +5890,9 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
       ),
     )
   | ComparisonLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let diffArr = obj->Dict.get("findings")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
       let findings = diffArr->Array.filterMap(item => {
@@ -5960,8 +5912,8 @@ let updatePanicAttack = (model: model, subMsg: panicAttackMsg): (model, Tea_Cmd.
         Some({PanicAttackModel.file, line, category: OtherCategory(""), severity, description, context})
       })
       Some(findings)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(findings) => ({...model, panicAttack: {...pa, findings, showDiff: true}}, Tea_Cmd.none)
@@ -6029,8 +5981,9 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
       ),
     )
   | ReposDiscovered(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -6051,8 +6004,8 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(repoResults) => ({...model, massPanic: {...mp, repoResults, loading: false}}, Tea_Cmd.none)
@@ -6119,8 +6072,9 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
       ),
     )
   | AssemblylineResult(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let parseStatus = (s: string): MassPanicModel.repoScanStatus =>
         switch s {
@@ -6170,8 +6124,8 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
       | None => None
       }
       Some((repoResults, summary))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((repoResults, summary)) =>
@@ -6188,16 +6142,17 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
   | PollProgress =>
     (model, MassPanicCmd.getProgress(result => MassPanic(ProgressUpdate(result))))
   | ProgressUpdate(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let reposDone = obj->Dict.get("repos_done")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
       let reposTotal = obj->Dict.get("repos_total")->Option.flatMap(JSON.Decode.float)->Option.getOr(1.0)
       let currentRepo = obj->Dict.get("current_repo")->Option.flatMap(JSON.Decode.string)
       let progress = if reposTotal > 0.0 { reposDone /. reposTotal } else { 0.0 }
       Some((progress, currentRepo))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((progress, currentRepo)) =>
@@ -6254,8 +6209,9 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
     )
   }
   | DeltaLoaded(Ok(jsonStr)) => {
-    let deltas = try {
-      let json = JSON.parseExn(jsonStr)
+    let deltas = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       arr->Array.filterMap(item => {
         let o = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -6273,8 +6229,8 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
           None
         }
       })
-    } catch {
-    | _ => []
+    
+    | None => []
     }
     ({...model, massPanic: {...mp, loading: false, delta: deltas, showDelta: true, lastError: None}}, Tea_Cmd.none)
   }
@@ -6323,8 +6279,9 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
     )
   | ImageLoaded(Ok(json)) => {
       // Parse panll.system-image.v0 JSON into systemImage
-      let parsed = try {
-        let obj = JSON.parseExn(json)
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, json) {
+      | Some(obj) =>
+        
         let getStr = (o, k) =>
           switch o->JSON.Decode.object->Option.flatMap(d => d->Dict.get(k)) {
           | Some(v) => v->JSON.Decode.string->Option.getOr("")
@@ -6354,8 +6311,8 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
           edges: [],
         }
         Some(image)
-      } catch {
-      | _ => None
+      
+      | None => None
       }
       switch parsed {
       | Some(img) =>
@@ -6379,8 +6336,9 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
     )
   | ImageFileLoaded(Ok(json)) => {
     // Reuse same parsing logic as ImageLoaded — panll.system-image.v0 JSON.
-    let parsed = try {
-      let obj = JSON.parseExn(json)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, json) {
+    | Some(obj) =>
+      
       let getStr = (o, k) =>
         switch o->JSON.Decode.object->Option.flatMap(d => d->Dict.get(k)) {
         | Some(v) => v->JSON.Decode.string->Option.getOr("")
@@ -6410,8 +6368,8 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
         edges: [],
       }
       Some(image)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(img) =>
@@ -6435,8 +6393,9 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
       )
     }
   | SnapshotsLoaded(Ok(jsonStr)) => {
-    let snapshots = try {
-      let json = JSON.parseExn(jsonStr)
+    let snapshots = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       arr->Array.filterMap(item => {
         let o = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -6453,8 +6412,8 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
           totalWeakPoints: gi(o, "total_weak_points"),
         })
       })
-    } catch {
-    | _ => []
+    
+    | None => []
     }
     ({...model, massPanic: {...mp, temporalLoading: false, snapshots, lastError: None}}, Tea_Cmd.none)
   }
@@ -6484,8 +6443,9 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
       }
     }
   | DiffLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let gs = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.string)->Option.getOr("")
       let gf = (d, k) => d->Dict.get(k)->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
@@ -6529,8 +6489,8 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
         unchangedCount: gi(obj, "unchanged_count"),
         trend: gs(obj, "trend"),
       })
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(diff) =>
@@ -6668,8 +6628,9 @@ let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
   | LoadDirective =>
     (model, TsdmCmd.loadDirective(result => Tsdm(DirectiveLoaded(result))))
   | DirectiveLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let parseAxisOrder = obj->Dict.get("axisOrder")->Option.flatMap(JSON.Decode.array)->Option.getOr([])->Array.filterMap(v =>
         switch v->JSON.Decode.string {
@@ -6705,8 +6666,8 @@ let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
       )
       let locked = obj->Dict.get("locked")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
       Some((parseAxisOrder, parseScopeOrder, parseMaintOrder, parseAuditOrder, locked))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((axisOrder, scopeOrder, maintOrder, auditOrder, locked)) =>
@@ -6727,8 +6688,9 @@ let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
   | CollectWorkItems =>
     (model, TsdmCmd.collectWorkItems(result => Tsdm(WorkItemsCollected(result))))
   | WorkItemsCollected(Ok(jsonStr)) => {
-    let items = try {
-      let json = JSON.parseExn(jsonStr)
+    let items = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       arr->Array.filterMap(item => {
         let o = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -6774,8 +6736,8 @@ let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
           None
         }
       })
-    } catch {
-    | _ => []
+    
+    | None => []
     }
     ({...model, tsdm: {...ts, workItems: items}}, Tea_Cmd.none)
   }
@@ -7033,8 +6995,9 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
       ValenceShellCmd.listRecordings(result => ValenceShell(RecordingsLoaded(result))),
     )
   | RecordingsLoaded(Ok(jsonStr)) => {
-      let parsed = try {
-        let json = JSON.parseExn(jsonStr)
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        
         let arr = json->JSON.Decode.array->Option.getOr([])
         let items = arr->Array.filterMap(item => {
           let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -7054,8 +7017,8 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
           })
         })
         Some(items)
-      } catch {
-      | _ => None
+      
+      | None => None
       }
       switch parsed {
       | Some(recs) => (
@@ -7098,8 +7061,9 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
       ValenceShellCmd.createCheckpoint(label, result => ValenceShell(CheckpointCreated(result))),
     )
   | CheckpointCreated(Ok(jsonStr)) => {
-      let parsed = try {
-        let json = JSON.parseExn(jsonStr)
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        
         let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
         let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
         let label = obj->Dict.get("label")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
@@ -7111,8 +7075,8 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
           createdAt: createdAt,
           opsSinceCheckpoint: Float.toInt(opsSince),
         })
-      } catch {
-      | _ => None
+      
+      | None => None
       }
       let newCheckpoints = switch parsed {
       | Some(cp) => Array.concat(vs.checkpoints, [cp])
@@ -7144,8 +7108,9 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
       ValenceShellCmd.listCheckpoints(result => ValenceShell(CheckpointsLoaded(result))),
     )
   | CheckpointsLoaded(Ok(jsonStr)) => {
-      let parsed = try {
-        let json = JSON.parseExn(jsonStr)
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        
         let arr = json->JSON.Decode.array->Option.getOr([])
         let items = arr->Array.filterMap(item => {
           let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -7161,8 +7126,8 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
           })
         })
         Some(items)
-      } catch {
-      | _ => None
+      
+      | None => None
       }
       switch parsed {
       | Some(cps) => (
@@ -7341,8 +7306,9 @@ let updateGamePreview = (model: model, msg: gamePreviewMsg): (model, Tea_Cmd.t<m
       GamePreviewCmd.listClips(result => GamePreview(ClipsLoaded(result))),
     )
   | ClipsLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -7362,8 +7328,8 @@ let updateGamePreview = (model: model, msg: gamePreviewMsg): (model, Tea_Cmd.t<m
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(clips) => (
@@ -7394,8 +7360,9 @@ let updateGamePreview = (model: model, msg: gamePreviewMsg): (model, Tea_Cmd.t<m
       GamePreviewCmd.fetchRenderStats(result => GamePreview(StatsReceived(result))),
     )
   | StatsReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let fps = obj->Dict.get("fps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
       let drawCalls = obj->Dict.get("drawCalls")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
@@ -7407,8 +7374,8 @@ let updateGamePreview = (model: model, msg: gamePreviewMsg): (model, Tea_Cmd.t<m
         textureMemory: Float.toInt(textureMemory),
         spriteCount: Float.toInt(spriteCount),
       })
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(stats) => ({...model, gamePreview: {...gp, stats: Some(stats)}}, Tea_Cmd.none)
@@ -7465,8 +7432,9 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
       )
     }
   | VmStateReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
       let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
@@ -7513,8 +7481,8 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
       let tierCountsArr = obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
       let tierCounts = tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
       Some((Float.toInt(pc), stack, memory, instructions, running, Float.toInt(totalSteps), tierCounts))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((pc, stack, memory, instructions, running, totalSteps, tierCounts)) => (
@@ -7559,8 +7527,9 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
       ({...model, vmInspector: {...vm, loading: true}}, cmd)
     }
   | StepResult(Ok(jsonStr)) => {
-      let parsed = try {
-        let json = JSON.parseExn(jsonStr)
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        
         let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
         let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
         let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
@@ -7585,8 +7554,8 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
         let tierCountsArr = obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
         let tierCounts = tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
         Some((Float.toInt(pc), stack, memory, instrMnemonic, running, Float.toInt(totalSteps), tierCounts))
-      } catch {
-      | _ => None
+      
+      | None => None
       }
       switch parsed {
       | Some((pc, stack, memory, instrMnemonic, running, totalSteps, tierCounts)) => {
@@ -7644,8 +7613,9 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
     }
   | PauseVm => ({...model, vmInspector: {...vm, running: false}}, Tea_Cmd.none)
   | RunResult(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
       let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
@@ -7668,8 +7638,8 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
       let tierCountsArr = obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
       let tierCounts = tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
       Some((Float.toInt(pc), stack, memory, Float.toInt(totalSteps), tierCounts))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((pc, stack, memory, totalSteps, tierCounts)) => (
@@ -7790,8 +7760,9 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
       }),
     )
   | TopologyReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let devArr = obj->Dict.get("devices")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
       let devices = devArr->Array.filterMap(d => {
@@ -7855,8 +7826,8 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
         })
       })
       Some((devices, connections))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((devices, connections)) => (
@@ -7886,8 +7857,9 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
       NetworkTopologyCmd.readDnsTable(result => NetworkTopology(DnsReceived(result))),
     )
   | DnsReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let entries = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -7903,8 +7875,8 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
         })
       })
       Some(entries)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(entries) => (
@@ -7927,8 +7899,9 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
       },
     )
   | PacketFlowReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let events = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -7944,8 +7917,8 @@ let updateNetworkTopology = (model: model, msg: networkTopologyMsg): (model, Tea
         })
       })
       Some(events)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(events) => (
@@ -8095,8 +8068,9 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
       LevelArchitectCmd.browseAssets(result => LevelArchitect(AssetsLoaded(result))),
     )
   | AssetsLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -8123,8 +8097,8 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(assets) => (
@@ -8146,8 +8120,9 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
       }),
     )
   | ValidationResult(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let issues = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -8165,8 +8140,8 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
         })
       })
       Some(issues)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(issues) => (
@@ -8185,8 +8160,9 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
       LevelArchitectCmd.loadLevel(path, result => LevelArchitect(LevelLoaded(result))),
     )
   | LevelLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let levelName = obj->Dict.get("levelName")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
       let gridWidth = obj->Dict.get("gridWidth")->Option.flatMap(JSON.Decode.float)->Option.getOr(32.0)
@@ -8253,8 +8229,8 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
         })
       })
       Some((levelName, Float.toInt(gridWidth), Float.toInt(gridHeight), entities, patrols))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((levelName, gridWidth, gridHeight, entities, patrols)) => (
@@ -8389,8 +8365,9 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
       | "graphics" => CoprocGraphics
       | _ => CoprocIO
       }
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -8418,8 +8395,8 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(metrics) => ({...model, coprocessors: {...cp, metrics, loading: false, error: None}}, Tea_Cmd.none)
@@ -8448,8 +8425,9 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
       | "graphics" => CoprocGraphics
       | _ => CoprocIO
       }
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -8473,8 +8451,8 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(callLog) => ({...model, coprocessors: {...cp, callLog, loading: false, error: None}}, Tea_Cmd.none)
@@ -8503,8 +8481,9 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
       | "graphics" => CoprocGraphics
       | _ => CoprocIO
       }
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -8520,8 +8499,8 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(heatmap) => ({...model, coprocessors: {...cp, heatmap, loading: false, error: None}}, Tea_Cmd.none)
@@ -8666,9 +8645,8 @@ let updateCoprocessors = (model: model, msg: coprocessorsMsg): (model, Tea_Cmd.t
   | SetRoutingStrategy(strategy) =>
     ({...model, coprocessors: {...cp, routingStrategy: strategy}}, Tea_Cmd.none)
   | SmartDispatch(operation, payload) =>
-    // Use the routing engine to determine the best route, then dispatch.
-    let decision = CoprocessorsEngine.selectRoute(cp, operation)
-    let newHistory = Array.concat([decision], cp.routingHistory)->Array.slice(~start=0, ~end=50)
+    // Phase 3: Use SmartRouter for per-operation intelligent dispatch.
+    let (decision, newHistory) = CoprocessorsEngine.smartRouteAndRecord(cp, operation)
     let cmd = switch decision.chosenRoute {
     | CoprocessorsModel.RouteLocal =>
       CoprocessorsCmd.dispatchLocal(operation, payload, r => Coprocessors(SmartDispatchResult(r)))
@@ -8764,8 +8742,9 @@ let updateMultiplayerMonitor = (model: model, msg: multiplayerMonitorMsg): (mode
       MultiplayerMonitorCmd.readMultiplayerState(result => MultiplayerMonitor(StateReceived(result))),
     )
   | StateReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let playersArr = obj->Dict.get("players")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
       let players = playersArr->Array.filterMap(item => {
@@ -8819,8 +8798,8 @@ let updateMultiplayerMonitor = (model: model, msg: multiplayerMonitorMsg): (mode
         })
       })
       Some((players, channels, deviceLocks))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((players, channels, deviceLocks)) => (
@@ -8839,8 +8818,9 @@ let updateMultiplayerMonitor = (model: model, msg: multiplayerMonitorMsg): (mode
       MultiplayerMonitorCmd.readStateDiffs(result => MultiplayerMonitor(DiffsReceived(result))),
     )
   | DiffsReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let diffs = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -8860,8 +8840,8 @@ let updateMultiplayerMonitor = (model: model, msg: multiplayerMonitorMsg): (mode
         })
       })
       Some(diffs)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(stateDiffs) => ({...model, multiplayerMonitor: {...mp, stateDiffs, loading: false, error: None}}, Tea_Cmd.none)
@@ -8932,8 +8912,9 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
       DlcWorkshopCmd.loadPuzzles(result => DlcWorkshop(PuzzlesLoaded(result))),
     )
   | PuzzlesLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -8966,8 +8947,8 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(puzzles) => ({...model, dlcWorkshop: {...dw, puzzles, loading: false, error: None}}, Tea_Cmd.none)
@@ -9016,8 +8997,9 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
       DlcWorkshopCmd.runTest(puzzleId, result => DlcWorkshop(PuzzleTestResult(result))),
     )
   | PuzzleTestResult(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let puzzleId = obj->Dict.get("puzzleId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
       let passed = obj->Dict.get("passed")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
@@ -9028,8 +9010,8 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
         TestFailed(errorMsg->Option.getOr("Test failed"))
       }
       Some((puzzleId, status))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((puzzleId, status)) => {
@@ -9051,8 +9033,9 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
       DlcWorkshopCmd.runAllTests(result => DlcWorkshop(AllTestsResult(result))),
     )
   | AllTestsResult(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let results = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9067,8 +9050,8 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
         Some((puzzleId, status))
       })
       Some(results)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(results) => {
@@ -9093,8 +9076,9 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
       DlcWorkshopCmd.browseAssets(result => DlcWorkshop(DlcAssetsLoaded(result))),
     )
   | DlcAssetsLoaded(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9112,8 +9096,8 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(assets) => ({...model, dlcWorkshop: {...dw, assets, loading: false, error: None}}, Tea_Cmd.none)
@@ -9138,8 +9122,9 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
       DlcWorkshopCmd.importPuzzle("", result => DlcWorkshop(PuzzleImported(result))),
     )
   | PuzzleImported(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
       let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
@@ -9168,8 +9153,8 @@ let updateDlcWorkshop = (model: model, msg: dlcWorkshopMsg): (model, Tea_Cmd.t<m
         testStatus: TestNotRun,
         hints,
       })
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(puzzle) => ({...model, dlcWorkshop: {...dw, puzzles: Array.concat(dw.puzzles, [puzzle]), error: None}}, Tea_Cmd.none)
@@ -9222,8 +9207,9 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
       UmsCmd.loadProjects(result => Ums(ProjectsLoaded(result))),
     )
   | ProjectsLoaded(Ok(jsonStr)) => {
-      let parsed = try {
-        let json = JSON.parseExn(jsonStr)
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        
         let arr = json->JSON.Decode.array->Option.getOr([])
         arr->Array.filterMap(item => {
           let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9245,8 +9231,8 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
             None
           }
         })
-      } catch {
-      | _ => []
+      
+      | None => []
       }
       ({...model, ums: {...u, projects: parsed, loading: false, error: None}}, Tea_Cmd.none)
     }
@@ -9287,8 +9273,9 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
       )
     }
   | ValidationResult(Ok(jsonStr)) => {
-      let parsed = try {
-        let json = JSON.parseExn(jsonStr)
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        
         let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
         let levelId = obj->Dict.get("levelId")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
         let guardsInZones = obj->Dict.get("guardsInZones")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
@@ -9302,8 +9289,8 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
           e->JSON.Decode.string
         )
         Some({UmsModel.levelId, guardsInZones, defenceTargetsValid, zonesOrdered, pbxConsistent, devicesExist, allPassed, validatedAt, errors})
-      } catch {
-      | _ => None
+      
+      | None => None
       }
       let results = switch parsed {
       | Some(r) => Array.concat(u.validationResults, [r])
@@ -9317,8 +9304,9 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
       UmsCmd.loadTemplates(result => Ums(TemplatesLoaded(result))),
     )
   | TemplatesLoaded(Ok(jsonStr)) => {
-      let parsed = try {
-        let json = JSON.parseExn(jsonStr)
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        
         let arr = json->JSON.Decode.array->Option.getOr([])
         arr->Array.filterMap(item => {
           let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9334,8 +9322,8 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
             None
           }
         })
-      } catch {
-      | _ => []
+      
+      | None => []
       }
       ({...model, ums: {...u, templates: parsed, loading: false, error: None}}, Tea_Cmd.none)
     }
@@ -9351,8 +9339,9 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
       UmsCmd.loadAssets(result => Ums(AssetsLoaded(result))),
     )
   | AssetsLoaded(Ok(jsonStr)) => {
-      let parsed = try {
-        let json = JSON.parseExn(jsonStr)
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        
         let arr = json->JSON.Decode.array->Option.getOr([])
         arr->Array.filterMap(item => {
           let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9370,8 +9359,8 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
             None
           }
         })
-      } catch {
-      | _ => []
+      
+      | None => []
       }
       ({...model, ums: {...u, assets: parsed, loading: false, error: None}}, Tea_Cmd.none)
     }
@@ -9393,8 +9382,9 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
       UmsCmd.loadApiReference(result => Ums(ApiReferenceLoaded(result))),
     )
   | ApiReferenceLoaded(Ok(jsonStr)) => {
-      let parsed = try {
-        let json = JSON.parseExn(jsonStr)
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        
         let arr = json->JSON.Decode.array->Option.getOr([])
         arr->Array.filterMap(item => {
           let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9410,8 +9400,8 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
             None
           }
         })
-      } catch {
-      | _ => []
+      
+      | None => []
       }
       ({...model, ums: {...u, apiEntries: parsed, loading: false, error: None}}, Tea_Cmd.none)
     }
@@ -9448,8 +9438,9 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
       EditorBridgeCmd.detectEditor(result => EditorBridge(EditorDetected(result))),
     )
   | EditorDetected(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let editorStr = obj->Dict.get("editorKind")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
       let editorKind: EditorBridgeModel.editorKind = switch editorStr {
@@ -9469,8 +9460,8 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
       | _ => EditorDisconnected
       }
       Some((editorKind, connection))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((editorKind, connection)) => (
@@ -9518,8 +9509,9 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
       },
     )
   | DiagnosticsReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9545,8 +9537,8 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(diagnostics) => ({...model, editorBridge: {...eb, diagnostics, loading: false, error: None}}, Tea_Cmd.none)
@@ -9562,8 +9554,9 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
       EditorBridgeCmd.readOpenFiles(result => EditorBridge(OpenFilesReceived(result))),
     )
   | OpenFilesReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9583,8 +9576,8 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(openFiles) => ({...model, editorBridge: {...eb, openFiles, loading: false, error: None}}, Tea_Cmd.none)
@@ -9605,8 +9598,9 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
       },
     )
   | SymbolsReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9624,8 +9618,8 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(symbols) => ({...model, editorBridge: {...eb, symbols, loading: false, error: None}}, Tea_Cmd.none)
@@ -9700,8 +9694,9 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       | "coprocessors" => TargetCoprocessors
       | other => TargetCustom(other)
       }
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let targetStr = obj->Dict.get("target")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
       let target = parseTarget(targetStr)
@@ -9715,8 +9710,8 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       | _ => BuildRunning
       }
       Some((target, status))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((target, status)) => {
@@ -9751,8 +9746,9 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       | "coprocessors" => TargetCoprocessors
       | other => TargetCustom(other)
       }
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9770,8 +9766,8 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
         Some((target, status))
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(targets) => ({...model, buildDashboard: {...bd, targets, loading: false, error: None}}, Tea_Cmd.none)
@@ -9792,8 +9788,9 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       ({...model, buildDashboard: {...bd, loading: true}}, cmd)
     }
   | TestsReceived(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9811,8 +9808,8 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(testResults) => ({...model, buildDashboard: {...bd, testResults, loading: false, error: None}}, Tea_Cmd.none)
@@ -9850,8 +9847,9 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
       | "coprocessors" => TargetCoprocessors
       | other => TargetCustom(other)
       }
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9881,8 +9879,8 @@ let updateBuildDashboard = (model: model, msg: buildDashboardMsg): (model, Tea_C
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(history) => ({...model, buildDashboard: {...bd, history, loading: false, error: None}}, Tea_Cmd.none)
@@ -9924,14 +9922,15 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
       ReleaseManagerCmd.bumpVersion(bumpType, result => ReleaseManager(VersionBumped(result))),
     )
   | VersionBumped(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let currentVersion = obj->Dict.get("currentVersion")->Option.flatMap(JSON.Decode.string)->Option.getOr(rm.currentVersion)
       let nextVersion = obj->Dict.get("nextVersion")->Option.flatMap(JSON.Decode.string)->Option.getOr(rm.nextVersion)
       Some((currentVersion, nextVersion))
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some((currentVersion, nextVersion)) => (
@@ -9954,8 +9953,9 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
       ),
     )
   | ChangelogGenerated(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -9975,8 +9975,8 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(entries) => ({...model, releaseManager: {...rm, pendingChangelog: entries, loading: false, error: None}}, Tea_Cmd.none)
@@ -10021,8 +10021,9 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
       | "ios" => PlatformMobileIOS
       | _ => PlatformWeb
       }
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -10043,8 +10044,8 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(artifacts) => ({...model, releaseManager: {...rm, artifacts, loading: false, error: None}}, Tea_Cmd.none)
@@ -10067,8 +10068,9 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
       }),
     )
   | ReleasePublished(Ok(jsonStr)) => {
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
       let version = obj->Dict.get("version")->Option.flatMap(JSON.Decode.string)->Option.getOr(rm.nextVersion)
       let publishedAt = obj->Dict.get("publishedAt")->Option.flatMap(JSON.Decode.float)
@@ -10082,8 +10084,8 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
         publishedAt,
       }
       Some(newRelease)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(release) => (
@@ -10129,8 +10131,9 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
       | "published" => ReleasePublished
       | _ => ReleaseDraft
       }
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -10152,8 +10155,8 @@ let updateReleaseManager = (model: model, msg: releaseManagerMsg): (model, Tea_C
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(releases) => ({...model, releaseManager: {...rm, releases, loading: false, error: None}}, Tea_Cmd.none)
@@ -10289,8 +10292,9 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
       | "dry_run_first" => DryRunFirst
       | _ => AutoFire
       }
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -10320,8 +10324,8 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(rules) => ({...model, automationRouter: {...ar, rules, loading: false, error: None}}, Tea_Cmd.none)
@@ -10362,8 +10366,9 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
       | "dry_run_first" => DryRunFirst
       | _ => AutoFire
       }
-    let parsed = try {
-      let json = JSON.parseExn(jsonStr)
+    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       let items = arr->Array.filterMap(item => {
         let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -10390,8 +10395,8 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
         })
       })
       Some(items)
-    } catch {
-    | _ => None
+    
+    | None => None
     }
     switch parsed {
     | Some(rules) => ({...model, automationRouter: {...ar, rules, loading: false, configSource: "repo", error: None}}, Tea_Cmd.none)
@@ -10505,8 +10510,82 @@ let updateScriptGist = (model: model, msg: scriptGistMsg): (model, Tea_Cmd.t<msg
       let selectedGistId = if sg.selectedGistId === Some(id) { None } else { sg.selectedGistId }
       ({...model, scriptGist: {...sg, gists, selectedGistId}}, Tea_Cmd.none)
     }
-  | SaveGist => (model, Tea_Cmd.none) // TODO: persist to filesystem via Tauri
-  | ExecuteGist => ({...model, scriptGist: {...sg, executing: true}}, Tea_Cmd.none) // TODO: dispatch to target
+  | SaveGist => {
+      // Persist the currently selected gist to ~/.panll/gists/<id>.json via Tauri.
+      switch sg.selectedGistId {
+      | Some(gistId) =>
+        switch sg.gists->Array.find(g => g.id === gistId) {
+        | Some(gist) => {
+            let gistJson = JSON.stringifyAny(gist)->Option.getOr("{}")
+            (
+              model,
+              ScriptGistCmd.saveGist(
+                gistJson,
+                result =>
+                  switch result {
+                  | Ok(_) => ScriptGist(GistExecutionResult(Ok({
+                      success: true,
+                      output: "Gist saved successfully",
+                      error: None,
+                      durationMs: 0.0,
+                      executedAt: Date.now(),
+                      invoker: "user",
+                    })))
+                  | Error(err) => ScriptGist(GistExecutionResult(Error(err)))
+                  },
+              ),
+            )
+          }
+        | None => ({...model, scriptGist: {...sg, error: Some("No gist found with id: " ++ gistId)}}, Tea_Cmd.none)
+        }
+      | None => ({...model, scriptGist: {...sg, error: Some("No gist selected to save")}}, Tea_Cmd.none)
+      }
+    }
+  | ExecuteGist => {
+      // Dispatch the currently selected gist to its execution target via BoJ/Tauri.
+      switch sg.selectedGistId {
+      | Some(gistId) =>
+        switch sg.gists->Array.find(g => g.id === gistId) {
+        | Some(gist) => {
+            let gistJson = JSON.stringifyAny(gist)->Option.getOr("{}")
+            (
+              {...model, scriptGist: {...sg, executing: true}},
+              ScriptGistCmd.executeGist(
+                gistJson,
+                result =>
+                  switch result {
+                  | Ok(resultJson) => {
+                      // Parse the execution result from the backend.
+                      let parsed = switch Tea_Json.decodeString(Tea_Json.value, resultJson) {
+                      | Ok(json) => json
+                      | Error(_) => JSON.Encode.null
+                      }
+                      let obj = parsed->JSON.Decode.object->Option.getOr(Dict.make())
+                      let success = obj->Dict.get("success")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+                      let output = obj->Dict.get("output")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+                      let errorStr = obj->Dict.get("error")->Option.flatMap(JSON.Decode.string)
+                      let durationMs = obj->Dict.get("durationMs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+                      let executedAt = obj->Dict.get("executedAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(Date.now())
+                      let invoker = obj->Dict.get("invoker")->Option.flatMap(JSON.Decode.string)->Option.getOr("user")
+                      ScriptGist(GistExecutionResult(Ok({
+                        success,
+                        output,
+                        error: errorStr,
+                        durationMs,
+                        executedAt,
+                        invoker,
+                      })))
+                    }
+                  | Error(err) => ScriptGist(GistExecutionResult(Error(err)))
+                  },
+              ),
+            )
+          }
+        | None => ({...model, scriptGist: {...sg, error: Some("No gist found with id: " ++ gistId)}}, Tea_Cmd.none)
+        }
+      | None => ({...model, scriptGist: {...sg, error: Some("No gist selected to execute")}}, Tea_Cmd.none)
+      }
+    }
   | GistExecutionResult(result) => {
       switch result {
       | Ok(gistResult) => ({...model, scriptGist: {...sg, executing: false, lastResult: Some(gistResult)}}, Tea_Cmd.none)
@@ -10549,15 +10628,48 @@ let updateScriptGist = (model: model, msg: scriptGistMsg): (model, Tea_Cmd.t<msg
       ({...model, scriptGist: {...sg, gists}}, Tea_Cmd.none)
     }
   | SnapshotDiachronic => {
+      // Serialise the current scriptGistState into the checkpoint snapshot.
+      let snapshotStr = JSON.stringify(sg->Obj.magic)
       let checkpoint: diachronicCheckpoint = {
         index: Array.length(sg.diachronicHistory),
         timestamp: Date.now(),
         label: "Checkpoint #" ++ Int.toString(Array.length(sg.diachronicHistory) + 1),
-        snapshot: "", // serialised externally when persistence is wired
+        snapshot: snapshotStr,
       }
       ({...model, scriptGist: {...sg, diachronicHistory: Array.concat(sg.diachronicHistory, [checkpoint])}}, Tea_Cmd.none)
     }
-  | RestoreDiachronic(_idx) => (model, Tea_Cmd.none) // TODO: deserialise snapshot
+  | RestoreDiachronic(idx) => {
+      // Restore a diachronic checkpoint by deserialising the snapshot JSON
+      // back into a scriptGistState. Preserves the diachronic history itself
+      // so the user can still navigate between checkpoints after restoring.
+      switch sg.diachronicHistory->Array.get(idx) {
+      | Some(checkpoint) => {
+          if checkpoint.snapshot === "" {
+            // Empty snapshot (legacy checkpoint before serialisation was wired).
+            ({...model, scriptGist: {...sg, error: Some("Checkpoint has no snapshot data")}}, Tea_Cmd.none)
+          } else {
+            // Deserialise the snapshot directly — it was serialised with JSON.stringify
+            // in SnapshotDiachronic above, so it is a valid scriptGistState shape.
+            // Self-serialized data — identity cast is safe for data roundtripped
+            // through JSON.stringify/parse of the same ReScript record type.
+            let jsonToGistState: JSON.t => scriptGistState = %raw(`function(j) { return j; }`)
+            let restored: scriptGistState = switch Tea_Json.decodeString(Tea_Json.value, checkpoint.snapshot) {
+            | Ok(json) => jsonToGistState(json)
+            | Error(_) => sg // On parse failure, keep current state.
+            }
+            // Replace gist state but preserve the full checkpoint history
+            // and clear any error from previous operations.
+            let restoredWithHistory = {
+              ...restored,
+              diachronicHistory: sg.diachronicHistory,
+              error: None,
+            }
+            ({...model, scriptGist: restoredWithHistory}, Tea_Cmd.none)
+          }
+        }
+      | None => ({...model, scriptGist: {...sg, error: Some("Checkpoint index out of bounds")}}, Tea_Cmd.none)
+      }
+    }
   | InsertIntoCardfile(cardfileId) => {
       switch sg.selectedGistId {
       | Some(gistId) => {
@@ -11355,8 +11467,9 @@ let updateTypeLL = (model: model, msg: typellMsg): (model, Tea_Cmd.t<msg>) => {
       TypeLLCmd.listSignatures(result => TypeLL(SignaturesLoaded(result))),
     )
   | SignaturesLoaded(Ok(jsonStr)) => {
-    let sigs = try {
-      let json = JSON.parseExn(jsonStr)
+    let sigs = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       arr->Array.filterMap(item => {
         let o = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -11378,8 +11491,8 @@ let updateTypeLL = (model: model, msg: typellMsg): (model, Tea_Cmd.t<msg>) => {
           None
         }
       })
-    } catch {
-    | _ => []
+    
+    | None => []
     }
     ({...model, typell: {...tl, loading: false, signatures: sigs, error: None}}, Tea_Cmd.none)
   }
@@ -11389,8 +11502,9 @@ let updateTypeLL = (model: model, msg: typellMsg): (model, Tea_Cmd.t<msg>) => {
       TypeLLCmd.universes(result => TypeLL(UniversesLoaded(result))),
     )
   | UniversesLoaded(Ok(jsonStr)) => {
-    let univs = try {
-      let json = JSON.parseExn(jsonStr)
+    let univs = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+    | Some(json) =>
+      
       let arr = json->JSON.Decode.array->Option.getOr([])
       arr->Array.filterMap(item => {
         let o = item->JSON.Decode.object->Option.getOr(Dict.make())
@@ -11407,8 +11521,8 @@ let updateTypeLL = (model: model, msg: typellMsg): (model, Tea_Cmd.t<msg>) => {
           None
         }
       })
-    } catch {
-    | _ => []
+    
+    | None => []
     }
     ({...model, typell: {...tl, loading: false, universes: univs, error: None}}, Tea_Cmd.none)
   }
@@ -12220,6 +12334,531 @@ let updateTangleViz = (model: model, msg: tangleVizMsg): (model, Tea_Cmd.t<msg>)
   }
 }
 
+// ===========================================================================
+// Game Dev Panel Sub-Updaters (24 panels)
+// ===========================================================================
+
+/// Handles all Unit Test Runner messages — test execution, coverage heatmap.
+let updateUnitTestRunner = (model: model, msg: unitTestRunnerMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.unitTestRunner
+  switch msg {
+  | SetUtrTab(tab) => ({...model, unitTestRunner: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | UtrStarted => ({...model, unitTestRunner: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | UtrCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, unitTestRunner: {...state, running: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, unitTestRunner: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissUtrError => ({...model, unitTestRunner: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Functional Tester messages — end-to-end game workflow simulation.
+let updateFunctionalTester = (model: model, msg: functionalTesterMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.functionalTester
+  switch msg {
+  | SetFtTab(tab) => ({...model, functionalTester: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | FtStarted => ({...model, functionalTester: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | FtCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, functionalTester: {...state, running: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, functionalTester: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissFtError => ({...model, functionalTester: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Regression Guard messages — snapshot comparison, golden-file testing.
+let updateRegressionGuard = (model: model, msg: regressionGuardMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.regressionGuard
+  switch msg {
+  | SetRgTab(tab) => ({...model, regressionGuard: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | RgStarted => ({...model, regressionGuard: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | RgCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, regressionGuard: {...state, running: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, regressionGuard: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissRgError => ({...model, regressionGuard: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Performance Profiler messages — frame budget, GC pressure, flamegraphs.
+let updatePerformanceProfiler = (model: model, msg: performanceProfilerMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.performanceProfiler
+  switch msg {
+  | SetPpTab(tab) => ({...model, performanceProfiler: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | PpStarted => ({...model, performanceProfiler: {...state, profiling: true, error: None}}, Tea_Cmd.none)
+  | PpCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, performanceProfiler: {...state, profiling: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, performanceProfiler: {...state, profiling: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissPpError => ({...model, performanceProfiler: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Load Tester messages — Phoenix channel stress testing.
+let updateLoadTester = (model: model, msg: loadTesterMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.loadTester
+  switch msg {
+  | SetLtTab(tab) => ({...model, loadTester: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | LtStarted => ({...model, loadTester: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | LtCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, loadTester: {...state, running: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, loadTester: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissLtError => ({...model, loadTester: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Soak Monitor messages — long-running session memory trend.
+let updateSoakMonitor = (model: model, msg: soakMonitorMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.soakMonitor
+  switch msg {
+  | SetSmTab(tab) => ({...model, soakMonitor: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | SmStarted => ({...model, soakMonitor: {...state, monitoring: true, error: None}}, Tea_Cmd.none)
+  | SmCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, soakMonitor: {...state, monitoring: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, soakMonitor: {...state, monitoring: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissSmError => ({...model, soakMonitor: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Compatibility Matrix messages — browser/device/resolution test matrix.
+let updateCompatibilityMatrix = (model: model, msg: compatibilityMatrixMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.compatibilityMatrix
+  switch msg {
+  | SetCmTab(tab) => ({...model, compatibilityMatrix: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | CmStarted => ({...model, compatibilityMatrix: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | CmCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, compatibilityMatrix: {...state, running: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, compatibilityMatrix: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissCmError => ({...model, compatibilityMatrix: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Exploratory Workbench messages — freeform play session recording.
+let updateExploratoryWorkbench = (model: model, msg: exploratoryWorkbenchMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.exploratoryWorkbench
+  switch msg {
+  | SetEwTab(tab) => ({...model, exploratoryWorkbench: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | EwStarted => ({...model, exploratoryWorkbench: {...state, recording: true, error: None}}, Tea_Cmd.none)
+  | EwCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, exploratoryWorkbench: {...state, recording: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, exploratoryWorkbench: {...state, recording: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissEwError => ({...model, exploratoryWorkbench: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Beta Feedback Hub messages — feedback-o-tron integration, sentiment.
+let updateBetaFeedbackHub = (model: model, msg: betaFeedbackHubMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.betaFeedbackHub
+  switch msg {
+  | SetBfhTab(tab) => ({...model, betaFeedbackHub: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | BfhStarted => ({...model, betaFeedbackHub: {...state, submitting: true, error: None}}, Tea_Cmd.none)
+  | BfhCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, betaFeedbackHub: {...state, submitting: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, betaFeedbackHub: {...state, submitting: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissBfhError => ({...model, betaFeedbackHub: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Balance Analyser messages — game balance stats, Monte Carlo.
+let updateBalanceAnalyser = (model: model, msg: balanceAnalyserMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.balanceAnalyser
+  switch msg {
+  | SetBaTab(tab) => ({...model, balanceAnalyser: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | BaStarted => ({...model, balanceAnalyser: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | BaCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, balanceAnalyser: {...state, running: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, balanceAnalyser: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissBaError => ({...model, balanceAnalyser: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Typing Bridge messages — TypeLL type constraints for game state.
+let updateTypingBridge = (model: model, msg: typingBridgeMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.typingBridge
+  switch msg {
+  | SetTbTab(tab) => ({...model, typingBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | TbStarted => ({...model, typingBridge: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | TbCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, typingBridge: {...state, running: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, typingBridge: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissTbError => ({...model, typingBridge: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Neurosymbolic Bridge messages — guard AI behaviour reasoning via ECHIDNA.
+let updateNeurosymBridge = (model: model, msg: neurosymBridgeMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.neurosymBridge
+  switch msg {
+  | SetNbTab(tab) => ({...model, neurosymBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | NbStarted => ({...model, neurosymBridge: {...state, simulating: true, error: None}}, Tea_Cmd.none)
+  | NbCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, neurosymBridge: {...state, simulating: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, neurosymBridge: {...state, simulating: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissNbError => ({...model, neurosymBridge: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Agentic Bridge messages — automated playtesting agents with OODA loop.
+let updateAgenticBridge = (model: model, msg: agenticBridgeMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.agenticBridge
+  switch msg {
+  | SetAbTab(tab) => ({...model, agenticBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | AbStarted => ({...model, agenticBridge: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | AbCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, agenticBridge: {...state, running: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, agenticBridge: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissAbError => ({...model, agenticBridge: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Automation Bridge messages — CI/CD pipeline orchestration.
+let updateAutomationBridge = (model: model, msg: automationBridgeMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.automationBridge
+  switch msg {
+  | SetAutoBTab(tab) => ({...model, automationBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | AutoBStarted => ({...model, automationBridge: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | AutoBCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, automationBridge: {...state, running: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, automationBridge: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissAutoBError => ({...model, automationBridge: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Database Bridge messages — VeriSimDB game state persistence.
+let updateDatabaseBridge = (model: model, msg: databaseBridgeMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.databaseBridge
+  switch msg {
+  | SetDbBTab(tab) => ({...model, databaseBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | DbBStarted => ({...model, databaseBridge: {...state, connected: true, error: None}}, Tea_Cmd.none)
+  | DbBCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, databaseBridge: {...state, connected: true}}, Tea_Cmd.none)
+    | Error(err) => ({...model, databaseBridge: {...state, connected: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissDbBError => ({...model, databaseBridge: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Protocol Bridge messages — multiplayer sync protocol analysis.
+let updateProtocolBridge = (model: model, msg: protocolBridgeMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.protocolBridge
+  switch msg {
+  | SetPbTab(tab) => ({...model, protocolBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | PbStarted => ({...model, protocolBridge: {...state, connected: true, error: None}}, Tea_Cmd.none)
+  | PbCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, protocolBridge: {...state, connected: true}}, Tea_Cmd.none)
+    | Error(err) => ({...model, protocolBridge: {...state, connected: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissPbError => ({...model, protocolBridge: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Proofs Bridge messages — proven repo formal verification.
+let updateProofsBridge = (model: model, msg: proofsBridgeMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.proofsBridge
+  switch msg {
+  | SetPrBTab(tab) => ({...model, proofsBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | PrBStarted => ({...model, proofsBridge: {...state, verifying: true, error: None}}, Tea_Cmd.none)
+  | PrBCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, proofsBridge: {...state, verifying: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, proofsBridge: {...state, verifying: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissPrBError => ({...model, proofsBridge: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Scripting Bridge messages — VM instruction scripting REPL.
+let updateScriptingBridge = (model: model, msg: scriptingBridgeMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.scriptingBridge
+  switch msg {
+  | SetScBTab(tab) => ({...model, scriptingBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | ScBStarted => ({...model, scriptingBridge: {...state, executing: true, error: None}}, Tea_Cmd.none)
+  | ScBCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, scriptingBridge: {...state, executing: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, scriptingBridge: {...state, executing: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissScBError => ({...model, scriptingBridge: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Generator Mode messages — parametric procedural world builder.
+let updateGeneratorMode = (model: model, msg: generatorModeMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.generatorMode
+  switch msg {
+  | SetGenCategory(cat) => ({...model, generatorMode: {...state, activeTab: cat}}, Tea_Cmd.none)
+  | GenStarted => ({...model, generatorMode: {...state, generating: true, error: None}}, Tea_Cmd.none)
+  | GenCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, generatorMode: {...state, generating: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, generatorMode: {...state, generating: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissGenError => ({...model, generatorMode: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Architect Mode messages — PixiJS fine-grained level editor.
+/// Tab switching and error dismissal only (no running state field).
+let updateArchitectMode = (model: model, msg: architectModeMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.architectMode
+  switch msg {
+  | SetArchModeCategory(cat) => ({...model, architectMode: {...state, activeTab: cat}}, Tea_Cmd.none)
+  | ArchModeStarted => (model, Tea_Cmd.none)
+  | ArchModeCompleted(_) => (model, Tea_Cmd.none)
+  | DismissArchModeError => ({...model, architectMode: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Guard AI Tuner messages — guard patrol, alert threshold tuning.
+let updateGuardAiTuner = (model: model, msg: guardAiTunerMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.guardAiTuner
+  switch msg {
+  | SetGatCategory(cat) => ({...model, guardAiTuner: {...state, activeTab: cat}}, Tea_Cmd.none)
+  | GatStarted => ({...model, guardAiTuner: {...state, editing: true, error: None}}, Tea_Cmd.none)
+  | GatCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, guardAiTuner: {...state, editing: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, guardAiTuner: {...state, editing: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissGatError => ({...model, guardAiTuner: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Device Network Designer messages — wire devices, security levels.
+let updateDeviceNetworkDesigner = (model: model, msg: deviceNetworkDesignerMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.deviceNetworkDesigner
+  switch msg {
+  | SetDndCategory(cat) => ({...model, deviceNetworkDesigner: {...state, activeTab: cat}}, Tea_Cmd.none)
+  | DndStarted => ({...model, deviceNetworkDesigner: {...state, wiringMode: true, error: None}}, Tea_Cmd.none)
+  | DndCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, deviceNetworkDesigner: {...state, wiringMode: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, deviceNetworkDesigner: {...state, wiringMode: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissDndError => ({...model, deviceNetworkDesigner: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Asset Manager messages — PixiJS sprites, sounds, templates.
+let updateAssetManager = (model: model, msg: assetManagerMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.assetManager
+  switch msg {
+  | SetAmCategory(cat) => ({...model, assetManager: {...state, activeTab: cat}}, Tea_Cmd.none)
+  | AmStarted => ({...model, assetManager: {...state, importing: true, error: None}}, Tea_Cmd.none)
+  | AmCompleted(result) =>
+    switch result {
+    | Ok(_) => ({...model, assetManager: {...state, importing: false}}, Tea_Cmd.none)
+    | Error(err) => ({...model, assetManager: {...state, importing: false, error: Some(err)}}, Tea_Cmd.none)
+    }
+  | DismissAmError => ({...model, assetManager: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Playtest Recorder messages — record + replay sessions.
+/// Tab switching and error dismissal only (playback state managed externally).
+let updatePlaytestRecorder = (model: model, msg: playtestRecorderMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.playtestRecorder
+  switch msg {
+  | SetPrCategory(cat) => ({...model, playtestRecorder: {...state, activeTab: cat}}, Tea_Cmd.none)
+  | PrStarted => (model, Tea_Cmd.none)
+  | PrCompleted(_) => (model, Tea_Cmd.none)
+  | DismissPrError => ({...model, playtestRecorder: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Code Review messages — PR review, inline comments, approval gates.
+let updateCodeReview = (model: model, msg: codeReviewMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.codeReview
+  switch msg {
+  | SetCrTab(tab) => ({...model, codeReview: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | SetCrFilter(f) => ({...model, codeReview: {...state, filter: f}}, Tea_Cmd.none)
+  | SelectPr(id) => ({...model, codeReview: {...state, selectedPr: Some(id)}}, Tea_Cmd.none)
+  | ApprovePr => (model, Tea_Cmd.none)
+  | DismissCrError => ({...model, codeReview: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Merge Coordinator messages — branch management, conflict resolution.
+let updateMergeCoordinator = (model: model, msg: mergeCoordinatorMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.mergeCoordinator
+  switch msg {
+  | SetMcTab(tab) => ({...model, mergeCoordinator: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | SelectBranch(name) => ({...model, mergeCoordinator: {...state, selectedBranch: Some(name)}}, Tea_Cmd.none)
+  | ResolveConflict(filePath, _resolution) => {
+      let newConflicts = state.conflicts->Array.map(c =>
+        c.filePath === filePath ? {...c, resolved: true} : c
+      )
+      ({...model, mergeCoordinator: {...state, conflicts: newConflicts}}, Tea_Cmd.none)
+    }
+  | DismissMcError => ({...model, mergeCoordinator: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Team Dashboard messages — team presence, activity feed.
+let updateTeamDashboard = (model: model, msg: teamDashboardMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.teamDashboard
+  switch msg {
+  | SetTdTab(tab) => ({...model, teamDashboard: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | SetTdFilter(f) => ({...model, teamDashboard: {...state, filter: f}}, Tea_Cmd.none)
+  | DismissTdError => ({...model, teamDashboard: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Handles all Debugging Workbench messages — time-travel, state inspection, watches.
+let updateDebuggingWorkbench = (model: model, msg: debuggingWorkbenchMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.debuggingWorkbench
+  let tt = state.timeTravel
+  switch msg {
+  | SetDwTab(tab) => ({...model, debuggingWorkbench: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | DwStepBack =>
+    if DebuggingWorkbenchEngine.canGoBack(tt) {
+      let newTt = {...tt, currentIndex: tt.currentIndex - 1, isTimeTravelling: true}
+      let snap = tt.snapshots->Array.get(newTt.currentIndex)
+      let selectedId = switch snap {
+      | Some(s) => Some(s.id)
+      | None => state.selectedSnapshot
+      }
+      ({...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: selectedId}}, Tea_Cmd.none)
+    } else {
+      (model, Tea_Cmd.none)
+    }
+  | DwStepForward =>
+    if DebuggingWorkbenchEngine.canGoForward(tt) {
+      let newTt = {...tt, currentIndex: tt.currentIndex + 1, isTimeTravelling: true}
+      let snap = tt.snapshots->Array.get(newTt.currentIndex)
+      let selectedId = switch snap {
+      | Some(s) => Some(s.id)
+      | None => state.selectedSnapshot
+      }
+      ({...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: selectedId}}, Tea_Cmd.none)
+    } else {
+      (model, Tea_Cmd.none)
+    }
+  | DwGoToSnapshot(idx) =>
+    if idx >= 0 && idx < Array.length(tt.snapshots) {
+      let newTt = {...tt, currentIndex: idx, isTimeTravelling: idx < Array.length(tt.snapshots) - 1}
+      let snap = tt.snapshots->Array.get(idx)
+      let selectedId = switch snap {
+      | Some(s) => Some(s.id)
+      | None => state.selectedSnapshot
+      }
+      ({...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: selectedId}}, Tea_Cmd.none)
+    } else {
+      (model, Tea_Cmd.none)
+    }
+  | DwCaptureSnapshot => {
+      let now = Date.now()
+      let snap: debugSnapshot = {
+        id: `snap-${Float.toString(now)}`,
+        modelJson: snapshotToJson(model),
+        timestamp: now,
+        label: `Snapshot at ${Float.toFixed(now /. 1000.0, ~digits=1)}s`,
+      }
+      let newSnapshots = Array.concat(tt.snapshots, [snap])
+      let newTt = {...tt, snapshots: newSnapshots, currentIndex: Array.length(newSnapshots) - 1, isTimeTravelling: false}
+      ({...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: Some(snap.id)}}, Tea_Cmd.none)
+    }
+  | DwAddWatch => {
+      let id = `watch-${Int.toString(Array.length(state.watches) + 1)}`
+      let watch: watchExpression = {
+        id,
+        expression: "",
+        currentValue: "(not evaluated)",
+        lastUpdated: Date.now(),
+      }
+      ({...model, debuggingWorkbench: {...state, watches: Array.concat(state.watches, [watch])}}, Tea_Cmd.none)
+    }
+  | DwRemoveWatch(id) => {
+      let newWatches = state.watches->Array.filter(w => w.id !== id)
+      ({...model, debuggingWorkbench: {...state, watches: newWatches}}, Tea_Cmd.none)
+    }
+  | DwClearConsole => ({...model, debuggingWorkbench: {...state, consoleLog: []}}, Tea_Cmd.none)
+  | DismissDwError => ({...model, debuggingWorkbench: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Sub-updater for Wiring Inspector — PCC verification lifecycle and UI state.
+let updateWiringInspector = (model: model, msg: wiringInspectorMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.wiringInspector
+  switch msg {
+  | RunVerification =>
+    let newState = {...state, loading: true, error: None}
+    let cmd = WiringInspectorCmd.runVerification(result => WiringInspector(VerificationResult(result)))
+    ({...model, wiringInspector: newState}, cmd)
+
+  | VerificationResult(Ok(json)) =>
+    let results = WiringInspectorEngine.parseVerificationJson(json)
+    let now = Date.make()->Date.toISOString
+    let newState = {
+      ...state,
+      loading: false,
+      results,
+      lastRunAt: Some(now),
+      error: None,
+    }
+    ({...model, wiringInspector: newState}, Tea_Cmd.none)
+
+  | VerificationResult(Error(e)) =>
+    logDegradedService("WiringInspector", e)
+    let newState = {...state, loading: false, error: Some(e)}
+    ({...model, wiringInspector: newState}, Tea_Cmd.none)
+
+  | RunSingleVerification(panelId) =>
+    let newState = {...state, loading: true, error: None}
+    let cmd = WiringInspectorCmd.runSingleVerification(panelId, result => WiringInspector(SingleVerificationResult(result)))
+    ({...model, wiringInspector: newState}, cmd)
+
+  | SingleVerificationResult(Ok(json)) =>
+    let results = WiringInspectorEngine.parseVerificationJson(json)
+    let now = Date.make()->Date.toISOString
+    let newState = {
+      ...state,
+      loading: false,
+      results,
+      lastRunAt: Some(now),
+      error: None,
+    }
+    ({...model, wiringInspector: newState}, Tea_Cmd.none)
+
+  | SingleVerificationResult(Error(e)) =>
+    logDegradedService("WiringInspector", e)
+    let newState = {...state, loading: false, error: Some(e)}
+    ({...model, wiringInspector: newState}, Tea_Cmd.none)
+
+  | SelectPanel(p) =>
+    ({...model, wiringInspector: {...state, selectedPanel: p}}, Tea_Cmd.none)
+
+  | SetFilterStatus(s) =>
+    ({...model, wiringInspector: {...state, filterStatus: s}}, Tea_Cmd.none)
+  }
+}
+
 /// ORCHESTRATOR: The main entry point for state updates.
 /// Routes each message to its domain-specific sub-updater, then applies
 /// contractile evaluation as a post-processing cognitive governance step.
@@ -12406,8 +13045,9 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
       // For now, parse the confidence score and use it to tune Anti-Crash.
       switch result {
       | Ok(jsonStr) => {
-          let newModel = try {
-            let json = JSON.parseExn(jsonStr)
+          let newModel = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+          | Some(json) =>
+            
             let o = json->JSON.Decode.object->Option.getOr(Dict.make())
             let confidence =
               o->Dict.get("confidence")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.5)
@@ -12426,8 +13066,8 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
               // Moderate confidence — maintain current posture.
               model
             }
-          } catch {
-          | _ => model
+          
+          | None => model
           }
           (newModel, Tea_Cmd.none)
         }
@@ -12439,8 +13079,9 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | GovernanceNesyValidateResult(result) => {
       switch result {
       | Ok(jsonStr) => {
-          let newModel = try {
-            let json = JSON.parseExn(jsonStr)
+          let newModel = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+          | Some(json) =>
+            
             let o = json->JSON.Decode.object->Option.getOr(Dict.make())
             let approved =
               o->Dict.get("approved")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
@@ -12453,8 +13094,8 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
             } else {
               model
             }
-          } catch {
-          | _ => model
+          
+          | None => model
           }
           (newModel, Tea_Cmd.none)
         }
@@ -12464,8 +13105,9 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | GovernanceNesyProbeResult(result) => {
       switch result {
       | Ok(jsonStr) => {
-          let newModel = try {
-            let json = JSON.parseExn(jsonStr)
+          let newModel = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+          | Some(json) =>
+            
             let o = json->JSON.Decode.object->Option.getOr(Dict.make())
             let neuralCoherence =
               o->Dict.get("neural_coherence")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.5)
@@ -12479,8 +13121,8 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
                 divergenceLevel: driftMagnitude,
               },
             }
-          } catch {
-          | _ => model
+          
+          | None => model
           }
           (newModel, Tea_Cmd.none)
         }
@@ -12567,8 +13209,9 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
         switch result {
         | Ok(jsonStr) =>
           // Parse JSON array of file paths
-          let paths = try {
-            let parsed = JSON.parseExn(jsonStr)
+          let paths = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+          | Some(parsed) =>
+            
             switch JSON.Classify.classify(parsed) {
             | Array(arr) =>
               arr->Array.filterMap(item =>
@@ -12579,8 +13222,8 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
               )
             | _ => []
             }
-          } catch {
-          | _ => []
+          
+          | None => []
           }
           ({...model, a2mlManifestPaths: paths}, Tea_Cmd.none)
         | Error(_) => (model, Tea_Cmd.none)
@@ -12675,6 +13318,40 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
       }
     | DismissOpsError => ({...model, ambientOps: {...model.ambientOps, error: None}}, Tea_Cmd.none)
     }
+  // Game Dev panels — testing
+  | UnitTestRunner(subMsg) => updateUnitTestRunner(model, subMsg)
+  | FunctionalTester(subMsg) => updateFunctionalTester(model, subMsg)
+  | RegressionGuard(subMsg) => updateRegressionGuard(model, subMsg)
+  | PerformanceProfiler(subMsg) => updatePerformanceProfiler(model, subMsg)
+  | LoadTester(subMsg) => updateLoadTester(model, subMsg)
+  | SoakMonitor(subMsg) => updateSoakMonitor(model, subMsg)
+  | CompatibilityMatrix(subMsg) => updateCompatibilityMatrix(model, subMsg)
+  | ExploratoryWorkbench(subMsg) => updateExploratoryWorkbench(model, subMsg)
+  | BetaFeedbackHub(subMsg) => updateBetaFeedbackHub(model, subMsg)
+  | BalanceAnalyser(subMsg) => updateBalanceAnalyser(model, subMsg)
+  // Game Dev panels — bridges
+  | TypingBridge(subMsg) => updateTypingBridge(model, subMsg)
+  | NeurosymBridge(subMsg) => updateNeurosymBridge(model, subMsg)
+  | AgenticBridge(subMsg) => updateAgenticBridge(model, subMsg)
+  | AutomationBridge(subMsg) => updateAutomationBridge(model, subMsg)
+  | DatabaseBridge(subMsg) => updateDatabaseBridge(model, subMsg)
+  | ProtocolBridge(subMsg) => updateProtocolBridge(model, subMsg)
+  | ProofsBridge(subMsg) => updateProofsBridge(model, subMsg)
+  | ScriptingBridge(subMsg) => updateScriptingBridge(model, subMsg)
+  // Game Dev panels — game-specific
+  | GeneratorMode(subMsg) => updateGeneratorMode(model, subMsg)
+  | ArchitectMode(subMsg) => updateArchitectMode(model, subMsg)
+  | GuardAiTuner(subMsg) => updateGuardAiTuner(model, subMsg)
+  | DeviceNetworkDesigner(subMsg) => updateDeviceNetworkDesigner(model, subMsg)
+  | AssetManager(subMsg) => updateAssetManager(model, subMsg)
+  | PlaytestRecorder(subMsg) => updatePlaytestRecorder(model, subMsg)
+  // Team / collaboration panels
+  | CodeReview(subMsg) => updateCodeReview(model, subMsg)
+  | MergeCoordinator(subMsg) => updateMergeCoordinator(model, subMsg)
+  | TeamDashboard(subMsg) => updateTeamDashboard(model, subMsg)
+  | DebuggingWorkbench(subMsg) => updateDebuggingWorkbench(model, subMsg)
+  // Infrastructure panels
+  | WiringInspector(subMsg) => updateWiringInspector(model, subMsg)
   | NoOp => (model, Tea_Cmd.none)
   }
 

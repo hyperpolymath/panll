@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Level Architect — visual level design tool
+
+panel_id = "Level Architect"
+module_name = "LevelArchitect"
+model_slice = "levelArchitect"
+msg_namespace = "levelArchitectMsg"
+view_route = "PanelLevelArchitect"
+short_name = "Lvl"
+clade_id = "level-architect"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Protocol-Squisher — 13-format schema analysis
+
+panel_id = "Protocol-Squisher"
+module_name = "ProtocolSquisher"
+model_slice = "protocolSquisher"
+msg_namespace = "protocolSquisherMsg"
+view_route = "PanelProtocolSquisher"
+short_name = "Squisher"
+clade_id = "protocol-squisher"
+has_backend = true

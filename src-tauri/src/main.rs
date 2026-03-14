@@ -43,6 +43,11 @@ async fn health_check(endpoint: String) -> Result<String, String> {
     }
 }
 
+/// Unified error types for the PanLL backend.
+/// Provides `PanllError` with `From` impls for common error sources and
+/// a `to_tauri_result` helper for Tauri command boundaries.
+pub mod error;
+
 /// CloudGuard — Cloudflare domain security management module.
 mod cloudguard;
 
@@ -164,6 +169,12 @@ mod provenance;
 
 /// Feedback — Persistent feedback report storage under ~/.panll/feedback/.
 mod feedback;
+
+/// Script Gist — Persistent gist storage, execution dispatch, and diachronic snapshots.
+mod script_gist;
+
+/// Wiring Inspector — Panel Contract Compiler (PCC) bridge for constraint verification.
+mod wiring_inspector;
 
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
@@ -1242,6 +1253,7 @@ Commands:
 // ---------------------------------------------------------------------------
 
 /// Default VeriSimDB API endpoint (can be overridden with VERISIMDB_URL env var)
+// panic-attack:allow insecure-protocol — localhost dev endpoint
 const DEFAULT_VERISIMDB_URL: &str = "http://localhost:8080/api/v1";
 
 /// Resolve the VeriSimDB API base URL from environment or default.
@@ -1461,6 +1473,7 @@ fn verisimdb_get_entity(entity_id: String) -> Result<String, String> {
 // ECHIDNA Theorem Prover Backend
 // ===========================================================================
 
+// panic-attack:allow insecure-protocol — localhost dev endpoint
 const DEFAULT_ECHIDNA_URL: &str = "http://localhost:9000/api/v1";
 
 /// Resolve the ECHIDNA API base URL from environment or default.
@@ -1930,6 +1943,7 @@ fn mylang_repl(input: String, dialect: String) -> Result<String, String> {
     }
 }
 
+// panic-attack:allow insecure-protocol — localhost dev endpoint
 const DEFAULT_MYLANG_LSP_URL: &str = "http://localhost:7900";
 
 /// Resolve the my-lang LSP URL from environment or default.
@@ -2282,6 +2296,14 @@ fn main() {
             provenance::commands::provenance_scan_unsound,
             // Feedback — Persistent report storage
             feedback::commands::feedback_save_report,
+            // Script Gist — Gist persistence, execution, and snapshots
+            script_gist::commands::script_gist_save,
+            script_gist::commands::script_gist_execute,
+            script_gist::commands::script_gist_restore_snapshot,
+            script_gist::commands::script_gist_list,
+            // Wiring Inspector — PCC constraint verification
+            wiring_inspector::commands::wiring_inspector_verify,
+            wiring_inspector::commands::wiring_inspector_verify_panel,
         ])
         .setup(|_app| {
             Ok(())

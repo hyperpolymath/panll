@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Exploratory Workbench — freeform play session recording, anomaly detection
+
+panel_id = "Exploratory Workbench"
+module_name = "ExploratoryWorkbench"
+model_slice = "exploratoryWorkbench"
+msg_namespace = "exploratoryWorkbenchMsg"
+view_route = "PanelExploratoryWorkbench"
+short_name = "Explore"
+clade_id = "exploratory-workbench"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for WiringInspector — PCC constraint state UI
+
+panel_id = "WiringInspector"
+module_name = "WiringInspector"
+model_slice = "wiringInspector"
+msg_namespace = "wiringInspectorMsg"
+view_route = "PanelWiringInspector"
+short_name = "Wiring"
+clade_id = "wiring-inspector"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Agentic Bridge — automated playtesting agents with OODA loop
+
+panel_id = "Agentic Bridge"
+module_name = "AgenticBridge"
+model_slice = "agenticBridge"
+msg_namespace = "agenticBridgeMsg"
+view_route = "PanelAgenticBridge"
+short_name = "AgB"
+clade_id = "agentic-bridge"
+has_backend = true

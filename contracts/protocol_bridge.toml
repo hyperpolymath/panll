@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Protocol Bridge — multiplayer sync protocol analysis
+
+panel_id = "Protocol Bridge"
+module_name = "ProtocolBridge"
+model_slice = "protocolBridge"
+msg_namespace = "protocolBridgeMsg"
+view_route = "PanelProtocolBridge"
+short_name = "PrB"
+clade_id = "protocol-bridge"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Repo Loader — repository scanner and panel configuration
+
+panel_id = "Repo Loader"
+module_name = "RepoLoader"
+model_slice = "repoLoader"
+msg_namespace = "repoLoaderMsg"
+view_route = "PanelRepoLoader"
+short_name = "Repo"
+clade_id = "repoloader"
+has_backend = true

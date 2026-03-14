@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Capture — screenshots, recordings, demos, panel cloning, comparison
+
+panel_id = "Capture"
+module_name = "Capture"
+model_slice = "capture"
+msg_namespace = "captureMsg"
+view_route = "PanelCapture"
+short_name = "Cap"
+clade_id = "capture"
+has_backend = true

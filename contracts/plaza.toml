@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Palimpsest Plaza — PMPL license adoption, compliance, and governance hub
+
+panel_id = "Palimpsest Plaza"
+module_name = "Plaza"
+model_slice = "plaza"
+msg_namespace = "plazaMsg"
+view_route = "PanelPlaza"
+short_name = "PMPL"
+clade_id = "plaza"
+has_backend = false

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Security — secrets redaction, vault, 2FA, Trustfile enforcement
+
+panel_id = "Security"
+module_name = "Security"
+model_slice = "security"
+msg_namespace = "securityMsg"
+view_route = "PanelSecurity"
+short_name = "Sec"
+clade_id = "security"
+has_backend = true

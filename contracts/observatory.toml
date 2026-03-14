@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Observatory — integrative dashboard, cross-panel health, service status
+
+panel_id = "Observatory"
+module_name = "Observatory"
+model_slice = "observatory"
+msg_namespace = "observatoryMsg"
+view_route = "PanelObservatory"
+short_name = "Obs"
+clade_id = "observatory"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for BoJ — Bundle of Joy unified cartridge server
+
+panel_id = "BoJ"
+module_name = "Boj"
+model_slice = "boj"
+msg_namespace = "bojMsg"
+view_route = "PanelBoj"
+short_name = "BoJ"
+clade_id = "boj"
+has_backend = true

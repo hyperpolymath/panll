@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Multiplayer Monitor — Elixir/Phoenix sync server monitoring
+
+panel_id = "Multiplayer Monitor"
+module_name = "MultiplayerMonitor"
+model_slice = "multiplayerMonitor"
+msg_namespace = "multiplayerMonitorMsg"
+view_route = "PanelMultiplayerMonitor"
+short_name = "MP"
+clade_id = "multiplayer-monitor"
+has_backend = true

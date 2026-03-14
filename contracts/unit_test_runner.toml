@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Unit Test Runner — ReScript test execution, coverage heatmap
+
+panel_id = "Unit Test Runner"
+module_name = "UnitTestRunner"
+model_slice = "unitTestRunner"
+msg_namespace = "unitTestRunnerMsg"
+view_route = "PanelUnitTestRunner"
+short_name = "UTR"
+clade_id = "unit-test-runner"
+has_backend = true

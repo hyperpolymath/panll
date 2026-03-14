@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Evangeliser — ReScript Evangeliser JS-to-ReScript transformation teaching
+
+panel_id = "Evangeliser"
+module_name = "Evangeliser"
+model_slice = "evangeliser"
+msg_namespace = "evangeliserMsg"
+view_route = "PanelEvangeliser"
+short_name = "Evan"
+clade_id = "evangeliser"
+has_backend = false

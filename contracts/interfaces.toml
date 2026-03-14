@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Interfaces — language bridges, ABI/FFI inventory
+
+panel_id = "Interfaces"
+module_name = "Interfaces"
+model_slice = "interfaces"
+msg_namespace = "interfacesMsg"
+view_route = "PanelInterfaces"
+short_name = "FFI"
+clade_id = "interfaces"
+has_backend = false

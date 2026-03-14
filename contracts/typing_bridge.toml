@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Typing Bridge — TypeLL type constraints for game state
+
+panel_id = "Typing Bridge"
+module_name = "TypingBridge"
+model_slice = "typingBridge"
+msg_namespace = "typingBridgeMsg"
+view_route = "PanelTypingBridge"
+short_name = "TyB"
+clade_id = "typing-bridge"
+has_backend = true

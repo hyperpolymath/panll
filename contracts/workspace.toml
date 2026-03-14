@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Workspace — panel arrangements, groups, sessions, modes, configurator
+
+panel_id = "Workspace"
+module_name = "Workspace"
+model_slice = "workspace"
+msg_namespace = "workspaceMsg"
+view_route = "PanelWorkspace"
+short_name = "WS"
+clade_id = "workspace"
+has_backend = true

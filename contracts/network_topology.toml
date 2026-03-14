@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Network Topology — force-directed graph of IDApTIK in-game network
+
+panel_id = "Network Topology"
+module_name = "NetworkTopology"
+model_slice = "networkTopology"
+msg_namespace = "networkTopologyMsg"
+view_route = "PanelNetworkTopology"
+short_name = "Topo"
+clade_id = "network-topology"
+has_backend = true

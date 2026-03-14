@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Soak Monitor — long-running session memory trend and leak detection
+
+panel_id = "Soak Monitor"
+module_name = "SoakMonitor"
+model_slice = "soakMonitor"
+msg_namespace = "soakMonitorMsg"
+view_route = "PanelSoakMonitor"
+short_name = "Soak"
+clade_id = "soak-monitor"
+has_backend = true

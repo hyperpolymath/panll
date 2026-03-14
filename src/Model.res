@@ -323,6 +323,47 @@ include SpecBrowserModel
 /// for the verification status panel.
 include VerificationDashboardModel
 
+/// Re-export game testing panel types.
+include UnitTestRunnerModel
+include FunctionalTesterModel
+include RegressionGuardModel
+include PerformanceProfilerModel
+include LoadTesterModel
+include SoakMonitorModel
+include CompatibilityMatrixModel
+include ExploratoryWorkbenchModel
+include BetaFeedbackHubModel
+include BalanceAnalyserModel
+
+/// Re-export bridge panel types.
+include TypingBridgeModel
+include NeurosymBridgeModel
+include AgenticBridgeModel
+include AutomationBridgeModel
+include DatabaseBridgeModel
+include ProtocolBridgeModel
+include ProofsBridgeModel
+include ScriptingBridgeModel
+
+/// Re-export game-specific panel types.
+include GeneratorModeModel
+include ArchitectModeModel
+include GuardAiTunerModel
+include DeviceNetworkDesignerModel
+include AssetManagerModel
+include PlaytestRecorderModel
+
+/// Re-export team/collaboration panel types.
+include CodeReviewModel
+include MergeCoordinatorModel
+include TeamDashboardModel
+include DebuggingWorkbenchModel
+
+/// Re-export Wiring Inspector types (obligationStatus, failureClass,
+/// repairability, obligation, panelVerification, wiringInspectorState)
+/// for the PCC constraint state UI panel.
+include WiringInspectorModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -566,6 +607,45 @@ type model = {
 
   // AmbientOps — hospital-model sysadmin (clinician, network ambulance, hardware crash team)
   ambientOps: ambientOpsState,
+
+  // Game Testing panels
+  unitTestRunner: unitTestRunnerState,
+  functionalTester: functionalTesterState,
+  regressionGuard: regressionGuardState,
+  performanceProfiler: performanceProfilerState,
+  loadTester: loadTesterState,
+  soakMonitor: soakMonitorState,
+  compatibilityMatrix: compatibilityMatrixState,
+  exploratoryWorkbench: exploratoryWorkbenchState,
+  betaFeedbackHub: betaFeedbackHubState,
+  balanceAnalyser: balanceAnalyserState,
+
+  // Bridge panels
+  typingBridge: typingBridgeState,
+  neurosymBridge: neurosymBridgeState,
+  agenticBridge: agenticBridgeState,
+  automationBridge: automationBridgeState,
+  databaseBridge: databaseBridgeState,
+  protocolBridge: protocolBridgeState,
+  proofsBridge: proofsBridgeState,
+  scriptingBridge: scriptingBridgeState,
+
+  // Game-specific panels
+  generatorMode: generatorModeState,
+  architectMode: architectModeState,
+  guardAiTuner: guardAiTunerState,
+  deviceNetworkDesigner: deviceNetworkDesignerState,
+  assetManager: assetManagerState,
+  playtestRecorder: playtestRecorderState,
+
+  // Team / collaboration panels
+  codeReview: codeReviewState,
+  mergeCoordinator: mergeCoordinatorState,
+  teamDashboard: teamDashboardState,
+  debuggingWorkbench: debuggingWorkbenchState,
+
+  // Infrastructure panels
+  wiringInspector: wiringInspectorState,
 }
 
 /// Initial model state - "Dark Start" mode
@@ -1253,4 +1333,36 @@ let init = (): model => {
   verificationDashboard: VerificationDashboardModel.initial,
   observatory: ObservatoryEngine.defaultState,
   ambientOps: AmbientOpsEngine.defaultState,
+  // Game Dev panels — testing
+  unitTestRunner: UnitTestRunnerEngine.defaultState,
+  functionalTester: FunctionalTesterEngine.defaultState,
+  regressionGuard: RegressionGuardEngine.defaultState,
+  performanceProfiler: PerformanceProfilerEngine.defaultState,
+  loadTester: LoadTesterEngine.defaultState,
+  soakMonitor: SoakMonitorEngine.defaultState,
+  compatibilityMatrix: CompatibilityMatrixEngine.defaultState,
+  exploratoryWorkbench: ExploratoryWorkbenchEngine.defaultState,
+  betaFeedbackHub: BetaFeedbackHubEngine.defaultState,
+  balanceAnalyser: BalanceAnalyserEngine.defaultState,
+  // Game Dev panels — bridges
+  typingBridge: TypingBridgeEngine.defaultState,
+  neurosymBridge: NeurosymBridgeEngine.defaultState,
+  agenticBridge: AgenticBridgeEngine.defaultState,
+  automationBridge: AutomationBridgeEngine.defaultState,
+  databaseBridge: DatabaseBridgeEngine.defaultState,
+  protocolBridge: ProtocolBridgeEngine.defaultState,
+  proofsBridge: ProofsBridgeEngine.defaultState,
+  scriptingBridge: ScriptingBridgeEngine.defaultState,
+  // Game Dev panels — game-specific
+  generatorMode: GeneratorModeEngine.defaultState,
+  architectMode: ArchitectModeEngine.defaultState,
+  guardAiTuner: GuardAiTunerEngine.defaultState,
+  deviceNetworkDesigner: DeviceNetworkDesignerEngine.defaultState,
+  assetManager: AssetManagerEngine.defaultState,
+  playtestRecorder: PlaytestRecorderEngine.defaultState,
+  codeReview: CodeReviewEngine.defaultState,
+  mergeCoordinator: MergeCoordinatorEngine.defaultState,
+  teamDashboard: TeamDashboardEngine.defaultState,
+  debuggingWorkbench: DebuggingWorkbenchEngine.defaultState,
+  wiringInspector: WiringInspectorEngine.defaultState,
 }

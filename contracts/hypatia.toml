@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Hypatia — neurosymbolic CI/CD intelligence
+
+panel_id = "Hypatia"
+module_name = "Hypatia"
+model_slice = "hypatia"
+msg_namespace = "hypatiaMsg"
+view_route = "PanelHypatia"
+short_name = "Hyp"
+clade_id = "hypatia"
+has_backend = true

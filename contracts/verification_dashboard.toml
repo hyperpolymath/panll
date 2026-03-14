@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Verification Dashboard — proof/test/benchmark/fuzzing status
+
+panel_id = "Verification Dashboard"
+module_name = "VerificationDashboard"
+model_slice = "verificationDashboard"
+msg_namespace = "verificationDashboardMsg"
+view_route = "PanelVerificationDashboard"
+short_name = "Verify"
+clade_id = "verification-dashboard"
+has_backend = false

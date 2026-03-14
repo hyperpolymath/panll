@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Debugging Workbench — time-travel debugging, state inspection, console
+
+panel_id = "Debugging Workbench"
+module_name = "DebuggingWorkbench"
+model_slice = "debuggingWorkbench"
+msg_namespace = "debuggingWorkbenchMsg"
+view_route = "PanelDebuggingWorkbench"
+short_name = "Debug"
+clade_id = "debugging-workbench"
+has_backend = false

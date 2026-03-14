@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Load Tester — Phoenix channel stress testing, concurrent simulation
+
+panel_id = "Load Tester"
+module_name = "LoadTester"
+model_slice = "loadTester"
+msg_namespace = "loadTesterMsg"
+view_route = "PanelLoadTester"
+short_name = "Load"
+clade_id = "load-tester"
+has_backend = true

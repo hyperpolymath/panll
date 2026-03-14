@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Spec Browser — browse all language specs, grammars, typing rules
+
+panel_id = "Spec Browser"
+module_name = "SpecBrowser"
+model_slice = "specBrowser"
+msg_namespace = "specBrowserMsg"
+view_route = "PanelSpecBrowser"
+short_name = "Spec"
+clade_id = "spec-browser"
+has_backend = false

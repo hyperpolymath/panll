@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Balance Analyser — game balance stats, Monte Carlo, difficulty curves
+
+panel_id = "Balance Analyser"
+module_name = "BalanceAnalyser"
+model_slice = "balanceAnalyser"
+msg_namespace = "balanceAnalyserMsg"
+view_route = "PanelBalanceAnalyser"
+short_name = "Bal"
+clade_id = "balance-analyser"
+has_backend = true

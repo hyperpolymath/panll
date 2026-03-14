@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Clade Browser — explore and customise panel clades
+
+panel_id = "Clade Browser"
+module_name = "CladeBrowser"
+model_slice = "cladeBrowser"
+msg_namespace = "cladeBrowserMsg"
+view_route = "PanelCladeBrowser"
+short_name = "Clade"
+clade_id = "clade-browser"
+has_backend = false

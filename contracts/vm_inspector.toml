@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for VM Inspector — reversible VM visual debugger
+
+panel_id = "VM Inspector"
+module_name = "VmInspector"
+model_slice = "vmInspector"
+msg_namespace = "vmInspectorMsg"
+view_route = "PanelVmInspector"
+short_name = "VM"
+clade_id = "vm-inspector"
+has_backend = true

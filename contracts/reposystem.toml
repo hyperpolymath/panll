@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Reposystem — RSR compliance and template management
+
+panel_id = "Reposystem"
+module_name = "Reposystem"
+model_slice = "reposystem"
+msg_namespace = "reposystemMsg"
+view_route = "PanelReposystem"
+short_name = "RSR"
+clade_id = "reposystem"
+has_backend = false

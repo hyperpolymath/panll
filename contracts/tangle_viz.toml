@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Tangle Viz — topological programming visualizer
+
+panel_id = "Tangle Viz"
+module_name = "TangleViz"
+model_slice = "tangleViz"
+msg_namespace = "tangleVizMsg"
+view_route = "PanelTangleViz"
+short_name = "Tangle"
+clade_id = "tangle-viz"
+has_backend = false

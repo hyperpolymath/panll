@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Mass Panic — organisation-scale batch scanning
+
+panel_id = "Mass Panic"
+module_name = "MassPanic"
+model_slice = "massPanic"
+msg_namespace = "massPanicMsg"
+view_route = "PanelMassPanic"
+short_name = "MP"
+clade_id = "mass-panic"
+has_backend = true

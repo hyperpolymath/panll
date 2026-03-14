@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for panic-attack — stress testing and logic-based bug signature detection
+
+panel_id = "panic-attack"
+module_name = "PanicAttack"
+model_slice = "panicAttack"
+msg_namespace = "panicAttackMsg"
+view_route = "PanelPanicAttack"
+short_name = "PA"
+clade_id = "panic-attack"
+has_backend = true

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Coprocessors — monitor IDApTIK's 10 coprocessor backends
+
+panel_id = "Coprocessors"
+module_name = "Coprocessors"
+model_slice = "coprocessors"
+msg_namespace = "coprocessorsMsg"
+view_route = "PanelCoprocessors"
+short_name = "CoPr"
+clade_id = "coprocessors"
+has_backend = true

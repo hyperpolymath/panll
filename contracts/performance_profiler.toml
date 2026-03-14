@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Performance Profiler — frame budget, GC pressure, memory flamegraphs
+
+panel_id = "Performance Profiler"
+module_name = "PerformanceProfiler"
+model_slice = "performanceProfiler"
+msg_namespace = "performanceProfilerMsg"
+view_route = "PanelPerformanceProfiler"
+short_name = "Perf"
+clade_id = "performance-profiler"
+has_backend = true

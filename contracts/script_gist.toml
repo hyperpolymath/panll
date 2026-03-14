@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Script Gist — portable computation gists, Minskian diachronic/synchronic cardfiles
+
+panel_id = "Script Gist"
+module_name = "ScriptGist"
+model_slice = "scriptGist"
+msg_namespace = "scriptGistMsg"
+view_route = "PanelScriptGist"
+short_name = "Gist"
+clade_id = "script-gist"
+has_backend = false

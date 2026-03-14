@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Release Manager — versioning, changelog, artifact building, distribution
+
+panel_id = "Release Manager"
+module_name = "ReleaseManager"
+model_slice = "releaseManager"
+msg_namespace = "releaseManagerMsg"
+view_route = "PanelReleaseManager"
+short_name = "Rel"
+clade_id = "release-manager"
+has_backend = true

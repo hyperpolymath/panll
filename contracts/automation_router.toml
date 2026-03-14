@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Automation Router — hybrid cross-panel workflow orchestration
+
+panel_id = "Automation Router"
+module_name = "AutomationRouter"
+model_slice = "automationRouter"
+msg_namespace = "automationRouterMsg"
+view_route = "PanelAutomationRouter"
+short_name = "Auto"
+clade_id = "automation-router"
+has_backend = true

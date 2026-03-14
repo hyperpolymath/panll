@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for AI — multi-provider AI neural interface
+
+panel_id = "AI"
+module_name = "Ai"
+model_slice = "ai"
+msg_namespace = "aiMsg"
+view_route = "PanelAi"
+short_name = "AI"
+clade_id = "ai"
+has_backend = true

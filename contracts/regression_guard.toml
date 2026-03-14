@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Regression Guard — snapshot comparison and golden-file testing
+
+panel_id = "Regression Guard"
+module_name = "RegressionGuard"
+model_slice = "regressionGuard"
+msg_namespace = "regressionGuardMsg"
+view_route = "PanelRegressionGuard"
+short_name = "RG"
+clade_id = "regression-guard"
+has_backend = true

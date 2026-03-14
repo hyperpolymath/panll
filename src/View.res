@@ -363,6 +363,40 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelEchidna) => Echidna.view(model.echidna)
   | Some(PanelObservatory) => Observatory.view(model.observatory)
   | Some(PanelAmbientOps) => AmbientOps.view(model.ambientOps)
+  // Game Dev panels — testing
+  | Some(PanelUnitTestRunner) => UnitTestRunner.view(model.unitTestRunner)
+  | Some(PanelFunctionalTester) => FunctionalTester.view(model.functionalTester)
+  | Some(PanelRegressionGuard) => RegressionGuard.view(model.regressionGuard)
+  | Some(PanelPerformanceProfiler) => PerformanceProfiler.view(model.performanceProfiler)
+  | Some(PanelLoadTester) => LoadTester.view(model.loadTester)
+  | Some(PanelSoakMonitor) => SoakMonitor.view(model.soakMonitor)
+  | Some(PanelCompatibilityMatrix) => CompatibilityMatrix.view(model.compatibilityMatrix)
+  | Some(PanelExploratoryWorkbench) => ExploratoryWorkbench.view(model.exploratoryWorkbench)
+  | Some(PanelBetaFeedbackHub) => BetaFeedbackHub.view(model.betaFeedbackHub)
+  | Some(PanelBalanceAnalyser) => BalanceAnalyser.view(model.balanceAnalyser)
+  // Game Dev panels — bridges
+  | Some(PanelTypingBridge) => TypingBridge.view(model.typingBridge)
+  | Some(PanelNeurosymBridge) => NeurosymBridge.view(model.neurosymBridge)
+  | Some(PanelAgenticBridge) => AgenticBridge.view(model.agenticBridge)
+  | Some(PanelAutomationBridge) => AutomationBridge.view(model.automationBridge)
+  | Some(PanelDatabaseBridge) => DatabaseBridge.view(model.databaseBridge)
+  | Some(PanelProtocolBridge) => ProtocolBridge.view(model.protocolBridge)
+  | Some(PanelProofsBridge) => ProofsBridge.view(model.proofsBridge)
+  | Some(PanelScriptingBridge) => ScriptingBridge.view(model.scriptingBridge)
+  // Game Dev panels — game-specific
+  | Some(PanelGeneratorMode) => GeneratorMode.view(model.generatorMode)
+  | Some(PanelArchitectMode) => ArchitectMode.view(model.architectMode)
+  | Some(PanelGuardAiTuner) => GuardAiTuner.view(model.guardAiTuner)
+  | Some(PanelDeviceNetworkDesigner) => DeviceNetworkDesigner.view(model.deviceNetworkDesigner)
+  | Some(PanelAssetManager) => AssetManager.view(model.assetManager)
+  | Some(PanelPlaytestRecorder) => PlaytestRecorder.view(model.playtestRecorder)
+  // Team / collaboration panels
+  | Some(PanelCodeReview) => CodeReview.view(model.codeReview)
+  | Some(PanelMergeCoordinator) => MergeCoordinator.view(model.mergeCoordinator)
+  | Some(PanelTeamDashboard) => TeamDashboard.view(model.teamDashboard)
+  | Some(PanelDebuggingWorkbench) => DebuggingWorkbench.view(model.debuggingWorkbench)
+  // Infrastructure panels
+  | Some(PanelWiringInspector) => WiringInspector.view(model.wiringInspector)
   }
 }
 

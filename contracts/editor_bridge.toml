@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Editor Bridge — federate with external code editors
+
+panel_id = "Editor Bridge"
+module_name = "EditorBridge"
+model_slice = "editorBridge"
+msg_namespace = "editorBridgeMsg"
+view_route = "PanelEditorBridge"
+short_name = "EB"
+clade_id = "editor-bridge"
+has_backend = true

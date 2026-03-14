@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for TSDM — Triaxial Software Development Methodology directive panel
+
+panel_id = "TSDM"
+module_name = "Tsdm"
+model_slice = "tsdm"
+msg_namespace = "tsdmMsg"
+view_route = "PanelTsdm"
+short_name = "TSD"
+clade_id = "tsdm"
+has_backend = false
