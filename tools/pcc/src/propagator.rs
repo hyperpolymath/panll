@@ -276,7 +276,7 @@ fn run_check(obligation: &mut Obligation, contract: &PanelContract, scanner: &Sc
                 obligation.message = "Tests not required by contract".to_string();
                 return true;
             }
-            let result = scanner.check_test_bundle(&contract.panel_id);
+            let result = scanner.check_test_bundle(&contract.module_name);
             if result.found {
                 obligation.message = format!("Found test file: {}", result.file);
                 obligation.file = Some(result.file);
