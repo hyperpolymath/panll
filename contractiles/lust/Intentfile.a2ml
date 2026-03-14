@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Intentfile (A2ML Canonical)
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+@abstract:
+Declared future intent for PanLL — panel framework with TEA architecture,
+Stapeln container integration, and TypeLL core assimilation.
+@end
+
+@requires:
+- section: Core
+- section: Integration
+- section: Quality
+@end
+
+## Core
+
+### tea-framework
+- description: Complete TEA (The Elm Architecture) implementation
+- status: in-progress
+- priority: critical
+- evidence: command: find src/core -name '*TEA*' -o -name '*Update*' -o -name '*Msg*' 2>/dev/null | wc -l | grep -v '^0$'
+
+### workspace-layer
+- description: Implement workspace layer for multi-panel management
+- status: in-progress
+- priority: high
+- evidence: command: find src/ -name '*Workspace*' 2>/dev/null | wc -l | grep -v '^0$'
+
+### safedom-v2
+- description: SafeDOM v2 with full Nickel contract validation
+- status: in-progress
+- priority: high
+- evidence: contractiles/safedom-enforcement.ncl exists
+
+## Integration
+
+### typell-assimilation
+- description: Assimilate TypeLL core into PanLL
+- status: in-progress
+- priority: critical
+- notes: TypeLL provides the type system layer for PanLL's lifecycle
+
+### stapeln-containers
+- description: Integrate with Stapeln container system
+- status: declared
+- priority: high
+
+### idaptik-game-panels
+- description: Game development panels for IDApTIK integration
+- status: declared
+- priority: medium
+- evidence: command: find src/ -name '*Game*' 2>/dev/null | wc -l | grep -v '^0$'
+
+## Quality
+
+### test-coverage
+- description: Unit tests for core panel lifecycle
+- status: declared
+- priority: medium
+
+### rescript-migration
+- description: Ensure all code uses modern ReScript APIs
+- status: in-progress
+- priority: high
+- evidence: command: grep -rn 'Js\.\(Dict\|Array2\)' src/ --include='*.res' | wc -l | grep -q '^0$'

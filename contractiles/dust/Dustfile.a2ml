@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Dustfile (A2ML Canonical)
+
+@abstract:
+Recovery and rollback paths for @hyperpolymath/panll.
+Declares how to undo significant state changes.
+@end
+
+@requires:
+- section: Source
+@end
+
+## Source
+
+### source-rollback
+- description: Revert all source changes to last commit
+- rollback: git checkout HEAD -- .
+- blast_radius: file
+- precondition: git stash
+- notes: Stashes uncommitted work before reverting

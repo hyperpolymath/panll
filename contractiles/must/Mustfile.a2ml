@@ -1,0 +1,81 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Mustfile (A2ML Canonical)
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+@abstract:
+Physical State contract for PanLL — panel-based layout and lifecycle
+framework built with ReScript. Uses TEA architecture with SafeDOM
+enforcement via Nickel contracts.
+@end
+
+@requires:
+- section: Core-Files
+- section: Source-Quality
+- section: Banned
+@end
+
+## Core-Files
+
+### license-present
+- description: LICENSE file must exist
+- run: test -f LICENSE
+- severity: critical
+
+### readme-present
+- description: README must exist
+- run: test -f README.adoc || test -f README.md
+- severity: critical
+
+### rescript-config
+- description: rescript.json must exist
+- run: test -f rescript.json
+- severity: critical
+
+### app-entry
+- description: App.res entry point must exist
+- run: test -f src/App.res
+- severity: critical
+
+### model-entry
+- description: Model.res must exist
+- run: test -f src/Model.res
+- severity: critical
+
+### safedom-enforcement
+- description: SafeDOM Nickel enforcement config must exist
+- run: test -f contractiles/safedom-enforcement.ncl
+- severity: critical
+
+## Source-Quality
+
+### no-deprecated-js-apis
+- description: No deprecated Js.* APIs
+- run: grep -rn 'Js\.\(Dict\|Array2\|String2\)' src/ --include='*.res' | wc -l | grep -q '^0$'
+- severity: critical
+
+### spdx-headers
+- description: ReScript source files should have SPDX headers
+- run: find src/ -name '*.res' | head -20 | xargs -r grep -L 'SPDX-License-Identifier' | wc -l | grep -q '^0$'
+- severity: warning
+
+### panels-not-panes
+- description: Code must use "panels" terminology, never "panes"
+- run: grep -rni 'pane[^l]' src/ --include='*.res' | grep -iv 'panel' | wc -l | grep -q '^0$'
+- severity: critical
+
+## Banned
+
+### no-dockerfile
+- description: No Dockerfiles
+- run: test ! -f Dockerfile
+- severity: critical
+
+### no-makefile
+- description: No Makefiles
+- run: test ! -f Makefile
+- severity: critical
+
+### no-env-files
+- description: No .env files committed
+- run: test ! -f .env
+- severity: critical

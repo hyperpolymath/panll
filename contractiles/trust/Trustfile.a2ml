@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Trustfile (A2ML Canonical)
+
+@abstract:
+Integrity and provenance verification for @hyperpolymath/panll.
+@end
+
+@requires:
+- section: Verifications
+@end
+
+## Verifications
+
+### license-content
+- description: LICENSE contains expected SPDX identifier
+- command: grep -q 'SPDX\|License\|MIT\|Apache\|PMPL\|MPL' LICENSE
+- severity: warning
+
+### no-secrets-committed
+- description: No .env or credential files in repo
+- command: test ! -f .env && test ! -f credentials.json && test ! -f .env.local
+- severity: critical
+
+### container-images-pinned
+- description: Containerfile base images use pinned digests
+- command: test ! -f Containerfile || grep -q '@sha256:' Containerfile
+- severity: warning
