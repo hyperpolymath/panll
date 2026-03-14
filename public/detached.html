@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanLL — Detached Panel</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.3.2/purify.min.js"
+          integrity="sha384-ZSs6LKr2GoUPDyHrN+rCQgyHL1yUyok5xMniSrgeRG7rUvA6vTmxronM1eZOfjgz"
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
+  <style>
+    #detached-app {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #030712;
+      color: #f3f4f6;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+    .detached-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      background: #111827;
+      border-bottom: 1px solid #1f2937;
+      font-size: 0.75rem;
+    }
+    .detached-header .panel-name { color: #22d3ee; font-weight: 600; }
+    .detached-header .status { color: #6b7280; }
+    .detached-header .status.connected { color: #34d399; }
+    .detached-header button {
+      padding: 0.25rem 0.75rem;
+      background: #374151;
+      color: #d1d5db;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-size: 0.7rem;
+    }
+    .detached-header button:hover { background: #4b5563; }
+    .detached-content {
+      flex: 1;
+      overflow: auto;
+      padding: 1rem;
+    }
+    .sync-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+    .sync-indicator.active { background: #34d399; }
+    .sync-indicator.dead { background: #ef4444; }
+    .sync-indicator.waiting { background: #f59e0b; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+</head>
+<body>
+  <div id="detached-app">
+    <div class="detached-header">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span class="sync-indicator waiting" id="sync-dot"></span>
+        <span class="panel-name" id="panel-name">Connecting...</span>
+        <span class="status" id="status-text">Waiting for main window</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="btn-reattach">Reattach to Main</button>
+        <button id="btn-close">Close</button>
+      </div>
+    </div>
+    <div class="detached-content" id="panel-content">
+      <p style="color: #6b7280; text-align: center; padding-top: 4rem;">
+        Waiting for panel state from main PanLL window...
+      </p>
+    </div>
+  </div>
+
+  <!-- Tauri runtime shim (same as main window) -->
+  <script>
+    if (!window.__TAURI_INTERNALS__) {
+      window.__TAURI_INTERNALS__ = {
+        __BROWSER_SHIM__: true,
+        transformCallback: function(cb) { var id = Math.random().toString(36).slice(2); window['_' + id] = cb; return id; },
+        invoke: function(cmd) { return Promise.reject(new Error('No Tauri runtime — "' + cmd + '" requires desktop app')); },
+        metadata: { currentWindow: { label: 'detached' }, currentWebview: { label: 'detached' } }
+      };
+    }
+  </script>
+
+  <script>
+    // SPDX-License-Identifier: PMPL-1.0-or-later
+    // PanLL Detached Panel Window — BroadcastChannel communication with main window.
+    //
+    // This page is opened by WindowBridge.openWindow when a panel is detached.
+    // It communicates with the main PanLL window via BroadcastChannel, receiving
+    // panel state updates and sending close/reattach notifications.
+
+    (function() {
+      'use strict';
+
+      // Extract panel name from window.name (set by WindowBridge.openWindow)
+      var windowName = window.name || 'panll-detach-unknown';
+      var panelName = windowName.replace('panll-detach-', '');
+
+      // UI references
+      var nameEl = document.getElementById('panel-name');
+      var statusEl = document.getElementById('status-text');
+      var syncDot = document.getElementById('sync-dot');
+      var contentEl = document.getElementById('panel-content');
+
+      // Display panel name
+      nameEl.textContent = panelName;
+      document.title = 'PanLL — ' + panelName;
+
+      // Create BroadcastChannel for this window
+      var channel = null;
+      try {
+        if (typeof BroadcastChannel !== 'undefined') {
+          channel = new BroadcastChannel(windowName);
+        }
+      } catch (e) {
+        statusEl.textContent = 'BroadcastChannel not supported';
+        syncDot.className = 'sync-indicator dead';
+      }
+
+      if (channel) {
+        // Listen for messages from main window
+        channel.addEventListener('message', function(event) {
+          try {
+            var data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+
+            if (data.action === 'init') {
+              // Initial connection from main window
+              statusEl.textContent = 'Connected';
+              statusEl.className = 'status connected';
+              syncDot.className = 'sync-indicator active';
+              contentEl.innerHTML = '<p style="color: #34d399; text-align: center; padding-top: 2rem;">' +
+                'Panel <strong>' + panelName + '</strong> detached successfully.</p>' +
+                '<p style="color: #6b7280; text-align: center; margin-top: 1rem;">State sync active via BroadcastChannel.</p>';
+            }
+
+            if (data.action === 'sync') {
+              // State sync from main window
+              statusEl.textContent = 'Synced at ' + new Date(data.timestamp).toLocaleTimeString();
+              syncDot.className = 'sync-indicator active';
+            }
+
+            if (data.action === 'reattach') {
+              // Main window requested reattachment — close this window
+              statusEl.textContent = 'Reattaching...';
+              syncDot.className = 'sync-indicator waiting';
+              setTimeout(function() { window.close(); }, 200);
+            }
+          } catch (e) {
+            // Ignore malformed messages
+          }
+        });
+
+        // Notify main window when this window is closing
+        window.addEventListener('beforeunload', function() {
+          try {
+            channel.postMessage('close');
+            channel.close();
+          } catch (e) {
+            // Ignore
+          }
+        });
+      }
+
+      // Button handlers
+      document.getElementById('btn-reattach').addEventListener('click', function() {
+        if (channel) {
+          channel.postMessage('close'); // Tell main to reattach
+          channel.close();
+        }
+        window.close();
+      });
+
+      document.getElementById('btn-close').addEventListener('click', function() {
+        if (channel) {
+          channel.postMessage('close');
+          channel.close();
+        }
+        window.close();
+      });
+    })();
+  </script>
+</body>
+</html>

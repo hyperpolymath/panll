@@ -11710,7 +11710,7 @@ let updateTiling = (model: model, msg: tilingMsg): (model, Tea_Cmd.t<msg>) => {
       let windowName = `panll-detach-${name}`
       // Open a new browser window for this panel
       let _windowRef = WindowBridge.openWindow(
-        `/?detached=${name}`,
+        `detached.html`,
         windowName,
         "width=800,height=600,menubar=no,toolbar=no,status=no",
       )
