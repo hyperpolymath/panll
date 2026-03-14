@@ -14,9 +14,9 @@
 //! - aria-live regions for dynamic content
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use super::types::{MintRequest, MintResult};
+use super::types::{BotFinding, MintRequest, MintResult, WiringDetail};
 
 /// Convert a PascalCase name to camelCase.
 fn to_camel_case(name: &str) -> String {
@@ -72,9 +72,9 @@ pub async fn minter_validate_name(name: String) -> Result<String, String> {
     }
 
     // Check if files already exist (collision detection)
-    let model_path = format!("src/model/{}Model.res", name);
-    if Path::new(&model_path).exists() {
-        return Ok(format!("Panel '{}' already exists (found {})", name, model_path));
+    let model_path = PathBuf::from("src/model").join(format!("{}Model.res", name));
+    if model_path.exists() {
+        return Ok(format!("Panel '{}' already exists (found {})", name, model_path.display()));
     }
 
     Ok("valid".to_string())
@@ -107,6 +107,14 @@ pub async fn minter_mint_panel(
         endpoint: endpoint.clone(),
     };
 
+    // Validate panel_name to prevent path traversal — must be alphanumeric PascalCase.
+    if panel_name.is_empty()
+        || !panel_name.chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
+        || !panel_name.chars().all(|c| c.is_alphanumeric())
+    {
+        return Err("Panel name must be non-empty alphanumeric PascalCase".to_string());
+    }
+
     let camel = to_camel_case(&panel_name);
     let snake = to_snake_case(&panel_name);
     let has_backend = backend_kind != "No Backend";
@@ -121,28 +129,33 @@ pub async fn minter_mint_panel(
     // =========================================================================
 
     // 1. Model types
-    let model_path = format!("src/model/{}Model.res", panel_name);
+    let model_path = PathBuf::from("src/model").join(format!("{}Model.res", panel_name));
+    let model_path = model_path.to_string_lossy().to_string();
     let model_content = generate_model(&panel_name, &camel, &description);
     write_file_safe(&model_path, &model_content, &mut files_created, &mut warnings)?;
 
     // 2. Module registration
-    let module_path = format!("src/modules/{}Module.res", panel_name);
+    let module_path = PathBuf::from("src/modules").join(format!("{}Module.res", panel_name));
+    let module_path = module_path.to_string_lossy().to_string();
     let module_content = generate_module(&panel_name, &description, &capabilities);
     write_file_safe(&module_path, &module_content, &mut files_created, &mut warnings)?;
 
     // 3. Engine (pure computation)
-    let engine_path = format!("src/core/{}Engine.res", panel_name);
+    let engine_path = PathBuf::from("src/core").join(format!("{}Engine.res", panel_name));
+    let engine_path = engine_path.to_string_lossy().to_string();
     let engine_content = generate_engine(&panel_name);
     write_file_safe(&engine_path, &engine_content, &mut files_created, &mut warnings)?;
 
     // 4. Component (view)
-    let component_path = format!("src/components/{}.res", panel_name);
+    let component_path = PathBuf::from("src/components").join(format!("{}.res", panel_name));
+    let component_path = component_path.to_string_lossy().to_string();
     let component_content = generate_component(&panel_name, &camel, &description);
     write_file_safe(&component_path, &component_content, &mut files_created, &mut warnings)?;
 
     // 5. Commands (if backend needed)
     if has_backend {
-        let cmd_path = format!("src/commands/{}Cmd.res", panel_name);
+        let cmd_path = PathBuf::from("src/commands").join(format!("{}Cmd.res", panel_name));
+        let cmd_path = cmd_path.to_string_lossy().to_string();
         let cmd_content = generate_cmd(&panel_name, &camel, &endpoint);
         write_file_safe(&cmd_path, &cmd_content, &mut files_created, &mut warnings)?;
     }
@@ -152,21 +165,21 @@ pub async fn minter_mint_panel(
     // =========================================================================
 
     if has_backend {
-        let rust_dir = format!("src-tauri/src/{}", snake);
+        let rust_dir = PathBuf::from("src-tauri/src").join(&snake);
         fs::create_dir_all(&rust_dir)
             .map_err(|e| format!("Failed to create Rust module dir: {}", e))?;
 
-        let mod_path = format!("{}/mod.rs", rust_dir);
+        let mod_path = rust_dir.join("mod.rs");
         let mod_content = generate_rust_mod(&panel_name, &description);
-        write_file_safe(&mod_path, &mod_content, &mut files_created, &mut warnings)?;
+        write_file_safe(&mod_path.to_string_lossy(), &mod_content, &mut files_created, &mut warnings)?;
 
-        let types_path = format!("{}/types.rs", rust_dir);
+        let types_path = rust_dir.join("types.rs");
         let types_content = generate_rust_types(&panel_name);
-        write_file_safe(&types_path, &types_content, &mut files_created, &mut warnings)?;
+        write_file_safe(&types_path.to_string_lossy(), &types_content, &mut files_created, &mut warnings)?;
 
-        let commands_path = format!("{}/commands.rs", rust_dir);
+        let commands_path = rust_dir.join("commands.rs");
         let commands_content = generate_rust_commands(&panel_name, &snake);
-        write_file_safe(&commands_path, &commands_content, &mut files_created, &mut warnings)?;
+        write_file_safe(&commands_path.to_string_lossy(), &commands_content, &mut files_created, &mut warnings)?;
     }
 
     // =========================================================================
@@ -215,12 +228,52 @@ pub async fn minter_mint_panel(
         files_patched.push("src/Update.res".to_string());
     }
 
+    // =========================================================================
+    // Generate clade manifest (A2ML)
+    // =========================================================================
+
+    let clade_dir = format!("panel-clades/clades/{}", camel);
+    let clade_path = format!("{}/{}.a2ml", clade_dir, panel_name);
+    let clade_content = generate_clade_manifest(&panel_name, &camel, &description, has_backend);
+    write_file_safe(&clade_path, &clade_content, &mut files_created, &mut warnings)?;
+
+    // =========================================================================
+    // Generate bot directives
+    // =========================================================================
+
+    let directives_dir = "panel-clades/.machine_readable/bot_directives";
+    let directive_path = format!("{}/{}.scm", directives_dir, snake);
+    let directive_content = generate_bot_directives(&panel_name, &snake, has_backend);
+    write_file_safe(&directive_path, &directive_content, &mut files_created, &mut warnings)?;
+
+    // =========================================================================
+    // Post-mint validation: verify wiring + run bot checks
+    // =========================================================================
+
+    let wiring_details = verify_wiring(&panel_name, &camel, &snake, has_backend);
+    let wiring_connected = wiring_details.iter().filter(|w| w.connected).count();
+    let wiring_total = wiring_details.len();
+    let wiring_score = format!("{}/{}", wiring_connected, wiring_total);
+
+    let bot_findings = run_post_mint_checks(
+        &panel_name,
+        &camel,
+        &snake,
+        has_backend,
+        &files_created,
+        &clade_path,
+        &directive_path,
+    );
+
     let result = MintResult {
         success: true,
         files_created,
         files_patched,
         warnings,
         error: None,
+        wiring_score,
+        wiring_details,
+        bot_findings,
     };
 
     serde_json::to_string(&result)
@@ -713,6 +766,362 @@ fn patch_view(name: &str, camel: &str) -> Result<(), String> {
 
     fs::write(path, patched)
         .map_err(|e| format!("Write failed: {}", e))
+}
+
+// =============================================================================
+// Clade manifest and bot directive generators
+// =============================================================================
+
+/// Generate an A2ML clade manifest for the new panel.
+///
+/// This registers the panel in the clade taxonomy so the CladeBrowser,
+/// Provisioner, and bot fleet can discover and classify it.
+fn generate_clade_manifest(name: &str, camel: &str, description: &str, has_backend: bool) -> String {
+    let backend_trait = if has_backend { "true" } else { "false" };
+    format!(
+        r#"; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the {name} panel.
+; Auto-generated by PanLL Minter. Edit to customise traits and capabilities.
+
+(clade
+  (id "{camel}")
+  (name "{name}")
+  (kind "overlay")
+  (parent "overlay")
+  (description "{description}")
+
+  (traits
+    (has-backend {backend_trait})
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+
+  (capabilities
+    (HealthCheck "Basic health check endpoint"))
+
+  (integrations
+    (model "{name}Model")
+    (component "{name}")
+    (engine "{name}Engine"))
+
+  (bot-lifecycle
+    (minted-by "minter")
+    (structure-validated-by "rhodibot")
+    (presentation-validated-by "glambot")
+    (wiring-validated-by "seambot")
+    (type-checked-by "echidnabot")
+    (release-gated-by "finishbot")))
+"#,
+        name = name,
+        camel = camel,
+        description = description,
+        backend_trait = backend_trait,
+    )
+}
+
+/// Generate bot directives for the new panel.
+///
+/// These tell each bot what it should check and what it's allowed to do
+/// when examining this panel's files.
+fn generate_bot_directives(name: &str, snake: &str, has_backend: bool) -> String {
+    let rust_scope = if has_backend {
+        format!(
+            r#"
+  (rust-scope
+    (modules ("{snake}"))
+    (allow ("analysis" "health-check"))
+    (deny ("write to commands.rs" "modify types.rs")))"#,
+            snake = snake,
+        )
+    } else {
+        String::new()
+    };
+
+    format!(
+        r#"; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Bot directives for the {name} panel.
+; Auto-generated by PanLL Minter. Edit to customise bot permissions.
+
+(panel-directives
+  (panel "{name}")
+  (version "1.0")
+
+  (rhodibot
+    (scope "panel/structure panel/naming panel/spdx")
+    (allow ("structure-check" "naming-check" "spdx-check"))
+    (auto-fix ("formatting" "spdx-headers")))
+
+  (glambot
+    (scope "panel/aria panel/keyboard panel/clade panel/docs")
+    (allow ("accessibility-audit" "docs-check" "clade-validation"))
+    (auto-fix ("aria-labels" "doc-comments")))
+
+  (seambot
+    (scope "panel/wiring panel/msg-match panel/seam-integrity")
+    (allow ("wiring-check" "msg-validation" "seam-scan"))
+    (deny ("modify global wiring files")))
+
+  (echidnabot
+    (scope "panel/cmd-match panel/typell panel/boj-routing")
+    (allow ("type-check" "signature-match" "boj-validation")))
+
+  (finishbot
+    (scope "panel/tests panel/clade-registered panel/todos panel/release-gate")
+    (allow ("test-check" "todo-scan" "release-assessment"))
+    (auto-fix ("test-stubs"))
+    (gate ("no-errors-from-any-bot" "tests-exist" "clade-registered"))){rust_scope})
+"#,
+        name = name,
+        rust_scope = rust_scope,
+    )
+}
+
+// =============================================================================
+// Post-mint wiring verification
+// =============================================================================
+
+/// Verify all 7 wiring points after minting, returning per-point status.
+///
+/// This is what powers the Wiring Inspector — it checks whether each
+/// global file was successfully patched with the panel's entry.
+fn verify_wiring(
+    name: &str,
+    _camel: &str,
+    snake: &str,
+    has_backend: bool,
+) -> Vec<WiringDetail> {
+    let variant = format!("Panel{}", name);
+    let include_marker = format!("include {}Model", name);
+    let msg_marker = format!("| {}(", name);
+    let view_marker = format!("Panel{}", name);
+    let update_marker = format!("update{}", name);
+
+    let checks = vec![
+        ("src/model/PanelSwitcherModel.res", "Panel ID variant", &variant),
+        ("src/modules/PanelRegistry.res", "Panel metadata entry", &variant),
+        ("src/Model.res", "Include + state field", &include_marker),
+        ("src/Msg.res", "Message type + routing variant", &msg_marker),
+        ("src/View.res", "renderActivePanel case", &view_marker),
+        ("src/Update.res", "Sub-updater + routing case", &update_marker),
+    ];
+
+    let mut details: Vec<WiringDetail> = checks
+        .into_iter()
+        .map(|(file, desc, marker)| {
+            let connected = fs::read_to_string(file)
+                .map(|content| content.contains(marker))
+                .unwrap_or(false);
+            WiringDetail {
+                file: file.to_string(),
+                description: desc.to_string(),
+                connected,
+                note: if connected { None } else { Some(format!("Missing: {}", marker)) },
+            }
+        })
+        .collect();
+
+    // Rust registration check
+    if has_backend {
+        let rust_marker = format!("{}::", snake);
+        let connected = fs::read_to_string("src-tauri/src/main.rs")
+            .map(|content| content.contains(&rust_marker))
+            .unwrap_or(false);
+        details.push(WiringDetail {
+            file: "src-tauri/src/main.rs".to_string(),
+            description: "Rust command registration".to_string(),
+            connected,
+            note: if connected {
+                None
+            } else {
+                Some("Rust commands not yet registered in main.rs invoke_handler".to_string())
+            },
+        });
+    } else {
+        details.push(WiringDetail {
+            file: "src-tauri/src/main.rs".to_string(),
+            description: "Rust command registration".to_string(),
+            connected: true,
+            note: Some("No backend — not needed".to_string()),
+        });
+    }
+
+    details
+}
+
+// =============================================================================
+// Post-mint bot checks (lightweight, synchronous)
+// =============================================================================
+
+/// Run immediate post-mint validation checks that simulate what the bots
+/// would find. These are cheap filesystem checks that run synchronously
+/// after minting, giving instant feedback before the full fleet runs.
+fn run_post_mint_checks(
+    name: &str,
+    camel: &str,
+    snake: &str,
+    has_backend: bool,
+    files_created: &[String],
+    clade_path: &str,
+    directive_path: &str,
+) -> Vec<BotFinding> {
+    let mut findings = Vec::new();
+
+    // --- rhodibot checks: structure ---
+
+    // PANEL-001: Required files exist
+    let required_files = vec![
+        format!("src/model/{}Model.res", name),
+        format!("src/core/{}Engine.res", name),
+        format!("src/components/{}.res", name),
+        format!("src/modules/{}Module.res", name),
+    ];
+    for file in &required_files {
+        if !Path::new(file).exists() && !files_created.contains(file) {
+            findings.push(BotFinding {
+                bot: "rhodibot".to_string(),
+                rule_id: "PANEL-001".to_string(),
+                severity: "error".to_string(),
+                message: format!("Required file missing: {}", file),
+                file: Some(file.clone()),
+            });
+        }
+    }
+
+    if has_backend {
+        let backend_files = vec![
+            format!("src/commands/{}Cmd.res", name),
+            format!("src-tauri/src/{}/mod.rs", snake),
+            format!("src-tauri/src/{}/types.rs", snake),
+            format!("src-tauri/src/{}/commands.rs", snake),
+        ];
+        for file in &backend_files {
+            if !Path::new(file).exists() && !files_created.contains(file) {
+                findings.push(BotFinding {
+                    bot: "rhodibot".to_string(),
+                    rule_id: "PANEL-001".to_string(),
+                    severity: "error".to_string(),
+                    message: format!("Required backend file missing: {}", file),
+                    file: Some(file.clone()),
+                });
+            }
+        }
+    }
+
+    // PANEL-004: SPDX headers present in generated files
+    for file in files_created {
+        if let Ok(content) = fs::read_to_string(file) {
+            let has_spdx = content.contains("SPDX-License-Identifier:");
+            if !has_spdx {
+                findings.push(BotFinding {
+                    bot: "rhodibot".to_string(),
+                    rule_id: "PANEL-004".to_string(),
+                    severity: "warning".to_string(),
+                    message: format!("SPDX header missing from {}", file),
+                    file: Some(file.clone()),
+                });
+            }
+        }
+    }
+
+    // --- glambot checks: presentation ---
+
+    // PANEL-010: Component has ARIA labels
+    let component_path = format!("src/components/{}.res", name);
+    if let Ok(content) = fs::read_to_string(&component_path) {
+        if !content.contains("ariaLabel") {
+            findings.push(BotFinding {
+                bot: "glambot".to_string(),
+                rule_id: "PANEL-010".to_string(),
+                severity: "warning".to_string(),
+                message: "Component has no ARIA labels — screen readers cannot navigate".to_string(),
+                file: Some(component_path.clone()),
+            });
+        }
+        if !content.contains("role(") {
+            findings.push(BotFinding {
+                bot: "glambot".to_string(),
+                rule_id: "PANEL-010".to_string(),
+                severity: "info".to_string(),
+                message: "Component has no role attributes — consider adding for semantic structure".to_string(),
+                file: Some(component_path.clone()),
+            });
+        }
+    }
+
+    // PANEL-012: Clade manifest exists
+    if !Path::new(clade_path).exists() && !files_created.contains(&clade_path.to_string()) {
+        findings.push(BotFinding {
+            bot: "glambot".to_string(),
+            rule_id: "PANEL-012".to_string(),
+            severity: "warning".to_string(),
+            message: "A2ML clade manifest not generated — panel won't appear in CladeBrowser".to_string(),
+            file: Some(clade_path.to_string()),
+        });
+    }
+
+    // PANEL-013: Doc comments on exported functions
+    let engine_path = format!("src/core/{}Engine.res", name);
+    if let Ok(content) = fs::read_to_string(&engine_path) {
+        if !content.contains("///") {
+            findings.push(BotFinding {
+                bot: "glambot".to_string(),
+                rule_id: "PANEL-013".to_string(),
+                severity: "info".to_string(),
+                message: "Engine has no doc comments — add /// annotations for documentation".to_string(),
+                file: Some(engine_path),
+            });
+        }
+    }
+
+    // --- seambot checks: wiring (already captured by verify_wiring, add msg-match) ---
+
+    // PANEL-027: Check Msg type name matches Engine expectations
+    let msg_path = "src/Msg.res";
+    if let Ok(content) = fs::read_to_string(msg_path) {
+        let expected_type = format!("type {}Msg", camel);
+        let expected_variant = format!("| {}({}Msg)", name, camel);
+        if content.contains(&format!("{}Msg", camel)) && !content.contains(&expected_variant) {
+            findings.push(BotFinding {
+                bot: "seambot".to_string(),
+                rule_id: "PANEL-027".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Msg type '{}' exists but routing variant '{}' is missing",
+                    expected_type, expected_variant
+                ),
+                file: Some(msg_path.to_string()),
+            });
+        }
+    }
+
+    // --- finishbot checks: release gate ---
+
+    // PANEL-040: Test file exists
+    let test_path = format!("tests/{}_engine_test.js", snake);
+    if !Path::new(&test_path).exists() {
+        findings.push(BotFinding {
+            bot: "finishbot".to_string(),
+            rule_id: "PANEL-040".to_string(),
+            severity: "warning".to_string(),
+            message: format!("No test file found at {} — create tests before release", test_path),
+            file: Some(test_path),
+        });
+    }
+
+    // PANEL-044: Bot directives file exists
+    if !Path::new(directive_path).exists() && !files_created.contains(&directive_path.to_string()) {
+        findings.push(BotFinding {
+            bot: "finishbot".to_string(),
+            rule_id: "PANEL-044".to_string(),
+            severity: "warning".to_string(),
+            message: "Bot directives file not generated — fleet cannot validate this panel".to_string(),
+            file: Some(directive_path.to_string()),
+        });
+    }
+
+    findings
 }
 
 /// Patch Update.res to add a minimal sub-updater and routing case.

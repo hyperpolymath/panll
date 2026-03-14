@@ -70,4 +70,40 @@ pub struct MintResult {
     pub warnings: Vec<String>,
     /// Error message if the operation failed.
     pub error: Option<String>,
+    /// Wiring completeness score (connected / total). 7/7 = fully wired.
+    pub wiring_score: String,
+    /// Per-wiring-point status for the Wiring Inspector.
+    pub wiring_details: Vec<WiringDetail>,
+    /// Bot validation findings from post-mint checks.
+    pub bot_findings: Vec<BotFinding>,
+}
+
+/// Status of a single wiring connection point — shown in the Wiring Inspector.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WiringDetail {
+    /// Which file this wiring point is in.
+    pub file: String,
+    /// What the wiring point does.
+    pub description: String,
+    /// Whether this wiring point is connected.
+    pub connected: bool,
+    /// Warning message if disconnected.
+    pub note: Option<String>,
+}
+
+/// A finding from a post-mint bot validation — lightweight version for the UI.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BotFinding {
+    /// Which bot produced this finding (e.g. "rhodibot", "glambot").
+    pub bot: String,
+    /// Rule ID (e.g. "PANEL-001").
+    pub rule_id: String,
+    /// Severity: "error", "warning", "info", "suggestion".
+    pub severity: String,
+    /// Human-readable message.
+    pub message: String,
+    /// File involved (if any).
+    pub file: Option<String>,
 }
