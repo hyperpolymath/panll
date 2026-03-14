@@ -1300,6 +1300,10 @@ type levelArchitectMsg =
   | DismissArchitectError
   /// TypeLL cross-panel type check result for level data types.
   | TypeCheckResult(result<string, string>)
+  /// Toggle BoJ routing for UMS validation.
+  | ToggleLaBojRouting
+  /// UMS ABI validation result from BoJ cartridge.
+  | UmsValidationResult(result<string, string>)
 
 /// Coprocessors messages — metrics refresh, call log, heatmap,
 /// backend toggling, and filter controls for the IDApTIK coprocessor

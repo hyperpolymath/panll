@@ -28,6 +28,7 @@ type cartridgeId =
   | ResearchMcp
   | SecretsMcp
   | SsgMcp
+  | UmsMcp
 
 /// Convert a cartridge variant to its wire-format string name.
 /// This is the ONLY place where cartridge name strings should exist.
@@ -54,6 +55,7 @@ let cartridgeToString = (c: cartridgeId): string =>
   | ResearchMcp => "research-mcp"
   | SecretsMcp => "secrets-mcp"
   | SsgMcp => "ssg-mcp"
+  | UmsMcp => "ums-mcp"
   }
 
 /// Parse a wire-format string back to a cartridge variant.
@@ -81,6 +83,7 @@ let cartridgeFromString = (s: string): option<cartridgeId> =>
   | "research-mcp" => Some(ResearchMcp)
   | "secrets-mcp" => Some(SecretsMcp)
   | "ssg-mcp" => Some(SsgMcp)
+  | "ums-mcp" => Some(UmsMcp)
   | _ => None
   }
 
@@ -90,7 +93,7 @@ type tier = Teranga | Shield | Ayo
 /// Get the tier for a cartridge.
 let cartridgeTier = (c: cartridgeId): tier =>
   switch c {
-  | ProofMcp | SecretsMcp => Shield
+  | ProofMcp | SecretsMcp | UmsMcp => Shield
   | _ => Teranga
   }
 
@@ -417,6 +420,33 @@ let ssgToolToString = (t: ssgTool): string =>
   | Reset => "reset"
   }
 
+/// UMS level management tools.
+type umsTool =
+  | LoadLevel
+  | SaveLevel
+  | ValidateLevelAbi
+  | ListLevels
+  | ExportLevelConfig
+  | CreateProject
+  | OpenProject
+  | DeleteProject
+  | LoadTemplates
+  | InstantiateTemplate
+
+let umsToolToString = (t: umsTool): string =>
+  switch t {
+  | LoadLevel => "load_level"
+  | SaveLevel => "save_level"
+  | ValidateLevelAbi => "validate_level_abi"
+  | ListLevels => "list_levels"
+  | ExportLevelConfig => "export_level_config"
+  | CreateProject => "create_project"
+  | OpenProject => "open_project"
+  | DeleteProject => "delete_project"
+  | LoadTemplates => "load_templates"
+  | InstantiateTemplate => "instantiate_template"
+  }
+
 /// Unified cartridge invocation — a single sum type over all (cartridge, tool) pairs.
 /// This is what Update.res should use instead of raw string pairs.
 type invocation =
@@ -441,6 +471,7 @@ type invocation =
   | Research(researchTool)
   | Secrets(secretsTool)
   | Ssg(ssgTool)
+  | Ums(umsTool)
 
 /// Decompose a typed invocation into its wire-format (cartridge_name, tool_name) pair.
 /// This is the bridge between the type-safe world and the string-based BojCmd layer.
@@ -467,11 +498,12 @@ let toWire = (inv: invocation): (string, string) =>
   | Research(t) => ("research-mcp", researchToolToString(t))
   | Secrets(t) => ("secrets-mcp", secretsToolToString(t))
   | Ssg(t) => ("ssg-mcp", ssgToolToString(t))
+  | Ums(t) => ("ums-mcp", umsToolToString(t))
   }
 
 /// Total cartridge count. Must match BoJ server's catalogue count.
 /// Seam test validates this at build time.
-let cartridgeCount = 21
+let cartridgeCount = 22
 
 /// Total tool count across all cartridges.
-let toolCount = 152
+let toolCount = 162

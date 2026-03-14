@@ -225,19 +225,104 @@ let renderPatrols = (state: levelArchitectState): Tea_Vdom.t<msg> => {
 }
 
 /// Render validation issues.
+/// Render a single ABI proof badge (pass/fail indicator).
+let renderAbiProofBadge = (name: string, passed: bool): Tea_Vdom.t<msg> => {
+  let (dotCls, textCls) = if passed {
+    ("bg-emerald-400", "text-emerald-400")
+  } else {
+    ("bg-red-400", "text-red-400")
+  }
+  div(
+    list{Attrs.class_("flex items-center gap-1.5")},
+    list{
+      div(list{Attrs.class_(`w-2 h-2 rounded-full ${dotCls}`)}, list{}),
+      span(list{Attrs.class_(`text-xs ${textCls}`)}, list{text(name)}),
+    },
+  )
+}
+
 let renderValidation = (state: levelArchitectState): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("space-y-3")},
+    list{Attrs.class_("space-y-4")},
     list{
-      // Validate button
-      button(
+      // Action bar
+      div(
+        list{Attrs.class_("flex items-center gap-2")},
         list{
-          Attrs.class_("px-3 py-1.5 text-xs bg-amber-700 text-white rounded hover:bg-amber-600 cursor-pointer"),
-          Events.onClick(LevelArchitect(ValidateLevel)),
+          button(
+            list{
+              Attrs.class_("px-3 py-1.5 text-xs bg-amber-700 text-white rounded hover:bg-amber-600 cursor-pointer"),
+              Events.onClick(LevelArchitect(ValidateLevel)),
+            },
+            list{text("Validate Level")},
+          ),
+          button(
+            list{
+              Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-cyan-400 rounded hover:bg-gray-600 cursor-pointer"),
+              Events.onClick(Ums(NavigateToPanel(PanelLevelArchitect))),
+            },
+            list{text("Open in UMS")},
+          ),
         },
-        list{text("Validate Level")},
       ),
-      // Issues list
+      // UMS ABI Validation (5 Idris2 proofs)
+      div(
+        list{Attrs.class_("p-3 bg-gray-800 rounded border border-gray-700")},
+        list{
+          div(
+            list{Attrs.class_("text-xs font-medium text-gray-300 mb-2")},
+            list{text("Idris2 ABI Proofs (5 cross-domain invariants)")},
+          ),
+          switch state.umsValidation {
+          | Some(v) =>
+            div(
+              list{Attrs.class_("grid grid-cols-2 lg:grid-cols-3 gap-2")},
+              list{
+                renderAbiProofBadge("Guards in Zones", v.guardsInZones),
+                renderAbiProofBadge("Defence Targets Valid", v.defenceTargetsValid),
+                renderAbiProofBadge("Zones Ordered", v.zonesOrdered),
+                renderAbiProofBadge("PBX Consistent", v.pbxConsistent),
+                renderAbiProofBadge("Devices Exist", v.devicesExist),
+                div(
+                  list{Attrs.class_("flex items-center gap-1.5")},
+                  list{
+                    div(
+                      list{
+                        Attrs.class_(
+                          if v.allPassed {
+                            "w-2 h-2 rounded-full bg-emerald-400"
+                          } else {
+                            "w-2 h-2 rounded-full bg-red-400"
+                          },
+                        ),
+                      },
+                      list{},
+                    ),
+                    span(
+                      list{
+                        Attrs.class_(
+                          if v.allPassed {
+                            "text-xs font-bold text-emerald-400"
+                          } else {
+                            "text-xs font-bold text-red-400"
+                          },
+                        ),
+                      },
+                      list{text(if v.allPassed { "ALL PASSED" } else { "HAS FAILURES" })},
+                    ),
+                  },
+                ),
+              },
+            )
+          | None =>
+            div(
+              list{Attrs.class_("text-xs text-gray-500")},
+              list{text("Not yet validated. Click 'Validate Level' to run ABI proof checks.")},
+            )
+          },
+        },
+      ),
+      // Classic validation issues
       if Array.length(state.validationIssues) === 0 {
         div(
           list{Attrs.class_("text-center text-emerald-400 text-sm py-4")},

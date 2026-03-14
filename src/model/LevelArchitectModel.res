@@ -94,6 +94,67 @@ type levelArchitectCategory =
   | ArchitectPatrols
   | ArchitectValidation
 
+/// IDApTIK device kind (mirrors Idris2 Types.idr DeviceKind).
+type deviceKind =
+  | DevLaptop
+  | DevDesktop
+  | DevServer
+  | DevRouter
+  | DevSwitch
+  | DevFirewall
+  | DevCamera
+  | DevAccessPoint
+  | DevPatchPanel
+  | DevPowerSupply
+  | DevPhoneSystem
+  | DevFibreHub
+
+/// IDApTIK guard rank (mirrors Idris2 Types.idr GuardRank).
+type guardRank =
+  | RankBasic
+  | RankEnforcer
+  | RankAntiHacker
+  | RankSentinel
+  | RankAssassin
+  | RankElite
+  | RankSecurityChief
+  | RankRivalHacker
+
+/// IDApTIK security dog breed (mirrors Idris2 Types.idr DogBreed).
+type dogBreed = BreedPatrol | BreedBloodhound | BreedRoboDog
+
+/// IDApTIK drone archetype (mirrors Idris2 Types.idr DroneArchetype).
+type droneArchetype = DroneHelper | DroneHunter | DroneKiller
+
+/// Security level (mirrors Idris2 Primitives.idr SecurityLevel).
+type securityLevel = SecOpen | SecWeak | SecMedium | SecStrong
+
+/// A security zone with boundaries (mirrors Idris2 Zones.idr).
+type levelZone = {
+  name: string,
+  startX: float,
+  endX: float,
+  securityTier: int,
+}
+
+/// ABI proof validation result (mirrors Validation.idr).
+type abiProof = {
+  name: string,
+  passed: bool,
+  detail: string,
+}
+
+/// UMS-format validation state (the 5 Idris2 proofs).
+type umsValidation = {
+  guardsInZones: bool,
+  defenceTargetsValid: bool,
+  zonesOrdered: bool,
+  pbxConsistent: bool,
+  devicesExist: bool,
+  allPassed: bool,
+  proofs: array<abiProof>,
+}
+
 /// Root state for the Level Architect panel.
 type levelArchitectState = {
   activeCategory: levelArchitectCategory,
@@ -116,4 +177,10 @@ type levelArchitectState = {
   alertThreshold: int,
   loading: bool,
   error: option<string>,
+  /// UMS-format zones (LAN/DMZ/SCADA).
+  zones: array<levelZone>,
+  /// UMS ABI validation result.
+  umsValidation: option<umsValidation>,
+  /// BoJ routing toggle.
+  bojRouting: bool,
 }
