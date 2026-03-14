@@ -68,6 +68,10 @@ type panelId =
   | PanelLanguageForge
   /// TangleViz — topological programming visualizer for braid/knot topology from the Tangle language.
   | PanelTangleViz
+  /// SpecBrowser — browse all language specs, grammars, typing rules side-by-side.
+  | PanelSpecBrowser
+  /// VerificationDashboard — proof/test/benchmark/fuzzing status across all repos.
+  | PanelVerificationDashboard
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

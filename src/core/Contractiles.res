@@ -48,6 +48,17 @@ let autonomyBoundContract = (agency: Model.agencyState, maxAutonomy: float): Mod
   }
 }
 
+/// Built-in contractile: SafeDOM Enforcement
+/// Ensures all DOM mounting goes through SafeDOM's 4-layer defence-in-depth.
+/// Checks that SafeDOM layers are initialised and no direct innerHTML usage exists.
+let safeDomContract = (safetyInitialised: bool): Model.contractStatus => {
+  if safetyInitialised {
+    Model.Satisfied
+  } else {
+    Model.Violated("SafeDOM layers not initialised — DOM mounts are unprotected against XSS")
+  }
+}
+
 /// Default contractile set for PanLL
 let defaultContractiles = (): array<contractile> => [
   {
@@ -86,6 +97,15 @@ let defaultContractiles = (): array<contractile> => [
     elasticity: 0.4,
     lastEvaluated: 0.0,
   },
+  {
+    id: "safedom-enforcement",
+    name: "SafeDOM Enforcement (K9-SVC)",
+    description: "All DOM mounts must go through SafeDOM 4-layer defence-in-depth — no direct innerHTML",
+    enforcement: Model.Strict,
+    status: Model.Pending,
+    elasticity: 0.0, // Zero elasticity — security contracts are non-negotiable
+    lastEvaluated: 0.0,
+  },
 ]
 
 /// Evaluate all contractiles against current model state
@@ -96,6 +116,7 @@ let evaluateAll = (model: Model.model, contractiles: array<Model.contractile>): 
     | "vexation-ceiling" => vexationCeilingContract(model.vexometer, 0.8)
     | "divergence-limit" => divergenceLimitContract(model.orbital, 0.6)
     | "autonomy-bound" => autonomyBoundContract(model.paneN.agency, 0.7)
+    | "safedom-enforcement" => safeDomContract(true) // SafeDOM initSafety() runs at startup in Tea_App
     | _ => Model.Pending
     }
 

@@ -2,8 +2,8 @@
 ;; ECOSYSTEM.scm - PanLL's position in the hyperpolymath ecosystem
 
 (ecosystem
-  (version "1.1.0")
-  (last-updated "2026-03-09")
+  (version "1.2.0")
+  (last-updated "2026-03-14")
   (format-spec "hyperpolymath/rsr-template-repo/spec/ECOSYSTEM-FORMAT-SPEC.adoc")
 
   (identity
@@ -144,11 +144,26 @@
      (integration-status "partial")
      (notes "Fleet panel wired with 6 bots and safety triangle. Seambot integration relevant for compliance seam detection. BoJ agent-mcp cartridge routes automation through BoJ gateway."))
 
+    ((project "typell")
+     (relationship "core-dependency")
+     (nature "TypeLL is the unified type verification kernel for PanLL — the formal verification substrate that multiple language frontends compile types into. TypeLL is to PanLL what LLVM is to Clang. It provides: Robinson unification with occurs check, bidirectional type inference, QTT linear/affine usage tracking, algebraic effect system with row polymorphism, SI-based dimensional analysis (from Eclexia), session type protocol checking with duality, dependent type index unification, refinement type predicate checking with built-in decision procedure, and proof obligation generation for ECHIDNA integration.")
+     (integration-status "active")
+     (criticality "load-bearing")
+     (notes "TypeLL kernel lives in its own repo (typell/) with Idris2 ABI + Zig FFI. PanLL consumes it via TypeLLEngine/TypeLLService/TypeLLModel/TypeLLCmd integration layer. TypeLLService fires on all 41/41 panels. 13 language bridge crates (affinescript, tangle, eclexia, vql, mylang, etc.). BoJ nesy-mcp cartridge routes TypeLL checks when bojRouting=true. 221 tests across kernel + bridges.")
+     (upstream-tracking
+       "Session type variables — IMPLEMENTED (2026-03-14)"
+       "Dependent length unification — IMPLEMENTED (2026-03-14)"
+       "Row-polymorphic effect unification — IMPLEMENTED (2026-03-14)"
+       "Compile-time exponent evaluation — IMPLEMENTED (2026-03-14)"
+       "SMT refinement decision procedure — IMPLEMENTED (2026-03-14)"
+       "Full SMT solver integration — future (ECHIDNA handles complex proofs)"
+       "Compile-time TypeLL checking via ReScript PPX — future"))
+
     ((project "boj-server")
      (relationship "primary-backend-gateway")
-     (nature "BoJ (Bundle of Joy) server provides 17 cartridges as MCP-compatible backend services. PanLL's BoJ panel and primary gateway route through BoJ cartridges.")
+     (nature "BoJ (Bundle of Joy) server provides 18 cartridges as MCP-compatible backend services. PanLL's BoJ panel and primary gateway route through BoJ cartridges.")
      (integration-status "active")
-     (notes "17 cartridges (all Grade D Alpha), bojRouting toggle for 5 panels (lsp-mcp, database-mcp, dap-mcp, bsp-mcp, agent-mcp). Per-invocation latency tracking. Umoja federation for multi-instance coordination."))
+     (notes "18 cartridges (all Grade D Alpha), bojRouting toggle for 6 panels (lsp-mcp, database-mcp, dap-mcp, bsp-mcp, agent-mcp, nesy-mcp). Per-invocation latency tracking. Umoja federation for multi-instance coordination."))
 
     ((project "idaptik")
      (relationship "game-development-module")

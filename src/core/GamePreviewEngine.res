@@ -107,7 +107,7 @@ let defaultRenderStats: renderStats = {
 
 /// Format render stats as a human-readable summary line.
 let renderStatsLabel = (stats: renderStats): string => {
-  Float.toFixedWithPrecision(stats.fps, ~digits=1) ++ " FPS | " ++
+  Float.toFixed(stats.fps, ~digits=1) ++ " FPS | " ++
   Int.toString(stats.drawCalls) ++ " draws | " ++
   Int.toString(stats.spriteCount) ++ " sprites"
 }

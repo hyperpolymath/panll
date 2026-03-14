@@ -11,12 +11,13 @@
 //! between at least two sources. The frontend renders these in the
 //! `CloudGuardDiffViewer.res` component with merge-conflict-style UI.
 
+#![allow(dead_code)]
+
 use serde::Serialize;
 use serde_json::Value;
 
 use super::api;
 use super::config;
-use super::types::*;
 
 /// A single entry in the three-way diff. One per setting that differs.
 #[derive(Debug, Serialize, Clone)]

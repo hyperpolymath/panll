@@ -2,6 +2,8 @@
 
 //! Capture types — serde-compatible structs for screenshots, recordings, demos.
 
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 
 /// Format for captured images.

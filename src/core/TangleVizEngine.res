@@ -177,7 +177,7 @@ let invariantLabel = (inv: knotInvariant): string => {
 let allInvariants: array<knotInvariant> = [Jones, Alexander, Homfly, Kauffman, Writhe, Linking]
 
 // ════════════════════════════════════════════════════════════════════════
-// Writhe Computation (the one invariant we can compute purely)
+// Invariant Computations
 // ════════════════════════════════════════════════════════════════════════
 
 /// Compute the writhe of a braid word — the sum of all crossing signs.
@@ -186,34 +186,166 @@ let computeWrithe = (generators: array<braidGenerator>): int => {
   generators->Array.reduce(0, (acc, gen) => acc + gen.exponent)
 }
 
-/// Compute a simple invariant result string.
-/// Only writhe is computed purely; others show placeholder formulae.
+/// Compute the linking number by counting signed crossings between
+/// distinct components. For a braid closure, we trace which strands
+/// form which components, then count only inter-component crossings.
+///
+/// For a simple 2-strand braid, linking number = (sum of signs) / 2.
+/// For n-strand braids, we trace the permutation closure to identify
+/// components, then count signed crossings between distinct components.
+let computeLinkingNumber = (generators: array<braidGenerator>, strandCount: int): int => {
+  // First, compute the permutation induced by the braid
+  let perm = Array.fromInitializer(~length=strandCount, i => i)
+  generators->Array.forEach(gen => {
+    let i = gen.index - 1
+    if i >= 0 && i + 1 < strandCount {
+      let tmp = perm->Array.getUnsafe(i)
+      let _ = perm->Array.set(i, perm->Array.getUnsafe(i + 1))
+      let _ = perm->Array.set(i + 1, tmp)
+    }
+  })
+
+  // Find which component each strand belongs to by following the
+  // permutation cycles (each cycle = one component in the closure)
+  let component = Array.fromInitializer(~length=strandCount, _ => -1)
+  let compIdx = ref(0)
+  for s in 0 to strandCount - 1 {
+    if component->Array.getUnsafe(s) === -1 {
+      let current = ref(s)
+      while component->Array.getUnsafe(current.contents) === -1 {
+        let _ = component->Array.set(current.contents, compIdx.contents)
+        current := perm->Array.getUnsafe(current.contents)
+      }
+      compIdx := compIdx.contents + 1
+    }
+  }
+
+  // Count signed crossings between distinct components
+  // Re-trace the strand positions through each crossing
+  let positions = Array.fromInitializer(~length=strandCount, i => i)
+  let linkingSum = ref(0)
+  generators->Array.forEach(gen => {
+    let i = gen.index - 1
+    if i >= 0 && i + 1 < strandCount {
+      let strandTop = positions->Array.getUnsafe(i)
+      let strandBot = positions->Array.getUnsafe(i + 1)
+      let compTop = component->Array.getUnsafe(strandTop)
+      let compBot = component->Array.getUnsafe(strandBot)
+      if compTop !== compBot {
+        linkingSum := linkingSum.contents + gen.exponent
+      }
+      // Swap positions
+      let tmp = positions->Array.getUnsafe(i)
+      let _ = positions->Array.set(i, positions->Array.getUnsafe(i + 1))
+      let _ = positions->Array.set(i + 1, tmp)
+    }
+  })
+
+  // Linking number = half the signed inter-component crossing count
+  linkingSum.contents / 2
+}
+
+/// Count the number of components in the braid closure.
+/// Each cycle in the braid permutation corresponds to one component.
+let countComponents = (generators: array<braidGenerator>, strandCount: int): int => {
+  let perm = Array.fromInitializer(~length=strandCount, i => i)
+  generators->Array.forEach(gen => {
+    let i = gen.index - 1
+    if i >= 0 && i + 1 < strandCount {
+      let tmp = perm->Array.getUnsafe(i)
+      let _ = perm->Array.set(i, perm->Array.getUnsafe(i + 1))
+      let _ = perm->Array.set(i + 1, tmp)
+    }
+  })
+  let visited = Array.fromInitializer(~length=strandCount, _ => false)
+  let count = ref(0)
+  for s in 0 to strandCount - 1 {
+    if !(visited->Array.getUnsafe(s)) {
+      count := count.contents + 1
+      let current = ref(s)
+      while !(visited->Array.getUnsafe(current.contents)) {
+        let _ = visited->Array.set(current.contents, true)
+        current := perm->Array.getUnsafe(current.contents)
+      }
+    }
+  }
+  count.contents
+}
+
+/// Compute a knot invariant result string.
+///
+/// Writhe and linking number are computed exactly from the braid word.
+/// Jones, Alexander, HOMFLY-PT, and Kauffman bracket show the defining
+/// skein relation with the braid's computed values substituted in,
+/// giving a mathematical characterisation rather than a numeric result
+/// (full polynomial computation requires state-sum expansion).
 let computeInvariant = (inv: knotInvariant, generators: array<braidGenerator>): string => {
+  let strandCount = strandCountFromWord(generators)
+  let w = computeWrithe(generators)
+  let n = Array.length(generators)
+  let numComponents = countComponents(generators, strandCount)
+
   switch inv {
   | Writhe => {
-      let w = computeWrithe(generators)
-      `w = ${Int.toString(w)}`
+      let sign = if w > 0 { "+" } else if w < 0 { "-" } else { "" }
+      `w(K) = ${sign}${Int.toString(Math.Int.abs(w))} (sum of ${Int.toString(n)} crossing signs)`
     }
   | Linking => {
-      let w = computeWrithe(generators)
-      `lk = ${Int.toString(w / 2)} (from writhe/2)`
+      if numComponents < 2 {
+        `lk = 0 (knot has 1 component; linking number is defined for links with >= 2 components)`
+      } else {
+        let lk = computeLinkingNumber(generators, strandCount)
+        `lk(L) = ${Int.toString(lk)} (${Int.toString(numComponents)}-component link, half the signed inter-component crossings)`
+      }
     }
   | Jones => {
-      let w = computeWrithe(generators)
-      let n = Array.length(generators)
-      `V(t) ~ (-1)^${Int.toString(n)} t^${Int.toString(w)} (simplified)`
+      // V(t) satisfies: t^{-1} V(L+) - t V(L-) = (t^{1/2} - t^{-1/2}) V(L0)
+      // For the unknot, V(t) = 1.
+      // Writhe factor: V(K) includes (-t)^{-3w/4} normalisation.
+      let wStr = Int.toString(w)
+      let compStr = Int.toString(numComponents)
+      if n === 0 {
+        `V(t) = 1 (unknot/unlink with ${compStr} component(s))`
+      } else {
+        let normExp = -3 * w
+        let normStr = if normExp >= 0 {
+          `(-t)^{${Int.toString(normExp)}/4}`
+        } else {
+          `(-t)^{${Int.toString(normExp)}/4}`
+        }
+        `V(t) = ${normStr} * <K>(t) | w=${wStr}, n=${Int.toString(n)}, components=${compStr} | Skein: t^{-1}V(L+) - tV(L-) = (t^{1/2} - t^{-1/2})V(L0)`
+      }
     }
   | Alexander => {
-      let n = Array.length(generators)
-      `\xce\x94(t) ~ ${Int.toString(n)}-crossing (requires Seifert matrix)`
+      // Delta(t) satisfies: Delta(L+) - Delta(L-) = (t^{1/2} - t^{-1/2}) Delta(L0)
+      // For the unknot, Delta(t) = 1.
+      if n === 0 {
+        `\xce\x94(t) = 1 (unknot)`
+      } else {
+        let wStr = Int.toString(w)
+        `\xce\x94(t) via Burau matrix: ${Int.toString(strandCount)}x${Int.toString(strandCount)} reduced Burau rep, w=${wStr} | Skein: \xce\x94(L+) - \xce\x94(L-) = (t^{1/2} - t^{-1/2})\xce\x94(L0)`
+      }
     }
   | Homfly => {
-      let n = Array.length(generators)
-      `P(a,z) ~ ${Int.toString(n)}-crossing (requires skein relations)`
+      // P(a,z) satisfies: a P(L+) - a^{-1} P(L-) = z P(L0)
+      // For the unknot, P(a,z) = 1.
+      if n === 0 {
+        `P(a,z) = 1 (unknot)`
+      } else {
+        let posCount = generators->Array.filter(g => g.exponent > 0)->Array.length
+        let negCount = n - posCount
+        `P(a,z): ${Int.toString(n)} crossings (${Int.toString(posCount)}+, ${Int.toString(negCount)}-), ${Int.toString(numComponents)} components | Skein: aP(L+) - a^{-1}P(L-) = zP(L0)`
+      }
     }
   | Kauffman => {
-      let n = Array.length(generators)
-      `<K> ~ ${Int.toString(n)}-crossing (requires state sum)`
+      // <K> = A<K_0> + A^{-1}<K_inf> for each crossing, where A = t^{-1/4}
+      // States: 2^n resolutions, each contributing A^{sigma} * (-A^2 - A^{-2})^{loops-1}
+      if n === 0 {
+        `<K> = 1 (unknot)`
+      } else {
+        let states = Math.Int.pow(2, ~exp=n)
+        `<K> = sum over ${Int.toString(states)} states of A^{sigma(s)}(-A^2 - A^{-2})^{|s|-1} | w=${Int.toString(w)}, normalize: f(K) = (-A^3)^{-w}<K>`
+      }
     }
   }
 }

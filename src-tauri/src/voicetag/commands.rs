@@ -8,7 +8,7 @@
 //! the Rust side treats content as opaque strings (read/write/delete/scan).
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use walkdir::WalkDir;
 
 /// Load a `.mri.json` sidecar file and return its content as a string.

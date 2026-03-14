@@ -2243,6 +2243,36 @@ type tangleVizMsg =
   /// Dismiss the error banner.
   | DismissError
 
+/// SpecBrowser messages — language specification browsing and comparison.
+type specBrowserMsg =
+  /// Set the active category tab.
+  | SetSpecCategory(specBrowserCategory)
+  /// Select a language for detail/grammar/typing views.
+  | SelectSpecLanguage(option<string>)
+  /// Set the comparison side language.
+  | SetComparisonSide(comparisonSide, string)
+  /// Update the text filter.
+  | SetSpecFilter(string)
+  /// Toggle showing only incomplete languages.
+  | ToggleIncompleteOnly
+  /// Dismiss error.
+  | DismissSpecError
+
+/// VerificationDashboard messages — proof/test/benchmark status.
+type verificationDashboardMsg =
+  /// Set the active category tab.
+  | SetVdCategory(verificationDashboardCategory)
+  /// Select a language for detail view.
+  | SelectVdLanguage(option<string>)
+  /// Update the text filter.
+  | SetVdFilter(string)
+  /// Set the sort criterion.
+  | SetVdSort(verificationSortBy)
+  /// Toggle showing only languages with admitted/sorry debt.
+  | ToggleDebtOnly
+  /// Dismiss error.
+  | DismissVdError
+
 /// Observatory messages — integrative dashboard health and resource monitoring.
 type observatoryMsg =
   /// Switch the active tab.
@@ -2343,6 +2373,8 @@ type msg =
   | Evangeliser(evangeliserMsg) // ReScript Evangeliser — JS→ReScript teaching
   | LanguageForge(languageForgeMsg) // Language Forge — nextgen-languages portfolio
   | TangleViz(tangleVizMsg) // Topological programming visualizer (braids, knots, invariants)
+  | SpecBrowser(specBrowserMsg) // Language specification browser — grammars, typing rules, taxonomy
+  | VerificationDashboard(verificationDashboardMsg) // Proof/test/benchmark/fuzzing status
   | Observatory(observatoryMsg) // Integrative dashboard — cross-panel health and resources
   | AmbientOps(ambientOpsMsg) // Hospital-model sysadmin — clinician, network, hardware
   | Undo // Undo last significant action

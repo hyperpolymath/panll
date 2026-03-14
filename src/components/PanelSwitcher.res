@@ -72,31 +72,52 @@ let renderPanelEntry = (panel: panelMeta, isActive: bool): Tea_Vdom.t<msg> => {
   let activeBg = isActive ? "bg-gray-700/80" : "hover:bg-gray-800/60"
   let activeText = isActive ? "text-white" : "text-gray-300"
 
-  button(
+  div(
     list{
       Attrs.class_(
-        `flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left ${activeBg} ${activeText} transition-colors group`,
+        `flex items-center gap-1 w-full px-1.5 py-1 rounded-lg ${activeBg} transition-colors group`,
       ),
-      Attrs.title(panel.description),
-      Attrs.ariaLabel(`Open ${panel.name} panel`),
-      Events.onClick(PanelSwitcher(TogglePanel(panel.id))),
     },
     list{
-      // Connection dot
-      if panel.hasBackend {
-        renderStatusDot(panel.connectionStatus)
-      } else {
-        noNode
-      },
-      // Panel name
-      span(
-        list{Attrs.class_("text-sm truncate flex-1")},
-        list{text(panel.name)},
+      // Main panel button (opens/closes panel)
+      button(
+        list{
+          Attrs.class_(`flex items-center gap-2 flex-1 px-1.5 py-1 rounded text-left ${activeText} transition-colors`),
+          Attrs.title(panel.description),
+          Attrs.ariaLabel(`Open ${panel.name} panel`),
+          Events.onClick(PanelSwitcher(TogglePanel(panel.id))),
+        },
+        list{
+          // Connection dot
+          if panel.hasBackend {
+            renderStatusDot(panel.connectionStatus)
+          } else {
+            noNode
+          },
+          // Panel name
+          span(
+            list{Attrs.class_("text-sm truncate flex-1")},
+            list{text(panel.name)},
+          ),
+          // Short name badge
+          span(
+            list{Attrs.class_("text-xs text-gray-500 font-mono opacity-60")},
+            list{text(panel.shortName)},
+          ),
+        },
       ),
-      // Short name badge
-      span(
-        list{Attrs.class_("text-xs text-gray-500 font-mono opacity-60")},
-        list{text(panel.shortName)},
+      // Detach button (pop-out into separate window)
+      button(
+        list{
+          Attrs.class_("px-1 py-1 text-gray-600 hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity rounded hover:bg-gray-600/50"),
+          Attrs.title(`Detach ${panel.name} into separate window`),
+          Attrs.ariaLabel(`Detach ${panel.name}`),
+          Events.onClick(Tiling(DetachPanel(panel.id))),
+        },
+        list{
+          // Pop-out icon (Unicode box with arrow)
+          span(list{Attrs.class_("text-xs")}, list{text("\xe2\x86\x97")}),
+        },
       ),
     },
   )

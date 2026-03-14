@@ -15,7 +15,7 @@ import * as Contractiles from "../src/core/Contractiles.res.js";
 
 Deno.test("Contractiles.defaultContractiles - returns 4 contracts", () => {
   const contracts = Contractiles.defaultContractiles();
-  assertEquals(contracts.length, 4);
+  assertEquals(contracts.length, 5);
 });
 
 Deno.test("Contractiles.orbitalStabilityContract - above threshold is Satisfied", () => {

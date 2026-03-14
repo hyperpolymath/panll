@@ -501,6 +501,26 @@ let allPanels: array<panelMeta> = [
     hasBackend: false, // All computation runs client-side
     cladeId: Some("tangle-viz"),
   },
+  {
+    id: PanelSpecBrowser,
+    name: "Spec Browser",
+    shortName: "Spec",
+    description: "Browse all 16 language specs, grammars, typing rules — side-by-side comparison and taxonomy completeness",
+    icon: "book-open",
+    connectionStatus: ServiceConnected, // Hardcoded data + filesystem reads, always available
+    hasBackend: false, // Pure client-side data, no HTTP service
+    cladeId: Some("spec-browser"),
+  },
+  {
+    id: PanelVerificationDashboard,
+    name: "Verification Dashboard",
+    shortName: "Verify",
+    description: "Proof/test/benchmark/fuzzing status across all nextgen-languages repos",
+    icon: "check-circle",
+    connectionStatus: ServiceConnected, // Hardcoded audit data, always available
+    hasBackend: false, // Pure client-side data, no HTTP service
+    cladeId: Some("verification-dashboard"),
+  },
 ]
 
 /// Look up panel metadata by ID.

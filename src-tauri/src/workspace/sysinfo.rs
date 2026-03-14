@@ -10,7 +10,6 @@
 //! (default: 2000ms for CPU, 5000ms for memory/disk).
 
 use std::fs;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::types::SystemInfo;
 

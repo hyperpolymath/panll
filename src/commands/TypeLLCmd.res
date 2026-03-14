@@ -211,3 +211,138 @@ let universes = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
     ->ignore
   })
 }
+
+// ============================================================================
+// New Kernel Integration — localhost:7800 routed operations
+// ============================================================================
+
+/// Route a type check to the kernel with a specific language target.
+/// POST /check — sends source + language to the kernel for type checking.
+let checkType = (
+  source: string,
+  language: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    let body = TypeLLEngine.buildCheckBody(source, language)
+    let p = if hasTauri() {
+      invokeRaw("typell_check", {"expression": source, "context": language})
+    } else {
+      fetchPost("/check", body)
+    }
+    p
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Kernel type check failed for " ++ language)))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Infer usage quantifiers (linear/affine/unrestricted) for an expression.
+/// POST /infer-usage — returns QTT quantifier annotations.
+let inferUsage = (
+  source: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    let body = TypeLLEngine.buildInferUsageBody(source)
+    let p = if hasTauri() {
+      invokeRaw("typell_infer", {"expression": source})
+    } else {
+      fetchPost("/infer-usage", body)
+    }
+    p
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Usage inference failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Infer effects for an expression.
+/// POST /check-effects — returns effect list and purity status.
+let checkEffects = (
+  source: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    let body = TypeLLEngine.buildCheckEffectsBody(source)
+    let p = if hasTauri() {
+      invokeRaw("typell_compute", {"term": source})
+    } else {
+      fetchPost("/check-effects", body)
+    }
+    p
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Effect checking failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Check dimensional consistency (for Eclexia's dimensional type system).
+/// POST /check-dimensional — validates unit/dimension annotations.
+let checkDimensional = (
+  source: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    let body = TypeLLEngine.buildCheckDimensionalBody(source)
+    let p = if hasTauri() {
+      invokeRaw("typell_compute", {"term": source})
+    } else {
+      fetchPost("/check-dimensional", body)
+    }
+    p
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Dimensional check failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Generate proof obligations from dependent types in the source.
+/// POST /generate-obligations — extracts propositions that need proving.
+let generateProofObligation = (
+  source: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    let body = TypeLLEngine.buildGenerateProofObligationBody(source)
+    let p = if hasTauri() {
+      invokeRaw("typell_compute", {"term": source})
+    } else {
+      fetchPost("/generate-obligations", body)
+    }
+    p
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Proof obligation generation failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}

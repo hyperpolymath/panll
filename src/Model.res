@@ -307,6 +307,17 @@ include LanguageForgeModel
 /// parsedStatus, tangleVizState) for the topological programming visualizer panel.
 include TangleVizModel
 
+/// Re-export SpecBrowser types (specFileKind, filePresence, verificationSummary,
+/// specLanguageEntry, specBrowserCategory, comparisonSide, specBrowserState) for
+/// the language specification browser panel.
+include SpecBrowserModel
+
+/// Re-export VerificationDashboard types (proofSystem, conformanceLevel,
+/// benchmarkEntry, fuzzingCoverage, languageVerificationStatus,
+/// verificationDashboardCategory, verificationSortBy, verificationDashboardState)
+/// for the verification status panel.
+include VerificationDashboardModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -535,6 +546,12 @@ type model = {
 
   // TangleViz — topological programming visualizer for braid/knot topology
   tangleViz: tangleVizState,
+
+  // Spec Browser — browse all language specs, grammars, typing rules
+  specBrowser: specBrowserState,
+
+  // Verification Dashboard — proof/test/benchmark/fuzzing status
+  verificationDashboard: verificationDashboardState,
 
   // Observatory — integrative dashboard aggregating health, resources, activity
   observatory: observatoryState,
@@ -1223,6 +1240,8 @@ let init = (): model => {
   evangeliser: EvangeliserEngine.defaultState,
   languageForge: LanguageForgeEngine.defaultState,
   tangleViz: TangleVizEngine.defaultState,
+  specBrowser: SpecBrowserModel.initial,
+  verificationDashboard: VerificationDashboardModel.initial,
   observatory: ObservatoryEngine.defaultState,
   ambientOps: AmbientOpsEngine.defaultState,
 }

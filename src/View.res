@@ -70,61 +70,156 @@ let renderPaneW = (paneW: paneWState, orbital: orbitalState, db: verisimdbState,
 }
 
 /// Render the Dark Start architecture manifold
-let renderDarkStart = (): Tea_Vdom.t<msg> => {
-  div(
+/// Render a quick-access panel card for the DarkStart grid.
+let renderQuickPanel = (panel: panelMeta): Tea_Vdom.t<msg> => {
+  let statusDot = switch panel.connectionStatus {
+  | ServiceConnected => "bg-green-400"
+  | ServiceDisconnected => "bg-gray-600"
+  | ServiceChecking => "bg-amber-400 animate-pulse"
+  | ServiceError(_) => "bg-red-400"
+  }
+  button(
     list{
-      Attrs.class_("fixed inset-0 bg-gray-950 flex items-center justify-center cursor-pointer"),
-      Attrs.role("button"),
-      Attrs.ariaLabel("Enter eNSAID environment"),
-      Events.onClick(View(SetViewMode(Standard))),
-      KeyboardUtil.onEnterOrSpace(View(SetViewMode(Standard))),
+      Attrs.class_("bg-gray-900/60 border border-gray-800 rounded-lg p-3 hover:bg-gray-800/80 hover:border-gray-700 transition-all text-left group"),
+      Events.onClick(PanelSwitcher(TogglePanel(panel.id))),
+      Attrs.title(panel.description),
     },
     list{
+      div(list{Attrs.class_("flex items-center gap-2 mb-1")}, list{
+        div(list{Attrs.class_(`w-1.5 h-1.5 rounded-full ${statusDot}`)}, list{}),
+        span(list{Attrs.class_("text-sm text-gray-300 group-hover:text-white transition-colors")}, list{text(panel.name)}),
+      }),
+      div(list{Attrs.class_("text-[10px] text-gray-600 truncate")}, list{text(panel.description)}),
+    },
+  )
+}
+
+/// Render the DarkStart front page — system overview, quick access, health.
+let renderDarkStart = (model: model): Tea_Vdom.t<msg> => {
+  // Gather health metrics
+  let totalPanels = Array.length(model.panelSwitcher.panels)
+  let connectedPanels = model.panelSwitcher.panels->Array.filter(p =>
+    p.connectionStatus === ServiceConnected
+  )->Array.length
+  let hypatiaConfidence = HypatiaEngine.avgConfidence(model.hypatia.networks)
+  let sessionCount = Array.length(model.workspace.sessions)
+  let bojCartridges = Array.length(model.boj.cartridges)
+  let bojLoaded = model.boj.cartridges->Array.filter(c => c.loaded)->Array.length
+
+  div(
+    list{
+      Attrs.class_("fixed inset-0 bg-gray-950 overflow-auto"),
+      Attrs.role("main"),
+      Attrs.ariaLabel("PanLL DarkStart — system overview"),
+    },
+    list{
+      // Top section: branding + enter button
       div(
-        list{Attrs.class_("text-center")},
+        list{Attrs.class_("max-w-5xl mx-auto px-8 pt-12 pb-6")},
         list{
-          div(
-            list{Attrs.class_("text-4xl font-light text-gray-600 mb-8")},
-            list{text("PanLL")},
-          ),
-          div(
-            list{Attrs.class_("flex items-center justify-center gap-16")},
-            list{
-              // Symbolic star
+          div(list{Attrs.class_("flex items-end justify-between mb-8")}, list{
+            div(list{}, list{
+              div(list{Attrs.class_("text-3xl font-light text-gray-400")}, list{text("PanLL")}),
+              div(list{Attrs.class_("text-xs text-gray-600 mt-1")}, list{text("eNSAID Neurosymbolic Development Environment")}),
+            }),
+            button(
+              list{
+                Attrs.class_("px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors text-sm font-medium"),
+                Events.onClick(View(SetViewMode(Standard))),
+                KeyboardUtil.onEnterOrSpace(View(SetViewMode(Standard))),
+              },
+              list{text("Enter Environment")},
+            ),
+          }),
+
+          // Binary Star diagram (compact)
+          div(list{Attrs.class_("flex items-center justify-center gap-8 mb-10")}, list{
+            div(
+              list{Attrs.class_("w-16 h-16 rounded-full bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center")},
+              list{div(list{Attrs.class_("text-indigo-400 text-[10px] font-medium")}, list{text("L")})},
+            ),
+            div(list{Attrs.class_("w-8 border-t border-dashed border-gray-700")}, list{}),
+            div(
+              list{Attrs.class_("w-16 h-16 rounded-full bg-emerald-600/30 border border-emerald-500/50 flex items-center justify-center")},
+              list{div(list{Attrs.class_("text-emerald-400 text-[10px] font-medium")}, list{text("N")})},
+            ),
+            div(list{Attrs.class_("w-8 border-t border-dashed border-gray-700")}, list{}),
+            div(
+              list{Attrs.class_("w-16 h-16 rounded-full bg-amber-600/30 border border-amber-500/50 flex items-center justify-center")},
+              list{div(list{Attrs.class_("text-amber-400 text-[10px] font-medium")}, list{text("W")})},
+            ),
+          }),
+
+          // System health cards
+          div(list{Attrs.class_("grid grid-cols-4 gap-3 mb-8")}, list{
+            // Panels
+            div(list{Attrs.class_("bg-gray-900/60 border border-gray-800 rounded-lg p-4")}, list{
+              div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-1")}, list{text("Panels")}),
+              div(list{Attrs.class_("text-2xl font-light text-gray-200")}, list{text(Int.toString(totalPanels))}),
+              div(list{Attrs.class_("text-xs text-green-500 mt-1")}, list{text(`${Int.toString(connectedPanels)} connected`)}),
+            }),
+            // Hypatia
+            div(list{Attrs.class_("bg-gray-900/60 border border-gray-800 rounded-lg p-4")}, list{
+              div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-1")}, list{text("Hypatia")}),
               div(
-                list{Attrs.class_("w-24 h-24 rounded-full bg-indigo-600/50 border-2 border-indigo-400 flex items-center justify-center")},
-                list{
-                  div(
-                    list{Attrs.class_("text-indigo-300 text-xs")},
-                    list{text("SYMBOLIC")},
-                  ),
-                },
+                list{Attrs.class_(`text-2xl font-light ${if hypatiaConfidence > 0.8 { "text-green-400" } else if hypatiaConfidence > 0.5 { "text-amber-400" } else { "text-gray-500" }}`)},
+                list{text(if hypatiaConfidence > 0.0 { `${Float.toFixed(hypatiaConfidence *. 100.0, ~digits=0)}%` } else { "---" })},
               ),
-              // Orbital path indicator
-              div(
-                list{Attrs.class_("w-16 border-t-2 border-dashed border-gray-600")},
-                list{},
+              div(list{Attrs.class_("text-xs text-gray-600 mt-1")}, list{text("ensemble confidence")}),
+            }),
+            // BoJ
+            div(list{Attrs.class_("bg-gray-900/60 border border-gray-800 rounded-lg p-4")}, list{
+              div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-1")}, list{text("BoJ Server")}),
+              div(list{Attrs.class_("text-2xl font-light text-gray-200")}, list{text(Int.toString(bojCartridges))}),
+              div(list{Attrs.class_("text-xs text-green-500 mt-1")}, list{text(`${Int.toString(bojLoaded)} loaded`)}),
+            }),
+            // Sessions
+            div(list{Attrs.class_("bg-gray-900/60 border border-gray-800 rounded-lg p-4")}, list{
+              div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-1")}, list{text("Sessions")}),
+              div(list{Attrs.class_("text-2xl font-light text-gray-200")}, list{text(Int.toString(sessionCount))}),
+              div(list{Attrs.class_("text-xs text-gray-600 mt-1")}, list{text("workspace sessions")}),
+            }),
+          }),
+
+          // Quick-access panel grid (top 12 panels)
+          div(list{Attrs.class_("mb-8")}, list{
+            div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-3")}, list{text("Quick Access")}),
+            div(list{Attrs.class_("grid grid-cols-4 gap-2")},
+              model.panelSwitcher.panels
+              ->Array.slice(~start=0, ~end=12)
+              ->Array.map(p => renderQuickPanel(p))
+              ->List.fromArray,
+            ),
+          }),
+
+          // Recent sessions
+          if Array.length(model.workspace.sessions) > 0 {
+            div(list{Attrs.class_("mb-8")}, list{
+              div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-3")}, list{text("Recent Sessions")}),
+              div(list{Attrs.class_("space-y-1")},
+                model.workspace.sessions
+                ->Array.slice(~start=0, ~end=5)
+                ->Array.map(session =>
+                  div(list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-900/40 rounded hover:bg-gray-800/60 transition-colors")}, list{
+                    div(list{Attrs.class_("w-1.5 h-1.5 rounded-full bg-gray-600")}, list{}),
+                    span(list{Attrs.class_("text-sm text-gray-400 flex-1")}, list{text(session.name)}),
+                    span(list{Attrs.class_("text-xs text-gray-600")}, list{
+                      text(Date.make()->Date.toLocaleDateString),
+                    }),
+                  })
+                )->List.fromArray,
               ),
-              // Neural star
-              div(
-                list{Attrs.class_("w-24 h-24 rounded-full bg-emerald-600/50 border-2 border-emerald-400 flex items-center justify-center")},
-                list{
-                  div(
-                    list{Attrs.class_("text-emerald-300 text-xs")},
-                    list{text("NEURAL")},
-                  ),
-                },
-              ),
-            },
-          ),
-          div(
-            list{Attrs.class_("mt-12 text-gray-600 text-sm")},
-            list{text("eNSAID Environment")},
-          ),
-          div(
-            list{Attrs.class_("mt-6 text-gray-700 text-xs animate-pulse")},
-            list{text("Click anywhere to enter")},
-          ),
+            })
+          } else {
+            noNode
+          },
+
+          // Footer
+          div(list{Attrs.class_("text-center py-6 border-t border-gray-900")}, list{
+            div(list{Attrs.class_("text-xs text-gray-700")}, list{
+              text("Press Enter or click \"Enter Environment\" to begin"),
+            }),
+          }),
         },
       ),
     },
@@ -262,6 +357,8 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelHelp) => Help.view(model.help)
   | Some(PanelLanguageForge) => LanguageForge.view(model.languageForge)
   | Some(PanelTangleViz) => TangleViz.view(model.tangleViz)
+  | Some(PanelSpecBrowser) => SpecBrowser.view(model.specBrowser)
+  | Some(PanelVerificationDashboard) => VerificationDashboard.view(model.verificationDashboard)
   | Some(PanelEchidna) => Echidna.view(model.echidna)
   | Some(PanelObservatory) => Observatory.view(model.observatory)
   | Some(PanelAmbientOps) => AmbientOps.view(model.ambientOps)
@@ -282,7 +379,7 @@ let rootColourClasses = (viewMode: viewMode): string => {
 let view = (model: model): Tea_Vdom.t<msg> => {
   // Dark Start mode - show architecture manifold
   if model.viewMode === DarkStart {
-    renderDarkStart()
+    renderDarkStart(model)
   } else {
     div(
       list{Attrs.class_(`h-screen ${rootColourClasses(model.viewMode)} flex flex-col ${AccessibilityEngine.rootClasses(model.accessibility)}`)},

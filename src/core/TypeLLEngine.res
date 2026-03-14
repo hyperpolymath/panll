@@ -523,6 +523,305 @@ let parseRefinementResult = (json: string): result<refinementResult, string> => 
 }
 
 // ============================================================================
+// Kernel Integration — localhost:7800 routing helpers
+// ============================================================================
+
+/// Result of a kernel type check routed to localhost:7800.
+type kernelTypeCheckResult = {
+  /// Whether the expression is well-typed.
+  valid: bool,
+  /// The inferred or checked type signature.
+  typeSignature: string,
+  /// Active type features detected.
+  activeFeatures: array<typeFeature>,
+  /// Proof obligations generated.
+  proofObligations: array<string>,
+  /// Effects detected.
+  effects: array<string>,
+  /// Linearity issues detected.
+  linearityIssues: array<string>,
+  /// Which language the source was checked against.
+  language: string,
+}
+
+/// Result of usage quantifier inference.
+type usageInferenceResult = {
+  /// Inferred quantifier (0, 1, omega).
+  quantifier: usageQuantifier,
+  /// Explanation of the inference.
+  explanation: string,
+  /// Variables and their inferred usages.
+  bindings: array<(string, usageQuantifier)>,
+}
+
+/// Result of effect inference.
+type effectInferenceResult = {
+  /// List of effects detected (e.g., "IO", "State s", "Alloc").
+  effects: array<string>,
+  /// Whether the expression is pure (no effects).
+  pure: bool,
+  /// Effect row type if applicable.
+  effectRow: option<string>,
+}
+
+/// Result of dimensional type checking (for Eclexia).
+type dimensionalResult = {
+  /// Whether dimensional consistency holds.
+  consistent: bool,
+  /// Inferred dimensional type (e.g., "Length / Time^2").
+  dimensionalType: string,
+  /// Dimensional violations found.
+  violations: array<string>,
+  /// Unit coercion suggestions.
+  coercions: array<string>,
+}
+
+/// A proof obligation generated from dependent types.
+type proofObligation = {
+  /// Unique ID for this obligation.
+  id: string,
+  /// The proposition to prove.
+  proposition: string,
+  /// Which dependent indices this obligation arises from.
+  indices: array<string>,
+  /// Suggested tactic to discharge it.
+  suggestedTactic: option<string>,
+  /// Whether ECHIDNA can auto-discharge this.
+  autoDischarge: bool,
+}
+
+/// Build the JSON body for a kernel type-check request.
+let buildCheckBody = (source: string, language: string): string => {
+  `{"source":${JSON.stringifyAny(source)->Option.getOr("\"\"")}, "language":${JSON.stringifyAny(language)->Option.getOr("\"\"")}, "mode":"check"}`
+}
+
+/// Build the JSON body for a kernel usage inference request.
+let buildInferUsageBody = (source: string): string => {
+  `{"source":${JSON.stringifyAny(source)->Option.getOr("\"\"")}, "mode":"infer_usage"}`
+}
+
+/// Build the JSON body for a kernel effect inference request.
+let buildCheckEffectsBody = (source: string): string => {
+  `{"source":${JSON.stringifyAny(source)->Option.getOr("\"\"")}, "mode":"check_effects"}`
+}
+
+/// Build the JSON body for a kernel dimensional check request (Eclexia).
+let buildCheckDimensionalBody = (source: string): string => {
+  `{"source":${JSON.stringifyAny(source)->Option.getOr("\"\"")}, "mode":"check_dimensional"}`
+}
+
+/// Build the JSON body for proof obligation generation.
+let buildGenerateProofObligationBody = (source: string): string => {
+  `{"source":${JSON.stringifyAny(source)->Option.getOr("\"\"")}, "mode":"generate_obligations"}`
+}
+
+/// Parse a kernel type check result from JSON response.
+let parseKernelCheckResult = (json: string, language: string): result<kernelTypeCheckResult, string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let getString = (key: string): string =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | String(s) => s
+            | _ => ""
+            }
+          | None => ""
+          }
+        let getBool = (key: string): bool =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Bool(b) => b
+            | _ => false
+            }
+          | None => false
+          }
+        let getStringArray = (key: string): array<string> =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Array(arr) =>
+              arr->Array.filterMap(item =>
+                switch JSON.Classify.classify(item) {
+                | String(s) => Some(s)
+                | _ => None
+                }
+              )
+            | _ => []
+            }
+          | None => []
+          }
+        let featureCodes = getStringArray("features")
+        let activeFeatures = featureCodes->Array.filterMap(parseFeatureCode)
+        Ok({
+          valid: getBool("valid"),
+          typeSignature: getString("type_signature"),
+          activeFeatures,
+          proofObligations: getStringArray("proof_obligations"),
+          effects: getStringArray("effects"),
+          linearityIssues: getStringArray("linearity_issues"),
+          language,
+        })
+      }
+    | _ => Error("Expected JSON object from kernel")
+    }
+  } catch {
+  | _ => Error("Failed to parse kernel type check JSON")
+  }
+}
+
+/// Parse a usage inference result from JSON.
+let parseUsageInferenceResult = (json: string): result<usageInferenceResult, string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let getString = (key: string): string =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | String(s) => s
+            | _ => ""
+            }
+          | None => ""
+          }
+        Ok({
+          quantifier: parseUsage(getString("quantifier")),
+          explanation: getString("explanation"),
+          bindings: [],
+        })
+      }
+    | _ => Error("Expected JSON object for usage inference")
+    }
+  } catch {
+  | _ => Error("Failed to parse usage inference JSON")
+  }
+}
+
+/// Parse an effect inference result from JSON.
+let parseEffectInferenceResult = (json: string): result<effectInferenceResult, string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let getBool = (key: string): bool =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Bool(b) => b
+            | _ => false
+            }
+          | None => false
+          }
+        let getStringArray = (key: string): array<string> =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Array(arr) =>
+              arr->Array.filterMap(item =>
+                switch JSON.Classify.classify(item) {
+                | String(s) => Some(s)
+                | _ => None
+                }
+              )
+            | _ => []
+            }
+          | None => []
+          }
+        let getString = (key: string): option<string> =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | String(s) => Some(s)
+            | _ => None
+            }
+          | None => None
+          }
+        Ok({
+          effects: getStringArray("effects"),
+          pure: getBool("pure"),
+          effectRow: getString("effect_row"),
+        })
+      }
+    | _ => Error("Expected JSON object for effect inference")
+    }
+  } catch {
+  | _ => Error("Failed to parse effect inference JSON")
+  }
+}
+
+/// Parse a dimensional check result from JSON.
+let parseDimensionalResult = (json: string): result<dimensionalResult, string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let getString = (key: string): string =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | String(s) => s
+            | _ => ""
+            }
+          | None => ""
+          }
+        let getBool = (key: string): bool =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Bool(b) => b
+            | _ => false
+            }
+          | None => false
+          }
+        let getStringArray = (key: string): array<string> =>
+          switch Dict.get(obj, key) {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | Array(arr) =>
+              arr->Array.filterMap(item =>
+                switch JSON.Classify.classify(item) {
+                | String(s) => Some(s)
+                | _ => None
+                }
+              )
+            | _ => []
+            }
+          | None => []
+          }
+        Ok({
+          consistent: getBool("consistent"),
+          dimensionalType: getString("dimensional_type"),
+          violations: getStringArray("violations"),
+          coercions: getStringArray("coercions"),
+        })
+      }
+    | _ => Error("Expected JSON object for dimensional result")
+    }
+  } catch {
+  | _ => Error("Failed to parse dimensional result JSON")
+  }
+}
+
+/// Kernel endpoint URL (default localhost:7800).
+let kernelBaseUrl = "http://localhost:7800/api/v1"
+
+/// All supported nextgen-languages that the kernel can type-check.
+let supportedLanguages: array<string> = [
+  "affinescript", "eclexia", "anvomidav", "ephapax", "wokelang",
+  "betlang", "tangle", "my-lang", "crank", "delimit",
+  "sunyata", "hexsweep", "cascade", "polytope", "coda", "strata",
+]
+
+/// Check if a language name is supported by the kernel.
+let isKernelSupported = (lang: string): bool => {
+  supportedLanguages->Array.includes(String.toLowerCase(lang))
+}
+
+// ============================================================================
 // Default State
 // ============================================================================
 

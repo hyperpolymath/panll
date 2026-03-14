@@ -78,10 +78,9 @@ pub async fn ai_send_message(request: SendMessageRequest) -> Result<String, Stri
             .filter(|p| p.enabled)
             .collect();
         candidates.sort_by_key(|p| p.priority);
-        candidates
+        (*candidates
             .first()
-            .ok_or("No enabled providers configured")?
-            .clone()
+            .ok_or("No enabled providers configured")?)
             .clone()
     };
 

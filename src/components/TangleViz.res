@@ -456,35 +456,367 @@ let renderBraidSvg = (generators: array<TangleVizModel.braidGenerator>, strandCo
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// Knot Diagram Placeholder
+// Knot Diagram (Braid Closure)
 // ════════════════════════════════════════════════════════════════════════
 
-/// Render the knot diagram view (braid closure).
-/// This is a placeholder — full Reidemeister-move based rendering
-/// would require a more sophisticated layout algorithm.
+/// Render the knot diagram view as braid closure.
+///
+/// Draws the braid diagram horizontally, then connects each strand's
+/// right endpoint back to its corresponding left endpoint with semicircular
+/// arcs on the right and left sides. This produces the standard braid
+/// closure, turning the braid into a knot or link diagram.
 let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, strandCount: int): Tea_Vdom.t<msg> => {
+  let crossingW = TangleVizEngine.crossingWidth
+  let strandSp = TangleVizEngine.strandSpacing
+  let topM = TangleVizEngine.svgTopMargin
+
+  let numCrossings = Array.length(generators)
+
+  // Extra horizontal margin for the closure arcs on each side
+  let arcMargin = 60.0
+  let leftM = TangleVizEngine.svgLeftMargin +. arcMargin
+
+  let braidWidth = Int.toFloat(numCrossings + 1) *. crossingW
+  let svgWidth = leftM +. braidWidth +. arcMargin +. 20.0
+  let svgHeight = topM *. 2.0 +. Int.toFloat(strandCount - 1) *. strandSp +. 40.0
+
+  // Track which physical strand is at each vertical position through crossings
+  let strandAt = Array.fromInitializer(~length=strandCount, i => i)
+
+  let elements: array<Tea_Vdom.t<msg>> = []
+
+  // Draw initial left-side strand segments (from left arc join to first crossing)
+  let xStart = leftM
+  for pos in 0 to strandCount - 1 {
+    let y = topM +. Int.toFloat(pos) *. strandSp
+    let colour = TangleVizEngine.strandColour(pos)
+    let _ = elements->Array.push(
+      Tea_Svg.line(
+        list{
+          Tea_Svg.Attrs.x1(Float.toString(xStart)),
+          Tea_Svg.Attrs.y1(Float.toString(y)),
+          Tea_Svg.Attrs.x2(Float.toString(xStart +. crossingW *. 0.3)),
+          Tea_Svg.Attrs.y2(Float.toString(y)),
+          Tea_Svg.Attrs.stroke(colour),
+          Tea_Svg.Attrs.strokeWidth("2.5"),
+        },
+        list{},
+      )
+    )
+  }
+
+  // Draw crossings (same logic as braid view)
+  for col in 0 to numCrossings - 1 {
+    let gen = generators->Array.getUnsafe(col)
+    let crossIdx = gen.index - 1
+    let x1 = leftM +. crossingW *. 0.3 +. Int.toFloat(col) *. crossingW
+    let x2 = leftM +. crossingW *. 0.3 +. Int.toFloat(col + 1) *. crossingW
+
+    // Straight-through strands
+    for pos in 0 to strandCount - 1 {
+      if pos !== crossIdx && pos !== crossIdx + 1 {
+        let y = topM +. Int.toFloat(pos) *. strandSp
+        let origStrand = strandAt->Array.getUnsafe(pos)
+        let colour = TangleVizEngine.strandColour(origStrand)
+        let _ = elements->Array.push(
+          Tea_Svg.line(
+            list{
+              Tea_Svg.Attrs.x1(Float.toString(x1)),
+              Tea_Svg.Attrs.y1(Float.toString(y)),
+              Tea_Svg.Attrs.x2(Float.toString(x2)),
+              Tea_Svg.Attrs.y2(Float.toString(y)),
+              Tea_Svg.Attrs.stroke(colour),
+              Tea_Svg.Attrs.strokeWidth("2.5"),
+            },
+            list{},
+          )
+        )
+      }
+    }
+
+    // Draw crossing between positions crossIdx and crossIdx+1
+    if crossIdx >= 0 && crossIdx + 1 < strandCount {
+      let yTop = topM +. Int.toFloat(crossIdx) *. strandSp
+      let yBot = topM +. Int.toFloat(crossIdx + 1) *. strandSp
+      let origTop = strandAt->Array.getUnsafe(crossIdx)
+      let origBot = strandAt->Array.getUnsafe(crossIdx + 1)
+      let colourTop = TangleVizEngine.strandColour(origTop)
+      let colourBot = TangleVizEngine.strandColour(origBot)
+      let mx = (x1 +. x2) /. 2.0
+
+      if gen.exponent > 0 {
+        // Under strand (gapped)
+        let _ = elements->Array.push(
+          Tea_Svg.path(
+            list{
+              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yBot)} C ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(x2)} ${Float.toString(yTop)}`),
+              Tea_Svg.Attrs.stroke(colourBot),
+              Tea_Svg.Attrs.strokeWidth("2.5"),
+              Tea_Svg.Attrs.fill("none"),
+              Tea_Svg.Attrs.strokeDasharray("20 12 20 0"),
+            },
+            list{},
+          )
+        )
+        // Over strand (solid)
+        let _ = elements->Array.push(
+          Tea_Svg.path(
+            list{
+              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yTop)} C ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(x2)} ${Float.toString(yBot)}`),
+              Tea_Svg.Attrs.stroke(colourTop),
+              Tea_Svg.Attrs.strokeWidth("2.5"),
+              Tea_Svg.Attrs.fill("none"),
+            },
+            list{},
+          )
+        )
+      } else {
+        // Under strand (gapped)
+        let _ = elements->Array.push(
+          Tea_Svg.path(
+            list{
+              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yTop)} C ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(x2)} ${Float.toString(yBot)}`),
+              Tea_Svg.Attrs.stroke(colourTop),
+              Tea_Svg.Attrs.strokeWidth("2.5"),
+              Tea_Svg.Attrs.fill("none"),
+              Tea_Svg.Attrs.strokeDasharray("20 12 20 0"),
+            },
+            list{},
+          )
+        )
+        // Over strand (solid)
+        let _ = elements->Array.push(
+          Tea_Svg.path(
+            list{
+              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yBot)} C ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(x2)} ${Float.toString(yTop)}`),
+              Tea_Svg.Attrs.stroke(colourBot),
+              Tea_Svg.Attrs.strokeWidth("2.5"),
+              Tea_Svg.Attrs.fill("none"),
+            },
+            list{},
+          )
+        )
+      }
+
+      // Swap strand tracking
+      let tmp = strandAt->Array.getUnsafe(crossIdx)
+      let _ = strandAt->Array.set(crossIdx, strandAt->Array.getUnsafe(crossIdx + 1))
+      let _ = strandAt->Array.set(crossIdx + 1, tmp)
+    }
+  }
+
+  // Draw right-side straight segments from last crossing to arc start
+  let xBraidEnd = leftM +. crossingW *. 0.3 +. Int.toFloat(numCrossings) *. crossingW
+  let xRightArc = xBraidEnd +. crossingW *. 0.3
+  for pos in 0 to strandCount - 1 {
+    let y = topM +. Int.toFloat(pos) *. strandSp
+    let origStrand = strandAt->Array.getUnsafe(pos)
+    let colour = TangleVizEngine.strandColour(origStrand)
+    let _ = elements->Array.push(
+      Tea_Svg.line(
+        list{
+          Tea_Svg.Attrs.x1(Float.toString(xBraidEnd)),
+          Tea_Svg.Attrs.y1(Float.toString(y)),
+          Tea_Svg.Attrs.x2(Float.toString(xRightArc)),
+          Tea_Svg.Attrs.y2(Float.toString(y)),
+          Tea_Svg.Attrs.stroke(colour),
+          Tea_Svg.Attrs.strokeWidth("2.5"),
+        },
+        list{},
+      )
+    )
+  }
+
+  // Draw closure arcs: connect right-side strand endpoints back to left-side.
+  // After all crossings, strandAt[pos] tells us which original strand is at
+  // vertical position `pos` on the right side.
+  // On the left side, original strand `i` is at position `i`.
+  // We connect: right position `pos` (original strand strandAt[pos])
+  //          to left position strandAt[pos] (where that original strand starts).
+  //
+  // Right arcs go from right endpoint to a point far right, then back.
+  // Left arcs go from left endpoint to a point far left, then back.
+  // We draw them as semicircular arcs on the right and left sides.
+  for pos in 0 to strandCount - 1 {
+    let origStrand = strandAt->Array.getUnsafe(pos)
+    let colour = TangleVizEngine.strandColour(origStrand)
+    let yRight = topM +. Int.toFloat(pos) *. strandSp
+    let yLeft = topM +. Int.toFloat(origStrand) *. strandSp
+
+    if pos === origStrand {
+      // Strand returns to the same vertical position: draw arcs on right and left
+      // Right arc: semicircle from right endpoint going right and looping back
+      let arcRadius = 15.0 +. Int.toFloat(pos) *. 5.0
+      // Right semicircular arc (goes out right and comes back to same y)
+      let _ = elements->Array.push(
+        Tea_Svg.path(
+          list{
+            Tea_Svg.Attrs.d(`M ${Float.toString(xRightArc)} ${Float.toString(yRight)} A ${Float.toString(arcRadius)} ${Float.toString(arcRadius)} 0 1 1 ${Float.toString(xRightArc)} ${Float.toString(yRight -. 0.01)}`),
+            Tea_Svg.Attrs.stroke(colour),
+            Tea_Svg.Attrs.strokeWidth("2.5"),
+            Tea_Svg.Attrs.fill("none"),
+            Tea_Svg.Attrs.opacity("0.0"),
+          },
+          list{},
+        )
+      )
+      // Actually, for same-position strands: draw a full right-side arc out and
+      // a left-side arc out. The braid closure connects right pos to left pos
+      // by going around the outside.
+      // Right arc: from (xRightArc, yRight) curving right
+      // Left arc: from (xStart, yLeft) curving left
+      // Connect them with top/bottom paths
+      let xRight = xRightArc +. arcMargin *. 0.7
+      let xLeft = xStart -. arcMargin *. 0.7
+      // Top path: right endpoint -> right arc point -> top -> left arc point -> left endpoint
+      let yMid = (yRight +. yLeft) /. 2.0
+      let _ = elements->Array.push(
+        Tea_Svg.path(
+          list{
+            Tea_Svg.Attrs.d(`M ${Float.toString(xRightArc)} ${Float.toString(yRight)} C ${Float.toString(xRight)} ${Float.toString(yRight)}, ${Float.toString(xRight)} ${Float.toString(yMid)}, ${Float.toString(xRight)} ${Float.toString(yMid -. strandSp *. 1.5)}`),
+            Tea_Svg.Attrs.stroke(colour),
+            Tea_Svg.Attrs.strokeWidth("2.0"),
+            Tea_Svg.Attrs.fill("none"),
+            Tea_Svg.Attrs.opacity("0.6"),
+          },
+          list{},
+        )
+      )
+      let _ = elements->Array.push(
+        Tea_Svg.path(
+          list{
+            Tea_Svg.Attrs.d(`M ${Float.toString(xStart)} ${Float.toString(yLeft)} C ${Float.toString(xLeft)} ${Float.toString(yLeft)}, ${Float.toString(xLeft)} ${Float.toString(yMid)}, ${Float.toString(xLeft)} ${Float.toString(yMid -. strandSp *. 1.5)}`),
+            Tea_Svg.Attrs.stroke(colour),
+            Tea_Svg.Attrs.strokeWidth("2.0"),
+            Tea_Svg.Attrs.fill("none"),
+            Tea_Svg.Attrs.opacity("0.6"),
+          },
+          list{},
+        )
+      )
+    } else {
+      // Strand ends at a different vertical position: draw closure arcs
+      // connecting right `pos` to left `origStrand`.
+      // Use a wide arc on the right side if going down, left side if going up.
+      let colour2 = TangleVizEngine.strandColour(origStrand)
+      let yMid = (yRight +. yLeft) /. 2.0
+      let spread = Float.fromInt(Math.Int.abs(pos - origStrand)) *. 8.0 +. 20.0
+
+      // Right-side closure arc: from right endpoint, curve outward, to a midpoint
+      let xOutRight = xRightArc +. spread
+      let _ = elements->Array.push(
+        Tea_Svg.path(
+          list{
+            Tea_Svg.Attrs.d(`M ${Float.toString(xRightArc)} ${Float.toString(yRight)} C ${Float.toString(xOutRight)} ${Float.toString(yRight)}, ${Float.toString(xOutRight)} ${Float.toString(yMid)}, ${Float.toString(xRightArc +. spread *. 0.5)} ${Float.toString(yMid)}`),
+            Tea_Svg.Attrs.stroke(colour2),
+            Tea_Svg.Attrs.strokeWidth("2.0"),
+            Tea_Svg.Attrs.fill("none"),
+            Tea_Svg.Attrs.opacity("0.6"),
+          },
+          list{},
+        )
+      )
+
+      // Left-side closure arc: from midpoint, curve outward to left endpoint
+      let xOutLeft = xStart -. spread
+      let _ = elements->Array.push(
+        Tea_Svg.path(
+          list{
+            Tea_Svg.Attrs.d(`M ${Float.toString(xStart -. spread *. 0.5)} ${Float.toString(yMid)} C ${Float.toString(xOutLeft)} ${Float.toString(yMid)}, ${Float.toString(xOutLeft)} ${Float.toString(yLeft)}, ${Float.toString(xStart)} ${Float.toString(yLeft)}`),
+            Tea_Svg.Attrs.stroke(colour2),
+            Tea_Svg.Attrs.strokeWidth("2.0"),
+            Tea_Svg.Attrs.fill("none"),
+            Tea_Svg.Attrs.opacity("0.6"),
+          },
+          list{},
+        )
+      )
+
+      // Top/bottom connecting segment (dashed, shows the closure path)
+      let _ = elements->Array.push(
+        Tea_Svg.path(
+          list{
+            Tea_Svg.Attrs.d(`M ${Float.toString(xRightArc +. spread *. 0.5)} ${Float.toString(yMid)} L ${Float.toString(xStart -. spread *. 0.5)} ${Float.toString(yMid)}`),
+            Tea_Svg.Attrs.stroke(colour2),
+            Tea_Svg.Attrs.strokeWidth("1.5"),
+            Tea_Svg.Attrs.fill("none"),
+            Tea_Svg.Attrs.opacity("0.35"),
+            Tea_Svg.Attrs.strokeDasharray("4 3"),
+          },
+          list{},
+        )
+      )
+    }
+  }
+
   div(
-    list{Attrs.class_("p-4 flex-1")},
+    list{
+      Attrs.class_("p-4 flex-1 overflow-auto"),
+      Attrs.ariaLabel("Knot diagram visualization (braid closure)"),
+    },
     list{
       div(
         list{Attrs.class_("text-xs font-medium text-gray-500 uppercase tracking-wider mb-2")},
         list{text("Knot Diagram (Braid Closure)")},
       ),
       div(
-        list{Attrs.class_("bg-gray-900 rounded-lg border border-gray-800 p-6 text-center")},
+        list{Attrs.class_("bg-gray-900 rounded-lg border border-gray-800 p-4 overflow-x-auto")},
         list{
-          div(
-            list{Attrs.class_("text-gray-400 text-sm mb-4")},
-            list{text(`${Int.toString(strandCount)}-strand braid with ${Int.toString(Array.length(generators))} crossings`)},
-          ),
-          div(
-            list{Attrs.class_("text-lg font-mono text-indigo-300 mb-4")},
-            list{text(TangleVizEngine.braidWordToString(generators))},
-          ),
-          div(
-            list{Attrs.class_("text-xs text-gray-600")},
-            list{text("Full knot projection rendering requires Reidemeister-move simplification (future work)")},
-          ),
+          if numCrossings === 0 && strandCount <= 2 {
+            div(
+              list{Attrs.class_("text-gray-600 text-sm text-center py-8")},
+              list{text("Select an example or enter a braid word to visualize its closure")},
+            )
+          } else {
+            div(
+              list{},
+              list{
+                // Info bar
+                div(
+                  list{Attrs.class_("flex items-center gap-4 mb-3")},
+                  list{
+                    div(
+                      list{Attrs.class_("text-xs text-gray-400")},
+                      list{text(`${Int.toString(strandCount)}-strand braid with ${Int.toString(numCrossings)} crossings`)},
+                    ),
+                    div(
+                      list{Attrs.class_("text-xs font-mono text-indigo-300")},
+                      list{text(TangleVizEngine.braidWordToString(generators))},
+                    ),
+                  },
+                ),
+                // SVG closure diagram
+                Tea_Svg.svg(
+                  list{
+                    Tea_Svg.Attrs.class_("block mx-auto"),
+                    Tea_Svg.Attrs.viewBox(`0 0 ${Float.toString(svgWidth)} ${Float.toString(svgHeight)}`),
+                    Tea_Svg.Attrs.width(Float.toString(Float.fromInt(Math.Int.min(Float.toInt(svgWidth), 900)))),
+                    Tea_Svg.Attrs.height(Float.toString(svgHeight)),
+                  },
+                  list{
+                    // Background
+                    Tea_Svg.rect(
+                      list{
+                        Tea_Svg.Attrs.x("0"),
+                        Tea_Svg.Attrs.y("0"),
+                        Tea_Svg.Attrs.width(Float.toString(svgWidth)),
+                        Tea_Svg.Attrs.height(Float.toString(svgHeight)),
+                        Tea_Svg.Attrs.fill("#0a0a0f"),
+                        Tea_Svg.Attrs.rx("8"),
+                      },
+                      list{},
+                    ),
+                    ...elements->List.fromArray,
+                  },
+                ),
+                // Legend
+                div(
+                  list{Attrs.class_("mt-2 text-[10px] text-gray-600 text-center")},
+                  list{text("Solid lines = braid crossings | Curved lines = closure arcs connecting strand endpoints")},
+                ),
+              },
+            )
+          },
         },
       ),
     },

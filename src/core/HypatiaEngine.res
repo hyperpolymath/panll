@@ -287,6 +287,7 @@ let sampleRecipes = (): array<recipeEntry> => [
   {id: "hyp-032", name: "transmute ban", description: "Bans std::mem::transmute in Rust except FFI boundaries", confidence: 0.98, tier: Eliminate, hasFixScript: false, languages: ["Rust"], timesTriggered: 0, lastTriggered: "never"},
   {id: "hyp-033", name: "nested .git detector", description: "Detects rogue .git directories inside monorepo subdirectories", confidence: 0.99, tier: Eliminate, hasFixScript: true, languages: ["*"], timesTriggered: 117, lastTriggered: "2026-02-20"},
   {id: "hyp-034", name: "SLSA provenance", description: "Validates SLSA build provenance attestation", confidence: 0.90, tier: Substitute, hasFixScript: false, languages: ["*"], timesTriggered: 2, lastTriggered: "2026-03-01"},
+  {id: "hyp-035", name: "innerHTML ban (SafeDOM)", description: "Flags innerHTML/outerHTML usage outside SafeDOMCore — all DOM mounts must use SafeDOM defence-in-depth", confidence: 0.99, tier: Eliminate, hasFixScript: true, languages: ["ReScript", "JavaScript"], timesTriggered: 0, lastTriggered: "never"},
 ]
 
 /// Filter recipes by text search.

@@ -11478,12 +11478,47 @@ let updateAccessibility = (model: model, msg: accessibilityMsg): (model, Tea_Cmd
 let updateTiling = (model: model, msg: tilingMsg): (model, Tea_Cmd.t<msg>) => {
   let t = model.tiling
   switch msg {
-  | DetachPanel(_panelId) =>
-    // Panel detachment via window.open — future implementation
-    // For now, just record the intent
-    (model, Tea_Cmd.none)
-  | ReattachPanel(_panelId) =>
-    (model, Tea_Cmd.none)
+  | DetachPanel(panelId) => {
+      let name = PanelRegistry.panelName(panelId)
+      let windowName = `panll-detach-${name}`
+      // Open a new browser window for this panel
+      let _windowRef = WindowBridge.openWindow(
+        `/?detached=${name}`,
+        windowName,
+        "width=800,height=600,menubar=no,toolbar=no,status=no",
+      )
+      // Track the detached panel in tiling state
+      let newTiling = TilingEngine.addDetachedPanel(panelId, windowName, t)
+      // Create a BroadcastChannel and send initial sync
+      let cmd = Tea_Cmd.call(callbacks => {
+        let channel = WindowBridge.createChannel(windowName)
+        // Send current panel state identifier to the new window
+        WindowBridge.postMessage(channel, `{"panel":"${name}","action":"init"}`)
+        // Listen for close events from the detached window
+        let _cleanup = WindowBridge.onMessage(channel, msg => {
+          if msg === "close" {
+            callbacks.enqueue(Tiling(DetachedPanelClosed(windowName)))
+          }
+        })
+      })
+      ({...model, tiling: newTiling}, cmd)
+    }
+  | ReattachPanel(panelId) => {
+      // Find the detached panel entry
+      let entry = t.detachedPanels->Array.find(dp => dp.panelId === panelId)
+      switch entry {
+      | Some(dp) => {
+          // Close the BroadcastChannel for this window
+          let channel = WindowBridge.createChannel(dp.windowName)
+          WindowBridge.postMessage(channel, `{"action":"reattach"}`)
+          WindowBridge.closeChannel(channel)
+          // Remove from detached panels
+          let newTiling = TilingEngine.removeDetachedPanel(dp.windowName, t)
+          ({...model, tiling: newTiling}, Tea_Cmd.none)
+        }
+      | None => (model, Tea_Cmd.none)
+      }
+    }
   | SetSnapZone(_panelId, _zone) =>
     (model, Tea_Cmd.none)
   | ApplyTilingPreset(preset) =>
@@ -11495,8 +11530,15 @@ let updateTiling = (model: model, msg: tilingMsg): (model, Tea_Cmd.t<msg>) => {
   | DetachedPanelClosed(windowName) =>
     let state = TilingEngine.markDetachedDead(windowName, t)
     ({...model, tiling: state}, Tea_Cmd.none)
-  | SyncToDetached(_data) =>
-    (model, Tea_Cmd.none)
+  | SyncToDetached(windowName) => {
+      // Send model state sync to a specific detached window
+      let cmd = Tea_Cmd.call(_callbacks => {
+        let channel = WindowBridge.createChannel(windowName)
+        WindowBridge.postMessage(channel, `{"action":"sync","timestamp":${Float.toString(Date.now())}}`)
+        WindowBridge.closeChannel(channel)
+      })
+      (model, cmd)
+    }
   | ToggleTilingControls =>
     ({...model, tiling: {...t, controlsVisible: !t.controlsVisible}}, Tea_Cmd.none)
   | SetTilingEnabled(enabled) =>
@@ -12028,6 +12070,30 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | Evangeliser(subMsg) => updateEvangeliser(model, subMsg)
   | LanguageForge(subMsg) => updateLanguageForge(model, subMsg)
   | TangleViz(subMsg) => updateTangleViz(model, subMsg)
+  // SpecBrowser — language specification browsing
+  | SpecBrowser(subMsg) =>
+    switch subMsg {
+    | SetSpecCategory(cat) => ({...model, specBrowser: {...model.specBrowser, activeCategory: cat}}, Tea_Cmd.none)
+    | SelectSpecLanguage(name) => ({...model, specBrowser: {...model.specBrowser, selectedLanguage: name}}, Tea_Cmd.none)
+    | SetComparisonSide(side, name) =>
+      switch side {
+      | LeftSide => ({...model, specBrowser: {...model.specBrowser, comparisonLeft: Some(name)}}, Tea_Cmd.none)
+      | RightSide => ({...model, specBrowser: {...model.specBrowser, comparisonRight: Some(name)}}, Tea_Cmd.none)
+      }
+    | SetSpecFilter(txt) => ({...model, specBrowser: {...model.specBrowser, filterText: txt}}, Tea_Cmd.none)
+    | ToggleIncompleteOnly => ({...model, specBrowser: {...model.specBrowser, showIncompleteOnly: !model.specBrowser.showIncompleteOnly}}, Tea_Cmd.none)
+    | DismissSpecError => ({...model, specBrowser: {...model.specBrowser, error: None}}, Tea_Cmd.none)
+    }
+  // VerificationDashboard — proof/test/benchmark status
+  | VerificationDashboard(subMsg) =>
+    switch subMsg {
+    | SetVdCategory(cat) => ({...model, verificationDashboard: {...model.verificationDashboard, activeCategory: cat}}, Tea_Cmd.none)
+    | SelectVdLanguage(name) => ({...model, verificationDashboard: {...model.verificationDashboard, selectedLanguage: name}}, Tea_Cmd.none)
+    | SetVdFilter(txt) => ({...model, verificationDashboard: {...model.verificationDashboard, filterText: txt}}, Tea_Cmd.none)
+    | SetVdSort(sortBy) => ({...model, verificationDashboard: {...model.verificationDashboard, sortBy}}, Tea_Cmd.none)
+    | ToggleDebtOnly => ({...model, verificationDashboard: {...model.verificationDashboard, showDebtOnly: !model.verificationDashboard.showDebtOnly}}, Tea_Cmd.none)
+    | DismissVdError => ({...model, verificationDashboard: {...model.verificationDashboard, error: None}}, Tea_Cmd.none)
+    }
   | EnsaidConfig(subMsg) => updateEnsaidConfig(model, subMsg)
   | Bus(busMsg) =>
     switch busMsg {

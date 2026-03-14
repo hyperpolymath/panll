@@ -113,7 +113,7 @@ let preflightCheck = (code: string, _language: playgroundLanguage): option<strin
 
 /// Format an execution result for display in the output panel.
 let formatOutput = (result: string, elapsedMs: float): string => {
-  result ++ "\n\n--- executed in " ++ Float.toFixedWithPrecision(elapsedMs, ~digits=1) ++ "ms ---"
+  result ++ "\n\n--- executed in " ++ Float.toFixed(elapsedMs, ~digits=1) ++ "ms ---"
 }
 
 /// Determine if a language needs the NQC database proxy for execution.

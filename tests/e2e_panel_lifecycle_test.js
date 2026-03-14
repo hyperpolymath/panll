@@ -102,8 +102,8 @@ Deno.test("E2E: Model.init() busRegistry exists", () => {
 // 2. Panel Registry — every panel can be looked up
 // ============================================================================
 
-Deno.test("E2E: PanelRegistry has all 49 registered panels", () => {
-  assertEquals(allPanels.length, 49);
+Deno.test("E2E: PanelRegistry has all 51 registered panels", () => {
+  assertEquals(allPanels.length, 51);
 });
 
 Deno.test("E2E: Every registered panel can be found by ID", () => {

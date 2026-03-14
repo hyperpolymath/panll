@@ -3,6 +3,8 @@
 //! Palimpsest Plaza types — compliance audit, provenance, and adoption
 //! statistics for the PMPL licensing panel.
 
+#![allow(dead_code)]
+
 use serde::Serialize;
 use std::collections::HashMap;
 

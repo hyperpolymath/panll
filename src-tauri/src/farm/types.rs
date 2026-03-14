@@ -10,6 +10,8 @@
 //! We parse the `repos` section into `ManifestRepo` entries and flatten
 //! the forge list per-repo into a simple array of forge names.
 
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

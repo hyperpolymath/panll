@@ -12,6 +12,8 @@
 //! Phase 4 will add full Nickel integration. For now, we use hardcoded
 //! security defaults that match the hardening session we did manually.
 
+#![allow(dead_code)]
+
 use serde::Serialize;
 use serde_json::Value;
 

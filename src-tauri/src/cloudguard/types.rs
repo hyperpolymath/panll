@@ -7,6 +7,8 @@
 //! designed for serde JSON serialisation/deserialisation against the CF API
 //! v4 response envelope `{ success, errors, messages, result }`.
 
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 
 // ============================================================================

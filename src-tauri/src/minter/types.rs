@@ -6,6 +6,8 @@
 //! Tauri command boundary can deserialise frontend requests and serialise
 //! results back.
 
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 
 /// Backend type for the panel — determines what kind of Rust backend

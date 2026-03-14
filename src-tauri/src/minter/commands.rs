@@ -432,7 +432,7 @@ let view = ({camel}: {camel}State): Tea_Vdom.t<msg> => {{
 }
 
 /// Generate the XCmd.res file — Tauri command wrappers.
-fn generate_cmd(name: &str, camel: &str, endpoint: &str) -> String {
+fn generate_cmd(name: &str, _camel: &str, _endpoint: &str) -> String {
     let snake = to_snake_case(name);
     format!(
         r#"// SPDX-License-Identifier: PMPL-1.0-or-later

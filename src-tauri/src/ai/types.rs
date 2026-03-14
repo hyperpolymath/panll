@@ -5,6 +5,8 @@
 //! These types are serialised to/from JSON for the Tauri IPC bridge.
 //! The frontend's AiModel.res mirrors these types in ReScript.
 
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 
 /// Supported AI provider identifiers.
