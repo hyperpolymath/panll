@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for CloudGuard — Cloudflare domain security management
+
+panel_id = "CloudGuard"
+module_name = "CloudGuard"
+model_slice = "cloudguard"
+msg_namespace = "cloudguardMsg"
+view_route = "PanelCloudGuard"
+short_name = "CG"
+clade_id = "cloudguard"
+has_backend = true

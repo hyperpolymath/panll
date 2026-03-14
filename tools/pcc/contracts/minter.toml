@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for Minter — panel creation wizard
+
+panel_id = "Minter"
+module_name = "Minter"
+model_slice = "minter"
+msg_namespace = "minterMsg"
+view_route = "PanelMinter"
+short_name = "Mint"
+clade_id = "minter"
+has_backend = true

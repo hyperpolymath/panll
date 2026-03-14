@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Panel contract for MyLang — AI-native language workbench
+
+panel_id = "MyLang"
+module_name = "MyLang"
+model_slice = "myLang"
+msg_namespace = "myLangMsg"
+view_route = "PanelMyLang"
+short_name = "My-Lang"
+clade_id = "my-lang"
+has_backend = true
