@@ -126,6 +126,11 @@ mod dlc_workshop;
 /// Universal Modding Studio — unified IDApTIK content creation hub.
 mod ums;
 
+/// UMS Cartridge — BoJ cartridge backend for ums-mcp routing.
+/// Bridges PanLL Level Architect to IDApTIK UMS validation via the shared
+/// bridge directory at /tmp/panll/ums-bridge/.
+mod ums_cartridge;
+
 /// Release Manager — IDApTIK versioning, changelog, and distribution.
 mod release_manager;
 
@@ -2231,6 +2236,12 @@ fn main() {
             ums::commands::ums_import_asset,
             ums::commands::ums_publish_mod,
             ums::commands::ums_load_api_reference,
+            // UMS Cartridge — BoJ cartridge backend for ums-mcp routing
+            ums_cartridge::commands::ums_cartridge_validate,
+            ums_cartridge::commands::ums_cartridge_load_level,
+            ums_cartridge::commands::ums_cartridge_save_level,
+            ums_cartridge::commands::ums_cartridge_list_levels,
+            ums_cartridge::commands::ums_cartridge_export_config,
             // Release Manager — Versioning, changelog, distribution
             release_manager::commands::release_generate_changelog,
             release_manager::commands::release_build_artifacts,
