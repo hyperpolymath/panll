@@ -9,6 +9,16 @@
 
 open WiringInspectorModel
 
+/// Empty state distribution — all counts zero.
+let emptyDistribution: stateDistribution = {
+  total: 0,
+  releasable: 0,
+  viable: 0,
+  wired: 0,
+  draft: 0,
+  broken: 0,
+}
+
 /// Initial state — no results, no selection, no error.
 let defaultState: wiringInspectorState = {
   loading: false,
@@ -17,6 +27,10 @@ let defaultState: wiringInspectorState = {
   selectedPanel: None,
   filterStatus: None,
   error: None,
+  activeTab: Overview,
+  distribution: emptyDistribution,
+  bottlenecks: [],
+  sortBy: "blockedCount",
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -61,6 +75,148 @@ let repairabilityColor = (r: repairability): string =>
   | Safe => "text-green-400"
   | Unsafe => "text-red-400"
   | Manual => "text-amber-400"
+  }
+
+// ════════════════════════════════════════════════════════════════════════
+// Panel lifecycle state helpers (Phase 5)
+// ════════════════════════════════════════════════════════════════════════
+
+/// Parse a PCC state string into a panelState variant.
+let parseState = (s: string): panelState =>
+  switch s {
+  | "draft" => Draft
+  | "wired" => Wired
+  | "viable" => Viable
+  | "releasable" => Releasable
+  | "broken" => Broken
+  | _ => Draft
+  }
+
+/// Human-readable uppercase label for a panel lifecycle state.
+let stateLabel = (s: panelState): string =>
+  switch s {
+  | Draft => "DRAFT"
+  | Wired => "WIRED"
+  | Viable => "VIABLE"
+  | Releasable => "RELEASABLE"
+  | Broken => "BROKEN"
+  }
+
+/// Tailwind text colour class for a panel lifecycle state.
+let stateColor = (s: panelState): string =>
+  switch s {
+  | Draft => "text-yellow-400"
+  | Wired => "text-blue-400"
+  | Viable => "text-cyan-400"
+  | Releasable => "text-green-400"
+  | Broken => "text-red-400"
+  }
+
+/// Tailwind background colour class for a panel lifecycle state.
+let stateBgColor = (s: panelState): string =>
+  switch s {
+  | Draft => "bg-yellow-900/30"
+  | Wired => "bg-blue-900/30"
+  | Viable => "bg-cyan-900/30"
+  | Releasable => "bg-green-900/30"
+  | Broken => "bg-red-900/30"
+  }
+
+/// Tailwind border colour class for a panel lifecycle state.
+let stateBorderColor = (s: panelState): string =>
+  switch s {
+  | Draft => "border-yellow-800"
+  | Wired => "border-blue-800"
+  | Viable => "border-cyan-800"
+  | Releasable => "border-green-800"
+  | Broken => "border-red-800"
+  }
+
+/// Count panels per lifecycle state across all verification results.
+let computeDistribution = (results: array<panelVerification>): stateDistribution => {
+  let total = Array.length(results)
+  let count = (target: panelState) =>
+    results->Array.filter(v => v.policy.state == target)->Array.length
+  {
+    total,
+    releasable: count(Releasable),
+    viable: count(Viable),
+    wired: count(Wired),
+    draft: count(Draft),
+    broken: count(Broken),
+  }
+}
+
+/// Extract all root-failure obligations with blockedDownstreamCount > 0
+/// across all panels, sorted by blocked count descending.
+let extractBottlenecks = (results: array<panelVerification>): array<bottleneck> => {
+  let all =
+    results
+    ->Array.flatMap(v =>
+      v.obligations
+      ->Array.filter(o => o.failureClass == Root && o.blockedDownstreamCount > 0)
+      ->Array.map(o => {
+        let bn: bottleneck = {
+          panelId: v.panelId,
+          obligationId: o.id,
+          kind: o.kind,
+          blockedCount: o.blockedDownstreamCount,
+          repairability: o.repairability,
+          message: o.message,
+          file: o.file,
+        }
+        bn
+      })
+    )
+  let copy = Array.copy(all)
+  copy->Array.sort((a, b) => Int.compare(b.blockedCount, a.blockedCount))
+  copy
+}
+
+/// Take the top N bottlenecks from a sorted array.
+let topBottlenecks = (bottlenecks: array<bottleneck>, n: int): array<bottleneck> =>
+  bottlenecks->Array.slice(~start=0, ~end=n)
+
+/// Filter verification results to only those with the given lifecycle state.
+let panelsByState = (results: array<panelVerification>, state: panelState): array<panelVerification> =>
+  results->Array.filter(v => v.policy.state == state)
+
+/// Health score: percentage of panels at Viable or above (Viable + Releasable).
+/// Returns 0 when there are no panels.
+let healthScore = (dist: stateDistribution): int =>
+  if dist.total == 0 {
+    0
+  } else {
+    (dist.releasable + dist.viable) * 100 / dist.total
+  }
+
+/// Human-readable label for an audit tab.
+let tabLabel = (tab: auditTab): string =>
+  switch tab {
+  | Overview => "Overview"
+  | ByState => "By State"
+  | Bottlenecks => "Bottlenecks"
+  | History => "History"
+  }
+
+/// Colour class for the health score badge.
+let healthScoreColor = (score: int): string =>
+  if score > 80 {
+    "text-green-400"
+  } else if score > 50 {
+    "text-yellow-400"
+  } else {
+    "text-red-400"
+  }
+
+/// Background colour class for the health score badge.
+let healthScoreBgColor = (score: int): string =>
+  if score > 80 {
+    "bg-green-900/30 border-green-800"
+  } else if score > 50 {
+    "bg-yellow-900/30 border-yellow-800"
+  } else {
+    "bg-red-900/30 border-red-800"
   }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -192,6 +348,7 @@ let typedObligation = (raw: obligation): obligation => {
 
 /// Parse a single panel verification JSON object into typed domain model.
 /// The raw parsing uses JS interop, then we refine the typed fields.
+/// Extracts Phase 5 policy fields (state, visible, releasable, next_requirement).
 let parseSingleVerification: JSON.t => panelVerification = %raw(`
   function parseSingleVerification(obj) {
     var summary = obj.summary || {};
@@ -210,6 +367,10 @@ let parseSingleVerification: JSON.t => panelVerification = %raw(`
         blockedDownstreamCount: o.blocked_downstream_count || 0,
       };
     });
+    // Parse lifecycle state — default to "draft" if missing.
+    var rawState = obj.state || "draft";
+    var stateMap = { draft: "Draft", wired: "Wired", viable: "Viable", releasable: "Releasable", broken: "Broken" };
+    var parsedState = stateMap[rawState] || "Draft";
     return {
       panelId: obj.panel_id || "",
       status: obj.status || "incomplete",
@@ -219,6 +380,12 @@ let parseSingleVerification: JSON.t => panelVerification = %raw(`
       blocked: summary.blocked || 0,
       primaryBottleneck: obj.primary_bottleneck || undefined,
       obligations: obligations,
+      policy: {
+        state: parsedState,
+        visible: obj.visible !== undefined ? obj.visible : true,
+        releasable: obj.releasable !== undefined ? obj.releasable : false,
+        nextRequirement: obj.next_requirement || undefined,
+      },
     };
   }
 `)

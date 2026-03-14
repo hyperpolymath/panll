@@ -12803,7 +12803,15 @@ let updateDebuggingWorkbench = (model: model, msg: debuggingWorkbenchMsg): (mode
   }
 }
 
-/// Sub-updater for Wiring Inspector — PCC verification lifecycle and UI state.
+/// Compute derived audit fields (distribution and bottlenecks) from results.
+let computeAuditDerived = (state: wiringInspectorState, results: array<panelVerification>): wiringInspectorState => {
+  ...state,
+  results,
+  distribution: WiringInspectorEngine.computeDistribution(results),
+  bottlenecks: WiringInspectorEngine.extractBottlenecks(results),
+}
+
+/// Sub-updater for Wiring Inspector — PCC verification lifecycle, audit tabs, and UI state.
 let updateWiringInspector = (model: model, msg: wiringInspectorMsg): (model, Tea_Cmd.t<msg>) => {
   let state = model.wiringInspector
   switch msg {
@@ -12815,13 +12823,15 @@ let updateWiringInspector = (model: model, msg: wiringInspectorMsg): (model, Tea
   | VerificationResult(Ok(json)) =>
     let results = WiringInspectorEngine.parseVerificationJson(json)
     let now = Date.make()->Date.toISOString
-    let newState = {
-      ...state,
-      loading: false,
+    let newState = computeAuditDerived(
+      {
+        ...state,
+        loading: false,
+        lastRunAt: Some(now),
+        error: None,
+      },
       results,
-      lastRunAt: Some(now),
-      error: None,
-    }
+    )
     ({...model, wiringInspector: newState}, Tea_Cmd.none)
 
   | VerificationResult(Error(e)) =>
@@ -12837,13 +12847,15 @@ let updateWiringInspector = (model: model, msg: wiringInspectorMsg): (model, Tea
   | SingleVerificationResult(Ok(json)) =>
     let results = WiringInspectorEngine.parseVerificationJson(json)
     let now = Date.make()->Date.toISOString
-    let newState = {
-      ...state,
-      loading: false,
+    let newState = computeAuditDerived(
+      {
+        ...state,
+        loading: false,
+        lastRunAt: Some(now),
+        error: None,
+      },
       results,
-      lastRunAt: Some(now),
-      error: None,
-    }
+    )
     ({...model, wiringInspector: newState}, Tea_Cmd.none)
 
   | SingleVerificationResult(Error(e)) =>
@@ -12856,6 +12868,23 @@ let updateWiringInspector = (model: model, msg: wiringInspectorMsg): (model, Tea
 
   | SetFilterStatus(s) =>
     ({...model, wiringInspector: {...state, filterStatus: s}}, Tea_Cmd.none)
+
+  | SetAuditTab(tab) =>
+    ({...model, wiringInspector: {...state, activeTab: tab}}, Tea_Cmd.none)
+
+  | SetSortBy(field) =>
+    ({...model, wiringInspector: {...state, sortBy: field}}, Tea_Cmd.none)
+
+  | ToggleStateSection(panelState) =>
+    // Toggle panel selection to act as expand/collapse for state sections.
+    // Uses the state label as a pseudo-panel ID for section tracking.
+    let sectionId = WiringInspectorEngine.stateLabel(panelState)
+    let newSelected = if state.selectedPanel == Some(sectionId) {
+      None
+    } else {
+      Some(sectionId)
+    }
+    ({...model, wiringInspector: {...state, selectedPanel: newSelected}}, Tea_Cmd.none)
   }
 }
 
