@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Universal Modding Studio Panel Clade — Unified IDApTIK content creation hub
+
+[clade-metadata]
+id = "ums"
+name = "Universal Modding Studio"
+short-name = "UMS"
+version = "1.0.0"
+kind = "builder"
+icon = "wrench"
+description = "Unified hub for IDApTIK game content creation — project management, Idris2 ABI validation, asset pipeline, mod templates, and distribution. Orchestrates Level Architect, DLC Workshop, Game Preview, and VM Inspector panels."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "ProjectManagement",
+  "AbiValidation",
+  "AssetPipeline",
+  "ModTemplates",
+  "ModDistribution",
+  "ApiReference",
+  "CrossPanelOrchestration",
+  "LevelValidation",
+  "Idris2ProofChecking",
+]
+
+[clade-panel-integration]
+panel-id = "PanelUms"
+model-module = "UmsModel"
+component-module = "Ums"
+command-module = "UmsCmd"
+engine-module = "UmsEngine"
+
+[clade-dependencies]
+enhances = ["level-architect", "dlc-workshop", "game-preview", "vm-inspector"]
+siblings = ["level-architect", "dlc-workshop"]
+abi-modules = 14
+abi-language = "Idris2"
+ffi-language = "Zig"
+
+[clade-abi-proofs]
+# The 5 cross-domain proofs from Validation.idr that UMS validates at runtime
+guards-in-zones = "All guards reference valid zones"
+defence-targets-valid = "Defence failover/cascade/mirror targets exist in registry"
+zones-ordered = "Zone transitions monotonically increase in world X"
+pbx-consistent = "When hasPBX=True, pbxAddr exists in device registry"
+devices-exist = "All defence config IPs exist in device registry"

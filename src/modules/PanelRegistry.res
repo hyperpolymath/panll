@@ -521,6 +521,16 @@ let allPanels: array<panelMeta> = [
     hasBackend: false, // Pure client-side data, no HTTP service
     cladeId: Some("verification-dashboard"),
   },
+  {
+    id: PanelUms,
+    name: "Universal Modding Studio",
+    shortName: "UMS",
+    description: "Unified hub for IDApTIK game content creation — project management, ABI validation, asset pipeline, mod distribution",
+    icon: "wrench",
+    connectionStatus: ServiceDisconnected, // File I/O + ABI validation
+    hasBackend: true, // Tauri file I/O + validation engine
+    cladeId: Some("ums"),
+  },
 ]
 
 /// Look up panel metadata by ID.

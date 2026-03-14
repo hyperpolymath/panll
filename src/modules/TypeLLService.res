@@ -146,6 +146,17 @@ let checkSecurityTypes = (
   TypeLLCmd.check(policyData, Some(context), tagger)
 }
 
+/// Check types for UMS ABI validation results.
+/// Used by Universal Modding Studio to type-check level data against the
+/// 14 Idris2 ABI module interface (dependent types, quantitative erasure).
+let checkUmsAbi = (
+  levelData: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  let context = `{"language":"idris2","domain":"ums-level-abi","features":["dependent","quantitative","erasure","proof-carrying"],"modules":14}`
+  TypeLLCmd.check(levelData, Some(context), tagger)
+}
+
 /// Check types for game data (levels, topology, VM state, puzzles).
 let checkGameDataTypes = (
   gameData: string,

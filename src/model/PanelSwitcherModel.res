@@ -72,6 +72,9 @@ type panelId =
   | PanelSpecBrowser
   /// VerificationDashboard — proof/test/benchmark/fuzzing status across all repos.
   | PanelVerificationDashboard
+  /// Universal Modding Studio — unified hub for IDApTIK game content creation,
+  /// ABI validation, asset pipeline, mod distribution, and cross-panel orchestration.
+  | PanelUms
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

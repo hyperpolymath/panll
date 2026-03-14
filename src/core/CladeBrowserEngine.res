@@ -209,6 +209,11 @@ let builtinCladesBase: array<cladeEntry> = [
     longDescription: "VM composer, solution testing, and asset bundling for IDApTIK DLC.",
     traits: { hasPersistence: true, hasBackend: true, hasWorkItems: true, hasRealTime: false, isAmbient: false },
     panelIds: ["PanelDlcWorkshop"], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: [] },
+  { id: "ums", name: "Universal Modding Studio", kind: "builder", version: "1.0.0",
+    summary: "Unified IDApTIK game content creation — projects, ABI validation, assets, distribution",
+    longDescription: "Hub panel orchestrating Level Architect, DLC Workshop, Game Preview, and VM Inspector. Manages mod projects, validates level data against Idris2 ABI proofs, runs asset pipelines, and handles mod distribution.",
+    traits: { hasPersistence: true, hasBackend: true, hasWorkItems: true, hasRealTime: false, isAmbient: false },
+    panelIds: ["PanelUms"], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: ["level-architect", "dlc-workshop", "game-preview", "vm-inspector"], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["level-architect", "dlc-workshop"] },
   { id: "editor-bridge", name: "Editor Bridge", kind: "bridge", version: "1.0.0",
     summary: "Federate with external code editors — LSP, diagnostics, symbols",
     longDescription: "Connects to VSCodium, JetBrains, Notepad++, Brackets via LSP for cross-editor integration.",
@@ -910,6 +915,14 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
       ~protocols=[ProtoTauriIPC],
       ~capabilities=[CapFilesystem, CapVisualisation],
       ~enhances=["game-preview", "level-architect"],
+      entry,
+    )
+  | "ums" =>
+    withDefaults(
+      ~protocols=[ProtoTauriIPC, ProtoREST],
+      ~capabilities=[CapFilesystem, CapVisualisation, CapCompute],
+      ~enhances=["level-architect", "dlc-workshop", "game-preview", "vm-inspector"],
+      ~requires=["level-architect"],
       entry,
     )
   | "plaza" =>

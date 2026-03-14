@@ -123,6 +123,9 @@ mod multiplayer_monitor;
 /// DLC Workshop — IDApTIK DLC puzzle pack creation and testing.
 mod dlc_workshop;
 
+/// Universal Modding Studio — unified IDApTIK content creation hub.
+mod ums;
+
 /// Release Manager — IDApTIK versioning, changelog, and distribution.
 mod release_manager;
 
@@ -2216,6 +2219,18 @@ fn main() {
             dlc_workshop::commands::dlc_package,
             dlc_workshop::commands::dlc_import_puzzle,
             dlc_workshop::commands::dlc_export_puzzle,
+            // Universal Modding Studio — Unified content creation hub
+            ums::commands::ums_load_projects,
+            ums::commands::ums_create_project,
+            ums::commands::ums_open_project,
+            ums::commands::ums_delete_project,
+            ums::commands::ums_validate_level,
+            ums::commands::ums_load_templates,
+            ums::commands::ums_instantiate_template,
+            ums::commands::ums_load_assets,
+            ums::commands::ums_import_asset,
+            ums::commands::ums_publish_mod,
+            ums::commands::ums_load_api_reference,
             // Release Manager — Versioning, changelog, distribution
             release_manager::commands::release_generate_changelog,
             release_manager::commands::release_build_artifacts,

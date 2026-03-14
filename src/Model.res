@@ -214,6 +214,11 @@ include MultiplayerMonitorModel
 /// creation, testing, and packaging panel.
 include DlcWorkshopModel
 
+/// Re-export UMS types (umsCategory, modProject, modTemplate, modAsset,
+/// abiValidationResult, distributionTarget, apiEntry, umsState) for the
+/// Universal Modding Studio panel — unified IDApTIK game content creation hub.
+include UmsModel
+
 /// Re-export Editor Bridge types (editorKind, editorConnectionState,
 /// openFileEntry, lspDiagnostic, workspaceSymbol, bridgeActivity,
 /// editorBridgeCategory, editorBridgeState) for the external code
@@ -455,6 +460,9 @@ type model = {
 
   // DLC Workshop — puzzle pack creation, testing, packaging
   dlcWorkshop: dlcWorkshopState,
+
+  // Universal Modding Studio — unified IDApTIK content creation hub
+  ums: umsState,
 
   // Editor Bridge — federate with external code editors (VSCodium, Zed, etc.)
   editorBridge: editorBridgeState,
@@ -1085,6 +1093,7 @@ let init = (): model => {
   coprocessors: CoprocessorsEngine.defaultState,
   multiplayerMonitor: MultiplayerMonitorEngine.defaultState,
   dlcWorkshop: DlcWorkshopEngine.defaultState,
+  ums: UmsEngine.defaultState,
   editorBridge: EditorBridgeEngine.defaultState,
   buildDashboard: BuildDashboardEngine.defaultState,
   releaseManager: ReleaseManagerEngine.defaultState,
