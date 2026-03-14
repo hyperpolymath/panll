@@ -167,6 +167,30 @@ let invokeCartridgeWithLatency = (
   })
 }
 
+/// Type-safe cartridge invocation — compile-time validated via CartridgeAbi.
+/// Prefer this over the raw string-based invokeCartridge/invokeCartridgeWithLatency.
+/// Usage: BojCmd.invokeTyped(Database(ExecuteVql), args, resultTagger, latencyTagger)
+let invokeTyped = (
+  inv: CartridgeAbi.invocation,
+  args: string,
+  resultTagger: result<string, string> => 'msg,
+  latencyTagger: (string, string, float) => 'msg,
+): Tea_Cmd.t<'msg> => {
+  let (name, tool) = CartridgeAbi.toWire(inv)
+  invokeCartridgeWithLatency(name, tool, args, resultTagger, latencyTagger)
+}
+
+/// Type-safe cartridge invocation without latency tracking.
+/// Usage: BojCmd.invokeTypedSimple(Nesy(Harmonize), args, resultTagger)
+let invokeTypedSimple = (
+  inv: CartridgeAbi.invocation,
+  args: string,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  let (name, tool) = CartridgeAbi.toWire(inv)
+  invokeCartridge(name, tool, args, tagger)
+}
+
 /// Get Umoja federation status.
 let umojaStatus = (
   tagger: result<string, string> => 'msg,

@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "SPDX-License-Identifier: PMPL-1.0-or-later — BoJ Cartridge ABI Schema. Auto-extracted from Idris2 ABI + Zig FFI + V-lang adapters. Source of truth for ppx_typell compile-time validation and CartridgeAbi.res generation.",
+  "version": "0.3.0",
+  "generated": "2026-03-14",
+  "protocols": ["MCP", "LSP", "DAP", "BSP", "NeSy", "Agentic", "Fleet", "GRPC", "REST"],
+  "tiers": {
+    "teranga": "Core cartridges, always available",
+    "shield": "Security-critical cartridges, elevated trust",
+    "ayo": "Community-contributed cartridges"
+  },
+  "cartridges": {
+    "agent-mcp": {
+      "tier": "teranga",
+      "domain": "cloud",
+      "protocols": ["Agentic", "MCP", "REST", "GRPC"],
+      "states": ["observe", "orient", "decide", "act", "halted"],
+      "tools": {
+        "new_session": { "params": {}, "returns": "session" },
+        "end_session": { "params": { "slot": "int" }, "returns": "string" },
+        "get_session": { "params": { "slot": "int" }, "returns": "session" },
+        "transition": { "params": { "slot": "int", "target": "string" }, "returns": "transition_result" },
+        "advance": { "params": { "slot": "int" }, "returns": "transition_result" },
+        "halt": { "params": { "slot": "int" }, "returns": "transition_result" },
+        "validate": { "params": { "from": "string", "to": "string" }, "returns": "validation" },
+        "reset": { "params": {}, "returns": "string" },
+        "tool_call_info": { "params": { "kind": "string" }, "returns": "tool_info" },
+        "safety_check_info": { "params": { "outcome": "string" }, "returns": "safety_info" },
+        "coordination_info": { "params": { "strategy": "string" }, "returns": "coordination_info" }
+      }
+    },
+    "bsp-mcp": {
+      "tier": "teranga",
+      "domain": "cloud",
+      "protocols": ["BSP", "MCP", "REST", "GRPC"],
+      "states": ["uninitialized", "initializing", "ready", "building", "shutting_down", "exited"],
+      "tools": {
+        "create_session": { "params": {}, "returns": "session" },
+        "initialize": { "params": { "slot": "int" }, "returns": "session" },
+        "ready": { "params": { "slot": "int" }, "returns": "session" },
+        "build": { "params": { "slot": "int" }, "returns": "session" },
+        "build_done": { "params": { "slot": "int" }, "returns": "session" },
+        "shutdown": { "params": { "slot": "int" }, "returns": "session" },
+        "exit": { "params": { "slot": "int" }, "returns": "string" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "add_target": { "params": { "slot": "int", "kind": "string" }, "returns": "target" },
+        "register_capability": { "params": { "slot": "int", "capability": "string" }, "returns": "capability" }
+      }
+    },
+    "cloud-mcp": {
+      "tier": "teranga",
+      "domain": "cloud",
+      "protocols": ["MCP", "REST", "GRPC"],
+      "states": ["unauthenticated", "authenticated", "operating", "auth_error"],
+      "tools": {
+        "authenticate": { "params": { "provider": "string" }, "returns": "session" },
+        "logout": { "params": { "slot": "int" }, "returns": "string" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "begin_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "end_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "comms-mcp": {
+      "tier": "teranga",
+      "domain": "communications",
+      "protocols": ["MCP", "REST"],
+      "states": ["unauthenticated", "authenticated", "operating", "auth_error"],
+      "tools": {
+        "authenticate": { "params": { "provider": "string", "token": "string" }, "returns": "session" },
+        "logout": { "params": { "slot": "int" }, "returns": "string" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "begin_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "end_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "container-mcp": {
+      "tier": "teranga",
+      "domain": "container",
+      "protocols": ["MCP", "REST"],
+      "states": ["none", "built", "created", "running", "stopped", "removed"],
+      "tools": {
+        "build_image": { "params": { "runtime": "string", "image_name": "string" }, "returns": "session" },
+        "create": { "params": { "slot": "int" }, "returns": "session" },
+        "start": { "params": { "slot": "int" }, "returns": "session" },
+        "stop": { "params": { "slot": "int" }, "returns": "session" },
+        "remove": { "params": { "slot": "int" }, "returns": "session" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "dap-mcp": {
+      "tier": "teranga",
+      "domain": "cloud",
+      "protocols": ["DAP", "MCP", "REST", "GRPC"],
+      "states": ["not_started", "launched", "configured", "running", "stopped", "terminated", "disconnected"],
+      "tools": {
+        "create_session": { "params": {}, "returns": "session" },
+        "launch": { "params": { "slot": "int" }, "returns": "session" },
+        "configure": { "params": { "slot": "int" }, "returns": "session" },
+        "continue": { "params": { "slot": "int" }, "returns": "session" },
+        "stopped": { "params": { "slot": "int", "reason": "string" }, "returns": "session" },
+        "terminate": { "params": { "slot": "int" }, "returns": "session" },
+        "disconnect": { "params": { "slot": "int" }, "returns": "session" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "add_breakpoint": { "params": { "slot": "int", "kind": "string", "location": "string" }, "returns": "breakpoint" }
+      }
+    },
+    "database-mcp": {
+      "tier": "teranga",
+      "domain": "database",
+      "protocols": ["MCP", "REST", "GRPC"],
+      "states": ["disconnected", "connected", "querying", "error"],
+      "tools": {
+        "connect": { "params": { "backend": "string" }, "returns": "session" },
+        "connect_sqlite": { "params": { "path": "string" }, "returns": "session" },
+        "connect_verisimdb": { "params": { "url": "string" }, "returns": "session" },
+        "disconnect": { "params": { "slot": "int" }, "returns": "string" },
+        "execute_sql": { "params": { "slot": "int", "sql": "string" }, "returns": "query_result" },
+        "execute_vql": { "params": { "slot": "int", "vql": "string" }, "returns": "query_result" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "feedback-mcp": {
+      "tier": "teranga",
+      "domain": "feedback",
+      "protocols": ["MCP", "REST"],
+      "states": ["inactive", "channel_registered", "collecting", "processing", "error"],
+      "tools": {
+        "register_channel": { "params": { "channel": "string" }, "returns": "session" },
+        "submit_feedback": { "params": { "slot": "int", "sentiment": "string" }, "returns": "string" },
+        "get_sentiment": { "params": { "slot": "int" }, "returns": "sentiment_report" },
+        "deregister": { "params": { "slot": "int" }, "returns": "string" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "fleet-mcp": {
+      "tier": "teranga",
+      "domain": "fleet",
+      "protocols": ["Fleet", "MCP", "REST"],
+      "states": ["unscanned", "scanning", "healthy", "degraded", "blocked"],
+      "tools": {
+        "get_status": { "params": {}, "returns": "fleet_status" },
+        "record_gate": { "params": { "bot": "string", "passed": "bool", "score": "int" }, "returns": "string" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "git-mcp": {
+      "tier": "teranga",
+      "domain": "git",
+      "protocols": ["MCP", "REST"],
+      "states": ["unauthenticated", "authenticated", "repo_selected", "operating", "git_error"],
+      "tools": {
+        "authenticate": { "params": { "forge": "string" }, "returns": "session" },
+        "select_repo": { "params": { "slot": "int", "owner": "string", "name": "string" }, "returns": "session" },
+        "begin_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "end_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "logout": { "params": { "slot": "int" }, "returns": "string" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "iac-mcp": {
+      "tier": "teranga",
+      "domain": "iac",
+      "protocols": ["MCP", "REST"],
+      "states": ["uninitialized", "initialized", "planned", "applying", "applied", "error"],
+      "tools": {
+        "init_workspace": { "params": { "tool": "string" }, "returns": "session" },
+        "plan": { "params": { "slot": "int", "plan_hash": "string" }, "returns": "plan_result" },
+        "apply": { "params": { "slot": "int" }, "returns": "session" },
+        "destroy": { "params": { "slot": "int" }, "returns": "session" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "k8s-mcp": {
+      "tier": "teranga",
+      "domain": "k8s",
+      "protocols": ["MCP", "REST", "GRPC"],
+      "states": ["disconnected", "cluster_connected", "namespace_selected", "operating", "k8s_error"],
+      "tools": {
+        "connect": { "params": { "tool": "string" }, "returns": "session" },
+        "select_namespace": { "params": { "slot": "int", "namespace": "string" }, "returns": "session" },
+        "begin_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "end_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "disconnect": { "params": { "slot": "int" }, "returns": "string" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "lsp-mcp": {
+      "tier": "teranga",
+      "domain": "cloud",
+      "protocols": ["LSP", "MCP", "REST", "GRPC"],
+      "states": ["uninitialized", "initializing", "running", "shutting_down", "exited"],
+      "tools": {
+        "create_session": { "params": {}, "returns": "session" },
+        "initialize": { "params": { "slot": "int" }, "returns": "session" },
+        "initialized": { "params": { "slot": "int" }, "returns": "session" },
+        "shutdown": { "params": { "slot": "int" }, "returns": "session" },
+        "exit": { "params": { "slot": "int" }, "returns": "string" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "register_capability": { "params": { "slot": "int", "capability": "string" }, "returns": "capability" }
+      }
+    },
+    "ml-mcp": {
+      "tier": "teranga",
+      "domain": "ml",
+      "protocols": ["MCP", "REST"],
+      "states": ["unauthenticated", "authenticated", "operating", "auth_error"],
+      "tools": {
+        "authenticate": { "params": { "provider": "string", "token": "string" }, "returns": "session" },
+        "logout": { "params": { "slot": "int" }, "returns": "string" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "begin_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "end_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "nesy-mcp": {
+      "tier": "teranga",
+      "domain": "nesy",
+      "protocols": ["NeSy", "MCP", "REST"],
+      "states": ["ready"],
+      "tools": {
+        "harmonize": { "params": { "neural": "string", "symbolic": "string" }, "returns": "harmonization_result" },
+        "analyze_drift": { "params": { "kind": "string" }, "returns": "drift_analysis" },
+        "reasoning_mode_info": { "params": { "mode": "string" }, "returns": "mode_info" }
+      }
+    },
+    "observe-mcp": {
+      "tier": "teranga",
+      "domain": "observe",
+      "protocols": ["MCP", "REST", "GRPC"],
+      "states": ["unconfigured", "source_registered", "query_ready", "querying", "error"],
+      "tools": {
+        "register_source": { "params": { "backend": "string" }, "returns": "session" },
+        "begin_query": { "params": { "slot": "int" }, "returns": "session" },
+        "end_query": { "params": { "slot": "int" }, "returns": "session" },
+        "unregister": { "params": { "slot": "int" }, "returns": "string" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "proof-mcp": {
+      "tier": "shield",
+      "domain": "proof",
+      "protocols": ["MCP", "REST"],
+      "states": ["idle", "loading", "verifying", "verified", "failed"],
+      "tools": {
+        "init_session": { "params": { "backend": "string" }, "returns": "session" },
+        "load_obligation": { "params": { "slot": "int", "backend": "string" }, "returns": "session" },
+        "verify": { "params": { "slot": "int" }, "returns": "session" },
+        "get_result": { "params": { "slot": "int" }, "returns": "proof_result" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "reset_session": { "params": { "slot": "int" }, "returns": "string" },
+        "reset_all": { "params": {}, "returns": "string" }
+      }
+    },
+    "queues-mcp": {
+      "tier": "teranga",
+      "domain": "queues",
+      "protocols": ["MCP", "REST", "GRPC"],
+      "states": ["disconnected", "connected", "subscribed", "consuming", "queue_error"],
+      "tools": {
+        "connect": { "params": { "backend": "string" }, "returns": "session" },
+        "subscribe": { "params": { "slot": "int" }, "returns": "session" },
+        "begin_consume": { "params": { "slot": "int" }, "returns": "session" },
+        "ack": { "params": { "slot": "int" }, "returns": "session" },
+        "publish": { "params": { "slot": "int" }, "returns": "session" },
+        "unsubscribe": { "params": { "slot": "int" }, "returns": "session" },
+        "disconnect": { "params": { "slot": "int" }, "returns": "string" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "research-mcp": {
+      "tier": "teranga",
+      "domain": "research",
+      "protocols": ["MCP", "REST"],
+      "states": ["unauthenticated", "authenticated", "operating", "auth_error"],
+      "tools": {
+        "authenticate": { "params": { "provider": "string", "api_key": "string" }, "returns": "session" },
+        "logout": { "params": { "slot": "int" }, "returns": "string" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "begin_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "end_operation": { "params": { "slot": "int" }, "returns": "session" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "secrets-mcp": {
+      "tier": "shield",
+      "domain": "secrets",
+      "protocols": ["MCP", "REST"],
+      "states": ["sealed", "unsealed", "authenticated", "accessing", "secret_error"],
+      "tools": {
+        "unseal": { "params": { "backend": "string" }, "returns": "session" },
+        "authenticate": { "params": { "slot": "int" }, "returns": "session" },
+        "begin_access": { "params": { "slot": "int" }, "returns": "session" },
+        "end_access": { "params": { "slot": "int" }, "returns": "session" },
+        "seal": { "params": { "slot": "int" }, "returns": "session" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    },
+    "ssg-mcp": {
+      "tier": "teranga",
+      "domain": "ssg",
+      "protocols": ["MCP", "REST"],
+      "states": ["empty", "content_loaded", "built", "previewing", "ready_to_deploy", "deployed", "error"],
+      "tools": {
+        "load_content": { "params": { "engine": "string", "content_hash": "string" }, "returns": "session" },
+        "build_site": { "params": { "slot": "int" }, "returns": "session" },
+        "preview": { "params": { "slot": "int" }, "returns": "session" },
+        "ready_deploy": { "params": { "slot": "int" }, "returns": "session" },
+        "deploy": { "params": { "slot": "int" }, "returns": "session" },
+        "clean": { "params": { "slot": "int" }, "returns": "session" },
+        "get_state": { "params": { "slot": "int" }, "returns": "state" },
+        "reset": { "params": {}, "returns": "string" }
+      }
+    }
+  }
+}
