@@ -25,6 +25,12 @@ type panelEvent =
   | RsrComplianceChanged(string, float) // (repo, newScore)
   /// Database connection status changed.
   | DatabaseConnectionChanged(string, bool) // (dbName, connected)
+  /// UMS level validation completed — 5 ABI proof results.
+  | UmsValidationCompleted(bool) // allPassed
+  /// Level Architect entity count changed.
+  | LevelArchitectEntitiesChanged(int) // entityCount
+  /// UMS project opened or created.
+  | UmsProjectChanged(string) // projectId
 
 /// Empty event array for sub-updaters with no cross-panel effects.
 let noEvents: array<panelEvent> = []
@@ -86,6 +92,9 @@ let eventTopic = (evt: panelEvent): eventTopic =>
   | FleetFixDispatched(_, _) => TopicWorkflow
   | RsrComplianceChanged(_, _) => TopicGovernance
   | DatabaseConnectionChanged(_, _) => TopicDatabase
+  | UmsValidationCompleted(_) => TopicBuild
+  | LevelArchitectEntitiesChanged(_) => TopicUI
+  | UmsProjectChanged(_) => TopicWorkflow
   }
 
 /// Human-readable label for a topic.
@@ -165,6 +174,8 @@ let defaultSubscribers: array<subscriber> = [
   { cladeId: "protocol-squisher", topics: [TopicProtocol, TopicType],         active: true },
   { cladeId: "my-lang",   topics: [TopicBuild, TopicType],                    active: true },
   { cladeId: "boj",       topics: [TopicProtocol, TopicDatabase, TopicWorkflow], active: true },
+  { cladeId: "ums",       topics: [TopicBuild, TopicUI, TopicWorkflow, TopicType], active: true },
+  { cladeId: "level-architect", topics: [TopicBuild, TopicUI, TopicType], active: true },
 ]
 
 /// Default registry with core subscribers.

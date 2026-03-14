@@ -3,7 +3,8 @@
 /**
  * LevelArchitectEngine Tests — category labels, entity kind labels/icons,
  * defence flag labels, tool labels, entity counting, grid occupancy,
- * and default state validation.
+ * device/guard/dog/drone/security labels, UMS zones, UMS JSON
+ * serialisation/validation, and default state validation.
  */
 
 import { assertEquals, assert } from "jsr:@std/assert";
@@ -16,6 +17,19 @@ import {
   toolLabel,
   countByKind,
   isOccupied,
+  deviceKindLabel,
+  guardRankLabel,
+  dogBreedLabel,
+  droneArchetypeLabel,
+  securityLevelLabel,
+  allDeviceKinds,
+  allGuardRanks,
+  allDogBreeds,
+  allDroneArchetypes,
+  allSecurityLevels,
+  defaultUmsZones,
+  toUmsJson,
+  parseUmsValidation,
   defaultState,
 } from "../src/core/LevelArchitectEngine.res.js";
 
@@ -242,4 +256,259 @@ Deno.test("defaultState loading is false", () => {
 
 Deno.test("defaultState error is undefined (None)", () => {
   assertEquals(defaultState.error, undefined);
+});
+
+// -- deviceKindLabel --
+
+Deno.test("deviceKindLabel returns correct strings for all 12 device kinds", () => {
+  assertEquals(deviceKindLabel("DevLaptop"), "Laptop");
+  assertEquals(deviceKindLabel("DevDesktop"), "Desktop");
+  assertEquals(deviceKindLabel("DevServer"), "Server");
+  assertEquals(deviceKindLabel("DevRouter"), "Router");
+  assertEquals(deviceKindLabel("DevSwitch"), "Switch");
+  assertEquals(deviceKindLabel("DevFirewall"), "Firewall");
+  assertEquals(deviceKindLabel("DevCamera"), "Camera");
+  assertEquals(deviceKindLabel("DevAccessPoint"), "Access Point");
+  assertEquals(deviceKindLabel("DevPatchPanel"), "Patch Panel");
+  assertEquals(deviceKindLabel("DevPowerSupply"), "Power Supply");
+  assertEquals(deviceKindLabel("DevPhoneSystem"), "Phone System");
+  assertEquals(deviceKindLabel("DevFibreHub"), "Fibre Hub");
+});
+
+// -- guardRankLabel --
+
+Deno.test("guardRankLabel returns correct strings for all 8 guard ranks", () => {
+  assertEquals(guardRankLabel("RankBasic"), "Basic");
+  assertEquals(guardRankLabel("RankEnforcer"), "Enforcer");
+  assertEquals(guardRankLabel("RankAntiHacker"), "Anti-Hacker");
+  assertEquals(guardRankLabel("RankSentinel"), "Sentinel");
+  assertEquals(guardRankLabel("RankAssassin"), "Assassin");
+  assertEquals(guardRankLabel("RankElite"), "Elite");
+  assertEquals(guardRankLabel("RankSecurityChief"), "Security Chief");
+  assertEquals(guardRankLabel("RankRivalHacker"), "Rival Hacker");
+});
+
+// -- dogBreedLabel --
+
+Deno.test("dogBreedLabel returns correct strings for all 3 breeds", () => {
+  assertEquals(dogBreedLabel("BreedPatrol"), "Patrol");
+  assertEquals(dogBreedLabel("BreedBloodhound"), "Bloodhound");
+  assertEquals(dogBreedLabel("BreedRoboDog"), "RoboDog");
+});
+
+// -- droneArchetypeLabel --
+
+Deno.test("droneArchetypeLabel returns correct strings for all 3 archetypes", () => {
+  assertEquals(droneArchetypeLabel("DroneHelper"), "Helper");
+  assertEquals(droneArchetypeLabel("DroneHunter"), "Hunter");
+  assertEquals(droneArchetypeLabel("DroneKiller"), "Killer");
+});
+
+// -- securityLevelLabel --
+
+Deno.test("securityLevelLabel returns correct strings for all 4 levels", () => {
+  assertEquals(securityLevelLabel("SecOpen"), "Open");
+  assertEquals(securityLevelLabel("SecWeak"), "Weak");
+  assertEquals(securityLevelLabel("SecMedium"), "Medium");
+  assertEquals(securityLevelLabel("SecStrong"), "Strong");
+});
+
+// -- allDeviceKinds --
+
+Deno.test("allDeviceKinds has 12 entries", () => {
+  assertEquals(allDeviceKinds.length, 12);
+});
+
+Deno.test("allDeviceKinds entries all have valid labels", () => {
+  for (const dk of allDeviceKinds) {
+    const label = deviceKindLabel(dk);
+    assert(typeof label === "string" && label.length > 0, `Missing label for ${dk}`);
+  }
+});
+
+// -- allGuardRanks --
+
+Deno.test("allGuardRanks has 8 entries", () => {
+  assertEquals(allGuardRanks.length, 8);
+});
+
+Deno.test("allGuardRanks entries all have valid labels", () => {
+  for (const gr of allGuardRanks) {
+    const label = guardRankLabel(gr);
+    assert(typeof label === "string" && label.length > 0, `Missing label for ${gr}`);
+  }
+});
+
+// -- allDogBreeds --
+
+Deno.test("allDogBreeds has 3 entries", () => {
+  assertEquals(allDogBreeds.length, 3);
+});
+
+// -- allDroneArchetypes --
+
+Deno.test("allDroneArchetypes has 3 entries", () => {
+  assertEquals(allDroneArchetypes.length, 3);
+});
+
+// -- allSecurityLevels --
+
+Deno.test("allSecurityLevels has 4 entries", () => {
+  assertEquals(allSecurityLevels.length, 4);
+});
+
+Deno.test("allSecurityLevels contains expected variants", () => {
+  assertEquals(allSecurityLevels, ["SecOpen", "SecWeak", "SecMedium", "SecStrong"]);
+});
+
+// -- defaultUmsZones --
+
+Deno.test("defaultUmsZones has 3 zones", () => {
+  assertEquals(defaultUmsZones.length, 3);
+});
+
+Deno.test("defaultUmsZones zone names are LAN, DMZ, SCADA", () => {
+  assertEquals(defaultUmsZones[0].name, "LAN");
+  assertEquals(defaultUmsZones[1].name, "DMZ");
+  assertEquals(defaultUmsZones[2].name, "SCADA");
+});
+
+Deno.test("defaultUmsZones zones have ascending security tiers", () => {
+  assertEquals(defaultUmsZones[0].securityTier, 1);
+  assertEquals(defaultUmsZones[1].securityTier, 2);
+  assertEquals(defaultUmsZones[2].securityTier, 3);
+});
+
+Deno.test("defaultUmsZones zones span contiguously from 0 to 5000", () => {
+  assertEquals(defaultUmsZones[0].startX, 0.0);
+  assertEquals(defaultUmsZones[0].endX, 1500.0);
+  assertEquals(defaultUmsZones[1].startX, 1500.0);
+  assertEquals(defaultUmsZones[1].endX, 3500.0);
+  assertEquals(defaultUmsZones[2].startX, 3500.0);
+  assertEquals(defaultUmsZones[2].endX, 5000.0);
+});
+
+// -- toUmsJson --
+
+Deno.test("toUmsJson produces valid JSON from default state", () => {
+  const json = toUmsJson(defaultState);
+  const parsed = JSON.parse(json);
+  assertEquals(parsed.levelName, "Untitled Level");
+  assertEquals(parsed.gridWidth, 20);
+  assertEquals(parsed.gridHeight, 15);
+  assertEquals(parsed.entities.length, 0);
+  assertEquals(parsed.zones.length, 3);
+  assertEquals(parsed.patrols.length, 0);
+  assertEquals(parsed.defenceFlags.length, 0);
+});
+
+Deno.test("toUmsJson includes entities in output", () => {
+  const state = {
+    ...defaultState,
+    entities: [
+      { id: "e1", kind: "EntityDevice", name: "Server-A", gridX: 1, gridY: 2 },
+      { id: "e2", kind: "EntityGuard", name: "Guard-B", gridX: 3, gridY: 4 },
+    ],
+  };
+  const parsed = JSON.parse(toUmsJson(state));
+  assertEquals(parsed.entities.length, 2);
+  assertEquals(parsed.entities[0].id, "e1");
+  assertEquals(parsed.entities[0].kind, "Device");
+  assertEquals(parsed.entities[1].kind, "Guard");
+});
+
+Deno.test("toUmsJson includes zones with correct fields", () => {
+  const parsed = JSON.parse(toUmsJson(defaultState));
+  assertEquals(parsed.zones[0].name, "LAN");
+  assertEquals(parsed.zones[0].securityTier, 1);
+  assertEquals(parsed.zones[2].name, "SCADA");
+});
+
+Deno.test("toUmsJson includes patrols and defence flags", () => {
+  const state = {
+    ...defaultState,
+    patrols: [
+      {
+        guardId: "g1",
+        waypoints: [{ x: 0, y: 0, pauseDuration: 1.0 }],
+        looping: true,
+        speed: 2.5,
+      },
+    ],
+    defenceFlags: ["FlagFirewall", "FlagIDS"],
+  };
+  const parsed = JSON.parse(toUmsJson(state));
+  assertEquals(parsed.patrols.length, 1);
+  assertEquals(parsed.patrols[0].guardId, "g1");
+  assertEquals(parsed.patrols[0].looping, true);
+  assertEquals(parsed.patrols[0].waypoints.length, 1);
+  assertEquals(parsed.defenceFlags.length, 2);
+  assertEquals(parsed.defenceFlags[0], "Firewall");
+  assertEquals(parsed.defenceFlags[1], "IDS/IPS");
+});
+
+// -- parseUmsValidation --
+
+Deno.test("parseUmsValidation parses valid JSON correctly", () => {
+  const input = JSON.stringify({
+    guardsInZones: true,
+    defenceTargetsValid: false,
+    zonesOrdered: true,
+    pbxConsistent: true,
+    devicesExist: true,
+    allPassed: false,
+    proofs: [
+      { name: "zone-check", passed: true, detail: "ok" },
+      { name: "defence-check", passed: false, detail: "missing target" },
+    ],
+  });
+  const result = parseUmsValidation(input);
+  assert(result !== undefined, "parseUmsValidation should return Some");
+  assertEquals(result.guardsInZones, true);
+  assertEquals(result.defenceTargetsValid, false);
+  assertEquals(result.zonesOrdered, true);
+  assertEquals(result.pbxConsistent, true);
+  assertEquals(result.devicesExist, true);
+  assertEquals(result.allPassed, false);
+  assertEquals(result.proofs.length, 2);
+  assertEquals(result.proofs[0].name, "zone-check");
+  assertEquals(result.proofs[0].passed, true);
+  assertEquals(result.proofs[1].detail, "missing target");
+});
+
+Deno.test("parseUmsValidation returns undefined for invalid JSON", () => {
+  const result = parseUmsValidation("not valid json {{{");
+  assertEquals(result, undefined);
+});
+
+Deno.test("parseUmsValidation returns undefined for empty string", () => {
+  const result = parseUmsValidation("");
+  assertEquals(result, undefined);
+});
+
+Deno.test("parseUmsValidation defaults missing booleans to false", () => {
+  const input = JSON.stringify({ proofs: [] });
+  const result = parseUmsValidation(input);
+  assert(result !== undefined, "parseUmsValidation should return Some for valid JSON");
+  assertEquals(result.guardsInZones, false);
+  assertEquals(result.defenceTargetsValid, false);
+  assertEquals(result.allPassed, false);
+  assertEquals(result.proofs.length, 0);
+});
+
+// -- defaultState (UMS fields) --
+
+Deno.test("defaultState zones matches defaultUmsZones", () => {
+  assertEquals(defaultState.zones.length, 3);
+  assertEquals(defaultState.zones[0].name, "LAN");
+  assertEquals(defaultState.zones[1].name, "DMZ");
+  assertEquals(defaultState.zones[2].name, "SCADA");
+});
+
+Deno.test("defaultState umsValidation is undefined (None)", () => {
+  assertEquals(defaultState.umsValidation, undefined);
+});
+
+Deno.test("defaultState bojRouting is false", () => {
+  assertEquals(defaultState.bojRouting, false);
 });
