@@ -9,6 +9,25 @@
 use crate::contract::PanelContract;
 use std::path::{Path, PathBuf};
 
+/// Convert a PascalCase identifier to snake_case.
+///
+/// Examples: "MyLang" -> "my_lang", "CloudGuard" -> "cloud_guard",
+/// "VAB" -> "v_a_b" (consecutive uppercase each get an underscore).
+fn to_snake_case(s: &str) -> String {
+    let mut result = String::with_capacity(s.len() + 4);
+    for (i, ch) in s.chars().enumerate() {
+        if ch.is_uppercase() {
+            if i > 0 {
+                result.push('_');
+            }
+            result.push(ch.to_lowercase().next().unwrap());
+        } else {
+            result.push(ch);
+        }
+    }
+    result
+}
+
 /// Result of scanning a single source file for a specific pattern.
 #[derive(Debug, Clone)]
 pub struct ScanResult {
@@ -153,6 +172,45 @@ impl Scanner {
         }
         // Return the include result (first found) as the evidence.
         include_result
+    }
+
+    /// Check whether a test file exists for the given panel.
+    ///
+    /// Tries multiple naming conventions because test files in the repo use
+    /// inconsistent casing (e.g. `cloudguard_engine_test.js` not `cloud_guard_`).
+    /// Checks in order:
+    /// 1. `tests/{snake_case}_engine_test.js` (e.g. `cloud_guard_engine_test.js`)
+    /// 2. `tests/{lowercase}_engine_test.js` (e.g. `cloudguard_engine_test.js`)
+    /// 3. `tests/{panel_id lower}_engine_test.js` (e.g. `cloudguard_engine_test.js`)
+    pub fn check_test_bundle(&self, panel_id: &str) -> ScanResult {
+        let snake = to_snake_case(panel_id);
+        let lowercase = panel_id.to_lowercase();
+
+        // Try candidates in priority order
+        let candidates = [
+            format!("tests/{}_engine_test.js", snake),
+            format!("tests/{}_engine_test.js", lowercase),
+        ];
+
+        for candidate in &candidates {
+            let test_path = self.repo_root.join(candidate);
+            if test_path.exists() {
+                return ScanResult {
+                    found: true,
+                    file: candidate.clone(),
+                    line: None,
+                    evidence: Some("Test file exists".to_string()),
+                };
+            }
+        }
+
+        // Report the first candidate as the expected path
+        ScanResult {
+            found: false,
+            file: candidates[0].clone(),
+            line: None,
+            evidence: None,
+        }
     }
 
     /// Run the full msg check (type definition + routing variant).

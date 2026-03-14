@@ -9,3 +9,4 @@ view_route = "PanelCloudGuard"
 short_name = "CG"
 clade_id = "cloudguard"
 has_backend = true
+requires_tests = true

@@ -8,6 +8,7 @@
 //! failure class (root first, then derived, then satisfied).
 
 use crate::obligation::{FailureClass, ObligationKind, ObligationStatus};
+use crate::policy::{self, PanelState};
 use crate::propagator::PropagationResult;
 use colored::Colorize;
 
@@ -38,6 +39,16 @@ pub fn render_terminal(result: &PropagationResult) {
         .as_deref()
         .unwrap_or("none");
 
+    // Derive lifecycle state from policy engine.
+    let decision = policy::evaluate_policy(result);
+    let state_label = match decision.state {
+        PanelState::Draft => decision.state.label().yellow().bold().to_string(),
+        PanelState::Wired => decision.state.label().blue().bold().to_string(),
+        PanelState::Viable => decision.state.label().cyan().bold().to_string(),
+        PanelState::Releasable => decision.state.label().green().bold().to_string(),
+        PanelState::Broken => decision.state.label().red().bold().to_string(),
+    };
+
     // Header box.
     let width = 56;
     println!("{}", "=".repeat(width).dimmed());
@@ -48,8 +59,12 @@ pub fn render_terminal(result: &PropagationResult) {
     println!("{}", "-".repeat(width).dimmed());
     println!("  Panel:              {}", panel_id.bold());
     println!("  Status:             {}", status_label);
+    println!("  State:              {}", state_label);
     if satisfied < total {
         println!("  Primary bottleneck: {}", bottleneck_label.red().bold());
+    }
+    if let Some(ref next) = decision.next_requirement {
+        println!("  Next:               {}", next.dimmed());
     }
     println!("{}", "=".repeat(width).dimmed());
     println!();
@@ -167,9 +182,15 @@ pub fn render_json(result: &PropagationResult) {
         "incomplete"
     };
 
+    let decision = policy::evaluate_policy(result);
+
     let json = serde_json::json!({
         "panel_id": result.contract.panel_id,
         "status": status,
+        "state": decision.state,
+        "visible": decision.visible,
+        "releasable": decision.releasable,
+        "next_requirement": decision.next_requirement,
         "summary": {
             "total": result.summary.total,
             "satisfied": result.summary.satisfied,
@@ -208,9 +229,14 @@ pub fn render_json_multi(results: &[PropagationResult]) {
             } else {
                 "incomplete"
             };
+            let decision = policy::evaluate_policy(result);
             serde_json::json!({
                 "panel_id": result.contract.panel_id,
                 "status": status,
+                "state": decision.state,
+                "visible": decision.visible,
+                "releasable": decision.releasable,
+                "next_requirement": decision.next_requirement,
                 "summary": {
                     "total": result.summary.total,
                     "satisfied": result.summary.satisfied,
@@ -247,13 +273,25 @@ pub fn render_terminal_multi(results: &[PropagationResult]) {
         render_terminal(result);
     }
 
-    // Final tally.
+    // Final tally with state distribution.
     let total_panels = results.len();
-    let complete_panels = results
-        .iter()
-        .filter(|r| r.summary.satisfied == r.summary.total)
-        .count();
-    let incomplete_panels = total_panels - complete_panels;
+
+    // Count panels by lifecycle state.
+    let mut releasable_count = 0usize;
+    let mut viable_count = 0usize;
+    let mut wired_count = 0usize;
+    let mut draft_count = 0usize;
+    let mut broken_count = 0usize;
+
+    for result in results {
+        match policy::derive_panel_state(result) {
+            PanelState::Releasable => releasable_count += 1,
+            PanelState::Viable => viable_count += 1,
+            PanelState::Wired => wired_count += 1,
+            PanelState::Draft => draft_count += 1,
+            PanelState::Broken => broken_count += 1,
+        }
+    }
 
     println!("{}", "=".repeat(56).dimmed());
     println!("{}", "  SUMMARY".bold());
@@ -263,13 +301,31 @@ pub fn render_terminal_multi(results: &[PropagationResult]) {
         total_panels.to_string().bold()
     );
     println!(
-        "  Complete:        {}",
-        complete_panels.to_string().green().bold()
+        "  Releasable:      {}",
+        releasable_count.to_string().green().bold()
     );
-    if incomplete_panels > 0 {
+    if viable_count > 0 {
         println!(
-            "  Incomplete:      {}",
-            incomplete_panels.to_string().red().bold()
+            "  Viable:          {}",
+            viable_count.to_string().cyan().bold()
+        );
+    }
+    if wired_count > 0 {
+        println!(
+            "  Wired:           {}",
+            wired_count.to_string().blue().bold()
+        );
+    }
+    if draft_count > 0 {
+        println!(
+            "  Draft:           {}",
+            draft_count.to_string().yellow().bold()
+        );
+    }
+    if broken_count > 0 {
+        println!(
+            "  Broken:          {}",
+            broken_count.to_string().red().bold()
         );
     }
     println!("{}", "=".repeat(56).dimmed());
@@ -284,5 +340,7 @@ fn kind_to_label(kind: &ObligationKind) -> &'static str {
         ObligationKind::MsgNamespace => "MSG_NAMESPACE_MISSING",
         ObligationKind::ViewRoute => "VIEW_ROUTE_MISSING",
         ObligationKind::PanelWired => "PANEL_NOT_WIRED",
+        ObligationKind::TestBundle => "TEST_BUNDLE_MISSING",
+        ObligationKind::CompletionState => "PANEL_INCOMPLETE",
     }
 }

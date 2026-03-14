@@ -26,6 +26,10 @@ pub enum ObligationKind {
     ViewRoute,
     /// All four wiring points are satisfied — panel is fully wired.
     PanelWired,
+    /// Test file exists for this panel's engine.
+    TestBundle,
+    /// All required obligations satisfied — panel is complete.
+    CompletionState,
 }
 
 /// Whether an obligation passed, failed, or is blocked by upstream failures.
@@ -106,15 +110,38 @@ pub struct Obligation {
     pub expected: Option<String>,
 }
 
+impl Obligation {
+    /// Returns the string name of the obligation kind.
+    pub fn kind_name(&self) -> &str {
+        match self.kind {
+            ObligationKind::ContractExists => "contract_exists",
+            ObligationKind::RegistryEntry => "registry_entry",
+            ObligationKind::ModelSlice => "model_slice",
+            ObligationKind::MsgNamespace => "msg_namespace",
+            ObligationKind::ViewRoute => "view_route",
+            ObligationKind::PanelWired => "panel_wired",
+            ObligationKind::TestBundle => "test_bundle",
+            ObligationKind::CompletionState => "completion_state",
+        }
+    }
+
+    /// Returns true if the obligation status is `Satisfied`.
+    pub fn is_satisfied(&self) -> bool {
+        self.status == ObligationStatus::Satisfied
+    }
+}
+
 /// Build the full obligation graph for a single panel contract.
 ///
-/// Returns 6 obligations per panel in dependency order:
+/// Returns 8 obligations per panel in dependency order:
 /// - `contract:{id}` (root, no deps)
 /// - `registry:{id}` (depends on contract)
 /// - `model:{id}` (depends on contract)
 /// - `msg:{id}` (depends on contract)
 /// - `view:{id}` (depends on contract)
 /// - `wired:{id}` (depends on registry, model, msg, view)
+/// - `test:{id}` (depends on contract)
+/// - `complete:{id}` (depends on wired + test)
 pub fn build_obligations(contract: &PanelContract) -> Vec<Obligation> {
     let id = &contract.panel_id;
 
@@ -124,6 +151,8 @@ pub fn build_obligations(contract: &PanelContract) -> Vec<Obligation> {
     let msg_id = format!("msg:{id}");
     let view_id = format!("view:{id}");
     let wired_id = format!("wired:{id}");
+    let test_id = format!("test:{id}");
+    let complete_id = format!("complete:{id}");
 
     vec![
         Obligation {
@@ -139,6 +168,7 @@ pub fn build_obligations(contract: &PanelContract) -> Vec<Obligation> {
                 model_id.clone(),
                 msg_id.clone(),
                 view_id.clone(),
+                test_id.clone(),
             ],
             blocked_downstream_count: 0,
             message: String::new(),
@@ -208,13 +238,41 @@ pub fn build_obligations(contract: &PanelContract) -> Vec<Obligation> {
             expected: Some(format!("Some({}) =>", contract.view_route)),
         },
         Obligation {
-            id: wired_id,
+            id: wired_id.clone(),
             kind: ObligationKind::PanelWired,
             panel_id: id.clone(),
             status: ObligationStatus::Unsatisfied,
             failure_class: None,
             repairability: Repairability::Manual,
             depends_on: vec![registry_id, model_id, msg_id, view_id],
+            blocks: vec![complete_id.clone()],
+            blocked_downstream_count: 0,
+            message: String::new(),
+            file: None,
+            expected: None,
+        },
+        Obligation {
+            id: test_id.clone(),
+            kind: ObligationKind::TestBundle,
+            panel_id: id.clone(),
+            status: ObligationStatus::Unsatisfied,
+            failure_class: None,
+            repairability: Repairability::Safe,
+            depends_on: vec![contract_id],
+            blocks: vec![complete_id.clone()],
+            blocked_downstream_count: 0,
+            message: String::new(),
+            file: None,
+            expected: None,
+        },
+        Obligation {
+            id: complete_id,
+            kind: ObligationKind::CompletionState,
+            panel_id: id.clone(),
+            status: ObligationStatus::Unsatisfied,
+            failure_class: None,
+            repairability: Repairability::Manual,
+            depends_on: vec![wired_id, test_id],
             blocks: vec![],
             blocked_downstream_count: 0,
             message: String::new(),

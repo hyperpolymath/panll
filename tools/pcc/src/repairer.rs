@@ -85,11 +85,14 @@ pub fn generate_repair_plans(
     let mut plans = Vec::new();
 
     for obligation in obligations {
-        // Skip the synthetic ContractExists and PanelWired obligations —
-        // these are not directly repairable via file patches.
+        // Skip the synthetic obligations — these are not directly
+        // repairable via file patches.
         if matches!(
             obligation.kind,
-            ObligationKind::ContractExists | ObligationKind::PanelWired
+            ObligationKind::ContractExists
+                | ObligationKind::PanelWired
+                | ObligationKind::TestBundle
+                | ObligationKind::CompletionState
         ) {
             continue;
         }
@@ -740,5 +743,7 @@ fn kind_to_label(kind: &ObligationKind) -> &'static str {
         ObligationKind::MsgNamespace => "MSG NAMESPACE",
         ObligationKind::ViewRoute => "VIEW ROUTE",
         ObligationKind::PanelWired => "PANEL WIRED",
+        ObligationKind::TestBundle => "TEST BUNDLE",
+        ObligationKind::CompletionState => "COMPLETION STATE",
     }
 }

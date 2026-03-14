@@ -18,6 +18,7 @@
 
 mod contract;
 mod obligation;
+mod policy;
 mod propagator;
 mod repairer;
 mod reporter;

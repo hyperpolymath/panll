@@ -270,6 +270,35 @@ fn run_check(obligation: &mut Obligation, contract: &PanelContract, scanner: &Sc
             obligation.message = "All wiring points confirmed".to_string();
             true
         }
+        ObligationKind::TestBundle => {
+            // Check if test coverage is required by the contract.
+            if !contract.requires_tests {
+                obligation.message = "Tests not required by contract".to_string();
+                return true;
+            }
+            let result = scanner.check_test_bundle(&contract.panel_id);
+            if result.found {
+                obligation.message = format!("Found test file: {}", result.file);
+                obligation.file = Some(result.file);
+            } else {
+                obligation.message = format!(
+                    "Test file not found: {}",
+                    result.file
+                );
+                obligation.file = Some(result.file);
+                obligation.expected = Some(format!(
+                    "tests/{}_engine_test.js",
+                    contract.panel_id
+                ));
+            }
+            result.found
+        }
+        ObligationKind::CompletionState => {
+            // Purely derived — satisfied iff all deps are satisfied.
+            // If we reached this check, all deps are satisfied.
+            obligation.message = "All obligations satisfied — panel is complete".to_string();
+            true
+        }
     }
 }
 

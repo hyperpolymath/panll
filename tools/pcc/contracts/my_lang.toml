@@ -9,3 +9,4 @@ view_route = "PanelMyLang"
 short_name = "My-Lang"
 clade_id = "my-lang"
 has_backend = true
+requires_tests = true

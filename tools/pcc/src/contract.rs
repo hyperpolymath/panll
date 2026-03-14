@@ -10,6 +10,11 @@
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+/// Helper for serde default — returns `true`.
+fn default_true() -> bool {
+    true
+}
+
 /// A panel contract declares the expected wiring for one PanLL panel.
 ///
 /// Fields correspond to the canonical integration points that every
@@ -40,6 +45,14 @@ pub struct PanelContract {
 
     /// Whether this panel has a Tauri/Rust backend.
     pub has_backend: bool,
+
+    /// Whether this panel requires test coverage (default: true).
+    #[serde(default = "default_true")]
+    pub requires_tests: bool,
+
+    /// Whether this panel requires eNSAID export configuration (default: false).
+    #[serde(default)]
+    pub requires_ensaid_export: bool,
 }
 
 /// Error type for contract loading.
