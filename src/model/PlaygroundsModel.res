@@ -82,4 +82,10 @@ type playgroundsState = {
   snippets: array<snippet>,
   /// NQC proxy connection status.
   nqcConnected: bool,
+  /// NQC console query input (separate from editor).
+  nqcInput: string,
+  /// NQC console active query language (VQL/KQL/GQL).
+  nqcLanguage: playgroundLanguage,
+  /// NQC console query history (most recent first).
+  nqcHistory: array<(string, playgroundLanguage, option<queryResult>)>,
 }

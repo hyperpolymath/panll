@@ -1,35 +1,52 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# Reposystem Panel Clade — RSR Compliance and Template Management
+# Reposystem Panel Clade — Repository Ecosystem Management
 
 [clade-metadata]
 id = "reposystem"
 name = "Reposystem"
 short-name = "RSR"
-version = "1.0.0"
+version = "1.1.0"
 kind = "scanner"
-icon = "layers"
-description = "RSR compliance and template management — filesystem scanning for repo health."
+icon = "railway"
+description = "Railway yard for repository ecosystems. Visualises repo relationships, manages slots and providers, annotates aspects, and coordinates multi-repo changes with scenario planning."
 
 [clade-traits]
-has-backend = false          # Filesystem scanning, no HTTP service
-has-scanning = true          # Core trait: scans repos for RSR compliance
-has-persistence = false      # Results are ephemeral per-scan
-has-work-items = true        # Compliance gaps as TSDM work items
-has-priority-ordering = false
-has-customisation = true     # Filter by compliance category, search
+has-backend = true              # Tauri backend with Mutex-guarded EcosystemGraph
+has-scanning = true             # Filesystem and forge scanning for repo discovery
+has-persistence = true          # JSON/YAML/TOML graph persistence
+has-work-items = true           # Compliance gaps + scenario plans as work items
+has-priority-ordering = true    # Aspect-weighted priority for repos and edges
+has-customisation = true        # Filter by aspect, group, search
+has-real-time = false           # Batch operations, not streaming
 is-directive = false
-is-readonly = true           # Read-only scanning, no mutations
+is-readonly = false             # Mutates graph: edges, groups, aspects, slots, plans
 
 [clade-capabilities]
 capabilities = [
-  "RSRComplianceAudit",     # Check repos against RSR template requirements
-  "TemplateComparison",     # Compare repo against rsr-template-repo
-  "FilePresenceCheck",      # Verify required files (STATE.scm, SECURITY.md, etc.)
-  "WorkflowValidation",     # Check GitHub Actions workflows
-  "LicenseVerification",    # Verify PMPL-1.0-or-later headers
+  "GraphVisualization",         # Force-directed, hierarchical, circular, grid layouts
+  "EcosystemScanning",          # Discover repos from filesystem or forges
+  "EdgeManagement",             # Create, remove, annotate relationships between repos
+  "GroupManagement",            # Organize repos into named collections
+  "AspectAnnotation",           # Tag repos/edges with weighted aspect scores
+  "SlotBindingSystem",          # Declare required capabilities and bind providers
+  "ScenarioPlanning",           # Multi-repo change coordination with risk assessment
+  "ExportMultiFormat",          # Export to JSON, YAML, TOML, Graphviz DOT
+  "ConstraintEvaluation",       # Evaluate ecosystem against governance rules
+  "HealthDashboard",            # Aggregate health metrics across the ecosystem
+  "RSRComplianceAudit",         # Check repos against RSR template requirements
+  "TemplateComparison",         # Compare repo against rsr-template-repo
+  "FilePresenceCheck",          # Verify required files (STATE.scm, SECURITY.md, etc.)
+  "WorkflowValidation",         # Check GitHub Actions workflows
+  "LicenseVerification",        # Verify PMPL-1.0-or-later headers
 ]
+
+[clade-panel-mapping]
+# Three-panel model for PanLL integration
+panel-l = "Ecosystem constraints: slot policies, edge cardinality limits, aspect rules, governance invariants"
+panel-n = "Ecosystem health reasoning: dependency analysis, vulnerability propagation, slot coverage gaps, orphan detection"
+panel-w = "Ecosystem graph visualization, scan results, health dashboard, scenario planning output"
 
 [clade-panel-integration]
 panel-id = "PanelReposystem"
@@ -37,3 +54,9 @@ model-module = "ReposystemModel"
 component-module = "Reposystem"
 command-module = "ReposystemCmd"
 module-module = "ReposystemModule"
+
+[clade-ui-layers]
+# Reposystem provides three UI surfaces, all PanLL-aware
+gui = "Tauri 2.0 + ReScript TEA + D3.js — desktop app with PanLL bridge"
+tui = "Ada/SPARK — formally verified terminal UI with PanLL mode (view 5)"
+web = "Vanilla JS + SVG — standalone browser graph editor with postMessage bridge"

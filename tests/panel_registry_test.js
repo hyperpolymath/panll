@@ -17,8 +17,8 @@ import {
   init,
 } from "../src/modules/PanelRegistry.res.js";
 
-Deno.test("allPanels has 43 entries", () => {
-  assertEquals(allPanels.length, 43);
+Deno.test("allPanels has 49 entries", () => {
+  assertEquals(allPanels.length, 49);
 });
 
 Deno.test("every panel has required fields", () => {
@@ -67,8 +67,8 @@ Deno.test("panelCladeId returns clade ID for known panel", () => {
   assertEquals(cladeId, "boj");
 });
 
-Deno.test("panelCladeId returns undefined for panel with no clade", () => {
-  const cladeId = panelCladeId("PanelLevelArchitect");
+Deno.test("panelCladeId returns undefined for unknown panel", () => {
+  const cladeId = panelCladeId("PanelNonExistent");
   assertEquals(cladeId, undefined);
 });
 

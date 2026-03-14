@@ -76,6 +76,9 @@ let defaultState: playgroundsState = {
   error: None,
   snippets: defaultSnippets,
   nqcConnected: false,
+  nqcInput: "",
+  nqcLanguage: LangVql,
+  nqcHistory: [],
 }
 
 /// Wrap user code in a safe execution harness for Deno eval.

@@ -165,14 +165,43 @@ let renderAuditPanel = (
                 ),
               },
             ),
-            // Findings list
+            // Severity summary bar
+            div(
+              list{Attrs.class_("flex gap-1 mb-3")},
+              list{
+                {
+                  let critical = result.findings->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "CRITICAL")->Array.length
+                  let high = result.findings->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "HIGH")->Array.length
+                  let medium = result.findings->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "MEDIUM")->Array.length
+                  let low = result.findings->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "LOW")->Array.length
+                  div(
+                    list{Attrs.class_("flex gap-2 text-[10px]")},
+                    list{
+                      if critical > 0 {
+                        span(list{Attrs.class_("text-red-400")}, list{text(`${Int.toString(critical)} critical`)})
+                      } else { noNode },
+                      if high > 0 {
+                        span(list{Attrs.class_("text-orange-400")}, list{text(`${Int.toString(high)} high`)})
+                      } else { noNode },
+                      if medium > 0 {
+                        span(list{Attrs.class_("text-amber-400")}, list{text(`${Int.toString(medium)} medium`)})
+                      } else { noNode },
+                      if low > 0 {
+                        span(list{Attrs.class_("text-gray-400")}, list{text(`${Int.toString(low)} low`)})
+                      } else { noNode },
+                    },
+                  )
+                },
+              },
+            ),
+            // Findings list with drill-down
             div(
               list{Attrs.class_("space-y-2")},
               result.findings
               ->CloudGuardEngine.sortFindingsBySeverity
               ->Array.map(finding =>
                 div(
-                  list{Attrs.class_("text-xs p-2 bg-gray-800/50 rounded")},
+                  list{Attrs.class_("text-xs p-2 bg-gray-800/50 rounded hover:bg-gray-800/70 transition-colors")},
                   list{
                     div(
                       list{Attrs.class_("flex items-center gap-1.5 mb-1")},
@@ -190,6 +219,25 @@ let renderAuditPanel = (
                     div(
                       list{Attrs.class_("text-gray-400")},
                       list{text(finding.message)},
+                    ),
+                    // Remediation suggestion
+                    div(
+                      list{Attrs.class_("mt-1.5 pl-2 border-l-2 border-gray-700")},
+                      list{
+                        div(list{Attrs.class_("text-[10px] text-gray-600 uppercase tracking-wider mb-0.5")}, list{text("Remediation")}),
+                        div(list{Attrs.class_("text-[10px] text-gray-500")}, list{
+                          text(`Set ${finding.settingId} from "${finding.currentValue}" to "${finding.expectedValue}"`),
+                        }),
+                      },
+                    ),
+                    // Fix action button
+                    button(
+                      list{
+                        Attrs.class_("mt-1.5 px-2 py-0.5 text-[10px] bg-indigo-900/40 text-indigo-300 rounded border border-indigo-800 hover:bg-indigo-800/50 transition-colors"),
+                        Events.onClick(CloudGuard(HardenSetting(finding.settingId))),
+                        Attrs.ariaLabel(`Fix ${finding.settingId}`),
+                      },
+                      list{text("Apply Fix")},
                     ),
                   },
                 )

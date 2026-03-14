@@ -614,155 +614,238 @@ let view = (hypatia: hypatiaState): Tea_Vdom.t<msg> => {
                     hypatia.networks->Array.map(net => renderNetGauge(net))->List.fromArray,
                   )
                 | HypatiaRecipes =>
-                  switch hypatia.recipes {
-                  | Some(inv) =>
-                    div(
-                      list{
-                        Attrs.class_("space-y-6"),
-                        Attrs.role("region"),
-                        Attrs.ariaLabel("Recipe inventory"),
-                      },
-                      list{
-                        // Total count header
+                  div(
+                    list{
+                      Attrs.class_("space-y-4"),
+                      Attrs.role("region"),
+                      Attrs.ariaLabel("Recipe inventory"),
+                    },
+                    list{
+                      // Summary stats row
+                      {
+                        let total = Array.length(hypatia.recipeEntries)
+                        let withFix = hypatia.recipeEntries->Array.filter(r => r.hasFixScript)->Array.length
+                        let elimCount = hypatia.recipeEntries->Array.filter(r => r.tier === Eliminate)->Array.length
+                        let subCount = hypatia.recipeEntries->Array.filter(r => r.tier === Substitute)->Array.length
+                        let ctrlCount = hypatia.recipeEntries->Array.filter(r => r.tier === Control)->Array.length
                         div(
-                          list{Attrs.class_("text-sm text-gray-300")},
-                          list{text(`${Int.toString(inv.totalRecipes)} recipes in inventory`)},
-                        ),
-                        // Confidence distribution
-                        div(
-                          list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4")},
+                          list{Attrs.class_("flex gap-4 text-xs flex-wrap")},
                           list{
-                            div(
-                              list{Attrs.class_("text-sm font-medium text-gray-300 mb-3")},
-                              list{text("Confidence Distribution")},
-                            ),
-                            div(
-                              list{Attrs.class_("space-y-2")},
-                              inv.confidenceBuckets
-                              ->Array.map(bucket => {
-                                let pct = if inv.totalRecipes > 0 {
-                                  Int.toFloat(bucket.count) /. Int.toFloat(inv.totalRecipes) *. 100.0
-                                } else {
-                                  0.0
-                                }
-                                let pctStr = Float.toFixed(pct, ~digits=0)
-                                let barColor = if bucket.label === "0.99" {
-                                  "bg-emerald-500"
-                                } else if bucket.label === "0.95+" {
-                                  "bg-green-500"
-                                } else if bucket.label === "0.90+" {
-                                  "bg-amber-500"
-                                } else {
-                                  "bg-red-500"
-                                }
-                                div(
-                                  list{
-                                    Attrs.class_("flex items-center gap-3"),
-                                    Attrs.ariaLabel(`${bucket.label} confidence: ${Int.toString(bucket.count)} recipes`),
-                                  },
-                                  list{
-                                    div(
-                                      list{Attrs.class_("w-16 text-right text-xs text-gray-400 font-mono")},
-                                      list{text(bucket.label)},
-                                    ),
-                                    div(
-                                      list{Attrs.class_("flex-1 bg-gray-800 rounded-full h-3 overflow-hidden")},
-                                      list{
-                                        div(
-                                          list{
-                                            Attrs.class_(`${barColor} h-full rounded-full transition-all`),
-                                            Attrs.prop("style", `width: ${pctStr}%`),
-                                          },
-                                          list{},
-                                        ),
-                                      },
-                                    ),
-                                    div(
-                                      list{Attrs.class_("w-8 text-xs text-gray-400 text-right")},
-                                      list{text(Int.toString(bucket.count))},
-                                    ),
-                                  },
-                                )
-                              })
-                              ->List.fromArray,
-                            ),
+                            div(list{Attrs.class_("text-gray-300 font-medium")}, list{text(`${Int.toString(total)} recipes`)}),
+                            div(list{Attrs.class_("text-green-400")}, list{text(`${Int.toString(withFix)} with fix_script`)}),
+                            div(list{Attrs.class_("text-red-400")}, list{text(`${Int.toString(elimCount)} eliminate`)}),
+                            div(list{Attrs.class_("text-amber-400")}, list{text(`${Int.toString(subCount)} substitute`)}),
+                            div(list{Attrs.class_("text-blue-400")}, list{text(`${Int.toString(ctrlCount)} control`)}),
                           },
-                        ),
-                        // Fix script coverage
+                        )
+                      },
+                      // Filter input
+                      input(
+                        list{
+                          Attrs.class_("w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-600"),
+                          Attrs.placeholder("Filter recipes by name, description, or language..."),
+                          Attrs.ariaLabel("Filter recipes"),
+                          Attrs.value(hypatia.recipeFilter),
+                          Events.onInput(v => Hypatia(SetRecipeFilter(v))),
+                        },
+                        list{},
+                      ),
+                      // Two-column layout: recipe list + detail
+                      {
+                        let filtered = HypatiaEngine.filterRecipes(hypatia.recipeEntries, hypatia.recipeFilter)
                         div(
-                          list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4")},
+                          list{Attrs.class_("flex gap-4")},
                           list{
+                            // Recipe list (left)
                             div(
-                              list{Attrs.class_("text-sm font-medium text-gray-300 mb-3")},
-                              list{text("Recipe-to-Script Coverage")},
-                            ),
-                            div(
-                              list{Attrs.class_("flex gap-6 text-xs")},
                               list{
+                                Attrs.class_("flex-1 border border-gray-700 rounded-lg overflow-hidden"),
+                                Attrs.role("list"),
+                              },
+                              list{
+                                // Column headers
                                 div(
-                                  list{Attrs.class_("text-green-400")},
-                                  list{text(`${Int.toString(inv.withFixScript)} with fix_script`)},
+                                  list{Attrs.class_("flex items-center gap-2 p-2 bg-gray-900 border-b border-gray-700 text-xs text-gray-500")},
+                                  list{
+                                    span(list{Attrs.class_("w-6")}, list{text("")}),
+                                    span(list{Attrs.class_("flex-1")}, list{text("Recipe")}),
+                                    span(list{Attrs.class_("w-12 text-right")}, list{text("Conf")}),
+                                    span(list{Attrs.class_("w-16 text-right")}, list{text("Tier")}),
+                                    span(list{Attrs.class_("w-14 text-right")}, list{text("Fired")}),
+                                  },
                                 ),
                                 div(
-                                  list{Attrs.class_("text-gray-500")},
-                                  list{text(`${Int.toString(inv.withoutFixScript)} without fix_script`)},
+                                  list{Attrs.class_("max-h-[32rem] overflow-y-auto")},
+                                  filtered->Array.map(recipe => {
+                                    let isSelected = hypatia.selectedRecipe === Some(recipe.id)
+                                    let confPct = Float.toFixed(recipe.confidence *. 100.0, ~digits=0)
+                                    let tierCol = HypatiaEngine.tierColor(recipe.tier)
+                                    div(
+                                      list{
+                                        Attrs.class_(`flex items-center gap-2 p-2 cursor-pointer transition-colors ${
+                                          isSelected ? "bg-indigo-900/40 border-l-2 border-indigo-500" : "hover:bg-gray-900/50 border-l-2 border-transparent"
+                                        }`),
+                                        Attrs.role("listitem"),
+                                        Events.onClick(Hypatia(SelectRecipe(Some(recipe.id)))),
+                                      },
+                                      list{
+                                        // Fix script indicator
+                                        span(
+                                          list{Attrs.class_(`w-6 text-center text-xs ${recipe.hasFixScript ? "text-green-500" : "text-gray-700"}`)},
+                                          list{text(recipe.hasFixScript ? "F" : "-")},
+                                        ),
+                                        // Name
+                                        span(
+                                          list{Attrs.class_("flex-1 text-sm text-gray-300 truncate")},
+                                          list{text(recipe.name)},
+                                        ),
+                                        // Confidence
+                                        span(
+                                          list{Attrs.class_(`w-12 text-right text-xs ${
+                                            recipe.confidence >= 0.97 ? "text-emerald-400" : recipe.confidence >= 0.93 ? "text-amber-400" : "text-red-400"
+                                          }`)},
+                                          list{text(`${confPct}%`)},
+                                        ),
+                                        // Tier
+                                        span(
+                                          list{Attrs.class_(`w-16 text-right text-xs ${tierCol}`)},
+                                          list{text(HypatiaEngine.tierLabel(recipe.tier))},
+                                        ),
+                                        // Times triggered
+                                        span(
+                                          list{Attrs.class_("w-14 text-right text-xs text-gray-500 font-mono")},
+                                          list{text(Int.toString(recipe.timesTriggered))},
+                                        ),
+                                      },
+                                    )
+                                  })->List.fromArray,
                                 ),
                               },
                             ),
-                            // Coverage bar
-                            {
-                              let coveragePct = if inv.totalRecipes > 0 {
-                                Float.toFixed(
-                                  Int.toFloat(inv.withFixScript) /. Int.toFloat(inv.totalRecipes) *. 100.0,
-                                  ~digits=0,
+                            // Detail panel (right) — shown when a recipe is selected
+                            switch hypatia.selectedRecipe {
+                            | Some(recipeId) =>
+                              switch HypatiaEngine.findRecipe(hypatia.recipeEntries, recipeId) {
+                              | Some(recipe) =>
+                                div(
+                                  list{
+                                    Attrs.class_(`w-80 border rounded-lg p-4 space-y-4 ${HypatiaEngine.tierBg(recipe.tier)}`),
+                                    Attrs.role("complementary"),
+                                    Attrs.ariaLabel(`Recipe detail: ${recipe.name}`),
+                                  },
+                                  list{
+                                    // Header
+                                    div(
+                                      list{Attrs.class_("flex items-start justify-between")},
+                                      list{
+                                        div(
+                                          list{Attrs.class_("space-y-1")},
+                                          list{
+                                            div(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text(recipe.name)}),
+                                            div(list{Attrs.class_("text-xs text-gray-500 font-mono")}, list{text(recipe.id)}),
+                                          },
+                                        ),
+                                        button(
+                                          list{
+                                            Attrs.class_("text-xs text-gray-500 hover:text-gray-300"),
+                                            Events.onClick(Hypatia(SelectRecipe(None))),
+                                            Attrs.ariaLabel("Close detail"),
+                                          },
+                                          list{text("x")},
+                                        ),
+                                      },
+                                    ),
+                                    // Description
+                                    div(
+                                      list{Attrs.class_("text-xs text-gray-400 leading-relaxed")},
+                                      list{text(recipe.description)},
+                                    ),
+                                    // Properties grid
+                                    div(
+                                      list{Attrs.class_("grid grid-cols-2 gap-2 text-xs")},
+                                      list{
+                                        div(list{Attrs.class_("text-gray-500")}, list{text("Confidence")}),
+                                        div(
+                                          list{Attrs.class_(`font-mono ${recipe.confidence >= 0.97 ? "text-emerald-400" : "text-amber-400"}`)},
+                                          list{text(`${Float.toFixed(recipe.confidence *. 100.0, ~digits=1)}%`)},
+                                        ),
+                                        div(list{Attrs.class_("text-gray-500")}, list{text("Tier")}),
+                                        div(
+                                          list{Attrs.class_(HypatiaEngine.tierColor(recipe.tier))},
+                                          list{text(HypatiaEngine.tierLabel(recipe.tier))},
+                                        ),
+                                        div(list{Attrs.class_("text-gray-500")}, list{text("Fix script")}),
+                                        div(
+                                          list{Attrs.class_(recipe.hasFixScript ? "text-green-400" : "text-gray-600")},
+                                          list{text(recipe.hasFixScript ? "Available" : "None")},
+                                        ),
+                                        div(list{Attrs.class_("text-gray-500")}, list{text("Times fired")}),
+                                        div(list{Attrs.class_("text-gray-300 font-mono")}, list{text(Int.toString(recipe.timesTriggered))}),
+                                        div(list{Attrs.class_("text-gray-500")}, list{text("Last triggered")}),
+                                        div(list{Attrs.class_("text-gray-400")}, list{text(recipe.lastTriggered)}),
+                                      },
+                                    ),
+                                    // Languages
+                                    div(
+                                      list{Attrs.class_("space-y-1")},
+                                      list{
+                                        div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Languages")}),
+                                        div(
+                                          list{Attrs.class_("flex flex-wrap gap-1")},
+                                          recipe.languages->Array.map(lang =>
+                                            span(
+                                              list{Attrs.class_("px-2 py-0.5 text-xs bg-gray-800/80 text-gray-300 rounded border border-gray-700")},
+                                              list{text(lang)},
+                                            )
+                                          )->List.fromArray,
+                                        ),
+                                      },
+                                    ),
+                                    // Confidence gauge
+                                    div(
+                                      list{Attrs.class_("space-y-1")},
+                                      list{
+                                        div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Confidence gauge")}),
+                                        div(
+                                          list{Attrs.class_("w-full bg-gray-800/60 rounded-full h-2")},
+                                          list{
+                                            div(
+                                              list{
+                                                Attrs.class_(`h-full rounded-full transition-all ${
+                                                  recipe.confidence >= 0.97 ? "bg-emerald-500" : recipe.confidence >= 0.93 ? "bg-amber-500" : "bg-red-500"
+                                                }`),
+                                                Attrs.prop("style", `width: ${Float.toFixed(recipe.confidence *. 100.0, ~digits=0)}%`),
+                                              },
+                                              list{},
+                                            ),
+                                          },
+                                        ),
+                                      },
+                                    ),
+                                  },
                                 )
-                              } else {
-                                "0"
+                              | None =>
+                                div(
+                                  list{Attrs.class_("w-80 border border-gray-700 rounded-lg p-4 text-xs text-gray-500")},
+                                  list{text("Recipe not found")},
+                                )
                               }
+                            | None =>
                               div(
-                                list{
-                                  Attrs.class_("mt-3"),
-                                  Attrs.role("meter"),
-                                  Attrs.ariaLabel(`Fix script coverage: ${coveragePct}%`),
-                                  Attrs.prop("aria-valuenow", coveragePct),
-                                  Attrs.prop("aria-valuemin", "0"),
-                                  Attrs.prop("aria-valuemax", "100"),
-                                },
+                                list{Attrs.class_("w-80 border border-gray-700 rounded-lg p-6 flex items-center justify-center")},
                                 list{
                                   div(
-                                    list{Attrs.class_("w-full bg-gray-800 rounded-full h-3")},
-                                    list{
-                                      div(
-                                        list{
-                                          Attrs.class_("bg-emerald-500 h-full rounded-full transition-all"),
-                                          Attrs.prop("style", `width: ${coveragePct}%`),
-                                        },
-                                        list{},
-                                      ),
-                                    },
-                                  ),
-                                  div(
-                                    list{Attrs.class_("text-xs text-gray-500 mt-1")},
-                                    list{text(`${coveragePct}% coverage`)},
+                                    list{Attrs.class_("text-center text-gray-600 text-xs")},
+                                    list{text("Select a recipe to view details")},
                                   ),
                                 },
                               )
                             },
                           },
-                        ),
+                        )
                       },
-                    )
-                  | None =>
-                    div(
-                      list{Attrs.class_("text-center py-12")},
-                      list{
-                        div(
-                          list{Attrs.class_("text-sm text-gray-500")},
-                          list{text("Recipe inventory not loaded. Connect to Hypatia backend to view the 34-recipe inventory.")},
-                        ),
-                      },
-                    )
-                  }
+                    },
+                  )
                 },
               },
             )

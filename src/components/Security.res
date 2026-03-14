@@ -27,38 +27,109 @@ let renderStatus = (label: string, ok: bool, tooltip: string): Tea_Vdom.t<msg> =
   )
 }
 
-/// Render the redaction patterns section.
+/// Render the redaction patterns section with CRUD.
 let renderPatterns = (security: securityState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("space-y-2")},
-    Array.map(security.patterns, pattern =>
+    list{
+      // Pattern list
       div(
-        list{
-          Attrs.class_(`flex items-center justify-between p-2 rounded ${
-            pattern.enabled ? "bg-gray-800" : "bg-gray-900"
-          } hover:bg-gray-700/50 transition-colors cursor-pointer`),
-          Events.onClick(Security(TogglePattern(pattern.id))),
-          Attrs.title(`Regex: ${pattern.pattern}`),
-        },
-        list{
+        list{Attrs.class_("space-y-1")},
+        Array.map(security.patterns, pattern =>
           div(
-            list{Attrs.class_("flex items-center gap-2")},
+            list{
+              Attrs.class_(`flex items-center justify-between p-2 rounded ${
+                pattern.enabled ? "bg-gray-800" : "bg-gray-900"
+              } hover:bg-gray-700/50 transition-colors`),
+              Attrs.title(`Regex: ${pattern.pattern}`),
+            },
             list{
               div(
-                list{Attrs.class_(`w-2 h-2 rounded-full ${pattern.enabled ? "bg-green-500" : "bg-gray-600"}`)},
+                list{
+                  Attrs.class_("flex items-center gap-2 flex-1 cursor-pointer"),
+                  Events.onClick(Security(TogglePattern(pattern.id))),
+                },
+                list{
+                  div(
+                    list{Attrs.class_(`w-2 h-2 rounded-full ${pattern.enabled ? "bg-green-500" : "bg-gray-600"}`)},
+                    list{},
+                  ),
+                  div(list{Attrs.class_("text-xs text-gray-300")}, list{text(pattern.label)}),
+                  if pattern.builtIn {
+                    div(list{Attrs.class_("text-xs text-gray-600")}, list{text("built-in")})
+                  } else {
+                    div(list{Attrs.class_("text-xs text-blue-600")}, list{text("custom")})
+                  },
+                },
+              ),
+              // Regex preview
+              span(list{Attrs.class_("text-[10px] text-gray-700 font-mono truncate max-w-32")}, list{text(pattern.pattern)}),
+              // Delete button (custom only)
+              if !pattern.builtIn {
+                button(
+                  list{
+                    Attrs.class_("ml-2 text-xs text-red-700 hover:text-red-400 transition-colors"),
+                    Events.onClick(Security(RemovePattern(pattern.id))),
+                    Attrs.ariaLabel(`Remove pattern ${pattern.label}`),
+                    Attrs.title("Remove custom pattern"),
+                  },
+                  list{text("x")},
+                )
+              } else {
+                noNode
+              },
+            },
+          )
+        )->List.fromArray,
+      ),
+      // Add custom pattern form
+      div(
+        list{Attrs.class_("mt-3 p-3 bg-gray-900/50 border border-gray-800 rounded")},
+        list{
+          div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-2")}, list{text("Add Custom Pattern")}),
+          div(
+            list{Attrs.class_("flex gap-2")},
+            list{
+              input(
+                list{
+                  Attrs.class_("flex-1 px-2 py-1 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700 focus:border-red-600 focus:outline-none"),
+                  Attrs.placeholder("Label (e.g. Stripe Key)"),
+                  Attrs.value(security.newPatternLabel),
+                  Events.onInput(v => Security(SetNewPatternLabel(v))),
+                  Attrs.ariaLabel("New pattern label"),
+                },
                 list{},
               ),
-              div(list{Attrs.class_("text-xs text-gray-300")}, list{text(pattern.label)}),
-              if pattern.builtIn {
-                div(list{Attrs.class_("text-xs text-gray-600")}, list{text("built-in")})
-              } else {
-                div(list{Attrs.class_("text-xs text-blue-600")}, list{text("custom")})
-              },
+              input(
+                list{
+                  Attrs.class_("flex-1 px-2 py-1 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700 font-mono focus:border-red-600 focus:outline-none"),
+                  Attrs.placeholder("Regex (e.g. sk_live_[a-zA-Z0-9]+)"),
+                  Attrs.value(security.newPatternRegex),
+                  Events.onInput(v => Security(SetNewPatternRegex(v))),
+                  Attrs.ariaLabel("New pattern regex"),
+                },
+                list{},
+              ),
+              button(
+                list{
+                  Attrs.class_(
+                    if security.newPatternLabel != "" && security.newPatternRegex != "" {
+                      "px-3 py-1 text-xs bg-red-900/50 text-red-300 rounded border border-red-700 hover:bg-red-800/50 transition-colors"
+                    } else {
+                      "px-3 py-1 text-xs bg-gray-800 text-gray-600 rounded border border-gray-700 cursor-not-allowed"
+                    }
+                  ),
+                  Events.onClick(Security(SubmitNewPattern)),
+                  Attrs.disabled(security.newPatternLabel == "" || security.newPatternRegex == ""),
+                  Attrs.ariaLabel("Add pattern"),
+                },
+                list{text("Add")},
+              ),
             },
           ),
         },
-      )
-    )->List.fromArray,
+      ),
+    },
   )
 }
 

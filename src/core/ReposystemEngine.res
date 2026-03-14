@@ -130,6 +130,36 @@ let parseAudits = (json: string): result<array<repoCompliance>, string> => {
   }
 }
 
+/// All RSR requirements.
+let allRequirements: array<rsrRequirement> = [
+  EditorConfig, AiManifest, StateMachineReadable, MetaMachineReadable,
+  EcosystemMachineReadable, Justfile, TopologyDiagram, SecurityPolicy,
+  LicenseFile, HypatiaScanWorkflow,
+]
+
+/// Find repos failing a specific requirement.
+let reposFailingRequirement = (audits: array<repoCompliance>, req: rsrRequirement): array<repoCompliance> =>
+  audits->Array.filter(a =>
+    a.results->Array.some(r => r.requirement === req && !r.met)
+  )
+
+/// Find repos passing a specific requirement.
+let reposPassingRequirement = (audits: array<repoCompliance>, req: rsrRequirement): array<repoCompliance> =>
+  audits->Array.filter(a =>
+    a.results->Array.some(r => r.requirement === req && r.met)
+  )
+
+/// Get compliance rate for a single requirement.
+let requirementRate = (audits: array<repoCompliance>, req: rsrRequirement): float => {
+  let total = Array.length(audits)
+  if total === 0 {
+    0.0
+  } else {
+    let passing = reposPassingRequirement(audits, req)->Array.length
+    Int.toFloat(passing) /. Int.toFloat(total)
+  }
+}
+
 /// Default initial state.
 let defaultState: reposystemState = {
   loaded: false,
@@ -139,4 +169,5 @@ let defaultState: reposystemState = {
   stats: None,
   activeCategory: RsrDashboard,
   filterText: "",
+  selectedRequirement: None,
 }

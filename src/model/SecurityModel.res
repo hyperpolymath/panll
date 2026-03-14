@@ -167,4 +167,8 @@ type securityState = {
   totpInput: string,
   /// Error from the last security operation.
   error: option<string>,
+  /// New custom pattern form: label input.
+  newPatternLabel: string,
+  /// New custom pattern form: regex input.
+  newPatternRegex: string,
 }

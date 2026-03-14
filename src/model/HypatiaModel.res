@@ -103,6 +103,28 @@ type hypatiaCategory =
   /// Recipe inventory — confidence distribution and fix_script coverage.
   | HypatiaRecipes
 
+/// An individual recipe in the Hypatia inventory.
+type recipeEntry = {
+  /// Unique recipe identifier (e.g. "hypatia-rec-001").
+  id: string,
+  /// Human-readable recipe name.
+  name: string,
+  /// Brief description of what this recipe detects/fixes.
+  description: string,
+  /// Confidence score (0.0–1.0).
+  confidence: float,
+  /// Safety triangle tier this recipe routes to (defined in FleetModel).
+  tier: FleetModel.safetyTier,
+  /// Whether a fix_script is available.
+  hasFixScript: bool,
+  /// Programming languages this recipe applies to.
+  languages: array<string>,
+  /// Number of times this recipe has fired across the estate.
+  timesTriggered: int,
+  /// Last triggered timestamp (ISO 8601) or "never".
+  lastTriggered: string,
+}
+
 /// Recipe confidence distribution bucket.
 type recipeConfidenceBucket = {
   /// Label for this bucket (e.g. "0.99", "0.95+", "0.90+", "<0.90").
@@ -161,6 +183,12 @@ type hypatiaState = {
   triangleCounts: option<(int, int, int)>,
   /// Recipe inventory summary.
   recipes: option<recipeInventory>,
+  /// Individual recipe entries for drill-down.
+  recipeEntries: array<recipeEntry>,
+  /// Currently selected recipe for detail view (by id).
+  selectedRecipe: option<string>,
+  /// Recipe filter text.
+  recipeFilter: string,
   /// Outcome summary for dashboard display.
   outcomes: option<outcomeSummary>,
 }

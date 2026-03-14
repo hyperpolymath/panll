@@ -162,6 +162,79 @@ let renderDashboard = (state: bojState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
+      // Latency log visualization
+      if Array.length(state.latencyLog) > 0 {
+        div(
+          list{Attrs.class_("bg-gray-800/30 border border-gray-700 rounded p-3")},
+          list{
+            div(list{Attrs.class_("text-xs text-gray-400 mb-3")}, list{text("Invocation Latency (last 20)")}),
+            // Histogram bars
+            div(
+              list{Attrs.class_("flex items-end gap-0.5 h-16")},
+              state.latencyLog->Array.slice(~start=0, ~end=20)->Array.map(entry => {
+                let maxMs = 500.0
+                let heightPct = Math.min(entry.durationMs /. maxMs *. 100.0, 100.0)
+                let colour = if entry.durationMs < 50.0 {
+                  "bg-emerald-500"
+                } else if entry.durationMs < 200.0 {
+                  "bg-amber-500"
+                } else {
+                  "bg-red-500"
+                }
+                div(
+                  list{
+                    Attrs.class_(`flex-1 ${colour} rounded-t transition-all min-w-1`),
+                    Attrs.style("height", `${Float.toFixed(heightPct, ~digits=0)}%`),
+                    Attrs.title(`${entry.cartridge}/${entry.tool}: ${Float.toFixed(entry.durationMs, ~digits=1)}ms`),
+                  },
+                  list{},
+                )
+              })->List.fromArray,
+            ),
+            // Summary stats
+            {
+              let totalMs = state.latencyLog->Array.reduce(0.0, (acc, e) => acc +. e.durationMs)
+              let count = Float.fromInt(Array.length(state.latencyLog))
+              let avgMs = totalMs /. count
+              let maxEntry = state.latencyLog->Array.reduce(state.latencyLog->Array.getUnsafe(0), (best, e) =>
+                if e.durationMs > best.durationMs { e } else { best }
+              )
+              let minEntry = state.latencyLog->Array.reduce(state.latencyLog->Array.getUnsafe(0), (best, e) =>
+                if e.durationMs < best.durationMs { e } else { best }
+              )
+              div(
+                list{Attrs.class_("flex gap-4 mt-2 text-[10px] text-gray-600")},
+                list{
+                  span(list{}, list{text(`Avg: ${Float.toFixed(avgMs, ~digits=1)}ms`)}),
+                  span(list{}, list{text(`Min: ${Float.toFixed(minEntry.durationMs, ~digits=1)}ms`)}),
+                  span(list{}, list{text(`Max: ${Float.toFixed(maxEntry.durationMs, ~digits=1)}ms`)}),
+                  span(list{}, list{text(`Total: ${Int.toString(Array.length(state.latencyLog))} calls`)}),
+                },
+              )
+            },
+          },
+        )
+      } else {
+        noNode
+      },
+      // Hot-reload pipeline indicator
+      div(
+        list{Attrs.class_("bg-gray-800/30 border border-gray-700 rounded p-3")},
+        list{
+          div(list{Attrs.class_("text-xs text-gray-400 mb-2")}, list{text("Hot-Reload Pipeline")}),
+          div(
+            list{Attrs.class_("flex items-center gap-2 text-xs")},
+            list{
+              span(list{Attrs.class_("px-2 py-0.5 bg-red-900/30 text-red-400 rounded border border-red-800")}, list{text("1. Unmount")}),
+              span(list{Attrs.class_("text-gray-700")}, list{text("→")}),
+              span(list{Attrs.class_("px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded border border-amber-800")}, list{text("2. Verify SHA-256")}),
+              span(list{Attrs.class_("text-gray-700")}, list{text("→")}),
+              span(list{Attrs.class_("px-2 py-0.5 bg-emerald-900/30 text-emerald-400 rounded border border-emerald-800")}, list{text("3. Remount")}),
+              span(list{Attrs.class_("text-gray-600 ml-auto text-[10px]")}, list{text("Zero-downtime cartridge replacement")}),
+            },
+          ),
+        },
+      ),
       // Refresh button
       div(
         list{Attrs.class_("flex gap-2")},
@@ -437,44 +510,170 @@ let renderCartridgeDetail = (state: bojState, name: string): Tea_Vdom.t<msg> => 
 }
 
 // ============================================================================
-// Topology Tab
+// Topology Tab — Interactive Layered Architecture View
 // ============================================================================
 
-let renderTopology = (state: bojState): Tea_Vdom.t<msg> => {
+/// Render a single topology layer card with detail metrics.
+let renderTopologyLayer = (
+  title: string,
+  subtitle: string,
+  colour: string,
+  borderColour: string,
+  metrics: array<(string, string)>,
+  readyCount: int,
+  totalCount: int,
+): Tea_Vdom.t<msg> => {
+  let pct = if totalCount > 0 { readyCount * 100 / totalCount } else { 0 }
   div(
-    list{Attrs.class_("space-y-3")},
+    list{Attrs.class_(`bg-gray-800/40 border rounded-lg p-4 ${borderColour} hover:bg-gray-800/60 transition-colors`)},
     list{
-      div(list{Attrs.class_("text-xs text-gray-400 mb-2")}, list{text("BoJ Architecture — 3-Layer Cartridge Stack")}),
       div(
-        list{Attrs.class_("bg-gray-800/30 border border-gray-700 rounded p-4 font-mono text-xs text-gray-300 whitespace-pre leading-relaxed")},
+        list{Attrs.class_("flex items-center justify-between mb-2")},
         list{
-          text(
-            `┌─────────────────────────────────────────────────┐
-│               V-lang Triple Adapter              │
-│         REST (:9000) + gRPC (:9001)              │
-│              + GraphQL (:9002)                    │
-├─────────────────────────────────────────────────┤
-│              Zig FFI (C-compatible)              │
-│      State machines, hash verification,          │
-│        ${Int.toString(Array.length(state.cartridges))} cartridge .so files loaded             │
-├─────────────────────────────────────────────────┤
-│           Idris2 ABI (Dependent Types)           │
-│     Formal proofs, SafeDatabase, SafeFleet,      │
-│  SafeLsp, SafeDap, SafeBsp, SafeOODA, Catalogue  │
-├─────────────────────────────────────────────────┤
-│             Umoja Federation Layer               │
-│  IPv6 UDP gossip, peer discovery, attestation    │
-│   Peers: ${Int.toString(Array.length(state.umoja.peers))}  Round: ${Int.toString(state.umoja.currentRound)}                           │
-└─────────────────────────────────────────────────┘`,
+          div(
+            list{Attrs.class_("flex items-center gap-2")},
+            list{
+              span(list{Attrs.class_(`text-sm font-bold ${colour}`)}, list{text(title)}),
+              span(list{Attrs.class_("text-[10px] text-gray-600")}, list{text(subtitle)}),
+            },
+          ),
+          // Readiness gauge
+          div(
+            list{Attrs.class_("flex items-center gap-2")},
+            list{
+              div(
+                list{Attrs.class_("w-20 h-2 bg-gray-700 rounded-full overflow-hidden")},
+                list{
+                  div(
+                    list{
+                      Attrs.class_(`h-full rounded-full ${if pct >= 80 { "bg-emerald-500" } else if pct >= 50 { "bg-amber-500" } else { "bg-red-500" }}`),
+                      Attrs.style("width", `${Int.toString(pct)}%`),
+                    },
+                    list{},
+                  ),
+                },
+              ),
+              span(list{Attrs.class_("text-[10px] text-gray-500 font-mono")}, list{text(`${Int.toString(readyCount)}/${Int.toString(totalCount)}`)}),
+            },
           ),
         },
       ),
-      button(
+      // Metrics grid
+      div(
+        list{Attrs.class_("grid grid-cols-3 gap-2 mt-2")},
+        metrics->Array.map(((label, value)) =>
+          div(
+            list{Attrs.class_("text-xs")},
+            list{
+              div(list{Attrs.class_("text-gray-600")}, list{text(label)}),
+              div(list{Attrs.class_("text-gray-300 font-mono")}, list{text(value)}),
+            },
+          )
+        )->List.fromArray,
+      ),
+    },
+  )
+}
+
+/// Render the data flow arrow between layers.
+let renderFlowArrow = (label: string): Tea_Vdom.t<msg> => {
+  div(
+    list{Attrs.class_("flex items-center justify-center py-1")},
+    list{
+      div(list{Attrs.class_("text-gray-700 text-xs flex items-center gap-1")}, list{
+        span(list{}, list{text("▼")}),
+        span(list{Attrs.class_("text-[10px] text-gray-600")}, list{text(label)}),
+        span(list{}, list{text("▼")}),
+      }),
+    },
+  )
+}
+
+let renderTopology = (state: bojState): Tea_Vdom.t<msg> => {
+  let abiReady = state.cartridges->Array.filter(c => c.layers.abiReady)->Array.length
+  let ffiReady = state.cartridges->Array.filter(c => c.layers.ffiReady)->Array.length
+  let adapterReady = state.cartridges->Array.filter(c => c.layers.adapterReady)->Array.length
+  let soReady = state.cartridges->Array.filter(c => c.layers.sharedLibReady)->Array.length
+  let total = Array.length(state.cartridges)
+  let restPorts = state.cartridges->Array.filter(c => c.restPort > 0)->Array.length
+  let grpcPorts = state.cartridges->Array.filter(c => c.grpcPort > 0)->Array.length
+  let gqlPorts = state.cartridges->Array.filter(c => c.graphqlPort > 0)->Array.length
+
+  div(
+    list{Attrs.class_("space-y-1")},
+    list{
+      div(list{Attrs.class_("text-xs text-gray-400 mb-3")}, list{text("BoJ Architecture — Interactive 3-Layer Cartridge Stack")}),
+      // Layer 1: V-lang Adapter
+      renderTopologyLayer(
+        "V-lang Triple Adapter",
+        "REST + gRPC + GraphQL",
+        "text-violet-400",
+        "border-violet-800",
+        [
+          ("REST endpoints", Int.toString(restPorts)),
+          ("gRPC endpoints", Int.toString(grpcPorts)),
+          ("GraphQL endpoints", Int.toString(gqlPorts)),
+        ],
+        adapterReady,
+        total,
+      ),
+      renderFlowArrow("C ABI calls"),
+      // Layer 2: Zig FFI
+      renderTopologyLayer(
+        "Zig FFI",
+        "C-compatible, zero-cost",
+        "text-amber-400",
+        "border-amber-800",
+        [
+          (".so files built", Int.toString(soReady)),
+          ("State machines", Int.toString(ffiReady)),
+          ("Hash verified", Int.toString(soReady)),
+        ],
+        ffiReady,
+        total,
+      ),
+      renderFlowArrow("dependent type proofs"),
+      // Layer 3: Idris2 ABI
+      renderTopologyLayer(
+        "Idris2 ABI",
+        "Dependent types, formal proofs",
+        "text-cyan-400",
+        "border-cyan-800",
+        [
+          ("Definitions ready", Int.toString(abiReady)),
+          ("Safe* modules", "7"),
+          ("Proof strategy", "compile-time"),
+        ],
+        abiReady,
+        total,
+      ),
+      renderFlowArrow("UDP gossip protocol"),
+      // Layer 4: Umoja Federation
+      renderTopologyLayer(
+        "Umoja Federation",
+        "IPv6 UDP gossip, SHA-256 attestation",
+        "text-indigo-400",
+        "border-indigo-800",
+        [
+          ("Active peers", Int.toString(Array.length(state.umoja.peers))),
+          ("Gossip round", Int.toString(state.umoja.currentRound)),
+          ("Status", if state.umoja.active { "Active" } else { "Inactive" }),
+        ],
+        if state.umoja.active { 1 } else { 0 },
+        1,
+      ),
+      // Refresh
+      div(
+        list{Attrs.class_("flex gap-2 mt-3")},
         list{
-          Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600"),
-          Events.onClick(Boj(RefreshTopology)),
+          button(
+            list{
+              Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600"),
+              Events.onClick(Boj(RefreshTopology)),
+            },
+            list{text("Refresh Topology")},
+          ),
         },
-        list{text("Refresh Topology")},
       ),
     },
   )

@@ -237,6 +237,11 @@ include ReleaseManagerModel
 /// workflow orchestration panel with event-driven rules and approval gates.
 include AutomationRouterModel
 
+/// Re-export Databases types (databasesCategory, queryHistoryEntry,
+/// schemaEntity, databasesState) for the unified database management panel
+/// covering VeriSimDB, QuandleDB, and LithoGlyph.
+include DatabasesModel
+
 /// Opens BojModel into this scope, contributing BoJ types
 /// (bojCartridge, bojCategory, bojState, etc.) for the Bundle of Joy panel.
 include BojModel
@@ -287,6 +292,20 @@ include StapelnModel
 /// evangeliserAnalysis, evangeliserConstraints, evangeliserTab, evangeliserViewLayer,
 /// evangeliserState) for the JS→ReScript transformation teaching panel.
 include EvangeliserModel
+
+/// Re-export Observatory types for the integrative dashboard panel.
+include ObservatoryModel
+
+/// Re-export AmbientOps types for the hospital-model sysadmin panel.
+include AmbientOpsModel
+
+/// Re-export Language Forge types (languagePhase, componentStatus, languageEntry,
+/// forgeCategory, forgeSortBy, languageForgeState) for the nextgen-languages panel.
+include LanguageForgeModel
+
+/// Re-export TangleViz types (braidGenerator, tangleViewMode, knotInvariant,
+/// parsedStatus, tangleVizState) for the topological programming visualizer panel.
+include TangleVizModel
 
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
@@ -438,6 +457,9 @@ type model = {
   // Automation Router — hybrid cross-panel workflow orchestration
   automationRouter: automationRouterState,
 
+  // Databases — unified VeriSimDB/QuandleDB/LithoGlyph management
+  databases: databasesState,
+
   // BoJ — Bundle of Joy cartridge server
   boj: bojState,
 
@@ -507,6 +529,18 @@ type model = {
 
   // Evangeliser — JS→ReScript pattern teaching with celebrate/minimize/better narratives
   evangeliser: evangeliserState,
+
+  // Language Forge — nextgen-languages portfolio monitoring and development
+  languageForge: languageForgeState,
+
+  // TangleViz — topological programming visualizer for braid/knot topology
+  tangleViz: tangleVizState,
+
+  // Observatory — integrative dashboard aggregating health, resources, activity
+  observatory: observatoryState,
+
+  // AmbientOps — hospital-model sysadmin (clinician, network ambulance, hardware crash team)
+  ambientOps: ambientOpsState,
 }
 
 /// Initial model state - "Dark Start" mode
@@ -903,6 +937,8 @@ let init = (): model => {
     bgpRoutes: [],
     activeCategory: AerieDashboard,
     bgpAnomalyCount: 0,
+    mtuResult: None,
+    interfaces: [],
     bojRouting: false,
   },
   interfaces: InterfacesEngine.defaultState,
@@ -1036,6 +1072,7 @@ let init = (): model => {
   buildDashboard: BuildDashboardEngine.defaultState,
   releaseManager: ReleaseManagerEngine.defaultState,
   automationRouter: AutomationRouterEngine.defaultState,
+  databases: DatabasesEngine.defaultState,
   boj: {
     serverUrl: ServiceEndpoints.bojServer,
     connected: true,
@@ -1184,4 +1221,8 @@ let init = (): model => {
   scriptGist: ScriptGistEngine.defaultState,
   stapeln: StapelnEngine.defaultState,
   evangeliser: EvangeliserEngine.defaultState,
+  languageForge: LanguageForgeEngine.defaultState,
+  tangleViz: TangleVizEngine.defaultState,
+  observatory: ObservatoryEngine.defaultState,
+  ambientOps: AmbientOpsEngine.defaultState,
 }

@@ -94,4 +94,6 @@ type reposystemState = {
   activeCategory: reposystemCategory,
   /// Text filter for repo search.
   filterText: string,
+  /// Currently selected requirement for drill-down.
+  selectedRequirement: option<rsrRequirement>,
 }

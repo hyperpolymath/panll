@@ -289,7 +289,7 @@ let allPanels: array<panelMeta> = [
     icon: "map",
     connectionStatus: ServiceDisconnected, // File I/O for level data
     hasBackend: true, // Tauri file I/O + validation
-    cladeId: None,
+    cladeId: Some("level-architect"),
   },
   {
     id: PanelCoprocessors,
@@ -389,7 +389,7 @@ let allPanels: array<panelMeta> = [
     icon: "dna",
     connectionStatus: ServiceConnected, // Local taxonomy data, always available
     hasBackend: false, // Reads clade .a2ml files from filesystem
-    cladeId: None,
+    cladeId: Some("clade-browser"),
   },
   {
     id: PanelTentacles,
@@ -449,7 +449,57 @@ let allPanels: array<panelMeta> = [
     icon: "help-circle",
     connectionStatus: ServiceConnected, // Local content, always available
     hasBackend: false, // All content is static, no backend service
-    cladeId: None, // Meta panel, not part of any clade
+    cladeId: Some("help"),
+  },
+  {
+    id: PanelEchidna,
+    name: "ECHIDNA",
+    shortName: "ECH",
+    description: "Multi-solver theorem prover — proof dispatch, tactic suggestions, enterprise model checking",
+    icon: "shield-check",
+    connectionStatus: ServiceDisconnected, // Connects to ECHIDNA service
+    hasBackend: true, // ECHIDNA V-lang REST adapters
+    cladeId: Some("echidna"),
+  },
+  {
+    id: PanelObservatory,
+    name: "Observatory",
+    shortName: "Obs",
+    description: "Integrative dashboard — cross-panel health, service status, resource usage, ambient metrics",
+    icon: "activity",
+    connectionStatus: ServiceConnected, // Aggregates local state, always available
+    hasBackend: true, // Queries Tauri for system info + panel health
+    cladeId: Some("observatory"),
+  },
+  {
+    id: PanelAmbientOps,
+    name: "AmbientOps",
+    shortName: "Ops",
+    description: "Hospital-model sysadmin — clinician, network ambulance, hardware crash team, emergency room",
+    icon: "stethoscope",
+    connectionStatus: ServiceDisconnected, // Probes for ambientops services
+    hasBackend: true, // Invokes clinician/network-repair CLIs via Tauri
+    cladeId: Some("ambientops"),
+  },
+  {
+    id: PanelLanguageForge,
+    name: "Language Forge",
+    shortName: "Forge",
+    description: "Monitor and develop the 14 nextgen-languages portfolio — scores, phases, WASM readiness",
+    icon: "hammer",
+    connectionStatus: ServiceConnected, // Hardcoded data, always available
+    hasBackend: false, // Pure client-side data, no HTTP service
+    cladeId: Some("language-forge"),
+  },
+  {
+    id: PanelTangleViz,
+    name: "Tangle Viz",
+    shortName: "Tangle",
+    description: "Topological programming visualizer — braid diagrams, knot invariants, Tangle source parsing",
+    icon: "knot",
+    connectionStatus: ServiceConnected, // Pure client-side, always available
+    hasBackend: false, // All computation runs client-side
+    cladeId: Some("tangle-viz"),
   },
 ]
 

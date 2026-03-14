@@ -133,10 +133,123 @@ let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
             }),
           })
         | PlayNqc =>
-          div(list{Attrs.class_("text-center text-gray-500 mt-8")}, list{
-            div(list{Attrs.class_("text-2xl mb-2")}, list{text("NQC Console")}),
-            div(list{Attrs.class_("text-sm")}, list{text("VQL (VeriSimDB) + KQL (QuandleDB) + GQL (LithoGlyph)")}),
-            div(list{Attrs.class_("text-xs text-gray-600 mt-1")}, list{text("Connects to NQC proxy at :4000")}),
+          div(list{Attrs.class_("space-y-4")}, list{
+            // NQC language selector (VQL/KQL/GQL only)
+            div(list{Attrs.class_("flex items-center gap-3")}, list{
+              div(list{Attrs.class_("flex gap-1"), Attrs.role("radiogroup"), Attrs.ariaLabel("NQC query language")},
+                [LangVql, LangKql, LangGql]->Array.map(lang => {
+                  let isActive = lang === pg.nqcLanguage
+                  let accentColor = switch lang {
+                  | LangVql => "bg-teal-600 text-white"
+                  | LangKql => "bg-purple-600 text-white"
+                  | LangGql => "bg-amber-600 text-white"
+                  | _ => "bg-indigo-600 text-white"
+                  }
+                  button(
+                    list{
+                      Attrs.class_(`px-3 py-1.5 text-xs rounded transition-colors ${isActive ? accentColor : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`),
+                      Attrs.role("radio"), Attrs.ariaSelected(isActive),
+                      Events.onClick(Playgrounds(SetNqcLanguage(lang))),
+                    },
+                    list{text(PlaygroundsEngine.languageLabel(lang))},
+                  )
+                })->List.fromArray,
+              ),
+              // Connection indicator
+              div(list{Attrs.class_(`flex items-center gap-1 text-xs ${pg.nqcConnected ? "text-green-400" : "text-gray-600"}`)}, list{
+                div(list{Attrs.class_(`w-1.5 h-1.5 rounded-full ${pg.nqcConnected ? "bg-green-400" : "bg-gray-600"}`)}, list{}),
+                text(pg.nqcConnected ? "Connected to :4000" : "Disconnected"),
+              }),
+              // Clear history
+              if Array.length(pg.nqcHistory) > 0 {
+                button(
+                  list{
+                    Attrs.class_("ml-auto text-xs text-gray-600 hover:text-gray-400"),
+                    Events.onClick(Playgrounds(ClearNqcHistory)),
+                  },
+                  list{text("Clear History")},
+                )
+              } else { noNode },
+            }),
+            // Query input + execute
+            div(list{Attrs.class_("flex gap-2")}, list{
+              textarea(
+                list{
+                  Attrs.class_("flex-1 bg-gray-900 border border-gray-700 rounded p-3 font-mono text-sm text-gray-200 resize-none h-20"),
+                  Attrs.placeholder(switch pg.nqcLanguage {
+                  | LangVql => "SELECT * FROM entities WHERE confidence > 0.9 LIMIT 10"
+                  | LangKql => "MATCH (n:Concept)-[r:RELATES_TO]->(m) RETURN n, r, m"
+                  | LangGql => "{ entities(filter: {type: \"document\"}) { id name confidence } }"
+                  | _ => "Enter query..."
+                  }),
+                  Attrs.ariaLabel("NQC query input"),
+                  Attrs.value(pg.nqcInput),
+                  Events.onInput(v => Playgrounds(SetNqcInput(v))),
+                },
+                list{},
+              ),
+              div(list{Attrs.class_("flex flex-col gap-1")}, list{
+                button(
+                  list{
+                    Attrs.class_(`px-4 py-2 text-sm rounded flex-1 ${pg.executing ? "bg-gray-700 text-gray-400" : "bg-teal-600 text-white hover:bg-teal-500"}`),
+                    Events.onClick(Playgrounds(ExecuteNqc)),
+                    Attrs.disabled(pg.executing || pg.nqcInput === ""),
+                  },
+                  list{text(pg.executing ? "Running..." : "Execute")},
+                ),
+                div(list{Attrs.class_("text-[10px] text-gray-600 text-center")}, list{
+                  text(PlaygroundsEngine.languageLabel(pg.nqcLanguage)),
+                }),
+              }),
+            }),
+            // Last result
+            switch pg.lastResult {
+            | Some(result) =>
+              div(list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-3")}, list{
+                if result.success {
+                  div(list{}, list{
+                    div(list{Attrs.class_("flex items-center gap-3 mb-2")}, list{
+                      span(list{Attrs.class_("text-xs text-green-400 font-medium")}, list{text("OK")}),
+                      span(list{Attrs.class_("text-xs text-gray-500")}, list{text(`${Float.toFixed(result.durationMs, ~digits=1)}ms`)}),
+                      span(list{Attrs.class_("text-xs text-gray-500")}, list{text(`${Int.toString(result.rowCount)} rows`)}),
+                    }),
+                    switch result.data {
+                    | Some(data) => pre(list{Attrs.class_("text-xs text-gray-300 font-mono whitespace-pre-wrap max-h-48 overflow-y-auto")}, list{text(data)})
+                    | None => noNode
+                    },
+                  })
+                } else {
+                  div(list{Attrs.class_("text-xs text-red-400")}, list{
+                    text(switch result.error { | Some(e) => e | None => "Unknown error" }),
+                  })
+                },
+              })
+            | None => noNode
+            },
+            // Query history
+            if Array.length(pg.nqcHistory) > 0 {
+              div(list{Attrs.class_("space-y-2")}, list{
+                div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider")}, list{text("Query History")}),
+                div(list{Attrs.class_("space-y-1 max-h-48 overflow-y-auto")},
+                  pg.nqcHistory->Array.map(((query, lang, result)) => {
+                    let statusColor = switch result {
+                    | Some(r) => r.success ? "border-l-green-600" : "border-l-red-600"
+                    | None => "border-l-gray-600"
+                    }
+                    div(
+                      list{
+                        Attrs.class_(`flex items-center gap-2 p-2 bg-gray-900/50 rounded border-l-2 ${statusColor} cursor-pointer hover:bg-gray-800/50`),
+                        Events.onClick(Playgrounds(SetNqcInput(query))),
+                      },
+                      list{
+                        span(list{Attrs.class_("text-xs text-gray-500 w-8")}, list{text(PlaygroundsEngine.languageLabel(lang))}),
+                        span(list{Attrs.class_("flex-1 text-xs text-gray-400 font-mono truncate")}, list{text(query)}),
+                      },
+                    )
+                  })->List.fromArray,
+                ),
+              })
+            } else { noNode },
           })
         | PlaySnippets =>
           div(list{Attrs.class_("space-y-3")},

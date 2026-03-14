@@ -73,6 +73,36 @@ type aerieCategory =
   /// Probe configuration.
   | AerieProbes
 
+/// MTU discovery result — path MTU vs interface MTU.
+type mtuResult = {
+  /// Network interface name (e.g. "wlp3s0").
+  interfaceName: string,
+  /// Interface MTU setting.
+  interfaceMtu: int,
+  /// Discovered path MTU (via PMTUD binary search).
+  pathMtu: int,
+  /// Whether the interface MTU exceeds the path MTU (mismatch).
+  mismatch: bool,
+  /// Measurement timestamp (ISO 8601).
+  timestamp: string,
+}
+
+/// Network interface summary — local interface diagnostics.
+type interfaceSummary = {
+  /// Interface name (e.g. "wlp3s0").
+  name: string,
+  /// Whether the interface is up.
+  isUp: bool,
+  /// IPv4 address (if assigned).
+  ipAddress: option<string>,
+  /// Link type: "wifi", "ethernet", "bluetooth", "loopback".
+  linkType: string,
+  /// Signal strength in dBm (WiFi only).
+  signalDbm: option<int>,
+  /// Connection name from NetworkManager.
+  connectionName: option<string>,
+}
+
 /// Root state for the Aerie panel.
 type aerieState = {
   /// Whether data has been loaded.
@@ -93,6 +123,10 @@ type aerieState = {
   activeCategory: aerieCategory,
   /// Number of anomalous BGP routes detected.
   bgpAnomalyCount: int,
+  /// MTU discovery result (from network ambulance or local probe).
+  mtuResult: option<mtuResult>,
+  /// Local interface summaries (from network ambulance).
+  interfaces: array<interfaceSummary>,
   /// When true, overlay operations route through BoJ observe-mcp cartridge instead of direct HTTP.
   bojRouting: bool,
 }

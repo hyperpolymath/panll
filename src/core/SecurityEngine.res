@@ -220,4 +220,6 @@ let defaultState: securityState = {
   activeCategory: SecurityOverview,
   totpInput: "",
   error: None,
+  newPatternLabel: "",
+  newPatternRegex: "",
 }

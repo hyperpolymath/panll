@@ -223,7 +223,7 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelHypatia) => Hypatia.view(model.hypatia)
   | Some(PanelFleet) => Fleet.view(model.fleet)
   | Some(PanelReposystem) => Reposystem.view(model.reposystem)
-  | Some(PanelDatabases) => Vab.view(model.vab) // Databases extends VeriSimDB — full panel coming
+  | Some(PanelDatabases) => Databases.view(model.databases)
   | Some(PanelAerie) => Aerie.view(model.aerie)
   | Some(PanelInterfaces) => Interfaces.view(model.interfaces)
   | Some(PanelPlaygrounds) => Playgrounds.view(model.playgrounds)
@@ -260,6 +260,11 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelTypeLL) => TypeLL.view(model.typell)
   | Some(PanelEvangeliser) => Evangeliser.view(model.evangeliser)
   | Some(PanelHelp) => Help.view(model.help)
+  | Some(PanelLanguageForge) => LanguageForge.view(model.languageForge)
+  | Some(PanelTangleViz) => TangleViz.view(model.tangleViz)
+  | Some(PanelEchidna) => Echidna.view(model.echidna)
+  | Some(PanelObservatory) => Observatory.view(model.observatory)
+  | Some(PanelAmbientOps) => AmbientOps.view(model.ambientOps)
   }
 }
 

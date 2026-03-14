@@ -276,6 +276,7 @@ type cloudguardMsg =
   // Hardening
   | HardenSelected
   | HardenZone(string)
+  | HardenSetting(string) // Fix a single audit finding by settingId
   | ZoneHardened(result<string, string>)
   // Audit
   | RunAudit
@@ -345,6 +346,10 @@ type hypatiaMsg =
   | SetHypatiaFilter(string)
   /// TypeLL cross-panel type check result for scan config types.
   | TypeCheckResult(result<string, string>)
+  /// Select a recipe for detail drill-down (None to deselect).
+  | SelectRecipe(option<string>)
+  /// Update recipe filter text.
+  | SetRecipeFilter(string)
 
 /// Gitbot-Fleet panel messages — bot status, findings queue, dispatch,
 /// and safety triangle navigation.
@@ -368,6 +373,8 @@ type reposystemMsg =
   | ScanAllLoaded(result<string, string>)
   | SetRsrCategory(reposystemCategory)
   | SetRsrFilter(string)
+  /// Select a requirement for drill-down (None to deselect).
+  | SelectRequirement(option<rsrRequirement>)
   /// TypeLL cross-panel type check result for RSR compliance types.
   | TypeCheckResult(result<string, string>)
 
@@ -379,6 +386,8 @@ type aerieMsg =
   | SetAerieCategory(aerieCategory)
   /// Toggle BoJ routing for overlay operations (observe-mcp cartridge).
   | ToggleAerieBojRouting
+  /// Toggle a probe target on/off by endpoint.
+  | ToggleProbe(string)
   /// TypeLL cross-panel type check result for network config types.
   | TypeCheckResult(result<string, string>)
 
@@ -398,6 +407,16 @@ type playgroundsMsg =
   | Execute
   | ExecuteResult(result<string, string>)
   | LoadSnippet(string)
+  /// NQC console: update query input text.
+  | SetNqcInput(string)
+  /// NQC console: switch query language (VQL/KQL/GQL).
+  | SetNqcLanguage(playgroundLanguage)
+  /// NQC console: execute the current NQC query.
+  | ExecuteNqc
+  /// NQC console: query result received.
+  | NqcResult(result<string, string>)
+  /// NQC console: clear query history.
+  | ClearNqcHistory
   /// TypeLL cross-panel type check result for sandbox code types.
   | TypeCheckResult(result<string, string>)
 
@@ -802,6 +821,12 @@ type securityMsg =
   | ToggleShoulderSafe
   /// Set security category tab.
   | SetSecurityCategory(securityCategory)
+  /// Update new pattern form: label field.
+  | SetNewPatternLabel(string)
+  /// Update new pattern form: regex field.
+  | SetNewPatternRegex(string)
+  /// Submit the new pattern form.
+  | SubmitNewPattern
   /// TypeLL cross-panel type check result for trustfile types.
   | TypeCheckResult(result<string, string>)
 
@@ -1675,6 +1700,53 @@ type bojMsg =
   /// TypeLL ABI type-check result for cartridge invocation.
   | AbiTypeCheckResult(result<string, string>)
 
+/// Databases panel messages — unified VeriSimDB/QuandleDB/LithoGlyph management.
+type databasesMsg =
+  /// Switch the active category tab.
+  | SetCategory(databasesCategory)
+  /// Select a database module by ID.
+  | SelectModule(string)
+  /// Connect to all database backends.
+  | ConnectAll
+  /// Refresh health/connection status for all modules.
+  | RefreshHealth
+  /// Health check result for a module.
+  | HealthResult(string, result<string, string>)
+  /// Set the query input text.
+  | SetQueryInput(string)
+  /// Execute the current query against the selected module.
+  | ExecuteQuery
+  /// Query execution result.
+  | QueryResult(result<string, string>)
+  /// Clear the query input and result.
+  | ClearQuery
+  /// Load an example query into the editor.
+  | LoadExampleQuery(string)
+  /// Set the schema filter text.
+  | SetFilter(string)
+  /// Select a schema entity for detail view.
+  | SelectEntity(string)
+  /// Load entity detail JSON.
+  | LoadEntityDetail(string)
+  /// Entity detail result.
+  | EntityDetailResult(result<string, string>)
+  /// Refresh drift scores for the selected module.
+  | RefreshDrift
+  /// Drift scores result.
+  | DriftResult(result<string, string>)
+  /// Normalise all drifted modalities.
+  | NormaliseAll
+  /// Normalisation result.
+  | NormaliseResult(result<string, string>)
+  /// Load telemetry snapshot.
+  | LoadTelemetry
+  /// Telemetry snapshot result.
+  | TelemetryResult(result<string, string>)
+  /// Toggle BoJ cartridge routing.
+  | ToggleBojRouting
+  /// Dismiss error banner.
+  | DismissError
+
 /// Script Gist messages — portable computation gist lifecycle.
 /// Covers gist CRUD, execution, template expansion, MCP tool registration,
 /// and diachronic/synchronic state document management (Minskian cardfiles).
@@ -2137,6 +2209,62 @@ type evangeliserMsg =
   /// Dismiss error.
   | DismissError
 
+/// Language Forge panel messages — nextgen-languages portfolio monitoring.
+type languageForgeMsg =
+  /// Load language data (re-initialise from hardcoded assessment).
+  | LoadLanguages
+  /// Change the active category tab.
+  | SetForgeCategory(forgeCategory)
+  /// Update the text filter for language search.
+  | SetForgeFilter(string)
+  /// Change the sort order.
+  | SetForgeSort(forgeSortBy)
+  /// Select a language for detail view (None to deselect).
+  | SelectLanguage(option<string>)
+  /// Toggle the MoSCoW breakdown in the detail view.
+  | ToggleMoscow
+
+/// Messages for TangleViz topological programming visualizer.
+type tangleVizMsg =
+  /// Switch view mode (braid diagram / knot diagram / algebraic).
+  | SetViewMode(tangleViewMode)
+  /// Update Tangle source code input text.
+  | SetInputText(string)
+  /// Parse the current input text into a braid word.
+  | ParseInput
+  /// Clear all input and state.
+  | ClearAll
+  /// Load an example braid word (array of generators).
+  | LoadExample(array<braidGenerator>)
+  /// Select a knot invariant for computation.
+  | SelectInvariant(knotInvariant)
+  /// Compute the currently selected invariant.
+  | ComputeInvariant
+  /// Dismiss the error banner.
+  | DismissError
+
+/// Observatory messages — integrative dashboard health and resource monitoring.
+type observatoryMsg =
+  /// Switch the active tab.
+  | SetObsTab(observatoryTab)
+  /// Start a health check sweep across all panels.
+  | RunHealthCheck
+  /// Health check completed with resource snapshots.
+  | HealthCheckComplete(result<array<resourceSnapshot>, string>)
+  /// Dismiss error banner.
+  | DismissObsError
+
+/// AmbientOps messages — hospital-model sysadmin diagnostics and repair.
+type ambientOpsMsg =
+  /// Switch the active tab.
+  | SetOpsTab(ambientOpsTab)
+  /// Start a diagnostic sweep.
+  | RunDiagnostics
+  /// Diagnostic sweep completed with findings.
+  | DiagnosticsComplete(result<array<diagnosticFinding>, string>)
+  /// Dismiss error banner.
+  | DismissOpsError
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -2188,6 +2316,7 @@ type msg =
   | ReleaseManager(releaseManagerMsg) // Versioning, changelog, distribution
   | AutomationRouter(automationRouterMsg) // Hybrid cross-panel workflow orchestration
   | ScriptGist(scriptGistMsg) // Portable computation gists (Minskian cardfiles)
+  | DatabasesPanel(databasesMsg) // Unified database management (VeriSimDB/QuandleDB/LithoGlyph)
   | Boj(bojMsg) // Bundle of Joy cartridge server
   | CladeBrowser(cladeBrowserMsg) // Clade taxonomy browser
   | Tentacles(tentaclesMsg) // 7-Tentacles compiler agent orchestra
@@ -2212,6 +2341,10 @@ type msg =
   | FocusDimming(focusDimmingMsg) // Focus-aware dimming and Smart Memory Mode
   | Stapeln(stapelnMsg) // Stapeln container assembly pipeline
   | Evangeliser(evangeliserMsg) // ReScript Evangeliser — JS→ReScript teaching
+  | LanguageForge(languageForgeMsg) // Language Forge — nextgen-languages portfolio
+  | TangleViz(tangleVizMsg) // Topological programming visualizer (braids, knots, invariants)
+  | Observatory(observatoryMsg) // Integrative dashboard — cross-panel health and resources
+  | AmbientOps(ambientOpsMsg) // Hospital-model sysadmin — clinician, network, hardware
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

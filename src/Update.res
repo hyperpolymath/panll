@@ -2673,6 +2673,15 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
       | None => (model, Tea_Cmd.none)
       }
     }
+  | HardenSetting(_settingId) =>
+    // Single setting fix — delegates to zone hardening for the first selected zone
+    switch Array.get(cg.selectedZoneIds, 0) {
+    | Some(zoneId) => (
+        {...model, cloudguard: {...cg, loading: true}},
+        CloudGuardCmd.hardenZone(zoneId, result => CloudGuard(ZoneHardened(result))),
+      )
+    | None => (model, Tea_Cmd.none)
+    }
   | HardenZone(zoneId) => (
       {...model, cloudguard: {...cg, loading: true}},
       CloudGuardCmd.hardenZone(zoneId, result => CloudGuard(ZoneHardened(result))),
@@ -3116,6 +3125,7 @@ let updateReposystem = (model: model, msg: reposystemMsg): (model, Tea_Cmd.t<msg
     }
   | SetRsrCategory(cat) => ({...model, reposystem: {...rsr, activeCategory: cat}}, Tea_Cmd.none)
   | SetRsrFilter(text) => ({...model, reposystem: {...rsr, filterText: text}}, Tea_Cmd.none)
+  | SelectRequirement(req) => ({...model, reposystem: {...rsr, selectedRequirement: req}}, Tea_Cmd.none)
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "reposystem", json)
@@ -3168,6 +3178,12 @@ let updateAerie = (model: model, msg: aerieMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, aerie: {...aer, bojRouting: !aer.bojRouting}},
       Tea_Cmd.none,
     )
+  | ToggleProbe(endpoint) => {
+      let probes = aer.probes->Array.map(p =>
+        if p.endpoint === endpoint { {...p, active: !p.active} } else { p }
+      )
+      ({...model, aerie: {...aer, probes}}, Tea_Cmd.none)
+    }
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "aerie", json)
@@ -3271,6 +3287,26 @@ let updatePlaygrounds = (model: model, msg: playgroundsMsg): (model, Tea_Cmd.t<m
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
+  | SetNqcInput(text) => ({...model, playgrounds: {...pg, nqcInput: text}}, Tea_Cmd.none)
+  | SetNqcLanguage(lang) => ({...model, playgrounds: {...pg, nqcLanguage: lang}}, Tea_Cmd.none)
+  | ExecuteNqc => (
+      {...model, playgrounds: {...pg, executing: true, error: None}},
+      PlaygroundsCmd.executeQuery(
+        PlaygroundsEngine.languageLabel(pg.nqcLanguage),
+        pg.nqcInput,
+        result => Playgrounds(NqcResult(result)),
+      ),
+    )
+  | NqcResult(result) => {
+      let qr = switch result {
+      | Ok(data) => {success: true, data: Some(data), error: None, durationMs: 0.0, rowCount: 0}
+      | Error(e) => {success: false, data: None, error: Some(e), durationMs: 0.0, rowCount: 0}
+      }
+      let entry = (pg.nqcInput, pg.nqcLanguage, Some(qr))
+      let history = [entry]->Array.concat(pg.nqcHistory)
+      ({...model, playgrounds: {...pg, executing: false, nqcHistory: history, lastResult: Some(qr)}}, Tea_Cmd.none)
+    }
+  | ClearNqcHistory => ({...model, playgrounds: {...pg, nqcHistory: []}}, Tea_Cmd.none)
   | TypeCheckResult(Error(_)) =>
     // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
@@ -3393,6 +3429,14 @@ let updateHypatia = (model: model, msg: hypatiaMsg): (model, Tea_Cmd.t<msg>) => 
   | TypeCheckResult(Error(_)) =>
     // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
+  | SelectRecipe(id) => (
+      {...model, hypatia: {...hyp, selectedRecipe: id}},
+      Tea_Cmd.none,
+    )
+  | SetRecipeFilter(text) => (
+      {...model, hypatia: {...hyp, recipeFilter: text}},
+      Tea_Cmd.none,
+    )
   }
 }
 
@@ -5528,6 +5572,24 @@ let updateSecurity = (model: model, msg: securityMsg): (model, Tea_Cmd.t<msg>) =
     ({...model, security: SecurityEngine.toggleShoulderSafe(sec)}, Tea_Cmd.none)
   | SetSecurityCategory(cat) =>
     ({...model, security: {...sec, activeCategory: cat}}, Tea_Cmd.none)
+  | SetNewPatternLabel(v) =>
+    ({...model, security: {...sec, newPatternLabel: v}}, Tea_Cmd.none)
+  | SetNewPatternRegex(v) =>
+    ({...model, security: {...sec, newPatternRegex: v}}, Tea_Cmd.none)
+  | SubmitNewPattern => {
+      if sec.newPatternLabel != "" && sec.newPatternRegex != "" {
+        let pattern: redactionPattern = {
+          id: "custom-" ++ Float.toString(Date.now()),
+          label: sec.newPatternLabel,
+          pattern: sec.newPatternRegex,
+          enabled: true,
+          builtIn: false,
+        }
+        ({...model, security: SecurityEngine.addPattern({...sec, newPatternLabel: "", newPatternRegex: ""}, pattern)}, Tea_Cmd.none)
+      } else {
+        (model, Tea_Cmd.none)
+      }
+    }
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "security", json)
@@ -10295,6 +10357,98 @@ let updateScriptGist = (model: model, msg: scriptGistMsg): (model, Tea_Cmd.t<msg
 }
 
 // ===========================================================================
+// Databases Sub-Updater — unified database management panel
+// ===========================================================================
+
+let updateDatabases = (model: model, msg: databasesMsg): (model, Tea_Cmd.t<msg>) => {
+  let db = model.databases
+  switch msg {
+  | SetCategory(cat) => ({...model, databases: {...db, activeCategory: cat}}, Tea_Cmd.none)
+  | SelectModule(id) => ({...model, databases: {...db, selectedModule: id, selectedEntity: None, entityDetail: None}}, Tea_Cmd.none)
+  | ConnectAll => ({...model, databases: {...db, loading: true}}, Tea_Cmd.none)
+  | RefreshHealth => ({...model, databases: {...db, loading: true}}, Tea_Cmd.none)
+  | HealthResult(moduleId, Ok(_json)) =>
+    let updated = DatabasesEngine.updateModule(db, moduleId, m => {
+      ...m,
+      connection: DatabaseModule.Connected(m.config.endpoint),
+    })
+    ({...model, databases: {...updated, loading: false, error: None}}, Tea_Cmd.none)
+  | HealthResult(moduleId, Error(err)) =>
+    let updated = DatabasesEngine.updateModule(db, moduleId, m => {
+      ...m,
+      connection: DatabaseModule.Error(err),
+    })
+    ({...model, databases: {...updated, loading: false}}, Tea_Cmd.none)
+  | SetQueryInput(value) => ({...model, databases: {...db, queryInput: value}}, Tea_Cmd.none)
+  | ExecuteQuery => ({...model, databases: {...db, queryLoading: true}}, Tea_Cmd.none)
+  | QueryResult(Ok(json)) =>
+    let entry: DatabasesModel.queryHistoryEntry = {
+      moduleId: db.selectedModule,
+      query: db.queryInput,
+      durationMs: 0.0,
+      rowCount: 0,
+      success: true,
+      timestamp: "",
+    }
+    let updated = DatabasesEngine.updateModule(db, db.selectedModule, m => {
+      ...m,
+      queryResult: Some({
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        timingMs: 0.0,
+        statementType: "SELECT",
+        message: Some(json),
+      }),
+      queryError: None,
+    })
+    let withHistory = DatabasesEngine.addToHistory(updated, entry)
+    ({...model, databases: {...withHistory, queryLoading: false}}, Tea_Cmd.none)
+  | QueryResult(Error(err)) =>
+    let entry: DatabasesModel.queryHistoryEntry = {
+      moduleId: db.selectedModule,
+      query: db.queryInput,
+      durationMs: 0.0,
+      rowCount: 0,
+      success: false,
+      timestamp: "",
+    }
+    let updated = DatabasesEngine.updateModule(db, db.selectedModule, m => {
+      ...m,
+      queryResult: None,
+      queryError: Some(err),
+    })
+    let withHistory = DatabasesEngine.addToHistory(updated, entry)
+    ({...model, databases: {...withHistory, queryLoading: false}}, Tea_Cmd.none)
+  | ClearQuery =>
+    let updated = DatabasesEngine.updateModule(db, db.selectedModule, m => {
+      ...m,
+      queryResult: None,
+      queryError: None,
+    })
+    ({...model, databases: {...updated, queryInput: "", queryLoading: false}}, Tea_Cmd.none)
+  | LoadExampleQuery(query) =>
+    ({...model, databases: {...db, queryInput: query, activeCategory: DatabasesModel.DbQuery}}, Tea_Cmd.none)
+  | SetFilter(value) => ({...model, databases: {...db, filterText: value}}, Tea_Cmd.none)
+  | SelectEntity(name) => ({...model, databases: {...db, selectedEntity: Some(name), entityDetail: None}}, Tea_Cmd.none)
+  | LoadEntityDetail(_name) => ({...model, databases: {...db, loading: true}}, Tea_Cmd.none)
+  | EntityDetailResult(Ok(json)) => ({...model, databases: {...db, entityDetail: Some(json), loading: false}}, Tea_Cmd.none)
+  | EntityDetailResult(Error(err)) => ({...model, databases: {...db, error: Some(err), loading: false}}, Tea_Cmd.none)
+  | RefreshDrift => ({...model, databases: {...db, loading: true}}, Tea_Cmd.none)
+  | DriftResult(Ok(_json)) => ({...model, databases: {...db, loading: false}}, Tea_Cmd.none)
+  | DriftResult(Error(err)) => ({...model, databases: {...db, error: Some(err), loading: false}}, Tea_Cmd.none)
+  | NormaliseAll => ({...model, databases: {...db, loading: true}}, Tea_Cmd.none)
+  | NormaliseResult(Ok(_)) => ({...model, databases: {...db, loading: false}}, Tea_Cmd.none)
+  | NormaliseResult(Error(err)) => ({...model, databases: {...db, error: Some(err), loading: false}}, Tea_Cmd.none)
+  | LoadTelemetry => ({...model, databases: {...db, loading: true}}, Tea_Cmd.none)
+  | TelemetryResult(Ok(_json)) => ({...model, databases: {...db, loading: false}}, Tea_Cmd.none)
+  | TelemetryResult(Error(err)) => ({...model, databases: {...db, error: Some(err), loading: false}}, Tea_Cmd.none)
+  | ToggleBojRouting => ({...model, databases: {...db, bojRouting: !db.bojRouting}}, Tea_Cmd.none)
+  | DismissError => ({...model, databases: {...db, error: None}}, Tea_Cmd.none)
+  }
+}
+
+// ===========================================================================
 // BoJ Sub-Updater — Bundle of Joy cartridge server
 // ===========================================================================
 
@@ -11256,10 +11410,12 @@ let updateMenuBar = (model: model, msg: menuBarMsg): (model, Tea_Cmd.t<msg>) => 
     | "tools:automation" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelAutomationRouter)}}, Tea_Cmd.none)
     | "tools:tentacles" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelTentacles)}}, Tea_Cmd.none)
     | "tools:protocol-squisher" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelProtocolSquisher)}}, Tea_Cmd.none)
-    | "tools:mof-ocl" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none) // Routes to ECHIDNA enterprise model tab (coming)
-    | "tools:echidna" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none) // ECHIDNA doesn't have a panel slot yet — route to Help
+    | "tools:mof-ocl" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelEchidna)}}, Tea_Cmd.none)
+    | "tools:echidna" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelEchidna)}}, Tea_Cmd.none)
     | "tools:keybindings" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelWorkspace)}}, Tea_Cmd.none)
-    | "panel:echidna" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelHelp)}}, Tea_Cmd.none) // ECHIDNA panel slot needed
+    | "panel:echidna" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelEchidna)}}, Tea_Cmd.none)
+    | "panel:observatory" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelObservatory)}}, Tea_Cmd.none)
+    | "panel:ambientops" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelAmbientOps)}}, Tea_Cmd.none)
     | "panel:interfaces" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelInterfaces)}}, Tea_Cmd.none)
     | "panel:protocol-squisher" => ({...model, panelSwitcher: {...model.panelSwitcher, activePanel: Some(PanelProtocolSquisher)}}, Tea_Cmd.none)
     // Help actions
@@ -11646,6 +11802,155 @@ let updateEvangeliser = (model: model, msg: evangeliserMsg): (model, Tea_Cmd.t<m
   }
 }
 
+// ===========================================================================
+// Language Forge Sub-Updater
+// ===========================================================================
+
+/// Handle Language Forge messages — nextgen-languages portfolio monitoring.
+let updateLanguageForge = (model: model, msg: languageForgeMsg): (model, Tea_Cmd.t<msg>) => {
+  let forge = model.languageForge
+  switch msg {
+  | LoadLanguages => (
+      {
+        ...model,
+        languageForge: {
+          ...forge,
+          loaded: true,
+          loading: false,
+          error: None,
+          languages: LanguageForgeEngine.languageData(),
+        },
+      },
+      Tea_Cmd.none,
+    )
+  | SetForgeCategory(cat) => (
+      {...model, languageForge: {...forge, activeCategory: cat}},
+      Tea_Cmd.none,
+    )
+  | SetForgeFilter(text) => (
+      {...model, languageForge: {...forge, filterText: text}},
+      Tea_Cmd.none,
+    )
+  | SetForgeSort(sort) => (
+      {...model, languageForge: {...forge, sortBy: sort}},
+      Tea_Cmd.none,
+    )
+  | SelectLanguage(name) => (
+      {...model, languageForge: {...forge, selectedLanguage: name}},
+      Tea_Cmd.none,
+    )
+  | ToggleMoscow => (
+      {...model, languageForge: {...forge, showMoscow: !forge.showMoscow}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
+/// Update handler for TangleViz topological programming visualizer.
+let updateTangleViz = (model: model, msg: tangleVizMsg): (model, Tea_Cmd.t<msg>) => {
+  let tv = model.tangleViz
+  switch msg {
+  | SetViewMode(mode) => (
+      {...model, tangleViz: {...tv, viewMode: mode}},
+      Tea_Cmd.none,
+    )
+  | SetInputText(text) => (
+      {...model, tangleViz: {...tv, inputText: text}},
+      Tea_Cmd.none,
+    )
+  | ParseInput => {
+      // Parse braid word notation: space/comma-separated tokens like
+      // "s1", "s2^-1", "s1 s2^-1 s1", "sigma1", "s3inv", etc.
+      let input = String.trim(tv.inputText)
+      if input === "" {
+        ({...model, tangleViz: {...tv, braidWord: [], strandCount: 2, parsedProgram: Some(ParsedOk), error: None}}, Tea_Cmd.none)
+      } else {
+        let tokens = input
+          ->String.replaceRegExp(%re("/[,;\\s]+/g"), " ")
+          ->String.trim
+          ->String.split(" ")
+        let generators: array<braidGenerator> = []
+        let parseError = ref(None)
+        tokens->Array.forEach(token => {
+          let t = String.trim(String.toLowerCase(token))
+          if t !== "" && parseError.contents === None {
+            let hasInverse = String.includes(t, "^-1") || String.includes(t, "inv") || String.includes(t, "-1")
+            let numStr = String.replaceRegExp(t, %re("/[^0-9]/g"), "")
+            switch Int.fromString(numStr) {
+            | Some(idx) if idx >= 1 => {
+                let _ = generators->Array.push({
+                  index: idx,
+                  exponent: hasInverse ? -1 : 1,
+                })
+              }
+            | _ => parseError := Some(`Invalid generator: "${token}"`)
+            }
+          }
+        })
+        switch parseError.contents {
+        | Some(err) => (
+            {...model, tangleViz: {...tv, parsedProgram: Some(ParseFailed(err)), error: Some(err)}},
+            Tea_Cmd.none,
+          )
+        | None => {
+            let strandCount = TangleVizEngine.strandCountFromWord(generators)
+            (
+              {
+                ...model,
+                tangleViz: {
+                  ...tv,
+                  braidWord: generators,
+                  strandCount,
+                  parsedProgram: Some(ParsedOk),
+                  error: None,
+                  invariantResult: None,
+                },
+              },
+              Tea_Cmd.none,
+            )
+          }
+        }
+      }
+    }
+  | ClearAll => (
+      {...model, tangleViz: TangleVizEngine.defaultState},
+      Tea_Cmd.none,
+    )
+  | LoadExample(generators) =>
+    let strandCount = TangleVizEngine.strandCountFromWord(generators)
+    (
+      {
+        ...model,
+        tangleViz: {
+          ...tv,
+          braidWord: generators,
+          strandCount: strandCount,
+          inputText: TangleVizEngine.braidWordToString(generators),
+          parsedProgram: Some(ParsedOk),
+          invariantResult: None,
+          error: None,
+        },
+      },
+      Tea_Cmd.none,
+    )
+  | SelectInvariant(inv) => (
+      {...model, tangleViz: {...tv, selectedInvariant: Some(inv), invariantResult: None}},
+      Tea_Cmd.none,
+    )
+  | ComputeInvariant =>
+    switch tv.selectedInvariant {
+    | None => (model, Tea_Cmd.none)
+    | Some(inv) =>
+      let result = TangleVizEngine.computeInvariant(inv, tv.braidWord)
+      ({...model, tangleViz: {...tv, invariantResult: Some(result)}}, Tea_Cmd.none)
+    }
+  | DismissError => (
+      {...model, tangleViz: {...tv, error: None}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
 /// ORCHESTRATOR: The main entry point for state updates.
 /// Routes each message to its domain-specific sub-updater, then applies
 /// contractile evaluation as a post-processing cognitive governance step.
@@ -11707,6 +12012,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | ReleaseManager(subMsg) => updateReleaseManager(model, subMsg)
   | AutomationRouter(subMsg) => updateAutomationRouter(model, subMsg)
   | ScriptGist(subMsg) => updateScriptGist(model, subMsg)
+  | DatabasesPanel(subMsg) => updateDatabases(model, subMsg)
   | Boj(subMsg) => updateBoj(model, subMsg)
   | CladeBrowser(subMsg) => updateCladeBrowser(model, subMsg)
   | Tentacles(subMsg) => updateTentacles(model, subMsg)
@@ -11720,6 +12026,8 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | FocusDimming(subMsg) => updateFocusDimming(model, subMsg)
   | Stapeln(subMsg) => updateStapeln(model, subMsg)
   | Evangeliser(subMsg) => updateEvangeliser(model, subMsg)
+  | LanguageForge(subMsg) => updateLanguageForge(model, subMsg)
+  | TangleViz(subMsg) => updateTangleViz(model, subMsg)
   | EnsaidConfig(subMsg) => updateEnsaidConfig(model, subMsg)
   | Bus(busMsg) =>
     switch busMsg {
@@ -12049,6 +12357,30 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
       ({...model, seamRegister: register, lastSeamAudit: Some(audit)}, Tea_Cmd.none)
     }
   | SeamAuditResult(audit) => ({...model, lastSeamAudit: Some(audit)}, Tea_Cmd.none)
+  // Observatory — integrative dashboard
+  | Observatory(subMsg) =>
+    switch subMsg {
+    | SetObsTab(tab) => ({...model, observatory: {...model.observatory, activeTab: tab}}, Tea_Cmd.none)
+    | RunHealthCheck => ({...model, observatory: {...model.observatory, checking: true}}, Tea_Cmd.none)
+    | HealthCheckComplete(result) =>
+      switch result {
+      | Ok(snapshots) => ({...model, observatory: {...model.observatory, snapshots, checking: false, error: None}}, Tea_Cmd.none)
+      | Error(err) => ({...model, observatory: {...model.observatory, checking: false, error: Some(err)}}, Tea_Cmd.none)
+      }
+    | DismissObsError => ({...model, observatory: {...model.observatory, error: None}}, Tea_Cmd.none)
+    }
+  // AmbientOps — hospital-model sysadmin
+  | AmbientOps(subMsg) =>
+    switch subMsg {
+    | SetOpsTab(tab) => ({...model, ambientOps: {...model.ambientOps, activeTab: tab}}, Tea_Cmd.none)
+    | RunDiagnostics => ({...model, ambientOps: {...model.ambientOps, scanning: true}}, Tea_Cmd.none)
+    | DiagnosticsComplete(result) =>
+      switch result {
+      | Ok(findings) => ({...model, ambientOps: {...model.ambientOps, findings, scanning: false, error: None}}, Tea_Cmd.none)
+      | Error(err) => ({...model, ambientOps: {...model.ambientOps, scanning: false, error: Some(err)}}, Tea_Cmd.none)
+      }
+    | DismissOpsError => ({...model, ambientOps: {...model.ambientOps, error: None}}, Tea_Cmd.none)
+    }
   | NoOp => (model, Tea_Cmd.none)
   }
 

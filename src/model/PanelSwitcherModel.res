@@ -54,10 +54,20 @@ type panelId =
   | PanelProtocolSquisher
   | PanelMyLang
   | PanelTypeLL
+  /// ECHIDNA multi-solver theorem prover — proof dispatch, tactic suggestions.
+  | PanelEchidna
   /// ReScript Evangeliser — JS→ReScript transformation teaching panel.
   | PanelEvangeliser
   /// In-application help system — searchable guides, glossary, onboarding.
   | PanelHelp
+  /// Integrative dashboard — cross-panel health, resource usage, service status.
+  | PanelObservatory
+  /// AmbientOps — hospital-model sysadmin tools: clinician, network ambulance, hardware crash team.
+  | PanelAmbientOps
+  /// Language Forge — nextgen-languages portfolio monitoring and development dashboard.
+  | PanelLanguageForge
+  /// TangleViz — topological programming visualizer for braid/knot topology from the Tangle language.
+  | PanelTangleViz
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

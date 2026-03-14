@@ -409,6 +409,21 @@ let builtinCladesBase: array<cladeEntry> = [
     longDescription: "Ambient focus system that dims inactive panels and activates Smart Memory Mode to reduce resource usage for off-screen or background panels.",
     traits: { hasPersistence: false, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: true },
     panelIds: [], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["workspace", "accessibility"] },
+  { id: "clade-browser", name: "Clade Browser", kind: "meta", version: "1.0.0",
+    summary: "Panel taxonomy explorer — clades, traits, kind filtering, panel mapping",
+    longDescription: "Explore and customise the PanLL clade taxonomy, inspect trait inheritance chains, filter by kind, and see panel-to-clade assignments.",
+    traits: { hasPersistence: false, hasBackend: false, hasWorkItems: false, hasRealTime: false, isAmbient: false },
+    panelIds: ["PanelCladeBrowser"], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [], capabilities: [], requires: [], enhances: [], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["workspace", "minter"] },
+  { id: "observatory", name: "Observatory", kind: "viewer", version: "1.0.0",
+    summary: "Integrative dashboard — cross-panel health, service status, resource usage",
+    longDescription: "Unified operational dashboard aggregating health, connection status, resource usage, and ambient metrics across all panels. Shows service connectivity, memory/CPU budgets, and panel activity.",
+    traits: { hasPersistence: true, hasBackend: true, hasWorkItems: false, hasRealTime: true, isAmbient: true },
+    panelIds: ["PanelObservatory"], consumedBy: [], supersedes: [], parentCladeId: None, protocols: [ProtoTauriIPC], capabilities: [CapVisualisation, CapStreaming], requires: [], enhances: ["workspace", "provisioner", "focus-dimming"], isolation: IsolationSoft, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["build-dashboard", "workspace"] },
+  { id: "ambientops", name: "AmbientOps", kind: "network", version: "1.0.0",
+    summary: "Hospital-model sysadmin — clinician, network ambulance, hardware crash team",
+    longDescription: "Integrates the AmbientOps hospital-model operations framework: AI-assisted clinician (Rust), network ambulance (Ada/SPARK + bash), hardware crash team (Rust), emergency room (V), observatory (Elixir). Evidence Envelope pipeline for diagnostics and repairs.",
+    traits: { hasPersistence: true, hasBackend: true, hasWorkItems: true, hasRealTime: true, isAmbient: false },
+    panelIds: ["PanelAmbientOps"], consumedBy: [], supersedes: [], parentCladeId: Some("network"), protocols: [ProtoTauriIPC, ProtoREST], capabilities: [CapProcessSpawn, CapFilesystem, CapNetwork], requires: [], enhances: ["aerie", "security", "observatory"], isolation: IsolationProcess, signing: SigningNone, sbom: None, sandbox: None, siblingClades: ["aerie", "cloudguard"] },
 ]
 
 // ════════════════════════════════════════════════════════════════════════
