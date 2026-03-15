@@ -1133,7 +1133,7 @@ let parseEchidnaDispatchResult = (json: string): option<echidnaDispatchResult> =
                       }
                     | None => ""
                     }
-                  let dangerLevel = switch aGetStr("danger_level") {
+                  let dangerLevel: axiomDangerLevel = switch aGetStr("danger_level") {
                   | "safe" => Safe
                   | "noted" => Noted
                   | "warning" => Warning
@@ -9239,7 +9239,7 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
   | ProjectsLoaded(Error(err)) => ({...model, ums: {...u, loading: false, error: Some(err)}}, Tea_Cmd.none)
   | CreateProject(name) => (
       {...model, ums: {...u, loading: true}},
-      UmsCmd.createProject(name, result => Ums(ProjectCreated(result))),
+      UmsCmd.createProject(name, "", result => Ums(ProjectCreated(result))),
     )
   | ProjectCreated(Ok(_)) => (model, UmsCmd.loadProjects(result => Ums(ProjectsLoaded(result))))
   | ProjectCreated(Error(err)) => ({...model, ums: {...u, loading: false, error: Some(err)}}, Tea_Cmd.none)
@@ -9313,7 +9313,13 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
           let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
           let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
           let description = obj->Dict.get("description")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-          let category = obj->Dict.get("category")->Option.flatMap(JSON.Decode.string)->Option.getOr("level")
+          let categoryStr = obj->Dict.get("category")->Option.flatMap(JSON.Decode.string)->Option.getOr("level")
+          let category: templateCategory = switch categoryStr {
+          | "puzzle" => TemplatePuzzle
+          | "campaign" => TemplateCampaign
+          | "asset_pack" => TemplateAssetPack
+          | _ => TemplateLevel
+          }
           let difficulty = obj->Dict.get("difficulty")->Option.flatMap(JSON.Decode.string)->Option.getOr("medium")
           let previewImagePath = obj->Dict.get("previewImagePath")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
           if id !== "" {
@@ -9330,13 +9336,13 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
   | TemplatesLoaded(Error(err)) => ({...model, ums: {...u, loading: false, error: Some(err)}}, Tea_Cmd.none)
   | InstantiateTemplate(templateId) => (
       {...model, ums: {...u, loading: true}},
-      UmsCmd.instantiateTemplate(templateId, result => Ums(TemplateInstantiated(result))),
+      UmsCmd.instantiateTemplate(templateId, "", result => Ums(TemplateInstantiated(result))),
     )
   | TemplateInstantiated(Ok(_)) => (model, UmsCmd.loadProjects(result => Ums(ProjectsLoaded(result))))
   | TemplateInstantiated(Error(err)) => ({...model, ums: {...u, loading: false, error: Some(err)}}, Tea_Cmd.none)
   | LoadAssets => (
       {...model, ums: {...u, loading: true}},
-      UmsCmd.loadAssets(result => Ums(AssetsLoaded(result))),
+      UmsCmd.loadAssets(u.selectedProjectId->Option.getOr(""), result => Ums(AssetsLoaded(result))),
     )
   | AssetsLoaded(Ok(jsonStr)) => {
       let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
@@ -12950,7 +12956,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | ReleaseManager(subMsg) => updateReleaseManager(model, subMsg)
   | AutomationRouter(subMsg) => updateAutomationRouter(model, subMsg)
   | ScriptGist(subMsg) => updateScriptGist(model, subMsg)
-  | DatabasesPanel(subMsg) => updateDatabases(model, subMsg)
+  | Databases(subMsg) => updateDatabases(model, subMsg)
   | Boj(subMsg) => updateBoj(model, subMsg)
   | CladeBrowser(subMsg) => updateCladeBrowser(model, subMsg)
   | Tentacles(subMsg) => updateTentacles(model, subMsg)

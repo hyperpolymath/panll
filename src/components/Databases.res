@@ -108,7 +108,7 @@ let renderModulePill = (config: moduleConfig, selected: bool, connStatus: connec
     list{
       Attrs.class_(`flex items-center gap-2 px-3 py-2 rounded-lg ${bg} ${border} transition-colors`),
       Attrs.style("border-color", if selected { accent } else { "transparent" }),
-      Events.onClick(DatabasesPanel(SelectModule(config.id))),
+      Events.onClick(Databases(SelectModule(config.id))),
       Attrs.ariaLabel(`Select ${config.name} database`),
     },
     list{
@@ -232,7 +232,7 @@ let viewDashboard = (state: databasesState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_("px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs rounded transition-colors"),
-              Events.onClick(DatabasesPanel(ConnectAll)),
+              Events.onClick(Databases(ConnectAll)),
               Attrs.ariaLabel("Connect to all database modules"),
             },
             list{text("Connect All")},
@@ -240,7 +240,7 @@ let viewDashboard = (state: databasesState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_("px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors"),
-              Events.onClick(DatabasesPanel(RefreshHealth)),
+              Events.onClick(Databases(RefreshHealth)),
               Attrs.ariaLabel("Refresh database health"),
             },
             list{text("Refresh Health")},
@@ -259,7 +259,7 @@ let viewDashboard = (state: databasesState): Tea_Vdom.t<msg> => {
                       "w-8 h-4 rounded-full bg-gray-700 relative transition-colors"
                     }
                   ),
-                  Events.onClick(DatabasesPanel(ToggleBojRouting)),
+                  Events.onClick(Databases(ToggleBojRouting)),
                   Attrs.ariaLabel("Toggle BoJ cartridge routing"),
                 },
                 list{
@@ -356,7 +356,7 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
                     button(
                       list{
                         Attrs.class_("text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded transition-colors"),
-                        Events.onClick(DatabasesPanel(LoadExampleQuery(eq.query))),
+                        Events.onClick(Databases(LoadExampleQuery(eq.query))),
                         Attrs.title(eq.query),
                       },
                       list{
@@ -380,7 +380,7 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
               Attrs.class_("w-full h-32 bg-gray-950 text-gray-200 text-sm font-mono p-3 rounded border border-gray-700 focus:border-emerald-600 focus:outline-none resize-y"),
               Attrs.value(state.queryInput),
               Attrs.placeholder(`Enter ${langName} query...`),
-              Events.onInput(value => DatabasesPanel(SetQueryInput(value))),
+              Events.onInput(value => Databases(SetQueryInput(value))),
               Attrs.ariaLabel(`${langName} query input`),
               Attrs.spellCheck(false),
             },
@@ -399,7 +399,7 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
                       "px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs rounded transition-colors"
                     }
                   ),
-                  Events.onClick(DatabasesPanel(ExecuteQuery)),
+                  Events.onClick(Databases(ExecuteQuery)),
                   Attrs.disabled(state.queryLoading || state.queryInput == ""),
                   Attrs.ariaLabel("Execute query"),
                 },
@@ -408,7 +408,7 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
               button(
                 list{
                   Attrs.class_("px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors"),
-                  Events.onClick(DatabasesPanel(ClearQuery)),
+                  Events.onClick(Databases(ClearQuery)),
                   Attrs.ariaLabel("Clear query"),
                 },
                 list{text("Clear")},
@@ -583,14 +583,14 @@ let viewEntityDetail = (state: databasesState): Tea_Vdom.t<msg> => {
               button(
                 list{
                   Attrs.class_("px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded transition-colors"),
-                  Events.onClick(DatabasesPanel(LoadEntityDetail(entityName))),
+                  Events.onClick(Databases(LoadEntityDetail(entityName))),
                 },
                 list{text("Load Detail")},
               ),
               button(
                 list{
                   Attrs.class_("px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded transition-colors"),
-                  Events.onClick(DatabasesPanel(LoadExampleQuery("SELECT * FROM " ++ entityName ++ " LIMIT 10"))),
+                  Events.onClick(Databases(LoadExampleQuery("SELECT * FROM " ++ entityName ++ " LIMIT 10"))),
                 },
                 list{text("Query This")},
               ),
@@ -625,7 +625,7 @@ let viewSchema = (state: databasesState): Tea_Vdom.t<msg> => {
               Attrs.class_("flex-1 bg-gray-900 text-gray-200 text-sm px-3 py-2 rounded border border-gray-700 focus:border-emerald-600 focus:outline-none"),
               Attrs.placeholder("Filter entities..."),
               Attrs.value(state.filterText),
-              Events.onInput(value => DatabasesPanel(SetFilter(value))),
+              Events.onInput(value => Databases(SetFilter(value))),
               Attrs.ariaLabel("Filter schema entities"),
             },
             list{},
@@ -647,7 +647,7 @@ let viewSchema = (state: databasesState): Tea_Vdom.t<msg> => {
                   Attrs.class_(
                     `flex items-center gap-2 w-full px-3 py-2 rounded text-left transition-colors ${if isSelected { "bg-gray-700 text-white" } else { "hover:bg-gray-800 text-gray-300" }}`
                   ),
-                  Events.onClick(DatabasesPanel(SelectEntity(entity.name))),
+                  Events.onClick(Databases(SelectEntity(entity.name))),
                   Attrs.ariaLabel(`Select entity ${entity.name}`),
                 },
                 list{
@@ -744,7 +744,7 @@ let viewDrift = (state: databasesState): Tea_Vdom.t<msg> => {
                       button(
                         list{
                           Attrs.class_("ml-auto px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded transition-colors"),
-                          Events.onClick(DatabasesPanel(RefreshDrift)),
+                          Events.onClick(Databases(RefreshDrift)),
                           Attrs.ariaLabel("Refresh drift scores"),
                         },
                         list{text("Refresh")},
@@ -801,7 +801,7 @@ let viewDrift = (state: databasesState): Tea_Vdom.t<msg> => {
               button(
                 list{
                   Attrs.class_("px-4 py-2 bg-indigo-700 hover:bg-indigo-600 text-white text-xs rounded transition-colors"),
-                  Events.onClick(DatabasesPanel(NormaliseAll)),
+                  Events.onClick(Databases(NormaliseAll)),
                   Attrs.ariaLabel("Normalise all drifted modalities"),
                 },
                 list{text("Normalise Drifted Modalities")},
@@ -923,7 +923,7 @@ let viewTelemetry = (state: databasesState): Tea_Vdom.t<msg> => {
                 button(
                   list{
                     Attrs.class_("px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors"),
-                    Events.onClick(DatabasesPanel(LoadTelemetry)),
+                    Events.onClick(Databases(LoadTelemetry)),
                     Attrs.ariaLabel("Load telemetry snapshot"),
                   },
                   list{text("Load Telemetry")},
@@ -974,7 +974,7 @@ let view = (state: databasesState): Tea_Vdom.t<msg> => {
                 button(
                   list{
                     Attrs.class_("text-xs text-gray-500 hover:text-gray-300"),
-                    Events.onClick(DatabasesPanel(DismissError)),
+                    Events.onClick(Databases(DismissError)),
                   },
                   list{text("dismiss")},
                 ),
@@ -988,11 +988,11 @@ let view = (state: databasesState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex gap-1 mb-4 border-b border-gray-800"), Attrs.role("tablist")},
         list{
-          renderTab("Dashboard", state.activeCategory == DbDashboard, DatabasesPanel(SetCategory(DbDashboard))),
-          renderTab("Query", state.activeCategory == DbQuery, DatabasesPanel(SetCategory(DbQuery))),
-          renderTab("Schema", state.activeCategory == DbSchema, DatabasesPanel(SetCategory(DbSchema))),
-          renderTab("Drift", state.activeCategory == DbDrift, DatabasesPanel(SetCategory(DbDrift))),
-          renderTab("Telemetry", state.activeCategory == DbTelemetry, DatabasesPanel(SetCategory(DbTelemetry))),
+          renderTab("Dashboard", state.activeCategory == DbDashboard, Databases(SetCategory(DbDashboard))),
+          renderTab("Query", state.activeCategory == DbQuery, Databases(SetCategory(DbQuery))),
+          renderTab("Schema", state.activeCategory == DbSchema, Databases(SetCategory(DbSchema))),
+          renderTab("Drift", state.activeCategory == DbDrift, Databases(SetCategory(DbDrift))),
+          renderTab("Telemetry", state.activeCategory == DbTelemetry, Databases(SetCategory(DbTelemetry))),
         },
       ),
       // Active tab content

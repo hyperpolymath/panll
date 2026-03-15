@@ -1429,6 +1429,8 @@ type umsMsg =
   | DeleteProject(string)
   /// Project deleted result.
   | ProjectDeleted(result<string, string>)
+  /// Run ABI validation on all levels.
+  | ValidateAll
   /// Run ABI validation on a level.
   | ValidateLevel(string)
   /// Validation result.
@@ -2370,6 +2372,9 @@ type unitTestRunnerMsg =
   | UtrStarted
   | UtrCompleted(result<string, string>)
   | DismissUtrError
+  | RunAllTests
+  | StopTests
+  | ToggleDiffAware
 
 /// Functional Tester messages — end-to-end game workflow simulation.
 type functionalTesterMsg =
@@ -2377,6 +2382,10 @@ type functionalTesterMsg =
   | FtStarted
   | FtCompleted(result<string, string>)
   | DismissFtError
+  | NewWorkflow
+  | SelectWorkflow(string)
+  | RunWorkflow(string)
+  | LoadTemplate(string)
 
 /// Regression Guard messages — snapshot comparison and golden-file testing.
 type regressionGuardMsg =
@@ -2384,6 +2393,11 @@ type regressionGuardMsg =
   | RgStarted
   | RgCompleted(result<string, string>)
   | DismissRgError
+  | CheckAll
+  | UpdateAll
+  | UpdateSnapshot(string)
+  | ViewDiff(string)
+  | ToggleAutoUpdate
 
 /// Performance Profiler messages — frame budget, GC pressure, memory flamegraphs.
 type performanceProfilerMsg =
@@ -2391,6 +2405,8 @@ type performanceProfilerMsg =
   | PpStarted
   | PpCompleted(result<string, string>)
   | DismissPpError
+  | StartProfiling
+  | StopProfiling
 
 /// Load Tester messages — Phoenix channel stress testing, concurrent simulation.
 type loadTesterMsg =
@@ -2398,6 +2414,9 @@ type loadTesterMsg =
   | LtStarted
   | LtCompleted(result<string, string>)
   | DismissLtError
+  | RunScenario(string)
+  | RunSelectedScenario
+  | SelectScenario(string)
 
 /// Soak Monitor messages — long-running session memory trend and leak detection.
 type soakMonitorMsg =
@@ -2405,6 +2424,8 @@ type soakMonitorMsg =
   | SmStarted
   | SmCompleted(result<string, string>)
   | DismissSmError
+  | StartMonitor
+  | StopMonitor
 
 /// Compatibility Matrix messages — browser/device/resolution test matrix.
 type compatibilityMatrixMsg =
@@ -2412,6 +2433,8 @@ type compatibilityMatrixMsg =
   | CmStarted
   | CmCompleted(result<string, string>)
   | DismissCmError
+  | RunAll
+  | SelectCell(string, string)
 
 /// Exploratory Workbench messages — freeform play session recording, anomaly detection.
 type exploratoryWorkbenchMsg =
@@ -2419,6 +2442,11 @@ type exploratoryWorkbenchMsg =
   | EwStarted
   | EwCompleted(result<string, string>)
   | DismissEwError
+  | StartRecording
+  | StopRecording
+  | QuickFlag(string)
+  | ToggleAnomalyDetection
+  | UpdateNotes(string)
 
 /// Beta Feedback Hub messages — feedback-o-tron integration, sentiment, triage.
 type betaFeedbackHubMsg =
@@ -2426,6 +2454,13 @@ type betaFeedbackHubMsg =
   | BfhStarted
   | BfhCompleted(result<string, string>)
   | DismissBfhError
+  | SelectFeedback(string)
+  | Upvote(string)
+  | Downvote(string)
+  | SubmitFeedback
+  | UpdateSubmitTitle(string)
+  | UpdateSubmitBody(string)
+  | ToggleSortByVotes
 
 /// Balance Analyser messages — game balance stats, Monte Carlo, difficulty curves.
 type balanceAnalyserMsg =
@@ -2433,6 +2468,9 @@ type balanceAnalyserMsg =
   | BaStarted
   | BaCompleted(result<string, string>)
   | DismissBaError
+  | RunSimulation
+  | SelectLevel(string)
+  | ApplyRecommendation(string, string, float)
 
 /// Typing Bridge messages — TypeLL type constraints for game state.
 type typingBridgeMsg =
@@ -2629,7 +2667,7 @@ type msg =
   | ReleaseManager(releaseManagerMsg) // Versioning, changelog, distribution
   | AutomationRouter(automationRouterMsg) // Hybrid cross-panel workflow orchestration
   | ScriptGist(scriptGistMsg) // Portable computation gists (Minskian cardfiles)
-  | DatabasesPanel(databasesMsg) // Unified database management (VeriSimDB/QuandleDB/LithoGlyph)
+  | Databases(databasesMsg) // Unified database management (VeriSimDB/QuandleDB/LithoGlyph)
   | Boj(bojMsg) // Bundle of Joy cartridge server
   | CladeBrowser(cladeBrowserMsg) // Clade taxonomy browser
   | Tentacles(tentaclesMsg) // 7-Tentacles compiler agent orchestra
