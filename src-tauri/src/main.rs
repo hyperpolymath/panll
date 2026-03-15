@@ -92,9 +92,18 @@ mod security;
 /// Routes to ECHIDNA overlay FFI via V-lang adapter at OVERLAY_URL.
 mod overlay;
 
-/// BoJ — Barrel of Jelly cartridge runtime bridge.
+/// BoJ — Barrel of Jelly cartridge runtime bridge (blocking).
 /// Routes to BoJ server at BOJ_URL (default http://localhost:7700/api/v1).
 mod boj;
+
+/// BoJ Live — async BoJ-server connection via shared HTTP client (v0.2.0+).
+/// Async alternative to `boj::commands` using the shared `http_client` module.
+mod boj_live;
+
+/// Shared async HTTP client for backend service connections.
+/// Centralises timeout, error handling, and connection pooling for all
+/// panel backends (BoJ, VeriSimDB, ECHIDNA, Fleet, etc.).
+mod http_client;
 
 /// TypeLL — Type-Level Language server bridge.
 /// Routes to TypeLL server at TYPELL_URL (default http://localhost:7800/api/v1).
@@ -2156,6 +2165,12 @@ fn main() {
             boj::commands::boj_topology,
             boj::commands::boj_invoke,
             boj::commands::boj_umoja_status,
+            // BoJ Live — async BoJ-server connection (v0.2.0)
+            boj_live::boj_live_health,
+            boj_live::boj_live_cartridges,
+            boj_live::boj_live_invoke,
+            boj_live::boj_live_topology,
+            boj_live::boj_live_check,
             // TypeLL — Type-level language server
             typell::commands::typell_health,
             typell::commands::typell_check,
