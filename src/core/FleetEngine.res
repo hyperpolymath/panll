@@ -198,7 +198,6 @@ let parseSafetyTier = (s: string): safetyTier =>
 /// Tea_Json decoder for a single fleet finding.
 let findingDecoder: Tea_Json.decoder<fleetFinding> = {
   open Decoders
-  open Tea_Json
   map7(
     (id, repoName, summary, tierStr, confidence, assignedStr, resolved) => ({
       id,

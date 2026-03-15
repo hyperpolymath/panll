@@ -83,7 +83,7 @@ let simulationStatus = (state: neurosymBridgeState): string =>
       } else {
         0.0
       }
-      `Completed: ${Int.toString(result.totalSteps)} steps, ${Float.toFixedWithPrecision(devRate, ~digits=1)}% deviation`
+      `Completed: ${Int.toString(result.totalSteps)} steps, ${Float.toFixed(devRate, ~digits=1)}% deviation`
     } else {
       `Incomplete: ${Int.toString(result.totalSteps)} steps (deadlock or timeout)`
     }

@@ -180,8 +180,8 @@ let rootClasses = (state: AccessibilityModel.accessibilityState): string => {
 /// Returns ThemeDark or ThemeLight.
 let detectOsColorScheme = (): AccessibilityModel.themeMode => {
   try {
-    let mql = %raw(`window.matchMedia("(prefers-color-scheme: light)")`)
-    let matches: bool = %raw(`mql.matches`)
+    let _mql = %raw(`window.matchMedia("(prefers-color-scheme: light)")`)
+    let matches: bool = %raw(`_mql.matches`)
     if matches { AccessibilityModel.ThemeLight } else { ThemeDark }
   } catch {
   | _ => ThemeDark
@@ -192,8 +192,8 @@ let detectOsColorScheme = (): AccessibilityModel.themeMode => {
 /// Returns true if the OS prefers reduced motion.
 let detectOsReducedMotion = (): bool => {
   try {
-    let mql = %raw(`window.matchMedia("(prefers-reduced-motion: reduce)")`)
-    let matches: bool = %raw(`mql.matches`)
+    let _mql = %raw(`window.matchMedia("(prefers-reduced-motion: reduce)")`)
+    let matches: bool = %raw(`_mql.matches`)
     matches
   } catch {
   | _ => false
@@ -315,8 +315,8 @@ let saveToLocalStorage = (state: AccessibilityModel.accessibilityState): unit =>
     Dict.set(json, "animations", JSON.Encode.string(animationToString(state.animations)))
     Dict.set(json, "fontSize", JSON.Encode.string(fontSizeToString(state.fontSize)))
     Dict.set(json, "focusStyle", JSON.Encode.string(focusStyleToString(state.focusStyle)))
-    let jsonStr = JSON.stringify(JSON.Encode.object(json))
-    %raw(`localStorage.setItem(storageKey, jsonStr)`)
+    let _jsonStr = JSON.stringify(JSON.Encode.object(json))
+    %raw(`localStorage.setItem(storageKey, _jsonStr)`)
   } catch {
   | _ => ()
   }
@@ -469,9 +469,9 @@ let saveCmd = (state: AccessibilityModel.accessibilityState): Tea_Cmd.t<'msg> =>
 ///
 /// The tagger receives a bool: true = OS prefers light, false = OS prefers dark.
 let listenColorSchemeChange = (
-  tagger: bool => 'msg,
+  _tagger: bool => 'msg,
 ): Tea_Cmd.t<'msg> => {
-  Tea_Cmd.call(callbacks => {
+  Tea_Cmd.call(_callbacks => {
     try {
       let _: unit = %raw(`
         window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", (e) => {

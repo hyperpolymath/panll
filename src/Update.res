@@ -2189,6 +2189,7 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
       | PanelBus.HypatiaFindingsRouted(_json) =>
         // When Hypatia routes findings, tell Fleet to reload.
         Some(Fleet(LoadFleet))
+      | _ => None // Unhandled bus events are no-ops
       }
     })
     if Array.length(followUps) > 0 {
@@ -8335,6 +8336,7 @@ let updateLevelArchitect = (model: model, msg: levelArchitectMsg): (model, Tea_C
   | TypeCheckResult(Error(_)) =>
     // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled level architect messages
   }
 }
 
@@ -9435,6 +9437,7 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
       let ps = model.panelSwitcher
       ({...model, panelSwitcher: {...ps, activePanel: Some(targetPanel)}}, Tea_Cmd.none)
     }
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled UMS messages
   }
 }
 
@@ -12364,6 +12367,7 @@ let updateUnitTestRunner = (model: model, msg: unitTestRunnerMsg): (model, Tea_C
     | Error(err) => ({...model, unitTestRunner: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | DismissUtrError => ({...model, unitTestRunner: {...state, error: None}}, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled unit test runner messages
   }
 }
 
@@ -12379,6 +12383,7 @@ let updateFunctionalTester = (model: model, msg: functionalTesterMsg): (model, T
     | Error(err) => ({...model, functionalTester: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | DismissFtError => ({...model, functionalTester: {...state, error: None}}, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled functional tester messages
   }
 }
 
@@ -12394,6 +12399,7 @@ let updateRegressionGuard = (model: model, msg: regressionGuardMsg): (model, Tea
     | Error(err) => ({...model, regressionGuard: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | DismissRgError => ({...model, regressionGuard: {...state, error: None}}, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled regression guard messages
   }
 }
 
@@ -12409,6 +12415,7 @@ let updatePerformanceProfiler = (model: model, msg: performanceProfilerMsg): (mo
     | Error(err) => ({...model, performanceProfiler: {...state, profiling: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | DismissPpError => ({...model, performanceProfiler: {...state, error: None}}, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled performance profiler messages
   }
 }
 
@@ -12424,6 +12431,7 @@ let updateLoadTester = (model: model, msg: loadTesterMsg): (model, Tea_Cmd.t<msg
     | Error(err) => ({...model, loadTester: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | DismissLtError => ({...model, loadTester: {...state, error: None}}, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled load tester messages
   }
 }
 
@@ -12439,6 +12447,7 @@ let updateSoakMonitor = (model: model, msg: soakMonitorMsg): (model, Tea_Cmd.t<m
     | Error(err) => ({...model, soakMonitor: {...state, monitoring: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | DismissSmError => ({...model, soakMonitor: {...state, error: None}}, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled soak monitor messages
   }
 }
 
@@ -12454,6 +12463,7 @@ let updateCompatibilityMatrix = (model: model, msg: compatibilityMatrixMsg): (mo
     | Error(err) => ({...model, compatibilityMatrix: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | DismissCmError => ({...model, compatibilityMatrix: {...state, error: None}}, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled compatibility matrix messages
   }
 }
 
@@ -12469,6 +12479,7 @@ let updateExploratoryWorkbench = (model: model, msg: exploratoryWorkbenchMsg): (
     | Error(err) => ({...model, exploratoryWorkbench: {...state, recording: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | DismissEwError => ({...model, exploratoryWorkbench: {...state, error: None}}, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled exploratory workbench messages
   }
 }
 
@@ -12484,6 +12495,7 @@ let updateBetaFeedbackHub = (model: model, msg: betaFeedbackHubMsg): (model, Tea
     | Error(err) => ({...model, betaFeedbackHub: {...state, submitting: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | DismissBfhError => ({...model, betaFeedbackHub: {...state, error: None}}, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled beta feedback hub messages
   }
 }
 
@@ -12499,6 +12511,7 @@ let updateBalanceAnalyser = (model: model, msg: balanceAnalyserMsg): (model, Tea
     | Error(err) => ({...model, balanceAnalyser: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
     }
   | DismissBaError => ({...model, balanceAnalyser: {...state, error: None}}, Tea_Cmd.none)
+  | _ => (model, Tea_Cmd.none) // Stub: unhandled balance analyser messages
   }
 }
 
@@ -12795,7 +12808,7 @@ let updateDebuggingWorkbench = (model: model, msg: debuggingWorkbenchMsg): (mode
         label: `Snapshot at ${Float.toFixed(now /. 1000.0, ~digits=1)}s`,
       }
       let newSnapshots = Array.concat(tt.snapshots, [snap])
-      let newTt = {...tt, snapshots: newSnapshots, currentIndex: Array.length(newSnapshots) - 1, isTimeTravelling: false}
+      let newTt = {snapshots: newSnapshots, currentIndex: Array.length(newSnapshots) - 1, isTimeTravelling: false}
       ({...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: Some(snap.id)}}, Tea_Cmd.none)
     }
   | DwAddWatch => {

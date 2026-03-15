@@ -91,7 +91,6 @@ let commonLicenses: array<string> = [
 /// Tea_Json decoder for adoption stats.
 let adoptionStatsDecoder: Tea_Json.decoder<adoptionStats> = {
   open Decoders
-  open Tea_Json
   map6(
     (totalRepos, pmplRepos, mplFallbackRepos, unlicensedRepos, quantumSignedRepos, byLicense) => ({
       totalRepos,

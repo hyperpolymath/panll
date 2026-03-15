@@ -184,7 +184,7 @@ let renderFfiStatus = (localDispatch: localDispatchState): Tea_Vdom.t<msg> => {
               div(list{Attrs.class_("text-gray-500")}, list{text("CPU Load")}),
               div(
                 list{Attrs.class_("text-gray-200 font-mono")},
-                list{text(`${Float.toFixedWithPrecision(localDispatch.cpuUtilisation *. 100.0, ~digits=1)}%`)},
+                list{text(`${Float.toFixed(localDispatch.cpuUtilisation *. 100.0, ~digits=1)}%`)},
               ),
             },
           ),
@@ -503,7 +503,7 @@ let renderRoutingRow = (decision: routingDecision): Tea_Vdom.t<msg> => {
       ),
       span(
         list{Attrs.class_("text-gray-500 font-mono ml-auto")},
-        list{text(`${Float.toFixedWithPrecision(decision.latencyEstimateMs, ~digits=1)}ms`)},
+        list{text(`${Float.toFixed(decision.latencyEstimateMs, ~digits=1)}ms`)},
       ),
     },
   )
@@ -545,7 +545,7 @@ let renderRouteDistribution = (stats: array<(string, int, float)>): Tea_Vdom.t<m
     stats
     ->Array.map(((label, count, avgLatency)) => {
       let pct = if total > 0 { Float.fromInt(count) /. Float.fromInt(total) *. 100.0 } else { 0.0 }
-      let widthPct = if total > 0 { Float.toFixedWithPrecision(pct, ~digits=0) } else { "0" }
+      let widthPct = if total > 0 { Float.toFixed(pct, ~digits=0) } else { "0" }
       div(
         list{Attrs.class_("space-y-0.5")},
         list{
@@ -555,7 +555,7 @@ let renderRouteDistribution = (stats: array<(string, int, float)>): Tea_Vdom.t<m
               span(list{Attrs.class_("text-gray-300")}, list{text(label)}),
               span(
                 list{Attrs.class_("text-gray-500 font-mono")},
-                list{text(`${Int.toString(count)} (${Float.toFixedWithPrecision(pct, ~digits=1)}%) avg ${Float.toFixedWithPrecision(avgLatency, ~digits=1)}ms`)},
+                list{text(`${Int.toString(count)} (${Float.toFixed(pct, ~digits=1)}%) avg ${Float.toFixed(avgLatency, ~digits=1)}ms`)},
               ),
             },
           ),
@@ -598,7 +598,7 @@ let renderBackendHealthRow = (health: SmartRouter.backendHealth): Tea_Vdom.t<msg
         list{
           span(
             list{Attrs.class_("text-gray-500 font-mono")},
-            list{text(`${Float.toFixedWithPrecision(health.avgLatencyMs, ~digits=1)}ms`)},
+            list{text(`${Float.toFixed(health.avgLatencyMs, ~digits=1)}ms`)},
           ),
           span(list{Attrs.class_(statusColour)}, list{text(statusText)}),
         },

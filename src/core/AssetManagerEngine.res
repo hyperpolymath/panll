@@ -49,13 +49,13 @@ let formatFileSize = (bytes: int): string => {
     `${Int.toString(bytes)} B`
   } else if b < 1048576.0 {
     let kb = b /. 1024.0
-    `${Float.toFixedWithPrecision(kb, ~digits=1)} KB`
+    `${Float.toFixed(kb, ~digits=1)} KB`
   } else if b < 1073741824.0 {
     let mb = b /. 1048576.0
-    `${Float.toFixedWithPrecision(mb, ~digits=1)} MB`
+    `${Float.toFixed(mb, ~digits=1)} MB`
   } else {
     let gb = b /. 1073741824.0
-    `${Float.toFixedWithPrecision(gb, ~digits=2)} GB`
+    `${Float.toFixed(gb, ~digits=2)} GB`
   }
 }
 

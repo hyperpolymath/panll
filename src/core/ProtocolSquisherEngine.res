@@ -102,7 +102,6 @@ let parseTransportClass = (s: string): transportClass =>
 /// Tea_Json decoder for an analysis result.
 let analysisDecoder: Tea_Json.decoder<analysisResult> = {
   open Decoders
-  open Tea_Json
   map7(
     (filePath, formatStr, transportStr, summary, overheadRatio, fieldCount, hasRecursion) => ({
       filePath,
@@ -130,7 +129,6 @@ let parseAnalysis = (json: string): result<analysisResult, string> =>
 /// Tea_Json decoder for a schema compatibility comparison result.
 let comparisonDecoder: Tea_Json.decoder<schemaCompatibilityResult> = {
   open Decoders
-  open Tea_Json
   map7(
     (leftPath, rightPath, leftFmt, rightFmt, compatible, adapterCost, notes) => ({
       leftPath,

@@ -141,7 +141,6 @@ let parseNetworks = (json: string): result<array<neuralNetState>, string> =>
 /// Tea_Json decoder for a single scan result.
 let scanResultDecoder: Tea_Json.decoder<scanResult> = {
   open Decoders
-  open Tea_Json
   map6(
     (repoName, riskScore, findingCount, quarantineCount, lastScanned, passed) => ({
       repoName,

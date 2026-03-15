@@ -35,8 +35,8 @@ let allTabs: array<playtestRecorderCategory> = [Record, Replay, Annotations, Ses
 let formatDuration = (ms: float): string => {
   let totalSeconds = ms /. 1000.0
   let hours = Math.floor(totalSeconds /. 3600.0)
-  let minutes = Math.floor(mod_float(totalSeconds, 3600.0) /. 60.0)
-  let seconds = Math.floor(mod_float(totalSeconds, 60.0))
+  let minutes = Math.floor(mod(totalSeconds, 3600.0) /. 60.0)
+  let seconds = Math.floor(mod(totalSeconds, 60.0))
   if hours > 0.0 {
     `${Float.toInt(hours)->Int.toString}h ${Float.toInt(minutes)->Int.toString}m ${Float.toInt(seconds)->Int.toString}s`
   } else {

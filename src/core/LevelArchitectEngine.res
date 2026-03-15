@@ -182,7 +182,6 @@ let abiProofDecoder: Tea_Json.decoder<abiProof> = {
 /// Tea_Json decoder for UMS validation result.
 let umsValidationDecoder: Tea_Json.decoder<umsValidation> = {
   open Decoders
-  open Tea_Json
   map7(
     (guardsInZones, defenceTargetsValid, zonesOrdered, pbxConsistent, devicesExist, allPassed, proofs) => ({
       guardsInZones,

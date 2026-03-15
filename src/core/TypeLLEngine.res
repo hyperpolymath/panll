@@ -416,7 +416,6 @@ let unifiedAnalysisSummary = (analysis: unifiedTypeAnalysis): string => {
 /// Extracts feature codes, computes tier, parses usage/discipline/inference.
 let checkResultDecoder: Tea_Json.decoder<typeCheckResult> = {
   open Decoders
-  open Tea_Json
   map11(
     (valid, typeSignature, explanation, proofObligations, effects,
      linearityIssues, sessionNotes, featureCodes, usageStr,
@@ -575,7 +574,6 @@ let buildGenerateProofObligationBody = (source: string): string => {
 /// Tea_Json decoder for a kernel type check result (parameterised by language).
 let kernelCheckResultDecoder = (language: string): Tea_Json.decoder<kernelTypeCheckResult> => {
   open Decoders
-  open Tea_Json
   map6(
     (valid, typeSignature, featureCodes, proofObligations, effects, linearityIssues) => {
       let activeFeatures = featureCodes->Array.filterMap(parseFeatureCode)

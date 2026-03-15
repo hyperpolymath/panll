@@ -62,7 +62,6 @@ let parseDialect = (s: string): myLangDialect =>
 /// Tea_Json decoder for a compilation result.
 let compilationDecoder: Tea_Json.decoder<compilationResult> = {
   open Decoders
-  open Tea_Json
   map6(
     (success, output, diagnostics, errorCount, warningCount, compileTimeMs) => ({
       success,

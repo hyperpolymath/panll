@@ -66,7 +66,7 @@ external domElementToObj: domElement => {..} = "%identity"
 /// Remove all child nodes from a DOM element without innerHTML.
 /// Safer than innerHTML = "" — avoids Trusted Types violations and
 /// is the recommended approach per W3C DOM spec.
-let removeAllChildren = (el: {..}): unit => {
+let removeAllChildren = (_el: {..}): unit => {
   %raw(`(function() { while (el.firstChild) { el.removeChild(el.firstChild); } })()`)
 }
 

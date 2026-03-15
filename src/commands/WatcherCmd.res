@@ -30,7 +30,6 @@ let parseEventKind = (kind: string): watchEventKind => {
 /// Tea_Json decoder for a single watch event.
 let watchEventDecoder: Tea_Json.decoder<watchEvent> = {
   open Decoders
-  open Tea_Json
   map6(
     (path, kindStr, isDir, timestamp, extension, filename) => ({
       path,
