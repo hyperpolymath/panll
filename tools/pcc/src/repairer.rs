@@ -744,6 +744,7 @@ fn kind_to_label(kind: &ObligationKind) -> &'static str {
         ObligationKind::ViewRoute => "VIEW ROUTE",
         ObligationKind::PanelWired => "PANEL WIRED",
         ObligationKind::TestBundle => "TEST BUNDLE",
+        ObligationKind::ContractileHealth => "CONTRACTILE HEALTH",
         ObligationKind::CompletionState => "COMPLETION STATE",
     }
 }

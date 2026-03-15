@@ -28,6 +28,8 @@ pub enum ObligationKind {
     PanelWired,
     /// Test file exists for this panel's engine.
     TestBundle,
+    /// Runtime contractile system is healthy for this panel.
+    ContractileHealth,
     /// All required obligations satisfied — panel is complete.
     CompletionState,
 }
@@ -121,6 +123,7 @@ impl Obligation {
             ObligationKind::ViewRoute => "view_route",
             ObligationKind::PanelWired => "panel_wired",
             ObligationKind::TestBundle => "test_bundle",
+            ObligationKind::ContractileHealth => "contractile_health",
             ObligationKind::CompletionState => "completion_state",
         }
     }
@@ -133,7 +136,7 @@ impl Obligation {
 
 /// Build the full obligation graph for a single panel contract.
 ///
-/// Returns 8 obligations per panel in dependency order:
+/// Returns 8 obligations per panel in dependency order (9 if contractile health is required):
 /// - `contract:{id}` (root, no deps)
 /// - `registry:{id}` (depends on contract)
 /// - `model:{id}` (depends on contract)
@@ -141,7 +144,8 @@ impl Obligation {
 /// - `view:{id}` (depends on contract)
 /// - `wired:{id}` (depends on registry, model, msg, view)
 /// - `test:{id}` (depends on contract)
-/// - `complete:{id}` (depends on wired + test)
+/// - `contractile:{id}` (depends on wired; only if requires_contractile_health)
+/// - `complete:{id}` (depends on wired + test [+ contractile when present])
 pub fn build_obligations(contract: &PanelContract) -> Vec<Obligation> {
     let id = &contract.panel_id;
 
@@ -152,9 +156,22 @@ pub fn build_obligations(contract: &PanelContract) -> Vec<Obligation> {
     let view_id = format!("view:{id}");
     let wired_id = format!("wired:{id}");
     let test_id = format!("test:{id}");
+    let contractile_id = format!("contractile:{id}");
     let complete_id = format!("complete:{id}");
 
-    vec![
+    // Build the completion dependencies: always wired + test, optionally contractile.
+    let mut complete_deps = vec![wired_id.clone(), test_id.clone()];
+    if contract.requires_contractile_health {
+        complete_deps.push(contractile_id.clone());
+    }
+
+    // Wired obligation blocks completion and optionally the contractile check.
+    let mut wired_blocks = vec![complete_id.clone()];
+    if contract.requires_contractile_health {
+        wired_blocks.push(contractile_id.clone());
+    }
+
+    let mut obligations = vec![
         Obligation {
             id: contract_id.clone(),
             kind: ObligationKind::ContractExists,
@@ -245,7 +262,7 @@ pub fn build_obligations(contract: &PanelContract) -> Vec<Obligation> {
             failure_class: None,
             repairability: Repairability::Manual,
             depends_on: vec![registry_id, model_id, msg_id, view_id],
-            blocks: vec![complete_id.clone()],
+            blocks: wired_blocks,
             blocked_downstream_count: 0,
             message: String::new(),
             file: None,
@@ -265,19 +282,40 @@ pub fn build_obligations(contract: &PanelContract) -> Vec<Obligation> {
             file: None,
             expected: None,
         },
-        Obligation {
-            id: complete_id,
-            kind: ObligationKind::CompletionState,
+    ];
+
+    // Conditionally add contractile health obligation.
+    if contract.requires_contractile_health {
+        obligations.push(Obligation {
+            id: contractile_id,
+            kind: ObligationKind::ContractileHealth,
             panel_id: id.clone(),
             status: ObligationStatus::Unsatisfied,
             failure_class: None,
             repairability: Repairability::Manual,
-            depends_on: vec![wired_id, test_id],
-            blocks: vec![],
+            depends_on: vec![wired_id],
+            blocks: vec![complete_id.clone()],
             blocked_downstream_count: 0,
             message: String::new(),
-            file: None,
-            expected: None,
-        },
-    ]
+            file: Some("src/core/Contractiles.res".to_string()),
+            expected: Some("defaultContractiles function with >= 5 contractiles".to_string()),
+        });
+    }
+
+    obligations.push(Obligation {
+        id: complete_id,
+        kind: ObligationKind::CompletionState,
+        panel_id: id.clone(),
+        status: ObligationStatus::Unsatisfied,
+        failure_class: None,
+        repairability: Repairability::Manual,
+        depends_on: complete_deps,
+        blocks: vec![],
+        blocked_downstream_count: 0,
+        message: String::new(),
+        file: None,
+        expected: None,
+    });
+
+    obligations
 }

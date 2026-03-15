@@ -293,6 +293,27 @@ fn run_check(obligation: &mut Obligation, contract: &PanelContract, scanner: &Sc
             }
             result.found
         }
+        ObligationKind::ContractileHealth => {
+            // Check that the runtime contractile system is present and healthy.
+            // Minimum 5 contractiles required (the original governance set).
+            let result = scanner.check_contractile_health(5);
+            if result.found {
+                obligation.message = format!(
+                    "Contractile system healthy: {}",
+                    result.evidence.unwrap_or_default()
+                );
+                obligation.file = Some(result.file);
+            } else {
+                obligation.message = format!(
+                    "Contractile system unhealthy: {}",
+                    result.evidence.unwrap_or_else(|| "unknown".to_string())
+                );
+                obligation.file = Some(result.file);
+                obligation.expected =
+                    Some("defaultContractiles with >= 5 contractiles".to_string());
+            }
+            result.found
+        }
         ObligationKind::CompletionState => {
             // Purely derived — satisfied iff all deps are satisfied.
             // If we reached this check, all deps are satisfied.

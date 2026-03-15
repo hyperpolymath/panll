@@ -53,6 +53,11 @@ pub struct PanelContract {
     /// Whether this panel requires eNSAID export configuration (default: false).
     #[serde(default)]
     pub requires_ensaid_export: bool,
+
+    /// Whether this panel requires runtime contractile health verification (default: false).
+    /// Only core panels (Panel-N, Panel-W, etc.) need this — opt-in via contract TOML.
+    #[serde(default)]
+    pub requires_contractile_health: bool,
 }
 
 /// Error type for contract loading.

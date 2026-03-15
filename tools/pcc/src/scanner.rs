@@ -213,6 +213,61 @@ impl Scanner {
         }
     }
 
+    /// Check that the runtime contractile system is present and healthy.
+    ///
+    /// Validates that `src/core/Contractiles.res` exists, exports a
+    /// `defaultContractiles` function, and declares at least `min_count`
+    /// contractile entries. This confirms the governance stack is wired
+    /// into the runtime without requiring per-panel contractile mapping.
+    pub fn check_contractile_health(&self, min_count: usize) -> ScanResult {
+        let file_path = "src/core/Contractiles.res";
+
+        // First check that defaultContractiles exists.
+        let fn_result = self.search_file(file_path, "let defaultContractiles");
+        if !fn_result.found {
+            return ScanResult {
+                found: false,
+                file: file_path.to_string(),
+                line: None,
+                evidence: Some("defaultContractiles function not found".to_string()),
+            };
+        }
+
+        // Count contractile entries by searching for `id: "` patterns.
+        match self.read_file(file_path) {
+            None => ScanResult {
+                found: false,
+                file: file_path.to_string(),
+                line: None,
+                evidence: Some(format!("File not found: {}", file_path)),
+            },
+            Some(content) => {
+                let count = content.lines().filter(|line| line.contains("id: \"")).count();
+                if count >= min_count {
+                    ScanResult {
+                        found: true,
+                        file: file_path.to_string(),
+                        line: fn_result.line,
+                        evidence: Some(format!(
+                            "Found {} contractiles (minimum: {})",
+                            count, min_count
+                        )),
+                    }
+                } else {
+                    ScanResult {
+                        found: false,
+                        file: file_path.to_string(),
+                        line: None,
+                        evidence: Some(format!(
+                            "Only {} contractiles found, minimum is {}",
+                            count, min_count
+                        )),
+                    }
+                }
+            }
+        }
+    }
+
     /// Run the full msg check (type definition + routing variant).
     ///
     /// Both the type definition and the variant must be present for the
