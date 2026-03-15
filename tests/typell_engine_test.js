@@ -569,22 +569,23 @@ Deno.test("parseCheckResult defaults missing fields", () => {
   assertEquals(result._0.effects.length, 0);
 });
 
-Deno.test("parseCheckResult returns Error for non-object JSON", () => {
+Deno.test("parseCheckResult returns Ok with defaults for non-object JSON", () => {
   const result = parseCheckResult('"just a string"');
-  assertEquals(result.TAG, "Error");
-  assert(result._0.includes("Expected JSON object"));
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.valid, false);
+  assertEquals(result._0.typeSignature, "");
 });
 
 Deno.test("parseCheckResult returns Error for invalid JSON", () => {
   const result = parseCheckResult("not valid json at all");
   assertEquals(result.TAG, "Error");
-  assert(result._0.includes("Failed to parse"));
+  assertEquals(result._0, "Invalid JSON");
 });
 
-Deno.test("parseCheckResult returns Error for JSON array", () => {
+Deno.test("parseCheckResult returns Ok with defaults for JSON array", () => {
   const result = parseCheckResult("[1, 2, 3]");
-  assertEquals(result.TAG, "Error");
-  assert(result._0.includes("Expected JSON object"));
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.valid, false);
 });
 
 // ============================================================================
@@ -614,16 +615,16 @@ Deno.test("parseRefinementResult defaults missing fields", () => {
   assertEquals(result._0.consistent, false);
 });
 
-Deno.test("parseRefinementResult returns Error for non-object JSON", () => {
+Deno.test("parseRefinementResult returns Ok with defaults for non-object JSON", () => {
   const result = parseRefinementResult("42");
-  assertEquals(result.TAG, "Error");
-  assert(result._0.includes("Expected JSON object"));
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.consistent, false);
 });
 
 Deno.test("parseRefinementResult returns Error for invalid JSON", () => {
   const result = parseRefinementResult("{broken");
   assertEquals(result.TAG, "Error");
-  assert(result._0.includes("Failed to parse"));
+  assertEquals(result._0, "Invalid JSON");
 });
 
 // ============================================================================

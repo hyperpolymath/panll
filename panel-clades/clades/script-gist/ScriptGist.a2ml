@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Script Gist panel.
+
+(clade
+  (id "script-gist")
+  (name "Script Gist")
+  (kind "overlay")
+  (parent "overlay")
+  (description "Portable computation gists — Minskian diachronic scripts (time) and synchronic schemata (space) as cardfiles, LLM-callable via MCP")
+  (traits
+    (has-backend false)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (HealthCheck "Basic health check endpoint"))
+  (integrations
+    (model "ScriptGistModel")
+    (component "ScriptGist")
+    (engine "ScriptGistEngine")))

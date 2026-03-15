@@ -399,7 +399,7 @@ let allPanels: array<panelMeta> = [
     icon: "cpu",
     connectionStatus: ServiceDisconnected, // FFI bridge checked on demand
     hasBackend: true, // ECHIDNA V-lang REST adapters
-    cladeId: Some("clade-tentacles"),
+    cladeId: Some("tentacles"),
   },
   {
     id: PanelProtocolSquisher,

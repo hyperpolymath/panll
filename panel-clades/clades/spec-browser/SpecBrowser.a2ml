@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Spec Browser panel.
+
+(clade
+  (id "spec-browser")
+  (name "Spec Browser")
+  (kind "viewer")
+  (parent "viewer")
+  (description "Browse all 16 language specs, grammars, typing rules — side-by-side comparison and taxonomy completeness")
+  (traits
+    (has-backend false)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (HealthCheck "Basic health check endpoint"))
+  (integrations
+    (model "SpecBrowserModel")
+    (component "SpecBrowser")
+    (engine "SpecBrowserEngine")))

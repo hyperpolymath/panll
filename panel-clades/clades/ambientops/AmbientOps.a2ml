@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the AmbientOps panel.
+
+(clade
+  (id "ambientops")
+  (name "AmbientOps")
+  (kind "infrastructure")
+  (parent "infrastructure")
+  (description "Hospital-model sysadmin — clinician, network ambulance, hardware crash team, emergency room")
+  (traits
+    (has-backend true)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (HealthCheck "Basic health check endpoint"))
+  (integrations
+    (model "AmbientOpsModel")
+    (component "AmbientOps")
+    (engine "AmbientOpsEngine")))

@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Help panel.
+
+(clade
+  (id "help")
+  (name "Help")
+  (kind "viewer")
+  (parent "viewer")
+  (description "In-application help — searchable guides, neurosymbolic glossary, keyboard shortcuts, onboarding walkthrough")
+  (traits
+    (has-backend false)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (HealthCheck "Basic health check endpoint"))
+  (integrations
+    (model "HelpModel")
+    (component "Help")
+    (engine "HelpEngine")))

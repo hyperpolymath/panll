@@ -167,7 +167,8 @@ pub async fn script_gist_restore_snapshot(snapshot_json: String) -> Result<Strin
         return Err("Snapshot must be a JSON object".to_string());
     }
 
-    let obj = parsed.as_object().unwrap();
+    let obj = parsed.as_object()
+        .ok_or_else(|| "Snapshot is not a JSON object (unreachable after is_object check)".to_string())?;
     if !obj.contains_key("gists") {
         return Err("Snapshot missing 'gists' field — not a valid scriptGistState".to_string());
     }

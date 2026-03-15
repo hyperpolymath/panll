@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Observatory panel.
+
+(clade
+  (id "observatory")
+  (name "Observatory")
+  (kind "infrastructure")
+  (parent "infrastructure")
+  (description "Integrative dashboard — cross-panel health, service status, resource usage, ambient metrics")
+  (traits
+    (has-backend true)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (HealthCheck "Basic health check endpoint"))
+  (integrations
+    (model "ObservatoryModel")
+    (component "Observatory")
+    (engine "ObservatoryEngine")))

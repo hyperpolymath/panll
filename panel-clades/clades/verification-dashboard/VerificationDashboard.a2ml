@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Verification Dashboard panel.
+
+(clade
+  (id "verification-dashboard")
+  (name "Verification Dashboard")
+  (kind "viewer")
+  (parent "viewer")
+  (description "Proof/test/benchmark/fuzzing status across all nextgen-languages repos")
+  (traits
+    (has-backend false)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (HealthCheck "Basic health check endpoint"))
+  (integrations
+    (model "VerificationDashboardModel")
+    (component "VerificationDashboard")
+    (engine "VerificationDashboardEngine")))

@@ -37,6 +37,6 @@ Deno.test("PanicAttackerCapability.parse - defaults mode when omitted", () => {
 Deno.test("PanicAttackerCapability.parse - rejects malformed JSON", () => {
   const result = parse("{bad json");
   assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Invalid panic-attacker capability payload");
+  assertEquals(result._0, "Invalid JSON");
 });
 

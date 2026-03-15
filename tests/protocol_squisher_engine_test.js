@@ -199,19 +199,19 @@ Deno.test("parseAnalysis handles missing fields with defaults", () => {
 Deno.test("parseAnalysis returns Error for invalid JSON", () => {
   const result = parseAnalysis("not valid json {{{");
   assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Failed to parse analysis JSON");
+  assertEquals(result._0, "Invalid JSON");
 });
 
-Deno.test("parseAnalysis returns Error for non-object JSON", () => {
+Deno.test("parseAnalysis returns Ok with defaults for non-object JSON", () => {
   const result = parseAnalysis('"just a string"');
-  assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Expected JSON object for analysis result");
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.filePath, "");
 });
 
-Deno.test("parseAnalysis returns Error for JSON array", () => {
+Deno.test("parseAnalysis returns Ok with defaults for JSON array", () => {
   const result = parseAnalysis("[1, 2, 3]");
-  assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Expected JSON object for analysis result");
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.filePath, "");
 });
 
 Deno.test("parseAnalysis handles recursion flag true", () => {

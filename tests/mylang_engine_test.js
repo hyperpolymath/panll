@@ -150,22 +150,24 @@ Deno.test("parseCompilation defaults missing fields", () => {
   assertEquals(result._0.compileTimeMs, 0);
 });
 
-Deno.test("parseCompilation returns Error for non-object JSON", () => {
+Deno.test("parseCompilation returns Ok with defaults for non-object JSON", () => {
   const result = parseCompilation('"just a string"');
-  assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Expected JSON object for compilation result");
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.success, false);
+  assertEquals(result._0.output, "");
 });
 
-Deno.test("parseCompilation returns Error for JSON array", () => {
+Deno.test("parseCompilation returns Ok with defaults for JSON array", () => {
   const result = parseCompilation("[1, 2, 3]");
-  assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Expected JSON object for compilation result");
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.success, false);
+  assertEquals(result._0.output, "");
 });
 
 Deno.test("parseCompilation returns Error for invalid JSON", () => {
   const result = parseCompilation("not json at all");
   assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Failed to parse compilation JSON");
+  assertEquals(result._0, "Invalid JSON");
 });
 
 // -- dialectExtension --

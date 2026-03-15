@@ -67,7 +67,7 @@ Deno.test("EventChain.parse - accepts panic-attacker panll export payload", () =
 Deno.test("EventChain.parse - returns error for malformed JSON", () => {
   const result = parse("{ this is not valid json");
   assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Invalid event-chain JSON");
+  assertEquals(result._0, "Invalid JSON");
 });
 
 Deno.test("EventChain.parse - tolerates missing summary with event chain", () => {

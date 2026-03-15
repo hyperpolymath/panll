@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the ECHIDNA panel.
+
+(clade
+  (id "echidna")
+  (name "ECHIDNA")
+  (kind "scanner")
+  (parent "scanner")
+  (description "Multi-solver theorem prover — proof dispatch, tactic suggestions, enterprise model checking")
+  (traits
+    (has-backend true)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (HealthCheck "Basic health check endpoint"))
+  (integrations
+    (model "EchidnaModel")
+    (component "Echidna")
+    (engine "EchidnaEngine")))

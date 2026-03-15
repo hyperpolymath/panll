@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Evangeliser panel.
+
+(clade
+  (id "evangeliser")
+  (name "Evangeliser")
+  (kind "overlay")
+  (parent "overlay")
+  (description "ReScript Evangeliser — JS-to-ReScript transformation teaching with 52 patterns, Makaton glyphs, and celebrate/minimize/better narratives")
+  (traits
+    (has-backend false)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (HealthCheck "Basic health check endpoint"))
+  (integrations
+    (model "EvangeliserModel")
+    (component "Evangeliser")
+    (engine "EvangeliserEngine")))

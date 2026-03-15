@@ -71,8 +71,8 @@ Deno.test("allKinds has 12 entries", () => {
 
 // -- builtinClades --
 
-Deno.test("builtinClades has 54 entries", () => {
-  assertEquals(builtinClades.length, 54);
+Deno.test("builtinClades has 55 entries", () => {
+  assertEquals(builtinClades.length, 55);
 });
 
 Deno.test("every builtin clade has required fields", () => {
@@ -182,7 +182,7 @@ Deno.test("countWithParent returns 6 (aerie, boj, mass-panic, panic-attack, prot
 
 Deno.test("rootClades returns clades without parents", () => {
   const roots = rootClades(builtinClades);
-  assertEquals(roots.length, 48); // 54 - 6 with parents
+  assertEquals(roots.length, 49); // 55 - 6 with parents
   for (const root of roots) {
     assertEquals(root.parentCladeId, undefined);
   }

@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Tangle Viz panel.
+
+(clade
+  (id "tangle-viz")
+  (name "Tangle Viz")
+  (kind "viewer")
+  (parent "viewer")
+  (description "Topological programming visualizer — braid diagrams, knot invariants, Tangle source parsing")
+  (traits
+    (has-backend false)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (HealthCheck "Basic health check endpoint"))
+  (integrations
+    (model "TangleVizModel")
+    (component "TangleViz")
+    (engine "TangleVizEngine")))

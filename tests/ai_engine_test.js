@@ -368,13 +368,14 @@ Deno.test("parseMessageResponse returns error for quota exhausted", () => {
 Deno.test("parseMessageResponse returns error for invalid JSON", () => {
   const result = parseMessageResponse("not json");
   assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Failed to parse message response JSON");
+  assertEquals(result._0, "Invalid JSON");
 });
 
-Deno.test("parseMessageResponse returns error for non-object JSON", () => {
+Deno.test("parseMessageResponse returns Ok with defaults for non-object JSON", () => {
   const result = parseMessageResponse("42");
-  assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Expected object in message response");
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.role, "Assistant");
+  assertEquals(result._0.content, "");
 });
 
 // -- parseProviderState --
@@ -397,13 +398,13 @@ Deno.test("parseProviderState parses valid provider config", () => {
 Deno.test("parseProviderState returns error for missing providers field", () => {
   const result = parseProviderState(JSON.stringify({}));
   assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Missing providers field");
+  assertEquals(result._0, 'providers: Field "providers" not found');
 });
 
 Deno.test("parseProviderState returns error for invalid JSON", () => {
   const result = parseProviderState("nope");
   assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Failed to parse provider state JSON");
+  assertEquals(result._0, "Invalid JSON");
 });
 
 Deno.test("parseProviderState skips entries with unknown provider IDs", () => {

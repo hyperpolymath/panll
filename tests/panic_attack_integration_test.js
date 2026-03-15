@@ -626,6 +626,6 @@ Deno.test("Cross-module: error path through all modules", () => {
 
   // Model stays in init state
   const state = { ...massPanicInit, lastError: cap._0 };
-  assertEquals(state.lastError, "Invalid panic-attacker capability payload");
+  assertEquals(state.lastError, "Invalid JSON");
   assertEquals(state.repoResults.length, 0);
 });

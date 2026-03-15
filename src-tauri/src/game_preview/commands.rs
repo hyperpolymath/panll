@@ -131,10 +131,9 @@ pub async fn game_preview_start_server(
     // Check if a server is already running.
     {
         let state = DEV_SERVER.lock().map_err(|e| format!("Lock error: {e}"))?;
-        if state.pid.is_some() {
+        if let Some(pid) = state.pid {
             return Err(format!(
-                "Dev server already running (PID {}). Stop it first.",
-                state.pid.unwrap()
+                "Dev server already running (PID {pid}). Stop it first.",
             ));
         }
     }

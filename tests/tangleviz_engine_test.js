@@ -79,13 +79,13 @@ Deno.test("computeWrithe with mixed signs cancels", () => {
 Deno.test("computeInvariant Writhe returns w = N", () => {
   const gens = [{ index: 1, exponent: 1 }, { index: 2, exponent: 1 }];
   const result = TangleVizEngine.computeInvariant("Writhe", gens);
-  assert(result.includes("w = 2"));
+  assert(result.includes("w(K) = +2"));
 });
 
 Deno.test("computeInvariant Linking returns lk from writhe/2", () => {
   const gens = [{ index: 1, exponent: 1 }, { index: 1, exponent: 1 }];
   const result = TangleVizEngine.computeInvariant("Linking", gens);
-  assert(result.includes("lk = 1"));
+  assert(result.includes("lk(L) = 1"));
 });
 
 Deno.test("computeInvariant Jones includes crossing count", () => {

@@ -136,16 +136,16 @@ Deno.test("parseAdoptionStats parses valid JSON", () => {
   assertEquals(result._0.byLicense.length, 2);
 });
 
-Deno.test("parseAdoptionStats returns error for non-object JSON", () => {
+Deno.test("parseAdoptionStats returns Ok with defaults for non-object JSON", () => {
   const result = parseAdoptionStats('"hello"');
-  assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Expected object in adoption stats response");
+  assertEquals(result.TAG, "Ok");
+  assertEquals(result._0.totalRepos, 0);
 });
 
 Deno.test("parseAdoptionStats returns error for invalid JSON", () => {
   const result = parseAdoptionStats("not json at all");
   assertEquals(result.TAG, "Error");
-  assertEquals(result._0, "Failed to parse adoption stats JSON");
+  assertEquals(result._0, "Invalid JSON");
 });
 
 Deno.test("parseAdoptionStats defaults missing fields to 0", () => {
