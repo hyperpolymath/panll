@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-//! Repo fact extraction — deterministic text search against .res source files.
+//! Repo fact extraction — structure-aware scanning of .res source files.
 //!
-//! The scanner reads PanLL source files and searches for specific text patterns
-//! that confirm each wiring point. All matching is line-by-line text search —
-//! no parsing, no inference, fully deterministic.
+//! The scanner reads PanLL source files and uses a lightweight structural
+//! scanner (`rescript_scanner`) to strip comments, understand declarations
+//! vs references, and match on structural patterns rather than raw text.
+//! This eliminates false positives on comments, strings, and partial matches
+//! while preserving accurate line numbers for diagnostics.
 
 use crate::contract::PanelContract;
+use crate::rescript_scanner::{self, StrippedLine};
 use std::path::{Path, PathBuf};
 
 /// Convert a PascalCase identifier to snake_case.
@@ -68,93 +71,148 @@ impl Scanner {
         std::fs::read_to_string(full_path).ok()
     }
 
-    /// Search a file for the first line containing a substring.
+    /// Read and strip comments from a file, returning comment-free lines
+    /// with preserved original line numbers.
     ///
-    /// Returns a `ScanResult` with the 1-indexed line number and trimmed
-    /// line content if found.
-    fn search_file(&self, relative_path: &str, needle: &str) -> ScanResult {
-        match self.read_file(relative_path) {
-            None => ScanResult {
-                found: false,
-                file: relative_path.to_string(),
-                line: None,
-                evidence: Some(format!("File not found: {}", relative_path)),
-            },
-            Some(content) => {
-                for (idx, line) in content.lines().enumerate() {
-                    if line.contains(needle) {
-                        return ScanResult {
-                            found: true,
-                            file: relative_path.to_string(),
-                            line: Some(idx + 1),
-                            evidence: Some(line.trim().to_string()),
-                        };
-                    }
-                }
-                ScanResult {
-                    found: false,
-                    file: relative_path.to_string(),
-                    line: None,
-                    evidence: None,
-                }
-            }
+    /// Returns `None` if the file does not exist.
+    fn read_and_strip(&self, relative_path: &str) -> Option<Vec<StrippedLine>> {
+        self.read_file(relative_path)
+            .map(|content| rescript_scanner::strip_comments(&content))
+    }
+
+    /// Build a not-found `ScanResult` for a missing file.
+    fn file_not_found(relative_path: &str) -> ScanResult {
+        ScanResult {
+            found: false,
+            file: relative_path.to_string(),
+            line: None,
+            evidence: Some(format!("File not found: {}", relative_path)),
+        }
+    }
+
+    /// Build a not-found `ScanResult` when a structural query returned no match.
+    fn not_found(relative_path: &str) -> ScanResult {
+        ScanResult {
+            found: false,
+            file: relative_path.to_string(),
+            line: None,
+            evidence: None,
+        }
+    }
+
+    /// Build a found `ScanResult` from a matched `StrippedLine`.
+    fn found_from_line(relative_path: &str, line: &StrippedLine) -> ScanResult {
+        ScanResult {
+            found: true,
+            file: relative_path.to_string(),
+            line: Some(line.number),
+            evidence: Some(line.raw.trim().to_string()),
         }
     }
 
     /// Check that the panel is registered in PanelRegistry.res.
     ///
-    /// Searches for `id: {view_route}` (e.g. `id: PanelMyLang`) in the
-    /// registry file. The PanelRegistry uses `panelId` variant constructors
-    /// that match the `view_route` field of the contract.
+    /// Uses structural `find_registry_entry` to locate `id: {view_route}`
+    /// in the registry file, ignoring commented-out entries.
     pub fn check_registry(&self, contract: &PanelContract) -> ScanResult {
-        let needle = format!("id: {}", contract.view_route);
-        self.search_file("src/modules/PanelRegistry.res", &needle)
+        let path = "src/modules/PanelRegistry.res";
+        match self.read_and_strip(path) {
+            None => Self::file_not_found(path),
+            Some(lines) => {
+                match rescript_scanner::find_registry_entry(&lines, &contract.view_route) {
+                    Some(line) => Self::found_from_line(path, line),
+                    None => Self::not_found(path),
+                }
+            }
+        }
     }
 
     /// Check that the model includes the panel's model module.
     ///
-    /// Searches for `include {module_name}Model` in Model.res to confirm
-    /// that the panel's state types are re-exported into the unified model.
+    /// Uses structural `find_include` to locate `include {module_name}Model`
+    /// in Model.res, ignoring commented-out includes.
     pub fn check_model_include(&self, contract: &PanelContract) -> ScanResult {
-        let needle = format!("include {}Model", contract.module_name);
-        self.search_file("src/Model.res", &needle)
+        let path = "src/Model.res";
+        let include_name = format!("{}Model", contract.module_name);
+        match self.read_and_strip(path) {
+            None => Self::file_not_found(path),
+            Some(lines) => match rescript_scanner::find_include(&lines, &include_name) {
+                Some(line) => Self::found_from_line(path, line),
+                None => Self::not_found(path),
+            },
+        }
     }
 
     /// Check that the model record contains the panel's state field.
     ///
-    /// Searches for `{model_slice}:` in Model.res to confirm the field
-    /// exists in the `type model` record.
+    /// Uses structural `find_record_field` to locate `{model_slice}:` in
+    /// Model.res, ignoring fields inside comments.
     pub fn check_model_slice(&self, contract: &PanelContract) -> ScanResult {
-        let needle = format!("{}: ", contract.model_slice);
-        self.search_file("src/Model.res", &needle)
+        let path = "src/Model.res";
+        match self.read_and_strip(path) {
+            None => Self::file_not_found(path),
+            Some(lines) => {
+                match rescript_scanner::find_record_field(&lines, &contract.model_slice) {
+                    Some(line) => Self::found_from_line(path, line),
+                    None => Self::not_found(path),
+                }
+            }
+        }
     }
 
     /// Check that the message namespace type is defined in Msg.res.
     ///
-    /// Searches for `type {msg_namespace}` to confirm the message type
-    /// exists (e.g. `type myLangMsg =`).
+    /// Uses structural `find_type_declaration` to locate `type {msg_namespace}`
+    /// as a declaration (not a reference), ignoring type mentions in comments.
     pub fn check_msg_type(&self, contract: &PanelContract) -> ScanResult {
-        let needle = format!("type {}", contract.msg_namespace);
-        self.search_file("src/Msg.res", &needle)
+        let path = "src/Msg.res";
+        match self.read_and_strip(path) {
+            None => Self::file_not_found(path),
+            Some(lines) => {
+                match rescript_scanner::find_type_declaration(&lines, &contract.msg_namespace) {
+                    Some(line) => Self::found_from_line(path, line),
+                    None => Self::not_found(path),
+                }
+            }
+        }
     }
 
     /// Check that the message routing variant exists in the `msg` union.
     ///
-    /// Searches for `| {module_name}({msg_namespace})` or
-    /// `{module_name}({msg_namespace})` to confirm the variant is wired
-    /// into the top-level msg type.
+    /// Uses structural `find_variant_with_arg` to locate
+    /// `| {module_name}({msg_namespace})` in the stripped content,
+    /// ignoring commented-out variants.
     pub fn check_msg_variant(&self, contract: &PanelContract) -> ScanResult {
-        let needle = format!("{}({})", contract.module_name, contract.msg_namespace);
-        self.search_file("src/Msg.res", &needle)
+        let path = "src/Msg.res";
+        match self.read_and_strip(path) {
+            None => Self::file_not_found(path),
+            Some(lines) => {
+                match rescript_scanner::find_variant_with_arg(
+                    &lines,
+                    &contract.module_name,
+                    &contract.msg_namespace,
+                ) {
+                    Some(line) => Self::found_from_line(path, line),
+                    None => Self::not_found(path),
+                }
+            }
+        }
     }
 
     /// Check that the view routes to this panel.
     ///
-    /// Searches for `Some({view_route})` in View.res to confirm the
-    /// panel switcher dispatches to this panel's view function.
+    /// Uses structural `find_match_arm` to locate `Some({view_route})`
+    /// in View.res, ignoring commented-out match arms.
     pub fn check_view_route(&self, contract: &PanelContract) -> ScanResult {
-        let needle = format!("Some({})", contract.view_route);
-        self.search_file("src/View.res", &needle)
+        let path = "src/View.res";
+        let pattern = format!("Some({})", contract.view_route);
+        match self.read_and_strip(path) {
+            None => Self::file_not_found(path),
+            Some(lines) => match rescript_scanner::find_match_arm(&lines, &pattern) {
+                Some(line) => Self::found_from_line(path, line),
+                None => Self::not_found(path),
+            },
+        }
     }
 
     /// Run the full model check (include + slice).
@@ -181,7 +239,6 @@ impl Scanner {
     /// Checks in order:
     /// 1. `tests/{snake_case}_engine_test.js` (e.g. `cloud_guard_engine_test.js`)
     /// 2. `tests/{lowercase}_engine_test.js` (e.g. `cloudguard_engine_test.js`)
-    /// 3. `tests/{panel_id lower}_engine_test.js` (e.g. `cloudguard_engine_test.js`)
     pub fn check_test_bundle(&self, panel_id: &str) -> ScanResult {
         let snake = to_snake_case(panel_id);
         let lowercase = panel_id.to_lowercase();
@@ -217,37 +274,40 @@ impl Scanner {
     ///
     /// Validates that `src/core/Contractiles.res` exists, exports a
     /// `defaultContractiles` function, and declares at least `min_count`
-    /// contractile entries. This confirms the governance stack is wired
-    /// into the runtime without requiring per-panel contractile mapping.
+    /// contractile entries. Uses structure-aware scanning to ignore
+    /// commented-out contractile entries.
     pub fn check_contractile_health(&self, min_count: usize) -> ScanResult {
         let file_path = "src/core/Contractiles.res";
 
-        // First check that defaultContractiles exists.
-        let fn_result = self.search_file(file_path, "let defaultContractiles");
-        if !fn_result.found {
-            return ScanResult {
-                found: false,
-                file: file_path.to_string(),
-                line: None,
-                evidence: Some("defaultContractiles function not found".to_string()),
-            };
-        }
-
-        // Count contractile entries by searching for `id: "` patterns.
-        match self.read_file(file_path) {
+        match self.read_and_strip(file_path) {
             None => ScanResult {
                 found: false,
                 file: file_path.to_string(),
                 line: None,
                 evidence: Some(format!("File not found: {}", file_path)),
             },
-            Some(content) => {
-                let count = content.lines().filter(|line| line.contains("id: \"")).count();
+            Some(lines) => {
+                // Check that defaultContractiles function exists (comment-stripped).
+                let fn_line = lines
+                    .iter()
+                    .find(|l| l.content.contains("let defaultContractiles"));
+
+                if fn_line.is_none() {
+                    return ScanResult {
+                        found: false,
+                        file: file_path.to_string(),
+                        line: None,
+                        evidence: Some("defaultContractiles function not found".to_string()),
+                    };
+                }
+
+                // Count contractile entries by searching stripped lines for `id: "`.
+                let count = lines.iter().filter(|l| l.content.contains("id: \"")).count();
                 if count >= min_count {
                     ScanResult {
                         found: true,
                         file: file_path.to_string(),
-                        line: fn_result.line,
+                        line: fn_line.map(|l| l.number),
                         evidence: Some(format!(
                             "Found {} contractiles (minimum: {})",
                             count, min_count
