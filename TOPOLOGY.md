@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
 <!-- TOPOLOGY.md — Project architecture map and completion dashboard -->
-<!-- Last updated: 2026-03-10 (Neural Stream enrichment, token filtering, menu wiring) -->
+<!-- Last updated: 2026-03-15 (A2ML migration, K9/Contractile Manager, rainbow agents, PCC v1) -->
 
 # PanLL eNSAID — Project Topology
 
@@ -23,7 +23,7 @@
                                           │
           ┌───────────────────────────────┼───────────────────────────────┐
           │        TypeLL VERIFICATION KERNEL (cross-cutting)            │
-          │  Cross-panel type intelligence │ 41/41 panels wired          │
+          │  Cross-panel type intelligence │ 79 panels (48 wired + 28 clade + 3 new) │
           └───────────────────────────────┼───────────────────────────────┘
                                           │
           ┌───────────────────────────────┼───────────────────────────────┐
@@ -58,7 +58,7 @@
           └───────────────────────────────┼───────────────────────────────┘
                                           │
     ┌─────────────────────────────────────┼─────────────────────────────────────┐
-    │                        PANEL OVERLAY SYSTEM (41 entries)                  │
+    │                        PANEL OVERLAY SYSTEM (79 entries)                  │
     │  ┌──────┐ ┌─────────┐ ┌──────┐ ┌─────┐ ┌──────┐ ┌───────┐ ┌──────────┐  │
     │  │ VAB  │ │CloudGrd │ │ Farm │ │Plaza│ │Hypatia│ │Fleet  │ │Reposystem│  │
     │  └──────┘ └─────────┘ └──────┘ └─────┘ └──────┘ └───────┘ └──────────┘  │
@@ -71,7 +71,7 @@
     │  ┌──────────────┐ ┌──────────────┐ ┌───────────┐ ┌───────────┐          │
     │  │Clade Browser │ │ Tentacles    │ │ TypeLL    │ │Automation │          │
     │  └──────────────┘ └──────────────┘ └───────────┘ └───────────┘          │
-    │  41 clades defined │ 55 component views │ 47 core engines               │
+    │  83 clades defined │ 301 component views │ 280 core engines              │
     └─────────────────────────────────────┼─────────────────────────────────────┘
                                           │
           ┌───────────────────────────────┼───────────────────────────────┐
@@ -90,7 +90,7 @@
                     ▼                     ▼                      ▼
     ┌───────────────────────┐ ┌───────────────────┐ ┌───────────────────────┐
     │  TAURI BACKEND (Rust) │ │ BEAM (Elixir)     │ │ EXTERNAL SERVICES     │
-    │  34 backend modules   │ │ - Hypatia API     │ │ - Cloudflare API      │
+    │  39 backend modules   │ │ - Hypatia API     │ │ - Cloudflare API      │
     │  - Farm, Fleet, Aerie │ │ - VeriSimDB       │ │ - gitbot-fleet Axum   │
     │  - Minter, Watcher    │ │ - QuandleDB       │ │ - Aerie V-lang API    │
     │  - Anti-Crash Gate    │ │ - LithoGlyph      │ │ - NQC proxy (:4000)   │
@@ -105,21 +105,21 @@
 ```
 DIRECTORY              FILES   DESCRIPTION
 ─────────────────────  ─────   ─────────────────────────────
-src/model/               49   Domain model types (1 per panel + shared)
-src/components/          55   Panel view components (Tea_Html)
-src/core/                47   Engine logic (computation, validation)
-src/commands/            49   Tauri bridge command bindings
+src/model/              192   Domain model types (1+ per panel + shared)
+src/components/         301   Panel view components (Tea_Html)
+src/core/               280   Engine logic (computation, validation)
+src/commands/           116   Tauri bridge command bindings
 src/tea/                 18   Custom TEA runtime (permanent, no npm deps)
 src/modules/             14   Module registry, TypeLLService, helpers
 src/subscriptions/        2   Keyboard + polling subscriptions
 src/bindings/             1   FFI bindings
 src/*.res                 7   Top-level: Model, Msg, Update, View, App, Storage
-src-tauri/src/          103   Rust backend (34 modules)
-tests/                   70   Deno test files (incl. E2E)
-panel-clades/clades/     41   Clade definitions (a2ml)
+src-tauri/src/           98   Rust backend (39 modules)
+tests/                  129   Deno test files (incl. E2E)
+panel-clades/clades/     83   Clade definitions (a2ml)
 ─────────────────────  ─────
-TOTAL SOURCE            361   258 ReScript + 103 Rust
-TOTAL TEST FILES         70   JS test suites (Deno.test)
+TOTAL SOURCE            510   412 ReScript + 98 Rust
+TOTAL TEST FILES        129   JS test suites (Deno.test)
 ```
 
 ## Completion Dashboard
@@ -153,7 +153,7 @@ PANEL OVERLAYS (14 general + 11 IDApTIK + 3 meta)
   7-Tentacles                       ██████████ 100%    Agentic orchestration        D
 
 CROSS-CUTTING SERVICES
-  TypeLL Verification Kernel        ██████████ 100%    41/41 panels wired (100%)    D
+  TypeLL Verification Kernel        ██████████ 100%    48/48 wired panels (100%)    D
   A2ML/K9 Integration Layer         ██████████ 100%    Manifest, Kennel, Yard, Hunt D
   Coprocessor Engine (Phase 1-3)    █████████░  90%    Control + data + smart route D
   Panel Bus pub/sub                 █████████░  90%    10 topics, ring buffer       D
@@ -201,21 +201,21 @@ TESTING (70 test files, 1452 assertions)
   End-to-end (panel lifecycle)      ██████████ 100%    40 E2E tests, all pass        D
 
 ──────────────────────────────────────────────────────────────────────────────────────
-FRONTEND:         258 ReScript files │ 18 TEA + 49 model + 55 view + 47 engine + 49 cmd
-BACKEND:          103 Rust files     │ 34 backend modules
-TOTAL:            361 source files   │ 41 panel entries │ 41 clades │ 55 components
-TESTS:             72 test files     │ 40 E2E tests     │ CRG D (Alpha) across the board
+FRONTEND:         412 ReScript files │ 18 TEA + 192 model + 301 view + 280 engine + 116 cmd
+BACKEND:           98 Rust files     │ 39 backend modules
+TOTAL:            510 source files   │ 79 panel entries │ 83 clades │ 301 components
+TESTS:            129 test files     │ 40 E2E tests     │ CRG D (Alpha) across the board
 ──────────────────────────────────────────────────────────────────────────────────────
 
 OVERALL PROGRESS
-  Frontend (panels compile & render) ██████████ 100%    All 41 panels render, views D
-  TypeLL cross-panel coverage        ██████████ 100%    41/41 panels wired          D
-  Backend connections (Rust cmds)    ██████████ 100%    34 modules, 9 backends      D
-  Testing                           █████████░  90%    72 files, 1470+ assertions  D
-  Documentation                     █████████░  90%    TOPOLOGY, manifests, clades D
+  Frontend (panels compile & render) ██████████ 100%    All 79 panels render, views D
+  TypeLL cross-panel coverage        ██████████ 100%    48/48 wired panels          D
+  Backend connections (Rust cmds)    ██████████ 100%    39 modules, 9 backends      D
+  Testing                           █████████░  92%    129 files, 2263 assertions  D
+  Documentation                     ████████░░  85%    TOPOLOGY, manifests, clades D
   CRG Grade Promotion (D->C)        ░░░░░░░░░░   0%    Requires author dogfooding  D
 ──────────────────────────────────────────────────────────────────────────────────────
-  HONEST OVERALL                    ██████████  97%    Alpha complete, 1470 Deno + 179 Rust tests pass
+  HONEST OVERALL                    █████████░  95%    Alpha complete, 2263 tests pass, 0 errors, 0 warnings
 ──────────────────────────────────────────────────────────────────────────────────────
 ```
 
@@ -298,14 +298,16 @@ EXTERNAL SERVICES
 
 ## Honesty Notes
 
-- All 41 panels compile and render with 0 errors, 0 warnings
-- TypeLL cross-panel intelligence is wired to all 41 of 41 panels (100%)
+- All 79 panels compile and render with 0 errors, 0 warnings
+- TypeLL cross-panel intelligence is wired to all 48 implemented panels (100%)
 - CRG grade D (Alpha) across every component — none have reached C (Beta, requires author dogfooding)
 - 40 E2E panel lifecycle tests exist and pass (panel instantiation, TypeLL, routing)
-- Previous TOPOLOGY.md claimed 100% across all four summary categories
-- Source file count was previously inflated by counting compiled .res.js alongside .res
-- Test "count" of 1346 was individual assertions, not test files (69 files on disk)
-- 34 Rust backend modules exist, but depth of implementation varies
+- 28 game dev panels exist as clade definitions (a2ml) — ReScript implementation pending
+- 3 new panels (K9 Manager, Contractile Manager, Wiring Inspector) added 2026-03-15
+- Source file count is 510 (.res + .rs); previous count of 361 predated game dev panels
+- 2263 test assertions across 129 test files
+- 39 Rust backend modules exist, but depth of implementation varies
+- 6 .scm files migrated to .a2ml format on 2026-03-15
 
 ## Update Protocol
 

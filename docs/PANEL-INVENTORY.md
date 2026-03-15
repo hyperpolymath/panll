@@ -1,13 +1,14 @@
 <!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
-<!-- PANEL-INVENTORY.md — Complete catalog of all 76 PanLL panels -->
-<!-- Last updated: 2026-03-14 -->
+<!-- PANEL-INVENTORY.md — Complete catalog of all 79 PanLL panels -->
+<!-- Last updated: 2026-03-15 -->
 
 # Panel Inventory
 
-PanLL has 76 panel entries across 10 categories. The three core panels (L, N, W)
+PanLL has 79 panel entries across 11 categories. The three core panels (L, N, W)
 are always visible; overlay panels appear one at a time on top of them.
 The 28 game dev panels (added 2026-03-14) exist as clade definitions; ReScript
 Model/Update/View/Cmd modules are pending implementation.
+K9 Manager, Contractile Manager, and Wiring Inspector added 2026-03-15.
 
 ## Core Panels (3)
 
@@ -171,3 +172,14 @@ Panels for collaborative development workflows.
 | Merge Coordinator | `PanelMergeCoordinator` | Merge | Directive | Branch management, conflict resolution, merge queues |
 | Team Dashboard | `PanelTeamDashboard` | Team | Viewer | Commit velocity, review throughput, build health overview |
 | Debugging Workbench | `PanelDebuggingWorkbench` | Debug | Inspector | DAP-backed breakpoints, watch expressions, multi-runtime |
+
+## Governance & Contracts (3)
+
+Panels for contractile enforcement, K9 security validation, and wiring integrity.
+**Status:** Implemented 2026-03-15 with full ReScript components.
+
+| Panel | panelId | Short | Source Files | Rust Backend | Description |
+|-------|---------|-------|-------------|--------------|-------------|
+| K9 Manager | `PanelK9Manager` | K9 | K9Model, K9Manager | via `k9/` commands | Security level badges (Kennel/Yard/Hunt), file validation, Load/Validate/Apply |
+| Contractile Manager | `PanelContractileManager` | CTR | ContractileManager | via contractiles | 11 built-in contractiles, colour-coded status, elasticity bars, vexation index |
+| Wiring Inspector | `PanelWiringInspector` | Wire | WiringInspectorModel, WiringInspector | None | Phase 5 Constraint Audit Dashboard, 77 panel contracts, PCC verification |

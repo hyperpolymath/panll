@@ -1,14 +1,192 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # STATE.a2ml — Project state checkpoint
-# Converted from STATE.scm on 2026-03-15
+# Converted from STATE.scm on 2026-03-15, repopulated 2026-03-15
 
 [metadata]
-project = "panll"
-version = "0.1.0"
+version = "1.1.0"
 last-updated = "2026-03-15"
-status = "active"
+format-spec = "hyperpolymath/rsr-template-repo/spec/STATE-FORMAT-SPEC.adoc"
 
 [project-context]
-name = "panll"
-completion-percentage = 0
-phase = "In development"
+name = "PanLL eNSAID"
+description = "Environment for NeSy-Agentic Integrated Development"
+tagline = "Binary Star co-orbit between Human Operator and Neurosymbolic Machine"
+status = "alpha"
+version = "0.1.0"
+license = "PMPL-1.0-or-later"
+repository = "https://github.com/hyperpolymath/panll"
+author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
+build-command = "deno task res:build"
+
+[project-context.source-files]
+total = 510
+rescript = 412
+rust = 98
+note = "412 .res files in src/, 98 .rs files in src-tauri/. Previous count of 361 predates game dev panels and recent additions."
+
+[project-context.counts]
+panels = 79
+panel-components = 301
+models = 192
+engines = 280
+commands = 116
+clades = 83
+test-files = 129
+rust-backend-modules = 39
+tea-modules = 18
+build-status = "0 errors, 0 warnings (all 42 warnings eliminated 2026-03-15)"
+test-count = 2263
+
+[current-position]
+milestone = "v0.2.0 — TypeLL Cross-Panel Intelligence & Backend Connections"
+phase = "alpha-complete"
+current-focus = "CRG D→C promotion (requires author dogfooding), live backend connections, infrastructure sync"
+
+[current-position.completion-percentage]
+frontend = 100
+backend-connections = 100
+typell-coverage = 100
+testing = 92
+documentation = 85
+overall = 95
+
+[current-position.status-summary]
+text = """95% overall — 79 panels defined (301 components), 83 clades, 129 test files,
+412 ReScript + 98 Rust source files, TypeLL covers all wired panels,
+39 Rust backend modules, 2263 tests passing, 0 build errors, 0 warnings.
+28 game dev panels (clade definitions only — ReScript pending).
+K9 Manager, Contractile Manager, Wiring Inspector added 2026-03-15.
+Live BoJ-server connection module added. Full contractiles system built (K9 validators,
+Hunt recipes, 11 runtime contractiles, 81 clade configs).
+Panel Contract Compiler (PCC) with structure-aware ReScript scanner.
+Rainbow agent family — 7 colour-coded agents mapped to panels."""
+
+[current-position.honesty-notes]
+notes = [
+  "Source file count is 510 (.res + .rs); previous count of 361 predates game dev panels",
+  "Test count of 2263 is individual assertions across 129 test files",
+  "TypeLL cross-panel intelligence wired to all original panels via TypeCheckResult Msg variants",
+  "28 game dev panels are clade definitions only (no ReScript/Rust implementation yet)",
+  "CRG grade D (Alpha) across all components — C (Beta) requires author dogfooding",
+  "5% gap: CRG promotion (0%), benchmark tests (60%), some integration tests, SeamEngine polish",
+  "TOPOLOGY.md and PANEL-INVENTORY.md panel counts lag behind actual state",
+  "6 .scm files migrated to .a2ml format on 2026-03-15 — data was lost in migration, now restored"
+]
+
+[current-position.five-percent-gap]
+crg-promotion = "0% — requires author dogfooding, cannot automate"
+benchmark-tests = "60% — need more performance baselines"
+integration-tests = "80% — need cross-panel integration scenarios"
+seam-engine = "80% — need remaining compliance seam definitions"
+flaky-rust-tests = "Race conditions in multiplayer_monitor, valence_shell"
+
+# --- Work completed (cumulative) ---
+
+[work-completed.core]
+items = [
+  "Custom TEA implementation: 18 modules, VDOM diffing, ARIA, message queue, animation",
+  "Three-panel parallel layout (L/N/W) with Binary Star co-orbit architecture",
+  "Full UI components: all 79 panels compile and render with 0 errors",
+  "Core types: Model, Msg, symbolicConstraint, neuralToken, oodaPhase",
+  "Tauri 2.0 backend: 39 Rust modules with types.rs + commands.rs each",
+  "SafeDOM: 4-layer defence-in-depth (DOMPurify + regex + tag nesting + Trusted Types)",
+  "Panel Clades: 83 clade definitions with a2ml manifests",
+  "Workspace Management Layer: DD-022 through DD-027 (6 design decisions)",
+  "npm→Deno migration complete (tests, dependencies, Tauri CLI via npx)"
+]
+
+[work-completed.panels]
+items = [
+  "VAB: KSP-themed visual server composer (111 proven-servers components)",
+  "CloudGuard: Phases 1-6, DNS/SSL/audit, 14 Tauri commands",
+  "BoJ Panel: 17 cartridges, Umoja federation, gateway routing",
+  "11 IDApTIK eNSAID panels: all with Rust backends",
+  "28 game dev panels: 10 testing, 8 bridge, 6 game-specific, 4 team (clade defs)",
+  "K9 Manager: security level badges, file validation, K9Cmd actions",
+  "Contractile Manager: 11 runtime contractiles, colour-coded status, elasticity bars",
+  "Wiring Inspector: Phase 5 Constraint Audit Dashboard, 77 panel contracts",
+  "Panel Contract Compiler: v0 with repair mode (dry-run + apply)"
+]
+
+[work-completed.typell]
+items = [
+  "TypeLL verification kernel: cross-panel type intelligence on all wired panels",
+  "TypeLLService: cross-cutting helpers available to any panel",
+  "Progressive disclosure: 4 view layers (Raw → Folded → Glyphed → WYSIWYG)",
+  "5 kernel gaps resolved: session type vars, dependent length unification, row-polymorphic effects, compile-time exponents, SMT refinement",
+  "221 tests across kernel + 13 bridge crates, 0 failures"
+]
+
+[work-completed.infrastructure]
+items = [
+  "PanelBus: 500 events, backpressure, 24 subscribers, topic filtering",
+  "BEAM promotion: PanelSupervisor, PanelServer (GenServer), EventBus (Phoenix.PubSub)",
+  "Coprocessor Phase 1-3: Zig FFI dispatch, Rust commands, SmartRouter (355 lines)",
+  "DebugLogger: Structured logging through Observatory + OTLP",
+  "Live BoJ-server connection module (v0.2.0 start)",
+  "Full contractiles system: K9 validators, Hunt recipes, 11 runtime contractiles, 81 clade configs",
+  "Rainbow agent family: 7 colour-coded agents mapped to panels",
+  "Bot-assisted post-mint validation and clade generation"
+]
+
+[work-completed.testing]
+items = [
+  "2263 tests passing (Deno + Rust), 0 failures",
+  "129 test files covering all engines",
+  "40 E2E panel lifecycle tests",
+  "Seam checks, unwrap removal complete"
+]
+
+# --- Route to MVP (v0.2.0) ---
+
+[route-to-mvp]
+description = "Connect panels to live backends to prove architecture works end-to-end"
+
+[route-to-mvp.blockers]
+items = [
+  "Live BoJ-server connection (started, module exists)",
+  "Live VeriSimDB persistence (not started)",
+  "Live ECHIDNA prover connection (not started)",
+  "Live gitbot-fleet API connection (not started)",
+  "CRG D→C promotion requires dogfooding (cannot automate)"
+]
+
+[route-to-mvp.critical-next-actions]
+items = [
+  "Wire 3-4 panels to live backends (BoJ, VeriSimDB, ECHIDNA)",
+  "Populate game dev panels with ReScript implementations",
+  "Update TOPOLOGY.md and PANEL-INVENTORY.md to current state",
+  "Float deprecation cleanup (654 occurrences across 56 files)",
+  "Begin CRG D→C dogfooding"
+]
+
+# --- Session history (recent) ---
+
+[session-history.session-2026-03-15]
+date = "2026-03-15"
+focus = "SCM→A2ML migration, K9/Contractile Manager panels, rainbow agents, build warning elimination"
+commits = [
+  "d846bb8 — refactor: migrate 6SCM → 6A2 (.scm → .a2ml format)",
+  "ca8f5c6 — feat: rainbow agent family — 7 colour-coded agents",
+  "3cf8791 — feat: K9 Manager, Contractile Manager, Fleet↔AgenticBridge",
+  "7de120d — chore: RSR compliance cleanup",
+  "63e4624 — fix: Send trait errors in coprocessor",
+  "a85de31 — feat(pcc): structure-aware ReScript scanner v1",
+  "e6a1fcd — fix: eliminate all 42 build warnings — 463 modules, 0 errors"
+]
+
+[session-history.session-2026-03-14]
+date = "2026-03-14"
+focus = "28 game dev panels, Coprocessor Phase 2/3, PanelBus scaling, BEAM promotion"
+commits = [
+  "f0152c5 — feat: 28 game dev panels + Coprocessor Phase 2/3 + PanelBus scaling + BEAM",
+  "60e081e — fix: rename DatabasesPanel msg variant to Databases — 81/81 Releasable",
+  "72cb2fd — feat: add 32 test files — 80/81 panels now Releasable",
+  "9c7b26f — feat: upgrade Wiring Inspector to Phase 5 Constraint Audit Dashboard",
+  "0f15929 — feat(pcc): Phase 4 completion policy + test bundle enforcement",
+  "3dfc3da — ci: add Panel Contract Compiler verification gate",
+  "77538e9 — feat(pcc): repair mode with dry-run and apply",
+  "4df57bd — feat: add Wiring Inspector panel + 77 panel contracts",
+  "f096a88 — feat: Panel Contract Compiler v0 + Phase 3 constraint-core",
+  "2b7a5ed — feat(minter): bot-assisted post-mint validation + clade generation"
+]

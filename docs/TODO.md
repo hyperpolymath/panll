@@ -2,7 +2,7 @@
 
 # PanLL TODO
 
-**Last updated: 2026-03-02**
+**Last updated: 2026-03-15**
 **Tracking method: Triaxial scoring (Scope x Maintenance x Audit)**
 
 ## Scoring Key
@@ -75,11 +75,9 @@ Each item scored on three axes (1-5 each, max combined = 15):
   - Scan for unsound markers (believe_me, Admitted, sorry, unsafeCoerce)
   - Update provenance on file save (Watcher event triggers re-blame)
 
-- [ ] **Cross-panel bus (PanelBus)** — Score: 3+3+5 = 11
-  - Define cross-panel event types in `src/core/PanelBus.res`
-  - Events: HypatiaFindingRouted, RepoHealthUpdated, ProvenanceChanged, FeedbackSignal
-  - Route through TEA update loop (not direct panel-to-panel)
-  - Each panel declares which bus events it subscribes to
+- [x] **Cross-panel bus (PanelBus)** — Score: 3+3+5 = 11 *(Completed 2026-03-14)*
+  - 500 events, backpressure, 24 subscribers, TopicTesting/TopicSimulation
+  - Ring buffer, topic filtering, event types defined
 
 - [ ] **Feedback-O-Tron opinion mining** — Score: 3+3+3 = 9
   - Extract structured sentiment from feedback text (positive/negative/neutral + topic)
@@ -238,9 +236,9 @@ Each item scored on three axes (1-5 each, max combined = 15):
 
 ## Infrastructure Debt
 
-- [ ] Update TOPOLOGY.md to reflect current 14-panel architecture
-- [ ] Update STATE.scm to reflect current state (still says 95% on old milestones)
-- [ ] Update ECOSYSTEM.scm (still says "future" for projects that now have panels)
+- [x] Update TOPOLOGY.md to reflect current 79-panel architecture *(Updated 2026-03-15)*
+- [x] Repopulate STATE.a2ml after SCM→A2ML migration *(Repopulated 2026-03-15)*
+- [x] Repopulate ECOSYSTEM.a2ml after SCM→A2ML migration *(Repopulated 2026-03-15)*
 - [ ] Float.toFixedWithPrecision deprecation warnings → switch to Float.toFixed
 - [ ] View.res unused match case warning (line 155) — clean up placeholder
 - [ ] Provenance/Unknown constructor shadowing warnings — namespace cleanup

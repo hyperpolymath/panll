@@ -395,4 +395,85 @@ PMPL (based on MPL) requires source attribution. Blake3 provenance chains auto-g
 
 ---
 
-*Design decisions are numbered sequentially. Superseded decisions retain their number with status changed to "Superseded by DD-XXX".*
+## DD-022: Panel Capture — Screenshots, Recordings, and Demo Packages
+
+**Date:** 2026-03-02
+**Status:** Accepted
+**Context:** Need integrated capture system for screenshots, recordings, and demo/teaching packages within PanLL panels.
+
+**Decision:** Capture module with Tauri backend providing:
+- Save screenshot (any panel → PNG)
+- Print panel (formatted output)
+- Record panel sessions
+- Demo package management (load/save/delete)
+
+**Implementation:** `src/model/CaptureModel.res` (types), `src/core/CaptureEngine.res` (pure functions), `src-tauri/src/capture/` (5 Tauri commands).
+
+---
+
+## DD-024: Workspace Panel Management — Arrangements, Groups, and Sessions
+
+**Date:** 2026-03-02
+**Status:** Accepted
+**Context:** Need persistent panel arrangements, groups, sessions, and execution modes for multi-monitor and multi-workflow support.
+
+**Decision:** Workspace management layer providing:
+- Named panel arrangements (save/load to disk)
+- Panel groups with collective operations
+- Session persistence and forking
+- Execution modes (development, review, presentation)
+- Checkpoint/restore for workspace state
+
+**Implementation:** `src/model/WorkspaceModel.res` (~230 lines), `src/core/WorkspaceEngine.res` (~280 lines), `src-tauri/src/workspace/` (7 Tauri commands including sysinfo).
+
+---
+
+## DD-025: Configurable Status Bar Widget System
+
+**Date:** 2026-03-02
+**Status:** Accepted
+**Context:** Need a flexible status bar that displays system info, build status, and panel-specific widgets.
+
+**Decision:** Widget registry with positional layout:
+- Widget kinds: text, icon, progress, separator, custom
+- Configurable positions and visibility
+- System info integration (CPU, memory, disk)
+- Per-panel status widgets
+
+**Implementation:** `src/model/StatusBarModel.res` (~75 lines), `src/core/StatusBarEngine.res` (~170 lines, widget registry + formatters).
+
+---
+
+## DD-026: Security — Redaction and Vault
+
+**Date:** 2026-03-02
+**Status:** Accepted
+**Context:** Panels display sensitive data (API keys, credentials, secrets). Need integrated redaction and vault.
+
+**Decision:** Security module providing:
+- Pattern-based redaction (regex patterns for API keys, tokens, passwords)
+- Secret detection (scan panel content for leaked credentials)
+- Vault storage (encrypted local vault via Tauri)
+- Redaction modes: full, partial (show last 4), custom mask
+
+**Implementation:** `src/model/SecurityModel.res` (~140 lines), `src/core/SecurityEngine.res` (~200 lines), `src-tauri/src/security/` (5 Tauri commands).
+
+---
+
+## DD-027: Security — 2FA and Trustfile Enforcement
+
+**Date:** 2026-03-02
+**Status:** Accepted
+**Context:** Need second-factor verification for destructive panel operations and Trustfile policy enforcement.
+
+**Decision:** Integrated 2FA + Trustfile:
+- Two-factor gates for destructive operations (delete, publish, deploy)
+- Trustfile enforcement (PanLL reads `.machine_readable/contractiles/trust/Trustfile.a2ml`)
+- Security level badges per panel (Kennel/Yard/Hunt from K9)
+- Audit log of security-gated operations
+
+**Implementation:** Combined with DD-026 in `src-tauri/src/security/`.
+
+---
+
+*Design decisions are numbered sequentially. DD-019 through DD-021 and DD-023 are reserved (not yet assigned). Superseded decisions retain their number with status changed to "Superseded by DD-XXX".*

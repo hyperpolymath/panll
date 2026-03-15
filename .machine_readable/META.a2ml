@@ -1,9 +1,128 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # META.a2ml — Project meta-information
-# Converted from META.scm on 2026-03-15
+# Converted from META.scm on 2026-03-15, repopulated 2026-03-15
 
 [metadata]
+version = "1.0.0"
+last-updated = "2026-03-15"
 project = "panll"
 author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
 license = "PMPL-1.0-or-later"
 standard = "RSR 2026"
+format-spec = "hyperpolymath/rsr-template-repo/spec/META-FORMAT-SPEC.adoc"
+
+# --- Architecture Decisions ---
+
+[architecture-decisions.adr-001]
+title = "Binary Star Human-Machine Architecture"
+status = "accepted"
+date = "2026-01-15"
+context = """Traditional IDEs treat AI as tool or assistant (Human-as-primary, Machine-as-subordinate).
+Need architecture that enables genuine co-working without subordination."""
+decision = """Model Human and Machine as Binary Star system — two gravitationally bound entities
+orbiting a shared Barycentre (the task/artifact). Neither is primary.
+Three panels: Panel-L (Symbolic/Human), Panel-N (Neural/Machine), Panel-W (World/Barycentre)."""
+consequences-positive = [
+  "Enables sustained co-working without constant context switching",
+  "Operator can see Machine reasoning stream in real-time (Panel-N)",
+  "Machine constrained by symbolic rules (Panel-L) visible to both parties",
+  "Shared output space (Panel-W) validates mutual understanding"
+]
+consequences-negative = [
+  "More complex UI than traditional editor",
+  "Requires both parties to adapt to synchronous co-orbit",
+  "Higher cognitive load initially until workflow internalised"
+]
+
+[architecture-decisions.adr-002]
+title = "The Elm Architecture (TEA) for State Management"
+status = "accepted"
+date = "2026-01-20"
+context = """Binary Star system requires deterministic, auditable state synchronisation.
+Complex UI with multiple interacting panels, cognitive load monitoring, orbital stability tracking."""
+decision = """Use The Elm Architecture (Model-Update-View with Commands and Subscriptions).
+Permanent custom TEA implementation in src/tea/ (18 modules).
+Migration to rescript-tea@0.16.0 evaluated and rejected (2026-03-08)."""
+consequences-positive = [
+  "Predictable state transitions — easier to debug",
+  "Time-travel debugging possible",
+  "Pure functions enable comprehensive testing",
+  "Zero npm dependencies — compiles with ReScript alone",
+  "First-class ARIA accessibility (12+ aria-* helpers in Tea_Vdom)",
+  "Dispatch queue prevents recursive dispatch in multi-panel architecture"
+]
+consequences-negative = [
+  "Steeper learning curve for contributors unfamiliar with TEA",
+  "More boilerplate than imperative state updates",
+  "No upstream community — all fixes in-house"
+]
+
+[architecture-decisions.adr-003]
+title = "ReScript for Type-Safe Frontend"
+status = "accepted"
+date = "2026-01-18"
+decision = "Use ReScript 11.1+ compiling to JavaScript. Follows hyperpolymath language policy."
+
+[architecture-decisions.adr-004]
+title = "Tauri 2.0 for Desktop App Framework"
+status = "accepted"
+date = "2026-01-22"
+decision = "Use Tauri 2.0 with Rust backend. Frontend in webview, backend handles system operations."
+
+[architecture-decisions.adr-005]
+title = "Anti-Crash Library as Circuit Breaker"
+status = "accepted"
+date = "2026-01-25"
+decision = """Circuit breaker between Panel-N and Panel-W. Every neural token must pass
+symbolic validation. Failed tokens trigger RequestOperatorIntervention, not automatic passage."""
+
+[architecture-decisions.adr-006]
+title = "Vexometer for Cognitive Load Monitoring"
+status = "accepted"
+date = "2026-01-28"
+decision = """Vexometer tracks cancellations, corrections, dwell time. Vexation Index (0.0-1.0)
+triggers anti-inflammatory UI adjustments."""
+
+[architecture-decisions.adr-007]
+title = "Deno + npm Hybrid Build System"
+status = "accepted"
+date = "2026-02-02"
+decision = """Deno tasks for Tailwind CSS and Tauri orchestration.
+npm scripts only for ReScript compilation (res:build, res:watch).
+Future migration to eliminate npm entirely pending ReScript Deno support."""
+
+# --- Development Practices ---
+
+[development-practices]
+testing-strategy = """Test-driven development for core logic (Model, Update, Commands, Subscriptions).
+Deno.test for JavaScript unit tests; cargo test for Rust backend tests.
+Integration tests for Tauri backend commands. Manual testing for UI/UX flows."""
+versioning-scheme = "Semantic versioning. v0.x.y = pre-1.0 (breaking changes allowed)."
+license-policy = "All original code PMPL-1.0-or-later. Third-party dependencies respect original licenses."
+
+# --- Design Rationale ---
+
+[design-rationale]
+three-pane-layout = """Parallel layout (L/N/W side-by-side) emphasises simultaneity.
+Panel-L (left) = Symbolic, Panel-N (middle) = Neural, Panel-W (right) = World.
+Layout inspired by music production DAWs (multiple simultaneous views)."""
+binary-star-metaphor = """Metaphor from astrophysics: two stars orbiting shared centre of mass.
+Human = symbolic star, Machine = neural star. Barycentre = task/artifact.
+Orbital stability sigma = measure of synchronicity."""
+information-humidity = """UI detail density adapts to operator stress level.
+High humidity (low stress) = more detail. Low humidity (high stress) = essential info only.
+Driven by cognitive load, not screen size."""
+dark-start-mode = """Startup: Binary Star topology diagram on Panel-W, other panels empty.
+Operator-initiated activation (first keypress). Reduces startup anxiety."""
+
+# --- Cross-Cutting Concerns ---
+
+[cross-cutting-concerns]
+security = """Tauri enforces CSP. Validate all Tauri command inputs.
+No eval() or unsafe JavaScript. SafeDOM 4-layer defence-in-depth."""
+performance = """ReScript compiles to optimised JavaScript. Rust backend for CPU-intensive tasks.
+Virtual DOM diffing for efficient UI updates."""
+accessibility = """Comprehensive ARIA attributes across all components.
+Keyboard navigation (Ctrl+Shift+L/N/B/W). High-contrast mode.
+4 colour palettes (Standard, Deuteranopia, Protanopia, High Contrast)."""
+internationalisation = "English-only for v0.x. i18n framework planned for v1.0."

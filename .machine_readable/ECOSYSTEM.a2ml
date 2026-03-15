@@ -1,10 +1,171 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # ECOSYSTEM.a2ml — Ecosystem position
-# Converted from ECOSYSTEM.scm on 2026-03-15
+# Converted from ECOSYSTEM.scm on 2026-03-15, repopulated 2026-03-15
 
 [metadata]
-project = "panll"
-ecosystem = "hyperpolymath"
+version = "1.2.0"
+last-updated = "2026-03-15"
+format-spec = "hyperpolymath/rsr-template-repo/spec/ECOSYSTEM-FORMAT-SPEC.adoc"
+
+[identity]
+name = "panll"
+full-name = "PanLL eNSAID"
+tagline = "Environment for NeSy-Agentic Integrated Development"
+type = "application"
+category = "neurosymbolic-tools"
+maturity = "alpha"
+version = "0.1.0"
+
+[purpose]
+text = """PanLL is a Human-Things Interface (HTI) designed for genuine co-working between
+Human Operators and Neurosymbolic Machines. It implements a 'Binary Star' architecture
+where Human and Machine orbit a shared task Barycentre, with real-time constraint
+validation (Anti-Crash), cognitive load monitoring (Vexometer), and synchronous
+three-panel layout (Symbolic/Neural/World)."""
 
 [position]
-type = "component"
+domain = "neurosymbolic-tooling"
+role = "development-environment"
+scope = "Human-Machine co-working for NeSy-Agentic tasks"
+unique-value = """First IDE treating AI as equal co-worker (Binary Star) rather than subordinate tool.
+Combines symbolic constraints (Panel-L) with neural inference stream (Panel-N) and
+validated output (Panel-W). Anti-Crash circuit breaker prevents unvalidated neural
+output from corrupting workspace. Vexometer tracks cognitive load and adapts UI."""
+target-users = [
+  "Researchers developing neurosymbolic AI systems",
+  "Developers building agentic applications",
+  "Operators working with AI agents on complex tasks",
+  "Teams exploring Human-AI co-working patterns"
+]
+
+# --- Related Projects ---
+
+[related-projects.panic-attack]
+relationship = "producer"
+nature = "Exports ambush event-chain timelines for PanLL ingestion and visualisation"
+integration-status = "active"
+
+[related-projects.hypatia]
+relationship = "potential-consumer"
+nature = "Neurosymbolic CI/CD could use PanLL UI for visualising build reasoning chains"
+integration-status = "future"
+
+[related-projects.gitvisor]
+relationship = "sibling-tool"
+nature = "Both are Human-Machine co-working tools (PanLL for general dev, gitvisor for Git archaeology)"
+integration-status = "none"
+
+[related-projects.ai-gatekeeper-protocol]
+relationship = "dependency"
+nature = "PanLL follows AI Gatekeeper Protocol (0-AI-MANIFEST.a2ml, .machine_readable/ A2ML files)"
+integration-status = "active"
+
+[related-projects.rsr-template-repo]
+relationship = "template-source"
+nature = "PanLL follows RSR template with all applicable workflows"
+integration-status = "active"
+
+[related-projects.gitbot-fleet]
+relationship = "automation-orchestration-module"
+nature = "PanLL as command center for gitbot-fleet (rhodibot, echidnabot, sustainabot, glambot, seambot, finishbot)"
+integration-status = "partial"
+notes = "Fleet panel wired with 6 bots and safety triangle. BoJ agent-mcp routes automation."
+
+[related-projects.verisimdb]
+relationship = "primary-backend-module"
+nature = """VeriSimDB is PanLL's first database backend. VQL-DT maps to three-panel layout:
+Panel-L = proof obligations, Panel-N = agentic inference, Panel-W = query results."""
+integration-status = "active"
+notes = "BoJ database-mcp cartridge routes VQL queries when bojRouting=true."
+
+[related-projects.quandledb]
+relationship = "future-backend-module"
+nature = "QuandleDB (KQL) as second database backend. Completes NQC multi-backend pattern."
+integration-status = "future"
+
+[related-projects.lithoglyph]
+relationship = "future-backend-module"
+nature = "LithoGlyph (GQL) as third database backend. Completes nextgen-databases trinity."
+integration-status = "future"
+
+[related-projects.reposystem]
+relationship = "infrastructure-management-module"
+nature = "PanLL as operational dashboard for hyperpolymath repo ecosystem (265+ repos)"
+integration-status = "future"
+
+[related-projects.typell]
+relationship = "core-dependency"
+criticality = "load-bearing"
+nature = """TypeLL is the unified type verification kernel — the formal verification substrate.
+TypeLL is to PanLL what LLVM is to Clang. Provides Robinson unification, bidirectional inference,
+QTT linear/affine tracking, algebraic effects, dimensional analysis, session types, dependent types,
+refinement predicates, and proof obligation generation for ECHIDNA."""
+integration-status = "active"
+notes = """TypeLL kernel in own repo with Idris2 ABI + Zig FFI. PanLL consumes via
+TypeLLEngine/TypeLLService/TypeLLModel/TypeLLCmd. 13 bridge crates. 221 tests, 0 failures.
+5 kernel gaps resolved 2026-03-14."""
+
+[related-projects.boj-server]
+relationship = "primary-backend-gateway"
+nature = "BoJ server provides 18 cartridges as MCP-compatible backend services"
+integration-status = "active"
+notes = "18 cartridges (Grade D Alpha), bojRouting toggle for 6 panels, Umoja federation."
+
+[related-projects.idaptik]
+relationship = "game-development-module"
+nature = "PanLL as development environment for IDApTIK game. 11 IDApTIK eNSAID panels."
+integration-status = "active"
+notes = "All 11 panels with Rust backends and Tauri commands."
+
+[related-projects.eclexia]
+relationship = "potential-language-backend"
+nature = "Eclexia could serve as PanLL's symbolic constraint language (shadow pricing, carbon-aware)"
+integration-status = "future"
+notes = "Requires Eclexia runtime stabilisation (currently ~45% complete)."
+
+[related-projects.scaffoldia]
+relationship = "potential-tool"
+nature = "Could generate PanLL-compatible project templates"
+integration-status = "future"
+
+# --- Dependencies ---
+
+[dependencies.runtime]
+deno = { version = "1.x", purpose = "Build orchestration, Tailwind CSS", license = "MIT", criticality = "high" }
+nodejs = { version = "18.x+", purpose = "ReScript compiler runtime (temporary)", license = "MIT", criticality = "medium", planned-removal = "When ReScript adds Deno support" }
+
+[dependencies.build-time]
+rescript = { version = "11.1.4", purpose = "Type-safe frontend compilation", license = "MIT", criticality = "critical" }
+tailwind = { version = "4.1.18", purpose = "Styling framework", license = "MIT", criticality = "medium" }
+tauri-cli = { version = "2.0.0", purpose = "Desktop app bundling", license = "MIT/Apache-2.0", criticality = "critical" }
+
+[dependencies.libraries]
+rescript-core = { version = "1.6.1", purpose = "ReScript standard library", license = "MIT" }
+custom-tea = { version = "internal", purpose = "Custom TEA — 18 modules, VDOM diffing, ARIA", license = "PMPL-1.0-or-later", criticality = "critical", note = "Permanent. rescript-tea@0.16.0 rejected." }
+
+# --- Governance ---
+
+[governance]
+maintainer = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
+maintainer-github = "hyperpolymath"
+contribution-model = "open-source"
+decision-making = "BDFL with community input"
+license = "PMPL-1.0-or-later"
+
+# --- Roadmap ---
+
+[roadmap.v0-2-0]
+target = "Q2 2026"
+focus = "Live backend connections (BoJ, VeriSimDB, ECHIDNA), CRG D→C promotion"
+
+[roadmap.v0-3-0]
+target = "Q2 2026"
+focus = "Neurosymbolic reasoning engine integration"
+
+[roadmap.v0-4-0]
+target = "Q3 2026"
+focus = "Multi-agent coordination, Stapeln containers"
+
+[roadmap.v1-0-0]
+target = "Q1 2027"
+focus = "Production-ready, stable API, security audit"
