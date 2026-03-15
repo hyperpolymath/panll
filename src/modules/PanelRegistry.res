@@ -826,6 +826,26 @@ let allPanels: array<panelMeta> = [
     hasBackend: true,
     cladeId: Some("wiring-inspector"),
   },
+  {
+    id: PanelK9Manager,
+    name: "K9 Manager",
+    shortName: "K9",
+    description: "Self-validating K9 contractile file management — Kennel/Yard/Hunt security levels",
+    icon: "dog",
+    connectionStatus: ServiceConnected, // Local file I/O, always available
+    hasBackend: true, // Tauri file I/O for loading .k9.ncl files
+    cladeId: Some("k9-manager"),
+  },
+  {
+    id: PanelContractileManager,
+    name: "Contractile Manager",
+    shortName: "Ctrl",
+    description: "Cognitive governance dashboard — 11 contractiles with elastic enforcement and vexation tracking",
+    icon: "shield-check",
+    connectionStatus: ServiceConnected, // Pure client-side state, always available
+    hasBackend: false, // All contractile evaluation runs client-side
+    cladeId: Some("contractile-manager"),
+  },
 ]
 
 /// Look up panel metadata by ID.

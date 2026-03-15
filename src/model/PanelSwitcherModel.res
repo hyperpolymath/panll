@@ -133,6 +133,10 @@ type panelId =
   | PanelDebuggingWorkbench
   /// Wiring Inspector — PCC constraint state, obligation graph, bottleneck analysis.
   | PanelWiringInspector
+  /// K9 Manager — self-validating K9 contractile file management.
+  | PanelK9Manager
+  /// Contractile Manager — cognitive governance dashboard for the 11 built-in contractiles.
+  | PanelContractileManager
 
 /// Connection status for panels backed by external services.
 type connectionStatus =
