@@ -100,7 +100,7 @@ let renderProjects = (state: umsState): Tea_Vdom.t<msg> => {
             button(
               list{
                 Attrs.class_("text-cyan-400 hover:text-cyan-300 underline cursor-pointer"),
-                Events.onClick(Ums(CreateProject)),
+                Events.onClick(Ums(CreateProject(""))),
               },
               list{text("Create a new project")},
             ),
@@ -310,7 +310,7 @@ let renderAssets = (state: umsState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_("px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
-              Events.onClick(Ums(ImportAsset)),
+              Events.onClick(Ums(ImportAsset(""))),
             },
             list{text("Import Asset")},
           ),
@@ -623,7 +623,7 @@ let view = (state: umsState, ~levelArchitect: levelArchitectState): Tea_Vdom.t<m
               button(
                 list{
                   Attrs.class_("px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
-                  Events.onClick(Ums(CreateProject)),
+                  Events.onClick(Ums(CreateProject(""))),
                 },
                 list{text("New Project")},
               ),
@@ -636,7 +636,7 @@ let view = (state: umsState, ~levelArchitect: levelArchitectState): Tea_Vdom.t<m
                       "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"
                     },
                   ),
-                  Events.onClick(Ums(ToggleBojRouting)),
+                  Events.onClick(Ums(ToggleUmsBojRouting)),
                 },
                 list{text("BoJ Routing")},
               ),

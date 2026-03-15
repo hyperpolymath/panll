@@ -64,4 +64,6 @@ type observatoryState = {
   systemMemory: int,
   /// System-level memory total in bytes.
   systemMemoryTotal: int,
+  /// Structured debug log entries routed through Observatory.
+  debugLog: array<DebugLogger.logEntry>,
 }

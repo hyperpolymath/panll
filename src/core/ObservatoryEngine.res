@@ -14,6 +14,7 @@ let defaultState: observatoryState = {
   systemCpu: 0.0,
   systemMemory: 0,
   systemMemoryTotal: 0,
+  debugLog: [],
 }
 
 /// Tab label for display.

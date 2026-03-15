@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Loader Clade Template
+# Loaders scan external sources (repos, filesystems) and configure panels accordingly.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "loader"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Loaders scan sources and configure panel state from discovered data.
+has-backend = true           # Backend for filesystem/network scanning
+has-scanning = true          # Scanning external sources is core
+has-persistence = true       # Cache scanned data, loaded configurations
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Source paths, scan depth, auto-detect settings
+is-directive = false
+is-readonly = false          # Loaders write configuration based on scan results
+
+[clade-capabilities]
+# Minimum capabilities for a loader clade.
+capabilities = [
+  "SourceScanning",          # Scan external source for data
+  "ManifestReading",         # Parse manifest/config files
+  "AutoConfiguration",      # Configure panels based on discovered data
+  "DirectoryBrowsing",      # Browse source directory structure
+]
+
+[clade-connections]
+backend-type = "tauri-ipc"
+protocols = ["TauriIPC"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["tree", "treeitem", "status", "progressbar"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

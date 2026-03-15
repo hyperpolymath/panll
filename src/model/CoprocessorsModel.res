@@ -60,6 +60,7 @@ type coprocessorsCategory =
   | CoprocDashboard
   | CoprocCallLog
   | CoprocHeatmap
+  | CoprocRouting
   | CoprocSettings
 
 /// Compute engine identity — external services that provide compute.
@@ -106,6 +107,9 @@ type localDispatchState = {
   ffiLoaded: bool,
   /// Path to the Zig FFI .so file.
   ffiPath: string,
+  /// Filesystem path passed to coprocessor_load_ffi (may differ from ffiPath
+  /// if the user specified a custom location).
+  ffiLibPath: option<string>,
   /// Available local devices (GPU, CPU cores).
   localDevices: array<computeDevice>,
   /// Current CPU utilisation (0.0–1.0).
@@ -114,6 +118,10 @@ type localDispatchState = {
   gpuMemoryMb: int,
   /// Number of pending local dispatches.
   pendingDispatches: int,
+  /// Number of CPU cores available for local dispatch.
+  cpuCores: int,
+  /// Backend names available through the loaded FFI library.
+  availableBackends: array<string>,
 }
 
 /// Routing decision record — tracks why a particular route was chosen.

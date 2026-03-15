@@ -6,7 +6,7 @@
 :icons: font
 
 image:https://img.shields.io/badge/version-v0.1.0--alpha-blue[Version]
-image:https://img.shields.io/badge/completion-92%25-green[Completion]
+image:https://img.shields.io/badge/completion-95%25-green[Completion]
 image:https://img.shields.io/badge/License-PMPL--1.0-indigo.svg[PMPL-1.0-or-later,link="LICENSE"]
 image:https://img.shields.io/badge/Tests-109%20passing-brightgreen[Tests]
 image:https://img.shields.io/badge/RSR-compliant-blue[RSR Compliant]
@@ -61,7 +61,7 @@ This is not a passive text editor. It is an active, synchronous environment that
 
 |Styling
 |Tailwind CSS 4.x
-|Utility-first, purged in production. Keeps panel styling consistent across 14 overlays without CSS specificity wars.
+|Utility-first, purged in production. Keeps panel styling consistent across 76 panels without CSS specificity wars.
 
 |Middleware
 |Elixir/BEAM (`beam/panll_beam`)
@@ -169,7 +169,7 @@ PMPL-1.0-or-later
 
 == Status
 
-**v0.1.0-alpha** (92% complete)
+**v0.1.0-alpha** (95% complete, 76 panels defined)
 
 ✅ Complete TEA implementation (Model-Update-View)
 ✅ All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)

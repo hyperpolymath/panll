@@ -59,6 +59,8 @@ pub struct Snapshot {
     pub total_steps: u64,
     /// Per-tier execution counts.
     pub tier_counts: [u64; 5],
+    /// Channel buffer contents.
+    pub channels: Vec<i64>,
 }
 
 /// Full VM state held in the static mutex.
@@ -80,6 +82,8 @@ pub struct VmState {
     pub tier_counts: [u64; 5],
     /// Ring buffer of pre-execution snapshots for reverse stepping.
     pub history: VecDeque<Snapshot>,
+    /// Channel buffer for SEND/RECV inter-VM communication (FIFO queue).
+    pub channels: Vec<i64>,
 }
 
 impl Default for VmState {
@@ -93,6 +97,7 @@ impl Default for VmState {
             total_steps: 0,
             tier_counts: [0u64; 5],
             history: VecDeque::new(),
+            channels: Vec::new(),
         }
     }
 }
@@ -116,6 +121,7 @@ fn state_to_json(vm: &VmState) -> Result<String, String> {
         "total_steps": vm.total_steps,
         "tier_counts": vm.tier_counts,
         "history_len": vm.history.len(),
+        "channels": vm.channels,
     });
     serde_json::to_string(&payload)
         .map_err(|e| format!("Serialisation error: {e}"))
@@ -129,6 +135,7 @@ fn capture_snapshot(vm: &mut VmState) {
         memory: vm.memory.clone(),
         total_steps: vm.total_steps,
         tier_counts: vm.tier_counts,
+        channels: vm.channels.clone(),
     };
     if vm.history.len() >= MAX_HISTORY {
         vm.history.pop_front();
@@ -149,7 +156,7 @@ fn tier_for_mnemonic(mnemonic: &str) -> u8 {
         "PUSH" | "POP" | "LOAD" | "STORE" | "SWAP" => 0,
         "ADD" | "SUB" | "MUL" | "DIV" | "NEGATE" => 1,
         "XOR" | "AND" | "OR" | "FLIP" | "ROL" | "ROR" => 2,
-        "IF_ZERO" | "IF_POS" | "LOOP" | "CALL" | "NOOP" => 3,
+        "IF_ZERO" | "IF_POS" | "JNZ" | "JLE" | "LOOP" | "CALL" | "NOOP" => 3,
         "SEND" | "RECV" => 4,
         _ => 3, // Default unknown mnemonics to control tier
     }
@@ -184,8 +191,9 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
                 vm.running = false;
                 return Err("Stack underflow on ADD".to_string());
             }
-            let b = vm.stack.pop().unwrap();
-            let a = vm.stack.pop().unwrap();
+            // SAFETY: length >= 2 checked above.
+            let b = vm.stack.pop().expect("ADD: stack len >= 2");
+            let a = vm.stack.pop().expect("ADD: stack len >= 2");
             vm.stack.push(a.wrapping_add(b));
         }
         "SUB" => {
@@ -193,8 +201,9 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
                 vm.running = false;
                 return Err("Stack underflow on SUB".to_string());
             }
-            let b = vm.stack.pop().unwrap();
-            let a = vm.stack.pop().unwrap();
+            // SAFETY: length >= 2 checked above.
+            let b = vm.stack.pop().expect("SUB: stack len >= 2");
+            let a = vm.stack.pop().expect("SUB: stack len >= 2");
             vm.stack.push(a.wrapping_sub(b));
         }
         "NOOP" => {
@@ -221,8 +230,9 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
                 vm.running = false;
                 return Err("Stack underflow on MUL".to_string());
             }
-            let b = vm.stack.pop().unwrap();
-            let a = vm.stack.pop().unwrap();
+            // SAFETY: length >= 2 checked above.
+            let b = vm.stack.pop().expect("MUL: stack len >= 2");
+            let a = vm.stack.pop().expect("MUL: stack len >= 2");
             vm.stack.push(a.wrapping_mul(b));
         }
         "DIV" => {
@@ -230,12 +240,13 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
                 vm.running = false;
                 return Err("Stack underflow on DIV".to_string());
             }
-            let b = vm.stack.pop().unwrap();
+            // SAFETY: length >= 2 checked above.
+            let b = vm.stack.pop().expect("DIV: stack len >= 2");
             if b == 0 {
                 vm.running = false;
                 return Err("Division by zero".to_string());
             }
-            let a = vm.stack.pop().unwrap();
+            let a = vm.stack.pop().expect("DIV: stack len >= 2");
             vm.stack.push(a.wrapping_div(b));
         }
         "LOAD" => {
@@ -243,7 +254,8 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
                 vm.running = false;
                 return Err("Stack underflow on LOAD".to_string());
             }
-            let addr = vm.stack.pop().unwrap() as usize;
+            // SAFETY: non-empty checked above.
+            let addr = vm.stack.pop().expect("LOAD: stack non-empty") as usize;
             if addr >= MEMORY_SIZE {
                 vm.running = false;
                 return Err(format!("LOAD address out of bounds: {addr}"));
@@ -255,8 +267,9 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
                 vm.running = false;
                 return Err("Stack underflow on STORE".to_string());
             }
-            let addr = vm.stack.pop().unwrap() as usize;
-            let val = vm.stack.pop().unwrap();
+            // SAFETY: length >= 2 checked above.
+            let addr = vm.stack.pop().expect("STORE: stack len >= 2") as usize;
+            let val = vm.stack.pop().expect("STORE: stack len >= 2");
             if addr >= MEMORY_SIZE {
                 vm.running = false;
                 return Err(format!("STORE address out of bounds: {addr}"));
@@ -268,8 +281,9 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
                 vm.running = false;
                 return Err("Stack underflow on XOR".to_string());
             }
-            let b = vm.stack.pop().unwrap();
-            let a = vm.stack.pop().unwrap();
+            // SAFETY: length >= 2 checked above.
+            let b = vm.stack.pop().expect("XOR: stack len >= 2");
+            let a = vm.stack.pop().expect("XOR: stack len >= 2");
             vm.stack.push(a ^ b);
         }
         "AND" => {
@@ -277,8 +291,9 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
                 vm.running = false;
                 return Err("Stack underflow on AND".to_string());
             }
-            let b = vm.stack.pop().unwrap();
-            let a = vm.stack.pop().unwrap();
+            // SAFETY: length >= 2 checked above.
+            let b = vm.stack.pop().expect("AND: stack len >= 2");
+            let a = vm.stack.pop().expect("AND: stack len >= 2");
             vm.stack.push(a & b);
         }
         "OR" => {
@@ -286,8 +301,9 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
                 vm.running = false;
                 return Err("Stack underflow on OR".to_string());
             }
-            let b = vm.stack.pop().unwrap();
-            let a = vm.stack.pop().unwrap();
+            // SAFETY: length >= 2 checked above.
+            let b = vm.stack.pop().expect("OR: stack len >= 2");
+            let a = vm.stack.pop().expect("OR: stack len >= 2");
             vm.stack.push(a | b);
         }
         "FLIP" => {
@@ -318,46 +334,122 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
             vm.stack[len - 1] = vm.stack[len - 1].rotate_right(1);
         }
         "IF_ZERO" => {
-            // TODO: Conditional jump — skip next instruction if TOS != 0.
-            // For now, just consumes TOS and continues.
+            // Conditional jump — skip next instruction if TOS != 0.
             if vm.stack.is_empty() {
                 vm.running = false;
                 return Err("Stack underflow on IF_ZERO".to_string());
             }
-            let val = vm.stack.pop().unwrap();
+            // SAFETY: non-empty checked above.
+            let val = vm.stack.pop().expect("IF_ZERO: stack non-empty");
             if val != 0 {
                 // Skip next instruction by incrementing pc an extra time.
                 vm.pc += 1;
             }
         }
         "IF_POS" => {
-            // TODO: Conditional jump — skip next instruction if TOS <= 0.
+            // Conditional jump — skip next instruction if TOS <= 0.
             if vm.stack.is_empty() {
                 vm.running = false;
                 return Err("Stack underflow on IF_POS".to_string());
             }
-            let val = vm.stack.pop().unwrap();
+            // SAFETY: non-empty checked above.
+            let val = vm.stack.pop().expect("IF_POS: stack non-empty");
             if val <= 0 {
                 vm.pc += 1;
             }
         }
+        "JNZ" => {
+            // Jump if Not Zero — pop TOS, if non-zero jump to operand address.
+            if vm.stack.is_empty() {
+                vm.running = false;
+                return Err("Stack underflow on JNZ".to_string());
+            }
+            // SAFETY: non-empty checked above.
+            let val = vm.stack.pop().expect("JNZ: stack non-empty");
+            if val != 0 {
+                let target = instr.operand.unwrap_or(0) as usize;
+                if target > vm.instructions.len() {
+                    vm.running = false;
+                    return Err(format!("JNZ target out of bounds: {target}"));
+                }
+                // Set pc to target - 1 because pc is incremented after match.
+                vm.pc = target.wrapping_sub(1);
+            }
+        }
+        "JLE" => {
+            // Jump if Less or Equal — pop two values, if top <= second jump
+            // to operand address.
+            if vm.stack.len() < 2 {
+                vm.running = false;
+                return Err("Stack underflow on JLE".to_string());
+            }
+            // SAFETY: length >= 2 checked above.
+            let top = vm.stack.pop().expect("JLE: stack len >= 2");
+            let second = vm.stack.pop().expect("JLE: stack len >= 2");
+            if top <= second {
+                let target = instr.operand.unwrap_or(0) as usize;
+                if target > vm.instructions.len() {
+                    vm.running = false;
+                    return Err(format!("JLE target out of bounds: {target}"));
+                }
+                // Set pc to target - 1 because pc is incremented after match.
+                vm.pc = target.wrapping_sub(1);
+            }
+        }
         "LOOP" => {
-            // TODO: Loop back to operand address. Stub: treat as NOOP.
+            // Decrement TOS and loop — if TOS > 0 after decrement, jump to
+            // operand address; otherwise pop and fall through.
+            if vm.stack.is_empty() {
+                vm.running = false;
+                return Err("Stack underflow on LOOP".to_string());
+            }
+            let len = vm.stack.len();
+            vm.stack[len - 1] = vm.stack[len - 1].wrapping_sub(1);
+            if vm.stack[len - 1] > 0 {
+                let target = instr.operand.unwrap_or(0) as usize;
+                if target > vm.instructions.len() {
+                    vm.running = false;
+                    return Err(format!("LOOP target out of bounds: {target}"));
+                }
+                // Set pc to target - 1 because pc is incremented after match.
+                vm.pc = target.wrapping_sub(1);
+            } else {
+                // Counter exhausted — pop and continue.
+                vm.stack.pop();
+            }
         }
         "CALL" => {
-            // TODO: Subroutine call. Stub: treat as NOOP.
+            // Subroutine call — push return address (pc + 1) onto stack,
+            // then jump to operand address.
+            let target = instr.operand.unwrap_or(0) as usize;
+            if target > vm.instructions.len() {
+                vm.running = false;
+                return Err(format!("CALL target out of bounds: {target}"));
+            }
+            // Push return address (the instruction after this CALL).
+            vm.stack.push((vm.pc + 1) as i64);
+            // Set pc to target - 1 because pc is incremented after match.
+            vm.pc = target.wrapping_sub(1);
         }
         "SEND" => {
-            // TODO: Inter-VM communication. Stub: pops TOS and discards.
+            // Send to channel — pop TOS and push it onto the channel buffer.
             if vm.stack.is_empty() {
                 vm.running = false;
                 return Err("Stack underflow on SEND".to_string());
             }
-            vm.stack.pop();
+            // SAFETY: non-empty checked above.
+            let val = vm.stack.pop().expect("SEND: stack non-empty");
+            vm.channels.push(val);
         }
         "RECV" => {
-            // TODO: Inter-VM communication. Stub: pushes 0.
-            vm.stack.push(0);
+            // Receive from channel — pop first value from channel buffer
+            // and push onto stack. If channel is empty, pushes 0.
+            let val = if vm.channels.is_empty() {
+                0
+            } else {
+                vm.channels.remove(0)
+            };
+            vm.stack.push(val);
         }
         other => {
             return Err(format!("Unknown instruction: {other}"));
@@ -407,6 +499,7 @@ pub async fn vm_inspector_step_backward() -> Result<String, String> {
     vm.memory = snap.memory;
     vm.total_steps = snap.total_steps;
     vm.tier_counts = snap.tier_counts;
+    vm.channels = snap.channels;
     state_to_json(&vm)
 }
 
@@ -442,8 +535,8 @@ pub async fn vm_inspector_run() -> Result<String, String> {
 /// Blank lines and lines starting with `#` or `;` are skipped.
 ///
 /// Supported mnemonics: ADD, SUB, PUSH, POP, LOAD, STORE, SWAP, NEGATE,
-/// NOOP, XOR, FLIP, ROL, ROR, AND, OR, MUL, DIV, IF_ZERO, IF_POS, LOOP,
-/// CALL, SEND, RECV.
+/// NOOP, XOR, FLIP, ROL, ROR, AND, OR, MUL, DIV, IF_ZERO, IF_POS, JNZ,
+/// JLE, LOOP, CALL, SEND, RECV.
 ///
 /// Returns a JSON array of `Instruction` objects with tier assignments.
 #[tauri::command]
@@ -471,7 +564,7 @@ pub async fn vm_inspector_load_program(assembly: String) -> Result<String, Strin
             "ADD" | "SUB" | "PUSH" | "POP" | "LOAD" | "STORE" | "SWAP"
             | "NEGATE" | "NOOP" | "XOR" | "FLIP" | "ROL" | "ROR"
             | "AND" | "OR" | "MUL" | "DIV" | "IF_ZERO" | "IF_POS"
-            | "LOOP" | "CALL" | "SEND" | "RECV"
+            | "JNZ" | "JLE" | "LOOP" | "CALL" | "SEND" | "RECV"
         );
         if !valid {
             return Err(format!(
@@ -809,6 +902,9 @@ mod tests {
         assert_eq!(tier_for_mnemonic("ROL"), 2);
         assert_eq!(tier_for_mnemonic("ROR"), 2);
         assert_eq!(tier_for_mnemonic("IF_ZERO"), 3);
+        assert_eq!(tier_for_mnemonic("IF_POS"), 3);
+        assert_eq!(tier_for_mnemonic("JNZ"), 3);
+        assert_eq!(tier_for_mnemonic("JLE"), 3);
         assert_eq!(tier_for_mnemonic("NOOP"), 3);
         assert_eq!(tier_for_mnemonic("CALL"), 3);
         assert_eq!(tier_for_mnemonic("LOOP"), 3);
@@ -934,6 +1030,149 @@ mod tests {
             assert_eq!(parsed["running"], false);
             assert_eq!(parsed["total_steps"], 0);
             assert!(parsed["stack"].as_array().unwrap().is_empty());
+        }
+    }
+
+    #[test]
+    fn test_jnz_jumps_when_nonzero() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        reset_vm();
+        // PUSH 1, JNZ 4, PUSH 99, NOOP, PUSH 42
+        load_instructions(vec![
+            instr_op("PUSH", 1),   // 0: push 1
+            instr_op("JNZ", 3),    // 1: TOS=1 != 0, jump to 3
+            instr_op("PUSH", 99),  // 2: should be skipped
+            instr_op("PUSH", 42),  // 3: lands here
+        ]);
+        {
+            let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
+            for _ in 0..3 {
+                capture_snapshot(&mut vm);
+                execute_one(&mut vm).unwrap();
+            }
+            // Stack: [42] — the PUSH 99 was skipped.
+            assert_eq!(vm.stack, vec![42]);
+        }
+    }
+
+    #[test]
+    fn test_jnz_no_jump_when_zero() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        reset_vm();
+        load_instructions(vec![
+            instr_op("PUSH", 0),   // 0: push 0
+            instr_op("JNZ", 3),    // 1: TOS=0, no jump
+            instr_op("PUSH", 99),  // 2: executed
+            instr_op("PUSH", 42),  // 3: also executed
+        ]);
+        {
+            let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
+            for _ in 0..4 {
+                capture_snapshot(&mut vm);
+                execute_one(&mut vm).unwrap();
+            }
+            // Stack: [99, 42] — both pushes executed.
+            assert_eq!(vm.stack, vec![99, 42]);
+        }
+    }
+
+    #[test]
+    fn test_jle_jumps_when_le() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        reset_vm();
+        // PUSH 5, PUSH 3, JLE 4 → top=3 <= second=5 → jump
+        load_instructions(vec![
+            instr_op("PUSH", 5),
+            instr_op("PUSH", 3),
+            instr_op("JLE", 4),
+            instr_op("PUSH", 99),  // 3: skipped
+            instr_op("PUSH", 42),  // 4: lands here
+        ]);
+        {
+            let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
+            for _ in 0..4 {
+                capture_snapshot(&mut vm);
+                execute_one(&mut vm).unwrap();
+            }
+            assert_eq!(vm.stack, vec![42]);
+        }
+    }
+
+    #[test]
+    fn test_loop_counts_down() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        reset_vm();
+        // PUSH 3, LOOP back to 1 → decrements 3→2→1→0, pops on 0
+        load_instructions(vec![
+            instr_op("PUSH", 3),  // 0: counter = 3
+            instr_op("LOOP", 1),  // 1: decrement, loop if > 0
+            instr("NOOP"),        // 2: after loop
+        ]);
+        {
+            let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
+            // Execute: PUSH(3), LOOP(3→2, jump), LOOP(2→1, jump), LOOP(1→0, pop), NOOP
+            for _ in 0..5 {
+                capture_snapshot(&mut vm);
+                if execute_one(&mut vm).is_err() { break; }
+            }
+            // Counter was popped when it reached 0.
+            assert!(vm.stack.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_call_pushes_return_address() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        reset_vm();
+        // CALL 2, NOOP, PUSH 42
+        load_instructions(vec![
+            instr_op("CALL", 2),  // 0: push return addr 1, jump to 2
+            instr("NOOP"),        // 1: skipped (would be return target)
+            instr_op("PUSH", 42), // 2: subroutine body
+        ]);
+        {
+            let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
+            for _ in 0..2 {
+                capture_snapshot(&mut vm);
+                execute_one(&mut vm).unwrap();
+            }
+            // Stack: [1, 42] — return address 1, then PUSH 42.
+            assert_eq!(vm.stack, vec![1, 42]);
+        }
+    }
+
+    #[test]
+    fn test_send_recv_channel() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        reset_vm();
+        // PUSH 77, SEND, RECV — should round-trip through channel.
+        load_instructions(vec![
+            instr_op("PUSH", 77),
+            instr("SEND"),
+            instr("RECV"),
+        ]);
+        {
+            let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
+            for _ in 0..3 {
+                capture_snapshot(&mut vm);
+                execute_one(&mut vm).unwrap();
+            }
+            // Value went stack→channel→stack.
+            assert_eq!(vm.stack, vec![77]);
+            assert!(vm.channels.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_recv_empty_channel_gives_zero() {
+        let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        reset_vm();
+        load_instructions(vec![instr("RECV")]);
+        {
+            let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
+            capture_snapshot(&mut vm);
+            execute_one(&mut vm).unwrap();
+            assert_eq!(vm.stack, vec![0]);
         }
     }
 }

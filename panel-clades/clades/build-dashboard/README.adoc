@@ -1,0 +1,33 @@
+= Build Dashboard Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Monitor build processes, test results, and compilation status across IDApTIK sub-projects.
+
+== Purpose
+
+The Build Dashboard tracks builds, tests, errors, and compilation status for all 6
+IDApTIK targets (Game, VM, DLC, SyncServer, Shared, Coprocessors). Build errors are
+clickable work items that route through EditorBridge for jump-to-line in external editors.
+
+== Key Features
+
+* Build trigger and cancel for 6 IDApTIK targets
+* Test runner with pass/fail, duration, and suite info
+* Clickable error list routing to EditorBridge for jump-to-line
+* Watch mode with auto-detect file changes and rebuild
+* Build history with statistics
+* Cross-panel integration for error navigation
+
+== Integration Points
+
+* **EditorBridge** -- errors route through for jump-to-line in external editor
+* **ReleaseManager** -- build status feeds into release readiness checks
+
+== Clade Kind
+
+**scanner**
+
+== Status
+
+Early development (v1.0.0). Engine and model modules defined.

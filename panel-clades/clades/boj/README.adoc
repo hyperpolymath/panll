@@ -1,0 +1,36 @@
+= BoJ (Bundle of Joy) Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Unified cartridge server bridging 17 protocol domains through Idris2/Zig/V-lang triple adapter.
+
+== Purpose
+
+BoJ is the protocol backbone of the hyperpolymath ecosystem. It replaces polystack with
+a single cartridge-based architecture where each domain (database, fleet, nesy, agent,
+cloud, container, k8s, git, secrets, queues, iac, observe, ssg, proof, lsp, dap, bsp)
+is a hot-reloadable shared library with SHA-256 integrity verification and formal ABI
+proofs via Idris2 dependent types.
+
+== Key Features
+
+* 17 hot-reloadable cartridges with SHA-256 integrity verification
+* Idris2 ABI -> Zig FFI -> V-lang REST/gRPC/GraphQL triple adapter
+* Umoja federation for distributed node discovery via gossip protocol
+* Cartridge lifecycle management (load, unload, invoke, health check)
+* Matrix view showing all cartridge states simultaneously
+* Cryptographic attestation for peer network trust
+
+== Integration Points
+
+* Consumed by **Aerie**, **AI**, **Databases**, **Playgrounds**, **Valence Shell**
+* Dispatches to all 17 MCP domain cartridges
+* Supersedes **polystack**
+
+== Clade Kind
+
+**bridge**
+
+== Status
+
+Active development (v1.0.0). Core cartridge architecture defined.

@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-//! Game Preview Tauri commands — dev-server health, engine control, recording,
+//! Game Preview Tauri commands — dev-server lifecycle, engine control, recording,
 //! screenshots, render stats, and clip management.
 //!
 //! Commands:
 //!   - `game_preview_check_server`: Probe a dev-server URL for connectivity.
+//!   - `game_preview_start_server`: Spawn a Vite/Deno dev-server process.
+//!   - `game_preview_stop_server`: Kill the tracked dev-server process.
 //!   - `game_preview_control`: Send pause/resume/step commands to the engine.
 //!   - `game_preview_record_start`: Begin a named game recording session.
 //!   - `game_preview_record_stop`: End the current recording session.
@@ -12,12 +14,45 @@
 //!   - `game_preview_stats`: Return render statistics (FPS, draw calls, etc.).
 //!   - `game_preview_clips_list`: List saved clips on disk.
 //!   - `game_preview_clip_delete`: Delete a clip by ID.
+//!
+//! Engine bridge protocol:
+//!   When a dev server is running, `control`, `screenshot`, and `stats` commands
+//!   attempt to reach the IDApTIK Vite plugin's `/__engine/*` endpoints. If the
+//!   endpoints are unavailable (plugin not loaded, server not running), they fall
+//!   back to local stub responses with `stub: true`.
 
 use std::fs;
 use std::path::PathBuf;
+use std::process::Command;
+use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use once_cell::sync::Lazy;
 use serde_json::json;
+
+/// Tracked Vite dev-server child process and its associated URL.
+/// When `game_preview_start_server` spawns a Vite process we stash its PID
+/// here so `game_preview_stop_server` can kill it cleanly.
+struct DevServerState {
+    /// OS process ID of the spawned Vite dev-server.
+    pid: Option<u32>,
+    /// URL the server was started on (e.g. "http://localhost:5173").
+    url: Option<String>,
+    /// Absolute path to the project directory passed at start time.
+    project_dir: Option<String>,
+}
+
+impl DevServerState {
+    fn new() -> Self {
+        Self {
+            pid: None,
+            url: None,
+            project_dir: None,
+        }
+    }
+}
+
+static DEV_SERVER: Lazy<Mutex<DevServerState>> = Lazy::new(|| Mutex::new(DevServerState::new()));
 
 /// Base directory for game clip storage.
 const CLIPS_DIR: &str = "/tmp/panll/game-clips";
@@ -72,12 +107,146 @@ pub async fn game_preview_check_server(url: String) -> Result<String, String> {
     }
 }
 
+/// Start a Vite dev-server for the game project.
+///
+/// Spawns `npx vite` (or `deno task dev` if a `deno.json` is present) in the
+/// given `project_dir`. The server process runs in the background; its PID is
+/// tracked so `game_preview_stop_server` can kill it later.
+///
+/// Prerequisites:
+///   - A valid IDApTIK game project directory with a `package.json` or `deno.json`.
+///   - `npx` (from Node/Deno) available on `$PATH`.
+///
+/// Returns JSON with `pid`, `url`, and `projectDir` on success.
+#[tauri::command]
+pub async fn game_preview_start_server(
+    project_dir: String,
+    port: Option<u16>,
+) -> Result<String, String> {
+    let dir = PathBuf::from(&project_dir);
+    if !dir.is_dir() {
+        return Err(format!("Project directory does not exist: {project_dir}"));
+    }
+
+    // Check if a server is already running.
+    {
+        let state = DEV_SERVER.lock().map_err(|e| format!("Lock error: {e}"))?;
+        if state.pid.is_some() {
+            return Err(format!(
+                "Dev server already running (PID {}). Stop it first.",
+                state.pid.unwrap()
+            ));
+        }
+    }
+
+    let server_port = port.unwrap_or(5173);
+    let server_url = format!("http://localhost:{server_port}");
+
+    // Decide launch command: prefer deno.json, fall back to npx vite.
+    let has_deno_json = dir.join("deno.json").exists() || dir.join("deno.jsonc").exists();
+
+    let child = if has_deno_json {
+        Command::new("deno")
+            .args(["task", "dev", "--port", &server_port.to_string()])
+            .current_dir(&dir)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+    } else {
+        Command::new("npx")
+            .args(["vite", "--port", &server_port.to_string()])
+            .current_dir(&dir)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+    };
+
+    let child = child.map_err(|e| {
+        format!(
+            "Failed to spawn dev server in {project_dir}: {e}. \
+             Ensure 'deno' or 'npx' is on $PATH."
+        )
+    })?;
+
+    let pid = child.id();
+
+    {
+        let mut state = DEV_SERVER.lock().map_err(|e| format!("Lock error: {e}"))?;
+        state.pid = Some(pid);
+        state.url = Some(server_url.clone());
+        state.project_dir = Some(project_dir.clone());
+    }
+
+    let result = json!({
+        "pid": pid,
+        "url": server_url,
+        "projectDir": project_dir,
+        "status": "started",
+    });
+    serde_json::to_string(&result)
+        .map_err(|e| format!("Serialisation error: {e}"))
+}
+
+/// Stop the running Vite dev-server.
+///
+/// Sends SIGTERM (Unix) or taskkill (Windows) to the tracked dev-server
+/// process. Clears the tracked state afterwards regardless of kill outcome
+/// so a new server can be started.
+#[tauri::command]
+pub async fn game_preview_stop_server() -> Result<String, String> {
+    let (pid, url) = {
+        let state = DEV_SERVER.lock().map_err(|e| format!("Lock error: {e}"))?;
+        match state.pid {
+            Some(pid) => (pid, state.url.clone().unwrap_or_default()),
+            None => return Err("No dev server is currently running".to_string()),
+        }
+    };
+
+    // Kill the process tree. On Unix we send SIGTERM to the process group
+    // so child processes (the actual Vite server) are also terminated.
+    #[cfg(unix)]
+    {
+        // Send SIGTERM to the process group (negative PID).
+        let kill_result = unsafe { libc::kill(-(pid as i32), libc::SIGTERM) };
+        if kill_result != 0 {
+            // Fall back to killing just the process if group kill fails.
+            unsafe { libc::kill(pid as i32, libc::SIGTERM) };
+        }
+    }
+
+    #[cfg(windows)]
+    {
+        let _ = Command::new("taskkill")
+            .args(["/F", "/T", "/PID", &pid.to_string()])
+            .output();
+    }
+
+    // Clear state so a new server can be started.
+    {
+        let mut state = DEV_SERVER.lock().map_err(|e| format!("Lock error: {e}"))?;
+        state.pid = None;
+        state.url = None;
+        state.project_dir = None;
+    }
+
+    let result = json!({
+        "stopped": true,
+        "pid": pid,
+        "url": url,
+    });
+    serde_json::to_string(&result)
+        .map_err(|e| format!("Serialisation error: {e}"))
+}
+
 /// Send a control command to the game engine.
 ///
 /// Accepted commands: `"pause"`, `"resume"`, `"step"`.
-/// Currently a stub that echoes the requested state back. When the engine
-/// WebSocket bridge is implemented this will forward commands to the running
-/// game instance.
+/// Forwards the command to the dev server's engine control endpoint at
+/// `<server_url>/__engine/control`. If no dev server is running or the
+/// endpoint is unreachable, falls back to echoing the requested state.
+///
+/// The engine control endpoint is expected to be provided by an IDApTIK
+/// Vite plugin that injects `/__engine/*` routes into the dev server.
 #[tauri::command]
 pub async fn game_preview_control(command: String) -> Result<String, String> {
     let valid_commands = ["pause", "resume", "step"];
@@ -87,6 +256,39 @@ pub async fn game_preview_control(command: String) -> Result<String, String> {
         ));
     }
 
+    // Try to forward to the running dev server's engine endpoint.
+    let server_url = {
+        let state = DEV_SERVER.lock().map_err(|e| format!("Lock error: {e}"))?;
+        state.url.clone()
+    };
+
+    if let Some(url) = server_url {
+        let control_url = format!("{url}/__engine/control");
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(3))
+            .build()
+            .map_err(|e| format!("HTTP client error: {e}"))?;
+
+        let body = json!({ "command": command });
+        match client.post(&control_url).json(&body).send().await {
+            Ok(resp) if resp.status().is_success() => {
+                let text = resp.text().await.unwrap_or_default();
+                // If the engine returns valid JSON, use it directly.
+                if serde_json::from_str::<serde_json::Value>(&text).is_ok() {
+                    return Ok(text);
+                }
+                // Otherwise wrap in our standard response.
+                let result = json!({ "state": command, "engineResponse": text });
+                return serde_json::to_string(&result)
+                    .map_err(|e| format!("Serialisation error: {e}"));
+            }
+            _ => {
+                // Engine endpoint not available — fall through to local echo.
+            }
+        }
+    }
+
+    // Fallback: echo the command state locally.
     let result = json!({ "state": command });
     serde_json::to_string(&result)
         .map_err(|e| format!("Serialisation error: {e}"))
@@ -149,7 +351,8 @@ pub async fn game_preview_record_stop() -> Result<String, String> {
 
     // Sort by name (timestamp-based) so we get the latest.
     recordings.sort_by_key(|e| e.file_name());
-    let latest = recordings.last().unwrap();
+    // SAFETY: `recordings` is guaranteed non-empty — checked at line 146.
+    let latest = recordings.last().expect("recordings: non-empty after is_empty guard");
     let recording_path = latest.path();
 
     // Read the recording metadata.
@@ -180,9 +383,16 @@ pub async fn game_preview_record_stop() -> Result<String, String> {
 
 /// Capture the current game frame as a screenshot.
 ///
-/// Currently a stub that returns a placeholder path. When the engine bridge
-/// is implemented, this will request a frame capture from the running game
-/// and save it as a PNG.
+/// Requests a frame capture from the running game's engine endpoint at
+/// `<server_url>/__engine/screenshot`. If the engine provides raw PNG
+/// bytes, they are saved to `/tmp/panll/game-clips/screenshot-<ts>.png`.
+///
+/// If no dev server is running or the endpoint is unavailable, returns a
+/// placeholder path with `stub: true` so the frontend can show a fallback.
+///
+/// Prerequisites:
+///   - Dev server running (via `game_preview_start_server`).
+///   - IDApTIK Vite plugin providing the `/__engine/screenshot` endpoint.
 #[tauri::command]
 pub async fn game_preview_screenshot() -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
@@ -193,6 +403,41 @@ pub async fn game_preview_screenshot() -> Result<String, String> {
     let filename = format!("screenshot-{ts}.png");
     let path = clips_dir.join(&filename);
 
+    // Try to capture from the running engine.
+    let server_url = {
+        let state = DEV_SERVER.lock().map_err(|e| format!("Lock error: {e}"))?;
+        state.url.clone()
+    };
+
+    if let Some(url) = server_url {
+        let screenshot_url = format!("{url}/__engine/screenshot");
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(5))
+            .build()
+            .map_err(|e| format!("HTTP client error: {e}"))?;
+
+        if let Ok(resp) = client.get(&screenshot_url).send().await {
+            if resp.status().is_success() {
+                if let Ok(bytes) = resp.bytes().await {
+                    if !bytes.is_empty() {
+                        fs::write(&path, &bytes)
+                            .map_err(|e| format!("Cannot write screenshot: {e}"))?;
+
+                        let result = json!({
+                            "path": path.to_string_lossy(),
+                            "filename": filename,
+                            "sizeBytes": bytes.len(),
+                            "stub": false,
+                        });
+                        return serde_json::to_string(&result)
+                            .map_err(|e| format!("Serialisation error: {e}"));
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback: return placeholder path.
     let result = json!({
         "path": path.to_string_lossy(),
         "filename": filename,
@@ -204,15 +449,51 @@ pub async fn game_preview_screenshot() -> Result<String, String> {
 
 /// Return render statistics from the game engine.
 ///
-/// Currently returns stub values. When the engine bridge is implemented,
-/// this will query the running game for real-time performance metrics.
+/// Queries the running dev server's engine stats endpoint at
+/// `<server_url>/__engine/stats`. If the engine provides JSON metrics
+/// (FPS, draw calls, texture memory, sprite count), those are returned
+/// directly.
+///
+/// If no dev server is running or the endpoint is unavailable, returns
+/// placeholder values with `stub: true` so the frontend can indicate
+/// that the engine is not providing live data.
+///
+/// Prerequisites:
+///   - Dev server running (via `game_preview_start_server`).
+///   - IDApTIK Vite plugin providing the `/__engine/stats` endpoint.
 #[tauri::command]
 pub async fn game_preview_stats() -> Result<String, String> {
+    // Try to fetch live stats from the running engine.
+    let server_url = {
+        let state = DEV_SERVER.lock().map_err(|e| format!("Lock error: {e}"))?;
+        state.url.clone()
+    };
+
+    if let Some(url) = server_url {
+        let stats_url = format!("{url}/__engine/stats");
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(3))
+            .build()
+            .map_err(|e| format!("HTTP client error: {e}"))?;
+
+        if let Ok(resp) = client.get(&stats_url).send().await {
+            if resp.status().is_success() {
+                if let Ok(text) = resp.text().await {
+                    if serde_json::from_str::<serde_json::Value>(&text).is_ok() {
+                        return Ok(text);
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback: return placeholder stats.
     let result = json!({
         "fps": 60.0,
         "drawCalls": 150,
         "textureMemory": 48.5,
         "spriteCount": 342,
+        "stub": true,
     });
     serde_json::to_string(&result)
         .map_err(|e| format!("Serialisation error: {e}"))
@@ -334,10 +615,12 @@ mod tests {
             let result = game_preview_stats().await;
             assert!(result.is_ok());
             let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
+            // Without a running dev server the fallback stub values are returned.
             assert_eq!(json["fps"], 60.0);
             assert_eq!(json["drawCalls"], 150);
             assert_eq!(json["textureMemory"], 48.5);
             assert_eq!(json["spriteCount"], 342);
+            assert_eq!(json["stub"], true);
         });
     }
 
@@ -408,6 +691,42 @@ mod tests {
             let result = game_preview_clip_delete("nonexistent-clip".to_string()).await;
             assert!(result.is_err());
             assert!(result.unwrap_err().contains("Clip not found"));
+        });
+    }
+
+    #[test]
+    fn test_game_preview_start_server_bad_dir() {
+        // Reset dev server state to ensure clean test.
+        {
+            let mut state = DEV_SERVER.lock().unwrap();
+            state.pid = None;
+            state.url = None;
+            state.project_dir = None;
+        }
+        rt().block_on(async {
+            let result = game_preview_start_server(
+                "/tmp/panll-nonexistent-project-dir-12345".to_string(),
+                None,
+            )
+            .await;
+            assert!(result.is_err());
+            assert!(result.unwrap_err().contains("does not exist"));
+        });
+    }
+
+    #[test]
+    fn test_game_preview_stop_server_not_running() {
+        // Ensure no server is tracked.
+        {
+            let mut state = DEV_SERVER.lock().unwrap();
+            state.pid = None;
+            state.url = None;
+            state.project_dir = None;
+        }
+        rt().block_on(async {
+            let result = game_preview_stop_server().await;
+            assert!(result.is_err());
+            assert!(result.unwrap_err().contains("No dev server"));
         });
     }
 }

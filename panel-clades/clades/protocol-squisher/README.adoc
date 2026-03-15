@@ -1,0 +1,36 @@
+= Protocol-Squisher Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Protocol compression scanner -- 13 wire formats, 4 transport classes, schema analysis.
+
+== Purpose
+
+Protocol-Squisher analyses, compares, and compresses protocol schemas across 13
+formats (JSON, Protobuf, MessagePack, CBOR, Avro, Thrift, FlatBuffers, Cap'n Proto,
+ASN.1, XML, YAML, TOML, EDN) and 4 transport classes (Streaming, Request-Response,
+Pub-Sub, Fire-and-Forget). IR analysis results can be imported as Panel-L constraints.
+
+== Key Features
+
+* 4-tab interface: Analyse, Compare, Results, Guide
+* Schema type checking via TypeLL
+* Side-by-side schema diff with compatibility scoring
+* Format auto-detection across 13 wire formats
+* Transport class classification (4 classes)
+* IR constraint extraction for Panel-L import
+* Analysis history browsing
+
+== Integration Points
+
+* Consumes **TypeLL** for schema type checking
+* Consumed by **Panel-L** for IR constraint import
+* Sibling of **My-Lang** and **EditorBridge**
+
+== Clade Kind
+
+**scanner**
+
+== Status
+
+Active development (v1.0.0). Full A2ML clade definition with engine.

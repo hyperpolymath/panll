@@ -74,61 +74,28 @@ let computeStats = (audits: array<repoCompliance>): complianceStats => {
   {totalRepos, requirementRates, avgScore, fullyCompliant}
 }
 
-/// Parse compliance audits from JSON.
-let parseAudits = (json: string): result<array<repoCompliance>, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Array(items) =>
-      let audits = items->Array.filterMap(item => {
-        switch JSON.Classify.classify(item) {
-        | Object(obj) => {
-            let getString = (key: string): string =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | String(s) => s
-                | _ => ""
-                }
-              | None => ""
-              }
-            let getFloat = (key: string): float =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Number(n) => n
-                | _ => 0.0
-                }
-              | None => 0.0
-              }
-            let getInt = (key: string): int =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Number(n) => Float.toInt(n)
-                | _ => 0
-                }
-              | None => 0
-              }
-
-            Some({
-              repoName: getString("repo_name"),
-              results: [], // Parsed separately if needed
-              score: getFloat("score"),
-              metCount: getInt("met_count"),
-              totalCount: getInt("total_count"),
-            })
-          }
-        | _ => None
-        }
-      })
-      Ok(audits)
-    | _ => Error("Expected array of compliance audits")
-    }
-  } catch {
-  | _ => Error("Failed to parse compliance JSON")
-  }
+/// Tea_Json decoder for a single repo compliance audit.
+let complianceDecoder: Tea_Json.decoder<repoCompliance> = {
+  open Decoders
+  open Tea_Json
+  map4(
+    (repoName, score, metCount, totalCount) => ({
+      repoName,
+      results: [], // Parsed separately if needed
+      score,
+      metCount,
+      totalCount,
+    }: repoCompliance),
+    stringField("repo_name"),
+    floatField("score"),
+    intField("met_count"),
+    intField("total_count"),
+  )
 }
+
+/// Parse compliance audits from JSON.
+let parseAudits = (json: string): result<array<repoCompliance>, string> =>
+  Decoders.decode(Decoders.lenientArray(complianceDecoder), json)
 
 /// All RSR requirements.
 let allRequirements: array<rsrRequirement> = [

@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Team Dashboard Panel Clade — Aggregated team activity and project health overview
+
+[clade-metadata]
+id = "team-dashboard"
+name = "Team Dashboard"
+short-name = "Team"
+version = "0.1.0"
+kind = "viewer"
+icon = "users"
+description = "Aggregated team activity overview — commit velocity, review throughput, build health, open issues, sprint progress, and contributor activity heatmaps."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "CommitVelocity",
+  "ReviewThroughput",
+  "BuildHealth",
+  "IssueTracker",
+  "SprintProgress",
+  "ContributorHeatmap",
+  "CustomWidgets",
+  "AlertConfiguration",
+]
+
+[clade-panel-integration]
+panel-id = "PanelTeamDashboard"
+model-module = "TeamDashboardModel"
+component-module = "TeamDashboard"
+command-module = "TeamDashboardCmd"
+
+[clade-cross-panel]
+depends-on = ["code-review", "merge-coordinator", "build-dashboard"]
+feeds-into = ["workspace"]

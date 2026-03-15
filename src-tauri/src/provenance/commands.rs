@@ -116,7 +116,9 @@ fn extract_co_authors(repo_path: &str, file_path: &str) -> Vec<serde_json::Value
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let re = Regex::new(r"(?i)Co-Authored-By:\s*(.+?)\s*<([^>]+)>").unwrap();
+    // SAFETY: This regex is a compile-time constant and is known to be valid.
+    let re = Regex::new(r"(?i)Co-Authored-By:\s*(.+?)\s*<([^>]+)>")
+        .expect("co-authored-by regex: pattern is a compile-time constant");
 
     let mut seen = HashSet::new();
     let mut co_authors = Vec::new();

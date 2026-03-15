@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Neurosym Bridge Panel Clade — Bridge between neural and symbolic reasoning systems
+
+[clade-metadata]
+id = "neurosym-bridge"
+name = "Neurosym Bridge"
+short-name = "NeSy"
+version = "0.1.0"
+kind = "bridge"
+icon = "brain-circuit"
+description = "Bridge between neural inference (ECHIDNA, LLM providers) and symbolic reasoning (Idris2 proofs, constraint solvers) — translation, confidence gating, proof-guided inference."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "NeuralToSymbolic",
+  "SymbolicToNeural",
+  "ConfidenceGating",
+  "ProofGuidedInference",
+  "TokenTranslation",
+  "ReasoningTrace",
+  "FallbackChain",
+]
+
+[clade-panel-integration]
+panel-id = "PanelNeurosymBridge"
+model-module = "NeurosymBridgeModel"
+component-module = "NeurosymBridge"
+command-module = "NeurosymBridgeCmd"
+
+[clade-cross-panel]
+depends-on = ["typell", "anti-crash"]
+feeds-into = ["pane-n", "tentacles"]

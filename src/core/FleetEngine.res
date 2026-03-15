@@ -128,162 +128,100 @@ let filterFindings = (findings: array<fleetFinding>, query: string): array<fleet
   }
 }
 
+/// Parse a bot ID string into a botId variant.
+let parseBotId = (s: string): option<botId> =>
+  switch s {
+  | "rhodibot" => Some(Rhodibot)
+  | "echidnabot" => Some(Echidnabot)
+  | "sustainabot" => Some(Sustainabot)
+  | "glambot" => Some(Glambot)
+  | "seambot" => Some(Seambot)
+  | "finishbot" => Some(Finishbot)
+  | _ => None
+  }
+
+/// Parse a bot status string into a botStatus variant.
+let parseBotStatus = (s: string): botStatus =>
+  switch s {
+  | "active" => BotActive
+  | "idle" => BotIdle
+  | "offline" => BotOffline
+  | _ => BotError(s)
+  }
+
+/// Tea_Json decoder for a single bot state.
+/// Uses map6 to decode fields, then validates the bot ID.
+let botStateDecoder: Tea_Json.decoder<botState> = json => {
+  open Decoders
+  open Tea_Json
+  let inner = map6(
+    (idStr, statusStr, queued, processed, confThresh, lastAct) =>
+      (idStr, statusStr, queued, processed, confThresh, lastAct),
+    stringField("id"),
+    stringField("status"),
+    intField("queued"),
+    intField("processed"),
+    floatField("confidence_threshold"),
+    stringField("last_activity"),
+  )
+  switch inner(json) {
+  | Ok((idStr, statusStr, queued, processed, confThresh, lastAct)) =>
+    switch parseBotId(idStr) {
+    | Some(botId) =>
+      Ok({
+        id: botId,
+        status: parseBotStatus(statusStr),
+        queuedFindings: queued,
+        processedFindings: processed,
+        confidenceThreshold: confThresh,
+        lastActivity: lastAct,
+      }: botState)
+    | None => Error(Failure(`Unknown bot id: ${idStr}`, json))
+    }
+  | Error(e) => Error(e)
+  }
+}
+
 /// Parse bot status from the fleet API JSON response.
 /// Expected shape: [{ "id": "rhodibot", "status": "active", "queued": 5, ... }]
-let parseBots = (json: string): result<array<botState>, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Array(items) =>
-      let bots = items->Array.filterMap(item => {
-        switch JSON.Classify.classify(item) {
-        | Object(obj) => {
-            let getString = (key: string): string =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | String(s) => s
-                | _ => ""
-                }
-              | None => ""
-              }
-            let getInt = (key: string): int =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Number(n) => Float.toInt(n)
-                | _ => 0
-                }
-              | None => 0
-              }
-            let getFloat = (key: string): float =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Number(n) => n
-                | _ => 0.0
-                }
-              | None => 0.0
-              }
+let parseBots = (json: string): result<array<botState>, string> =>
+  Decoders.decode(Decoders.lenientArray(botStateDecoder), json)
 
-            let idStr = getString("id")
-            let id = switch idStr {
-            | "rhodibot" => Some(Rhodibot)
-            | "echidnabot" => Some(Echidnabot)
-            | "sustainabot" => Some(Sustainabot)
-            | "glambot" => Some(Glambot)
-            | "seambot" => Some(Seambot)
-            | "finishbot" => Some(Finishbot)
-            | _ => None
-            }
-
-            let statusStr = getString("status")
-            let status = switch statusStr {
-            | "active" => BotActive
-            | "idle" => BotIdle
-            | "offline" => BotOffline
-            | _ => BotError(statusStr)
-            }
-
-            switch id {
-            | Some(botId) =>
-              Some({
-                id: botId,
-                status,
-                queuedFindings: getInt("queued"),
-                processedFindings: getInt("processed"),
-                confidenceThreshold: getFloat("confidence_threshold"),
-                lastActivity: getString("last_activity"),
-              })
-            | None => None
-            }
-          }
-        | _ => None
-        }
-      })
-      Ok(bots)
-    | _ => Error("Expected array of bot states")
-    }
-  } catch {
-  | _ => Error("Failed to parse fleet status JSON")
+/// Parse a safety tier string into a safetyTier variant.
+let parseSafetyTier = (s: string): safetyTier =>
+  switch s {
+  | "eliminate" => Eliminate
+  | "substitute" => Substitute
+  | _ => Control
   }
+
+/// Tea_Json decoder for a single fleet finding.
+let findingDecoder: Tea_Json.decoder<fleetFinding> = {
+  open Decoders
+  open Tea_Json
+  map7(
+    (id, repoName, summary, tierStr, confidence, assignedStr, resolved) => ({
+      id,
+      repoName,
+      summary,
+      tier: parseSafetyTier(tierStr),
+      confidence,
+      assignedBot: parseBotId(assignedStr),
+      resolved,
+    }: fleetFinding),
+    stringField("id"),
+    stringField("repo_name"),
+    stringField("summary"),
+    stringField("tier"),
+    floatField("confidence"),
+    stringField("assigned_bot"),
+    boolField("resolved"),
+  )
 }
 
 /// Parse findings from the fleet API JSON response.
-let parseFindings = (json: string): result<array<fleetFinding>, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Array(items) =>
-      let findings = items->Array.filterMap(item => {
-        switch JSON.Classify.classify(item) {
-        | Object(obj) => {
-            let getString = (key: string): string =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | String(s) => s
-                | _ => ""
-                }
-              | None => ""
-              }
-            let getFloat = (key: string): float =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Number(n) => n
-                | _ => 0.0
-                }
-              | None => 0.0
-              }
-            let getBool = (key: string): bool =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Bool(b) => b
-                | _ => false
-                }
-              | None => false
-              }
-
-            let tierStr = getString("tier")
-            let tier = switch tierStr {
-            | "eliminate" => Eliminate
-            | "substitute" => Substitute
-            | _ => Control
-            }
-
-            let assignedStr = getString("assigned_bot")
-            let assignedBot = switch assignedStr {
-            | "rhodibot" => Some(Rhodibot)
-            | "echidnabot" => Some(Echidnabot)
-            | "sustainabot" => Some(Sustainabot)
-            | "glambot" => Some(Glambot)
-            | "seambot" => Some(Seambot)
-            | "finishbot" => Some(Finishbot)
-            | _ => None
-            }
-
-            Some({
-              id: getString("id"),
-              repoName: getString("repo_name"),
-              summary: getString("summary"),
-              tier,
-              confidence: getFloat("confidence"),
-              assignedBot,
-              resolved: getBool("resolved"),
-            })
-          }
-        | _ => None
-        }
-      })
-      Ok(findings)
-    | _ => Error("Expected array of findings")
-    }
-  } catch {
-  | _ => Error("Failed to parse findings JSON")
-  }
-}
+let parseFindings = (json: string): result<array<fleetFinding>, string> =>
+  Decoders.decode(Decoders.lenientArray(findingDecoder), json)
 
 /// Default initial state.
 let defaultState: fleetState = {

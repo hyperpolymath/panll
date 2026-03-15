@@ -1,0 +1,37 @@
+= Network Topology Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Force-directed graph of IDApTIK's in-game network devices, zones, and packet flow.
+
+== Purpose
+
+The Network Topology panel renders IDApTIK's in-game network as a force-directed
+graph. Devices are colour-coded by security zone, with defence flag badges, packet
+flow animation, DNS resolution trees, and SSH path highlighting. Supports drag
+rearrangement and SVG export.
+
+== Key Features
+
+* Force-directed graph layout with drag rearrangement
+* Zone colouring by security level
+* Security level indicators per device
+* Packet flow animation along network paths
+* Device GUI launch (click a device to interact)
+* Defence flag badges on devices
+* DNS resolution tree view
+* SSH path highlighting
+* SVG export of topology
+
+== Integration Points
+
+* No backend required -- renders from in-game state
+* Persists topology layout preferences
+
+== Clade Kind
+
+**viewer**
+
+== Status
+
+Early development (v1.0.0). Model and command modules defined.

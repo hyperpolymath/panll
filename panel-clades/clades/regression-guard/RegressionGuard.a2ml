@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Regression Guard Panel Clade — Prevent regressions via baseline comparison
+
+[clade-metadata]
+id = "regression-guard"
+name = "Regression Guard"
+short-name = "RG"
+version = "0.1.0"
+kind = "scanner"
+icon = "shield-alert"
+description = "Prevent regressions by comparing test results, performance metrics, and behaviour baselines against known-good snapshots — alerts on drift."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = true
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "BaselineCapture",
+  "DiffDetection",
+  "RegressionAlert",
+  "PerformanceDrift",
+  "BehaviourDiff",
+  "AutoBaseline",
+  "BlameAnalysis",
+  "TrendGraph",
+]
+
+[clade-panel-integration]
+panel-id = "PanelRegressionGuard"
+model-module = "RegressionGuardModel"
+component-module = "RegressionGuard"
+command-module = "RegressionGuardCmd"
+
+[clade-dependencies]
+baseline-storage = "~/.panll/baselines/"

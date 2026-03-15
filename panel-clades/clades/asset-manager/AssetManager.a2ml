@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Asset Manager Panel Clade — Game asset inventory, import, and pipeline management
+
+[clade-metadata]
+id = "asset-manager"
+name = "Asset Manager"
+short-name = "Asset"
+version = "0.1.0"
+kind = "loader"
+icon = "package"
+description = "Game asset inventory and pipeline — import sprites, audio, level data, and WASM modules; track versions, detect unused assets, and manage build bundles."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "AssetImport",
+  "VersionTracking",
+  "UnusedDetection",
+  "BundleManagement",
+  "ThumbnailPreview",
+  "DependencyGraph",
+  "SizeAnalysis",
+  "FormatConversion",
+]
+
+[clade-panel-integration]
+panel-id = "PanelAssetManager"
+model-module = "AssetManagerModel"
+component-module = "AssetManager"
+command-module = "AssetManagerCmd"
+
+[clade-cross-panel]
+depends-on = ["dlc-workshop", "repoloader"]
+feeds-into = ["game-preview", "build-dashboard"]

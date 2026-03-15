@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Soak Monitor Panel Clade — Long-running stability and resource leak detection
+
+[clade-metadata]
+id = "soak-monitor"
+name = "Soak Monitor"
+short-name = "Soak"
+version = "0.1.0"
+kind = "inspector"
+icon = "clock"
+description = "Long-running stability monitoring — detect memory leaks, file descriptor exhaustion, CPU creep, and degradation over hours/days of continuous operation."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "MemoryLeakDetection",
+  "FDExhaustion",
+  "CPUCreepAlert",
+  "UptimeTracking",
+  "ResourceTrend",
+  "ThresholdAlerts",
+  "SnapshotDiff",
+  "AutoReport",
+]
+
+[clade-panel-integration]
+panel-id = "PanelSoakMonitor"
+model-module = "SoakMonitorModel"
+component-module = "SoakMonitor"
+command-module = "SoakMonitorCmd"
+
+[clade-dependencies]
+monitoring = ["/proc", "Tauri resource API", "BEAM observer"]

@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Service Clade Template
+# Services provide cross-cutting capabilities consumed by multiple panels.
+# They operate both as standalone panels and as callable services.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "service"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Services are ambient (always available), real-time, and consumed by many panels.
+has-backend = true           # Backend service endpoint
+has-scanning = false
+has-persistence = false      # Services are typically stateless (override if caching)
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Service configuration, endpoint selection
+is-directive = false
+is-readonly = false          # Services accept requests and produce responses
+is-ambient = true            # TYPICAL: services run in background, available to all panels
+
+[clade-capabilities]
+# Minimum capabilities for a service clade.
+capabilities = [
+  "HealthCheck",             # Verify service availability
+  "CrossPanelDispatch",      # Respond to requests from any panel
+  "GracefulDegradation",     # Panels MUST work when service is unavailable
+  "ServiceConfiguration",   # Configure service parameters
+]
+
+[clade-connections]
+backend-type = "http"
+default-endpoint = "http://localhost:{{PORT}}/api/v1"
+protocols = ["REST", "TauriIPC"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["status", "region", "log"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

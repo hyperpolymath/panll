@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Unit Test Runner Panel Clade — Execute and visualise unit test suites
+
+[clade-metadata]
+id = "unit-test-runner"
+name = "Unit Test Runner"
+short-name = "UTR"
+version = "0.1.0"
+kind = "scanner"
+icon = "test-tube"
+description = "Execute unit test suites across ReScript, Rust, Deno, and Elixir — real-time pass/fail tree, coverage heatmap, assertion detail drilldown."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "TestDiscovery",
+  "TestExecution",
+  "PassFailTree",
+  "CoverageHeatmap",
+  "AssertionDetail",
+  "WatchMode",
+  "FilterByStatus",
+  "RerunFailed",
+  "SnapshotComparison",
+]
+
+[clade-panel-integration]
+panel-id = "PanelUnitTestRunner"
+model-module = "UnitTestRunnerModel"
+component-module = "UnitTestRunner"
+command-module = "UnitTestRunnerCmd"
+
+[clade-dependencies]
+test-runners = ["deno test", "cargo test", "mix test", "rescript"]

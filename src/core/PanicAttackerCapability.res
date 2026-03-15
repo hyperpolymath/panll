@@ -10,42 +10,23 @@ type payload = {
   detail: option<string>,
 }
 
-let parse = (raw: string): result<payload, string> => {
-  try {
-    let parsed = JSON.parseExn(raw)
-
-    let getField = (obj, field) => {
-      switch obj->JSON.Decode.object {
-      | Some(dict) => dict->Dict.get(field)
-      | None => None
-      }
-    }
-
-    let getString = (obj, field, default) => {
-      switch getField(obj, field) {
-      | Some(value) =>
-        switch value->JSON.Decode.string {
-        | Some(str) => str
-        | None => default
-        }
-      | None => default
-      }
-    }
-
-    let getOptionString = (obj, field) => {
-      switch getField(obj, field) {
-      | Some(value) => value->JSON.Decode.string
-      | None => None
-      }
-    }
-
-    Ok({
-      mode: getString(parsed, "mode", "unavailable"),
-      binary: getOptionString(parsed, "binary"),
-      detail: getOptionString(parsed, "detail"),
-    })
-  } catch {
-  | _ => Error("Invalid panic-attacker capability payload")
-  }
+/// Tea_Json decoder for a panic-attacker capability payload.
+let payloadDecoder: Tea_Json.decoder<payload> = {
+  open Decoders
+  open Tea_Json
+  map3(
+    (mode, binary, detail) => ({
+      mode,
+      binary,
+      detail,
+    }: payload),
+    fieldWithDefault("mode", string, "unavailable"),
+    optionalFieldDecoder("binary", string),
+    optionalFieldDecoder("detail", string),
+  )
 }
+
+/// Parse a panic-attacker capability payload from JSON.
+let parse = (raw: string): result<payload, string> =>
+  Decoders.decode(payloadDecoder, raw)
 

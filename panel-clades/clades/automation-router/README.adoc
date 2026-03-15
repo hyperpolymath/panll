@@ -1,0 +1,37 @@
+= Automation Router Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Cross-panel workflow orchestration via event-driven rules with human approval gates.
+
+== Purpose
+
+The Automation Router is PanLL's orchestration layer. It defines rules triggered by
+file changes, panel messages, or timers, and dispatches actions to any panel. Rules
+support hybrid approval modes (AutoFire, RequireApproval, ApproveOnce, DryRunFirst)
+and per-repo configuration via `.ensaid-config/workflows.a2ml`.
+
+== Key Features
+
+* Event-driven rule engine with conditional execution
+* Four hybrid approval modes for safety-critical workflows
+* Cross-panel message dispatch to any panel
+* Priority chaining (before/after/parallel ordering)
+* Per-repo automation via `.ensaid-config/workflows.a2ml`
+* Global kill switch and manual trigger override
+* Full execution history with success/failure logging
+
+== Integration Points
+
+* **RepoLoader** -- reads `.ensaid-config` for per-repo rules
+* **TSDM** -- respects priority ordering from TSDM methodology
+* **Workspace** -- coordinates with workspace-level session context
+* Dispatches to **all panels** as the orchestration layer
+
+== Clade Kind
+
+**directive**
+
+== Status
+
+Early development (v1.0.0). Engine and model modules defined.

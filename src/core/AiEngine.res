@@ -256,130 +256,79 @@ let providerModels = (id: aiProviderId): array<string> => {
   }
 }
 
-/// Parse a SendMessageResponse from the Tauri backend JSON.
-let parseMessageResponse = (jsonStr: string): result<aiMessage, string> => {
-  try {
-    let parsed = JSON.parseExn(jsonStr)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getInt = (key: string): int =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Number(n) => Float.toInt(n)
-            | _ => 0
-            }
-          | None => 0
-          }
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-        let providerId = providerIdFromString(getString("provider"))
-        let isExhausted = getBool("quota_exhausted")
-
-        if isExhausted {
-          Error("quota_exhausted")
-        } else {
-          Ok({
-            role: Assistant,
-            content: getString("content"),
-            provider: providerId,
-            model: Some(getString("model")),
-            inputTokens: getInt("input_tokens"),
-            outputTokens: getInt("output_tokens"),
-            timestamp: Date.now(),
-          })
-        }
-      }
-    | _ => Error("Expected object in message response")
-    }
-  } catch {
-  | _ => Error("Failed to parse message response JSON")
+/// Tea_Json decoder for a message response.
+/// Returns Error("quota_exhausted") if the quota_exhausted field is true.
+let messageResponseDecoder: Tea_Json.decoder<aiMessage> = json => {
+  open Decoders
+  open Tea_Json
+  let inner = map6(
+    (providerStr, content, model, inputTokens, outputTokens, quotaExhausted) =>
+      (providerStr, content, model, inputTokens, outputTokens, quotaExhausted),
+    stringField("provider"),
+    stringField("content"),
+    stringField("model"),
+    intField("input_tokens"),
+    intField("output_tokens"),
+    boolField("quota_exhausted"),
+  )
+  switch inner(json) {
+  | Ok((_, _, _, _, _, true)) =>
+    Error(Failure("quota_exhausted", json))
+  | Ok((providerStr, content, model, inputTokens, outputTokens, _)) =>
+    Ok({
+      role: Assistant,
+      content,
+      provider: providerIdFromString(providerStr),
+      model: Some(model),
+      inputTokens,
+      outputTokens,
+      timestamp: Date.now(),
+    }: aiMessage)
+  | Error(e) => Error(e)
   }
 }
+
+/// Parse a SendMessageResponse from the Tauri backend JSON.
+let parseMessageResponse = (jsonStr: string): result<aiMessage, string> =>
+  Decoders.decode(messageResponseDecoder, jsonStr)
+
+/// Tea_Json decoder for a single AI provider config.
+/// Validates the provider ID, skipping unknown providers.
+let providerConfigDecoder: Tea_Json.decoder<aiProviderConfig> = json => {
+  open Decoders
+  open Tea_Json
+  let inner = map5(
+    (idStr, envVar, enabled, priority, model) =>
+      (idStr, envVar, enabled, priority, model),
+    stringField("id"),
+    stringField("env_var"),
+    boolField("enabled"),
+    intField("priority"),
+    stringField("model"),
+  )
+  switch inner(json) {
+  | Ok((idStr, envVar, enabled, priority, model)) =>
+    switch providerIdFromString(idStr) {
+    | Some(id) =>
+      Ok({
+        id,
+        apiKey: None,
+        envVar,
+        enabled,
+        priority,
+        selectedModel: model,
+        quotaExhausted: false,
+      }: aiProviderConfig)
+    | None => Error(Failure(`Unknown provider id: ${idStr}`, json))
+    }
+  | Error(e) => Error(e)
+  }
+}
+
+/// Tea_Json decoder for the provider state response envelope.
+let providerStateDecoder: Tea_Json.decoder<array<aiProviderConfig>> =
+  Tea_Json.field("providers", Decoders.lenientArray(providerConfigDecoder))
 
 /// Parse provider config state from the Tauri backend JSON.
-let parseProviderState = (jsonStr: string): result<array<aiProviderConfig>, string> => {
-  try {
-    let parsed = JSON.parseExn(jsonStr)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        switch Dict.get(obj, "providers") {
-        | Some(arr) =>
-          switch JSON.Classify.classify(arr) {
-          | Array(providers) => {
-              let configs = providers->Array.filterMap(p => {
-                switch JSON.Classify.classify(p) {
-                | Object(pObj) => {
-                    let getString = (key: string): string =>
-                      switch Dict.get(pObj, key) {
-                      | Some(v) =>
-                        switch JSON.Classify.classify(v) {
-                        | String(s) => s
-                        | _ => ""
-                        }
-                      | None => ""
-                      }
-                    let getBool = (key: string): bool =>
-                      switch Dict.get(pObj, key) {
-                      | Some(v) =>
-                        switch JSON.Classify.classify(v) {
-                        | Bool(b) => b
-                        | _ => false
-                        }
-                      | None => false
-                      }
-                    let getInt = (key: string): int =>
-                      switch Dict.get(pObj, key) {
-                      | Some(v) =>
-                        switch JSON.Classify.classify(v) {
-                        | Number(n) => Float.toInt(n)
-                        | _ => 0
-                        }
-                      | None => 0
-                      }
-                    switch providerIdFromString(getString("id")) {
-                    | Some(id) =>
-                      Some({
-                        id,
-                        apiKey: None,
-                        envVar: getString("env_var"),
-                        enabled: getBool("enabled"),
-                        priority: getInt("priority"),
-                        selectedModel: getString("model"),
-                        quotaExhausted: false,
-                      })
-                    | None => None
-                    }
-                  }
-                | _ => None
-                }
-              })
-              Ok(configs)
-            }
-          | _ => Error("Expected array for providers")
-          }
-        | None => Error("Missing providers field")
-        }
-      }
-    | _ => Error("Expected object in provider state response")
-    }
-  } catch {
-  | _ => Error("Failed to parse provider state JSON")
-  }
-}
+let parseProviderState = (jsonStr: string): result<array<aiProviderConfig>, string> =>
+  Decoders.decode(providerStateDecoder, jsonStr)

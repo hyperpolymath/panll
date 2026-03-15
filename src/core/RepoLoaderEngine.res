@@ -154,71 +154,62 @@ let parseSuggestions = (arr: array<JSON.t>): array<panelSuggestion> => {
   })
 }
 
-/// Parse the full scan result from the Tauri backend.
-let parseScanResult = (jsonStr: string): result<(repoInfo, array<panelSuggestion>), string> => {
-  try {
-    let parsed = JSON.parseExn(jsonStr)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let repo = switch Dict.get(obj, "repo") {
-        | Some(v) =>
-          switch JSON.Classify.classify(v) {
-          | Object(repoObj) => parseRepoInfo(repoObj)
-          | _ => None
-          }
-        | None => None
-        }
-        let suggestions = switch Dict.get(obj, "suggestions") {
-        | Some(v) =>
-          switch JSON.Classify.classify(v) {
-          | Array(arr) => parseSuggestions(arr)
-          | _ => []
-          }
-        | None => []
-        }
-        switch repo {
-        | Some(r) => Ok((r, suggestions))
-        | None => Error("Failed to parse repo info")
-        }
-      }
-    | _ => Error("Expected object in scan result")
+/// Tea_Json decoder for a repoInfo, bridging the existing parseRepoInfo parser.
+let repoInfoDecoder: Tea_Json.decoder<repoInfo> = json => {
+  switch json {
+  | Object(dict) =>
+    switch parseRepoInfo(dict) {
+    | Some(v) => Ok(v)
+    | None => Error(Tea_Json.Failure("Failed to decode repoInfo", json))
     }
-  } catch {
-  | _ => Error("Failed to parse scan result JSON")
+  | _ => Error(Tea_Json.Failure("Expected an object for repoInfo", json))
   }
 }
 
-/// Parse recent repos from JSON response.
-let parseRecentPaths = (jsonStr: string): array<string> => {
-  try {
-    let parsed = JSON.parseExn(jsonStr)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) =>
-      switch Dict.get(obj, "repos") {
-      | Some(v) =>
-        switch JSON.Classify.classify(v) {
-        | Array(arr) =>
-          arr->Array.filterMap(item =>
-            switch JSON.Classify.classify(item) {
-            | Object(repoObj) =>
-              switch Dict.get(repoObj, "path") {
-              | Some(pathVal) =>
-                switch JSON.Classify.classify(pathVal) {
-                | String(s) => Some(s)
-                | _ => None
-                }
-              | None => None
-              }
-            | _ => None
-            }
-          )
-        | _ => []
-        }
-      | None => []
-      }
-    | _ => []
-    }
-  } catch {
-  | _ => []
-  }
+/// Tea_Json decoder for a panelSuggestion.
+let suggestionDecoder: Tea_Json.decoder<panelSuggestion> = {
+  open Decoders
+  open Tea_Json
+  map4(
+    (panelName, reason, priority, enabled) => ({
+      panelName,
+      reason,
+      priority,
+      enabled,
+    }: panelSuggestion),
+    stringField("panel_name"),
+    stringField("reason"),
+    stringField("priority"),
+    boolField("enabled"),
+  )
 }
+
+/// Tea_Json decoder for the full scan result.
+let scanResultDecoder: Tea_Json.decoder<(repoInfo, array<panelSuggestion>)> = {
+  open Tea_Json
+  map2(
+    (repo, suggestions) => (repo, suggestions),
+    field("repo", repoInfoDecoder),
+    Decoders.fieldWithDefault("suggestions", Decoders.lenientArray(suggestionDecoder), []),
+  )
+}
+
+/// Parse the full scan result from the Tauri backend.
+let parseScanResult = (jsonStr: string): result<(repoInfo, array<panelSuggestion>), string> =>
+  Decoders.decode(scanResultDecoder, jsonStr)
+
+/// Tea_Json decoder for extracting a path string from a repo object.
+let repoPathDecoder: Tea_Json.decoder<string> =
+  Tea_Json.field("path", Tea_Json.string)
+
+/// Tea_Json decoder for recent repo paths — extracts "repos" array, then "path" from each.
+let recentPathsDecoder: Tea_Json.decoder<array<string>> =
+  Decoders.fieldWithDefault(
+    "repos",
+    Decoders.lenientArray(repoPathDecoder),
+    [],
+  )
+
+/// Parse recent repos from JSON response.
+let parseRecentPaths = (jsonStr: string): array<string> =>
+  Decoders.decodeWithDefault(recentPathsDecoder, [], jsonStr)

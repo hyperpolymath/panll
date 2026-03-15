@@ -1,0 +1,35 @@
+= My-Lang Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+AI-native personal language with 4 dialects, integrated REPL, compiler, and LSP.
+
+== Purpose
+
+My-Lang is a personal language panel with a 4-tab interface: Editor (syntax-highlighted
+code with LSP diagnostics), REPL (per-dialect sessions with history), Compile
+(dialect-aware compilation with TypeLL type checking), and Dialects (selector with
+descriptions and examples).
+
+== Key Features
+
+* 4 collaboration-mode dialects: Solo, Duet, Ensemble, Me
+* Syntax-highlighted code editor with LSP integration
+* Per-dialect REPL sessions with history
+* Dialect-aware compilation via TypeLL type checking
+* Real-time LSP diagnostics and syntax highlighting
+* Backend on port 7900
+
+== Integration Points
+
+* Consumes **TypeLL** for type checking
+* Dispatches to `lsp-mcp` cartridge
+* Sibling of **EditorBridge** and **Protocol-Squisher**
+
+== Clade Kind
+
+**builder**
+
+== Status
+
+Active development (v1.0.0). Full A2ML clade definition with engine.

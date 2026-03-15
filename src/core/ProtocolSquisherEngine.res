@@ -99,116 +99,61 @@ let parseTransportClass = (s: string): transportClass =>
   | _ => Economy
   }
 
-/// Parse an analysis result from JSON.
-let parseAnalysis = (json: string): result<analysisResult, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getFloat = (key: string): float =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Number(n) => n
-            | _ => 0.0
-            }
-          | None => 0.0
-          }
-        let getInt = (key: string): int =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Number(n) => Float.toInt(n)
-            | _ => 0
-            }
-          | None => 0
-          }
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
+/// Tea_Json decoder for an analysis result.
+let analysisDecoder: Tea_Json.decoder<analysisResult> = {
+  open Decoders
+  open Tea_Json
+  map7(
+    (filePath, formatStr, transportStr, summary, overheadRatio, fieldCount, hasRecursion) => ({
+      filePath,
+      format: parseFormat(formatStr),
+      transportClass: parseTransportClass(transportStr),
+      summary,
+      overheadRatio,
+      fieldCount,
+      hasRecursion,
+    }: analysisResult),
+    stringField("file_path"),
+    stringField("format"),
+    stringField("transport_class"),
+    stringField("summary"),
+    floatField("overhead_ratio"),
+    intField("field_count"),
+    boolField("has_recursion"),
+  )
+}
 
-        Ok({
-          filePath: getString("file_path"),
-          format: parseFormat(getString("format")),
-          transportClass: parseTransportClass(getString("transport_class")),
-          summary: getString("summary"),
-          overheadRatio: getFloat("overhead_ratio"),
-          fieldCount: getInt("field_count"),
-          hasRecursion: getBool("has_recursion"),
-        })
-      }
-    | _ => Error("Expected JSON object for analysis result")
-    }
-  } catch {
-  | _ => Error("Failed to parse analysis JSON")
-  }
+/// Parse an analysis result from JSON.
+let parseAnalysis = (json: string): result<analysisResult, string> =>
+  Decoders.decode(analysisDecoder, json)
+
+/// Tea_Json decoder for a schema compatibility comparison result.
+let comparisonDecoder: Tea_Json.decoder<schemaCompatibilityResult> = {
+  open Decoders
+  open Tea_Json
+  map7(
+    (leftPath, rightPath, leftFmt, rightFmt, compatible, adapterCost, notes) => ({
+      leftPath,
+      rightPath,
+      leftFormat: parseFormat(leftFmt),
+      rightFormat: parseFormat(rightFmt),
+      compatible,
+      adapterCost,
+      notes,
+    }: schemaCompatibilityResult),
+    stringField("left_path"),
+    stringField("right_path"),
+    stringField("left_format"),
+    stringField("right_format"),
+    boolField("compatible"),
+    intField("adapter_cost"),
+    stringField("notes"),
+  )
 }
 
 /// Parse a schema compatibility comparison result from JSON.
-let parseComparison = (json: string): result<schemaCompatibilityResult, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getInt = (key: string): int =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Number(n) => Float.toInt(n)
-            | _ => 0
-            }
-          | None => 0
-          }
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-
-        Ok({
-          leftPath: getString("left_path"),
-          rightPath: getString("right_path"),
-          leftFormat: parseFormat(getString("left_format")),
-          rightFormat: parseFormat(getString("right_format")),
-          compatible: getBool("compatible"),
-          adapterCost: getInt("adapter_cost"),
-          notes: getString("notes"),
-        })
-      }
-    | _ => Error("Expected JSON object for comparison result")
-    }
-  } catch {
-  | _ => Error("Failed to parse comparison JSON")
-  }
-}
+let parseComparison = (json: string): result<schemaCompatibilityResult, string> =>
+  Decoders.decode(comparisonDecoder, json)
 
 /// Extract IR constraints from an analysis result for Panel-L import.
 /// Generates constraint expressions based on schema structure properties.

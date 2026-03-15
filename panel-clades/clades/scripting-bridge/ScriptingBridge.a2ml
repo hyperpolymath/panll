@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Scripting Bridge Panel Clade — Bridge to scripting runtimes (Deno, Julia, Elixir, Lua)
+
+[clade-metadata]
+id = "scripting-bridge"
+name = "Scripting Bridge"
+short-name = "Script"
+version = "0.1.0"
+kind = "bridge"
+icon = "terminal"
+description = "Bridge to scripting runtimes — execute Deno, Julia, Elixir, and Lua snippets from panels, capture output, inject panel context, and manage sandboxed execution."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "RuntimeDetection",
+  "SnippetExecution",
+  "OutputCapture",
+  "ContextInjection",
+  "SandboxedExecution",
+  "REPLSession",
+  "RuntimeSelection",
+]
+
+[clade-panel-integration]
+panel-id = "PanelScriptingBridge"
+model-module = "ScriptingBridgeModel"
+component-module = "ScriptingBridge"
+command-module = "ScriptingBridgeCmd"
+
+[clade-cross-panel]
+depends-on = ["playgrounds", "valence-shell"]
+feeds-into = ["automation-router", "unit-test-runner"]

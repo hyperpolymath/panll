@@ -1,0 +1,39 @@
+= VM Inspector Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Visual debugger for IDApTIK's reversible VM -- stack, memory, instructions, time-travel.
+
+== Purpose
+
+The VM Inspector provides a visual debugging interface for IDApTIK's reversible
+virtual machine. It displays stack state, memory grid, instruction listings, and
+supports forward/backward stepping (time-travel debugging), breakpoints, execution
+timeline, subroutine call graphs, and port I/O monitoring.
+
+== Key Features
+
+* Stack visualisation with live updates
+* Memory grid display
+* Instruction listing with current position indicator
+* Step forward and backward (time-travel debugging)
+* Breakpoint management
+* Execution timeline view
+* Subroutine call graph
+* Port I/O monitor
+* Multi-VM view for parallel VM instances
+* State snapshot save/restore
+
+== Integration Points
+
+* VM state bridge: `tauri-inter-webview`
+* 23 VM instructions across 5 tiers (Arithmetic, Conditionals, StackMemory, Subroutines, IO)
+* Orchestrated by **UMS** (Universal Modding Studio)
+
+== Clade Kind
+
+**viewer**
+
+== Status
+
+Early development (v1.0.0). Model and command modules defined.

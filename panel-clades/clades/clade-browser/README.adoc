@@ -1,0 +1,34 @@
+= Clade Browser Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Interactive browser for exploring panel clades, traits, inheritance chains, and permissions.
+
+== Purpose
+
+The Clade Browser provides a 4-tab interface for exploring the PanLL clade taxonomy:
+Overview (stats grid, clade cards), By Kind (grouped by clade kinds), Traits (matrix
+table), and Panel Map (panel-to-clade assignments with permission controls).
+
+== Key Features
+
+* 4-tab exploration interface (Overview, By Kind, Traits, Panel Map)
+* OR-merge inheritance semantics with cycle detection
+* 16 query functions for clade metadata
+* Permission management (PermitAll/PermitOnly/PermitNone toggles)
+* 4-tier metadata system (protocols, capabilities, dependencies, isolation)
+* Dependency graph visualisation
+
+== Integration Points
+
+* Consumes **all clades** for taxonomy browsing
+* Sibling of **panel-switcher** and **workspace**
+* No backend required -- fully client-side
+
+== Clade Kind
+
+**inspector**
+
+== Status
+
+Active development (v1.0.0). Engine with 16 query functions implemented.

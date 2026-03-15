@@ -76,7 +76,9 @@ let checkTypeConstraints = (token: neuralToken, constraints: array<symbolicConst
 
 /// Check for security violations
 let checkSecurityConstraints = (token: neuralToken): option<violationType> => {
-  // Check for common security anti-patterns
+  // panic-attack:allow dynamic-code-detection-string — these are detection
+  // patterns for security scanning, not actual code execution. Each string
+  // is matched against user input to detect dangerous patterns.
   let dangerousPatterns = [
     "eval(",
     "exec(",

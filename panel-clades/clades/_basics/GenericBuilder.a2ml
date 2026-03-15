@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Builder Clade Template
+# Builders create, compile, or assemble artifacts — levels, releases, mods, languages.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "builder"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Builders persist their output and have backends for compilation/assembly.
+has-backend = true           # Backend for build/compile operations
+has-scanning = false
+has-persistence = true       # Artifacts, build outputs, project files
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Build targets, options, templates
+is-directive = false
+is-readonly = false          # REQUIRED: builders create output
+
+[clade-capabilities]
+# Minimum capabilities for a builder clade.
+capabilities = [
+  "Create",                  # Create new artifacts
+  "Edit",                    # Modify existing artifacts
+  "Validate",               # Check artifact correctness
+  "Export",                  # Export artifacts for use
+]
+
+[clade-connections]
+backend-type = "tauri-ipc"
+protocols = ["TauriIPC"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["form", "button", "status", "toolbar"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

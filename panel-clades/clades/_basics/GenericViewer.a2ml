@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Viewer Clade Template
+# Viewers display, visualise, and monitor data — typically read-only or mostly read-only.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "viewer"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Viewers display data; often read-only but may support interactive features.
+has-backend = true           # Backend for data retrieval
+has-scanning = false
+has-persistence = false      # Viewers typically don't persist (override if needed)
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Display preferences, filters, zoom
+is-directive = false
+is-readonly = true           # TYPICAL: viewers are read-only (override if interactive)
+
+[clade-capabilities]
+# Minimum capabilities for a viewer clade.
+capabilities = [
+  "DataDisplay",             # Render data in visual format
+  "FilterSort",              # Filter and sort displayed data
+  "DetailInspection",        # Drill into individual items
+  "RefreshControl",          # Manual or auto-refresh of data
+]
+
+[clade-connections]
+backend-type = "tauri-ipc"
+protocols = ["TauriIPC"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["grid", "table", "img", "region"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

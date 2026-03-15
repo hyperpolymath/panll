@@ -1,11 +1,13 @@
 <!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
-<!-- PANEL-INVENTORY.md — Complete catalog of all 41 PanLL panels -->
-<!-- Last updated: 2026-03-09 -->
+<!-- PANEL-INVENTORY.md — Complete catalog of all 76 PanLL panels -->
+<!-- Last updated: 2026-03-14 -->
 
 # Panel Inventory
 
-PanLL has 41 panel entries across 6 categories. The three core panels (L, N, W)
+PanLL has 76 panel entries across 10 categories. The three core panels (L, N, W)
 are always visible; overlay panels appear one at a time on top of them.
+The 28 game dev panels (added 2026-03-14) exist as clade definitions; ReScript
+Model/Update/View/Cmd modules are pending implementation.
 
 ## Core Panels (3)
 
@@ -109,3 +111,63 @@ Ambient cognitive ergonomics — always present, no dedicated panel IDs.
 | Automation Router | `PanelAutomationRouter` | Auto | AutomationRouterEngine | None (ENSAID_CONFIG reading) | Cross-panel workflow orchestration |
 | Observability | (via governance) | — | ObservabilityEngine | `observability/` (3 commands) | SARIF export, OpenTelemetry traces |
 | Umoja | (via BoJ) | — | — | `umoja/` (5 commands) | Federation gossip protocol peer management |
+
+## Game Dev — Testing (10)
+
+Panels for test orchestration, profiling, compatibility, and balance analysis.
+**Status:** Clade definitions only (a2ml manifests). ReScript implementation pending.
+
+| Panel | panelId | Short | Kind | Description |
+|-------|---------|-------|------|-------------|
+| Unit Test Runner | `PanelUnitTestRunner` | UTR | Scanner | Execute unit test suites, pass/fail tree, coverage heatmap |
+| Functional Tester | `PanelFunctionalTester` | FT | Scanner | Scenario-based functional test orchestration, screenshots |
+| Regression Guard | `PanelRegressionGuard` | RG | Scanner | Baseline comparison, drift detection, blame analysis |
+| Performance Profiler | `PanelPerformanceProfiler` | Perf | Inspector | CPU flame graphs, memory tracking, frame timing |
+| Load Tester | `PanelLoadTester` | Load | Scanner | Synthetic load generation, latency percentiles, throughput |
+| Soak Monitor | `PanelSoakMonitor` | Soak | Inspector | Long-running stability, memory leaks, resource trends |
+| Compatibility Matrix | `PanelCompatibilityMatrix` | Compat | Viewer | Cross-platform/version test matrix, colour-coded grid |
+| Exploratory Workbench | `PanelExploratoryWorkbench` | Explore | Builder | Free-form manual testing, session notes, bug tagging |
+| Beta Feedback Hub | `PanelBetaFeedbackHub` | Beta | Viewer | Player/tester feedback collection, sentiment, triage |
+| Balance Analyser | `PanelBalanceAnalyser` | Balance | Inspector | Difficulty curves, win/loss tracking, resource economy |
+
+## Game Dev — Bridge (8)
+
+Panels bridging PanLL to external systems, type systems, protocols, and runtimes.
+**Status:** Clade definitions only (a2ml manifests). ReScript implementation pending.
+
+| Panel | panelId | Short | Kind | Description |
+|-------|---------|-------|------|-------------|
+| Typing Bridge | `PanelTypingBridge` | TyBr | Bridge | Bridge TypeLL to Idris2, Rust, ReScript, Gleam type systems |
+| Neurosym Bridge | `PanelNeurosymBridge` | NeSy | Bridge | Neural-symbolic translation, confidence gating, proof-guided inference |
+| Agentic Bridge | `PanelAgenticBridge` | Agent | Bridge | External AI agent dispatch (MCP, Claude Code, ECHIDNA) |
+| Automation Bridge | `PanelAutomationBridge` | CI | Bridge | CI/CD pipeline trigger, monitoring, artifact collection |
+| Database Bridge | `PanelDatabaseBridge` | DBBr | Bridge | VeriSimDB/QuandleDB query proxy, schema inspection |
+| Protocol Bridge | `PanelProtocolBridge` | Proto | Bridge | MCP/LSP/DAP/BSP/gRPC message translation and inspection |
+| Proofs Bridge | `PanelProofsBridge` | Proof | Bridge | Formal verification (Idris2, ECHIDNA, Lean4) proof submission |
+| Scripting Bridge | `PanelScriptingBridge` | Script | Bridge | Deno/Julia/Elixir/Lua snippet execution, sandbox management |
+
+## Game Dev — Game-Specific (6)
+
+Panels for IDApTIK game content creation, AI tuning, and playtesting.
+**Status:** Clade definitions only (a2ml manifests). ReScript implementation pending.
+
+| Panel | panelId | Short | Kind | Description |
+|-------|---------|-------|------|-------------|
+| Generator Mode | `PanelGeneratorMode` | Gen | Builder | Procedural level/puzzle/topology generation with constraint satisfaction |
+| Architect Mode | `PanelArchitectMode` | Arch | Builder | High-level system design, dependency graphs, ADR management |
+| Guard AI Tuner | `PanelGuardAiTuner` | GAI | Builder | Tune guard AI patrol patterns, detection, escalation, difficulty |
+| Device Network Designer | `PanelDeviceNetworkDesigner` | NetDes | Builder | Visual in-game network designer, drag-and-drop, topology validation |
+| Asset Manager | `PanelAssetManager` | Asset | Loader | Game asset inventory, import pipeline, unused detection |
+| Playtest Recorder | `PanelPlaytestRecorder` | Play | Inspector | Record/replay play sessions, input capture, decision trees |
+
+## Game Dev — Team (4)
+
+Panels for collaborative development workflows.
+**Status:** Clade definitions only (a2ml manifests). ReScript implementation pending.
+
+| Panel | panelId | Short | Kind | Description |
+|-------|---------|-------|------|-------------|
+| Code Review | `PanelCodeReview` | Review | Viewer | In-panel diff views, inline comments, approval workflow |
+| Merge Coordinator | `PanelMergeCoordinator` | Merge | Directive | Branch management, conflict resolution, merge queues |
+| Team Dashboard | `PanelTeamDashboard` | Team | Viewer | Commit velocity, review throughput, build health overview |
+| Debugging Workbench | `PanelDebuggingWorkbench` | Debug | Inspector | DAP-backed breakpoints, watch expressions, multi-runtime |

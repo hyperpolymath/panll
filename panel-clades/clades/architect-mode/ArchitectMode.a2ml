@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Architect Mode Panel Clade — High-level game architecture design surface
+
+[clade-metadata]
+id = "architect-mode"
+name = "Architect Mode"
+short-name = "Arch"
+version = "0.1.0"
+kind = "builder"
+icon = "drafting-compass"
+description = "High-level game architecture design surface — system dependency graphs, data flow diagrams, component wiring, and architecture decision records for IDApTIK."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = true
+has-priority-ordering = true
+has-customisation = true
+is-directive = true
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "DependencyGraph",
+  "DataFlowDiagram",
+  "ComponentWiring",
+  "ADRManagement",
+  "SystemOverview",
+  "ConstraintEditor",
+  "ExportDiagram",
+  "VersionHistory",
+]
+
+[clade-panel-integration]
+panel-id = "PanelArchitectMode"
+model-module = "ArchitectModeModel"
+component-module = "ArchitectMode"
+command-module = "ArchitectModeCmd"
+
+[clade-cross-panel]
+depends-on = ["level-architect", "clade-browser"]
+feeds-into = ["generator-mode", "build-dashboard"]

@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Bridge Clade Template
+# Bridges connect PanLL to external systems — editors, servers, protocol runtimes.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "bridge"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Bridges have backends for external protocol communication and real-time data flow.
+has-backend = true           # REQUIRED: bridges connect to external systems
+has-scanning = false
+has-persistence = false      # Override if connection state needs caching
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Connection config, protocol selection, endpoints
+is-directive = false
+is-readonly = false          # Bridges send and receive data
+has-real-time = true         # Bridge data flow is typically real-time
+
+[clade-capabilities]
+# Minimum capabilities for a bridge clade.
+capabilities = [
+  "ConnectionManagement",    # Connect, disconnect, reconnect to external system
+  "ProtocolNegotiation",    # Negotiate protocol version and capabilities
+  "HealthCheck",             # Verify external system availability
+  "DataRelay",               # Relay data between PanLL and external system
+]
+
+[clade-connections]
+# Bridges connect to external systems via various protocols.
+backend-type = "http"
+default-endpoint = "http://localhost:{{PORT}}"
+protocols = ["{{PROTOCOL}}"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["status", "log", "dialog", "region"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

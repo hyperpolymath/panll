@@ -119,35 +119,33 @@ let fromA2ml = (dirId: string, content: string): option<cladeEntry> => {
   }
 }
 
-/// Parse the JSON response from `scan_clade_files` into an array of clade entries.
-/// Expected format: `[{"id": "...", "content": "..."}]`
-let fromScanResult = (jsonStr: string): array<cladeEntry> => {
-  try {
-    let json = JSON.parseExn(jsonStr)
-    switch JSON.Decode.array(json) {
-    | Some(arr) =>
-      arr
-      ->Array.filterMap(item => {
-        switch JSON.Decode.object(item) {
-        | Some(obj) => {
-            let dirId = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-            let content =
-              obj->Dict.get("content")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-            if dirId !== "" && content !== "" {
-              fromA2ml(dirId, content)
-            } else {
-              None
-            }
-          }
-        | None => None
-        }
-      })
-    | None => []
+/// Tea_Json decoder for a single scan result item.
+/// Extracts "id" and "content" strings, then delegates to fromA2ml for parsing.
+let scanItemDecoder: Tea_Json.decoder<cladeEntry> = json => {
+  open Tea_Json
+  let inner = map2(
+    (dirId, content) => (dirId, content),
+    field("id", string),
+    field("content", string),
+  )
+  switch inner(json) {
+  | Ok((dirId, content)) =>
+    if dirId !== "" && content !== "" {
+      switch fromA2ml(dirId, content) {
+      | Some(entry) => Ok(entry)
+      | None => Error(Failure("fromA2ml returned None", json))
+      }
+    } else {
+      Error(Failure("Empty id or content", json))
     }
-  } catch {
-  | _ => []
+  | Error(e) => Error(e)
   }
 }
+
+/// Parse the JSON response from `scan_clade_files` into an array of clade entries.
+/// Expected format: `[{"id": "...", "content": "..."}]`
+let fromScanResult = (jsonStr: string): array<cladeEntry> =>
+  Decoders.decodeWithDefault(Decoders.lenientArray(scanItemDecoder), [], jsonStr)
 
 /// Merge file-loaded clades with built-in clades. File-loaded clades take
 /// precedence over built-ins with the same ID. Built-ins without a matching

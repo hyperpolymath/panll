@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Database Bridge Panel Clade — Bridge to VeriSimDB, QuandleDB, and external databases
+
+[clade-metadata]
+id = "database-bridge"
+name = "Database Bridge"
+short-name = "DBBr"
+version = "0.1.0"
+kind = "bridge"
+icon = "database"
+description = "Bridge to VeriSimDB, QuandleDB, LithoGlyph, and external databases — query proxy, schema inspection, migration management, connection pooling."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "QueryProxy",
+  "SchemaInspection",
+  "MigrationManagement",
+  "ConnectionPooling",
+  "ResultCaching",
+  "VQLSupport",
+  "CrossDBJoin",
+]
+
+[clade-panel-integration]
+panel-id = "PanelDatabaseBridge"
+model-module = "DatabaseBridgeModel"
+component-module = "DatabaseBridge"
+command-module = "DatabaseBridgeCmd"
+
+[clade-cross-panel]
+depends-on = ["boj", "databases"]
+feeds-into = ["playgrounds", "balance-analyser"]

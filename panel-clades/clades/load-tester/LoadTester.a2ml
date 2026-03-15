@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Load Tester Panel Clade — Synthetic load generation and throughput analysis
+
+[clade-metadata]
+id = "load-tester"
+name = "Load Tester"
+short-name = "Load"
+version = "0.1.0"
+kind = "scanner"
+icon = "gauge"
+description = "Synthetic load generation against game servers, BoJ cartridges, and BEAM services — configurable concurrency, latency percentiles, throughput graphs."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "LoadGeneration",
+  "ConcurrencyControl",
+  "LatencyPercentiles",
+  "ThroughputGraph",
+  "ErrorRateTracking",
+  "RampProfile",
+  "TargetSelection",
+  "ReportExport",
+]
+
+[clade-panel-integration]
+panel-id = "PanelLoadTester"
+model-module = "LoadTesterModel"
+component-module = "LoadTester"
+command-module = "LoadTesterCmd"
+
+[clade-dependencies]
+targets = ["BoJ cartridges", "BEAM endpoints", "Game server WebSockets"]

@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Directive Clade Template
+# Directives control how other panels operate — orchestration, policy, provisioning.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "directive"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Directives typically persist rules/policies, control other panels, and are not read-only.
+has-backend = true           # Backend for rule execution and policy enforcement
+has-scanning = false
+has-persistence = true       # Rules, policies, and execution history
+has-work-items = true        # Pending actions or policy violations
+has-priority-ordering = true # Directives often order panel operations
+has-customisation = true     # Rule creation, enable/disable, approval modes
+is-directive = true          # REQUIRED: true for directive kind
+is-readonly = false          # Directives modify panel behaviour
+
+[clade-capabilities]
+# Minimum capabilities for a directive clade.
+capabilities = [
+  "PolicyEnforcement",       # Apply rules to panel operations
+  "CrossPanelDispatch",      # Send messages/commands to other panels
+  "RuleManagement",          # Create, edit, enable, disable rules
+  "ExecutionHistory",        # Log of directive actions
+]
+
+[clade-connections]
+# Directives typically use Tauri IPC for cross-panel communication.
+backend-type = "tauri-ipc"
+protocols = ["TauriIPC"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["toolbar", "button", "log", "status"]
+
+[clade-integration-hooks]
+# Lifecycle hooks for panel integration.
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

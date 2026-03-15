@@ -88,52 +88,31 @@ let commonLicenses: array<string> = [
   "Unlicense",
 ]
 
-/// Parse adoption stats from JSON response.
-let parseAdoptionStats = (jsonStr: string): result<adoptionStats, string> => {
-  try {
-    let json = JSON.parseExn(jsonStr)
-    switch JSON.Classify.classify(json) {
-    | Object(obj) => {
-        let getInt = (key: string): int =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Number(n) => Float.toInt(n)
-            | _ => 0
-            }
-          | None => 0
-          }
-
-        let byLicense = switch Dict.get(obj, "by_license") {
-        | Some(v) =>
-          switch JSON.Classify.classify(v) {
-          | Object(licObj) =>
-            Dict.toArray(licObj)->Array.filterMap(((key, val)) =>
-              switch JSON.Classify.classify(val) {
-              | Number(n) => Some((key, Float.toInt(n)))
-              | _ => None
-              }
-            )
-          | _ => []
-          }
-        | None => []
-        }
-
-        Ok({
-          totalRepos: getInt("total_repos"),
-          pmplRepos: getInt("pmpl_repos"),
-          mplFallbackRepos: getInt("mpl_fallback_repos"),
-          unlicensedRepos: getInt("unlicensed_repos"),
-          quantumSignedRepos: getInt("quantum_signed_repos"),
-          byLicense,
-        })
-      }
-    | _ => Error("Expected object in adoption stats response")
-    }
-  } catch {
-  | _ => Error("Failed to parse adoption stats JSON")
-  }
+/// Tea_Json decoder for adoption stats.
+let adoptionStatsDecoder: Tea_Json.decoder<adoptionStats> = {
+  open Decoders
+  open Tea_Json
+  map6(
+    (totalRepos, pmplRepos, mplFallbackRepos, unlicensedRepos, quantumSignedRepos, byLicense) => ({
+      totalRepos,
+      pmplRepos,
+      mplFallbackRepos,
+      unlicensedRepos,
+      quantumSignedRepos,
+      byLicense,
+    }: adoptionStats),
+    intField("total_repos"),
+    intField("pmpl_repos"),
+    intField("mpl_fallback_repos"),
+    intField("unlicensed_repos"),
+    intField("quantum_signed_repos"),
+    fieldWithDefault("by_license", intDict, []),
+  )
 }
+
+/// Parse adoption stats from JSON response.
+let parseAdoptionStats = (jsonStr: string): result<adoptionStats, string> =>
+  Decoders.decode(adoptionStatsDecoder, jsonStr)
 
 /// Compute the PMPL adoption percentage.
 let adoptionPercentage = (stats: adoptionStats): float => {

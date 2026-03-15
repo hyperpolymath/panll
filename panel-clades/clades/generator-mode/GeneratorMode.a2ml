@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generator Mode Panel Clade — Procedural content generation for IDApTIK
+
+[clade-metadata]
+id = "generator-mode"
+name = "Generator Mode"
+short-name = "Gen"
+version = "0.1.0"
+kind = "builder"
+icon = "wand-sparkles"
+description = "Procedural content generation for IDApTIK — level templates, puzzle seeds, device catalogues, network topologies — with constraint satisfaction and preview."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "LevelGeneration",
+  "PuzzleSeedCreation",
+  "DeviceCatalogue",
+  "TopologyGeneration",
+  "ConstraintSatisfaction",
+  "PreviewRendering",
+  "SeedManagement",
+  "ParameterTuning",
+]
+
+[clade-panel-integration]
+panel-id = "PanelGeneratorMode"
+model-module = "GeneratorModeModel"
+component-module = "GeneratorMode"
+command-module = "GeneratorModeCmd"
+
+[clade-cross-panel]
+depends-on = ["level-architect", "vm-inspector"]
+feeds-into = ["game-preview", "playtest-recorder"]

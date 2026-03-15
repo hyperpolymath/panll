@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Performance Profiler Panel Clade — CPU, memory, and frame timing profiler
+
+[clade-metadata]
+id = "performance-profiler"
+name = "Performance Profiler"
+short-name = "Perf"
+version = "0.1.0"
+kind = "inspector"
+icon = "activity"
+description = "CPU flame graphs, memory allocation tracking, frame timing histograms, and hot-path identification for both game runtime and PanLL itself."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "FlameGraph",
+  "MemoryAllocation",
+  "FrameTiming",
+  "HotPathDetection",
+  "AllocationHeatmap",
+  "GCPauseTracking",
+  "ComparisonView",
+  "ExportProfile",
+]
+
+[clade-panel-integration]
+panel-id = "PanelPerformanceProfiler"
+model-module = "PerformanceProfilerModel"
+component-module = "PerformanceProfiler"
+command-module = "PerformanceProfilerCmd"
+
+[clade-dependencies]
+profiler-backends = ["perf", "flamegraph-rs", "Tauri IPC timing"]

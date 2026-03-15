@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Playtest Recorder Panel Clade — Record and replay IDApTIK play sessions
+
+[clade-metadata]
+id = "playtest-recorder"
+name = "Playtest Recorder"
+short-name = "Play"
+version = "0.1.0"
+kind = "inspector"
+icon = "video"
+description = "Record and replay IDApTIK play sessions — input capture, VM state snapshots, decision trees, heatmaps, and annotated timeline for post-mortem analysis."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "InputCapture",
+  "VMStateSnapshot",
+  "DecisionTree",
+  "Heatmap",
+  "AnnotatedTimeline",
+  "SessionReplay",
+  "ExportRecording",
+  "CompareRuns",
+]
+
+[clade-panel-integration]
+panel-id = "PanelPlaytestRecorder"
+model-module = "PlaytestRecorderModel"
+component-module = "PlaytestRecorder"
+command-module = "PlaytestRecorderCmd"
+
+[clade-cross-panel]
+depends-on = ["game-preview", "vm-inspector"]
+feeds-into = ["balance-analyser", "beta-feedback-hub"]

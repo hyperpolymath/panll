@@ -1,0 +1,36 @@
+= TypeLL Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Cross-panel type intelligence service -- type checking, inference, refinement, and proofs.
+
+== Purpose
+
+TypeLL is PanLL's primary type intelligence service, operating both as a standalone
+panel and as a cross-cutting service callable by any panel via TypeLLService helpers.
+It provides 7 core operations: health, check, infer, refine, compute, list-signatures,
+and universes. All panels MUST degrade gracefully when TypeLL is unavailable.
+
+== Key Features
+
+* 7 core operations (health, check, infer, refine, compute, list-signatures, universes)
+* Wired to 7 panels: VeriSimDB, Protocol-Squisher, My-Lang, Anti-Crash, Pane-L, BoJ, ECHIDNA
+* Evangeliser progressive disclosure: RAW, FOLDED, GLYPHED, WYSIWYG
+* Proof obligation generation
+* Cross-panel dispatch via TypeLLService helpers
+* Backend on port 7800
+
+== Integration Points
+
+* Consumed by **VeriSimDB**, **Protocol-Squisher**, **My-Lang**, **Anti-Crash**,
+  **Pane-L**, **BoJ**, **ECHIDNA**, **BuildDashboard**
+* Dispatches to `nesy-mcp` cartridge
+* Ambient service -- always available in background
+
+== Clade Kind
+
+**service**
+
+== Status
+
+Active development (v1.0.0). Full A2ML clade definition with engine.

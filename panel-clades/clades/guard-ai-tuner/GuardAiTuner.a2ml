@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Guard AI Tuner Panel Clade — Tune IDApTIK guard AI behaviour and difficulty
+
+[clade-metadata]
+id = "guard-ai-tuner"
+name = "Guard AI Tuner"
+short-name = "GAI"
+version = "0.1.0"
+kind = "builder"
+icon = "shield-half"
+description = "Tune IDApTIK guard AI behaviour — patrol patterns, detection sensitivity, response escalation, difficulty curves — with live preview and A/B testing."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "PatrolPatternEditor",
+  "DetectionSensitivity",
+  "ResponseEscalation",
+  "DifficultyCurve",
+  "LivePreview",
+  "ABTesting",
+  "BehaviourTree",
+  "StatExport",
+]
+
+[clade-panel-integration]
+panel-id = "PanelGuardAiTuner"
+model-module = "GuardAiTunerModel"
+component-module = "GuardAiTuner"
+command-module = "GuardAiTunerCmd"
+
+[clade-cross-panel]
+depends-on = ["vm-inspector", "game-preview"]
+feeds-into = ["balance-analyser", "playtest-recorder"]

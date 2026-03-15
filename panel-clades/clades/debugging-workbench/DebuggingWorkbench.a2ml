@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Debugging Workbench Panel Clade — Unified debugging surface across languages and runtimes
+
+[clade-metadata]
+id = "debugging-workbench"
+name = "Debugging Workbench"
+short-name = "Debug"
+version = "0.1.0"
+kind = "inspector"
+icon = "bug"
+description = "Unified debugging surface — DAP-backed breakpoints, watch expressions, call stacks, and variable inspection across Rust, ReScript, Elixir, and WASM runtimes."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "Breakpoints",
+  "WatchExpressions",
+  "CallStack",
+  "VariableInspection",
+  "StepDebugging",
+  "ConditionalBreakpoints",
+  "LogPoints",
+  "MultiRuntimeSupport",
+]
+
+[clade-panel-integration]
+panel-id = "PanelDebuggingWorkbench"
+model-module = "DebuggingWorkbenchModel"
+component-module = "DebuggingWorkbench"
+command-module = "DebuggingWorkbenchCmd"
+
+[clade-cross-panel]
+depends-on = ["editor-bridge", "vm-inspector"]
+feeds-into = ["valence-shell", "performance-profiler"]

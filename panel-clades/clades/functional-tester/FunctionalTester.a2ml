@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Functional Tester Panel Clade — Scenario-based functional test orchestration
+
+[clade-metadata]
+id = "functional-tester"
+name = "Functional Tester"
+short-name = "FT"
+version = "0.1.0"
+kind = "scanner"
+icon = "clipboard-check"
+description = "Scenario-based functional test orchestration — define multi-step user flows, validate end-to-end behaviour, generate test reports with screenshots."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = true
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "ScenarioDefinition",
+  "StepExecution",
+  "AssertionChaining",
+  "ScreenshotCapture",
+  "TestReportGeneration",
+  "ParallelScenarios",
+  "DataDrivenTests",
+  "MockInjection",
+]
+
+[clade-panel-integration]
+panel-id = "PanelFunctionalTester"
+model-module = "FunctionalTesterModel"
+component-module = "FunctionalTester"
+command-module = "FunctionalTesterCmd"
+
+[clade-dependencies]
+protocols = ["Playwright", "Tauri WebDriver"]

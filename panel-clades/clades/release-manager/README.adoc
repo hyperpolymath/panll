@@ -1,0 +1,35 @@
+= Release Manager Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Versioning, changelog, artifact building, signing, and distribution for IDApTIK.
+
+== Purpose
+
+The Release Manager handles the full release pipeline: semver version bumping,
+changelog generation from git history, artifact building across 6 platforms
+(Web, Linux, Mac, Windows, Android, iOS), GPG/Sigstore signing, and distribution
+through 5 release channels (Dev, Alpha, Beta, RC, Stable).
+
+== Key Features
+
+* Semver version bumping (patch, minor, major)
+* Changelog auto-generation from git commits
+* Artifact building for 6 platforms
+* Platform toggles per release
+* GPG/Sigstore artifact signing
+* 5 release channels with promotion workflow
+* Release history browser with artifact counts
+
+== Integration Points
+
+* **BuildDashboard** -- depends on build readiness status
+* **Valence Shell** -- changelog integrates with git operations
+
+== Clade Kind
+
+**builder**
+
+== Status
+
+Early development (v1.0.0). Engine and model modules defined.

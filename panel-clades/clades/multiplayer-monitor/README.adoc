@@ -1,0 +1,37 @@
+= Multiplayer Monitor Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Monitor the Elixir/Phoenix sync server -- WebSocket status, channels, player state diff.
+
+== Purpose
+
+The Multiplayer Monitor inspects IDApTIK's Elixir/Phoenix sync server in real time.
+It displays WebSocket connection status, channel subscriptions, player state diffs,
+VM message bus traffic, Lamport clock visualisation, device lock status, and latency
+graphs.
+
+== Key Features
+
+* WebSocket connection status and health
+* Channel subscription viewer
+* Player state diff (before/after)
+* VM message bus monitor
+* Lamport clock visualisation for causal ordering
+* Device lock status display
+* Latency graph with historical data
+* Erlang process tree and ETS cache inspection
+* Reconnection testing
+
+== Integration Points
+
+* Sync server: Phoenix on port 4000 (phoenix-websocket-v2 protocol)
+* Read-only viewer -- does not modify server state
+
+== Clade Kind
+
+**viewer**
+
+== Status
+
+Early development (v1.0.0). Model and command modules defined.

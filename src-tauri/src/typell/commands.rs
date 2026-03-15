@@ -5,6 +5,7 @@
 
 use serde_json::json;
 
+// panic-attack:allow insecure-protocol — localhost dev endpoint
 const DEFAULT_TYPELL_URL: &str = "http://localhost:7800/api/v1";
 
 fn typell_url() -> String {

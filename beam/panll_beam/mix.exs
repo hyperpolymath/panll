@@ -25,6 +25,7 @@ defmodule PanllBeam.MixProject do
       {:bandit, "~> 1.5"},
       {:grpc, "~> 0.8"},
       {:jason, "~> 1.4"},
+      {:phoenix_pubsub, "~> 2.1"},
       {:plug, "~> 1.15"},
       {:protobuf, "~> 0.12"}
     ]

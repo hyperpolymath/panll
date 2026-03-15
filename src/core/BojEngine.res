@@ -268,81 +268,69 @@ let parseCartridgeObj = (obj: Dict.t<JSON.t>): bojCartridge => {
   }
 }
 
-/// Parse a JSON string containing an array of cartridge objects.
-let parseCartridges = (json: string): result<array<bojCartridge>, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Array(arr) =>
-      let cartridges = arr->Array.filterMap(item =>
-        switch JSON.Classify.classify(item) {
-        | Object(obj) => Some(parseCartridgeObj(obj))
-        | _ => None
-        }
-      )
-      Ok(cartridges)
-    | _ => Error("Expected JSON array for cartridges list")
-    }
-  } catch {
-  | _ => Error("Failed to parse cartridges JSON")
+/// Tea_Json decoder for a single cartridge, bridging the existing parseCartridgeObj parser.
+let cartridgeDecoder: Tea_Json.decoder<bojCartridge> = json => {
+  switch json {
+  | Object(dict) => Ok(parseCartridgeObj(dict))
+  | _ => Error(Tea_Json.Failure("Expected an object for cartridge", json))
   }
+}
+
+/// Tea_Json decoder for a cartridges array.
+let cartridgesDecoder: Tea_Json.decoder<array<bojCartridge>> =
+  Decoders.lenientArray(cartridgeDecoder)
+
+/// Parse a JSON string containing an array of cartridge objects.
+let parseCartridges = (json: string): result<array<bojCartridge>, string> =>
+  Decoders.decode(cartridgesDecoder, json)
+
+/// Tea_Json decoder for a single peer, bridging the existing value-level helpers.
+let peerDecoder: Tea_Json.decoder<umojaPeer> = json => {
+  switch json {
+  | Object(peerObj) =>
+    Ok({
+      nodeId: getStringFromObj(peerObj, "nodeId"),
+      address: getStringFromObj(peerObj, "endpoint"),
+      state: parsePeerState(getStringFromObj(peerObj, "state")),
+      gossipRound: getIntFromObj(peerObj, "currentRound"),
+      catalogueDigest: getStringFromObj(peerObj, "catalogueDigest"),
+      lastSeen: getFloatFromObj(peerObj, "loadFactor"),
+    })
+  | _ => Error(Tea_Json.Failure("Expected an object for peer", json))
+  }
+}
+
+/// Tea_Json decoder for Umoja federation status.
+let umojaStatusDecoder: Tea_Json.decoder<umojaStatus> = {
+  open Decoders
+  open Tea_Json
+  map4(
+    (active, localNodeId, peers, currentRound) => ({
+      active,
+      localNodeId,
+      peers,
+      currentRound,
+    }: umojaStatus),
+    boolField("active"),
+    stringField("localNodeId"),
+    fieldWithDefault("peers", lenientArray(peerDecoder), []),
+    intField("currentRound"),
+  )
 }
 
 /// Parse a JSON string containing Umoja federation status.
-let parseUmojaStatus = (json: string): result<umojaStatus, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let peers = switch Dict.get(obj, "peers") {
-        | Some(v) =>
-          switch JSON.Classify.classify(v) {
-          | Array(arr) =>
-            arr->Array.filterMap(item =>
-              switch JSON.Classify.classify(item) {
-              | Object(peerObj) =>
-                Some({
-                  nodeId: getStringFromObj(peerObj, "nodeId"),
-                  address: getStringFromObj(peerObj, "endpoint"),
-                  state: parsePeerState(getStringFromObj(peerObj, "state")),
-                  gossipRound: getIntFromObj(peerObj, "currentRound"),
-                  catalogueDigest: getStringFromObj(peerObj, "catalogueDigest"),
-                  lastSeen: getFloatFromObj(peerObj, "loadFactor"),
-                })
-              | _ => None
-              }
-            )
-          | _ => []
-          }
-        | None => []
-        }
-        Ok({
-          active: getBoolFromObj(obj, "active"),
-          localNodeId: getStringFromObj(obj, "localNodeId"),
-          peers,
-          currentRound: getIntFromObj(obj, "currentRound"),
-        })
-      }
-    | _ => Error("Expected JSON object for Umoja status")
-    }
-  } catch {
-  | _ => Error("Failed to parse Umoja status JSON")
-  }
-}
+let parseUmojaStatus = (json: string): result<umojaStatus, string> =>
+  Decoders.decode(umojaStatusDecoder, json)
+
+/// Tea_Json decoder for topology diagram data.
+/// Extracts the "diagram" field as a plain string.
+let topologyDecoder: Tea_Json.decoder<string> =
+  Decoders.stringField("diagram")
 
 /// Parse a JSON string containing topology diagram data.
 /// Extracts the "diagram" field as a plain string.
-let parseTopology = (json: string): result<string, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => Ok(getStringFromObj(obj, "diagram"))
-    | _ => Error("Expected JSON object for topology data")
-    }
-  } catch {
-  | _ => Error("Failed to parse topology JSON")
-  }
-}
+let parseTopology = (json: string): result<string, string> =>
+  Decoders.decode(topologyDecoder, json)
 
 /// Default BoJ panel state.
 let defaultState: bojState = {

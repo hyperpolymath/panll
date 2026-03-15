@@ -83,149 +83,86 @@ let avgConfidence = (networks: array<neuralNetState>): float => {
   }
 }
 
-/// Parse neural network states from API JSON.
-let parseNetworks = (json: string): result<array<neuralNetState>, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Array(items) =>
-      let nets = items->Array.filterMap(item => {
-        switch JSON.Classify.classify(item) {
-        | Object(obj) => {
-            let getString = (key: string): string =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | String(s) => s
-                | _ => ""
-                }
-              | None => ""
-              }
-            let getFloat = (key: string): float =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Number(n) => n
-                | _ => 0.0
-                }
-              | None => 0.0
-              }
-            let getInt = (key: string): int =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Number(n) => Float.toInt(n)
-                | _ => 0
-                }
-              | None => 0
-              }
-
-            let idStr = getString("id")
-            let id = switch idStr {
-            | "graph_of_trust" => Some(GraphOfTrust)
-            | "mixture_of_experts" => Some(MixtureOfExperts)
-            | "liquid_state_machine" => Some(LiquidStateMachine)
-            | "echo_state_network" => Some(EchoStateNetwork)
-            | "radial_neural_network" => Some(RadialNeuralNetwork)
-            | _ => None
-            }
-
-            let statusStr = getString("status")
-            let status = switch statusStr {
-            | "active" => NetActive
-            | "training" => NetTraining
-            | "offline" => NetOffline
-            | _ => NetError(statusStr)
-            }
-
-            switch id {
-            | Some(netId) =>
-              Some({
-                id: netId,
-                status,
-                confidence: getFloat("confidence"),
-                inferenceCount: getInt("inference_count"),
-                version: getString("version"),
-              })
-            | None => None
-            }
-          }
-        | _ => None
-        }
-      })
-      Ok(nets)
-    | _ => Error("Expected array of network states")
-    }
-  } catch {
-  | _ => Error("Failed to parse networks JSON")
+/// Parse a neural network ID string into a neuralNetId variant.
+let parseNetId = (s: string): option<neuralNetId> =>
+  switch s {
+  | "graph_of_trust" => Some(GraphOfTrust)
+  | "mixture_of_experts" => Some(MixtureOfExperts)
+  | "liquid_state_machine" => Some(LiquidStateMachine)
+  | "echo_state_network" => Some(EchoStateNetwork)
+  | "radial_neural_network" => Some(RadialNeuralNetwork)
+  | _ => None
   }
+
+/// Parse a neural network status string into a neuralNetStatus variant.
+let parseNetStatus = (s: string): neuralNetStatus =>
+  switch s {
+  | "active" => NetActive
+  | "training" => NetTraining
+  | "offline" => NetOffline
+  | _ => NetError(s)
+  }
+
+/// Tea_Json decoder for a single neural network state.
+/// Validates the network ID, skipping unknown networks.
+let networkDecoder: Tea_Json.decoder<neuralNetState> = json => {
+  open Decoders
+  open Tea_Json
+  let inner = map5(
+    (idStr, statusStr, confidence, inferenceCount, version) =>
+      (idStr, statusStr, confidence, inferenceCount, version),
+    stringField("id"),
+    stringField("status"),
+    floatField("confidence"),
+    intField("inference_count"),
+    stringField("version"),
+  )
+  switch inner(json) {
+  | Ok((idStr, statusStr, confidence, inferenceCount, version)) =>
+    switch parseNetId(idStr) {
+    | Some(netId) =>
+      Ok({
+        id: netId,
+        status: parseNetStatus(statusStr),
+        confidence,
+        inferenceCount,
+        version,
+      }: neuralNetState)
+    | None => Error(Failure(`Unknown neural net id: ${idStr}`, json))
+    }
+  | Error(e) => Error(e)
+  }
+}
+
+/// Parse neural network states from API JSON.
+let parseNetworks = (json: string): result<array<neuralNetState>, string> =>
+  Decoders.decode(Decoders.lenientArray(networkDecoder), json)
+
+/// Tea_Json decoder for a single scan result.
+let scanResultDecoder: Tea_Json.decoder<scanResult> = {
+  open Decoders
+  open Tea_Json
+  map6(
+    (repoName, riskScore, findingCount, quarantineCount, lastScanned, passed) => ({
+      repoName,
+      riskScore,
+      findingCount,
+      quarantineCount,
+      lastScanned,
+      passed,
+    }: scanResult),
+    stringField("repo_name"),
+    floatField("risk_score"),
+    intField("finding_count"),
+    intField("quarantine_count"),
+    stringField("last_scanned"),
+    boolField("passed"),
+  )
 }
 
 /// Parse scan results from API JSON.
-let parseScans = (json: string): result<array<scanResult>, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Array(items) =>
-      let scans = items->Array.filterMap(item => {
-        switch JSON.Classify.classify(item) {
-        | Object(obj) => {
-            let getString = (key: string): string =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | String(s) => s
-                | _ => ""
-                }
-              | None => ""
-              }
-            let getFloat = (key: string): float =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Number(n) => n
-                | _ => 0.0
-                }
-              | None => 0.0
-              }
-            let getInt = (key: string): int =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Number(n) => Float.toInt(n)
-                | _ => 0
-                }
-              | None => 0
-              }
-            let getBool = (key: string): bool =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Bool(b) => b
-                | _ => false
-                }
-              | None => false
-              }
-
-            Some({
-              repoName: getString("repo_name"),
-              riskScore: getFloat("risk_score"),
-              findingCount: getInt("finding_count"),
-              quarantineCount: getInt("quarantine_count"),
-              lastScanned: getString("last_scanned"),
-              passed: getBool("passed"),
-            })
-          }
-        | _ => None
-        }
-      })
-      Ok(scans)
-    | _ => Error("Expected array of scan results")
-    }
-  } catch {
-  | _ => Error("Failed to parse scans JSON")
-  }
-}
+let parseScans = (json: string): result<array<scanResult>, string> =>
+  Decoders.decode(Decoders.lenientArray(scanResultDecoder), json)
 
 /// Safety tier label.
 let tierLabel = (tier: safetyTier): string =>

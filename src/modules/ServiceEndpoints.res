@@ -6,6 +6,10 @@
 /// All hardcoded localhost URLs are defined here so they can be overridden
 /// from environment variables or configuration files without modifying
 /// individual engine/model files.
+///
+/// panic-attack:allow insecure-protocol — all URLs are localhost/loopback
+/// development endpoints. Local services do not run TLS. Production
+/// deployments override these via environment variables or config files.
 
 /// VeriSimDB octad multimodal database.
 let verisimdb = "http://localhost:8080/api/v1"

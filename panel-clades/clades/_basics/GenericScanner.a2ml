@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Scanner Clade Template
+# Scanners analyse, probe, or inspect data — security, builds, protocols, compliance.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "scanner"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Scanners have scanning as their core trait, often with work items for findings.
+has-backend = true           # Backend for scan execution
+has-scanning = true          # REQUIRED: true for scanner kind
+has-persistence = true       # Scan history and results
+has-work-items = true        # Findings are actionable work items
+has-priority-ordering = false
+has-customisation = true     # Scan targets, thresholds, filters
+is-directive = false
+is-readonly = false          # Can trigger scans
+
+[clade-capabilities]
+# Minimum capabilities for a scanner clade.
+capabilities = [
+  "ScanTrigger",             # Initiate a scan run
+  "ResultViewer",            # Display scan findings
+  "ScanHistory",             # Browse past scan results
+  "FindingClassification",   # Categorise findings by severity
+]
+
+[clade-connections]
+# Scanners typically need a backend for analysis.
+backend-type = "tauri-ipc"
+protocols = ["TauriIPC"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["table", "status", "log", "alert"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic AI Clade Template
+# AI panels interact with language models, neural networks, or agent orchestration.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "ai"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# AI panels typically have real-time streaming and backend model connections.
+has-backend = true           # Backend for model API calls
+has-scanning = false
+has-persistence = true       # Conversation history, agent state
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Model selection, temperature, system prompts
+is-directive = false
+is-readonly = false          # AI panels accept input and produce output
+
+[clade-capabilities]
+# Minimum capabilities for an AI clade.
+capabilities = [
+  "ModelInteraction",        # Send prompts, receive responses
+  "ModelSelection",          # Choose between available models/providers
+  "ConversationHistory",    # Browse and manage past interactions
+  "HealthCheck",             # Verify model/provider availability
+]
+
+[clade-connections]
+backend-type = "http"
+default-endpoint = "http://localhost:{{PORT}}/api/v1"
+protocols = ["REST"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["log", "textbox", "status", "region"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

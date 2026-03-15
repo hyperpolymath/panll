@@ -334,6 +334,77 @@ let getJsonString = (obj: Dict.t<JSON.t>, key: string): option<string> => {
   }
 }
 
+/// Tea_Json decoder for accessibility preferences from localStorage.
+/// Parses string fields and maps them to variant types via existing parsers.
+let accessibilityDecoder: Tea_Json.decoder<AccessibilityModel.accessibilityState> = json => {
+  open Decoders
+  open Tea_Json
+  let inner = map5(
+    (themeStr, paletteStr, animStr, fontStr, focusStr) =>
+      (themeStr, paletteStr, animStr, fontStr, focusStr),
+    optionalFieldDecoder("theme", string),
+    optionalFieldDecoder("palette", string),
+    optionalFieldDecoder("animations", string),
+    optionalFieldDecoder("fontSize", string),
+    optionalFieldDecoder("focusStyle", string),
+  )
+  switch inner(json) {
+  | Ok((themeStr, paletteStr, animStr, fontStr, focusStr)) => {
+      let theme = switch themeStr {
+      | Some(s) => themeFromString(s)
+      | None => None
+      }
+      let palette = switch paletteStr {
+      | Some(s) => paletteFromString(s)
+      | None => None
+      }
+      let animations = switch animStr {
+      | Some(s) => animationFromString(s)
+      | None => None
+      }
+      let fontSize = switch fontStr {
+      | Some(s) => fontSizeFromString(s)
+      | None => None
+      }
+      let focusStyle = switch focusStr {
+      | Some(s) => focusStyleFromString(s)
+      | None => None
+      }
+      let osScheme = detectOsColorScheme()
+      let resolvedTheme = switch theme {
+      | Some(ThemeSystem) => osScheme
+      | Some(t) => t
+      | None => ThemeDark
+      }
+      Ok({
+        palette: switch palette {
+        | Some(p) => p
+        | None => StandardPalette
+        },
+        theme: switch theme {
+        | Some(t) => t
+        | None => ThemeDark
+        },
+        animations: switch animations {
+        | Some(a) => a
+        | None => AnimationsOn
+        },
+        fontSize: switch fontSize {
+        | Some(f) => f
+        | None => FontMedium
+        },
+        focusStyle: switch focusStyle {
+        | Some(f) => f
+        | None => FocusDefault
+        },
+        toolbarExpanded: false,
+        resolvedTheme,
+      }: AccessibilityModel.accessibilityState)
+    }
+  | Error(e) => Error(e)
+  }
+}
+
 /// Load accessibility preferences from localStorage.
 /// Returns None if nothing is stored or parsing fails.
 let loadFromLocalStorage = (): option<AccessibilityModel.accessibilityState> => {
@@ -341,64 +412,7 @@ let loadFromLocalStorage = (): option<AccessibilityModel.accessibilityState> => 
     let raw: Nullable.t<string> = %raw(`localStorage.getItem(storageKey)`)
     switch Nullable.toOption(raw) {
     | None => None
-    | Some(jsonStr) => {
-        let parsed = JSON.parseExn(jsonStr)
-        switch JSON.Classify.classify(parsed) {
-        | Object(obj) => {
-            let theme = switch getJsonString(obj, "theme") {
-            | Some(s) => themeFromString(s)
-            | None => None
-            }
-            let palette = switch getJsonString(obj, "palette") {
-            | Some(s) => paletteFromString(s)
-            | None => None
-            }
-            let animations = switch getJsonString(obj, "animations") {
-            | Some(s) => animationFromString(s)
-            | None => None
-            }
-            let fontSize = switch getJsonString(obj, "fontSize") {
-            | Some(s) => fontSizeFromString(s)
-            | None => None
-            }
-            let focusStyle = switch getJsonString(obj, "focusStyle") {
-            | Some(s) => focusStyleFromString(s)
-            | None => None
-            }
-            let osScheme = detectOsColorScheme()
-            let resolvedTheme = switch theme {
-            | Some(ThemeSystem) => osScheme
-            | Some(t) => t
-            | None => ThemeDark
-            }
-            Some({
-              palette: switch palette {
-              | Some(p) => p
-              | None => StandardPalette
-              },
-              theme: switch theme {
-              | Some(t) => t
-              | None => ThemeDark
-              },
-              animations: switch animations {
-              | Some(a) => a
-              | None => AnimationsOn
-              },
-              fontSize: switch fontSize {
-              | Some(f) => f
-              | None => FontMedium
-              },
-              focusStyle: switch focusStyle {
-              | Some(f) => f
-              | None => FocusDefault
-              },
-              toolbarExpanded: false,
-              resolvedTheme,
-            })
-          }
-        | _ => None
-        }
-      }
+    | Some(jsonStr) => Decoders.decodeOption(accessibilityDecoder, jsonStr)
     }
   } catch {
   | _ => None

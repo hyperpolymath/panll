@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Balance Analyser Panel Clade — Game balance metrics and difficulty curve analysis
+
+[clade-metadata]
+id = "balance-analyser"
+name = "Balance Analyser"
+short-name = "Balance"
+version = "0.1.0"
+kind = "inspector"
+icon = "scale"
+description = "Game balance metrics — difficulty curve visualisation, win/loss ratio tracking, resource economy graphs, and statistical outlier detection for IDApTIK puzzles."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "DifficultyCurve",
+  "WinLossTracking",
+  "ResourceEconomy",
+  "OutlierDetection",
+  "PlayerProgression",
+  "CompletionRates",
+  "HeatmapOverlay",
+  "ABComparison",
+]
+
+[clade-panel-integration]
+panel-id = "PanelBalanceAnalyser"
+model-module = "BalanceAnalyserModel"
+component-module = "BalanceAnalyser"
+command-module = "BalanceAnalyserCmd"
+
+[clade-dependencies]
+data-sources = ["playtest-recorder", "VeriSimDB analytics", "Level Architect metadata"]

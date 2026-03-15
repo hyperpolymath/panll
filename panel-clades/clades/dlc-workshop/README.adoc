@@ -1,0 +1,35 @@
+= DLC Workshop Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Create, test, and package DLC puzzle packs for IDApTIK.
+
+== Purpose
+
+The DLC Workshop provides tools for authoring puzzle content for IDApTIK. It includes
+a VM instruction composer, solution test runner, difficulty classification, and asset
+bundling. The workshop manages the 42-puzzle `idaptik-reversible` test suite and
+supports import/export of puzzle packs.
+
+== Key Features
+
+* Puzzle editor with VM instruction composer
+* Solution test runner (42 existing tests)
+* Automatic difficulty classification
+* Asset bundling and packaging
+* Puzzle import/export
+* Puzzle chain editor for multi-stage puzzles
+
+== Integration Points
+
+* DLC directory: `dlc/`
+* Test suite: `dlc/idaptik-reversible/`
+* Orchestrated by **UMS** (Universal Modding Studio)
+
+== Clade Kind
+
+**builder**
+
+== Status
+
+Early development (v1.0.0). Model and command modules defined.

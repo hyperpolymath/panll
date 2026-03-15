@@ -27,57 +27,34 @@ let parseEventKind = (kind: string): watchEventKind => {
   }
 }
 
+/// Tea_Json decoder for a single watch event.
+let watchEventDecoder: Tea_Json.decoder<watchEvent> = {
+  open Decoders
+  open Tea_Json
+  map6(
+    (path, kindStr, isDir, timestamp, extension, filename) => ({
+      path,
+      kind: parseEventKind(kindStr),
+      isDir,
+      timestamp,
+      extension,
+      filename,
+    }: watchEvent),
+    stringField("path"),
+    stringField("kind"),
+    boolField("is_dir"),
+    floatField("timestamp"),
+    stringField("extension"),
+    stringField("filename"),
+  )
+}
+
 /// Parse a raw JSON string into a `watchEvent`.
 ///
 /// The Rust side emits events as JSON-serialised `WatchEvent` structs.
 /// This parses the JSON and maps field names (snake_case → camelCase).
-let parseEvent = (jsonStr: string): option<watchEvent> => {
-  try {
-    let json = JSON.parseExn(jsonStr)
-    switch JSON.Classify.classify(json) {
-    | JSON.Classify.Object(dict) => {
-        let getString = key =>
-          switch dict->Dict.get(key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | JSON.Classify.String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getBool = key =>
-          switch dict->Dict.get(key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | JSON.Classify.Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-        let getFloat = key =>
-          switch dict->Dict.get(key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | JSON.Classify.Number(n) => n
-            | _ => 0.0
-            }
-          | None => 0.0
-          }
-        Some({
-          path: getString("path"),
-          kind: parseEventKind(getString("kind")),
-          isDir: getBool("is_dir"),
-          timestamp: getFloat("timestamp"),
-          extension: getString("extension"),
-          filename: getString("filename"),
-        })
-      }
-    | _ => None
-    }
-  } catch {
-  | _ => None
-  }
-}
+let parseEvent = (jsonStr: string): option<watchEvent> =>
+  Decoders.decodeOption(watchEventDecoder, jsonStr)
 
 /// Start the filesystem watcher on the given paths.
 ///

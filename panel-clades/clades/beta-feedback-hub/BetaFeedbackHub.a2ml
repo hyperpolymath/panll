@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Beta Feedback Hub Panel Clade — Collect and triage player/tester feedback
+
+[clade-metadata]
+id = "beta-feedback-hub"
+name = "Beta Feedback Hub"
+short-name = "Beta"
+version = "0.1.0"
+kind = "viewer"
+icon = "message-circle"
+description = "Collect, categorise, and triage feedback from beta testers and players — sentiment analysis, duplicate detection, priority voting, and release-gate integration."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = true
+has-priority-ordering = true
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "FeedbackCollection",
+  "SentimentAnalysis",
+  "DuplicateDetection",
+  "PriorityVoting",
+  "CategoryTagging",
+  "ReleaseGateIntegration",
+  "TrendAnalysis",
+  "ResponseTracking",
+]
+
+[clade-panel-integration]
+panel-id = "PanelBetaFeedbackHub"
+model-module = "BetaFeedbackHubModel"
+component-module = "BetaFeedbackHub"
+command-module = "BetaFeedbackHubCmd"
+
+[clade-dependencies]
+integrations = ["Feedback-O-Tron", "Release Manager", "Multiplayer Monitor"]

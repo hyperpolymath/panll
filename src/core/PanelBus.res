@@ -31,9 +31,65 @@ type panelEvent =
   | LevelArchitectEntitiesChanged(int) // entityCount
   /// UMS project opened or created.
   | UmsProjectChanged(string) // projectId
+  // ── Game Testing Events ──────────────────────────────────────────────
+  /// A test suite completed execution (suiteName, passCount, failCount).
+  | TestSuiteCompleted(string, int, int)
+  /// Balance simulation finished (simulationId, equilibriumScore).
+  | BalanceSimulationDone(string, float)
+  /// Player/tester feedback received (feedbackId, sentiment 0.0–1.0).
+  | FeedbackReceived(string, float)
+  /// Soak test detected a memory leak (processName, leakBytes).
+  | SoakLeakDetected(string, int)
+  /// Compatibility check completed (platformId, passed).
+  | CompatibilityCheckDone(string, bool)
+  /// Procedural generator produced a world (worldId, seed).
+  | GeneratorWorldReady(string, int)
+  /// Level Architect saved a level (levelId, entityCount).
+  | ArchitectLevelSaved(string, int)
 
 /// Empty event array for sub-updaters with no cross-panel effects.
 let noEvents: array<panelEvent> = []
+
+// ════════════════════════════════════════════════════════════════════════
+// Backpressure and Scaling — strategies for handling event volume spikes.
+// ════════════════════════════════════════════════════════════════════════
+
+/// Strategy for handling ring buffer overflow under high event volume.
+type backpressureStrategy =
+  /// Drop the oldest events to make room (default, preserves liveness).
+  | DropOldest
+  /// Drop the newest events (preserves history, risks stale state).
+  | DropNewest
+  /// Block the emitter until space is available (use with caution).
+  | Block
+  /// Sample every Nth event, discarding the rest (load shedding).
+  | Sample(int)
+
+/// Subscriber dispatch priority — determines processing order.
+type subscriberPriority =
+  /// Dispatched first, never dropped under backpressure.
+  | Critical
+  /// Standard dispatch order.
+  | Normal
+  /// Dispatched last, may be deferred or dropped under load.
+  | Background
+
+/// Configuration record for the event bus.
+type busConfig = {
+  /// Maximum events retained in the ring buffer.
+  maxEvents: int,
+  /// Strategy when the ring buffer is full.
+  backpressure: backpressureStrategy,
+  /// Time-to-live for events in milliseconds (0 = no expiry).
+  eventTtlMs: float,
+}
+
+/// Default bus configuration — 500-event ring buffer, drop-oldest, no TTL.
+let defaultBusConfig: busConfig = {
+  maxEvents: 500,
+  backpressure: DropOldest,
+  eventTtlMs: 0.0,
+}
 
 /// Governance-originated events — emitted by the post-update governance
 /// pass when contractile compliance, orbital stability, or database
@@ -81,6 +137,8 @@ type eventTopic =
   | TopicSecurity     // Security events, vault, secrets
   | TopicWorkflow     // Automation router, fleet dispatch
   | TopicUI           // Workspace, layout, session changes
+  | TopicTesting      // Game testing: unit, functional, soak, compat
+  | TopicSimulation   // Balance simulation, procedural generation
 
 /// Classify a panel event into its topic.
 let eventTopic = (evt: panelEvent): eventTopic =>
@@ -95,6 +153,13 @@ let eventTopic = (evt: panelEvent): eventTopic =>
   | UmsValidationCompleted(_) => TopicBuild
   | LevelArchitectEntitiesChanged(_) => TopicUI
   | UmsProjectChanged(_) => TopicWorkflow
+  | TestSuiteCompleted(_, _, _) => TopicTesting
+  | FeedbackReceived(_, _) => TopicTesting
+  | SoakLeakDetected(_, _) => TopicTesting
+  | CompatibilityCheckDone(_, _) => TopicTesting
+  | BalanceSimulationDone(_, _) => TopicSimulation
+  | GeneratorWorldReady(_, _) => TopicSimulation
+  | ArchitectLevelSaved(_, _) => TopicUI
   }
 
 /// Human-readable label for a topic.
@@ -110,12 +175,15 @@ let topicLabel = (t: eventTopic): string =>
   | TopicSecurity => "Security"
   | TopicWorkflow => "Workflow"
   | TopicUI => "UI"
+  | TopicTesting => "Testing"
+  | TopicSimulation => "Simulation"
   }
 
 /// All topics for display.
 let allTopics: array<eventTopic> = [
   TopicScan, TopicHealth, TopicBuild, TopicGovernance, TopicDatabase,
   TopicType, TopicProtocol, TopicSecurity, TopicWorkflow, TopicUI,
+  TopicTesting, TopicSimulation,
 ]
 
 /// Envelope wrapping an event with metadata for tracing and debugging.
@@ -140,6 +208,8 @@ type subscriber = {
   topics: array<eventTopic>,
   /// Whether this subscriber is currently active.
   active: bool,
+  /// Dispatch priority — Critical subscribers are dispatched first.
+  priority: subscriberPriority,
 }
 
 /// The subscriber registry — which clades listen to which topics.
@@ -158,24 +228,50 @@ let emptyRegistry: subscriberRegistry = {
   subscribers: [],
   nextEventId: 1,
   recentEvents: [],
-  maxRecentEvents: 100,
+  maxRecentEvents: 500,
 }
 
 /// Default subscriber declarations for core panels.
 let defaultSubscribers: array<subscriber> = [
-  { cladeId: "fleet",     topics: [TopicScan, TopicHealth, TopicWorkflow],    active: true },
-  { cladeId: "hypatia",   topics: [TopicScan, TopicGovernance, TopicHealth],  active: true },
-  { cladeId: "databases",  topics: [TopicDatabase, TopicType],                active: true },
-  { cladeId: "typell",    topics: [TopicType, TopicProtocol, TopicBuild],     active: true },
-  { cladeId: "security",  topics: [TopicSecurity, TopicScan],                 active: true },
-  { cladeId: "workspace", topics: [TopicUI, TopicHealth],                     active: true },
-  { cladeId: "automation-router", topics: [TopicWorkflow, TopicBuild, TopicGovernance], active: true },
-  { cladeId: "farm",      topics: [TopicHealth],                              active: true },
-  { cladeId: "protocol-squisher", topics: [TopicProtocol, TopicType],         active: true },
-  { cladeId: "my-lang",   topics: [TopicBuild, TopicType],                    active: true },
-  { cladeId: "boj",       topics: [TopicProtocol, TopicDatabase, TopicWorkflow], active: true },
-  { cladeId: "ums",       topics: [TopicBuild, TopicUI, TopicWorkflow, TopicType], active: true },
-  { cladeId: "level-architect", topics: [TopicBuild, TopicUI, TopicType], active: true },
+  // ── Core infrastructure panels ───────────────────────────────────────
+  { cladeId: "fleet",     topics: [TopicScan, TopicHealth, TopicWorkflow],    active: true, priority: Critical },
+  { cladeId: "hypatia",   topics: [TopicScan, TopicGovernance, TopicHealth],  active: true, priority: Critical },
+  { cladeId: "databases",  topics: [TopicDatabase, TopicType],                active: true, priority: Normal },
+  { cladeId: "typell",    topics: [TopicType, TopicProtocol, TopicBuild],     active: true, priority: Normal },
+  { cladeId: "security",  topics: [TopicSecurity, TopicScan],                 active: true, priority: Critical },
+  { cladeId: "workspace", topics: [TopicUI, TopicHealth],                     active: true, priority: Normal },
+  { cladeId: "automation-router", topics: [TopicWorkflow, TopicBuild, TopicGovernance], active: true, priority: Normal },
+  { cladeId: "farm",      topics: [TopicHealth],                              active: true, priority: Background },
+  { cladeId: "protocol-squisher", topics: [TopicProtocol, TopicType],         active: true, priority: Normal },
+  { cladeId: "my-lang",   topics: [TopicBuild, TopicType],                    active: true, priority: Normal },
+  { cladeId: "boj",       topics: [TopicProtocol, TopicDatabase, TopicWorkflow], active: true, priority: Normal },
+  { cladeId: "ums",       topics: [TopicBuild, TopicUI, TopicWorkflow, TopicType], active: true, priority: Normal },
+  { cladeId: "level-architect", topics: [TopicBuild, TopicUI, TopicType],     active: true, priority: Normal },
+  // ── Game dev testing panels (24 new panels) ──────────────────────────
+  { cladeId: "unit-test-runner",        topics: [TopicTesting, TopicBuild],               active: true, priority: Normal },
+  { cladeId: "functional-tester",       topics: [TopicTesting, TopicBuild],               active: true, priority: Normal },
+  { cladeId: "integration-tester",      topics: [TopicTesting, TopicBuild],               active: true, priority: Normal },
+  { cladeId: "regression-tester",       topics: [TopicTesting, TopicBuild],               active: true, priority: Normal },
+  { cladeId: "performance-profiler",    topics: [TopicTesting, TopicHealth],              active: true, priority: Normal },
+  { cladeId: "soak-tester",            topics: [TopicTesting, TopicHealth],              active: true, priority: Normal },
+  { cladeId: "stress-tester",          topics: [TopicTesting, TopicHealth],              active: true, priority: Normal },
+  { cladeId: "fuzz-tester",            topics: [TopicTesting, TopicSecurity],            active: true, priority: Normal },
+  { cladeId: "compatibility-checker",   topics: [TopicTesting],                           active: true, priority: Background },
+  { cladeId: "accessibility-checker",   topics: [TopicTesting, TopicUI],                  active: true, priority: Background },
+  { cladeId: "localisation-checker",    topics: [TopicTesting, TopicUI],                  active: true, priority: Background },
+  { cladeId: "balance-simulator",       topics: [TopicSimulation, TopicTesting],          active: true, priority: Normal },
+  { cladeId: "economy-simulator",       topics: [TopicSimulation],                        active: true, priority: Normal },
+  { cladeId: "ai-behaviour-tester",     topics: [TopicSimulation, TopicTesting],          active: true, priority: Normal },
+  { cladeId: "world-generator",         topics: [TopicSimulation, TopicUI],               active: true, priority: Normal },
+  { cladeId: "replay-analyser",         topics: [TopicTesting, TopicWorkflow],            active: true, priority: Background },
+  { cladeId: "feedback-collector",      topics: [TopicTesting, TopicUI],                  active: true, priority: Background },
+  { cladeId: "crash-reporter",          topics: [TopicTesting, TopicHealth, TopicSecurity], active: true, priority: Critical },
+  { cladeId: "network-tester",          topics: [TopicTesting, TopicHealth],              active: true, priority: Normal },
+  { cladeId: "save-load-tester",        topics: [TopicTesting, TopicDatabase],            active: true, priority: Normal },
+  { cladeId: "input-tester",            topics: [TopicTesting, TopicUI],                  active: true, priority: Normal },
+  { cladeId: "audio-tester",            topics: [TopicTesting],                           active: true, priority: Background },
+  { cladeId: "visual-diff-tester",      topics: [TopicTesting, TopicUI],                  active: true, priority: Normal },
+  { cladeId: "memory-profiler",         topics: [TopicTesting, TopicHealth],              active: true, priority: Normal },
 ]
 
 /// Default registry with core subscribers.
@@ -196,7 +292,7 @@ let subscribe = (reg: subscriberRegistry, cladeId: string, topics: array<eventTo
       }
     )
   } else {
-    Array.concat(reg.subscribers, [{ cladeId, topics, active: true }])
+    Array.concat(reg.subscribers, [{ cladeId, topics, active: true, priority: Normal }])
   }
   { ...reg, subscribers }
 }
@@ -258,3 +354,36 @@ let activeSubscriberCount = (reg: subscriberRegistry): int =>
 /// Count total events processed.
 let totalEventsProcessed = (reg: subscriberRegistry): int =>
   reg.nextEventId - 1
+
+// ════════════════════════════════════════════════════════════════════════
+// Event Batching — group envelopes by topic for efficient bulk dispatch.
+// ════════════════════════════════════════════════════════════════════════
+
+/// A batch of events grouped by topic for efficient bulk dispatch.
+type eventBatch = {
+  /// The topic shared by all events in this batch.
+  topic: eventTopic,
+  /// The envelopes in dispatch order.
+  envelopes: array<eventEnvelope>,
+}
+
+/// Group an array of envelopes by topic for batched dispatch.
+/// Returns one batch per distinct topic present in the input.
+let batchEvents = (envelopes: array<eventEnvelope>): array<eventBatch> => {
+  let topicGroups: Dict.t<array<eventEnvelope>> = Dict.make()
+  envelopes->Array.forEach(env => {
+    let key = topicLabel(env.topic)
+    let existing = switch Dict.get(topicGroups, key) {
+    | Some(arr) => arr
+    | None => []
+    }
+    Dict.set(topicGroups, key, Array.concat(existing, [env]))
+  })
+  // Convert back to batches — use the topic from the first envelope.
+  Dict.toArray(topicGroups)->Array.filterMap(((_, envs)) => {
+    switch envs[0] {
+    | Some(first) => Some({ topic: first.topic, envelopes: envs })
+    | None => None
+    }
+  })
+}

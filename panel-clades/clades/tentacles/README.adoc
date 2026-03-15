@@ -1,0 +1,37 @@
+= 7-Tentacles Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Seven colour-coded compiler agents with OODA reasoning and progressive cephalopod staging.
+
+== Purpose
+
+The 7-Tentacles panel embeds the seven compiler agent personas from the
+nextgen-languages/7-tentacles educational system into PanLL's three-panel model.
+Each agent maps to a compiler subsystem (Parser, Concurrency, TypeSystem,
+ASTArchitect, Auditor, Metaprogrammer, Governance) and operates through the
+OODA loop (Observe/Orient/Decide/Act).
+
+== Key Features
+
+* 7 colour-coded agents (Red through Violet)
+* Orchestra view showing all agents simultaneously
+* OODA reasoning loop per agent
+* Progressive cephalopod staging: Cuttle (8-12), Squidlet (13-14), Duet (15), Octopus (16+)
+* Inter-agent broadcast communication
+* Constraint generation (Panel-L) and result validation (Panel-W)
+* "Without" mode via ECHIDNA FFI/ABI for standalone operation
+
+== Integration Points
+
+* Consumes **ECHIDNA** for Idris2 ABI -> Zig FFI -> V-lang adapter
+* Source project: `nextgen-languages/7-tentacles`
+* Sibling of **AI** and **BoJ**
+
+== Clade Kind
+
+**ai**
+
+== Status
+
+Active development (v1.0.0). Full A2ML clade definition with architecture.

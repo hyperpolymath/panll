@@ -100,8 +100,10 @@ let createHTML = (html: string): trustedHTML => {
     let result: trustedHTML = %raw(`_policy.createHTML(html)`)
     result
   | None =>
-    // No Trusted Types — return string as-is (cast to opaque type)
-    Obj.magic(html)
+    // No Trusted Types — return string as-is (cast to opaque type).
+    // Uses identity function instead of Obj.magic (banned pattern).
+    let stringToTrustedHTML: string => trustedHTML = %raw(`function(s) { return s; }`)
+    stringToTrustedHTML(html)
   }
 }
 

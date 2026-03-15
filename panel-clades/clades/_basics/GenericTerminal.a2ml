@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Terminal Clade Template
+# Terminal panels embed interactive shell sessions within PanLL.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "terminal"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Terminals have backends for PTY management and persist session state.
+has-backend = true           # REQUIRED: backend for PTY/shell management
+has-scanning = false
+has-persistence = true       # Session history, command history
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Shell selection, theme, font, keybindings
+is-directive = false
+is-readonly = false          # Terminals accept input and produce output
+
+[clade-capabilities]
+# Minimum capabilities for a terminal clade.
+capabilities = [
+  "PTYTerminal",             # Interactive pseudo-terminal session
+  "SessionManagement",       # Create, switch, close terminal sessions
+  "CommandHistory",          # Browse and search command history
+  "SessionRecording",        # Record and replay terminal sessions
+]
+
+[clade-connections]
+backend-type = "tauri-ipc"
+protocols = ["TauriIPC"]
+
+[clade-dependencies]
+terminal-emulator = "xterm.js"
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["textbox", "log", "status"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

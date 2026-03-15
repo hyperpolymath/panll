@@ -1,0 +1,35 @@
+= Coprocessors Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Monitor IDApTIK's coprocessor backends -- call logs, heatmaps, and performance metrics.
+
+== Purpose
+
+The Coprocessors panel displays real-time status of IDApTIK's 3 coprocessor categories
+(Compute, Security, I/O) spanning 10 backends (Maths, Vector, Tensor, Physics, Crypto,
+Neural, Quantum, Audio, Graphics, IO). It provides call frequency heatmaps, performance
+metrics, and backend toggle controls.
+
+== Key Features
+
+* Call log showing coprocessor invocations
+* Frequency heatmap across all 10 backends
+* Performance metrics (latency, throughput)
+* Input/output inspection for individual calls
+* Dispatch log for cross-backend routing
+* Backend enable/disable toggles
+* Health status monitoring
+
+== Integration Points
+
+* Source files: `Coprocessor_Compute.res`, `Coprocessor_Security.res`, `Coprocessor_IO.res`
+* Read-only viewer -- does not modify coprocessor state
+
+== Clade Kind
+
+**viewer**
+
+== Status
+
+Early development (v1.0.0). Model and command modules defined.

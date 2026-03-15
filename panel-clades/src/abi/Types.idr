@@ -1,20 +1,24 @@
 -- SPDX-License-Identifier: PMPL-1.0-or-later
--- Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}>
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 --
-||| ABI Type Definitions Template
+||| ABI Type Definitions for PanLL Panel-Clades
 |||
-||| This module defines the Application Binary Interface (ABI) for this library.
-||| All type definitions include formal proofs of correctness.
+||| This module defines the Application Binary Interface (ABI) for the
+||| panel-clades subsystem of PanLL.  It provides formally verified types
+||| for clade identification, clade kinds, panel integration records, and
+||| clade capabilities.
 |||
-||| Replace {{PROJECT}} with your project name.
+||| Panel-clades categorises every PanLL panel into one of 13 clade kinds.
+||| Each kind describes the panel's primary role inside a workspace.
 |||
 ||| @see https://idris2.readthedocs.io for Idris2 documentation
 
-module {{PROJECT}}.ABI.Types
+module PanelClades.ABI.Types
 
 import Data.Bits
 import Data.So
 import Data.Vect
+import Data.String
 
 %default total
 
@@ -166,50 +170,169 @@ cAlignOf p Double = 8
 cAlignOf p _ = ptrSize p `div` 8
 
 --------------------------------------------------------------------------------
--- Example Struct with Layout Proof
+-- Clade-Specific Types
 --------------------------------------------------------------------------------
 
-||| Example C-compatible struct
-||| Replace this with your actual data types
+||| A non-empty string identifier for a panel clade.
+||| The proof witness ensures the identifier is never the empty string.
 public export
-record ExampleStruct where
-  constructor MkExampleStruct
-  field1 : Bits32
-  field2 : Bits64
-  field3 : Double
+record CladeId where
+  constructor MkCladeId
+  ||| The raw string value of the clade identifier
+  value : String
+  ||| Proof that the identifier is non-empty
+  {auto 0 nonEmpty : So (value /= "")}
 
-||| Prove the struct has correct size
+||| Safely construct a CladeId, returning Nothing if the string is empty
 public export
-exampleStructSize : (p : Platform) -> HasSize ExampleStruct 16
-exampleStructSize p =
-  -- 4 bytes (Bits32) + 4 padding + 8 bytes (Bits64) + 8 bytes (Double) = 24
-  -- But with alignment, it's actually platform-specific
-  SizeProof
+mkCladeId : (s : String) -> Maybe CladeId
+mkCladeId "" = Nothing
+mkCladeId s  = Just (MkCladeId s)
 
-||| Prove the struct has correct alignment
+||| The 13 clade kinds that classify every PanLL panel.
+|||
+||| Each kind corresponds to a primary role a panel can play inside
+||| a PanLL workspace:
+|||
+|||   Directive  — orchestration / command dispatch
+|||   Scanner    — code analysis and linting
+|||   Builder    — compilation and build pipelines
+|||   Database   — persistent storage and query
+|||   Network    — HTTP, sockets, protocol handling
+|||   Viewer     — read-only display and preview
+|||   Ai         — LLM / ML inference integration
+|||   Loader     — asset and resource loading
+|||   Meta       — workspace metadata management
+|||   Service    — background service / daemon panels
+|||   Inspector  — runtime introspection and debugging
+|||   Bridge     — cross-system translation layers
+|||   Terminal   — interactive shell and REPL panels
 public export
-exampleStructAlign : (p : Platform) -> HasAlignment ExampleStruct 8
-exampleStructAlign p = AlignProof
+data CladeKind
+  = Directive
+  | Scanner
+  | Builder
+  | Database
+  | Network
+  | Viewer
+  | Ai
+  | Loader
+  | Meta
+  | Service
+  | Inspector
+  | Bridge
+  | Terminal
 
---------------------------------------------------------------------------------
--- FFI Declarations
---------------------------------------------------------------------------------
+||| Convert a CladeKind to its C-compatible integer tag.
+||| Tags are zero-indexed and contiguous (0..12).
+public export
+cladeKindToInt : CladeKind -> Bits32
+cladeKindToInt Directive  = 0
+cladeKindToInt Scanner    = 1
+cladeKindToInt Builder    = 2
+cladeKindToInt Database   = 3
+cladeKindToInt Network    = 4
+cladeKindToInt Viewer     = 5
+cladeKindToInt Ai         = 6
+cladeKindToInt Loader     = 7
+cladeKindToInt Meta       = 8
+cladeKindToInt Service    = 9
+cladeKindToInt Inspector  = 10
+cladeKindToInt Bridge     = 11
+cladeKindToInt Terminal   = 12
 
-||| Declare external C functions
-||| These will be implemented in Zig FFI
-namespace Foreign
+||| Convert a C integer tag back to a CladeKind.
+||| Returns Nothing for out-of-range values.
+public export
+cladeKindFromInt : Bits32 -> Maybe CladeKind
+cladeKindFromInt 0  = Just Directive
+cladeKindFromInt 1  = Just Scanner
+cladeKindFromInt 2  = Just Builder
+cladeKindFromInt 3  = Just Database
+cladeKindFromInt 4  = Just Network
+cladeKindFromInt 5  = Just Viewer
+cladeKindFromInt 6  = Just Ai
+cladeKindFromInt 7  = Just Loader
+cladeKindFromInt 8  = Just Meta
+cladeKindFromInt 9  = Just Service
+cladeKindFromInt 10 = Just Inspector
+cladeKindFromInt 11 = Just Bridge
+cladeKindFromInt 12 = Just Terminal
+cladeKindFromInt _  = Nothing
 
-  ||| External function example
-  export
-  %foreign "C:example_function, libexample"
-  prim__exampleFunction : Bits64 -> PrimIO Bits32
+||| CladeKind values are decidably equal
+public export
+DecEq CladeKind where
+  decEq Directive  Directive  = Yes Refl
+  decEq Scanner    Scanner    = Yes Refl
+  decEq Builder    Builder    = Yes Refl
+  decEq Database   Database   = Yes Refl
+  decEq Network    Network    = Yes Refl
+  decEq Viewer     Viewer     = Yes Refl
+  decEq Ai         Ai         = Yes Refl
+  decEq Loader     Loader     = Yes Refl
+  decEq Meta       Meta       = Yes Refl
+  decEq Service    Service    = Yes Refl
+  decEq Inspector  Inspector  = Yes Refl
+  decEq Bridge     Bridge     = Yes Refl
+  decEq Terminal   Terminal   = Yes Refl
+  decEq _          _          = No absurd
 
-  ||| Safe wrapper around FFI function
-  export
-  exampleFunction : Handle -> IO (Either Result Bits32)
-  exampleFunction h = do
-    result <- primIO (prim__exampleFunction (handlePtr h))
-    pure (Right result)
+||| The total number of clade kinds.
+||| This constant is used in compile-time checks to verify exhaustiveness.
+public export
+cladeKindCount : Nat
+cladeKindCount = 13
+
+||| All 13 clade kinds as a vector, useful for iteration and exhaustiveness
+||| checks.  The vector length proves there are exactly cladeKindCount kinds.
+public export
+allCladeKinds : Vect cladeKindCount CladeKind
+allCladeKinds =
+  [ Directive, Scanner, Builder, Database, Network, Viewer, Ai
+  , Loader, Meta, Service, Inspector, Bridge, Terminal ]
+
+||| Exhaustiveness proof: cladeKindToInt covers every constructor.
+||| For every CladeKind value there exists a corresponding element in
+||| allCladeKinds.
+public export
+cladeKindExhaustive : (k : CladeKind) -> (n : Nat ** (n < cladeKindCount, index (natToFinLT n) allCladeKinds = k))
+cladeKindExhaustive Directive  = (0  ** (LTESucc LTEZero, Refl))
+cladeKindExhaustive Scanner    = (1  ** (LTESucc (LTESucc LTEZero), Refl))
+cladeKindExhaustive Builder    = (2  ** (LTESucc (LTESucc (LTESucc LTEZero)), Refl))
+cladeKindExhaustive Database   = (3  ** (LTESucc (LTESucc (LTESucc (LTESucc LTEZero))), Refl))
+cladeKindExhaustive Network    = (4  ** (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc LTEZero)))), Refl))
+cladeKindExhaustive Viewer     = (5  ** (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc LTEZero))))), Refl))
+cladeKindExhaustive Ai         = (6  ** (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc LTEZero)))))), Refl))
+cladeKindExhaustive Loader     = (7  ** (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc LTEZero))))))), Refl))
+cladeKindExhaustive Meta       = (8  ** (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc LTEZero)))))))), Refl))
+cladeKindExhaustive Service    = (9  ** (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc LTEZero))))))))), Refl))
+cladeKindExhaustive Inspector  = (10 ** (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc LTEZero)))))))))), Refl))
+cladeKindExhaustive Bridge     = (11 ** (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc LTEZero))))))))))), Refl))
+cladeKindExhaustive Terminal   = (12 ** (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc (LTESucc LTEZero)))))))))))), Refl))
+
+||| Record describing how a panel integrates with the clade system.
+||| Ties a named panel to a specific clade via its CladeId and CladeKind.
+public export
+record PanelIntegration where
+  constructor MkPanelIntegration
+  ||| Human-readable name of the panel
+  panelName : String
+  ||| Clade identifier this panel belongs to
+  cladeId : CladeId
+  ||| The clade kind classifying this panel's role
+  kind : CladeKind
+
+||| A capability that a clade may expose.
+||| The `required` flag indicates whether the capability is mandatory for
+||| panels in the clade to function correctly.
+public export
+record CladeCapability where
+  constructor MkCladeCapability
+  ||| Name of the capability (e.g. "syntax-highlight", "execute")
+  name : String
+  ||| Whether this capability is required (True) or optional (False)
+  required : Bool
 
 --------------------------------------------------------------------------------
 -- Verification

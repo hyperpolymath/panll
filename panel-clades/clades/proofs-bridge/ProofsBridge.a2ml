@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Proofs Bridge Panel Clade — Bridge to formal verification backends (Idris2, ECHIDNA)
+
+[clade-metadata]
+id = "proofs-bridge"
+name = "Proofs Bridge"
+short-name = "Proof"
+version = "0.1.0"
+kind = "bridge"
+icon = "check-check"
+description = "Bridge to formal verification backends — Idris2 dependent type proofs, ECHIDNA property provers, and Lean4 — submit obligations, collect witnesses, display proof trees."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = true
+has-priority-ordering = true
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "ObligationSubmission",
+  "WitnessCollection",
+  "ProofTreeDisplay",
+  "VerificationStatus",
+  "CounterexampleView",
+  "ProofCaching",
+  "BatchVerification",
+]
+
+[clade-panel-integration]
+panel-id = "PanelProofsBridge"
+model-module = "ProofsBridgeModel"
+component-module = "ProofsBridge"
+command-module = "ProofsBridgeCmd"
+
+[clade-cross-panel]
+depends-on = ["typell", "boj"]
+feeds-into = ["pane-l", "anti-crash"]

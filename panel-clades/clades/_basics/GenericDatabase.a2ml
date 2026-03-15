@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Database Clade Template
+# Database panels query, browse, and manage data stores.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "database"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Database panels have backends for queries and persistence for results/schemas.
+has-backend = true           # Backend for database connections and queries
+has-scanning = false
+has-persistence = true       # Query history, schema cache, saved queries
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Connection config, query preferences, display options
+is-directive = false
+is-readonly = false          # Can execute queries (read and write)
+
+[clade-capabilities]
+# Minimum capabilities for a database clade.
+capabilities = [
+  "QueryExecution",          # Run queries against the data store
+  "SchemaExploration",       # Browse tables, collections, schemas
+  "ResultViewer",            # Display query results
+  "QueryHistory",            # Browse past queries
+]
+
+[clade-connections]
+# Database panels typically connect via HTTP or direct driver.
+backend-type = "http"
+default-endpoint = "http://localhost:{{PORT}}"
+protocols = ["REST"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["table", "grid", "textbox", "status"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

@@ -12,110 +12,82 @@ type payload = {
   events: array<eventChainEvent>,
 }
 
-let parse = (raw: string): result<payload, string> => {
-  try {
-    let parsed = JSON.parseExn(raw)
-
-    let getField = (obj, field) => {
-      switch obj->JSON.Decode.object {
-      | Some(dict) => dict->Dict.get(field)
-      | None => None
-      }
-    }
-
-    let getString = (obj, field, default) => {
-      switch getField(obj, field) {
-      | Some(value) =>
-        switch value->JSON.Decode.string {
-        | Some(str) => str
-        | None => default
-        }
-      | None => default
-      }
-    }
-
-    let getFloat = (obj, field, default) => {
-      switch getField(obj, field) {
-      | Some(value) =>
-        switch value->JSON.Decode.float {
-        | Some(f) => f
-        | None => default
-        }
-      | None => default
-      }
-    }
-
-    let getOptionString = (obj, field) => {
-      switch getField(obj, field) {
-      | Some(value) => value->JSON.Decode.string
-      | None => None
-      }
-    }
-
-    let getOptionFloat = (obj, field) => {
-      switch getField(obj, field) {
-      | Some(value) => value->JSON.Decode.float
-      | None => None
-      }
-    }
-
-    let getArray = (obj, field) => {
-      switch getField(obj, field) {
-      | Some(value) => value->JSON.Decode.array
-      | None => None
-      }
-    }
-
-    let summary = switch getField(parsed, "summary") {
-    | Some(value) =>
-      switch value->JSON.Decode.object {
-      | Some(_) =>
-        Some({
-          program: getString(value, "program", ""),
-          weakPoints: Int.fromFloat(getFloat(value, "weak_points", 0.0)),
-          criticalWeakPoints: Int.fromFloat(
-            getFloat(value, "critical_weak_points", 0.0),
-          ),
-          totalCrashes: Int.fromFloat(getFloat(value, "total_crashes", 0.0)),
-          robustnessScore: getFloat(value, "robustness_score", 0.0),
-        })
-      | None => None
-      }
-    | None => None
-    }
-
-    let timeline = switch getField(parsed, "timeline") {
-    | Some(value) =>
-      switch value->JSON.Decode.object {
-      | Some(_) =>
-        Some({
-          durationMs: getFloat(value, "duration_ms", 0.0),
-          events: Int.fromFloat(getFloat(value, "events", 0.0)),
-        })
-      | None => None
-      }
-    | None => None
-    }
-
-    let events = switch getArray(parsed, "event_chain") {
-    | Some(arr) =>
-      arr->Array.map(item => {
-        {
-          id: getString(item, "id", ""),
-          axis: getString(item, "axis", "unknown"),
-          startMs: getOptionFloat(item, "start_ms"),
-          durationMs: getFloat(item, "duration_ms", 0.0),
-          intensity: getString(item, "intensity", "unknown"),
-          status: getString(item, "status", "unknown"),
-          peakMemory: getOptionFloat(item, "peak_memory"),
-          notes: getOptionString(item, "notes"),
-        }
-      })
-    | None => []
-    }
-
-    Ok({summary, timeline, events})
-  } catch {
-  | _ => Error("Invalid event-chain JSON")
-  }
+/// Tea_Json decoder for an event chain summary.
+let summaryDecoder: Tea_Json.decoder<eventChainSummary> = {
+  open Decoders
+  open Tea_Json
+  map5(
+    (program, weakPoints, criticalWeakPoints, totalCrashes, robustnessScore) => ({
+      program,
+      weakPoints,
+      criticalWeakPoints,
+      totalCrashes,
+      robustnessScore,
+    }: eventChainSummary),
+    stringField("program"),
+    intField("weak_points"),
+    intField("critical_weak_points"),
+    intField("total_crashes"),
+    floatField("robustness_score"),
+  )
 }
+
+/// Tea_Json decoder for an event chain timeline.
+let timelineDecoder: Tea_Json.decoder<eventChainTimeline> = {
+  open Decoders
+  open Tea_Json
+  map2(
+    (durationMs, events) => ({
+      durationMs,
+      events,
+    }: eventChainTimeline),
+    floatField("duration_ms"),
+    intField("events"),
+  )
+}
+
+/// Tea_Json decoder for a single event chain event.
+let eventDecoder: Tea_Json.decoder<eventChainEvent> = {
+  open Decoders
+  open Tea_Json
+  map8(
+    (id, axis, startMs, durationMs, intensity, status, peakMemory, notes) => ({
+      id,
+      axis,
+      startMs,
+      durationMs,
+      intensity,
+      status,
+      peakMemory,
+      notes,
+    }: eventChainEvent),
+    stringField("id"),
+    fieldWithDefault("axis", string, "unknown"),
+    optionalFieldDecoder("start_ms", float),
+    floatField("duration_ms"),
+    fieldWithDefault("intensity", string, "unknown"),
+    fieldWithDefault("status", string, "unknown"),
+    optionalFieldDecoder("peak_memory", float),
+    optionalFieldDecoder("notes", string),
+  )
+}
+
+/// Tea_Json decoder for the full event-chain payload.
+let payloadDecoder: Tea_Json.decoder<payload> = {
+  open Decoders
+  open Tea_Json
+  map3(
+    (summary, timeline, events) => ({
+      summary,
+      timeline,
+      events,
+    }: payload),
+    optionalFieldDecoder("summary", summaryDecoder),
+    optionalFieldDecoder("timeline", timelineDecoder),
+    fieldWithDefault("event_chain", lenientArray(eventDecoder), []),
+  )
+}
+
+/// Parse a panic-attack PanLL export JSON into a payload.
+let parse = (raw: string): result<payload, string> =>
+  Decoders.decode(payloadDecoder, raw)

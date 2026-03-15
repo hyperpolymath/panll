@@ -58,10 +58,27 @@ type renderState<'msg> = {
 /// Remove style property
 @send external removeStyleProperty: ({..}, string) => unit = "removeProperty"
 
+/// Zero-cost cast from opaque domElement to open object for DOM property access.
+/// This is safe because domElement is always a browser DOM Element/Node.
+/// Uses ReScript's %identity external instead of Obj.magic (banned pattern).
+external domElementToObj: domElement => {..} = "%identity"
+
+/// Remove all child nodes from a DOM element without innerHTML.
+/// Safer than innerHTML = "" — avoids Trusted Types violations and
+/// is the recommended approach per W3C DOM spec.
+let removeAllChildren = (el: {..}): unit => {
+  %raw(`(function() { while (el.firstChild) { el.removeChild(el.firstChild); } })()`)
+}
+
+/// Compare two DOM elements for identity.
+let domElementsEqual: (domElement, domElement) => bool = %raw(`function(a, b) { return a === b; }`)
+
 /// Remove event listener from element
+@send external removeEventListenerDom: (domElement, string, Dom.event => unit) => unit = "removeEventListener"
+
+/// Remove event listener from element (typed wrapper)
 let removeEventListener = (listener: eventListener): unit => {
-  let el: {..} = Obj.magic(listener.element)
-  el["removeEventListener"](listener.eventName, listener.handler)
+  removeEventListenerDom(listener.element, listener.eventName, listener.handler)
 }
 
 /// Boolean properties that should be set directly on the element
@@ -231,8 +248,8 @@ let cleanup = (state: renderState<'msg>): unit => {
 /// Render virtual DOM to a container element (full re-render)
 let render = (container: domElement, vdom: t<'msg>, state: renderState<'msg>): unit => {
   cleanup(state)
-  let containerObj: {..} = Obj.magic(container)
-  containerObj["innerHTML"] = ""
+  let containerObj = domElementToObj(container)
+  removeAllChildren(containerObj)
   let el = createElement(vdom, state)
   containerObj["appendChild"](el)
 }
@@ -418,7 +435,7 @@ let removeStaleAttrs = (el: {..}, oldAttrs: array<attribute<'msg>>, newAttrs: ar
 /// Remove old event listeners for a specific element
 let removeElementListeners = (state: renderState<'msg>, domEl: domElement): unit => {
   let (toRemove, toKeep) = Array.reduce(state.listeners, ([], []), ((rem, keep), listener) => {
-    if Obj.magic(listener.element) === Obj.magic(domEl) {
+    if domElementsEqual(listener.element, domEl) {
       (Array.concat(rem, [listener]), keep)
     } else {
       (rem, Array.concat(keep, [listener]))
@@ -511,7 +528,7 @@ let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderS
       }
     }
   | UpdateProps(newAttrs) => {
-      let el: {..} = Obj.magic(domNode)
+      let el = domElementToObj(domNode)
       // Remove stale attrs from previous render
       switch state.previousVdom {
       | Some(Element(_, oldAttrs, _)) | Some(KeyedElement(_, oldAttrs, _)) =>
@@ -525,7 +542,7 @@ let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderS
     }
   | UpdateChildren(childPatches) => {
       let childNodes: array<domElement> = %raw(`Array.from(domNode.childNodes)`)
-      let domObj: {..} = Obj.magic(domNode)
+      let domObj = domElementToObj(domNode)
       Array.forEach(childPatches, cp => {
         switch Array.get(childNodes, cp.index) {
         | Some(childNode) => applyPatch(childNode, cp.patch, state)
@@ -541,7 +558,7 @@ let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderS
       })
     }
   | UpdateAttrsAndChildren(newAttrs, childPatches) => {
-      let domObj: {..} = Obj.magic(domNode)
+      let domObj = domElementToObj(domNode)
       // Update attrs
       switch state.previousVdom {
       | Some(Element(_, oldAttrs, _)) | Some(KeyedElement(_, oldAttrs, _)) =>
@@ -623,7 +640,7 @@ let update = (
           render(container, vdom, state)
         }
       | _ => {
-          let containerObj: {..} = Obj.magic(container)
+          let containerObj = domElementToObj(container)
           let firstChild: option<domElement> = switch containerObj["firstChild"] {
           | child if !Nullable.isNullable(Nullable.make(child)) => Some(child)
           | _ => None
@@ -645,8 +662,8 @@ let unmount = (containerSelector: string, state: renderState<'msg>): unit => {
 
   switch querySelector(containerSelector) {
   | Some(container) => {
-      let containerObj: {..} = Obj.magic(container)
-      containerObj["innerHTML"] = ""
+      let containerObj = domElementToObj(container)
+      removeAllChildren(containerObj)
     }
   | None => ()
   }

@@ -409,118 +409,75 @@ let unifiedAnalysisSummary = (analysis: unifiedTypeAnalysis): string => {
 }
 
 // ============================================================================
-// JSON Parsing
+// JSON Parsing — Tea_Json decoders
 // ============================================================================
 
+/// Tea_Json decoder for a type check result.
+/// Extracts feature codes, computes tier, parses usage/discipline/inference.
+let checkResultDecoder: Tea_Json.decoder<typeCheckResult> = {
+  open Decoders
+  open Tea_Json
+  map11(
+    (valid, typeSignature, explanation, proofObligations, effects,
+     linearityIssues, sessionNotes, featureCodes, usageStr,
+     disciplineStr, inferSrcStr) => {
+      let activeFeatures = featureCodes->Array.filterMap(parseFeatureCode)
+      let maxTier = computeMaxTier(activeFeatures)
+      ({
+        valid,
+        typeSignature,
+        explanation,
+        proofObligations,
+        effects,
+        linearityIssues,
+        sessionNotes,
+        activeFeatures,
+        maxTier,
+        usage: parseUsage(usageStr),
+        discipline: parseDiscipline(disciplineStr),
+        inferenceSource: parseInferenceSource(inferSrcStr),
+        unifiedAnalysis: None, // Parsed separately if the server provides it
+      }: typeCheckResult)
+    },
+    boolField("valid"),
+    stringField("type_signature"),
+    stringField("explanation"),
+    stringArrayField("proof_obligations"),
+    stringArrayField("effects"),
+    stringArrayField("linearity_issues"),
+    stringArrayField("session_notes"),
+    stringArrayField("features"),
+    stringField("usage"),
+    stringField("discipline"),
+    stringField("inference_source"),
+  )
+}
+
 /// Parse a type check result from JSON.
-let parseCheckResult = (json: string): result<typeCheckResult, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-        let getStringArray = (key: string): array<string> =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Array(arr) =>
-              arr->Array.filterMap(item =>
-                switch JSON.Classify.classify(item) {
-                | String(s) => Some(s)
-                | _ => None
-                }
-              )
-            | _ => []
-            }
-          | None => []
-          }
+let parseCheckResult = (json: string): result<typeCheckResult, string> =>
+  Decoders.decode(checkResultDecoder, json)
 
-        // Extract feature codes and compute tier
-        let featureCodes = getStringArray("features")
-        let activeFeatures = featureCodes->Array.filterMap(parseFeatureCode)
-        let maxTier = computeMaxTier(activeFeatures)
-        let usage = parseUsage(getString("usage"))
-        let discipline = parseDiscipline(getString("discipline"))
-        let inferSrc = parseInferenceSource(getString("inference_source"))
-
-        Ok({
-          valid: getBool("valid"),
-          typeSignature: getString("type_signature"),
-          explanation: getString("explanation"),
-          proofObligations: getStringArray("proof_obligations"),
-          effects: getStringArray("effects"),
-          linearityIssues: getStringArray("linearity_issues"),
-          sessionNotes: getStringArray("session_notes"),
-          activeFeatures,
-          maxTier,
-          usage,
-          discipline,
-          inferenceSource: inferSrc,
-          unifiedAnalysis: None, // Parsed separately if the server provides it
-        })
-      }
-    | _ => Error("Expected JSON object for type check result")
-    }
-  } catch {
-  | _ => Error("Failed to parse type check JSON")
-  }
+/// Tea_Json decoder for a refinement result.
+let refinementResultDecoder: Tea_Json.decoder<refinementResult> = {
+  open Decoders
+  open Tea_Json
+  map4(
+    (baseType, refinedType, _constraints, consistent) => ({
+      baseType,
+      refinedType,
+      constraints: [],
+      consistent,
+    }: refinementResult),
+    stringField("base_type"),
+    stringField("refined_type"),
+    fieldWithDefault("constraints", lenientArray(string), []),
+    boolField("consistent"),
+  )
 }
 
 /// Parse a refinement result from JSON.
-let parseRefinementResult = (json: string): result<refinementResult, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-
-        Ok({
-          baseType: getString("base_type"),
-          refinedType: getString("refined_type"),
-          constraints: [],
-          consistent: getBool("consistent"),
-        })
-      }
-    | _ => Error("Expected JSON object for refinement result")
-    }
-  } catch {
-  | _ => Error("Failed to parse refinement JSON")
-  }
-}
+let parseRefinementResult = (json: string): result<refinementResult, string> =>
+  Decoders.decode(refinementResultDecoder, json)
 
 // ============================================================================
 // Kernel Integration — localhost:7800 routing helpers
@@ -615,196 +572,96 @@ let buildGenerateProofObligationBody = (source: string): string => {
   `{"source":${JSON.stringifyAny(source)->Option.getOr("\"\"")}, "mode":"generate_obligations"}`
 }
 
+/// Tea_Json decoder for a kernel type check result (parameterised by language).
+let kernelCheckResultDecoder = (language: string): Tea_Json.decoder<kernelTypeCheckResult> => {
+  open Decoders
+  open Tea_Json
+  map6(
+    (valid, typeSignature, featureCodes, proofObligations, effects, linearityIssues) => {
+      let activeFeatures = featureCodes->Array.filterMap(parseFeatureCode)
+      ({
+        valid,
+        typeSignature,
+        activeFeatures,
+        proofObligations,
+        effects,
+        linearityIssues,
+        language,
+      }: kernelTypeCheckResult)
+    },
+    boolField("valid"),
+    stringField("type_signature"),
+    stringArrayField("features"),
+    stringArrayField("proof_obligations"),
+    stringArrayField("effects"),
+    stringArrayField("linearity_issues"),
+  )
+}
+
 /// Parse a kernel type check result from JSON response.
-let parseKernelCheckResult = (json: string, language: string): result<kernelTypeCheckResult, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-        let getStringArray = (key: string): array<string> =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Array(arr) =>
-              arr->Array.filterMap(item =>
-                switch JSON.Classify.classify(item) {
-                | String(s) => Some(s)
-                | _ => None
-                }
-              )
-            | _ => []
-            }
-          | None => []
-          }
-        let featureCodes = getStringArray("features")
-        let activeFeatures = featureCodes->Array.filterMap(parseFeatureCode)
-        Ok({
-          valid: getBool("valid"),
-          typeSignature: getString("type_signature"),
-          activeFeatures,
-          proofObligations: getStringArray("proof_obligations"),
-          effects: getStringArray("effects"),
-          linearityIssues: getStringArray("linearity_issues"),
-          language,
-        })
-      }
-    | _ => Error("Expected JSON object from kernel")
-    }
-  } catch {
-  | _ => Error("Failed to parse kernel type check JSON")
-  }
+let parseKernelCheckResult = (json: string, language: string): result<kernelTypeCheckResult, string> =>
+  Decoders.decode(kernelCheckResultDecoder(language), json)
+
+/// Tea_Json decoder for a usage inference result.
+let usageInferenceResultDecoder: Tea_Json.decoder<usageInferenceResult> = {
+  open Decoders
+  open Tea_Json
+  map2(
+    (quantifierStr, explanation) => ({
+      quantifier: parseUsage(quantifierStr),
+      explanation,
+      bindings: [],
+    }: usageInferenceResult),
+    stringField("quantifier"),
+    stringField("explanation"),
+  )
 }
 
 /// Parse a usage inference result from JSON.
-let parseUsageInferenceResult = (json: string): result<usageInferenceResult, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        Ok({
-          quantifier: parseUsage(getString("quantifier")),
-          explanation: getString("explanation"),
-          bindings: [],
-        })
-      }
-    | _ => Error("Expected JSON object for usage inference")
-    }
-  } catch {
-  | _ => Error("Failed to parse usage inference JSON")
-  }
+let parseUsageInferenceResult = (json: string): result<usageInferenceResult, string> =>
+  Decoders.decode(usageInferenceResultDecoder, json)
+
+/// Tea_Json decoder for an effect inference result.
+let effectInferenceResultDecoder: Tea_Json.decoder<effectInferenceResult> = {
+  open Decoders
+  open Tea_Json
+  map3(
+    (effects, pure, effectRow) => ({
+      effects,
+      pure,
+      effectRow,
+    }: effectInferenceResult),
+    stringArrayField("effects"),
+    boolField("pure"),
+    optionalFieldDecoder("effect_row", string),
+  )
 }
 
 /// Parse an effect inference result from JSON.
-let parseEffectInferenceResult = (json: string): result<effectInferenceResult, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-        let getStringArray = (key: string): array<string> =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Array(arr) =>
-              arr->Array.filterMap(item =>
-                switch JSON.Classify.classify(item) {
-                | String(s) => Some(s)
-                | _ => None
-                }
-              )
-            | _ => []
-            }
-          | None => []
-          }
-        let getString = (key: string): option<string> =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => Some(s)
-            | _ => None
-            }
-          | None => None
-          }
-        Ok({
-          effects: getStringArray("effects"),
-          pure: getBool("pure"),
-          effectRow: getString("effect_row"),
-        })
-      }
-    | _ => Error("Expected JSON object for effect inference")
-    }
-  } catch {
-  | _ => Error("Failed to parse effect inference JSON")
-  }
+let parseEffectInferenceResult = (json: string): result<effectInferenceResult, string> =>
+  Decoders.decode(effectInferenceResultDecoder, json)
+
+/// Tea_Json decoder for a dimensional check result.
+let dimensionalResultDecoder: Tea_Json.decoder<dimensionalResult> = {
+  open Decoders
+  open Tea_Json
+  map4(
+    (consistent, dimensionalType, violations, coercions) => ({
+      consistent,
+      dimensionalType,
+      violations,
+      coercions,
+    }: dimensionalResult),
+    boolField("consistent"),
+    stringField("dimensional_type"),
+    stringArrayField("violations"),
+    stringArrayField("coercions"),
+  )
 }
 
 /// Parse a dimensional check result from JSON.
-let parseDimensionalResult = (json: string): result<dimensionalResult, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-        let getStringArray = (key: string): array<string> =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Array(arr) =>
-              arr->Array.filterMap(item =>
-                switch JSON.Classify.classify(item) {
-                | String(s) => Some(s)
-                | _ => None
-                }
-              )
-            | _ => []
-            }
-          | None => []
-          }
-        Ok({
-          consistent: getBool("consistent"),
-          dimensionalType: getString("dimensional_type"),
-          violations: getStringArray("violations"),
-          coercions: getStringArray("coercions"),
-        })
-      }
-    | _ => Error("Expected JSON object for dimensional result")
-    }
-  } catch {
-  | _ => Error("Failed to parse dimensional result JSON")
-  }
-}
+let parseDimensionalResult = (json: string): result<dimensionalResult, string> =>
+  Decoders.decode(dimensionalResultDecoder, json)
 
 /// Kernel endpoint URL (default localhost:7800).
 let kernelBaseUrl = "http://localhost:7800/api/v1"

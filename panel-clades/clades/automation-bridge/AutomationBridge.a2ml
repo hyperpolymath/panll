@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Automation Bridge Panel Clade — Bridge to CI/CD and workflow automation systems
+
+[clade-metadata]
+id = "automation-bridge"
+name = "Automation Bridge"
+short-name = "CI"
+version = "0.1.0"
+kind = "bridge"
+icon = "workflow"
+description = "Bridge to CI/CD pipelines and workflow automation — GitHub Actions, Hypatia CI, gitbot-fleet dispatches — trigger, monitor, and collect artifacts."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "PipelineTrigger",
+  "RunMonitoring",
+  "ArtifactCollection",
+  "LogStreaming",
+  "StatusAggregation",
+  "WebhookReceiver",
+  "DeploymentGate",
+]
+
+[clade-panel-integration]
+panel-id = "PanelAutomationBridge"
+model-module = "AutomationBridgeModel"
+component-module = "AutomationBridge"
+command-module = "AutomationBridgeCmd"
+
+[clade-cross-panel]
+depends-on = ["hypatia", "fleet"]
+feeds-into = ["build-dashboard", "release-manager"]

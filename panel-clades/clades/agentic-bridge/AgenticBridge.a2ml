@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Agentic Bridge Panel Clade — Bridge to external AI agent frameworks
+
+[clade-metadata]
+id = "agentic-bridge"
+name = "Agentic Bridge"
+short-name = "Agent"
+version = "0.1.0"
+kind = "bridge"
+icon = "bot"
+description = "Bridge to external AI agent frameworks — MCP tool servers, Claude Code, Codex, ECHIDNA provers — dispatch tasks, collect results, maintain agent session state."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = true
+has-priority-ordering = true
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "AgentDiscovery",
+  "TaskDispatch",
+  "ResultCollection",
+  "SessionManagement",
+  "ToolServerProxy",
+  "CapabilityNegotiation",
+  "AgentHealthCheck",
+]
+
+[clade-panel-integration]
+panel-id = "PanelAgenticBridge"
+model-module = "AgenticBridgeModel"
+component-module = "AgenticBridge"
+command-module = "AgenticBridgeCmd"
+
+[clade-cross-panel]
+depends-on = ["boj", "tentacles"]
+feeds-into = ["automation-router", "workspace"]

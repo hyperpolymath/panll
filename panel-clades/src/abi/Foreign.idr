@@ -1,18 +1,24 @@
 -- SPDX-License-Identifier: PMPL-1.0-or-later
--- Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}>
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 --
-||| Foreign Function Interface Declarations
+||| Foreign Function Interface Declarations for PanLL Panel-Clades
 |||
 ||| This module declares all C-compatible functions that will be
-||| implemented in the Zig FFI layer.
+||| implemented in the Zig FFI layer for the panel-clades subsystem.
+|||
+||| In addition to the standard library lifecycle (init/free), this
+||| module exposes clade-specific FFI functions:
+|||   - loadClade   — load a clade definition by identifier
+|||   - queryTraits — query the traits/capabilities of a loaded clade
+|||   - cladeKindCount — return the compile-time count of clade kinds (13)
 |||
 ||| All functions are declared here with type signatures and safety proofs.
 ||| Implementations live in ffi/zig/
 
-module {{PROJECT}}.ABI.Foreign
+module PanelClades.ABI.Foreign
 
-import {{PROJECT}}.ABI.Types
-import {{PROJECT}}.ABI.Layout
+import PanelClades.ABI.Types
+import PanelClades.ABI.Layout
 
 %default total
 
@@ -20,10 +26,10 @@ import {{PROJECT}}.ABI.Layout
 -- Library Lifecycle
 --------------------------------------------------------------------------------
 
-||| Initialize the library
+||| Initialize the panel-clades library
 ||| Returns a handle to the library instance, or Nothing on failure
 export
-%foreign "C:{{project}}_init, lib{{project}}"
+%foreign "C:panel_clades_init, libpanel_clades"
 prim__init : PrimIO Bits64
 
 ||| Safe wrapper for library initialization
@@ -33,9 +39,9 @@ init = do
   ptr <- primIO prim__init
   pure (createHandle ptr)
 
-||| Clean up library resources
+||| Clean up panel-clades library resources
 export
-%foreign "C:{{project}}_free, lib{{project}}"
+%foreign "C:panel_clades_free, libpanel_clades"
 prim__free : Bits64 -> PrimIO ()
 
 ||| Safe wrapper for cleanup
@@ -47,9 +53,9 @@ free h = primIO (prim__free (handlePtr h))
 -- Core Operations
 --------------------------------------------------------------------------------
 
-||| Example operation: process data
+||| Process data through the panel-clades engine
 export
-%foreign "C:{{project}}_process, lib{{project}}"
+%foreign "C:panel_clades_process, libpanel_clades"
 prim__process : Bits64 -> Bits32 -> PrimIO Bits32
 
 ||| Safe wrapper with error handling
@@ -62,6 +68,71 @@ process h input = do
     n => Right n
 
 --------------------------------------------------------------------------------
+-- Clade-Specific FFI
+--------------------------------------------------------------------------------
+
+||| Load a clade definition by its string identifier.
+||| The string is passed as a C pointer; returns a result code.
+export
+%foreign "C:panel_clades_load_clade, libpanel_clades"
+prim__loadClade : Bits64 -> String -> PrimIO Bits32
+
+||| Safely load a clade definition into the library context.
+||| Returns Ok on success or an error Result on failure.
+export
+loadClade : Handle -> String -> IO (Either Result ())
+loadClade h cladeIdStr = do
+  result <- primIO (prim__loadClade (handlePtr h) cladeIdStr)
+  pure $ case resultFromInt result of
+    Just Ok  => Right ()
+    Just err => Left err
+    Nothing  => Left Error
+  where
+    resultFromInt : Bits32 -> Maybe Result
+    resultFromInt 0 = Just Ok
+    resultFromInt 1 = Just Error
+    resultFromInt 2 = Just InvalidParam
+    resultFromInt 3 = Just OutOfMemory
+    resultFromInt 4 = Just NullPointer
+    resultFromInt _ = Nothing
+
+||| Query the traits (capabilities) of a loaded clade.
+||| Returns a pointer to a null-terminated trait descriptor string, or 0
+||| on failure.  The caller must free the string via panel_clades_free_string.
+export
+%foreign "C:panel_clades_query_traits, libpanel_clades"
+prim__queryTraits : Bits64 -> Bits32 -> PrimIO Bits64
+
+||| Safe wrapper: query traits for a given clade kind.
+||| Returns a human-readable trait descriptor or Nothing on failure.
+export
+queryTraits : Handle -> CladeKind -> IO (Maybe String)
+queryTraits h kind = do
+  ptr <- primIO (prim__queryTraits (handlePtr h) (cladeKindToInt kind))
+  if ptr == 0
+    then pure Nothing
+    else do
+      let str = prim__getString ptr
+      primIO (prim__freeString ptr)
+      pure (Just str)
+
+||| Return the number of clade kinds known to the library.
+||| This MUST equal cladeKindCount (13) — mismatch indicates an ABI
+||| version incompatibility between the Idris2 definitions and the
+||| Zig implementation.
+export
+%foreign "C:panel_clades_clade_kind_count, libpanel_clades"
+prim__cladeKindCount : PrimIO Bits32
+
+||| Retrieve the clade kind count from the FFI layer and verify it
+||| matches the compile-time constant.  Returns True when consistent.
+export
+verifyCladeKindCount : IO Bool
+verifyCladeKindCount = do
+  n <- primIO prim__cladeKindCount
+  pure (n == cast cladeKindCount)
+
+--------------------------------------------------------------------------------
 -- String Operations
 --------------------------------------------------------------------------------
 
@@ -72,12 +143,12 @@ prim__getString : Bits64 -> String
 
 ||| Free C string
 export
-%foreign "C:{{project}}_free_string, lib{{project}}"
+%foreign "C:panel_clades_free_string, libpanel_clades"
 prim__freeString : Bits64 -> PrimIO ()
 
 ||| Get string result from library
 export
-%foreign "C:{{project}}_get_string, lib{{project}}"
+%foreign "C:panel_clades_get_string, libpanel_clades"
 prim__getResult : Bits64 -> PrimIO Bits64
 
 ||| Safe string getter
@@ -98,7 +169,7 @@ getString h = do
 
 ||| Process array data
 export
-%foreign "C:{{project}}_process_array, lib{{project}}"
+%foreign "C:panel_clades_process_array, libpanel_clades"
 prim__processArray : Bits64 -> Bits64 -> Bits32 -> PrimIO Bits32
 
 ||| Safe array processor
@@ -125,7 +196,7 @@ processArray h buf len = do
 
 ||| Get last error message
 export
-%foreign "C:{{project}}_last_error, lib{{project}}"
+%foreign "C:panel_clades_last_error, libpanel_clades"
 prim__lastError : PrimIO Bits64
 
 ||| Retrieve last error as string
@@ -152,7 +223,7 @@ errorDescription NullPointer = "Null pointer"
 
 ||| Get library version
 export
-%foreign "C:{{project}}_version, lib{{project}}"
+%foreign "C:panel_clades_version, libpanel_clades"
 prim__version : PrimIO Bits64
 
 ||| Get version as string
@@ -164,7 +235,7 @@ version = do
 
 ||| Get library build info
 export
-%foreign "C:{{project}}_build_info, lib{{project}}"
+%foreign "C:panel_clades_build_info, libpanel_clades"
 prim__buildInfo : PrimIO Bits64
 
 ||| Get build information
@@ -185,7 +256,7 @@ Callback = Bits64 -> Bits32 -> Bits32
 
 ||| Register a callback
 export
-%foreign "C:{{project}}_register_callback, lib{{project}}"
+%foreign "C:panel_clades_register_callback, libpanel_clades"
 prim__registerCallback : Bits64 -> AnyPtr -> PrimIO Bits32
 
 -- TODO: Implement safe callback registration.
@@ -199,7 +270,7 @@ prim__registerCallback : Bits64 -> AnyPtr -> PrimIO Bits32
 
 ||| Check if library is initialized
 export
-%foreign "C:{{project}}_is_initialized, lib{{project}}"
+%foreign "C:panel_clades_is_initialized, libpanel_clades"
 prim__isInitialized : Bits64 -> PrimIO Bits32
 
 ||| Check initialization status

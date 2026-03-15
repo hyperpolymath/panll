@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Protocol Bridge Panel Clade — Bridge between wire protocols (MCP, LSP, DAP, BSP, gRPC)
+
+[clade-metadata]
+id = "protocol-bridge"
+name = "Protocol Bridge"
+short-name = "Proto"
+version = "0.1.0"
+kind = "bridge"
+icon = "cable"
+description = "Bridge between wire protocols — translate, proxy, and inspect messages across MCP, LSP, DAP, BSP, gRPC, REST, and GraphQL boundaries."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = false
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "ProtocolTranslation",
+  "MessageProxy",
+  "WireInspection",
+  "SchemaValidation",
+  "LatencyMeasurement",
+  "MessageReplay",
+  "FormatConversion",
+]
+
+[clade-panel-integration]
+panel-id = "PanelProtocolBridge"
+model-module = "ProtocolBridgeModel"
+component-module = "ProtocolBridge"
+command-module = "ProtocolBridgeCmd"
+
+[clade-cross-panel]
+depends-on = ["boj", "protocol-squisher"]
+feeds-into = ["editor-bridge", "agentic-bridge"]

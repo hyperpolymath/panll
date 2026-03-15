@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Network Clade Template
+# Network panels probe, monitor, and visualise network infrastructure.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "network"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Network panels typically probe external infrastructure via backends.
+has-backend = true           # Backend for network probing and monitoring
+has-scanning = true          # Network scanning/probing is core
+has-persistence = true       # Diagnostic history, topology snapshots
+has-work-items = true        # Network issues as actionable items
+has-priority-ordering = false
+has-customisation = true     # Targets, protocols, probe configuration
+is-directive = false
+is-readonly = false          # Can trigger probes and diagnostics
+
+[clade-capabilities]
+# Minimum capabilities for a network clade.
+capabilities = [
+  "NetworkProbing",          # Probe network targets
+  "TopologyView",            # Visualise network topology
+  "LatencyMeasurement",      # Measure round-trip times
+  "DiagnosticHistory",       # Browse past diagnostic results
+]
+
+[clade-connections]
+backend-type = "tauri-ipc"
+protocols = ["TauriIPC"]
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["img", "table", "status", "alert"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

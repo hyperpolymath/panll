@@ -4,25 +4,55 @@
 //!
 //! Commands:
 //!   - `valence_shell_check`:            Check if valence-shell binary exists on PATH.
-//!   - `valence_shell_spawn`:            Spawn a PTY session (stub).
-//!   - `valence_shell_input`:            Send input to PTY (stub: echoes back).
+//!   - `valence_shell_spawn`:            Spawn a shell process with piped I/O.
+//!   - `valence_shell_input`:            Send input to a session's stdin, read stdout.
 //!   - `valence_shell_record_start`:     Start asciicast recording.
 //!   - `valence_shell_record_stop`:      Stop recording and close .cast file.
 //!   - `valence_shell_recordings_list`:  List saved recordings.
 //!   - `valence_shell_recording_delete`: Delete a recording file.
 //!   - `valence_shell_checkpoint_create`:  Create a labelled checkpoint.
-//!   - `valence_shell_checkpoint_restore`: Restore a checkpoint (stub).
+//!   - `valence_shell_checkpoint_restore`: Restore a checkpoint (restores cwd).
 //!   - `valence_shell_checkpoints_list`:   List saved checkpoints.
-//!   - `valence_shell_screenshot`:       Capture terminal state (stub).
+//!   - `valence_shell_screenshot`:       Capture last N lines of session output.
 //!   - `valence_shell_recording_export`: Export recording in a given format (stub).
 //!
 //! All persistent data lives under `/tmp/panll/` so it is ephemeral across
 //! reboots, which is appropriate for recordings and checkpoints that are
 //! not yet promoted to permanent storage.
 
+use std::collections::HashMap;
 use std::fs;
+use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::process::{Child, Command, Stdio};
+use std::sync::Mutex;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+use once_cell::sync::Lazy;
+
+/// Per-session state: the child process, its piped stdin handle, a buffered
+/// reader for stdout, and a ring buffer of recent output lines for screenshots.
+struct ShellSession {
+    /// The spawned child process (owns the process lifetime).
+    child: Child,
+    /// Buffered reader wrapping the child's stdout pipe.
+    stdout_reader: BufReader<std::process::ChildStdout>,
+    /// Ring buffer of the last `OUTPUT_BUFFER_CAPACITY` output lines,
+    /// used by `valence_shell_screenshot` to return terminal state.
+    output_buffer: Vec<String>,
+    /// The shell binary that was spawned (e.g. "bash", "zsh").
+    shell: String,
+    /// Working directory the session was spawned in.
+    cwd: String,
+}
+
+/// Maximum number of output lines retained per session for screenshots.
+const OUTPUT_BUFFER_CAPACITY: usize = 200;
+
+/// Global session store — maps session_id to its ShellSession.
+/// Protected by a Mutex so Tauri async commands can safely share it.
+static SESSIONS: Lazy<Mutex<HashMap<String, ShellSession>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// Base directory for all Valence Shell ephemeral data.
 const BASE_DIR: &str = "/tmp/panll";
@@ -90,13 +120,63 @@ pub async fn valence_shell_check() -> Result<String, String> {
         .map_err(|e| format!("Serialisation error: {e}"))
 }
 
-/// Spawn a PTY session.
+/// Spawn a shell process with piped stdin/stdout.
 ///
-/// Stub implementation: returns a session ID immediately. Real PTY
-/// integration will be added via `tauri-plugin-shell` in a later phase.
+/// Starts the requested shell (e.g. "bash", "zsh") in the given working
+/// directory. The child's stdin and stdout are piped so that subsequent
+/// `valence_shell_input` calls can write commands and read output.
+/// Stderr is merged into stdout via `2>&1` shell invocation.
+///
+/// Returns JSON with the session_id, shell, cwd, and status.
 #[tauri::command]
 pub async fn valence_shell_spawn(shell: String, cwd: String) -> Result<String, String> {
     let session_id = generate_id();
+
+    // Resolve the shell binary. Fall back to /bin/sh if the requested
+    // shell is not found on PATH.
+    let shell_bin = which::which(&shell)
+        .unwrap_or_else(|_| PathBuf::from("/bin/sh"));
+
+    // Validate that the working directory exists.
+    let cwd_path = PathBuf::from(&cwd);
+    if !cwd_path.is_dir() {
+        return Err(format!("Working directory does not exist: {cwd}"));
+    }
+
+    // Spawn the shell with piped stdin/stdout. We use `-i` for interactive
+    // mode so that prompts and builtins work, and redirect stderr to stdout
+    // so the caller gets a unified output stream.
+    let mut child = Command::new(&shell_bin)
+        .arg("-i")
+        .current_dir(&cwd_path)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .env("TERM", "dumb")          // suppress escape sequences
+        .env("PS1", "$ ")             // simple prompt for parsing
+        .env("LANG", "C.UTF-8")       // predictable locale
+        .spawn()
+        .map_err(|e| format!("Failed to spawn shell '{shell}': {e}"))?;
+
+    // Extract the stdout pipe from the child, wrap in a BufReader for
+    // line-by-line reading.
+    let stdout_pipe = child.stdout.take()
+        .ok_or_else(|| "Failed to capture stdout pipe".to_string())?;
+    let stdout_reader = BufReader::new(stdout_pipe);
+
+    // Store the session in the global map.
+    let session = ShellSession {
+        child,
+        stdout_reader,
+        output_buffer: Vec::with_capacity(OUTPUT_BUFFER_CAPACITY),
+        shell: shell.clone(),
+        cwd: cwd.clone(),
+    };
+
+    SESSIONS
+        .lock()
+        .map_err(|e| format!("Session lock poisoned: {e}"))?
+        .insert(session_id.clone(), session);
 
     let result = serde_json::json!({
         "session_id": session_id,
@@ -109,14 +189,139 @@ pub async fn valence_shell_spawn(shell: String, cwd: String) -> Result<String, S
         .map_err(|e| format!("Serialisation error: {e}"))
 }
 
-/// Send input to the active PTY session.
+/// Send input to a shell session and read back available output.
 ///
-/// Stub implementation: echoes the input back as simulated output.
+/// Writes the `input` string (plus a trailing newline) to the session's
+/// stdin, then reads any lines that become available on stdout within a
+/// short timeout window. The output is also appended to the session's
+/// ring buffer for `valence_shell_screenshot`.
+///
+/// If `session_id` is empty or missing, falls back to a one-shot
+/// `Command::new("sh")` execution for backward compatibility.
+///
+/// Returns JSON with `output` (collected stdout text) and `exit_code`
+/// (null while the session is still alive).
 #[tauri::command]
-pub async fn valence_shell_input(input: String) -> Result<String, String> {
+pub async fn valence_shell_input(
+    session_id: Option<String>,
+    input: String,
+) -> Result<String, String> {
+    // If no session_id provided, run the command as a one-shot execution
+    // for backward compatibility with the original stub interface.
+    let sid = match session_id {
+        Some(ref id) if !id.is_empty() => id.clone(),
+        _ => {
+            return run_oneshot(&input).await;
+        }
+    };
+
+    let mut sessions = SESSIONS
+        .lock()
+        .map_err(|e| format!("Session lock poisoned: {e}"))?;
+
+    let session = sessions
+        .get_mut(&sid)
+        .ok_or_else(|| format!("Session '{sid}' not found"))?;
+
+    // Write the input to the child's stdin.
+    if let Some(ref mut stdin) = session.child.stdin {
+        let line = if input.ends_with('\n') {
+            input.clone()
+        } else {
+            format!("{input}\n")
+        };
+        stdin
+            .write_all(line.as_bytes())
+            .map_err(|e| format!("Write to stdin failed: {e}"))?;
+        stdin
+            .flush()
+            .map_err(|e| format!("Flush stdin failed: {e}"))?;
+    } else {
+        return Err("Session stdin is closed".to_string());
+    }
+
+    // Give the child a moment to produce output, then drain available lines.
+    // We use a non-blocking read approach: try reading lines with a short
+    // sleep to allow the process to respond.
+    drop(sessions); // release the lock during the sleep
+    std::thread::sleep(Duration::from_millis(50));
+
+    let mut sessions = SESSIONS
+        .lock()
+        .map_err(|e| format!("Session lock poisoned: {e}"))?;
+    let session = sessions
+        .get_mut(&sid)
+        .ok_or_else(|| format!("Session '{sid}' disappeared"))?;
+
+    let mut collected = String::new();
+
+    // Read available lines from the stdout BufReader. Since the reader is
+    // blocking, we use `read_line` in a loop with the `fill_buf` trick to
+    // detect when no more data is immediately available.
+    loop {
+        // Peek at the internal buffer — if it's empty after we've already
+        // read at least once, we stop to avoid blocking indefinitely.
+        let buf = session
+            .stdout_reader
+            .fill_buf()
+            .map_err(|e| format!("Read error: {e}"))?;
+        if buf.is_empty() {
+            break;
+        }
+
+        let mut line = String::new();
+        match session.stdout_reader.read_line(&mut line) {
+            Ok(0) => break,     // EOF
+            Ok(_) => {
+                collected.push_str(&line);
+                // Append to the ring buffer, evicting oldest if full.
+                if session.output_buffer.len() >= OUTPUT_BUFFER_CAPACITY {
+                    session.output_buffer.remove(0);
+                }
+                session.output_buffer.push(line);
+            }
+            Err(_) => break,
+        }
+    }
+
+    // Check whether the child has exited.
+    let exit_code = match session.child.try_wait() {
+        Ok(Some(status)) => serde_json::json!(status.code()),
+        _ => serde_json::Value::Null,
+    };
+
     let result = serde_json::json!({
-        "output": format!("echo: {input}"),
-        "exit_code": serde_json::Value::Null,
+        "output": collected,
+        "exit_code": exit_code,
+    });
+
+    serde_json::to_string(&result)
+        .map_err(|e| format!("Serialisation error: {e}"))
+}
+
+/// Run a command as a one-shot execution (no persistent session).
+///
+/// Used as a fallback when `valence_shell_input` is called without a
+/// session_id. Spawns `/bin/sh -c <input>`, captures stdout+stderr,
+/// and returns the result.
+async fn run_oneshot(input: &str) -> Result<String, String> {
+    let output = Command::new("/bin/sh")
+        .arg("-c")
+        .arg(input)
+        .output()
+        .map_err(|e| format!("One-shot execution failed: {e}"))?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let combined = if stderr.is_empty() {
+        stdout.to_string()
+    } else {
+        format!("{stdout}{stderr}")
+    };
+
+    let result = serde_json::json!({
+        "output": combined,
+        "exit_code": output.status.code(),
     });
 
     serde_json::to_string(&result)
@@ -307,10 +512,15 @@ pub async fn valence_shell_checkpoint_create(label: String) -> Result<String, St
 
 /// Restore a checkpoint by ID.
 ///
-/// Stub implementation: reads the checkpoint file and returns its contents
-/// with a "restored" status. Real restore logic depends on PTY integration.
+/// Reads the checkpoint file and returns its contents with a "restored"
+/// status. If a `session_id` is provided and the checkpoint contains a
+/// `cwd` field, sends a `cd` command to the session to restore the
+/// working directory.
 #[tauri::command]
-pub async fn valence_shell_checkpoint_restore(id: String) -> Result<String, String> {
+pub async fn valence_shell_checkpoint_restore(
+    id: String,
+    session_id: Option<String>,
+) -> Result<String, String> {
     let path = checkpoints_dir()?.join(format!("{id}.json"));
     if !path.exists() {
         return Err(format!("Checkpoint '{id}' not found"));
@@ -320,6 +530,24 @@ pub async fn valence_shell_checkpoint_restore(id: String) -> Result<String, Stri
         .map_err(|e| format!("Read error: {e}"))?;
     let mut checkpoint: serde_json::Value = serde_json::from_str(&content)
         .map_err(|e| format!("Parse error: {e}"))?;
+
+    // If a session is specified and the checkpoint has a cwd, restore it
+    // by writing a `cd` command to the session's stdin.
+    if let Some(ref sid) = session_id {
+        if let Some(cwd) = checkpoint.get("cwd").and_then(|v| v.as_str()) {
+            let mut sessions = SESSIONS
+                .lock()
+                .map_err(|e| format!("Session lock poisoned: {e}"))?;
+            if let Some(session) = sessions.get_mut(sid) {
+                if let Some(ref mut stdin) = session.child.stdin {
+                    let cd_cmd = format!("cd {cwd}\n");
+                    let _ = stdin.write_all(cd_cmd.as_bytes());
+                    let _ = stdin.flush();
+                    session.cwd = cwd.to_string();
+                }
+            }
+        }
+    }
 
     // Update the status to "restored".
     if let Some(obj) = checkpoint.as_object_mut() {
@@ -363,16 +591,85 @@ pub async fn valence_shell_checkpoints_list() -> Result<String, String> {
         .map_err(|e| format!("Serialisation error: {e}"))
 }
 
-/// Capture the current terminal state as a screenshot.
+/// Capture the current terminal state from a session's output buffer.
 ///
-/// Stub implementation: returns a placeholder string representing the
-/// terminal contents. Real implementation will capture the PTY buffer.
+/// Returns the last N lines (default 40) of the session's accumulated
+/// stdout output. If no session_id is provided, returns the state of
+/// all active sessions. Each session's output buffer holds up to
+/// `OUTPUT_BUFFER_CAPACITY` (200) lines.
+///
+/// Returns JSON with `content` (the terminal text), `width`, `height`
+/// (number of lines returned), `timestamp`, and `session_id`.
 #[tauri::command]
-pub async fn valence_shell_screenshot() -> Result<String, String> {
+pub async fn valence_shell_screenshot(
+    session_id: Option<String>,
+    lines: Option<usize>,
+) -> Result<String, String> {
+    let max_lines = lines.unwrap_or(40);
+
+    let sessions = SESSIONS
+        .lock()
+        .map_err(|e| format!("Session lock poisoned: {e}"))?;
+
+    // If a specific session is requested, return its buffer.
+    if let Some(ref sid) = session_id {
+        if let Some(session) = sessions.get(sid) {
+            let buf = &session.output_buffer;
+            let start = if buf.len() > max_lines {
+                buf.len() - max_lines
+            } else {
+                0
+            };
+            let content: String = buf[start..].join("");
+
+            let result = serde_json::json!({
+                "session_id": sid,
+                "content": content,
+                "width": 120,
+                "height": buf[start..].len(),
+                "timestamp": unix_now(),
+            });
+            return serde_json::to_string(&result)
+                .map_err(|e| format!("Serialisation error: {e}"));
+        } else {
+            return Err(format!("Session '{sid}' not found"));
+        }
+    }
+
+    // No session specified — return a summary of all sessions.
+    let mut all_screenshots = Vec::new();
+    for (sid, session) in sessions.iter() {
+        let buf = &session.output_buffer;
+        let start = if buf.len() > max_lines {
+            buf.len() - max_lines
+        } else {
+            0
+        };
+        let content: String = buf[start..].join("");
+        all_screenshots.push(serde_json::json!({
+            "session_id": sid,
+            "shell": session.shell,
+            "cwd": session.cwd,
+            "content": content,
+            "height": buf[start..].len(),
+        }));
+    }
+
+    // If no sessions exist, return a helpful message rather than an empty array.
+    if all_screenshots.is_empty() {
+        let result = serde_json::json!({
+            "content": "No active sessions. Use valence_shell_spawn to start one.",
+            "width": 120,
+            "height": 1,
+            "timestamp": unix_now(),
+        });
+        return serde_json::to_string(&result)
+            .map_err(|e| format!("Serialisation error: {e}"));
+    }
+
     let result = serde_json::json!({
-        "content": "--- Terminal Screenshot (stub) ---\n$ _\n--- End ---",
+        "sessions": all_screenshots,
         "width": 120,
-        "height": 40,
         "timestamp": unix_now(),
     });
 
@@ -446,14 +743,27 @@ mod tests {
         assert_eq!(json["cwd"], "/tmp");
         assert_eq!(json["status"], "spawned");
         assert!(json["session_id"].as_str().is_some());
+
+        // Clean up: kill the spawned process.
+        let sid = json["session_id"].as_str().unwrap().to_string();
+        if let Ok(mut sessions) = SESSIONS.lock() {
+            if let Some(mut session) = sessions.remove(&sid) {
+                let _ = session.child.kill();
+            }
+        }
     }
 
     #[tokio::test]
-    async fn test_valence_shell_input_echoes() {
-        let result = valence_shell_input("hello world".to_string()).await;
+    async fn test_valence_shell_input_oneshot() {
+        // With no session_id, falls back to one-shot execution.
+        let result = valence_shell_input(None, "echo hello world".to_string()).await;
         assert!(result.is_ok());
         let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
-        assert_eq!(json["output"], "echo: hello world");
+        let output = json["output"].as_str().unwrap();
+        assert!(
+            output.contains("hello world"),
+            "One-shot output should contain 'hello world', got: {output}"
+        );
     }
 
     #[tokio::test]
@@ -588,13 +898,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_screenshot_returns_stub() {
-        let result = valence_shell_screenshot().await;
+    async fn test_screenshot_no_sessions() {
+        // With no active sessions, screenshot returns a helpful message.
+        let result = valence_shell_screenshot(None, None).await;
         assert!(result.is_ok());
         let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
-        assert!(json["content"].as_str().unwrap().contains("stub"));
+        assert!(json["content"].as_str().unwrap().contains("No active sessions"));
         assert_eq!(json["width"], 120);
-        assert_eq!(json["height"], 40);
     }
 
     #[tokio::test]

@@ -1,0 +1,36 @@
+= Game Preview Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Live IDApTIK game preview with hot-reload, frame stepping, and gameplay recording.
+
+== Purpose
+
+The Game Preview panel embeds a live game view via a Vite dev server, providing
+hot-reload, frame-by-frame stepping, overlay toggles, FPS counters, render stats,
+and gameplay recording. It serves as the primary visual feedback loop for IDApTIK
+game development.
+
+== Key Features
+
+* Live preview via embedded Vite dev server (port 8080)
+* Hot-reload on source changes
+* Frame stepping for precise debugging
+* Overlay toggles (debug info, hitboxes, grid)
+* Gameplay recording and screenshot capture
+* FPS counter and render statistics
+* Multiplayer view support
+
+== Integration Points
+
+* Dev server: Vite on port 8080
+* Orchestrated by **UMS** (Universal Modding Studio)
+* Read-only viewer -- does not modify game state
+
+== Clade Kind
+
+**viewer**
+
+== Status
+
+Early development (v1.0.0). Model and command modules defined.

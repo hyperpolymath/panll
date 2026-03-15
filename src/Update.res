@@ -9353,7 +9353,15 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
           let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
           let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
           let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-          let assetType = obj->Dict.get("assetType")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let assetTypeStr = obj->Dict.get("assetType")->Option.flatMap(JSON.Decode.string)->Option.getOr("sprite")
+          let assetType: modAssetType = switch assetTypeStr {
+          | "sound" => AssetSound
+          | "map" => AssetMap
+          | "tileset" => AssetTileset
+          | "animation" => AssetAnimation
+          | "script" => AssetScript
+          | _ => AssetSprite
+          }
           let filePath = obj->Dict.get("filePath")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
           let sizeBytes = obj->Dict.get("sizeBytes")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)->Float.toInt
           let usedIn = obj->Dict.get("usedIn")->Option.flatMap(JSON.Decode.array)->Option.getOr([])->Array.filterMap(e =>
@@ -9373,13 +9381,13 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
   | AssetsLoaded(Error(err)) => ({...model, ums: {...u, loading: false, error: Some(err)}}, Tea_Cmd.none)
   | ImportAsset(path) => (
       {...model, ums: {...u, loading: true}},
-      UmsCmd.importAsset(path, result => Ums(AssetImported(result))),
+      UmsCmd.importAsset(u.selectedProjectId->Option.getOr(""), path, result => Ums(AssetImported(result))),
     )
-  | AssetImported(Ok(_)) => (model, UmsCmd.loadAssets(result => Ums(AssetsLoaded(result))))
+  | AssetImported(Ok(_)) => (model, UmsCmd.loadAssets(u.selectedProjectId->Option.getOr(""), result => Ums(AssetsLoaded(result))))
   | AssetImported(Error(err)) => ({...model, ums: {...u, loading: false, error: Some(err)}}, Tea_Cmd.none)
   | PublishMod => (
       {...model, ums: {...u, loading: true}},
-      UmsCmd.publishMod("", result => Ums(PublishResult(result))),
+      UmsCmd.publishMod(u.selectedProjectId->Option.getOr(""), "", result => Ums(PublishResult(result))),
     )
   | PublishResult(Ok(_jsonStr)) => ({...model, ums: {...u, loading: false}}, Tea_Cmd.none)
   | PublishResult(Error(err)) => ({...model, ums: {...u, loading: false, error: Some(err)}}, Tea_Cmd.none)

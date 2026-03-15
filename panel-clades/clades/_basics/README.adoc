@@ -1,0 +1,72 @@
+= PanLL Clade Basics — Generic Templates
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+== What is this?
+
+The `_basics/` directory contains **generic A2ML template files** for each of the
+13 clade kinds in PanLL's panel taxonomy. These templates define the minimum required
+structure, traits, capabilities, connections, and accessibility defaults that every
+clade of a given kind must satisfy.
+
+== Purpose
+
+* **Reference**: Show the required structure for each clade kind before writing a new one.
+* **Scaffolding**: Copy a template as the starting point for a new clade definition.
+* **Validation**: Tooling can compare a clade's A2ML against its kind's generic template
+  to ensure all required fields and traits are present.
+
+== The 13 Clade Kinds
+
+[cols="2,1,4"]
+|===
+| Template File | Kind | Description
+
+| `GenericDirective.a2ml`  | directive  | Orchestration, policy, panel control
+| `GenericScanner.a2ml`    | scanner    | Analysis, probing, security scanning
+| `GenericBuilder.a2ml`    | builder    | Artifact creation, compilation, assembly
+| `GenericDatabase.a2ml`   | database   | Data store queries, schema browsing
+| `GenericNetwork.a2ml`    | network    | Network probing, topology, diagnostics
+| `GenericViewer.a2ml`     | viewer     | Data display and visualisation (read-only)
+| `GenericAi.a2ml`         | ai         | Model interaction, agent orchestration
+| `GenericLoader.a2ml`     | loader     | External source scanning and panel configuration
+| `GenericMeta.a2ml`       | meta       | Governance, compliance, licensing dashboards
+| `GenericService.a2ml`    | service    | Cross-cutting services consumed by many panels
+| `GenericInspector.a2ml`  | inspector  | Internal structure browsing and exploration
+| `GenericBridge.a2ml`     | bridge     | External system integration and protocol bridging
+| `GenericTerminal.a2ml`   | terminal   | Embedded interactive shell sessions
+|===
+
+== Usage
+
+To create a new clade from a template:
+
+[source,bash]
+----
+# 1. Copy the template for your clade kind
+cp _basics/GenericBuilder.a2ml ../my-new-panel/MyNewPanel.a2ml
+
+# 2. Replace all placeholders:
+#    {{CLADE_ID}}     — kebab-case identifier (e.g. "my-new-panel")
+#    {{CLADE_NAME}}   — display name (e.g. "My New Panel")
+#    {{SHORT}}        — 2-4 character abbreviation (e.g. "MNP")
+#    {{ICON}}         — Lucide icon name (e.g. "wrench")
+#    {{PASCAL_NAME}}  — PascalCase module name (e.g. "MyNewPanel")
+#    {{PORT}}         — service port number (if applicable)
+#    {{PROTOCOL}}     — protocol name (if applicable)
+#    {{ONE_LINE_DESCRIPTION}} — concise panel description
+
+# 3. Add clade-specific capabilities, connections, and dependencies
+# 4. Remove or customise integration hooks
+----
+
+== Template Conventions
+
+* **Version**: Templates use `0.1.0` — bump to `1.0.0` when the clade is production-ready.
+* **Traits**: Each template marks traits that are _required_ for the kind with `# REQUIRED`
+  and traits that are _typical_ with `# TYPICAL` — override the typical ones as needed.
+* **Capabilities**: Templates list the minimum set — add clade-specific capabilities.
+* **Accessibility**: All templates include keyboard navigation and screen reader support
+  as non-negotiable defaults.
+* **Integration hooks**: Placeholder `on-init` and `on-dispose` handlers are included;
+  replace with actual handler names or remove if not needed.

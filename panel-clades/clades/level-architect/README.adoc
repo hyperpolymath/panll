@@ -1,0 +1,37 @@
+= Level Architect Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Visual level design tool for IDApTIK -- device placement, guard patrols, defence flags.
+
+== Purpose
+
+The Level Architect provides a visual editor for designing IDApTIK game levels. It
+supports device placement, guard patrol editing, spawn point configuration, defence
+flag toggles (11 flags), alert threshold sliders, asset browsing, and level validation.
+Levels export to `LevelConfig.res` format.
+
+== Key Features
+
+* Device placement on level canvas
+* Guard patrol path editor
+* Spawn point and companion placement
+* 11 defence flag toggles with alert threshold sliders
+* Asset browser for level components
+* Level validation against game rules
+* Level import/export with undo/redo
+* Side-by-side preview with Game Preview panel
+
+== Integration Points
+
+* Level config: `src/app/screens/LevelConfig.res`
+* UMS integration via `idaptik-ums`
+* Orchestrated by **UMS** (Universal Modding Studio)
+
+== Clade Kind
+
+**builder**
+
+== Status
+
+Early development (v1.0.0). Model and command modules defined.

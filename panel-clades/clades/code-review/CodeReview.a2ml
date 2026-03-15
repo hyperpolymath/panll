@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Code Review Panel Clade — In-panel code review with diff, comments, and approval
+
+[clade-metadata]
+id = "code-review"
+name = "Code Review"
+short-name = "Review"
+version = "0.1.0"
+kind = "viewer"
+icon = "eye"
+description = "In-panel code review — unified/split diff views, inline comments, approval workflow, TypeLL type annotations on diffs, and PR/MR integration."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = true
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "UnifiedDiff",
+  "SplitDiff",
+  "InlineComments",
+  "ApprovalWorkflow",
+  "TypeLLAnnotations",
+  "PRIntegration",
+  "FileBrowser",
+  "ReviewChecklist",
+]
+
+[clade-panel-integration]
+panel-id = "PanelCodeReview"
+model-module = "CodeReviewModel"
+component-module = "CodeReview"
+command-module = "CodeReviewCmd"
+
+[clade-cross-panel]
+depends-on = ["editor-bridge", "typell"]
+feeds-into = ["merge-coordinator", "team-dashboard"]

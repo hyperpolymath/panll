@@ -263,26 +263,19 @@ let parseRepoFromJson = (json: JSON.t): option<farmRepo> => {
   }
 }
 
-/// Parse the full inventory response from the farm_list_repos command.
-/// Returns (repos, totalCount).
-let parseInventory = (jsonStr: string): result<array<farmRepo>, string> => {
-  try {
-    let json = JSON.parseExn(jsonStr)
-    switch JSON.Classify.classify(json) {
-    | Object(obj) => {
-        let repos = switch Dict.get(obj, "repos") {
-        | Some(v) =>
-          switch JSON.Classify.classify(v) {
-          | Array(arr) => arr->Array.filterMap(parseRepoFromJson)
-          | _ => []
-          }
-        | None => []
-        }
-        Ok(repos)
-      }
-    | _ => Error("Expected object in inventory response")
-    }
-  } catch {
-  | _ => Error("Failed to parse inventory JSON")
+/// Tea_Json decoder for a single farmRepo, bridging the existing parseRepoFromJson parser.
+let farmRepoDecoder: Tea_Json.decoder<farmRepo> = json => {
+  switch parseRepoFromJson(json) {
+  | Some(v) => Ok(v)
+  | None => Error(Tea_Json.Failure("Failed to decode farmRepo", json))
   }
 }
+
+/// Tea_Json decoder for the inventory response envelope.
+let inventoryDecoder: Tea_Json.decoder<array<farmRepo>> =
+  Decoders.fieldWithDefault("repos", Decoders.lenientArray(farmRepoDecoder), [])
+
+/// Parse the full inventory response from the farm_list_repos command.
+/// Returns (repos, totalCount).
+let parseInventory = (jsonStr: string): result<array<farmRepo>, string> =>
+  Decoders.decode(inventoryDecoder, jsonStr)

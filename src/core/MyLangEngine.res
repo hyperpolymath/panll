@@ -59,55 +59,31 @@ let parseDialect = (s: string): myLangDialect =>
   | _ => Solo
   }
 
-/// Parse a compilation result from JSON.
-let parseCompilation = (json: string): result<compilationResult, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getInt = (key: string): int =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Number(n) => Float.toInt(n)
-            | _ => 0
-            }
-          | None => 0
-          }
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-
-        Ok({
-          success: getBool("success"),
-          output: getString("output"),
-          diagnostics: getString("diagnostics"),
-          errorCount: getInt("error_count"),
-          warningCount: getInt("warning_count"),
-          compileTimeMs: getInt("compile_time_ms"),
-        })
-      }
-    | _ => Error("Expected JSON object for compilation result")
-    }
-  } catch {
-  | _ => Error("Failed to parse compilation JSON")
-  }
+/// Tea_Json decoder for a compilation result.
+let compilationDecoder: Tea_Json.decoder<compilationResult> = {
+  open Decoders
+  open Tea_Json
+  map6(
+    (success, output, diagnostics, errorCount, warningCount, compileTimeMs) => ({
+      success,
+      output,
+      diagnostics,
+      errorCount,
+      warningCount,
+      compileTimeMs,
+    }: compilationResult),
+    boolField("success"),
+    stringField("output"),
+    stringField("diagnostics"),
+    intField("error_count"),
+    intField("warning_count"),
+    intField("compile_time_ms"),
+  )
 }
+
+/// Parse a compilation result from JSON.
+let parseCompilation = (json: string): result<compilationResult, string> =>
+  Decoders.decode(compilationDecoder, json)
 
 /// File extension for a dialect's source files.
 let dialectExtension = (d: myLangDialect): string =>

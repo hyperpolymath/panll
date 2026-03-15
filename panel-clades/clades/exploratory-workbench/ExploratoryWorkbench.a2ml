@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Exploratory Workbench Panel Clade — Free-form manual testing workspace
+
+[clade-metadata]
+id = "exploratory-workbench"
+name = "Exploratory Workbench"
+short-name = "Explore"
+version = "0.1.0"
+kind = "builder"
+icon = "compass"
+description = "Free-form manual testing workspace — session-based exploratory testing with note capture, bug tagging, screenshot annotation, and heuristic checklists."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "SessionTimer",
+  "NoteCapture",
+  "BugTagging",
+  "ScreenshotAnnotation",
+  "HeuristicChecklist",
+  "CharterDefinition",
+  "DebreifReport",
+  "LinkedIssues",
+]
+
+[clade-panel-integration]
+panel-id = "PanelExploratoryWorkbench"
+model-module = "ExploratoryWorkbenchModel"
+component-module = "ExploratoryWorkbench"
+command-module = "ExploratoryWorkbenchCmd"
+
+[clade-dependencies]
+integrations = ["Capture panel", "Feedback-O-Tron", "issue tracker"]

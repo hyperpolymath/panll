@@ -1,0 +1,37 @@
+= Universal Modding Studio (UMS) Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Unified hub for IDApTIK game content creation -- projects, ABI validation, asset pipeline.
+
+== Purpose
+
+UMS orchestrates IDApTIK content creation by unifying Level Architect, DLC Workshop,
+Game Preview, and VM Inspector under a single project management interface. It provides
+Idris2 ABI validation (14 modules, 5 cross-domain proofs), asset pipeline management,
+mod templates, and distribution.
+
+== Key Features
+
+* Project management for mods and content packs
+* Idris2 ABI validation with 5 cross-domain formal proofs
+* Asset pipeline (import, transform, bundle)
+* Mod templates for quick starts
+* Mod distribution and packaging
+* API reference browser
+* Cross-panel orchestration of 4 sub-panels
+
+== Integration Points
+
+* Orchestrates **Level Architect**, **DLC Workshop**, **Game Preview**, **VM Inspector**
+* ABI language: Idris2 (14 modules), FFI language: Zig
+* 5 formal proofs: guards-in-zones, defence-targets-valid, zones-ordered,
+  pbx-consistent, devices-exist
+
+== Clade Kind
+
+**builder**
+
+== Status
+
+Early development (v1.0.0). Engine and model modules defined.

@@ -126,8 +126,8 @@ type dogBreed = BreedPatrol | BreedBloodhound | BreedRoboDog
 /// IDApTIK drone archetype (mirrors Idris2 Types.idr DroneArchetype).
 type droneArchetype = DroneHelper | DroneHunter | DroneKiller
 
-/// Security level (mirrors Idris2 Primitives.idr SecurityLevel).
-type securityLevel = SecOpen | SecWeak | SecMedium | SecStrong
+/// Zone security level (mirrors Idris2 Primitives.idr SecurityLevel).
+type zoneSecurityLevel = SecOpen | SecWeak | SecMedium | SecStrong
 
 /// A security zone with boundaries (mirrors Idris2 Zones.idr).
 type levelZone = {

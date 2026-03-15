@@ -144,11 +144,114 @@ let renderComputeResult = (result: computeQueryResult): Tea_Vdom.t<msg> => {
   )
 }
 
+/// Render the Phase 2 FFI status indicator.
+let renderFfiStatus = (localDispatch: localDispatchState): Tea_Vdom.t<msg> => {
+  let statusColour = if localDispatch.ffiLoaded { "text-emerald-400" } else { "text-gray-500" }
+  let statusText = if localDispatch.ffiLoaded { "Loaded" } else { "Not Loaded" }
+  let dotColour = if localDispatch.ffiLoaded { "bg-emerald-400" } else { "bg-gray-600" }
+  div(
+    list{Attrs.class_("p-3 bg-gray-800 rounded border border-gray-700 space-y-2")},
+    list{
+      div(
+        list{Attrs.class_("flex items-center justify-between")},
+        list{
+          div(
+            list{Attrs.class_("flex items-center gap-2")},
+            list{
+              div(list{Attrs.class_(`w-2 h-2 rounded-full ${dotColour}`)}, list{}),
+              span(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text("Zig FFI")}),
+            },
+          ),
+          span(list{Attrs.class_(`text-xs font-mono ${statusColour}`)}, list{text(statusText)}),
+        },
+      ),
+      div(
+        list{Attrs.class_("grid grid-cols-2 gap-2 text-xs")},
+        list{
+          div(
+            list{},
+            list{
+              div(list{Attrs.class_("text-gray-500")}, list{text("CPU Cores")}),
+              div(
+                list{Attrs.class_("text-gray-200 font-mono")},
+                list{text(Int.toString(localDispatch.cpuCores))},
+              ),
+            },
+          ),
+          div(
+            list{},
+            list{
+              div(list{Attrs.class_("text-gray-500")}, list{text("CPU Load")}),
+              div(
+                list{Attrs.class_("text-gray-200 font-mono")},
+                list{text(`${Float.toFixedWithPrecision(localDispatch.cpuUtilisation *. 100.0, ~digits=1)}%`)},
+              ),
+            },
+          ),
+          div(
+            list{},
+            list{
+              div(list{Attrs.class_("text-gray-500")}, list{text("GPU Memory")}),
+              div(
+                list{Attrs.class_("text-gray-200 font-mono")},
+                list{
+                  text(
+                    if localDispatch.gpuMemoryMb > 0 {
+                      `${Int.toString(localDispatch.gpuMemoryMb)} MB`
+                    } else {
+                      "N/A"
+                    },
+                  ),
+                },
+              ),
+            },
+          ),
+          div(
+            list{},
+            list{
+              div(list{Attrs.class_("text-gray-500")}, list{text("FFI Backends")}),
+              div(
+                list{Attrs.class_("text-gray-200 font-mono")},
+                list{
+                  text(
+                    if Array.length(localDispatch.availableBackends) > 0 {
+                      Int.toString(Array.length(localDispatch.availableBackends))
+                    } else {
+                      "0"
+                    },
+                  ),
+                },
+              ),
+            },
+          ),
+        },
+      ),
+      // Show library path when loaded.
+      switch localDispatch.ffiLibPath {
+      | Some(path) =>
+        div(
+          list{Attrs.class_("text-xs text-gray-600 font-mono truncate")},
+          list{text(path)},
+        )
+      | None => noNode
+      },
+    },
+  )
+}
+
 /// Render the dashboard view.
 let renderDashboard = (state: coprocessorsState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("space-y-4")},
     list{
+      // Phase 2: FFI status indicator
+      div(
+        list{Attrs.class_("space-y-2")},
+        list{
+          div(list{Attrs.class_("text-xs text-gray-400 font-medium")}, list{text("LOCAL DISPATCH (PHASE 2)")}),
+          renderFfiStatus(state.localDispatch),
+        },
+      ),
       // Control plane: discovered devices
       div(
         list{Attrs.class_("space-y-2")},
@@ -377,6 +480,254 @@ let renderHeatmap = (state: coprocessorsState): Tea_Vdom.t<msg> => {
   }
 }
 
+/// Render a single routing decision row in the audit log.
+let renderRoutingRow = (decision: routingDecision): Tea_Vdom.t<msg> => {
+  let routeColour = CoprocessorsEngine.routingColour(decision.chosenRoute)
+  let routeLabel = CoprocessorsEngine.routingLabel(decision.chosenRoute)
+  let category = SmartRouter.classifyOperation(decision.operation)
+  let catColour = SmartRouter.categoryColour(category)
+  div(
+    list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-800 rounded text-xs")},
+    list{
+      span(
+        list{Attrs.class_(`w-20 font-mono ${catColour}`)},
+        list{text(SmartRouter.categoryLabel(category))},
+      ),
+      span(
+        list{Attrs.class_("text-gray-200 w-36 truncate")},
+        list{text(decision.operation)},
+      ),
+      span(
+        list{Attrs.class_(`font-medium ${routeColour}`)},
+        list{text(routeLabel)},
+      ),
+      span(
+        list{Attrs.class_("text-gray-500 font-mono ml-auto")},
+        list{text(`${Float.toFixedWithPrecision(decision.latencyEstimateMs, ~digits=1)}ms`)},
+      ),
+    },
+  )
+}
+
+/// Render the routing strategy selector buttons.
+let renderStrategySelector = (activeStrategy: routingStrategy): Tea_Vdom.t<msg> => {
+  let strategies: array<routingStrategy> = [RouteAutomatic, RouteLocal, RouteRemote, RouteBoj]
+  div(
+    list{Attrs.class_("flex items-center gap-1")},
+    strategies
+    ->Array.map(s => {
+      let isActive = s === activeStrategy
+      let colour = CoprocessorsEngine.routingColour(s)
+      let label = CoprocessorsEngine.routingLabel(s)
+      button(
+        list{
+          Attrs.class_(
+            if isActive {
+              `px-3 py-1 text-xs font-medium ${colour} bg-gray-700 rounded border border-gray-600`
+            } else {
+              "px-3 py-1 text-xs text-gray-400 bg-gray-800 rounded border border-gray-700 hover:text-gray-200 cursor-pointer"
+            },
+          ),
+          Events.onClick(Coprocessors(SetRoutingStrategy(s))),
+        },
+        list{text(label)},
+      )
+    })
+    ->List.fromArray,
+  )
+}
+
+/// Render the route distribution bar chart.
+let renderRouteDistribution = (stats: array<(string, int, float)>): Tea_Vdom.t<msg> => {
+  let total = stats->Array.reduce(0, (acc, (_, count, _)) => acc + count)
+  div(
+    list{Attrs.class_("space-y-2")},
+    stats
+    ->Array.map(((label, count, avgLatency)) => {
+      let pct = if total > 0 { Float.fromInt(count) /. Float.fromInt(total) *. 100.0 } else { 0.0 }
+      let widthPct = if total > 0 { Float.toFixedWithPrecision(pct, ~digits=0) } else { "0" }
+      div(
+        list{Attrs.class_("space-y-0.5")},
+        list{
+          div(
+            list{Attrs.class_("flex items-center justify-between text-xs")},
+            list{
+              span(list{Attrs.class_("text-gray-300")}, list{text(label)}),
+              span(
+                list{Attrs.class_("text-gray-500 font-mono")},
+                list{text(`${Int.toString(count)} (${Float.toFixedWithPrecision(pct, ~digits=1)}%) avg ${Float.toFixedWithPrecision(avgLatency, ~digits=1)}ms`)},
+              ),
+            },
+          ),
+          div(
+            list{Attrs.class_("w-full bg-gray-800 rounded-full h-1.5")},
+            list{
+              div(
+                list{
+                  Attrs.class_("bg-cyan-500 h-1.5 rounded-full"),
+                  Attrs.style("width", `${widthPct}%`),
+                },
+                list{},
+              ),
+            },
+          ),
+        },
+      )
+    })
+    ->List.fromArray,
+  )
+}
+
+/// Render the backend health indicators.
+let renderBackendHealthRow = (health: SmartRouter.backendHealth): Tea_Vdom.t<msg> => {
+  let dotColour = if health.available { "bg-emerald-400" } else { "bg-gray-600" }
+  let statusText = if health.available { "Online" } else { "Offline" }
+  let statusColour = if health.available { "text-emerald-400" } else { "text-gray-500" }
+  div(
+    list{Attrs.class_("flex items-center justify-between p-2 bg-gray-800 rounded")},
+    list{
+      div(
+        list{Attrs.class_("flex items-center gap-2")},
+        list{
+          div(list{Attrs.class_(`w-2 h-2 rounded-full ${dotColour}`)}, list{}),
+          span(list{Attrs.class_("text-sm text-gray-200")}, list{text(health.name)}),
+        },
+      ),
+      div(
+        list{Attrs.class_("flex items-center gap-4 text-xs")},
+        list{
+          span(
+            list{Attrs.class_("text-gray-500 font-mono")},
+            list{text(`${Float.toFixedWithPrecision(health.avgLatencyMs, ~digits=1)}ms`)},
+          ),
+          span(list{Attrs.class_(statusColour)}, list{text(statusText)}),
+        },
+      ),
+    },
+  )
+}
+
+/// Render the Phase 3 routing tab.
+let renderRouting = (state: coprocessorsState): Tea_Vdom.t<msg> => {
+  let backends = SmartRouter.buildBackendHealth(state)
+  let stats = CoprocessorsEngine.currentRouteStats(state)
+  let catStats = CoprocessorsEngine.currentCategoryStats(state)
+  let recentDecisions =
+    state.routingHistory
+    ->Array.toReversed
+    ->Array.slice(~start=0, ~end=50)
+
+  div(
+    list{Attrs.class_("space-y-4")},
+    list{
+      // Strategy selector
+      div(
+        list{Attrs.class_("space-y-2")},
+        list{
+          div(
+            list{Attrs.class_("text-xs text-gray-400 font-medium")},
+            list{text("ROUTING STRATEGY")},
+          ),
+          renderStrategySelector(state.routingStrategy),
+        },
+      ),
+      // Backend health
+      div(
+        list{Attrs.class_("space-y-2")},
+        list{
+          div(
+            list{Attrs.class_("text-xs text-gray-400 font-medium")},
+            list{text("BACKEND HEALTH")},
+          ),
+          div(
+            list{Attrs.class_("space-y-1")},
+            backends->Array.map(b => renderBackendHealthRow(b))->List.fromArray,
+          ),
+        },
+      ),
+      // Route distribution
+      div(
+        list{Attrs.class_("space-y-2")},
+        list{
+          div(
+            list{Attrs.class_("flex items-center justify-between")},
+            list{
+              span(
+                list{Attrs.class_("text-xs text-gray-400 font-medium")},
+                list{text("ROUTE DISTRIBUTION")},
+              ),
+              span(
+                list{Attrs.class_("text-xs text-gray-600")},
+                list{text(`${Int.toString(Array.length(state.routingHistory))} decisions`)},
+              ),
+            },
+          ),
+          if Array.length(state.routingHistory) === 0 {
+            div(
+              list{Attrs.class_("text-center text-gray-500 text-xs py-3")},
+              list{text("No routing decisions yet. Use Smart Dispatch to route operations.")},
+            )
+          } else {
+            renderRouteDistribution(stats)
+          },
+        },
+      ),
+      // Category distribution
+      if Array.length(catStats) > 0 {
+        div(
+          list{Attrs.class_("space-y-2")},
+          list{
+            div(
+              list{Attrs.class_("text-xs text-gray-400 font-medium")},
+              list{text("OPERATION CATEGORIES")},
+            ),
+            div(
+              list{Attrs.class_("flex items-center gap-2 flex-wrap")},
+              catStats
+              ->Array.map(((label, count)) => {
+                div(
+                  list{Attrs.class_("px-2 py-1 bg-gray-800 rounded text-xs")},
+                  list{
+                    span(list{Attrs.class_("text-gray-300")}, list{text(label)}),
+                    span(
+                      list{Attrs.class_("text-gray-500 ml-1 font-mono")},
+                      list{text(Int.toString(count))},
+                    ),
+                  },
+                )
+              })
+              ->List.fromArray,
+            ),
+          },
+        )
+      } else {
+        noNode
+      },
+      // Recent routing decisions (audit trail)
+      div(
+        list{Attrs.class_("space-y-2")},
+        list{
+          div(
+            list{Attrs.class_("text-xs text-gray-400 font-medium")},
+            list{text("RECENT DECISIONS")},
+          ),
+          if Array.length(recentDecisions) === 0 {
+            div(
+              list{Attrs.class_("text-center text-gray-500 text-xs py-4")},
+              list{text("No routing decisions recorded")},
+            )
+          } else {
+            div(
+              list{Attrs.class_("space-y-1 max-h-72 overflow-y-auto")},
+              recentDecisions->Array.map(d => renderRoutingRow(d))->List.fromArray,
+            )
+          },
+        },
+      ),
+    },
+  )
+}
+
 /// Render the settings view.
 let renderSettings = (state: coprocessorsState): Tea_Vdom.t<msg> => {
   div(
@@ -489,6 +840,7 @@ let view = (state: coprocessorsState): Tea_Vdom.t<msg> => {
           renderTab("Dashboard", CoprocDashboard, state.activeCategory),
           renderTab("Call Log", CoprocCallLog, state.activeCategory),
           renderTab("Heatmap", CoprocHeatmap, state.activeCategory),
+          renderTab("Routing", CoprocRouting, state.activeCategory),
           renderTab("Settings", CoprocSettings, state.activeCategory),
         },
       ),
@@ -532,6 +884,7 @@ let view = (state: coprocessorsState): Tea_Vdom.t<msg> => {
           | CoprocDashboard => renderDashboard(state)
           | CoprocCallLog => renderCallLog(state)
           | CoprocHeatmap => renderHeatmap(state)
+          | CoprocRouting => renderRouting(state)
           | CoprocSettings => renderSettings(state)
           },
         },

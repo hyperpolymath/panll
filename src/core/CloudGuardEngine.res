@@ -156,29 +156,22 @@ let parseZone = (json: JSON.t): option<cfZone> => {
   }
 }
 
-/// Parse a JSON string (array of zone objects) into cfZone records.
-/// Handles both the raw result array and the full CF API envelope.
-let parseZonesJson = (jsonString: string): array<cfZone> => {
-  try {
-    let parsed = JSON.parseExn(jsonString)
-    switch JSON.Classify.classify(parsed) {
-    | Array(arr) => arr->Array.filterMap(parseZone)
-    | Object(obj) =>
-      // Handle CF API envelope: { result: [...] }
-      switch Dict.get(obj, "result") {
-      | Some(resultJson) =>
-        switch JSON.Classify.classify(resultJson) {
-        | Array(arr) => arr->Array.filterMap(parseZone)
-        | _ => []
-        }
-      | None => []
-      }
-    | _ => []
-    }
-  } catch {
-  | _ => []
+/// Tea_Json decoder for a single cfZone, bridging the existing parseZone parser.
+let zoneDecoder: Tea_Json.decoder<cfZone> = json => {
+  switch parseZone(json) {
+  | Some(v) => Ok(v)
+  | None => Error(Tea_Json.Failure("Failed to decode cfZone", json))
   }
 }
+
+/// Tea_Json decoder for a zones response — handles both `[...]` and `{ "result": [...] }`.
+let zonesDecoder: Tea_Json.decoder<array<cfZone>> =
+  Decoders.resultArrayOrDirect(zoneDecoder)
+
+/// Parse a JSON string (array of zone objects) into cfZone records.
+/// Handles both the raw result array and the full CF API envelope.
+let parseZonesJson = (jsonString: string): array<cfZone> =>
+  Decoders.decodeWithDefault(zonesDecoder, [], jsonString)
 
 // ============================================================================
 // JSON → cfSetting parsing
@@ -266,27 +259,21 @@ let parseSetting = (json: JSON.t): option<cfSetting> => {
   }
 }
 
-/// Parse a JSON string (array of setting objects) into cfSetting records.
-let parseSettingsJson = (jsonString: string): array<cfSetting> => {
-  try {
-    let parsed = JSON.parseExn(jsonString)
-    switch JSON.Classify.classify(parsed) {
-    | Array(arr) => arr->Array.filterMap(parseSetting)
-    | Object(obj) =>
-      switch Dict.get(obj, "result") {
-      | Some(resultJson) =>
-        switch JSON.Classify.classify(resultJson) {
-        | Array(arr) => arr->Array.filterMap(parseSetting)
-        | _ => []
-        }
-      | None => []
-      }
-    | _ => []
-    }
-  } catch {
-  | _ => []
+/// Tea_Json decoder for a single cfSetting, bridging the existing parseSetting parser.
+let settingDecoder: Tea_Json.decoder<cfSetting> = json => {
+  switch parseSetting(json) {
+  | Some(v) => Ok(v)
+  | None => Error(Tea_Json.Failure("Failed to decode cfSetting", json))
   }
 }
+
+/// Tea_Json decoder for a settings response — handles both `[...]` and `{ "result": [...] }`.
+let settingsDecoder: Tea_Json.decoder<array<cfSetting>> =
+  Decoders.resultArrayOrDirect(settingDecoder)
+
+/// Parse a JSON string (array of setting objects) into cfSetting records.
+let parseSettingsJson = (jsonString: string): array<cfSetting> =>
+  Decoders.decodeWithDefault(settingsDecoder, [], jsonString)
 
 // ============================================================================
 // JSON → cfDnsRecord parsing
@@ -352,27 +339,21 @@ let parseDnsRecord = (json: JSON.t): option<cfDnsRecord> => {
   }
 }
 
-/// Parse a JSON string (array of DNS record objects) into cfDnsRecord records.
-let parseDnsRecordsJson = (jsonString: string): array<cfDnsRecord> => {
-  try {
-    let parsed = JSON.parseExn(jsonString)
-    switch JSON.Classify.classify(parsed) {
-    | Array(arr) => arr->Array.filterMap(parseDnsRecord)
-    | Object(obj) =>
-      switch Dict.get(obj, "result") {
-      | Some(resultJson) =>
-        switch JSON.Classify.classify(resultJson) {
-        | Array(arr) => arr->Array.filterMap(parseDnsRecord)
-        | _ => []
-        }
-      | None => []
-      }
-    | _ => []
-    }
-  } catch {
-  | _ => []
+/// Tea_Json decoder for a single cfDnsRecord, bridging the existing parseDnsRecord parser.
+let dnsRecordDecoder: Tea_Json.decoder<cfDnsRecord> = json => {
+  switch parseDnsRecord(json) {
+  | Some(v) => Ok(v)
+  | None => Error(Tea_Json.Failure("Failed to decode cfDnsRecord", json))
   }
 }
+
+/// Tea_Json decoder for a DNS records response — handles both `[...]` and `{ "result": [...] }`.
+let dnsRecordsDecoder: Tea_Json.decoder<array<cfDnsRecord>> =
+  Decoders.resultArrayOrDirect(dnsRecordDecoder)
+
+/// Parse a JSON string (array of DNS record objects) into cfDnsRecord records.
+let parseDnsRecordsJson = (jsonString: string): array<cfDnsRecord> =>
+  Decoders.decodeWithDefault(dnsRecordsDecoder, [], jsonString)
 
 // ============================================================================
 // cfSetting → JSON serialisation (for push changes)

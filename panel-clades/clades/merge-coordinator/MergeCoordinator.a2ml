@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Merge Coordinator Panel Clade — Branch management, conflict resolution, merge queues
+
+[clade-metadata]
+id = "merge-coordinator"
+name = "Merge Coordinator"
+short-name = "Merge"
+version = "0.1.0"
+kind = "directive"
+icon = "git-merge"
+description = "Branch management and merge coordination — conflict resolution UI, merge queue management, branch protection status, and cross-forge synchronisation."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = true
+has-customisation = true
+is-directive = true
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "ConflictResolution",
+  "MergeQueueManagement",
+  "BranchProtection",
+  "CrossForgeSync",
+  "MergePreview",
+  "AutoMerge",
+  "BranchCleanup",
+  "DependencyCheck",
+]
+
+[clade-panel-integration]
+panel-id = "PanelMergeCoordinator"
+model-module = "MergeCoordinatorModel"
+component-module = "MergeCoordinator"
+command-module = "MergeCoordinatorCmd"
+
+[clade-cross-panel]
+depends-on = ["code-review", "build-dashboard"]
+feeds-into = ["release-manager", "team-dashboard"]

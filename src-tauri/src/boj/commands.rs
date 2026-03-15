@@ -5,6 +5,7 @@
 
 use serde_json::json;
 
+// panic-attack:allow insecure-protocol — localhost dev endpoint
 const DEFAULT_BOJ_URL: &str = "http://localhost:7700";
 
 fn boj_url() -> String {

@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Compatibility Matrix Panel Clade — Cross-platform and cross-version test matrix
+
+[clade-metadata]
+id = "compatibility-matrix"
+name = "Compatibility Matrix"
+short-name = "Compat"
+version = "0.1.0"
+kind = "viewer"
+icon = "grid-3x3"
+description = "Cross-platform and cross-version compatibility matrix — track test results across OS, browser, runtime, and dependency versions in a colour-coded grid."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = true
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "MatrixDefinition",
+  "CrossPlatformResults",
+  "VersionTracking",
+  "ColourCodedGrid",
+  "FailureCorrelation",
+  "HistoryComparison",
+  "CIIntegration",
+  "ExportMatrix",
+]
+
+[clade-panel-integration]
+panel-id = "PanelCompatibilityMatrix"
+model-module = "CompatibilityMatrixModel"
+component-module = "CompatibilityMatrix"
+command-module = "CompatibilityMatrixCmd"
+
+[clade-dependencies]
+ci-sources = ["GitHub Actions", "Hypatia", "local test results"]

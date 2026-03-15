@@ -141,7 +141,7 @@ let droneArchetypeLabel = (da: droneArchetype): string =>
   }
 
 /// Security level labels.
-let securityLevelLabel = (sl: securityLevel): string =>
+let securityLevelLabel = (sl: zoneSecurityLevel): string =>
   switch sl {
   | SecOpen => "Open"
   | SecWeak => "Weak"
@@ -167,34 +167,45 @@ let toUmsJson = (state: levelArchitectState): string => {
   `{"levelName":"${state.levelName}","gridWidth":${Int.toString(state.gridWidth)},"gridHeight":${Int.toString(state.gridHeight)},"entities":[${entitiesJson}],"zones":[${zonesJson}],"patrols":[${patrolsJson}],"defenceFlags":[${flagsJson}]}`
 }
 
-/// Parse UMS validation result JSON.
-let parseUmsValidation = (jsonStr: string): option<umsValidation> => {
-  try {
-    let json = JSON.parseExn(jsonStr)
-    let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
-    let getBool = (key: string) =>
-      obj->Dict.get(key)->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
-    let proofsArr = obj->Dict.get("proofs")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
-    let proofs = proofsArr->Array.filterMap(p => {
-      let pObj = p->JSON.Decode.object->Option.getOr(Dict.make())
-      let name = pObj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-      let passed = pObj->Dict.get("passed")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
-      let detail = pObj->Dict.get("detail")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-      Some({name, passed, detail})
-    })
-    Some({
-      guardsInZones: getBool("guardsInZones"),
-      defenceTargetsValid: getBool("defenceTargetsValid"),
-      zonesOrdered: getBool("zonesOrdered"),
-      pbxConsistent: getBool("pbxConsistent"),
-      devicesExist: getBool("devicesExist"),
-      allPassed: getBool("allPassed"),
-      proofs,
-    })
-  } catch {
-  | _ => None
-  }
+/// Tea_Json decoder for a single UMS proof entry.
+let abiProofDecoder: Tea_Json.decoder<abiProof> = {
+  open Decoders
+  open Tea_Json
+  map3(
+    (name, passed, detail) => ({name, passed, detail}: abiProof),
+    stringField("name"),
+    boolField("passed"),
+    stringField("detail"),
+  )
 }
+
+/// Tea_Json decoder for UMS validation result.
+let umsValidationDecoder: Tea_Json.decoder<umsValidation> = {
+  open Decoders
+  open Tea_Json
+  map7(
+    (guardsInZones, defenceTargetsValid, zonesOrdered, pbxConsistent, devicesExist, allPassed, proofs) => ({
+      guardsInZones,
+      defenceTargetsValid,
+      zonesOrdered,
+      pbxConsistent,
+      devicesExist,
+      allPassed,
+      proofs,
+    }: umsValidation),
+    boolField("guardsInZones"),
+    boolField("defenceTargetsValid"),
+    boolField("zonesOrdered"),
+    boolField("pbxConsistent"),
+    boolField("devicesExist"),
+    boolField("allPassed"),
+    fieldWithDefault("proofs", lenientArray(abiProofDecoder), []),
+  )
+}
+
+/// Parse UMS validation result JSON.
+let parseUmsValidation = (jsonStr: string): option<umsValidation> =>
+  Decoders.decodeOption(umsValidationDecoder, jsonStr)
 
 /// All device kinds for dropdowns.
 let allDeviceKinds: array<deviceKind> = [
@@ -216,7 +227,7 @@ let allDogBreeds: array<dogBreed> = [BreedPatrol, BreedBloodhound, BreedRoboDog]
 let allDroneArchetypes: array<droneArchetype> = [DroneHelper, DroneHunter, DroneKiller]
 
 /// All security levels for dropdowns.
-let allSecurityLevels: array<securityLevel> = [SecOpen, SecWeak, SecMedium, SecStrong]
+let allSecurityLevels: array<zoneSecurityLevel> = [SecOpen, SecWeak, SecMedium, SecStrong]
 
 /// Default state for the Level Architect panel.
 let defaultState: levelArchitectState = {

@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Typing Bridge Panel Clade — Bridge between TypeLL kernel and external type systems
+
+[clade-metadata]
+id = "typing-bridge"
+name = "Typing Bridge"
+short-name = "TyBr"
+version = "0.1.0"
+kind = "bridge"
+icon = "type"
+description = "Bridge between TypeLL kernel and external type systems — Idris2 dependent types, Rust borrow checker, ReScript sound types, Gleam BEAM types."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = false
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "TypeSystemDetection",
+  "TypeTranslation",
+  "ConstraintMapping",
+  "TypeErrorBridge",
+  "CrossLanguageCheck",
+  "UnificationView",
+  "TypeDiffDisplay",
+]
+
+[clade-panel-integration]
+panel-id = "PanelTypingBridge"
+model-module = "TypingBridgeModel"
+component-module = "TypingBridge"
+command-module = "TypingBridgeCmd"
+
+[clade-cross-panel]
+depends-on = ["typell"]
+feeds-into = ["editor-bridge", "build-dashboard"]

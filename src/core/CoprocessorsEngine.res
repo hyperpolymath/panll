@@ -11,6 +11,7 @@ let categoryLabel = (cat: coprocessorsCategory): string =>
   | CoprocDashboard => "Dashboard"
   | CoprocCallLog => "Call Log"
   | CoprocHeatmap => "Heatmap"
+  | CoprocRouting => "Routing"
   | CoprocSettings => "Settings"
   }
 
@@ -103,104 +104,59 @@ let engineLabel = (engine: computeEngine): string =>
   | EngineLocal => "Local CPU/WASM"
   }
 
-/// Parse a compute engine query result from JSON.
-let parseComputeResult = (json: string, engine: computeEngine): result<computeQueryResult, string> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getFloat = (key: string): float =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Number(n) => n
-            | _ => 0.0
-            }
-          | None => 0.0
-          }
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-        Ok({
-          engineId: engine,
-          operation: getString("operation"),
-          result: getString("result"),
-          durationMs: getFloat("duration_ms"),
-          success: getBool("success"),
-        })
-      }
-    | _ => Error("Expected JSON object for compute result")
-    }
-  } catch {
-  | _ => Error("Failed to parse compute result JSON")
+/// Parse a compute engine string into a computeEngine variant.
+let parseEngineId = (s: string): computeEngine =>
+  switch s {
+  | "axiom" => EngineAxiom
+  | "boj" => EngineBoJ
+  | _ => EngineLocal
   }
+
+/// Tea_Json decoder for a compute query result (parameterised by engine).
+let computeResultDecoder = (engine: computeEngine): Tea_Json.decoder<computeQueryResult> => {
+  open Decoders
+  open Tea_Json
+  map4(
+    (operation, result, durationMs, success) => ({
+      engineId: engine,
+      operation,
+      result,
+      durationMs,
+      success,
+    }: computeQueryResult),
+    stringField("operation"),
+    stringField("result"),
+    floatField("duration_ms"),
+    boolField("success"),
+  )
+}
+
+/// Parse a compute engine query result from JSON.
+let parseComputeResult = (json: string, engine: computeEngine): result<computeQueryResult, string> =>
+  Decoders.decode(computeResultDecoder(engine), json)
+
+/// Tea_Json decoder for a single compute device.
+let deviceDecoder: Tea_Json.decoder<computeDevice> = {
+  open Decoders
+  open Tea_Json
+  map4(
+    (engineStr, deviceName, deviceType, available) => ({
+      engineId: parseEngineId(engineStr),
+      deviceName,
+      deviceType,
+      available,
+      capabilities: [],
+    }: computeDevice),
+    stringField("engine"),
+    stringField("device_name"),
+    stringField("device_type"),
+    boolField("available"),
+  )
 }
 
 /// Parse discovered devices from JSON array.
-let parseDevices = (json: string): array<computeDevice> => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Array(items) =>
-      items->Array.filterMap(item => {
-        switch JSON.Classify.classify(item) {
-        | Object(obj) => {
-            let getString = (key: string): string =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | String(s) => s
-                | _ => ""
-                }
-              | None => ""
-              }
-            let getBool = (key: string): bool =>
-              switch Dict.get(obj, key) {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | Bool(b) => b
-                | _ => false
-                }
-              | None => false
-              }
-            let engineStr = getString("engine")
-            let engineId = switch engineStr {
-            | "axiom" => EngineAxiom
-            | "boj" => EngineBoJ
-            | _ => EngineLocal
-            }
-            Some({
-              engineId,
-              deviceName: getString("device_name"),
-              deviceType: getString("device_type"),
-              available: getBool("available"),
-              capabilities: [],
-            })
-          }
-        | _ => None
-        }
-      })
-    | _ => []
-    }
-  } catch {
-  | _ => []
-  }
-}
+let parseDevices = (json: string): array<computeDevice> =>
+  Decoders.decodeWithDefault(Decoders.lenientArray(deviceDecoder), [], json)
 
 /// Human-readable label for a routing strategy.
 let routingLabel = (strategy: routingStrategy): string =>
@@ -336,70 +292,43 @@ let selectRoute = (state: coprocessorsState, operation: string): routingDecision
 /// Default local dispatch state (Phase 2).
 let defaultLocalDispatch: localDispatchState = {
   ffiLoaded: false,
-  ffiPath: "/var/mnt/eclipse/repos/panll/ffi/zig/zig-out/lib/libpanll_compute.so",
+  ffiPath: "/var/mnt/eclipse/repos/panll/ffi/zig/zig-out/lib/libpanll_copro.so",
+  ffiLibPath: None,
   localDevices: [],
   cpuUtilisation: 0.0,
   gpuMemoryMb: 0,
   pendingDispatches: 0,
+  cpuCores: 0,
+  availableBackends: [],
+}
+
+/// Tea_Json decoder for local dispatch state from coprocessor_ffi_status JSON.
+let localDispatchDecoder: Tea_Json.decoder<localDispatchState> = {
+  open Decoders
+  open Tea_Json
+  map5(
+    (ffiLoaded, ffiLibPath, cpuUtilisation, gpuMemoryMb, cpuCores) => ({
+      ffiLoaded,
+      ffiPath: defaultLocalDispatch.ffiPath,
+      ffiLibPath: if ffiLibPath === "" { None } else { Some(ffiLibPath) },
+      localDevices: [],
+      cpuUtilisation,
+      gpuMemoryMb,
+      pendingDispatches: 0,
+      cpuCores,
+      availableBackends: [],
+    }: localDispatchState),
+    boolField("ffi_loaded"),
+    stringField("ffi_lib_path"),
+    floatField("cpu_utilisation"),
+    intField("gpu_memory_mb"),
+    intField("cpu_cores"),
+  )
 }
 
 /// Parse local dispatch state from JSON.
-let parseLocalDispatchState = (json: string): localDispatchState => {
-  try {
-    let parsed = JSON.parseExn(json)
-    switch JSON.Classify.classify(parsed) {
-    | Object(obj) => {
-        let getBool = (key: string): bool =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Bool(b) => b
-            | _ => false
-            }
-          | None => false
-          }
-        let getString = (key: string): string =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | String(s) => s
-            | _ => ""
-            }
-          | None => ""
-          }
-        let getFloat = (key: string): float =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Number(n) => n
-            | _ => 0.0
-            }
-          | None => 0.0
-          }
-        let getInt = (key: string): int =>
-          switch Dict.get(obj, key) {
-          | Some(v) =>
-            switch JSON.Classify.classify(v) {
-            | Number(n) => Float.toInt(n)
-            | _ => 0
-            }
-          | None => 0
-          }
-        {
-          ffiLoaded: getBool("ffi_loaded"),
-          ffiPath: getString("ffi_path"),
-          localDevices: [],
-          cpuUtilisation: getFloat("cpu_utilisation"),
-          gpuMemoryMb: getInt("gpu_memory_mb"),
-          pendingDispatches: getInt("pending_dispatches"),
-        }
-      }
-    | _ => defaultLocalDispatch
-    }
-  } catch {
-  | _ => defaultLocalDispatch
-  }
-}
+let parseLocalDispatchState = (json: string): localDispatchState =>
+  Decoders.decodeWithDefault(localDispatchDecoder, defaultLocalDispatch, json)
 
 /// Default state for the Coprocessors panel.
 let defaultState: coprocessorsState = {
@@ -421,3 +350,27 @@ let defaultState: coprocessorsState = {
   routingStrategy: RouteAutomatic,
   routingHistory: [],
 }
+
+/// Smart-route an operation using the SmartRouter module.
+/// Builds backend health from current state, routes, and appends to history.
+let smartRouteAndRecord = (
+  state: coprocessorsState,
+  operation: string,
+): (routingDecision, array<routingDecision>) => {
+  let backends = SmartRouter.buildBackendHealth(state)
+  let decision = SmartRouter.smartRoute(operation, backends, state.routingStrategy)
+  let updatedHistory = SmartRouter.addDecision(state.routingHistory, decision)
+  (decision, updatedHistory)
+}
+
+/// Human-readable label for the chosen route in a routing decision.
+let routeDecisionLabel = (decision: routingDecision): string =>
+  routingLabel(decision.chosenRoute)
+
+/// Route distribution from the current history.
+let currentRouteStats = (state: coprocessorsState): array<(string, int, float)> =>
+  SmartRouter.routeStats(state.routingHistory)
+
+/// Category distribution from the current history.
+let currentCategoryStats = (state: coprocessorsState): array<(string, int)> =>
+  SmartRouter.categoryStats(state.routingHistory)

@@ -9,6 +9,7 @@
 
 use serde_json::json;
 
+// panic-attack:allow insecure-protocol — localhost dev endpoint
 const DEFAULT_OVERLAY_URL: &str = "http://localhost:8103/api/v1/overlay";
 
 fn overlay_url() -> String {

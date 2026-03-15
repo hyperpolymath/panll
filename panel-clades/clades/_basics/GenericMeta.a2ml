@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Generic Meta Clade Template
+# Meta panels provide governance, compliance, licensing, or cross-cutting dashboards.
+
+[clade-metadata]
+id = "{{CLADE_ID}}"
+name = "{{CLADE_NAME}}"
+short-name = "{{SHORT}}"
+version = "0.1.0"
+kind = "meta"
+icon = "{{ICON}}"
+description = "{{ONE_LINE_DESCRIPTION}}"
+
+[clade-traits]
+# Meta panels scan for compliance/governance data and surface work items.
+has-backend = false          # Often client-side only (override if backend needed)
+has-scanning = true          # Scan for compliance, license, governance data
+has-persistence = false      # Typically stateless (override if caching)
+has-work-items = true        # Compliance findings as actionable items
+has-priority-ordering = false
+has-customisation = true     # Policy rules, filter preferences
+is-directive = false
+is-readonly = true           # Meta panels report, not modify (override if governance actions)
+
+[clade-capabilities]
+# Minimum capabilities for a meta clade.
+capabilities = [
+  "ComplianceScanning",      # Check compliance against policies
+  "GovernanceDashboard",     # Overview of governance status
+  "PolicyViewer",            # Display applicable policies
+  "ReportGeneration",        # Generate compliance reports
+]
+
+[clade-connections]
+backend-type = "none"
+protocols = []
+
+[clade-accessibility]
+keyboard-navigable = true
+screen-reader-support = true
+aria-roles = ["table", "status", "region", "alert"]
+
+[clade-integration-hooks]
+on-init = "{{ON_INIT_HANDLER}}"
+on-dispose = "{{ON_DISPOSE_HANDLER}}"
+
+[clade-panel-integration]
+panel-id = "Panel{{PASCAL_NAME}}"
+model-module = "{{PASCAL_NAME}}Model"
+component-module = "{{PASCAL_NAME}}"
+command-module = "{{PASCAL_NAME}}Cmd"

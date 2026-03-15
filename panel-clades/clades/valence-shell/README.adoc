@@ -1,0 +1,35 @@
+= Valence Shell Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Embedded terminal with Claude Code integration, session recording, and reversible filesystem ops.
+
+== Purpose
+
+Valence Shell embeds an interactive terminal within PanLL, providing PTY sessions
+via xterm.js, Claude Code AI integration, session recording and replay, reversible
+filesystem operations, and a collaborative approval gate for safety-critical commands.
+
+== Key Features
+
+* PTY terminal via xterm.js
+* Claude Code AI integration for assisted workflows
+* Session recording and replay
+* Reversible filesystem operations (undo destructive commands)
+* Collaborative approval gate (parent+child shared sessions)
+* Command palette for quick actions
+* Alkahest transmuter for data format conversion
+
+== Integration Points
+
+* External binary: `valence-shell`
+* Tauri plugin: `@tauri-apps/plugin-shell`
+* Terminal emulator: xterm.js
+
+== Clade Kind
+
+**terminal**
+
+== Status
+
+Early development (v1.0.0). Model and command modules defined.

@@ -1,0 +1,35 @@
+= Editor Bridge Panel Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+Federate with external code editors via LSP -- PanLL is mission control, not a text editor.
+
+== Purpose
+
+The Editor Bridge connects PanLL to external editors (VSCodium, Zed, Helix, Neovim,
+Emacs, Kakoune, and more) via LSP. It relays diagnostics, symbols, and open file
+tracking, and provides jump-to-line capability so build errors in PanLL open directly
+in the user's editor.
+
+== Key Features
+
+* Auto-detect running editor (8 supported editors)
+* LSP connection for diagnostics and symbol browsing
+* Jump-to-line: click an error in PanLL, open at that line in editor
+* Open file tracker showing files active in external editor
+* Activity feed of recent editor actions
+* Auto-sync diagnostics and symbols refresh
+
+== Integration Points
+
+* **BuildDashboard** -- routes build errors through for jump-to-line
+* **Workspace** -- editor activity feeds into session context
+* Protocol: LSP (Language Server Protocol)
+
+== Clade Kind
+
+**bridge**
+
+== Status
+
+Early development (v1.0.0). Engine and model modules defined.
