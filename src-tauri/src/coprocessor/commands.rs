@@ -108,10 +108,13 @@ pub async fn query_compute_engine(
         "axiom" => query_axiom(&operation).await,
         "boj" => query_boj(&operation).await,
         "local" => {
-            // Phase 2: attempt FFI dispatch for local engine
-            let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
-            if guard.loaded {
-                drop(guard);
+            // Phase 2: attempt FFI dispatch for local engine.
+            // Extract loaded state before any .await to avoid holding MutexGuard across yield.
+            let ffi_loaded = {
+                let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
+                guard.loaded
+            };
+            if ffi_loaded {
                 dispatch_via_ffi("maths", &operation, "").await
             } else {
                 Ok("Local compute: FFI not loaded — use coprocessor_load_ffi to load the Zig library".to_string())
@@ -162,28 +165,33 @@ pub async fn discover_compute_devices() -> Result<String, String> {
         devices.extend(boj_devices);
     }
 
-    // Phase 2: report FFI-backed local backends
-    let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
-    if guard.loaded {
-        for backend in &guard.available_backends {
-            devices.push(ComputeDevice {
+    // Phase 2: report FFI-backed local backends.
+    // Extract data from Mutex in a tight scope so the guard doesn't cross await.
+    let local_devices = {
+        let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
+        if guard.loaded {
+            guard
+                .available_backends
+                .iter()
+                .map(|b| ComputeDevice {
+                    engine: "local".to_string(),
+                    device_name: format!("Zig FFI — {}", b.label()),
+                    device_type: "ffi".to_string(),
+                    available: true,
+                    capabilities: vec!["zig-ffi".to_string(), "zero-copy".to_string()],
+                })
+                .collect::<Vec<_>>()
+        } else {
+            vec![ComputeDevice {
                 engine: "local".to_string(),
-                device_name: format!("Zig FFI — {}", backend.label()),
-                device_type: "ffi".to_string(),
+                device_name: "CPU".to_string(),
+                device_type: "cpu".to_string(),
                 available: true,
-                capabilities: vec!["zig-ffi".to_string(), "zero-copy".to_string()],
-            });
+                capabilities: vec!["basic-math".to_string(), "wasm".to_string()],
+            }]
         }
-    } else {
-        // Always report CPU as available for local compute
-        devices.push(ComputeDevice {
-            engine: "local".to_string(),
-            device_name: "CPU".to_string(),
-            device_type: "cpu".to_string(),
-            available: true,
-            capabilities: vec!["basic-math".to_string(), "wasm".to_string()],
-        });
-    }
+    }; // guard dropped here
+    devices.extend(local_devices);
 
     serde_json::to_string(&devices).map_err(|e| e.to_string())
 }
@@ -353,7 +361,19 @@ pub async fn coprocessor_ffi_dispatch(
 /// backends are available locally, and system resource information.
 #[tauri::command]
 pub async fn coprocessor_ffi_status() -> Result<String, String> {
-    let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
+    // Extract FFI state in a tight scope — no MutexGuard across async boundary.
+    let (ffi_loaded, ffi_lib_path, available_backends) = {
+        let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
+        (
+            guard.loaded,
+            guard.lib_path.clone(),
+            guard
+                .available_backends
+                .iter()
+                .map(|b| b.label().to_string())
+                .collect::<Vec<_>>(),
+        )
+    };
 
     let cpu_cores = std::thread::available_parallelism()
         .map(|p| p.get())
@@ -364,13 +384,9 @@ pub async fn coprocessor_ffi_status() -> Result<String, String> {
     let gpu_memory_mb = super::estimate_gpu_memory_mb();
 
     let status = FfiStatusReport {
-        ffi_loaded: guard.loaded,
-        ffi_lib_path: guard.lib_path.clone(),
-        available_backends: guard
-            .available_backends
-            .iter()
-            .map(|b| b.label().to_string())
-            .collect(),
+        ffi_loaded,
+        ffi_lib_path,
+        available_backends,
         cpu_cores,
         gpu_available,
         cpu_utilisation,
@@ -393,10 +409,13 @@ pub async fn coprocessor_dispatch_local(
     operation: String,
     input: String,
 ) -> Result<String, String> {
-    let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
+    // Extract loaded state in a tight scope — MutexGuard must not cross .await.
+    let ffi_loaded = {
+        let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
+        guard.loaded
+    };
 
-    if guard.loaded {
-        drop(guard);
+    if ffi_loaded {
         // Delegate to the new Phase 2 dispatch.
         coprocessor_ffi_dispatch("maths".to_string(), operation, input).await
     } else {
