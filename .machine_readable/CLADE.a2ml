@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Clade declaration — part of the gv-clade-index registry
+# See: https://github.com/hyperpolymath/gv-clade-index
+
+[identity]
+uuid = "6c8a8b70-77a6-598c-980d-46e3713d2a1a"
+primary-forge = "github"
+primary-owner = "hyperpolymath"
+canonical-name = "panll"
+prefixed-name = "nl-panll"
+
+[clade]
+primary = "nl"
+secondary = ["ap"]
+assigned = "2026-03-16"
+rationale = ""
+
+[forges]
+github = "hyperpolymath/panll"
+gitlab = "hyperpolymath/panll"
+bitbucket = "hyperpolymath/panll"
+
+[lineage]
+type = "standalone"
+parent = "Panel-based UI framework — TEA architecture, workspace layer"
+born = "2026-03-16"
