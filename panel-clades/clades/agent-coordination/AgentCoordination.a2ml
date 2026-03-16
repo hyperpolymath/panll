@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Agent Coordination View Panel Clade — Multi-Agent Topology and Strategy
+
+[clade-metadata]
+id = "agent-coordination"
+name = "Agent Coordination View"
+short-name = "AC"
+version = "1.0.0"
+kind = "viewer"
+icon = "git-branch"
+description = "Coordination view — displays multi-agent topology, coordination strategies, and memory type indicators for connected agent nodes."
+
+[clade-traits]
+has-backend = true           # Topology and strategy data via BoJ cartridge
+has-scanning = false
+has-persistence = false
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Strategy selection, topology filtering
+is-directive = true          # Can set coordination strategy
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "TopologyVisualization",   # Agent nodes connected by relationship lines
+  "StrategySelection",       # Choose from 6 coordination strategies
+  "MemoryTypeIndicators",    # Show memory types on each agent node
+  "MultiAgentDetection",     # Detect multi-agent configurations
+  "StrategyDescriptions",    # Rich descriptions of each strategy
+  "PersistenceIndicators",   # Identify persistent vs ephemeral memory
+]
+
+[clade-panel-integration]
+panel-id = "PanelAgentCoordination"
+model-module = "AgentCoordinationModel"
+component-module = "AgentCoordination"
+command-module = "AgentCoordinationCmd"
+
+[clade-related]
+parent = "agentic-bridge"
+sibling = "agent-ooda"

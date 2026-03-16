@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# NeSy Harmonization Monitor Panel Clade — Live Neural-Symbolic Verdict Fusion
+
+[clade-metadata]
+id = "nesy-harmonize"
+name = "NeSy Harmonization Monitor"
+short-name = "NH"
+version = "1.0.0"
+kind = "viewer"
+icon = "git-merge"
+description = "Live monitoring of neural-symbolic harmonization verdicts — tracks neural vs symbolic agreement, confidence, and override rates."
+
+[clade-traits]
+has-backend = true           # Fetches harmonization entries via BoJ cartridge
+has-scanning = false
+has-persistence = false
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Filter by verdict type, toggle auto-refresh
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "NeSyMonitoring",          # Live harmonization entry feed
+  "VerdictHarmonization",    # Neural + symbolic → harmonized verdict
+  "ConfidenceTracking",      # Low/High/Absolute confidence levels
+  "SymbolicWinRate",         # Track how often symbolic overrides neural
+  "VerdictFiltering",        # Filter by CertifiedSafe/RequiresReview/CriticalUnsafe
+  "AutoRefresh",             # Configurable polling interval
+]
+
+[clade-panel-integration]
+panel-id = "PanelNesyHarmonize"
+model-module = "NesyHarmonizeModel"
+component-module = "NesyHarmonize"
+command-module = "NesyHarmonizeCmd"
+
+[clade-related]
+parent = "neurosym-bridge"
+sibling = "nesy-drift"

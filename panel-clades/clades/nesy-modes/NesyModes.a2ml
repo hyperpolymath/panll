@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# NeSy Reasoning Mode Selector Panel Clade — Neural-Symbolic Mode Configuration
+
+[clade-metadata]
+id = "nesy-modes"
+name = "NeSy Reasoning Mode Selector"
+short-name = "NM"
+version = "1.0.0"
+kind = "viewer"
+icon = "sliders"
+description = "Reasoning mode selector — choose between 6 neural-symbolic reasoning strategies with live symbolic/neural indicator feedback."
+
+[clade-traits]
+has-backend = true           # Mode get/set via BoJ cartridge
+has-scanning = false
+has-persistence = false
+has-work-items = false
+has-priority-ordering = false
+has-customisation = false
+is-directive = true          # Actively changes system behaviour
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "ModeSelection",           # Select from 6 reasoning modes
+  "SymbolicIndicator",       # Shows whether current mode uses symbolic reasoning
+  "NeuralIndicator",         # Shows whether current mode uses neural reasoning
+  "HybridDetection",         # Identifies hybrid modes
+  "ModeDescription",         # Rich descriptions for each mode
+  "LiveModeStatus",          # Current active mode display
+]
+
+[clade-panel-integration]
+panel-id = "PanelNesyModes"
+model-module = "NesyModesModel"
+component-module = "NesyModes"
+command-module = "NesyModesCmd"
+
+[clade-related]
+parent = "neurosym-bridge"
+sibling = "nesy-harmonize"

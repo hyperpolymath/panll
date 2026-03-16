@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# NeSy Drift Dashboard Panel Clade — Model Drift Detection and Alerting
+
+[clade-metadata]
+id = "nesy-drift"
+name = "NeSy Drift Dashboard"
+short-name = "ND"
+version = "1.0.0"
+kind = "viewer"
+icon = "activity"
+description = "Drift detection dashboard — monitors neural model drift across 6 categories with severity-based alerting and corrective action recommendations."
+
+[clade-traits]
+has-backend = true           # Drift checks via BoJ cartridge
+has-scanning = true          # Periodic drift scanning
+has-persistence = false
+has-work-items = true        # Critical drift alerts create work items
+has-priority-ordering = true # Alerts ordered by urgency
+has-customisation = true     # Filter by urgency, drift kind
+is-directive = false
+is-readonly = true
+
+[clade-capabilities]
+capabilities = [
+  "DriftDetection",          # 6 drift categories monitored
+  "DriftClassification",     # Concept/data/prior/architecture/distribution/feedback
+  "ActionRecommendation",    # Retrain/calibrate/fallback/halt/review/ignore
+  "UrgencyLevels",           # Immediate/Soon/Scheduled/FYI
+  "AlertTimeline",           # Chronological alert history
+  "ModelStatusOverview",     # Per-model current drift status
+]
+
+[clade-panel-integration]
+panel-id = "PanelNesyDrift"
+model-module = "NesyDriftModel"
+component-module = "NesyDrift"
+command-module = "NesyDriftCmd"
+
+[clade-related]
+parent = "neurosym-bridge"
+sibling = "nesy-harmonize"

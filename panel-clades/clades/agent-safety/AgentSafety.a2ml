@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Agent Safety Gate Panel Clade — Tool Call Safety Review and Approval
+
+[clade-metadata]
+id = "agent-safety"
+name = "Agent Safety Gate"
+short-name = "AS"
+version = "1.0.0"
+kind = "viewer"
+icon = "shield"
+description = "Safety gate — reviews agent tool calls against safety policies, queues dangerous operations for human approval, and tracks approval/denial history."
+
+[clade-traits]
+has-backend = true           # Safety checks via BoJ cartridge
+has-scanning = false
+has-persistence = true       # Event history persisted
+has-work-items = true        # Pending approvals are work items
+has-priority-ordering = true # Pending items ordered by risk
+has-customisation = true     # Filter by outcome, agent
+is-directive = true          # Can approve/deny pending operations
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "PendingApprovals",        # Queue of tool calls awaiting human review
+  "ApproveAction",           # Approve a pending tool call
+  "DenyAction",              # Deny a pending tool call
+  "SafetyHistory",           # Chronological event history
+  "SideEffectDetection",     # Detect tool calls with side effects
+  "EscalationTracking",      # Track escalated operations
+  "StatsOverview",           # Approved/denied/escalated counts
+]
+
+[clade-panel-integration]
+panel-id = "PanelAgentSafety"
+model-module = "AgentSafetyModel"
+component-module = "AgentSafety"
+command-module = "AgentSafetyCmd"
+
+[clade-related]
+parent = "agentic-bridge"
+sibling = "agent-ooda"

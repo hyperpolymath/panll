@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# OODA Session Monitor Panel Clade — Agent OODA Loop Lifecycle Tracking
+
+[clade-metadata]
+id = "agent-ooda"
+name = "OODA Session Monitor"
+short-name = "AO"
+version = "1.0.0"
+kind = "viewer"
+icon = "refresh-cw"
+description = "OODA session monitor — tracks Observe/Orient/Decide/Act agent lifecycles with loop counting, health indicators, and halt controls."
+
+[clade-traits]
+has-backend = true           # Session listing and control via BoJ cartridge
+has-scanning = false
+has-persistence = false
+has-work-items = false
+has-priority-ordering = false
+has-customisation = true     # Session filtering, detail selection
+is-directive = true          # Can advance/halt agent sessions
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "SessionListing",          # List all active OODA sessions
+  "SessionDetail",           # Detailed view of selected session
+  "StateTracking",           # Observe/Orient/Decide/Act/Halted states
+  "LoopCounting",            # Track OODA loop iterations
+  "SessionHealth",           # Health indicators per session
+  "AdvanceControl",          # Manually advance agent state
+  "HaltControl",             # Emergency halt an agent session
+]
+
+[clade-panel-integration]
+panel-id = "PanelAgentOoda"
+model-module = "AgentOodaModel"
+component-module = "AgentOoda"
+command-module = "AgentOodaCmd"
+
+[clade-related]
+parent = "agentic-bridge"
+sibling = "agent-safety"
