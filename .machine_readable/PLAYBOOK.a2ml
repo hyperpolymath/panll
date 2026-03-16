@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# PLAYBOOK.a2ml — Operational playbook
+# Runbooks, incident response, deployment procedures.
+
+[metadata]
+version = "0.1.0"
+last-updated = "2026-03-16"
+
+[deployment]
+# method = "gitops"
+# target = "container"
+
+[incident-response]
+# 1. Check .machine_readable/STATE.a2ml for current status
+# 2. Review recent commits and CI results
+# 3. Run just validate to check compliance
+
+[release-process]
+# 1. Update version in STATE.a2ml, META.a2ml
+# 2. Run just quality (format, lint, test)
+# 3. Tag and push
+
+[operational-flows]
+# - Adding a new feature to PanLL.
+# - 1. Read STATE.scm to understand current state, blockers
+# - 2. Create feature branch: git checkout -b feature/description
+# - 3. Write tests first (tests/*.test.js)
+# - Testing complete user workflows.
+# - 1. New user onboarding: Launch app, see Dark Start mode, first interaction
+# - 2. Constraint creation: Add constraint, toggle active/inactive, pin constraint
+# - 3. Neural validation: Generate token, pass/fail validation, operator intervention
+# - 4. Vexometer tracking: Perform actions, check vexation index updates
+# - 5. Feedback submission: Open Feedback-O-Tron, submit feedback
+# - Future: Automated E2E tests with Playwright or similar

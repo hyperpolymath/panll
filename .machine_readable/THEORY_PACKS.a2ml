@@ -1,0 +1,259 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# THEORY_PACKS.a2ml — Migrated from THEORY_PACKS.scm
+
+[metadata]
+version = "0.1.0"
+last-updated = "2026-03-16"
+migrated-from = "THEORY_PACKS.scm"
+
+[content]
+# - 0.1.0
+# - )
+# - panll/theory-packs
+# - )
+# - Registry of semantic packs that PanLL-Universal notation may bind to.
+# - )
+# - Backend binding must preserve the intended semantics of the pack.
+# - )
+# - Backend binding must explicitly record what restriction or weakening was applied.
+# - )
+# - Backend binding must include machine-generated provenance and downstream validation.
+# - )
+# - PanLL must not silently continue with this binding.
+# - ))
+# - core/eq/v1
+# - )
+# - Core Equality
+# - )
+# - panll-universal
+# - )
+# - =
+# - )
+# - !=
+# - ))))
+# - Minimal equality vocabulary used by many other packs.
+# - )
+# - rocq
+# - )
+# - eq
+# - )
+# - Uses backend-native equality.
+# - ))
+# - lean4
+# - )
+# - Eq
+# - )
+# - Uses backend-native equality.
+# - ))
+# - isabelle-hol
+# - )
+# - =
+# - )
+# - Uses backend-native equality.
+# - ))
+# - z3
+# - )
+# - =
+# - )
+# - Safe at the level of first-order/theory equality where applicable.
+# - ))))
+# - nat/peano/v1
+# - )
+# - Natural Numbers (Peano/Inductive)
+# - )
+# - panll-universal
+# - )
+# - N
+# - )
+# - 0
+# - )
+# - S
+# - )
+# - +
+# - )
+# - *
+# - ))))
+# - Inductive natural numbers with structural induction.
+# - )
+# - Pack is mathematically ordinary but tied to inductive natural number semantics, not arbitrary integers.
+# - ))
+# - rocq
+# - )
+# - nat
+# - )
+# - Backend-native inductive naturals.
+# - ))
+# - lean4
+# - )
+# - Nat
+# - )
+# - Backend-native naturals.
+# - ))
+# - isabelle-hol
+# - )
+# - nat
+# - )
+# - Good fit, but proof and library transport must be theory-aware, not assumed identical.
+# - ))
+# - z3
+# - )
+# - Int with n >= 0 discipline
+# - )
+# - Allowed only when the goal falls in an explicitly approved arithmetic fragment.
+# - ))
+# - elk
+# - )
+# - DL reasoner; not an arithmetic prover.
+# - ))))
+# - algebra/additive-monoid/v1
+# - )
+# - Additive Monoid
+# - )
+# - panll-universal
+# - )
+# - A
+# - )
+# - 0
+# - )
+# - +
+# - ))))
+# - Common algebraic structure for safe cross-backend transport.
+# - )
+# - rocq
+# - )
+# - typeclass or record encoding
+# - ))
+# - lean4
+# - )
+# - typeclass encoding
+# - ))
+# - isabelle-hol
+# - )
+# - locale/type-class style encoding
+# - ))
+# - z3
+# - )
+# - uninterpreted sort + function + axioms
+# - )
+# - Useful for bounded obligation discharge, but not equivalent to proof-assistant algebra libraries.
+# - ))))
+# - logic/first-order/v1
+# - )
+# - First-Order Logic Core
+# - )
+# - panll-universal
+# - )
+# - forall
+# - )
+# - exists
+# - )
+# - ->
+# - )
+# - /\\
+# - )
+# - \\/
+# - )
+# - ~
+# - ))))
+# - Portable core for first-order reasoning.
+# - )
+# - Portable as a core notation layer, but backend proof principles vary sharply.
+# - ))
+# - rocq
+# - )
+# - Prop-level quantification
+# - )
+# - Exact only inside explicitly non-dependent fragments.
+# - ))
+# - lean4
+# - )
+# - Prop-level quantification
+# - )
+# - Exact only inside explicitly non-dependent fragments.
+# - ))
+# - isabelle-hol
+# - )
+# - HOL FOL-style fragment
+# - ))
+# - z3
+# - )
+# - SMT-LIB first-order core
+# - )
+# - Subject to backend quantifier behaviour and supported theories.
+# - ))))
+# - ontology/owl2-el/classification/v1
+# - )
+# - OWL 2 EL Classification
+# - )
+# - ontology-graph
+# - )
+# - subclass-of
+# - )
+# - equiv
+# - )
+# - exists
+# - )
+# - top
+# - )
+# - bottom
+# - ))))
+# - Use ontology reasoning to validate class hierarchy and extract safe consequences.
+# - )
+# - Not a generic theorem-proving pack. Intended for ontology classification and fact extraction.
+# - ))
+# - elk
+# - )
+# - OWL 2 EL ontology
+# - ))
+# - hermit
+# - )
+# - OWL 2 DL ontology
+# - )
+# - Allowed if source ontology remains within the declared EL-safe fragment for this pack.
+# - ))
+# - rocq
+# - )
+# - fact import only
+# - )
+# - Only classified consequences may be imported, each with provenance.
+# - ))
+# - lean4
+# - )
+# - fact import only
+# - ))
+# - z3
+# - )
+# - Not a direct ontology target for this pack.
+# - ))))
+# - bridge/ontology-facts/v1
+# - )
+# - Ontology Consequence Import
+# - )
+# - panll-universal
+# - )
+# - fact
+# - )
+# - from
+# - ))))
+# - Bridge pack for importing externally justified ontology consequences into proof contexts.
+# - )
+# - This is the safe bridge. It imports justified consequences, not the entire ontology semantics.
+# - ))
+# - rocq
+# - )
+# - axiom/fact context with provenance wrapper
+# - ))
+# - lean4
+# - )
+# - fact context with provenance wrapper
+# - ))
+# - isabelle-hol
+# - )
+# - fact context with provenance wrapper
+# - ))
+# - z3
+# - )
+# - assertion context with provenance sidecar
+# - )))))

@@ -1,0 +1,263 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# BACKEND_CAPABILITIES.a2ml — Migrated from BACKEND_CAPABILITIES.scm
+
+[metadata]
+version = "0.1.0"
+last-updated = "2026-03-16"
+migrated-from = "BACKEND_CAPABILITIES.scm"
+
+[content]
+# - 0.1.0
+# - )
+# - panll/backend-capabilities
+# - )
+# - Registry of theorem provers, SMT solvers, description-logic reasoners, and related backends.
+# - )
+# - Translation preserves intended semantics within the declared theory pack.
+# - )
+# - Translation weakens or constrains the source semantics safely.
+# - )
+# - Translation uses search, guessing, or model assistance and requires validation.
+# - )
+# - Translation is not attempted because PanLL cannot justify it semantically.
+# - ))
+# - rocq
+# - )
+# - Rocq Prover
+# - )
+# - coq
+# -  
+# - coq-8.x
+# -  
+# - rocq-prover
+# - ))
+# - dependent-type-theory
+# - )
+# - cic
+# - )
+# - Pi-types and logical quantification may coincide or interact depending on encoding.
+# - ))
+# - smt-theory-transport
+# -  
+# - owl-dl-direct-import
+# - )))
+# - Gallina
+# -  
+# - Ltac
+# - ))
+# - sexp
+# -  
+# - json-via-adapter
+# - ))
+# - cli
+# -  
+# - lsp-via-wrapper
+# - )))
+# - Good target for dependent and constructive theory packs. Not a generic direct target for DL ontologies.
+# - ))
+# - lean4
+# - )
+# - Lean 4
+# - )
+# - lean
+# -  
+# - lean-4
+# - ))
+# - dependent-type-theory
+# - )
+# - dependent-type-theory
+# - )
+# - Rich elaboration layer; surface syntax often hides deeper semantic choices.
+# - ))
+# - owl-dl-direct-import
+# - )))
+# - Lean
+# - ))
+# - json-via-adapter
+# - ))
+# - cli
+# -  
+# - lsp
+# - )))
+# - Strong target for shared algebraic and constructive theory packs, but library-level equivalence must be declared, not assumed.
+# - ))
+# - isabelle-hol
+# - )
+# - Isabelle/HOL
+# - )
+# - isabelle
+# -  
+# - hol
+# - ))
+# - higher-order-logic
+# - )
+# - classical-hol
+# - )
+# - HOL quantification is not equivalent to CIC Pi-types.
+# - ))
+# - dependent-transport
+# -  
+# - owl-dl-direct-import
+# - )))
+# - Isar
+# -  
+# - HOL
+# - ))
+# - xml
+# -  
+# - json-via-adapter
+# - ))
+# - cli
+# -  
+# - document-model
+# - )))
+# - Excellent target for algebraic/HOL-style packs; exactness must be theory-pack specific.
+# - ))
+# - z3
+# - )
+# - Z3
+# - )
+# - smt
+# -  
+# - smtlib
+# -  
+# - z3-solver
+# - ))
+# - first-order-with-theories
+# - )
+# - smt
+# - )
+# - Quantified reasoning is supported but not a foundation-preserving substitute for CIC/HOL proof transport.
+# - ))
+# - dependent-type-theory
+# -  
+# - general-induction
+# -  
+# - owl-dl-direct-import
+# - )))
+# - SMT-LIB
+# - ))
+# - smt2
+# - ))
+# - smt2
+# -  
+# - models
+# -  
+# - proofs-where-available
+# - ))
+# - cli
+# -  
+# - ffi
+# - )))
+# - Natural target for arithmetic, arrays, bitvectors, and decidable fragments. Dangerous target for pretending semantic equivalence with proof assistants.
+# - ))
+# - elk
+# - )
+# - ELK
+# - )
+# - elk-reasoner
+# - ))
+# - description-logic
+# - )
+# - owl-2-el
+# - )
+# - Quantification appears through DL constructors, not as general theorem-prover syntax.
+# - ))
+# - general-hol-goals
+# -  
+# - dependent-transport
+# -  
+# - smt-theories
+# - )))
+# - OWL 2 EL
+# - ))
+# - owl
+# -  
+# - rdf/xml
+# - ))
+# - classification-results
+# - ))
+# - java
+# -  
+# - adapter
+# - )))
+# - Best used as an ontology consistency/classification stage, not as a generic proof engine.
+# - ))
+# - hermit
+# - )
+# - HermiT
+# - )
+# - hermit-reasoner
+# - ))
+# - description-logic
+# - )
+# - owl-2-dl
+# - )
+# - DL reasoner semantics must not be conflated with theorem-prover quantification.
+# - ))
+# - direct-cic-equivalence
+# -  
+# - general-smt-encoding
+# - )))
+# - OWL 2 DL
+# - ))
+# - owl
+# -  
+# - rdf/xml
+# - ))
+# - classification-results
+# -  
+# - consistency-results
+# - ))
+# - java
+# -  
+# - adapter
+# - )))
+# - Use for ontology reasoning and extraction of justified consequences, not for pretending the ontology is already a proof assistant theory.
+# - ))
+# - panll-slm
+# - )
+# - PanLL Semantic Translator
+# - )
+# - slm
+# -  
+# - translator
+# - ))
+# - statistical-neurosymbolic
+# - )
+# - n/a
+# - )
+# - Never source of truth. Must be validated by a downstream backend.
+# - ))
+# - rocq
+# -  
+# - lean4
+# -  
+# - isabelle-hol
+# -  
+# - z3
+# -  
+# - elk
+# -  
+# - hermit
+# - )))
+# - panll-universal
+# -  
+# - backend-specific-via-prompting
+# - ))
+# - json
+# -  
+# - sexp
+# -  
+# - text
+# - ))
+# - candidate-translations
+# - ))
+# - local-model
+# -  
+# - sidecar
+# - )))
+# - Assistant only. Never claim semantic preservation unless another backend proves it.
+# - )))

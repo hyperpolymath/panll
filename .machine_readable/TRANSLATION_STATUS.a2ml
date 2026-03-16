@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# TRANSLATION_STATUS.a2ml — Migrated from TRANSLATION_STATUS.scm
+
+[metadata]
+version = "0.1.0"
+last-updated = "2026-03-16"
+migrated-from = "TRANSLATION_STATUS.scm"
+
+[content]
+# - 0.1.0
+# - )
+# - Exact
+# - )
+# - green
+# - )
+# - PanLL has a declared semantic pack and a backend binding that preserves the intended meaning within that pack.
+# - )
+# - This target preserves the declared semantics for this pack.
+# - ))
+# - Conservative
+# - )
+# - blue
+# - )
+# - PanLL has translated safely by restricting or weakening the original semantics.
+# - )
+# - This target is safe to use, but it is not semantically identical; some meaning has been restricted.
+# - ))
+# - Heuristic
+# - )
+# - amber
+# - )
+# - PanLL has used search, inference, or model assistance to propose a translation that must be validated downstream.
+# - )
+# - This translation is a candidate, not a trusted equivalence. Validation is required.
+# - ))
+# - Refused
+# - )
+# - red
+# - )
+# - PanLL will not translate because it cannot justify the semantics.
+# - )
+# - PanLL refused to translate this because it cannot do so honestly.
+# - )))

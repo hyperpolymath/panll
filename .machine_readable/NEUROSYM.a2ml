@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# NEUROSYM.a2ml — Neurosymbolic integration metadata
+# Configuration for Hypatia scanning and symbolic reasoning.
+
+[metadata]
+version = "0.1.0"
+last-updated = "2026-03-16"
+
+[hypatia-config]
+scan-enabled = true
+scan-depth = "standard"
+report-format = "logtalk"
+
+[goals]
+# - - Decide: Choose action based on constraints and goals
+# - - Act: Generate token, submit to Anti-Crash for validation
+# - Operator can see current OODA phase in Pane-N.
+# - - 0.5 = Shared autonomy (operator sets goals, machine chooses tactics)
+# - - 1.0 = Fully autonomous (machine operates independently within constraints)
+
+[constraints]
+# - PanLL is fundamentally a neurosymbolic environment, integrating symbolic constraints 
+# - (Pane-L) with neural inference (Pane-N) to produce validated outputs (Pane-W). 
+# - Interactive editor in Pane-L for adding, editing, removing constraints. 
+# - Constraints can be pinned (sticky) across sessions. 
+# - - Observe: Gather information from environment (Pane-L constraints, Pane-W state)
+# - - Orient: Analyse situation, update internal model
+# - - Decide: Choose action based on constraints and goals
+# - - Act: Generate token, submit to Anti-Crash for validation
+# - Operator can see current OODA phase in Pane-N.
+# - - 1.0 = Fully autonomous (machine operates independently within constraints)
+# - lastOperatorInput timestamp tracks time since last human intervention.
+# - Validation checks token.content against active constraints from Pane-L. 
+# - If validation passes: token.validated = true, flows to Pane-W. 
+# - If validation fails: RequestOperatorIntervention message, token blocked.
+# - Hybrid: symbolic constraints guide neural generation
+# - Constraints in Pane-L act as 'guard rails' for neural inference. 
+# - Agent aware of constraints, tries to generate tokens that satisfy them. 
+# - Anti-Crash validates after-the-fact, but agent aims to avoid violations.
+# - If constraints too strict (many false positives), agent proposes relaxation. 
+# - If constraints too loose (validation misses errors), agent proposes tightening. 
+# - - Operator learns to express constraints more precisely
+# - - Shared vocabulary develops over time
+# - - Orbital stability sigma measures synchronicity
+# - Learn constraints from examples (operator provides valid/invalid tokens). 
+# - Use inductive logic programming or LLM-based synthesis.
+# - Support constraints on non-textual outputs (images, audio, code ASTs). 
+# - Constraints over sequences of tokens (e.g., 'if token A, then token B within 5 tokens'). 
+# - Soft constraints with confidence scores. 
+# - Allow agent to violate low-confidence constraints if overall probability high.
