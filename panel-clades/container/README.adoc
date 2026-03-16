@@ -13,7 +13,7 @@ The stapeln stack provides verified container packaging, edge gateway
 policies, runtime monitoring, and supply-chain signing for Podman-based
 deployments using https://www.chainguard.dev/[Chainguard] Wolfi base images.
 
-All files use `{{PLACEHOLDER}}` tokens that are replaced by `just container-init`
+All files use `container` tokens that are replaced by `just container-init`
 (or by the top-level `just init` during project bootstrap).
 
 == File Reference
@@ -113,7 +113,7 @@ just container-init
 ----
 
 The `container-init` recipe prompts for container-specific values
-(service name, port, registry) and substitutes all `{{PLACEHOLDER}}`
+(service name, port, registry) and substitutes all `container`
 tokens in the `container/` directory.
 
 == Development Workflow

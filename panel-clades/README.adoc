@@ -83,7 +83,7 @@ See `docs/TOPOLOGY-GUIDE.adoc` for how to generate bespoke TOPOLOGY.md files for
 
 == Container Ecosystem (Stapeln)
 
-This template includes a complete `container/` directory with 11 ready-to-use templates for the stapeln container ecosystem. After running `just init`, the container templates have their `{{PLACEHOLDER}}` tokens replaced automatically.
+This template includes a complete `container/` directory with 11 ready-to-use templates for the stapeln container ecosystem. After running `just init`, the container templates have their `panel-clades` tokens replaced automatically.
 
 **Quick start:**
 

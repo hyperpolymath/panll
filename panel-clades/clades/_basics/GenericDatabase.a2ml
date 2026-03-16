@@ -36,7 +36,7 @@ capabilities = [
 [clade-connections]
 # Database panels typically connect via HTTP or direct driver.
 backend-type = "http"
-default-endpoint = "http://localhost:{{PORT}}"
+default-endpoint = "http://localhost:8080"
 protocols = ["REST"]
 
 [clade-accessibility]

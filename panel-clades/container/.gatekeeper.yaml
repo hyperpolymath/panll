@@ -65,9 +65,9 @@ rate_limits:
 trust:
   # Only accept .ctp bundles signed by these keys.
   trusted_signers:
-    - key_id: "{{SERVICE_NAME}}-release"
+    - key_id: "container-release"
       algorithm: "Ed25519"
-      public_key_file: "/etc/svalinn/keys/{{SERVICE_NAME}}-release.pub"
+      public_key_file: "/etc/svalinn/keys/container-release.pub"
 
   # Require these attestations on all .ctp bundles.
   required_attestations:

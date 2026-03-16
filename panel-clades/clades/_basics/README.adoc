@@ -52,7 +52,7 @@ cp _basics/GenericBuilder.a2ml ../my-new-panel/MyNewPanel.a2ml
 #    {{SHORT}}        — 2-4 character abbreviation (e.g. "MNP")
 #    {{ICON}}         — Lucide icon name (e.g. "wrench")
 #    {{PASCAL_NAME}}  — PascalCase module name (e.g. "MyNewPanel")
-#    {{PORT}}         — service port number (if applicable)
+#    8080         — service port number (if applicable)
 #    {{PROTOCOL}}     — protocol name (if applicable)
 #    {{ONE_LINE_DESCRIPTION}} — concise panel description
 

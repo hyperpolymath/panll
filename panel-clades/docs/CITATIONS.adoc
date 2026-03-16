@@ -6,7 +6,7 @@
 [source,bibtex]
 ----
 @software{Panll_2026,
-  author = {{{AUTHOR_LAST}}, {{AUTHOR_FIRST}}},
+  author = {Jewell, Jonathan},
   title = {Panll},
   year = {2026},
   url = {https://github.com/hyperpolymath/Panll},
@@ -16,7 +16,7 @@
 
 == Harvard Style
 
-{{AUTHOR_LAST}}, {{AUTHOR_INITIALS}} (2026) _Panll_ [Computer software]. Available at: https://github.com/hyperpolymath/Panll
+Jewell, J.D.A. (2026) _Panll_ [Computer software]. Available at: https://github.com/hyperpolymath/Panll
 
 == OSCOLA
 
@@ -24,11 +24,11 @@ Jonathan D.A. Jewell, 'Panll' (2026) <https://github.com/hyperpolymath/Panll>
 
 == MLA
 
-{{AUTHOR_LAST}}, {{AUTHOR_FIRST}} "Panll." 2026, github.com/hyperpolymath/Panll.
+Jewell, Jonathan "Panll." 2026, github.com/hyperpolymath/Panll.
 
 == APA 7
 
-{{AUTHOR_LAST}}, {{AUTHOR_INITIALS}} (2026). _Panll_ [Computer software]. GitHub. https://github.com/hyperpolymath/Panll
+Jewell, J.D.A. (2026). _Panll_ [Computer software]. GitHub. https://github.com/hyperpolymath/Panll
 
 == See Also
 

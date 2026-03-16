@@ -9,7 +9,7 @@
 |---------------|--------------------------------|
 | Project       | Panll               |
 | Version       | 1.0                            |
-| Last Reviewed | {{DATE}}                       |
+| Last Reviewed | 2026-03-16                       |
 | Author        | Jonathan D.A. Jewell                     |
 | Methodology   | STRIDE                         |
 

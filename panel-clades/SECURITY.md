@@ -4,7 +4,7 @@
 ============================================================================
 TEMPLATE INSTRUCTIONS (delete this block before publishing)
 ============================================================================
-Replace all {{PLACEHOLDER}} values with your information:
+Replace all panel-clades values with your information:
   Panll     - Your project name
   hyperpolymath            - GitHub username or org (e.g., hyperpolymath)
   panll             - Repository name

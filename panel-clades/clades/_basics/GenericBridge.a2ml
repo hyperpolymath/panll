@@ -37,7 +37,7 @@ capabilities = [
 [clade-connections]
 # Bridges connect to external systems via various protocols.
 backend-type = "http"
-default-endpoint = "http://localhost:{{PORT}}"
+default-endpoint = "http://localhost:8080"
 protocols = ["{{PROTOCOL}}"]
 
 [clade-accessibility]
