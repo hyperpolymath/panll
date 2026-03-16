@@ -17,16 +17,16 @@ validates the result, and runs k9-svc checks if available.
 ```bash
 # If you prefer manual replacement (run from repo root)
 
-sed -i 's/{{AUTHOR}}/Jane Doe/g' $(grep -rl '{{AUTHOR}}' .)
-sed -i 's/{{AUTHOR_EMAIL}}/jane@example.org/g' $(grep -rl '{{AUTHOR_EMAIL}}' .)
-sed -i 's/{{OWNER}}/my-org/g' $(grep -rl '{{OWNER}}' .)
-sed -i 's/{{PROJECT_NAME}}/my-project/g' $(grep -rl '{{PROJECT_NAME}}' .)
+sed -i 's/Jonathan D.A. Jewell/Jane Doe/g' $(grep -rl 'Jonathan D.A. Jewell' .)
+sed -i 's/j.d.a.jewell@open.ac.uk/jane@example.org/g' $(grep -rl 'j.d.a.jewell@open.ac.uk' .)
+sed -i 's/hyperpolymath/my-org/g' $(grep -rl 'hyperpolymath' .)
+sed -i 's/Panll/my-project/g' $(grep -rl 'Panll' .)
 sed -i 's/{{PROJECT}}/MY_PROJECT/g' $(grep -rl '{{PROJECT}}' .)
 sed -i 's/{{project}}/my_project/g' $(grep -rl '{{project}}' .)
-sed -i 's/{{REPO}}/my-project/g' $(grep -rl '{{REPO}}' .)
-sed -i 's/{{FORGE}}/github.com/g' $(grep -rl '{{FORGE}}' .)
-sed -i "s/{{CURRENT_YEAR}}/$(date +%Y)/g" $(grep -rl '{{CURRENT_YEAR}}' .)
-sed -i "s/{{CURRENT_DATE}}/$(date +%Y-%m-%d)/g" $(grep -rl '{{CURRENT_DATE}}' .)
+sed -i 's/panll/my-project/g' $(grep -rl 'panll' .)
+sed -i 's/github.com/github.com/g' $(grep -rl 'github.com' .)
+sed -i "s/2026/$(date +%Y)/g" $(grep -rl '2026' .)
+sed -i "s/2026-03-16/$(date +%Y-%m-%d)/g" $(grep -rl '2026-03-16' .)
 ```
 
 ## Placeholder Reference
@@ -35,8 +35,8 @@ sed -i "s/{{CURRENT_DATE}}/$(date +%Y-%m-%d)/g" $(grep -rl '{{CURRENT_DATE}}' .)
 
 | Placeholder | Description | Example | Files |
 |---|---|---|---|
-| `{{AUTHOR}}` | Full legal name | `Jane Doe` | SPDX headers (all files), MAINTAINERS.md, .mailmap, .reuse/dep5, docs/AI-CONVENTIONS.md |
-| `{{AUTHOR_EMAIL}}` | Primary contact email | `jane@example.org` | SPDX headers (all files), .mailmap, .reuse/dep5, .well-known/humans.txt |
+| `Jonathan D.A. Jewell` | Full legal name | `Jane Doe` | SPDX headers (all files), MAINTAINERS.md, .mailmap, .reuse/dep5, docs/AI-CONVENTIONS.md |
+| `j.d.a.jewell@open.ac.uk` | Primary contact email | `jane@example.org` | SPDX headers (all files), .mailmap, .reuse/dep5, .well-known/humans.txt |
 | `{{AUTHOR_EMAIL_ALT}}` | Previous/secondary email (for .mailmap) | `old@example.com` | .mailmap |
 | `{{AUTHOR_ORG}}` | Author's organization/affiliation | `Acme University` | project-metadata.k9.ncl |
 | `{{AUTHOR_LAST}}` | Author surname (for citations) | `Doe` | docs/CITATIONS.adoc |
@@ -47,28 +47,28 @@ sed -i "s/{{CURRENT_DATE}}/$(date +%Y-%m-%d)/g" $(grep -rl '{{CURRENT_DATE}}' .)
 
 | Placeholder | Description | Example | Files |
 |---|---|---|---|
-| `{{PROJECT_NAME}}` | Human-readable project name | `My Project` | SECURITY.md, CODE_OF_CONDUCT.md, TOPOLOGY.md, STATE.a2ml, Justfile, GOVERNANCE.md, MAINTAINERS.md, flake.nix, devcontainer.json |
+| `Panll` | Human-readable project name | `My Project` | SECURITY.md, CODE_OF_CONDUCT.md, TOPOLOGY.md, STATE.a2ml, Justfile, GOVERNANCE.md, MAINTAINERS.md, flake.nix, devcontainer.json |
 | `{{PROJECT_DESCRIPTION}}` | One-line description | `A tool for X` | flake.nix |
 | `{{PROJECT}}` | Uppercase identifier (for Idris2 modules, C macros) | `MY_PROJECT` | ABI-FFI-README.md, src/abi/*.idr, ffi/zig/*.zig |
 | `{{project}}` | Lowercase identifier (for C symbols, filenames) | `my_project` | ABI-FFI-README.md, ffi/zig/*.zig |
-| `{{REPO}}` | Repository name (slug) | `my-project` | CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, cliff.toml |
-| `{{OWNER}}` | GitHub/GitLab org or username | `my-org` | SPDX headers, CONTRIBUTING.md, SECURITY.md, GOVERNANCE.md, MAINTAINERS.md, CODEOWNERS, mirror.yml, cliff.toml |
-| `{{FORGE}}` | Git forge domain | `github.com` | CONTRIBUTING.md |
+| `panll` | Repository name (slug) | `my-project` | CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, cliff.toml |
+| `hyperpolymath` | GitHub/GitLab org or username | `my-org` | SPDX headers, CONTRIBUTING.md, SECURITY.md, GOVERNANCE.md, MAINTAINERS.md, CODEOWNERS, mirror.yml, cliff.toml |
+| `github.com` | Git forge domain | `github.com` | CONTRIBUTING.md |
 
 ### Dates
 
 | Placeholder | Description | Example | Files |
 |---|---|---|---|
-| `{{CURRENT_YEAR}}` | Current year | `2026` | SPDX headers (all files), GOVERNANCE.md, MAINTAINERS.md |
-| `{{CURRENT_DATE}}` | Current date (ISO) | `2026-02-14` | STATE.a2ml, MAINTAINERS.md |
+| `2026` | Current year | `2026` | SPDX headers (all files), GOVERNANCE.md, MAINTAINERS.md |
+| `2026-03-16` | Current date (ISO) | `2026-02-14` | STATE.a2ml, MAINTAINERS.md |
 | `{{DATE}}` | Last updated date | `2026-02-14` | TOPOLOGY.md, THREAT-MODEL.md |
 
 ### Contact & Security
 
 | Placeholder | Description | Example | Files |
 |---|---|---|---|
-| `{{SECURITY_EMAIL}}` | Security contact email | `security@example.org` | SECURITY.md |
-| `{{PGP_FINGERPRINT}}` | 40-char PGP fingerprint | `ABCD 1234 ...` | SECURITY.md |
+| `6759885+hyperpolymath@users.noreply.github.com` | Security contact email | `security@example.org` | SECURITY.md |
+| `[PGP fingerprint not set]` | 40-char PGP fingerprint | `ABCD 1234 ...` | SECURITY.md |
 | `{{PGP_KEY_URL}}` | URL to public PGP key | `https://keys.openpgp.org/...` | SECURITY.md |
 | `{{WEBSITE}}` | Project website | `https://example.org` | SECURITY.md |
 | `{{CONDUCT_EMAIL}}` | Conduct reports email | `conduct@example.org` | CODE_OF_CONDUCT.md |
@@ -79,13 +79,13 @@ sed -i "s/{{CURRENT_DATE}}/$(date +%Y-%m-%d)/g" $(grep -rl '{{CURRENT_DATE}}' .)
 
 | Placeholder | Description | Example | Files |
 |---|---|---|---|
-| `{{MAIN_BRANCH}}` | Main branch name | `main` | CONTRIBUTING.md |
+| `main` | Main branch name | `main` | CONTRIBUTING.md |
 
 ### Build
 
 | Placeholder | Description | Example | Files |
 |---|---|---|---|
-| `{{LICENSE}}` | License name | `PMPL-1.0-or-later` | ABI-FFI-README.md |
+| `PMPL-1.0-or-later` | License name | `PMPL-1.0-or-later` | ABI-FFI-README.md |
 | `{{PROJECT_PURPOSE}}` | One-line project description | `FFI bridges between languages` | STATE.a2ml |
 
 ### AI Manifest

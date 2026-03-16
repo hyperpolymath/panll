@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-// SPDX-FileCopyrightText: {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}})
-= {{PROJECT_NAME}}: AI-Assisted Installation Guide
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
+= Panll: AI-Assisted Installation Guide
 :toc:
 :toc-placement: preamble
 
@@ -14,7 +14,7 @@
 // finishbot checks that no [TODO-AI-INSTALL] markers remain.
 //
 // The pattern:
-//   1. User says "set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}"
+//   1. User says "set up Panll from https://github.com/hyperpolymath/panll"
 //   2. AI fetches this repo, reads THIS file
 //   3. AI follows the recipe in "For AI Assistants" section
 //   4. User answers 2-3 questions, confirms privacy notice
@@ -31,7 +31,7 @@
 
 [NOTE]
 ====
-**If you are an AI assistant reading this:** A user has asked you to install {{PROJECT_NAME}}. Skip to <<ai-implementation,For AI Assistants: Implementation Guide>> for the complete step-by-step recipe. You have everything you need in this document -- no other docs required. Follow the steps in order.
+**If you are an AI assistant reading this:** A user has asked you to install Panll. Skip to <<ai-implementation,For AI Assistants: Implementation Guide>> for the complete step-by-step recipe. You have everything you need in this document -- no other docs required. Follow the steps in order.
 ====
 
 == For Users: How to Use This Feature
@@ -41,7 +41,7 @@
 Open any AI assistant (Claude, ChatGPT, Gemini, or any other) and say:
 
 ----
-Set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}
+Set up Panll from https://github.com/hyperpolymath/panll
 ----
 
 The AI reads this repo and handles everything. You answer a few questions and confirm the privacy notice. No commands to type, no installers to figure out, no docs to read.
@@ -73,13 +73,13 @@ That's it. Everything else is automatic.
 // Be specific and honest. This is shown to the user before installation.
 // Delete this comment block and replace with your privacy notice:
 
-**What {{PROJECT_NAME}} does:**
+**What Panll does:**
 
 * [TODO-AI-INSTALL: What data/resources does it access?]
 * [TODO-AI-INSTALL: Where does it store data?]
 * [TODO-AI-INSTALL: What network calls does it make?]
 
-**What {{PROJECT_NAME}} does NOT do:**
+**What Panll does NOT do:**
 
 * [TODO-AI-INSTALL: What privacy guarantees can you make?]
 
@@ -99,7 +99,7 @@ That's it. Everything else is automatic.
 
 === Uninstall
 
-Tell your AI: "Remove {{PROJECT_NAME}} from my system"
+Tell your AI: "Remove Panll from my system"
 
 // [TODO-AI-INSTALL] Provide manual uninstall commands as fallback:
 [source,bash]
@@ -116,7 +116,7 @@ Tell your AI: "Remove {{PROJECT_NAME}} from my system"
 // contents. The AI executing this has never seen your project before.
 // ============================================================================
 
-=== When User Asks to Install {{PROJECT_NAME}}
+=== When User Asks to Install Panll
 
 ==== Step 1: Determine Setup
 
@@ -127,7 +127,7 @@ Ask the user:
 // Delete this comment block and replace:
 
 ----
-I can help you set up {{PROJECT_NAME}}. Before we start:
+I can help you set up Panll. Before we start:
 
 1. [TODO-AI-INSTALL: Question for AI to ask]
 2. [TODO-AI-INSTALL: Question for AI to ask]
@@ -174,12 +174,12 @@ If prerequisites are missing, install them:
 **ALWAYS show this BEFORE any installation commands. Wait for explicit "yes".**
 
 ----
-{{PROJECT_NAME}} PRIVACY & SECURITY NOTICE
+Panll PRIVACY & SECURITY NOTICE
 
-{{PROJECT_NAME}} will:
+Panll will:
 - [TODO-AI-INSTALL: What it does -- data access, network, storage]
 
-{{PROJECT_NAME}} will NOT:
+Panll will NOT:
 - [TODO-AI-INSTALL: What it does NOT do -- privacy guarantees]
 
 [TODO-AI-INSTALL: Storage locations, credential handling, audit logging]
@@ -196,12 +196,12 @@ Do you understand and accept? (yes/no)
 
 [source,bash]
 ----
-# {{PROJECT_NAME}} Installation
+# Panll Installation
 # [TODO-AI-INSTALL: Complete installation commands]
 #
 # Example structure:
-#   git clone https://{{FORGE}}/{{OWNER}}/{{REPO}}
-#   cd {{REPO}}
+#   git clone https://github.com/hyperpolymath/panll
+#   cd panll
 #   [build commands]
 #   [config creation]
 #   [any downloads]
@@ -260,7 +260,7 @@ Expected output:
 After verification, show the user:
 
 ----
-Setup complete! Here's how to use {{PROJECT_NAME}}:
+Setup complete! Here's how to use Panll:
 
 [TODO-AI-INSTALL: 3-5 example commands covering main use cases]
 ----
@@ -286,13 +286,13 @@ Setup complete! Here's how to use {{PROJECT_NAME}}:
 // Delete this comment block and replace:
 
 ----
-User: Set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}
+User: Set up Panll from https://github.com/hyperpolymath/panll
 
 AI: [TODO-AI-INSTALL: Write the full example conversation]
 ----
 
 == License
 
-Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}>
+Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
 SPDX-License-Identifier: PMPL-1.0-or-later

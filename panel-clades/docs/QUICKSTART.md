@@ -12,7 +12,7 @@ Get up and running in 60 seconds.
 ## From Template (New Project)
 
 ```bash
-git clone https://github.com/{{OWNER}}/rsr-template-repo my-project
+git clone https://github.com/hyperpolymath/rsr-template-repo my-project
 cd my-project
 rm -rf .git && git init -b main
 just init       # interactive placeholder replacement
@@ -21,8 +21,8 @@ just init       # interactive placeholder replacement
 ## Clone and Setup (Existing Project)
 
 ```bash
-git clone https://github.com/{{OWNER}}/{{REPO}}.git
-cd {{REPO}}
+git clone https://github.com/hyperpolymath/panll.git
+cd panll
 just deps
 ```
 
@@ -60,5 +60,5 @@ docs/        # Documentation
 If `just deps` fails, ensure your toolchain version matches the
 project requirements listed in the `Justfile` or `.machine_readable/ECOSYSTEM.a2ml`.
 
-Open a [Discussion](https://github.com/{{OWNER}}/{{REPO}}/discussions)
+Open a [Discussion](https://github.com/hyperpolymath/panll/discussions)
 if you get stuck.

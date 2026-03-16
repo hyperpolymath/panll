@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-// SPDX-FileCopyrightText: {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}})
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath)
 //
 // ============================================================================
 // AI-NATIVE INSTALLATION SECTION — paste into your README.adoc
@@ -21,7 +21,7 @@
 
 [source,text]
 ----
-Set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}
+Set up Panll from https://github.com/hyperpolymath/panll
 ----
 
 **The URL is the spec.** The AI fetches this repo, reads the installation guide inside it, and handles everything. You answer a few questions and confirm the privacy notice. No commands to type, no installers to figure out, no docs to read.
@@ -40,7 +40,7 @@ The AI handles:
 
 === Other Ways to Say It
 
-If your AI already knows about {{PROJECT_NAME}} (web search, training data), shorter versions work:
+If your AI already knows about Panll (web search, training data), shorter versions work:
 
 // [TODO-AI-INSTALL] Replace with natural-language variations specific to your project.
 // Delete this comment block and replace:
@@ -50,7 +50,7 @@ If your AI already knows about {{PROJECT_NAME}} (web search, training data), sho
 
 If it doesn't know the project, just include the URL:
 
-* "Set up https://{{FORGE}}/{{OWNER}}/{{REPO}} on my machine"
+* "Set up https://github.com/hyperpolymath/panll on my machine"
 
 === What You'll Be Asked
 
@@ -72,11 +72,11 @@ That's it. Everything else is automatic.
 // [TODO-AI-INSTALL] Same privacy notice as in the AI_INSTALLATION_GUIDE.adoc.
 // Delete this comment block and replace:
 
-**What {{PROJECT_NAME}} does:**
+**What Panll does:**
 
 * [TODO-AI-INSTALL: What it does]
 
-**What {{PROJECT_NAME}} does NOT do:**
+**What Panll does NOT do:**
 
 * [TODO-AI-INSTALL: What it does NOT do]
 
@@ -95,7 +95,7 @@ That's it. Everything else is automatic.
 
 === Uninstall
 
-Tell your AI: "Remove {{PROJECT_NAME}} from my system"
+Tell your AI: "Remove Panll from my system"
 
 === Troubleshooting
 

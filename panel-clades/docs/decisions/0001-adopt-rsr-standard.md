@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
-<!-- Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}> -->
+<!-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk> -->
 
 # 1. Adopt Rhodium Standard Repository (RSR) Template
 
@@ -50,7 +50,7 @@ The RSR template provides:
 New repositories are created by cloning the template:
 
 ```bash
-git clone https://github.com/{{OWNER}}/rsr-template-repo new-repo-name
+git clone https://github.com/hyperpolymath/rsr-template-repo new-repo-name
 cd new-repo-name
 rm -rf .git && git init
 ```

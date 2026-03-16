@@ -3,7 +3,7 @@
 [TIP]
 ====
 **AI-Assisted Install:** Just tell any AI assistant: +
-`Set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}` +
+`Set up Panll from https://github.com/hyperpolymath/panll` +
 The AI reads this repo, asks you a few questions, and handles everything. See <<ai-install,details below>>.
 ====
 
@@ -63,7 +63,7 @@ project/
 * ✅ No repeated explanations - mechanical enforcement
 * ✅ Works universally (not just Claude)
 
-**See:** link:https://github.com/{{OWNER}}/0-ai-gatekeeper-protocol[AI Gatekeeper Protocol] for details
+**See:** link:https://github.com/hyperpolymath/0-ai-gatekeeper-protocol[AI Gatekeeper Protocol] for details
 
 **Enforcement:**
 
@@ -195,7 +195,7 @@ Permission policy is audit-first by default. Use `just perms-lock` only when int
 
 [source,text]
 ----
-Set up {{PROJECT_NAME}} from https://{{FORGE}}/{{OWNER}}/{{REPO}}
+Set up Panll from https://github.com/hyperpolymath/panll
 ----
 
 The URL is the spec. The AI fetches this repo, reads `docs/AI_INSTALLATION_GUIDE.adoc`, and handles everything -- prerequisites, build, config, verification. You answer a few questions and confirm the privacy notice. No commands, no installers, no forms.

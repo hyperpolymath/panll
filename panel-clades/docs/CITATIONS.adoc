@@ -1,34 +1,34 @@
-= {{PROJECT_NAME}} - Citation Guide
+= Panll - Citation Guide
 :toc:
 
 == BibTeX
 
 [source,bibtex]
 ----
-@software{{{PROJECT_NAME}}_{{CURRENT_YEAR}},
+@software{Panll_2026,
   author = {{{AUTHOR_LAST}}, {{AUTHOR_FIRST}}},
-  title = {{{PROJECT_NAME}}},
-  year = {{{CURRENT_YEAR}}},
-  url = {https://github.com/{{OWNER}}/{{PROJECT_NAME}}},
+  title = {Panll},
+  year = {2026},
+  url = {https://github.com/hyperpolymath/Panll},
   license = {PMPL-1.0-or-later}
 }
 ----
 
 == Harvard Style
 
-{{AUTHOR_LAST}}, {{AUTHOR_INITIALS}} ({{CURRENT_YEAR}}) _{{PROJECT_NAME}}_ [Computer software]. Available at: https://github.com/{{OWNER}}/{{PROJECT_NAME}}
+{{AUTHOR_LAST}}, {{AUTHOR_INITIALS}} (2026) _Panll_ [Computer software]. Available at: https://github.com/hyperpolymath/Panll
 
 == OSCOLA
 
-{{AUTHOR}}, '{{PROJECT_NAME}}' ({{CURRENT_YEAR}}) <https://github.com/{{OWNER}}/{{PROJECT_NAME}}>
+Jonathan D.A. Jewell, 'Panll' (2026) <https://github.com/hyperpolymath/Panll>
 
 == MLA
 
-{{AUTHOR_LAST}}, {{AUTHOR_FIRST}} "{{PROJECT_NAME}}." {{CURRENT_YEAR}}, github.com/{{OWNER}}/{{PROJECT_NAME}}.
+{{AUTHOR_LAST}}, {{AUTHOR_FIRST}} "Panll." 2026, github.com/hyperpolymath/Panll.
 
 == APA 7
 
-{{AUTHOR_LAST}}, {{AUTHOR_INITIALS}} ({{CURRENT_YEAR}}). _{{PROJECT_NAME}}_ [Computer software]. GitHub. https://github.com/{{OWNER}}/{{PROJECT_NAME}}
+{{AUTHOR_LAST}}, {{AUTHOR_INITIALS}} (2026). _Panll_ [Computer software]. GitHub. https://github.com/hyperpolymath/Panll
 
 == See Also
 

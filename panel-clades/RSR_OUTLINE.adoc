@@ -1,6 +1,6 @@
 = RSR Template Repository
 
-image:[Palimpsest-MPL-1.0,link="https://github.com/{{OWNER}}/palimpsest-license"] image:[Palimpsest,link="https://github.com/{{OWNER}}/palimpsest-license"]
+image:[Palimpsest-MPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"] image:[Palimpsest,link="https://github.com/hyperpolymath/palimpsest-license"]
 :toc:
 :sectnums:
 
@@ -24,7 +24,7 @@ This repository provides the standardized structure, configuration, and tooling 
 [source,bash]
 ----
 # Clone the template
-git clone https://github.com/{{OWNER}}/RSR-template-repo my-project
+git clone https://github.com/hyperpolymath/RSR-template-repo my-project
 cd my-project
 
 # Remove template git history
@@ -239,7 +239,7 @@ The STATE.a2ml file tracks project state:
 # STATE — Project State Checkpoint
 # Format: a2ml (AI-readable markup)
 
-project: {{PROJECT_NAME}}
+project: Panll
 version: 0.1.0
 last-updated: 2026-02-14
 status: active
@@ -285,6 +285,6 @@ SPDX-License-Identifier: PMPL-1.0-or-later
 
 == Links
 
-* https://github.com/{{OWNER}}/elegant-STATE[elegant-STATE] - STATE tooling
-* https://github.com/{{OWNER}}/conative-gating[conative-gating] - Policy enforcement
+* https://github.com/hyperpolymath/elegant-STATE[elegant-STATE] - STATE tooling
+* https://github.com/hyperpolymath/conative-gating[conative-gating] - Policy enforcement
 * https://rhodium.sh[Rhodium Standard] - RSR documentation

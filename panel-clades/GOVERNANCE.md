@@ -2,13 +2,13 @@
 
 # Project Governance
 
-This document describes the governance model for **{{PROJECT_NAME}}**.
+This document describes the governance model for **Panll**.
 
 ---
 
 ## Project Governance Model
 
-{{PROJECT_NAME}} follows a **Benevolent Dictator For Life (BDFL)** governance model.
+Panll follows a **Benevolent Dictator For Life (BDFL)** governance model.
 This model is well-suited for solo maintainers and small project teams where rapid,
 consistent decision-making is more valuable than formal consensus processes.
 
@@ -155,4 +155,4 @@ with the community before adoption, even though the BDFL retains final authority
 
 ---
 
-<sub>Copyright (c) {{CURRENT_YEAR}} {{OWNER}}. Licensed under PMPL-1.0-or-later.</sub>
+<sub>Copyright (c) 2026 hyperpolymath. Licensed under PMPL-1.0-or-later.</sub>

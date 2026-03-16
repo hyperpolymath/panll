@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 = Dev Container Usage
-:author: {{AUTHOR}} <{{AUTHOR_EMAIL}}>
+:author: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 == Overview
 
@@ -24,4 +24,4 @@ This dev container uses `cgr.dev/chainguard/wolfi-base` with git, curl, bash, an
 
 == Customization
 
-Replace `{{PROJECT_NAME}}` placeholders in both `devcontainer.json` and `Containerfile` with your actual project name. Run `just deps` to verify the environment after first launch.
+Replace `Panll` placeholders in both `devcontainer.json` and `Containerfile` with your actual project name. Run `just deps` to verify the environment after first launch.

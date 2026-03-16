@@ -2,7 +2,7 @@
 
 # Maintainers
 
-This document lists the current and former maintainers of **{{PROJECT_NAME}}**.
+This document lists the current and former maintainers of **Panll**.
 
 ---
 
@@ -10,7 +10,7 @@ This document lists the current and former maintainers of **{{PROJECT_NAME}}**.
 
 | Name | GitHub | Role | Since |
 |------|--------|------|-------|
-| {{AUTHOR}} | [@{{OWNER}}](https://github.com/{{OWNER}}) | BDFL | {{CURRENT_DATE}} |
+| Jonathan D.A. Jewell | [@hyperpolymath](https://github.com/hyperpolymath) | BDFL | 2026-03-16 |
 
 ---
 
@@ -35,4 +35,4 @@ for their contributions.
 
 ---
 
-<sub>Copyright (c) {{CURRENT_YEAR}} {{OWNER}}. Licensed under PMPL-1.0-or-later.</sub>
+<sub>Copyright (c) 2026 hyperpolymath. Licensed under PMPL-1.0-or-later.</sub>
