@@ -16,6 +16,7 @@
 //!   panll panel repair --panel Wharf       # dry-run repair preview
 //!   panll panel repair --panel Wharf --apply  # apply repairs
 
+#![forbid(unsafe_code)]
 mod contract;
 mod obligation;
 mod policy;
