@@ -243,6 +243,12 @@ let defaultState: aiState = {
   error: None,
   totalInputTokens: 0,
   totalOutputTokens: 0,
+  streaming: {
+    active: false,
+    currentText: "",
+    pendingToolCalls: [],
+    completedToolResults: [],
+  },
 }
 
 /// Available models for each provider.
@@ -332,3 +338,119 @@ let providerStateDecoder: Tea_Json.decoder<array<aiProviderConfig>> =
 /// Parse provider config state from the Tauri backend JSON.
 let parseProviderState = (jsonStr: string): result<array<aiProviderConfig>, string> =>
   Decoders.decode(providerStateDecoder, jsonStr)
+
+// ---------------------------------------------------------------------------
+// Streaming helpers — parse stream chunks and manage streaming state
+// ---------------------------------------------------------------------------
+
+/// Parse a stream chunk JSON from a Tauri event payload.
+/// Returns `(chunkType, optionalData)` where chunkType is one of:
+/// "TextDelta", "ToolUseStart", "ToolUseDelta", "ToolUseEnd", "Complete", "Error".
+let parseStreamChunk = (json: string): result<(string, option<JSON.t>), string> => {
+  try {
+    let parsed = JSON.parseExn(json)
+    switch JSON.Classify.classify(parsed) {
+    | Object(obj) => {
+        let chunkType = switch Dict.get(obj, "type") {
+        | Some(v) =>
+          switch JSON.Classify.classify(v) {
+          | String(s) => s
+          | _ => "unknown"
+          }
+        | None => "unknown"
+        }
+        let data = Dict.get(obj, "data")
+        Ok((chunkType, data))
+      }
+    | _ => Error("Stream chunk is not an object: " ++ json)
+    }
+  } catch {
+  | _ => Error("Failed to parse stream chunk: " ++ json)
+  }
+}
+
+/// Create default streaming state (inactive, no accumulated data).
+let defaultStreamingState = (): streamingState => {
+  active: false,
+  currentText: "",
+  pendingToolCalls: [],
+  completedToolResults: [],
+}
+
+/// Append a text delta to the streaming state's accumulated text.
+let appendTextDelta = (state: streamingState, text: string): streamingState => {
+  ...state,
+  currentText: state.currentText ++ text,
+}
+
+/// Start a new tool call (ToolUseStart received).
+let startToolCall = (state: streamingState, id: string, name: string): streamingState => {
+  let newCall: toolCallState = {
+    id,
+    name,
+    accumulatedInput: "",
+    status: Accumulating,
+  }
+  {
+    ...state,
+    pendingToolCalls: Array.concat(state.pendingToolCalls, [newCall]),
+  }
+}
+
+/// Append JSON input to the most recent pending tool call (ToolUseDelta).
+let appendToolInput = (state: streamingState, partialJson: string): streamingState => {
+  let len = Array.length(state.pendingToolCalls)
+  if len === 0 {
+    state
+  } else {
+    let calls = Array.copy(state.pendingToolCalls)
+    switch calls[len - 1] {
+    | Some(last) =>
+      last.accumulatedInput = last.accumulatedInput ++ partialJson
+      {...state, pendingToolCalls: calls}
+    | None => state
+    }
+  }
+}
+
+/// Info needed to dispatch a tool call to BoJ.
+type toolCallDispatchInfo = {
+  /// The tool_use_id from Claude.
+  callId: string,
+  /// The tool name (maps to a BoJ cartridge tool).
+  callName: string,
+  /// The accumulated JSON input for the tool.
+  callInput: string,
+}
+
+/// Mark the most recent pending tool call as ready for execution (ToolUseEnd).
+/// Returns the tool call info for dispatch, if any.
+let finalizeToolCall = (
+  state: streamingState,
+): (streamingState, option<toolCallDispatchInfo>) => {
+  let len = Array.length(state.pendingToolCalls)
+  if len === 0 {
+    (state, None)
+  } else {
+    let calls = Array.copy(state.pendingToolCalls)
+    switch calls[len - 1] {
+    | Some(last) =>
+      last.status = Executing
+      (
+        {...state, pendingToolCalls: calls},
+        Some({callId: last.id, callName: last.name, callInput: last.accumulatedInput}),
+      )
+    | None => (state, None)
+    }
+  }
+}
+
+/// Check if all pending tool calls have completed (Completed or Failed).
+let allToolCallsComplete = (state: streamingState): bool => {
+  Array.every(state.pendingToolCalls, tc =>
+    switch tc.status {
+    | Completed(_) | Failed(_) => true
+    | Accumulating | Executing => false
+    }
+  )
+}

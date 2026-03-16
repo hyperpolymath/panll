@@ -611,6 +611,22 @@ type aiMsg =
   | MarkQuotaExhausted(aiProviderId)
   /// TypeLL cross-panel type check result for prompt types.
   | TypeCheckResult(result<string, string>)
+  // ---------------------------------------------------------------------------
+  // Streaming + tool_use messages (Claude Code integration)
+  // ---------------------------------------------------------------------------
+  /// A stream chunk arrived from the Tauri `ai:stream-chunk` event.
+  /// Payload is the raw JSON string from the StreamChunk enum.
+  | AiStreamChunkReceived(string)
+  /// Streaming session started (fire-and-forget acknowledgement).
+  | StreamingStarted(result<string, string>)
+  /// A tool call has been fully accumulated and needs execution via BoJ.
+  /// Dispatched when a ToolUseEnd chunk completes a pending tool call.
+  | AiToolCallRequested({id: string, name: string, input: string})
+  /// A tool call result arrived from BoJ cartridge execution.
+  | AiToolCallResult({toolUseId: string, result: result<string, string>})
+  /// All pending tool calls are complete — continue the conversation
+  /// by sending a new streaming request with the tool results.
+  | AiContinueAfterToolUse
 
 /// Repo Loader messages — repository scanning, panel configuration,
 /// directory picking, and recent repo management.

@@ -255,3 +255,85 @@ pub async fn ai_get_state() -> Result<String, String> {
     let config_file = load_config()?;
     serde_json::to_string(&config_file).map_err(|e| format!("Serialisation error: {e}"))
 }
+
+/// Send a streaming message to the Anthropic provider with tool_use support.
+///
+/// Unlike `ai_send_message` which returns a complete response, this command
+/// fires and forgets — results arrive via Tauri events on the `ai:stream-chunk`
+/// channel. The frontend listens for these events and feeds them into the
+/// TEA update loop as `AiStreamChunkReceived` messages.
+///
+/// Returns `"streaming_started"` immediately. Errors during streaming are
+/// emitted as `StreamChunk::Error` events rather than returned here.
+#[tauri::command]
+pub async fn ai_send_message_streaming(
+    app_handle: tauri::AppHandle,
+    request: StreamingRequest,
+) -> Result<String, String> {
+    let config_file = load_config()?;
+
+    // Select provider: explicit choice or auto-select by priority.
+    // Currently, streaming only supports Anthropic. Other providers
+    // fall back to the non-streaming path.
+    let provider_config: ProviderConfig = if let Some(ref pid) = request.provider_id {
+        config_file
+            .providers
+            .iter()
+            .find(|p| &p.id == pid)
+            .ok_or(format!("Provider {:?} not configured", pid))?
+            .clone()
+    } else {
+        // Auto-select: highest priority, enabled, Anthropic preferred.
+        let mut candidates: Vec<&ProviderConfig> = config_file
+            .providers
+            .iter()
+            .filter(|p| p.enabled)
+            .collect();
+        candidates.sort_by_key(|p| p.priority);
+        (*candidates
+            .first()
+            .ok_or("No enabled providers configured")?)
+            .clone()
+    };
+
+    // Verify this is Anthropic — streaming is only implemented for Anthropic.
+    if provider_config.id != ProviderId::Anthropic {
+        return Err(format!(
+            "Streaming only supported for Anthropic, got {:?}",
+            provider_config.id
+        ));
+    }
+
+    // Clone owned data for the spawned task (must be 'static).
+    let tools_owned = request.tools.clone();
+    let tool_results_owned = request.tool_results.clone();
+    let system_prompt = request.system_prompt.clone();
+    let history = request.history.clone();
+    let content = request.content.clone();
+
+    // Spawn the streaming task so we can return immediately.
+    tauri::async_runtime::spawn(async move {
+        let tools_ref = tools_owned.as_deref();
+        let tool_results_ref = tool_results_owned.as_deref();
+
+        if let Err(e) = providers::send_anthropic_streaming(
+            &provider_config,
+            &system_prompt,
+            &history,
+            &content,
+            tools_ref,
+            tool_results_ref,
+            app_handle.clone(),
+        )
+        .await
+        {
+            use tauri::Emitter;
+            let _ = app_handle.emit(
+                "ai:stream-chunk",
+                &StreamChunk::Error(e),
+            );
+        }
+    });
+
+    Ok("streaming_started".to_string())
+}

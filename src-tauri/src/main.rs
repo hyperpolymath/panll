@@ -2107,6 +2107,7 @@ fn main() {
             ai::commands::ai_clear_history,
             ai::commands::ai_build_context,
             ai::commands::ai_get_state,
+            ai::commands::ai_send_message_streaming,
             // Repo Loader — Repository scanning and panel configuration
             repoloader::commands::repoloader_scan,
             repoloader::commands::repoloader_save_panels,

@@ -99,6 +99,58 @@ type aiCategory =
   /// are included in the system prompt.
   | Context
 
+// ---------------------------------------------------------------------------
+// Streaming types — SSE streaming with tool_use for Claude Code integration
+// ---------------------------------------------------------------------------
+
+/// Tool call lifecycle states. Each tool call progresses through this
+/// state machine as streaming chunks arrive and the BoJ cartridge executes.
+type toolCallStatus =
+  /// Still receiving input_json_delta chunks from Claude.
+  | Accumulating
+  /// Input fully received, dispatched to BoJ cartridge for execution.
+  | Executing
+  /// BoJ cartridge returned a successful result.
+  | Completed(string)
+  /// BoJ cartridge returned an error.
+  | Failed(string)
+
+/// State of a single in-flight tool call during streaming.
+type toolCallState = {
+  /// The tool_use_id from Claude's content block.
+  id: string,
+  /// The tool name (maps to a BoJ cartridge tool).
+  name: string,
+  /// Incrementally accumulated JSON input from input_json_delta chunks.
+  mutable accumulatedInput: string,
+  /// Current lifecycle status.
+  mutable status: toolCallStatus,
+}
+
+/// A completed tool result ready to send back to Claude.
+type completedToolResult = {
+  /// The tool_use_id this result corresponds to.
+  id: string,
+  /// The tool's output content.
+  content: string,
+  /// Whether the tool execution failed.
+  isError: bool,
+}
+
+/// Streaming state tracked during an active SSE stream.
+/// Mutated in-place as chunks arrive for performance (token-level updates
+/// at high frequency).
+type streamingState = {
+  /// Whether a streaming session is currently active.
+  mutable active: bool,
+  /// Accumulated text from TextDelta chunks (the assistant's response so far).
+  mutable currentText: string,
+  /// Tool calls that are being accumulated or executed.
+  mutable pendingToolCalls: array<toolCallState>,
+  /// Tool results from completed BoJ cartridge invocations.
+  mutable completedToolResults: array<completedToolResult>,
+}
+
 /// Root state for the AI panel module.
 type aiState = {
   /// Per-provider configurations (user's key ring).
@@ -126,4 +178,6 @@ type aiState = {
   totalInputTokens: int,
   /// Cumulative output tokens across all providers this session.
   totalOutputTokens: int,
+  /// Streaming session state (active stream, accumulated text, pending tool calls).
+  streaming: streamingState,
 }

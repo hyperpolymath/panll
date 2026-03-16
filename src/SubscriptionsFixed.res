@@ -151,6 +151,10 @@ let neurosymbolicSubscriptions = (_model: model): Tea_Sub.t<msg> => {
     TauriEvents.onGovernanceSignal(payload =>
       AntiCrash(RequestOperatorIntervention(payload))
     ),
+    // AI streaming chunks → feed into AI panel streaming state machine.
+    TauriEvents.onAiStreamChunk(payload =>
+      Ai(AiStreamChunkReceived(payload))
+    ),
   })
 }
 

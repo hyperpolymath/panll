@@ -459,6 +459,243 @@ pub async fn send_local(
     })
 }
 
+// ---------------------------------------------------------------------------
+// Streaming provider — Anthropic Messages API with SSE + tool_use
+// ---------------------------------------------------------------------------
+
+/// Send a streaming message via the Anthropic Messages API.
+///
+/// Instead of waiting for a complete response, this function reads
+/// Server-Sent Events (SSE) from the Anthropic API and emits each
+/// chunk to the frontend as a Tauri event (`ai:stream-chunk`).
+///
+/// Supports tool_use: if `tools` is provided, Claude may request tool
+/// calls which the frontend routes through BoJ MCP cartridges.
+pub async fn send_anthropic_streaming(
+    config: &ProviderConfig,
+    system_prompt: &str,
+    messages: &[AiMessage],
+    user_content: &str,
+    tools: Option<&[ToolDefinition]>,
+    tool_results: Option<&[ToolResult]>,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
+    use futures::StreamExt;
+    use tauri::Emitter;
+
+    let api_key = resolve_api_key(config)?;
+
+    // Build a client without the standard timeout — streaming responses
+    // can take longer than 120s for large generations.
+    let client = Client::builder()
+        .build()
+        .map_err(|e| format!("HTTP client error: {e}"))?;
+
+    // Build conversation history in Anthropic format.
+    let mut api_messages: Vec<Value> = messages
+        .iter()
+        .filter(|m| m.role != MessageRole::System)
+        .map(|m| {
+            json!({
+                "role": match m.role {
+                    MessageRole::User => "user",
+                    MessageRole::Assistant => "assistant",
+                    _ => "user",
+                },
+                "content": m.content,
+            })
+        })
+        .collect();
+
+    // If tool_results are provided, append them as a user message with
+    // tool_result content blocks (Anthropic's multi-turn tool_use format).
+    if let Some(results) = tool_results {
+        let tool_result_blocks: Vec<Value> = results
+            .iter()
+            .map(|tr| {
+                json!({
+                    "type": "tool_result",
+                    "tool_use_id": tr.tool_use_id,
+                    "content": tr.content,
+                    "is_error": tr.is_error,
+                })
+            })
+            .collect();
+        api_messages.push(json!({
+            "role": "user",
+            "content": tool_result_blocks,
+        }));
+    } else {
+        // Append the new user message.
+        api_messages.push(json!({
+            "role": "user",
+            "content": user_content,
+        }));
+    }
+
+    let mut body = json!({
+        "model": config.model,
+        "max_tokens": 4096,
+        "system": system_prompt,
+        "messages": api_messages,
+        "stream": true,
+    });
+
+    // Include tool definitions if provided.
+    if let Some(tool_defs) = tools {
+        let tools_json: Vec<Value> = tool_defs
+            .iter()
+            .map(|t| {
+                json!({
+                    "name": t.name,
+                    "description": t.description,
+                    "input_schema": t.input_schema,
+                })
+            })
+            .collect();
+        body["tools"] = json!(tools_json);
+    }
+
+    let resp = client
+        .post("https://api.anthropic.com/v1/messages")
+        .header("x-api-key", &api_key)
+        .header("anthropic-version", "2023-06-01")
+        .header("content-type", "application/json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("Anthropic streaming request failed: {e}"))?;
+
+    let status = resp.status();
+    if !status.is_success() {
+        let error_text = resp.text().await.unwrap_or_default();
+        let _ = app_handle.emit(
+            "ai:stream-chunk",
+            &StreamChunk::Error(format!("Anthropic HTTP {}: {}", status, error_text)),
+        );
+        return Err(format!("Anthropic HTTP {}: {}", status, error_text));
+    }
+
+    // Read SSE stream line by line.
+    let mut stream = resp.bytes_stream();
+    let mut buffer = String::new();
+    let mut input_tokens: u32 = 0;
+    let mut output_tokens: u32 = 0;
+    let mut in_tool_use = false;
+
+    while let Some(chunk_result) = stream.next().await {
+        let chunk_bytes = chunk_result.map_err(|e| format!("Stream read error: {e}"))?;
+        let chunk_str = String::from_utf8_lossy(&chunk_bytes);
+        buffer.push_str(&chunk_str);
+
+        // Process complete lines in the buffer.
+        while let Some(newline_pos) = buffer.find('\n') {
+            let line = buffer[..newline_pos].trim().to_string();
+            buffer = buffer[newline_pos + 1..].to_string();
+
+            // SSE format: lines starting with "data: " contain JSON.
+            if !line.starts_with("data: ") {
+                continue;
+            }
+            let json_str = &line[6..];
+            if json_str == "[DONE]" {
+                continue;
+            }
+
+            let parsed: Value = match serde_json::from_str(json_str) {
+                Ok(v) => v,
+                Err(_) => continue,
+            };
+
+            let event_type = parsed["type"].as_str().unwrap_or("");
+
+            match event_type {
+                "message_start" => {
+                    // Extract input token usage from the message start event.
+                    input_tokens = parsed["message"]["usage"]["input_tokens"]
+                        .as_u64()
+                        .unwrap_or(0) as u32;
+                }
+                "content_block_start" => {
+                    let block_type = parsed["content_block"]["type"].as_str().unwrap_or("");
+                    if block_type == "tool_use" {
+                        in_tool_use = true;
+                        let id = parsed["content_block"]["id"]
+                            .as_str()
+                            .unwrap_or("")
+                            .to_string();
+                        let name = parsed["content_block"]["name"]
+                            .as_str()
+                            .unwrap_or("")
+                            .to_string();
+                        let _ = app_handle.emit(
+                            "ai:stream-chunk",
+                            &StreamChunk::ToolUseStart { id, name },
+                        );
+                    }
+                    // text blocks: wait for deltas
+                }
+                "content_block_delta" => {
+                    let delta_type = parsed["delta"]["type"].as_str().unwrap_or("");
+                    match delta_type {
+                        "text_delta" => {
+                            let text = parsed["delta"]["text"]
+                                .as_str()
+                                .unwrap_or("")
+                                .to_string();
+                            let _ = app_handle
+                                .emit("ai:stream-chunk", &StreamChunk::TextDelta(text));
+                        }
+                        "input_json_delta" => {
+                            let partial_json = parsed["delta"]["partial_json"]
+                                .as_str()
+                                .unwrap_or("")
+                                .to_string();
+                            let _ = app_handle.emit(
+                                "ai:stream-chunk",
+                                &StreamChunk::ToolUseDelta(partial_json),
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+                "content_block_stop" => {
+                    if in_tool_use {
+                        let _ =
+                            app_handle.emit("ai:stream-chunk", &StreamChunk::ToolUseEnd);
+                        in_tool_use = false;
+                    }
+                }
+                "message_delta" => {
+                    output_tokens = parsed["usage"]["output_tokens"]
+                        .as_u64()
+                        .unwrap_or(0) as u32;
+                }
+                "message_stop" => {
+                    let _ = app_handle.emit(
+                        "ai:stream-chunk",
+                        &StreamChunk::Complete {
+                            input_tokens,
+                            output_tokens,
+                        },
+                    );
+                }
+                "error" => {
+                    let error_msg = parsed["error"]["message"]
+                        .as_str()
+                        .unwrap_or("Unknown streaming error")
+                        .to_string();
+                    let _ = app_handle
+                        .emit("ai:stream-chunk", &StreamChunk::Error(error_msg));
+                }
+                _ => {}
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// Route a message to the correct provider's send function.
 pub async fn send_message(
     config: &ProviderConfig,

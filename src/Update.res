@@ -4738,6 +4738,242 @@ let updateAi = (model: model, msg: aiMsg): (model, Tea_Cmd.t<msg>) => {
   | TypeCheckResult(Error(_)) =>
     // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
+
+  // =========================================================================
+  // Streaming + tool_use handlers (Claude Code integration)
+  // =========================================================================
+
+  | StreamingStarted(Ok(_)) =>
+    // Streaming acknowledged — state already set to active in SendMessage handler.
+    (model, Tea_Cmd.none)
+  | StreamingStarted(Error(e)) =>
+    ({...model, ai: {...ai, loading: false, error: Some(e), streaming: {...ai.streaming, active: false}}}, Tea_Cmd.none)
+
+  | AiStreamChunkReceived(json) => {
+      switch AiEngine.parseStreamChunk(json) {
+      | Ok(("TextDelta", Some(data))) => {
+          let text = switch JSON.Classify.classify(data) {
+          | String(s) => s
+          | _ => ""
+          }
+          let newStreaming = AiEngine.appendTextDelta(ai.streaming, text)
+          // Emit a neuralToken to Panel-N for real-time streaming display.
+          let tokenId = "stream-" ++ Int.toString(Array.length(model.paneN.tokens))
+          let token: neuralToken = {
+            id: tokenId,
+            content: text,
+            timestamp: Date.now(),
+            confidence: 0.95,
+            validated: false,
+            source: NeuralInference,
+            category: Observation,
+            emittedDuring: model.paneN.agency.phase,
+            causedBy: model.paneN.activeCausalChain,
+            proofHash: None,
+          }
+          (
+            {...model, ai: {...ai, streaming: newStreaming}},
+            Tea_Cmd.batch(list{
+              Tea_Cmd.call(callbacks => {
+                callbacks.enqueue(PaneN(ReceiveToken(token)))
+              }),
+            }),
+          )
+        }
+      | Ok(("ToolUseStart", Some(data))) => {
+          // Parse {id, name} from the data object.
+          let (id, name) = switch JSON.Classify.classify(data) {
+          | Object(obj) => {
+              let id = switch Dict.get(obj, "id") {
+              | Some(v) => switch JSON.Classify.classify(v) { | String(s) => s | _ => "" }
+              | None => ""
+              }
+              let name = switch Dict.get(obj, "name") {
+              | Some(v) => switch JSON.Classify.classify(v) { | String(s) => s | _ => "" }
+              | None => ""
+              }
+              (id, name)
+            }
+          | _ => ("", "")
+          }
+          let newStreaming = AiEngine.startToolCall(ai.streaming, id, name)
+          ({...model, ai: {...ai, streaming: newStreaming}}, Tea_Cmd.none)
+        }
+      | Ok(("ToolUseDelta", Some(data))) => {
+          let partialJson = switch JSON.Classify.classify(data) {
+          | String(s) => s
+          | _ => ""
+          }
+          let newStreaming = AiEngine.appendToolInput(ai.streaming, partialJson)
+          ({...model, ai: {...ai, streaming: newStreaming}}, Tea_Cmd.none)
+        }
+      | Ok(("ToolUseEnd", _)) => {
+          let (newStreaming, maybeCall) = AiEngine.finalizeToolCall(ai.streaming)
+          let cmd = switch maybeCall {
+          | Some(call) =>
+            // Dispatch tool call to BoJ via BojLiveCmd.
+            Tea_Cmd.call(callbacks => {
+              callbacks.enqueue(Ai(AiToolCallRequested({id: call.callId, name: call.callName, input: call.callInput})))
+            })
+          | None => Tea_Cmd.none
+          }
+          ({...model, ai: {...ai, streaming: newStreaming}}, cmd)
+        }
+      | Ok(("Complete", Some(data))) => {
+          // Parse {input_tokens, output_tokens} from data.
+          let (inputTokens, outputTokens) = switch JSON.Classify.classify(data) {
+          | Object(obj) => {
+              let inp = switch Dict.get(obj, "input_tokens") {
+              | Some(v) => switch JSON.Classify.classify(v) { | Number(n) => Float.toInt(n) | _ => 0 }
+              | None => 0
+              }
+              let out = switch Dict.get(obj, "output_tokens") {
+              | Some(v) => switch JSON.Classify.classify(v) { | Number(n) => Float.toInt(n) | _ => 0 }
+              | None => 0
+              }
+              (inp, out)
+            }
+          | _ => (0, 0)
+          }
+          // Finalize: add the full response as an AiMessage to history.
+          let responseMsg: aiMessage = {
+            role: Assistant,
+            content: ai.streaming.currentText,
+            provider: Some(Anthropic),
+            model: Some("claude-opus-4-6"),
+            inputTokens,
+            outputTokens,
+            timestamp: Date.now(),
+          }
+          let newMessages = Array.concat(ai.messages, [responseMsg])
+          (
+            {
+              ...model,
+              ai: {
+                ...ai,
+                messages: newMessages,
+                loading: false,
+                error: None,
+                totalInputTokens: ai.totalInputTokens + inputTokens,
+                totalOutputTokens: ai.totalOutputTokens + outputTokens,
+                streaming: AiEngine.defaultStreamingState(),
+              },
+            },
+            Tea_Cmd.none,
+          )
+        }
+      | Ok(("Error", Some(data))) => {
+          let errorMsg = switch JSON.Classify.classify(data) {
+          | String(s) => s
+          | _ => "Unknown streaming error"
+          }
+          (
+            {
+              ...model,
+              ai: {
+                ...ai,
+                loading: false,
+                error: Some(errorMsg),
+                streaming: AiEngine.defaultStreamingState(),
+              },
+            },
+            Tea_Cmd.none,
+          )
+        }
+      | Ok(_) | Error(_) =>
+        // Unknown chunk type or parse error — ignore gracefully.
+        (model, Tea_Cmd.none)
+      }
+    }
+
+  | AiToolCallRequested({id, name, input}) => {
+      // Route the tool call through BoJ Live (MCP cartridge runtime).
+      // The cartridge name is derived from the tool name prefix (e.g. "database_query" → "database").
+      let cartridgeName = switch String.split(name, "_")[0] {
+      | Some(prefix) => prefix
+      | None => name
+      }
+      (
+        model,
+        BojLiveCmd.invokeCartridge(
+          cartridgeName,
+          name,
+          input,
+          result => Ai(AiToolCallResult({toolUseId: id, result})),
+        ),
+      )
+    }
+
+  | AiToolCallResult({toolUseId, result}) => {
+      let (content, isError) = switch result {
+      | Ok(c) => (c, false)
+      | Error(e) => (e, true)
+      }
+      // Update the tool call status and add to completed results.
+      let newPendingCalls = ai.streaming.pendingToolCalls->Array.map(tc =>
+        if tc.id === toolUseId {
+          tc.status = isError ? Failed(content) : Completed(content)
+          tc
+        } else {
+          tc
+        }
+      )
+      let newCompleted = Array.concat(
+        ai.streaming.completedToolResults,
+        [{id: toolUseId, content, isError}: completedToolResult],
+      )
+      let newStreaming = {
+        ...ai.streaming,
+        pendingToolCalls: newPendingCalls,
+        completedToolResults: newCompleted,
+      }
+      let updatedModel = {...model, ai: {...ai, streaming: newStreaming}}
+      // Check if all tool calls are complete — if so, continue the conversation.
+      if AiEngine.allToolCallsComplete(newStreaming) {
+        (updatedModel, Tea_Cmd.call(callbacks => {
+          callbacks.enqueue(Ai(AiContinueAfterToolUse))
+        }))
+      } else {
+        (updatedModel, Tea_Cmd.none)
+      }
+    }
+
+  | AiContinueAfterToolUse => {
+      // Send a new streaming request with the tool results appended.
+      let toolResultsJson = ai.streaming.completedToolResults->Array.map(tr =>
+        JSON.Encode.object(
+          Dict.fromArray([
+            ("tool_use_id", JSON.Encode.string(tr.id)),
+            ("content", JSON.Encode.string(tr.content)),
+            ("is_error", JSON.Encode.bool(tr.isError)),
+          ]),
+        )
+      )
+      let selectedProvider = AiEngine.selectProvider(ai.providers)
+      let providerId = switch selectedProvider {
+      | Some(p) => Some(AiEngine.providerIdToString(p.id))
+      | None => None
+      }
+      // Reset streaming state for the continuation turn.
+      let newStreaming: streamingState = {
+        active: true,
+        currentText: "",
+        pendingToolCalls: [],
+        completedToolResults: [],
+      }
+      (
+        {...model, ai: {...ai, streaming: newStreaming}},
+        AiCmd.sendMessageStreaming(
+          "",
+          [],
+          ai.systemPrompt,
+          providerId,
+          None,
+          Some(JSON.Encode.array(toolResultsJson)),
+          result => Ai(StreamingStarted(result)),
+        ),
+      )
+    }
   }
 }
 

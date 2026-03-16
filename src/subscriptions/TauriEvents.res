@@ -81,3 +81,10 @@ let onHypatiaStatus = (tagger: string => 'msg): Tea_Sub.t<'msg> => {
 let onGovernanceSignal = (tagger: string => 'msg): Tea_Sub.t<'msg> => {
   safeListen("tauri:governance-signal", "governance:signal", tagger)
 }
+
+/// Listen for AI streaming chunks from the Anthropic SSE provider.
+/// Each chunk is a JSON-serialised StreamChunk from the Rust backend.
+/// The frontend parses these in the AI update handler.
+let onAiStreamChunk = (tagger: string => 'msg): Tea_Sub.t<'msg> => {
+  safeListen("tauri:ai-stream-chunk", "ai:stream-chunk", tagger)
+}

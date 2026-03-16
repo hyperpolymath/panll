@@ -163,6 +163,54 @@ let buildContext = (
   })
 }
 
+/// Fire-and-forget streaming message. Results arrive via Tauri events on
+/// `ai:stream-chunk`. This command returns immediately with "streaming_started".
+///
+/// The streaming provider emits StreamChunk events that the frontend receives
+/// via TauriEvents.onAiStreamChunk and feeds into the TEA update loop.
+///
+/// @param content — the user's message text
+/// @param history — conversation history (JSON-serialised AiMessages)
+/// @param systemPrompt — assembled system prompt
+/// @param providerId — explicit provider or None for auto-select
+/// @param tools — tool definitions for Claude's tool_use (or None)
+/// @param toolResults — results from previously executed tool calls (or None)
+/// @param tagger — TEA message tagger for the fire-and-forget acknowledgement
+let sendMessageStreaming = (
+  content: string,
+  history: array<JSON.t>,
+  systemPrompt: string,
+  providerId: option<string>,
+  tools: option<JSON.t>,
+  toolResults: option<JSON.t>,
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke(
+      "ai_send_message_streaming",
+      {
+        "request": {
+          "content": content,
+          "history": history,
+          "system_prompt": systemPrompt,
+          "provider_id": providerId,
+          "tools": tools,
+          "tool_results": toolResults,
+        },
+      },
+    )
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to start streaming")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
 /// Load the current provider configuration state from disk.
 let getState = (
   tagger: result<string, string> => 'msg,

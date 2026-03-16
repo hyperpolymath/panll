@@ -112,6 +112,73 @@ pub struct SendMessageResponse {
     pub quota_exhausted: bool,
 }
 
+// ---------------------------------------------------------------------------
+// Streaming types — SSE streaming with tool_use for Claude Code integration
+// ---------------------------------------------------------------------------
+
+/// Stream chunk types emitted via Tauri events during streaming.
+/// The frontend listens on `ai:stream-chunk` for these tagged payloads
+/// and routes them through the TEA update loop.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type", content = "data")]
+pub enum StreamChunk {
+    /// A text fragment from the assistant's response.
+    TextDelta(String),
+    /// A tool_use content block has started. Claude wants to call a tool.
+    ToolUseStart { id: String, name: String },
+    /// An incremental JSON fragment of the tool's input parameters.
+    ToolUseDelta(String),
+    /// The tool_use content block is complete; input JSON is fully accumulated.
+    ToolUseEnd,
+    /// The message is complete. Carries final token usage.
+    Complete { input_tokens: u32, output_tokens: u32 },
+    /// An error occurred during streaming.
+    Error(String),
+}
+
+/// Tool definition for Claude's tool_use feature.
+/// Passed in the request body so Claude knows which tools are available.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolDefinition {
+    /// Tool name (must match a BoJ cartridge tool identifier).
+    pub name: String,
+    /// Human-readable description of what the tool does.
+    pub description: String,
+    /// JSON Schema for the tool's input parameters.
+    pub input_schema: serde_json::Value,
+}
+
+/// Tool result returned to Claude after execution.
+/// Appended as a `tool_result` content block in the next request.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolResult {
+    /// The tool_use_id from the original ToolUseStart chunk.
+    pub tool_use_id: String,
+    /// The tool's output content (stringified).
+    pub content: String,
+    /// Whether the tool execution failed.
+    pub is_error: bool,
+}
+
+/// Extended request for streaming with tool definitions and tool results.
+/// Distinct from `SendMessageRequest` to avoid breaking the existing
+/// non-streaming path.
+#[derive(Debug, Clone, Deserialize)]
+pub struct StreamingRequest {
+    /// The user's message text.
+    pub content: String,
+    /// Conversation history (for context window).
+    pub history: Vec<AiMessage>,
+    /// Assembled system prompt.
+    pub system_prompt: String,
+    /// Which provider to use (or None for auto-select by priority).
+    pub provider_id: Option<ProviderId>,
+    /// Tool definitions available to Claude (None = no tool_use).
+    pub tools: Option<Vec<ToolDefinition>>,
+    /// Tool results from previously executed tool calls (None = first turn).
+    pub tool_results: Option<Vec<ToolResult>>,
+}
+
 /// Top-level config file structure (`~/.config/panll/ai-providers.json`).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AiProvidersFile {
