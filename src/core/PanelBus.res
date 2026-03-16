@@ -46,6 +46,16 @@ type panelEvent =
   | GeneratorWorldReady(string, int)
   /// Level Architect saved a level (levelId, entityCount).
   | ArchitectLevelSaved(string, int)
+  /// Burble voice session started (panelContext, roomId).
+  | BurbleVoiceStarted(string, string)
+  /// Burble voice session ended (panelContext).
+  | BurbleVoiceEnded(string)
+  /// Burble participant started speaking (userId, displayName).
+  | BurbleSpeechStarted(string, string)
+  /// Burble participant stopped speaking (userId).
+  | BurbleSpeechEnded(string)
+  /// Burble voice tag created from speech (transcript, tagType).
+  | BurbleVoiceTagCreated(string, string)
 
 /// Empty event array for sub-updaters with no cross-panel effects.
 let noEvents: array<panelEvent> = []
@@ -160,6 +170,11 @@ let eventTopic = (evt: panelEvent): eventTopic =>
   | BalanceSimulationDone(_, _) => TopicSimulation
   | GeneratorWorldReady(_, _) => TopicSimulation
   | ArchitectLevelSaved(_, _) => TopicUI
+  | BurbleVoiceStarted(_, _) => TopicUI
+  | BurbleVoiceEnded(_) => TopicUI
+  | BurbleSpeechStarted(_, _) => TopicUI
+  | BurbleSpeechEnded(_) => TopicUI
+  | BurbleVoiceTagCreated(_, _) => TopicUI
   }
 
 /// Human-readable label for a topic.
