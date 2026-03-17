@@ -9,7 +9,7 @@ Layout presets configure which panes, sub-panels, and tools are visible,
 sized, and prioritised for a given discipline. They are the "recipes"
 behind PanLL's global viewshift dropdown.
 
-Each preset is a https://github.com/hyperpolymath/k9-svc[K9 Self-Validating Component]
+Each preset is a https://github.com/hyperpolymath/standards/tree/main/k9-svc[K9 Self-Validating Component]
 at *Yard* security level — pure Nickel configuration with contracts, no I/O.
 
 == Core Presets
