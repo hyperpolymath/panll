@@ -129,7 +129,7 @@ let view = (state: nesyModesState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("grid grid-cols-2 gap-3 flex-1")},
         state.availableModes
         ->Array.map(info => modeCard(info, info.mode == state.activeMode))
-        ->Array.toList,
+        ->List.fromArray,
       ),
     },
   )

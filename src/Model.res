@@ -656,6 +656,9 @@ type model = {
   // Infrastructure panels
   wiringInspector: wiringInspectorState,
 
+  // K9 and Contractile management panels
+  k9Manager: K9Model.k9ManagerState,
+
   // Floor Raise campaign panels
   floorRaise: floorRaiseState,
   provenAdoption: provenAdoptionState,
@@ -1383,6 +1386,9 @@ let init = (): model => {
   teamDashboard: TeamDashboardEngine.defaultState,
   debuggingWorkbench: DebuggingWorkbenchEngine.defaultState,
   wiringInspector: WiringInspectorEngine.defaultState,
+  // K9 and Contractile management panels
+  k9Manager: K9Model.init,
+
   // Floor Raise campaign panels
   floorRaise: FloorRaiseEngine.defaultState,
   provenAdoption: ProvenAdoptionEngine.defaultState,

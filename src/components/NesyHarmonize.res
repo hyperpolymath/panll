@@ -47,7 +47,7 @@ let statsBar = (stats: harmonizeStats): Tea_Vdom.t<msg> => {
         list{
           span(
             list{Attrs.class_("text-2xl font-bold font-mono")},
-            list{text(Float.toFixedWithPrecision(stats.symbolicWinRate *. 100.0, ~digits=1) ++ "%")},
+            list{text(Float.toFixed(stats.symbolicWinRate *. 100.0, ~digits=1) ++ "%")},
           ),
           span(
             list{Attrs.class_("text-xs uppercase tracking-wide opacity-80")},
@@ -188,7 +188,7 @@ let view = (state: nesyHarmonizeState): Tea_Vdom.t<msg> => {
         list{
           div(
             list{Attrs.class_("divide-y divide-gray-800")},
-            filtered->Array.map(entryRow)->Array.toList,
+            filtered->Array.map(entryRow)->List.fromArray,
           ),
         },
       ),

@@ -15,7 +15,7 @@ let pending = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("agent_safety_pending", {})
+    invoke("agent_safety_pending", ())
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -75,7 +75,7 @@ let history = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("agent_safety_history", {})
+    invoke("agent_safety_history", ())
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()

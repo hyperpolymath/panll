@@ -15,7 +15,7 @@ let fetchEntries = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("nesy_harmonize_fetch_entries", {})
+    invoke("nesy_harmonize_fetch_entries", ())
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()

@@ -18,6 +18,13 @@ type isaDimension = {
   sampleCount: int,
 }
 
+/// Friction trend direction.
+type frictionTrend =
+  | Improving
+  | Stable
+  | Worsening
+  | NoData
+
 /// Friction profile for a single tool.
 type toolFrictionProfile = {
   /// Tool name.
@@ -31,13 +38,6 @@ type toolFrictionProfile = {
   /// Last measurement timestamp (ISO 8601).
   lastMeasured: string,
 }
-
-/// Friction trend direction.
-and frictionTrend =
-  | Improving
-  | Stable
-  | Worsening
-  | NoData
 
 /// Vexometer Friction panel tabs.
 type vexometerFrictionTab =

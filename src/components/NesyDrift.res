@@ -88,7 +88,7 @@ let modelStatusCard = (status: modelDriftStatus): Tea_Vdom.t<msg> => {
               ),
               Attrs.style(
                 "width",
-                Float.toFixedWithPrecision(status.lastMagnitude *. 100.0, ~digits=0) ++ "%",
+                Float.toFixed(status.lastMagnitude *. 100.0, ~digits=0) ++ "%",
               ),
             },
             list{},
@@ -229,7 +229,7 @@ let view = (state: nesyDriftState): Tea_Vdom.t<msg> => {
       // Model status cards (horizontal scroll)
       div(
         list{Attrs.class_("flex gap-3 overflow-x-auto pb-3 mb-3")},
-        state.modelStatuses->Array.map(modelStatusCard)->Array.toList,
+        state.modelStatuses->Array.map(modelStatusCard)->List.fromArray,
       ),
       // Urgency filter
       urgencyFilter(state.urgencyFilter),
@@ -239,7 +239,7 @@ let view = (state: nesyDriftState): Tea_Vdom.t<msg> => {
         list{
           div(
             list{Attrs.class_("divide-y divide-gray-800")},
-            filteredAlerts->Array.map(alertRow)->Array.toList,
+            filteredAlerts->Array.map(alertRow)->List.fromArray,
           ),
         },
       ),

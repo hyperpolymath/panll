@@ -212,7 +212,7 @@ let view = (state: agentSafetyState): Tea_Vdom.t<msg> => {
                 ),
                 div(
                   list{Attrs.class_("grid grid-cols-1 gap-2 max-h-64 overflow-y-auto")},
-                  state.pendingEvents->Array.map(pendingCard)->Array.toList,
+                  state.pendingEvents->Array.map(pendingCard)->List.fromArray,
                 ),
               },
             )
@@ -232,7 +232,7 @@ let view = (state: agentSafetyState): Tea_Vdom.t<msg> => {
             list{
               div(
                 list{Attrs.class_("divide-y divide-gray-800")},
-                state.historyEvents->Array.map(historyRow)->Array.toList,
+                state.historyEvents->Array.map(historyRow)->List.fromArray,
               ),
             },
           ),

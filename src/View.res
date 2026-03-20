@@ -405,8 +405,9 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelVerisimdbFeeds) => VerisimdbFeeds.view(model.verisimdbFeeds)
   | Some(PanelFeedbackRouting) => FeedbackRouting.view(model.feedbackRouting)
   | Some(PanelVexometerFriction) => VexometerFriction.view(model.vexometerFriction)
-  | Some(PanelK9Manager) => noNode // TODO: wire K9Manager.view
-  | Some(PanelContractileManager) => noNode // TODO: wire ContractileManager.view
+  | Some(PanelK9Manager) => K9Manager.view(model.k9Manager)
+  | Some(PanelContractileManager) =>
+    ContractileManager.view(model.contractiles, model.vexometer)
   }
 }
 

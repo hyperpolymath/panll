@@ -120,7 +120,7 @@ let agentNodeView = (node: agentNode): Tea_Vdom.t<msg> => {
       // Memory type badges
       div(
         list{Attrs.class_("flex gap-1 flex-wrap justify-center")},
-        node.memoryTypes->Array.map(memoryBadge)->Array.toList,
+        node.memoryTypes->Array.map(memoryBadge)->List.fromArray,
       ),
     },
   )
@@ -158,7 +158,7 @@ let topologyDiagram = (
       // Agent nodes (flex wrapped)
       div(
         list{Attrs.class_("flex gap-3 flex-wrap")},
-        nodes->Array.map(agentNodeView)->Array.toList,
+        nodes->Array.map(agentNodeView)->List.fromArray,
       ),
       // Edge labels
       if Array.length(edges) > 0 {
@@ -171,7 +171,7 @@ let topologyDiagram = (
             ),
             div(
               list{Attrs.class_("flex flex-col gap-1")},
-              edges->Array.map(edgeLabel)->Array.toList,
+              edges->Array.map(edgeLabel)->List.fromArray,
             ),
           },
         )
@@ -220,7 +220,7 @@ let view = (state: agentCoordinationState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("grid grid-cols-3 gap-2 mb-4")},
         allStrategies
         ->Array.map(s => strategyCard(s, state.selectedStrategy == Some(s)))
-        ->Array.toList,
+        ->List.fromArray,
       ),
       // Topology diagram
       div(
