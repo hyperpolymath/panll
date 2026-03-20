@@ -330,3 +330,210 @@ let dagNodeKindColour = (kind: dagNodeKind): string => {
   | AttestationNode => "text-cyan-400"
   }
 }
+
+// ===========================================================================
+// Code MRI Layer 1 — Blake3 Provenance Chain
+//
+// Tamper-evident hash chain for code regions. Each entry's hash is computed
+// from (content, author, timestamp, parentHash), forming a linked chain
+// where modifying any field invalidates everything downstream.
+//
+// IMPLEMENTATION NOTE: ReScript cannot call Blake3 directly, so we use a
+// deterministic hex-encoded hash built from character code accumulation with
+// prime mixing. This gives collision resistance suitable for integrity
+// checking (not cryptographic security). A future FFI binding to a real
+// Blake3 library can replace `computeRegionHash` without changing the chain
+// structure.
+// ===========================================================================
+
+/// Compute a deterministic hex-encoded hash from a code region's fields.
+///
+/// Concatenates (content, author, timestamp, parentHash) with a separator,
+/// then applies a prime-mixing accumulator over each character code to
+/// produce a 16-character hex digest. This is NOT cryptographically secure —
+/// it is a structural integrity check. Replace with Blake3 FFI when available.
+///
+/// @param content    The source code text of the region
+/// @param author     The commit author (name or email)
+/// @param timestamp  ISO 8601 timestamp string
+/// @param parentHash Hash of the previous chain entry ("0" for genesis)
+/// @returns 16-character hex string
+let computeRegionHash = (
+  content: string,
+  author: string,
+  timestamp: string,
+  parentHash: string,
+): string => {
+  // Concatenate all fields with a pipe separator to avoid ambiguity
+  let input = content ++ "|" ++ author ++ "|" ++ timestamp ++ "|" ++ parentHash
+  // Prime-mixing accumulator: fold over character codes with two accumulators
+  // to produce a 64-bit-equivalent hash spread across 16 hex digits.
+  let len = String.length(input)
+  let hashA = ref(0x811c9dc5) // FNV offset basis (32-bit)
+  let hashB = ref(0x01000193) // FNV prime (32-bit)
+  for i in 0 to len - 1 {
+    let charCode = String.charCodeAt(input, i)->Float.toInt
+    hashA := lxor(hashA.contents * 16777619, charCode)
+    hashB := lxor(hashB.contents * 16777259, charCode + i)
+  }
+  // Convert both 32-bit halves to 8-char hex each, yielding 16 hex digits.
+  let toHex8 = (n: int): string => {
+    let positive = if n < 0 { -n } else { n }
+    let hexChars = "0123456789abcdef"
+    let result = ref("")
+    let remaining = ref(positive)
+    for _ in 0 to 7 {
+      let digit = land(remaining.contents, 15)
+      result := String.charAt(hexChars, digit) ++ result.contents
+      remaining := asr(remaining.contents, 4)
+    }
+    result.contents
+  }
+  toHex8(hashA.contents) ++ toHex8(hashB.contents)
+}
+
+/// Create a new provenance chain entry with a computed hash.
+///
+/// The hash is derived from the content, author, timestamp, and parent hash,
+/// ensuring the chain is tamper-evident. The attribution field defaults to
+/// "human" — callers should set it explicitly for AI-generated code.
+///
+/// @param content    The source code region
+/// @param author     Who committed this region
+/// @param timestamp  When it was committed (ISO 8601)
+/// @param parentHash Hash of the previous entry ("0" for the first entry)
+/// @returns A fully populated chain entry with computed hash
+let createChainEntry = (
+  content: string,
+  author: string,
+  timestamp: string,
+  parentHash: string,
+): provenanceChainEntry => {
+  let hash = computeRegionHash(content, author, timestamp, parentHash)
+  {
+    hash,
+    parentHash,
+    content,
+    author,
+    timestamp,
+    attribution: "human",
+  }
+}
+
+/// Verify that a provenance chain is internally consistent.
+///
+/// Walks the chain from index 1 onward, checking that each entry's
+/// `parentHash` matches the previous entry's `hash`. Also verifies that
+/// each entry's `hash` field matches the recomputed hash from its fields.
+///
+/// An empty chain or single-entry chain is considered valid.
+///
+/// @param entries The provenance chain to verify (ordered oldest-first)
+/// @returns true if the entire chain is consistent, false if any link is broken
+let verifyChain = (entries: array<provenanceChainEntry>): bool => {
+  let len = Array.length(entries)
+  if len <= 1 {
+    true
+  } else {
+    let valid = ref(true)
+    for i in 0 to len - 1 {
+      let entry = entries->Array.getUnsafe(i)
+      // Verify the hash field matches recomputation
+      let recomputed = computeRegionHash(
+        entry.content,
+        entry.author,
+        entry.timestamp,
+        entry.parentHash,
+      )
+      if recomputed !== entry.hash {
+        valid := false
+      }
+      // Verify parent linkage (skip index 0 — genesis entry)
+      if i > 0 {
+        let prev = entries->Array.getUnsafe(i - 1)
+        if entry.parentHash !== prev.hash {
+          valid := false
+        }
+      }
+    }
+    valid.contents
+  }
+}
+
+/// Serialize a provenance chain to JSON for .mri.json sidecar files.
+///
+/// Produces a JSON array where each element is an object with fields:
+/// hash, parentHash, content, author, timestamp, attribution.
+/// The output is deterministic (same chain always produces same JSON).
+///
+/// @param entries The provenance chain to serialize
+/// @returns A JSON string representation of the chain
+let chainToJson = (entries: array<provenanceChainEntry>): string => {
+  // Escape double quotes and backslashes in a string for JSON embedding.
+  let escapeJson = (s: string): string => {
+    let result = ref("")
+    let len = String.length(s)
+    for i in 0 to len - 1 {
+      let ch = String.charAt(s, i)
+      if ch === "\"" {
+        result := result.contents ++ "\\\""
+      } else if ch === "\\" {
+        result := result.contents ++ "\\\\"
+      } else if ch === "\n" {
+        result := result.contents ++ "\\n"
+      } else if ch === "\r" {
+        result := result.contents ++ "\\r"
+      } else if ch === "\t" {
+        result := result.contents ++ "\\t"
+      } else {
+        result := result.contents ++ ch
+      }
+    }
+    result.contents
+  }
+  let items = entries->Array.map(entry => {
+    "{" ++
+    "\"hash\":\"" ++ escapeJson(entry.hash) ++ "\"," ++
+    "\"parentHash\":\"" ++ escapeJson(entry.parentHash) ++ "\"," ++
+    "\"content\":\"" ++ escapeJson(entry.content) ++ "\"," ++
+    "\"author\":\"" ++ escapeJson(entry.author) ++ "\"," ++
+    "\"timestamp\":\"" ++ escapeJson(entry.timestamp) ++ "\"," ++
+    "\"attribution\":\"" ++ escapeJson(entry.attribution) ++ "\"" ++
+    "}"
+  })
+  "[" ++ Array.join(items, ",") ++ "]"
+}
+
+/// Detect tampered entries in a provenance chain.
+///
+/// Returns the indices of entries whose hash does not match recomputation
+/// from their fields, OR whose parentHash does not match the previous
+/// entry's hash. Index 0 is only flagged if its own hash is inconsistent
+/// (it has no parent to check against).
+///
+/// @param entries The provenance chain to audit
+/// @returns Array of 0-based indices where tampering was detected
+let detectTampering = (entries: array<provenanceChainEntry>): array<int> => {
+  let len = Array.length(entries)
+  let tampered = ref([])
+  for i in 0 to len - 1 {
+    let entry = entries->Array.getUnsafe(i)
+    let recomputed = computeRegionHash(
+      entry.content,
+      entry.author,
+      entry.timestamp,
+      entry.parentHash,
+    )
+    let hashMismatch = recomputed !== entry.hash
+    let parentMismatch = if i > 0 {
+      let prev = entries->Array.getUnsafe(i - 1)
+      entry.parentHash !== prev.hash
+    } else {
+      false
+    }
+    if hashMismatch || parentMismatch {
+      tampered := Array.concat(tampered.contents, [i])
+    }
+  }
+  tampered.contents
+}

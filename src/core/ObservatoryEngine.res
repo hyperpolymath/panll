@@ -291,6 +291,32 @@ let sortByHealthSeverity = (snapshots: array<resourceSnapshot>): array<resourceS
   })
 }
 
+/// Sort snapshots by health status with Healthy first and Unknown last.
+/// Order: Healthy(0) -> Degraded(1) -> Unreachable(2) -> Unknown(3).
+/// Within the same health tier, original order is preserved.
+let sortByHealth = (snapshots: array<resourceSnapshot>): array<resourceSnapshot> => {
+  let priority = (h: serviceHealth): int => {
+    switch h {
+    | Healthy => 0
+    | Degraded(_) => 1
+    | Unreachable => 2
+    | Unknown => 3
+    }
+  }
+  snapshots->Array.toSorted((a, b) => {
+    Float.fromInt(priority(a.health) - priority(b.health))
+  })
+}
+
+/// Filter snapshots to only those matching a specific health status.
+/// Uses structural equality on the serviceHealth variant.
+let panelsByHealth = (
+  snapshots: array<resourceSnapshot>,
+  health: serviceHealth,
+): array<resourceSnapshot> => {
+  snapshots->Array.filter(s => s.health == health)
+}
+
 /// Sort snapshots by memory usage (highest first). Useful for the
 /// Resources tab to highlight memory-hungry panels.
 let sortByMemoryDesc = (snapshots: array<resourceSnapshot>): array<resourceSnapshot> => {
@@ -344,6 +370,45 @@ let replaceAllSnapshots = (
   snapshots: array<resourceSnapshot>,
 ): observatoryState => {
   {...state, snapshots}
+}
+
+// ============================================================================
+// System Health Summary
+// ============================================================================
+
+/// Whether CPU usage exceeds the warning threshold (80%).
+/// Returns true when the system should display a CPU warning indicator.
+let cpuWarning = (cpu: float): bool => {
+  cpu > 80.0
+}
+
+/// Whether memory usage exceeds the warning threshold (90%).
+/// Computed from raw byte values via `memoryPercentage`. Returns false
+/// if `total` is zero (avoids division by zero).
+let memoryWarning = (used: int, total: int): bool => {
+  memoryPercentage(used, total) > 90.0
+}
+
+/// Compute a system health badge string based on CPU and memory metrics.
+/// Three tiers:
+/// - "Critical": CPU > 90% or memory > 95%
+/// - "Warning": CPU > 80% or memory > 90%
+/// - "Healthy": all metrics within normal range
+let systemHealthBadge = (cpu: float, memory: int, memoryTotal: int): string => {
+  let memPct = memoryPercentage(memory, memoryTotal)
+  if cpu > 90.0 || memPct > 95.0 {
+    "Critical"
+  } else if cpu > 80.0 || memPct > 90.0 {
+    "Warning"
+  } else {
+    "Healthy"
+  }
+}
+
+/// Whether the system is operating within normal parameters.
+/// Returns true only when neither CPU nor memory warnings are triggered.
+let systemOkay = (cpu: float, memory: int, memoryTotal: int): bool => {
+  !cpuWarning(cpu) && !memoryWarning(memory, memoryTotal)
 }
 
 // ============================================================================
@@ -439,6 +504,26 @@ let addActivity = (
   {...state, activity: trimmed}
 }
 
+/// Add an activity entry to a raw log array. The new entry is prepended
+/// (most recent first) and the log is capped at 200 entries to prevent
+/// unbounded growth. Returns a new array; the original is not mutated.
+/// This standalone variant operates on the array directly, unlike
+/// `addActivity` which operates on state.
+let addActivityEntry = (
+  log: array<activityEntry>,
+  timestamp: string,
+  panelName: string,
+  event: string,
+): array<activityEntry> => {
+  let entry: activityEntry = {timestamp, panelName, event}
+  let combined = Array.concat([entry], log)
+  if combined->Array.length > 200 {
+    combined->Array.slice(~start=0, ~end=200)
+  } else {
+    combined
+  }
+}
+
 /// Create and append an activity entry in one step.
 let logActivity = (
   state: observatoryState,
@@ -530,6 +615,21 @@ let debugLogCounts = (
     | Error => (d, i, w, e + 1)
     }
   })
+}
+
+/// Return the most recent `count` debug log entries. Since entries are
+/// stored chronologically (oldest first), this returns the last `count`
+/// entries from the array. Returns the full array if `count` exceeds length.
+let recentDebugEntries = (
+  log: array<DebugLogger.logEntry>,
+  count: int,
+): array<DebugLogger.logEntry> => {
+  let len = log->Array.length
+  if count >= len {
+    log
+  } else {
+    log->Array.slice(~start=len - count, ~end=len)
+  }
 }
 
 /// Clear all debug log entries.
