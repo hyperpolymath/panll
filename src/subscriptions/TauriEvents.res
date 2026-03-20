@@ -88,3 +88,26 @@ let onGovernanceSignal = (tagger: string => 'msg): Tea_Sub.t<'msg> => {
 let onAiStreamChunk = (tagger: string => 'msg): Tea_Sub.t<'msg> => {
   safeListen("tauri:ai-stream-chunk", "ai:stream-chunk", tagger)
 }
+
+/// Listen for filesystem watcher events from the Rust backend.
+/// The watcher runs in a background thread and emits events on
+/// `watcher://event` when files are created, modified, removed, or renamed.
+/// Panels like Farm, Hypatia, Reposystem, and Plaza subscribe to these
+/// for automatic refresh when project files change on disk.
+let onWatcherEvent = (tagger: string => 'msg): Tea_Sub.t<'msg> => {
+  safeListen("tauri:watcher-event", "watcher://event", tagger)
+}
+
+/// Listen for watcher error events from the Rust backend.
+/// Emitted when the watcher encounters a non-fatal error (permission denied,
+/// path not found, etc.). Displayed in the Observatory activity log.
+let onWatcherError = (tagger: string => 'msg): Tea_Sub.t<'msg> => {
+  safeListen("tauri:watcher-error", "watcher://error", tagger)
+}
+
+/// Listen for panel lifecycle events from the Tauri backend.
+/// Emitted when panels are opened/closed, allowing backends to
+/// start/stop expensive operations (e.g., watcher paths, polling).
+let onPanelLifecycle = (tagger: string => 'msg): Tea_Sub.t<'msg> => {
+  safeListen("tauri:panel-lifecycle", "panel://lifecycle", tagger)
+}

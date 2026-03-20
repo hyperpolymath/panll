@@ -430,6 +430,48 @@ let view = (model: model): Tea_Vdom.t<msg> => {
     div(
       list{Attrs.class_(`h-screen ${rootColourClasses(model.viewMode)} flex flex-col ${AccessibilityEngine.rootClasses(model.accessibility)}`)},
       list{
+        // ────────────────────────────────────────────────────────────────
+        // Accessibility: Skip links (WCAG 2.1 AA §2.4.1)
+        // Visually hidden until focused via Tab key, allowing keyboard
+        // users to jump directly to main content areas.
+        // ────────────────────────────────────────────────────────────────
+        nav(
+          list{
+            Attrs.class_("sr-only focus-within:not-sr-only focus-within:fixed focus-within:top-0 focus-within:left-0 focus-within:z-50 focus-within:bg-gray-900 focus-within:p-2 focus-within:flex focus-within:gap-2"),
+            Attrs.ariaLabel("Skip navigation"),
+          },
+          list{
+            a(
+              list{
+                Attrs.href("#pane-l"),
+                Attrs.class_("text-blue-400 underline focus:outline-2 focus:outline-blue-400 px-2 py-1 rounded"),
+              },
+              list{text("Skip to Panel-L (Symbolic)")},
+            ),
+            a(
+              list{
+                Attrs.href("#pane-n"),
+                Attrs.class_("text-blue-400 underline focus:outline-2 focus:outline-blue-400 px-2 py-1 rounded"),
+              },
+              list{text("Skip to Panel-N (Neural)")},
+            ),
+            a(
+              list{
+                Attrs.href("#pane-w"),
+                Attrs.class_("text-blue-400 underline focus:outline-2 focus:outline-blue-400 px-2 py-1 rounded"),
+              },
+              list{text("Skip to Panel-W (World)")},
+            ),
+            a(
+              list{
+                Attrs.href("#panel-bar"),
+                Attrs.class_("text-blue-400 underline focus:outline-2 focus:outline-blue-400 px-2 py-1 rounded"),
+              },
+              list{text("Skip to Panel Bar")},
+            ),
+          },
+        ),
+
         // Ambient substrate - Orbital Drift Aura
         renderDriftAura(model.orbital, model.humidity),
 
@@ -441,14 +483,21 @@ let view = (model: model): Tea_Vdom.t<msg> => {
 
         // Main three-pane layout (padded right for the panel bar when visible)
         div(
-          list{Attrs.class_(`flex-1 flex overflow-hidden relative z-10 ${if model.panelBarVisible { "pr-12" } else { "" }}`)},
+          list{
+            Attrs.class_(`flex-1 flex overflow-hidden relative z-10 ${if model.panelBarVisible { "pr-12" } else { "" }}`),
+            Attrs.role("main"),
+            Attrs.ariaLabel("PanLL workspace — three-pane parallel layout"),
+          },
           list{
             // Cross-panel circuit lines showing data flow
             renderCircuitLines(model.orbital, model.paneLVisible, model.paneNVisible, model.paneWVisible),
             // Pane-L with capture bar and focus dimming
             div(
               list{
+                Attrs.id("pane-l"),
                 Attrs.class_(`flex-1 overflow-auto relative transition-opacity duration-500 ${FocusDimmingEngine.panelOpacityClass(model.focusDimming, "paneL")}`),
+                Attrs.role("region"),
+                Attrs.ariaLabel("Panel-L — Symbolic constraints and proof obligations"),
                 Events.onClick(FocusDimming(RecordInteraction("paneL"))),
               },
               list{
@@ -459,7 +508,10 @@ let view = (model: model): Tea_Vdom.t<msg> => {
             // Pane-N with capture bar and focus dimming
             div(
               list{
+                Attrs.id("pane-n"),
                 Attrs.class_(`flex-1 overflow-auto relative transition-opacity duration-500 ${FocusDimmingEngine.panelOpacityClass(model.focusDimming, "paneN")}`),
+                Attrs.role("region"),
+                Attrs.ariaLabel("Panel-N — Neural inference stream and ECHIDNA prover"),
                 Events.onClick(FocusDimming(RecordInteraction("paneN"))),
               },
               list{
@@ -470,7 +522,10 @@ let view = (model: model): Tea_Vdom.t<msg> => {
             // Pane-W with capture bar and focus dimming
             div(
               list{
+                Attrs.id("pane-w"),
                 Attrs.class_(`flex-1 overflow-auto relative transition-opacity duration-500 ${FocusDimmingEngine.panelOpacityClass(model.focusDimming, "paneW")}`),
+                Attrs.role("region"),
+                Attrs.ariaLabel("Panel-W — World barycentre, validated output, and VeriSimDB tools"),
                 Events.onClick(FocusDimming(RecordInteraction("paneW"))),
               },
               list{
