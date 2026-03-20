@@ -1,0 +1,36 @@
+= ManifestCoverage Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+== What is this?
+
+This directory defines the **ManifestCoverage** panel clade for PanLL.
+AI manifest coverage — 0-AI-MANIFEST.a2ml presence across all repos.
+
+== Files
+
+[cols="1,3"]
+|===
+| File | Purpose
+
+| `ManifestCoverage.a2ml`
+| Machine-readable clade definition — traits, capabilities, integration points
+
+| `README.adoc`
+| This file — directory overview
+
+| `config.k9.ncl`
+| K9 Kennel configuration (auto-generated from PanelRegistry)
+|===
+
+== Clade Kind
+
+**scanner**
+
+== PanLL Integration
+
+=== Panel Files (in PanLL src/)
+
+* `src/model/ManifestCoverageModel.res` — state types
+* `src/core/ManifestCoverageEngine.res` — pure helpers and default state
+* `src/components/ManifestCoverage.res` — Tea_Html view

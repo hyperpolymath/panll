@@ -1,0 +1,36 @@
+= ContractileCompleteness Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+== What is this?
+
+This directory defines the **ContractileCompleteness** panel clade for PanLL.
+Contractile completeness — Mustfile/Trustfile/Dustfile/K9 coverage.
+
+== Files
+
+[cols="1,3"]
+|===
+| File | Purpose
+
+| `ContractileCompleteness.a2ml`
+| Machine-readable clade definition — traits, capabilities, integration points
+
+| `README.adoc`
+| This file — directory overview
+
+| `config.k9.ncl`
+| K9 Kennel configuration (auto-generated from PanelRegistry)
+|===
+
+== Clade Kind
+
+**scanner**
+
+== PanLL Integration
+
+=== Panel Files (in PanLL src/)
+
+* `src/model/ContractileCompletenessModel.res` — state types
+* `src/core/ContractileCompletenessEngine.res` — pure helpers and default state
+* `src/components/ContractileCompleteness.res` — Tea_Html view

@@ -2631,6 +2631,65 @@ type wiringInspectorMsg =
   | SetSortBy(string)
   | ToggleStateSection(WiringInspectorModel.panelState)
 
+// ── Floor Raise campaign message types ──────────────────────────────────
+
+/// Messages for the Floor Raise campaign dashboard.
+type floorRaiseMsg =
+  | SetTab(FloorRaiseModel.floorRaiseTab)
+  | ScanAdoption
+  | AdoptionScanned(result<string, string>)
+  | RunCampaign(string)
+  | CampaignResult(result<string, string>)
+  | ClearError
+
+/// Messages for the Proven Adoption scanner panel.
+type provenAdoptionMsg =
+  | SetTab(ProvenAdoptionModel.provenAdoptionTab)
+  | ScanRepos
+  | ReposScanned(result<string, string>)
+  | SelectRepo(string)
+  | ClearError
+
+/// Messages for the Contractile Completeness scanner panel.
+type contractileCompletenessMsg =
+  | SetTab(ContractileCompletenessModel.contractileCompletenessTab)
+  | ScanRepos
+  | ReposScanned(result<string, string>)
+  | SelectRepo(string)
+  | ClearError
+
+/// Messages for the Manifest Coverage scanner panel.
+type manifestCoverageMsg =
+  | SetTab(ManifestCoverageModel.manifestCoverageTab)
+  | ScanRepos
+  | ReposScanned(result<string, string>)
+  | SelectRepo(string)
+  | ClearError
+
+/// Messages for the VeriSimDB Feeds viewer panel.
+type verisimdbFeedsMsg =
+  | SetTab(VerisimdbFeedsModel.verisimdbFeedsTab)
+  | CheckFeeds
+  | FeedsChecked(result<string, string>)
+  | SelectFeed(string)
+  | ClearError
+
+/// Messages for the Feedback Routing viewer panel.
+type feedbackRoutingMsg =
+  | SetTab(FeedbackRoutingModel.feedbackRoutingTab)
+  | RefreshReports
+  | ReportsRefreshed(result<string, string>)
+  | SelectReport(string)
+  | ClearError
+
+/// Messages for the Vexometer Friction viewer panel.
+type vexometerFrictionMsg =
+  | SetTab(VexometerFrictionModel.vexometerFrictionTab)
+  | MeasureAll
+  | MeasureResult(result<string, string>)
+  | SelectTool(string)
+  | ClearError
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -2748,6 +2807,14 @@ type msg =
   | DebuggingWorkbench(debuggingWorkbenchMsg) // Time-travel debugging, state inspection
   // Infrastructure panels
   | WiringInspector(wiringInspectorMsg) // PCC constraint state and bottleneck analysis
+  // Floor Raise panels — foundational tool adoption campaign
+  | FloorRaise(floorRaiseMsg) // Floor Raise campaign dashboard
+  | ProvenAdoption(provenAdoptionMsg) // Proven library adoption scanner
+  | ContractileCompleteness(contractileCompletenessMsg) // Contractile coverage scanner
+  | ManifestCoverage(manifestCoverageMsg) // AI manifest coverage scanner
+  | VerisimdbFeeds(verisimdbFeedsMsg) // VeriSimDB data feed viewer
+  | FeedbackRouting(feedbackRoutingMsg) // Feedback-o-Tron routing viewer
+  | VexometerFriction(vexometerFrictionMsg) // Vexometer friction viewer
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

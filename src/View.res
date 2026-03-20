@@ -397,6 +397,16 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelDebuggingWorkbench) => DebuggingWorkbench.view(model.debuggingWorkbench)
   // Infrastructure panels
   | Some(PanelWiringInspector) => WiringInspector.view(model.wiringInspector)
+  // Floor Raise panels — foundational tool adoption campaign
+  | Some(PanelFloorRaise) => FloorRaise.view(model.floorRaise)
+  | Some(PanelProvenAdoption) => ProvenAdoption.view(model.provenAdoption)
+  | Some(PanelContractileCompleteness) => ContractileCompleteness.view(model.contractileCompleteness)
+  | Some(PanelManifestCoverage) => ManifestCoverage.view(model.manifestCoverage)
+  | Some(PanelVerisimdbFeeds) => VerisimdbFeeds.view(model.verisimdbFeeds)
+  | Some(PanelFeedbackRouting) => FeedbackRouting.view(model.feedbackRouting)
+  | Some(PanelVexometerFriction) => VexometerFriction.view(model.vexometerFriction)
+  | Some(PanelK9Manager) => noNode // TODO: wire K9Manager.view
+  | Some(PanelContractileManager) => noNode // TODO: wire ContractileManager.view
   }
 }
 

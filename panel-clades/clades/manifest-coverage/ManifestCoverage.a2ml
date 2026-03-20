@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Manifest Coverage panel.
+
+(clade
+  (id "manifest-coverage")
+  (name "Manifest Coverage")
+  (kind "scanner")
+  (parent "scanner")
+  (description "AI manifest coverage — 0-AI-MANIFEST.a2ml presence across all repos")
+  (traits
+    (has-backend false)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (ScanRepos "Scan filesystem for AI manifest presence"))
+  (integrations
+    (model "ManifestCoverageModel")
+    (component "ManifestCoverage")
+    (engine "ManifestCoverageEngine")))

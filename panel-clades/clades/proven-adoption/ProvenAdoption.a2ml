@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Proven Adoption panel.
+
+(clade
+  (id "proven-adoption")
+  (name "Proven Adoption")
+  (kind "scanner")
+  (parent "scanner")
+  (description "Proven library adoption — which repos use formally verified safety primitives")
+  (traits
+    (has-backend false)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (ScanRepos "Scan filesystem for proven library usage"))
+  (integrations
+    (model "ProvenAdoptionModel")
+    (component "ProvenAdoption")
+    (engine "ProvenAdoptionEngine")))

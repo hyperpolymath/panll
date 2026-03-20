@@ -364,6 +364,15 @@ include DebuggingWorkbenchModel
 /// for the PCC constraint state UI panel.
 include WiringInspectorModel
 
+/// Re-export Floor Raise campaign panel types.
+include FloorRaiseModel
+include ProvenAdoptionModel
+include ContractileCompletenessModel
+include ManifestCoverageModel
+include VerisimdbFeedsModel
+include FeedbackRoutingModel
+include VexometerFrictionModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -646,6 +655,15 @@ type model = {
 
   // Infrastructure panels
   wiringInspector: wiringInspectorState,
+
+  // Floor Raise campaign panels
+  floorRaise: floorRaiseState,
+  provenAdoption: provenAdoptionState,
+  contractileCompleteness: contractileCompletenessState,
+  manifestCoverage: manifestCoverageState,
+  verisimdbFeeds: verisimdbFeedsState,
+  feedbackRouting: feedbackRoutingState,
+  vexometerFriction: vexometerFrictionState,
 }
 
 /// Initial model state - "Dark Start" mode
@@ -1365,4 +1383,12 @@ let init = (): model => {
   teamDashboard: TeamDashboardEngine.defaultState,
   debuggingWorkbench: DebuggingWorkbenchEngine.defaultState,
   wiringInspector: WiringInspectorEngine.defaultState,
+  // Floor Raise campaign panels
+  floorRaise: FloorRaiseEngine.defaultState,
+  provenAdoption: ProvenAdoptionEngine.defaultState,
+  contractileCompleteness: ContractileCompletenessEngine.defaultState,
+  manifestCoverage: ManifestCoverageEngine.defaultState,
+  verisimdbFeeds: VerisimdbFeedsEngine.defaultState,
+  feedbackRouting: FeedbackRoutingEngine.defaultState,
+  vexometerFriction: VexometerFrictionEngine.defaultState,
 }
