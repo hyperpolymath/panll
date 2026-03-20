@@ -148,7 +148,7 @@ type verisimdbMsg =
   | OrchStatusLoaded(result<string, string>)
   /// TypeLL cross-panel type check result for the last VQL query.
   | VqlTypeCheckResult(result<string, string>)
-  /// Toggle VQL-DT proof obligation display in Panel-L.
+  /// Toggle VQL-UT proof obligation display in Panel-L.
   | ToggleProofDisplay
   /// Neural advisor suggestion for the current VQL query.
   | InferenceSuggestion(string)

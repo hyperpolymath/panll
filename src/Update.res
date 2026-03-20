@@ -571,8 +571,8 @@ let updatePaneW = (model: model, msg: paneWMsg): (model, Tea_Cmd.t<msg>) => {
 // VeriSimDB Parsers
 // ===========================================================================
 
-/// Parse proof obligations from a VQL-DT JSON response.
-/// VQL-DT queries return a `proof_certificate` object with an array of proofs.
+/// Parse proof obligations from a VQL-UT JSON response.
+/// VQL-UT queries return a `proof_certificate` object with an array of proofs.
 /// Each proof has type, contract, verified status, and hash fields.
 /// Tea_Json decoder for a single proof obligation.
 let proofObligationDecoder: Tea_Json.decoder<proofObligation> =
@@ -828,7 +828,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
   | QueryResult(result) =>
     switch result {
     | Ok(json) =>
-      // Parse proof obligations from VQL-DT responses
+      // Parse proof obligations from VQL-UT responses
       let proofs = parseProofObligations(json)
       (
         {...model, verisimdb: {...db, queryResult: Some(json), queryError: None, proofObligations: proofs}},

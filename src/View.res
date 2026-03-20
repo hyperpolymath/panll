@@ -29,7 +29,7 @@ let renderDriftAura = (orbital: orbitalState, humidity: humidityLevel): Tea_Vdom
 }
 
 /// Render Pane-L (Symbolic Mass) - using full component.
-/// Receives proof obligations from VeriSimDB VQL-DT queries to display
+/// Receives proof obligations from VeriSimDB VQL-UT queries to display
 /// as symbolic constraints alongside the constraint editor.
 let renderPaneL = (paneL: paneLState, proofs: array<proofObligation>, visible: bool): Tea_Vdom.t<msg> => {
   if !visible {

@@ -358,7 +358,7 @@ let renderDriftStatus = (db: verisimdbState): Tea_Vdom.t<msg> => {
 
 /// Telemetry dashboard panel — shows aggregate product development metrics.
 /// Displays modality usage heatmap, query pattern distribution, performance,
-/// drift frequency, and VQL-DT proof adoption. All data is aggregate-only.
+/// drift frequency, and VQL-UT proof adoption. All data is aggregate-only.
 let renderTelemetryPanel = (db: verisimdbState): Tea_Vdom.t<msg> => {
   if !db.telemetryVisible {
     text("")
@@ -585,7 +585,7 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
             list{
               div(
                 list{Attrs.class_("text-[11px] text-gray-400")},
-                list{text("VQL-DT Proof Obligations")},
+                list{text("VQL-UT Proof Obligations")},
               ),
               button(
                 list{

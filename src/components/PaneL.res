@@ -192,7 +192,7 @@ let renderEditor = (content: string): Tea_Vdom.t<msg> => {
   )
 }
 
-/// Render proof obligations from a VQL-DT query result certificate.
+/// Render proof obligations from a VQL-UT query result certificate.
 /// Displays proof type, contract, verification status, and hash for each
 /// obligation the type checker inferred during query execution.
 let renderProofObligations = (proofs: array<proofObligation>): Tea_Vdom.t<msg> => {
@@ -242,11 +242,11 @@ let renderProofObligations = (proofs: array<proofObligation>): Tea_Vdom.t<msg> =
       list{
         div(
           list{Attrs.class_("text-xs text-indigo-400 tracking-widest uppercase")},
-          list{text("PROOF OBLIGATIONS (VQL-DT)")},
+          list{text("PROOF OBLIGATIONS (VQL-UT)")},
         ),
         div(
           list{Attrs.class_("text-[10px] text-gray-500")},
-          list{text(Int.toString(Array.length(proofs)) ++ " proof(s) from last VQL-DT query")},
+          list{text(Int.toString(Array.length(proofs)) ++ " proof(s) from last VQL-UT query")},
         ),
         div(
           list{Attrs.class_("space-y-0.5")},
@@ -330,7 +330,7 @@ let view = (state: paneLState, proofs: array<proofObligation>): Tea_Vdom.t<msg> 
       // Constraint list
       renderConstraintList(state.constraints),
 
-      // Proof obligations from VQL-DT queries
+      // Proof obligations from VQL-UT queries
       renderProofObligations(proofs),
 
       // Editor

@@ -741,7 +741,23 @@ let view = (tl: typellState): Tea_Vdom.t<msg> => {
                         div(list{Attrs.class_("divide-y divide-gray-800")}, list{
                           div(list{Attrs.class_("flex p-2 text-xs")}, list{
                             span(list{Attrs.class_("w-40 text-cyan-400")}, list{text("VeriSimDB")}),
-                            span(list{Attrs.class_("text-gray-400")}, list{text("VQL-DT proof obligations, query type safety")}),
+                            span(list{Attrs.class_("text-gray-400")}, list{text("VQL-UT 10-level type safety (supersedes VQL-DT)")}),
+                          }),
+                          div(list{Attrs.class_("p-2 text-xs bg-gray-950 border-l-2 border-cyan-700")}, list{
+                            div(list{Attrs.class_("text-cyan-500 font-bold mb-1")}, list{text("VQL-UT Safety Levels")}),
+                            div(list{Attrs.class_("grid grid-cols-2 gap-1 text-gray-500")}, list{
+                              span(list{}, list{text("L1 Parse-time")}),
+                              span(list{}, list{text("L2 Schema-binding")}),
+                              span(list{}, list{text("L3 Type-compatible")}),
+                              span(list{}, list{text("L4 Null-safety")}),
+                              span(list{}, list{text("L5 Injection-proof")}),
+                              span(list{}, list{text("L6 Result-type")}),
+                              span(list{Attrs.class_("text-amber-500")}, list{text("L7 Cardinality")}),
+                              span(list{Attrs.class_("text-amber-500")}, list{text("L8 Effect-tracking")}),
+                              span(list{Attrs.class_("text-amber-500")}, list{text("L9 Temporal")}),
+                              span(list{Attrs.class_("text-amber-500")}, list{text("L10 Linearity")}),
+                            }),
+                            div(list{Attrs.class_("mt-1 text-gray-600 italic")}, list{text("Amber = research-identified (Idris2 verified)")}),
                           }),
                           div(list{Attrs.class_("flex p-2 text-xs")}, list{
                             span(list{Attrs.class_("w-40 text-cyan-400")}, list{text("Protocol-Squisher")}),

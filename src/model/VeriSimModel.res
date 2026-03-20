@@ -10,7 +10,7 @@
 ///
 /// This module has NO dependencies on other PanLL modules.
 
-/// Proof obligation from a VQL-DT query result certificate
+/// Proof obligation from a VQL-UT query result certificate
 type proofObligation = {
   /// Proof strategy type (e.g. "contract", "invariant", "temporal").
   proofType: string,
@@ -90,7 +90,7 @@ type verisimdbState = {
   driftStatus: option<string>,
   /// Per-modality drift scores for the heatmap.
   driftScores: option<driftScores>,
-  /// Proof obligations from the last VQL-DT query certificate.
+  /// Proof obligations from the last VQL-UT query certificate.
   proofObligations: array<proofObligation>,
   /// Whether the VeriSimDB menu dropdown is expanded.
   dbMenuExpanded: bool,
@@ -107,7 +107,7 @@ type verisimdbState = {
   /// TypeLL type-check result JSON for the last VQL query (cross-panel intelligence).
   /// Parsed via TypeLLEngine.parseCheckResult when rendering.
   lastTypeCheck: option<string>,
-  /// Panel-L proof obligation display: VQL-DT type constraints and proof status
+  /// Panel-L proof obligation display: VQL-UT type constraints and proof status
   /// pushed to the symbolic pane for operator inspection.
   proofDisplayActive: bool,
   /// Panel-N agentic inference suggestions for the current VQL query.
