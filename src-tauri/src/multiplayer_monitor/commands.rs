@@ -271,16 +271,27 @@ mod tests {
     }
 
     /// Reset connection state between tests.
+    /// Uses `unwrap_or_else` to recover from poisoned mutexes — a previous
+    /// test panic should not cascade into subsequent test failures.
     fn reset_state() {
-        let mut state = CONNECTION_STATE.lock().unwrap();
+        let mut state = CONNECTION_STATE
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         state.connected = false;
         state.server_url = None;
         state.connected_at = None;
     }
 
+    /// Acquire the test lock, recovering from poison if a previous test panicked.
+    fn acquire_test_lock() -> std::sync::MutexGuard<'static, ()> {
+        TEST_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
     #[test]
     fn test_multiplayer_connect_success() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = acquire_test_lock();
         reset_state();
         rt().block_on(async {
             let result = multiplayer_connect("ws://localhost:4000/socket".to_string()).await;
@@ -294,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_connect_empty_url() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = acquire_test_lock();
         reset_state();
         rt().block_on(async {
             let result = multiplayer_connect("".to_string()).await;
@@ -305,7 +316,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_disconnect() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = acquire_test_lock();
         reset_state();
         rt().block_on(async {
             // Connect first, then disconnect.
@@ -321,7 +332,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_read_state() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = acquire_test_lock();
         reset_state();
         rt().block_on(async {
             let result = multiplayer_read_state().await;
@@ -338,7 +349,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_read_diffs() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = acquire_test_lock();
         reset_state();
         rt().block_on(async {
             let result = multiplayer_read_diffs().await;
@@ -353,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_read_ets() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = acquire_test_lock();
         reset_state();
         rt().block_on(async {
             let result = multiplayer_read_ets().await;
@@ -368,7 +379,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_reconnection_test_not_connected() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = acquire_test_lock();
         reset_state();
         rt().block_on(async {
             let result = multiplayer_reconnection_test().await;
@@ -379,7 +390,7 @@ mod tests {
 
     #[test]
     fn test_multiplayer_reconnection_test_connected() {
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = acquire_test_lock();
         reset_state();
         rt().block_on(async {
             let _ = multiplayer_connect("ws://localhost:4000/socket".to_string()).await;
