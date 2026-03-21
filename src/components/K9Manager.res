@@ -9,7 +9,6 @@
 ///
 /// Wires to K9Cmd.res functions via the K9 message channel in the TEA loop.
 
-open Model
 open Msg
 open Tea.Html
 

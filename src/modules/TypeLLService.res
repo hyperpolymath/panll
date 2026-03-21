@@ -13,7 +13,7 @@
 ///
 /// | Panel              | What TypeLL provides                                    |
 /// |--------------------|---------------------------------------------------------|
-/// | VeriSimDB          | VQL-DT proof obligations, query type safety             |
+/// | VeriSimDB          | VQL-UT proof obligations, query type safety             |
 /// | Protocol-Squisher  | Schema type compatibility, adapter type safety           |
 /// | My-Lang            | Full type checking across all 4 dialects                |
 /// | Anti-Crash         | Type-level validation before token acceptance            |
@@ -39,7 +39,7 @@ let checkVqlTypes = (
   query: string,
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
-  let context = `{"language":"vql","dialect":"vql-dt++","features":["dependent","linear","proof-carrying"]}`
+  let context = `{"language":"vql","dialect":"vql-ut","features":["dependent","linear","proof-carrying"]}`
   TypeLLCmd.check(query, Some(context), tagger)
 }
 

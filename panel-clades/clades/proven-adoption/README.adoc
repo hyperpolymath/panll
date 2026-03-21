@@ -1,0 +1,36 @@
+= ProvenAdoption Clade
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+== What is this?
+
+This directory defines the **ProvenAdoption** panel clade for PanLL.
+Proven library adoption — which repos use formally verified safety primitives.
+
+== Files
+
+[cols="1,3"]
+|===
+| File | Purpose
+
+| `ProvenAdoption.a2ml`
+| Machine-readable clade definition — traits, capabilities, integration points
+
+| `README.adoc`
+| This file — directory overview
+
+| `config.k9.ncl`
+| K9 Kennel configuration (auto-generated from PanelRegistry)
+|===
+
+== Clade Kind
+
+**scanner**
+
+== PanLL Integration
+
+=== Panel Files (in PanLL src/)
+
+* `src/model/ProvenAdoptionModel.res` — state types
+* `src/core/ProvenAdoptionEngine.res` — pure helpers and default state
+* `src/components/ProvenAdoption.res` — Tea_Html view

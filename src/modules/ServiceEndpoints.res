@@ -26,6 +26,9 @@ let bojServer = "http://localhost:7700"
 /// ECHIDNA proof assistant / multi-solver dispatch.
 let echidna = "http://localhost:9000/api/v1"
 
+/// Gitbot-Fleet Axum dashboard API.
+let fleet = "http://localhost:8090/api/v1"
+
 /// Multiplayer Monitor WebSocket server.
 let multiplayerMonitor = "ws://localhost:4000/socket/websocket"
 

@@ -364,6 +364,15 @@ include DebuggingWorkbenchModel
 /// for the PCC constraint state UI panel.
 include WiringInspectorModel
 
+/// Re-export Floor Raise campaign panel types.
+include FloorRaiseModel
+include ProvenAdoptionModel
+include ContractileCompletenessModel
+include ManifestCoverageModel
+include VerisimdbFeedsModel
+include FeedbackRoutingModel
+include VexometerFrictionModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -438,6 +447,9 @@ type model = {
 
   // Provenance Map — Qubes-style code trust surface (always visible, ambient)
   provenance: provenanceState,
+
+  // Code MRI Timeline — VeriSimDB-backed development time series (Layer 2)
+  codeMriTimeline: TimelineModel.timelineState,
 
   // Watcher — filesystem observation infrastructure (feeds all panels)
   watcher: watcherState,
@@ -646,6 +658,18 @@ type model = {
 
   // Infrastructure panels
   wiringInspector: wiringInspectorState,
+
+  // K9 and Contractile management panels
+  k9Manager: K9Model.k9ManagerState,
+
+  // Floor Raise campaign panels
+  floorRaise: floorRaiseState,
+  provenAdoption: provenAdoptionState,
+  contractileCompleteness: contractileCompletenessState,
+  manifestCoverage: manifestCoverageState,
+  verisimdbFeeds: verisimdbFeedsState,
+  feedbackRouting: feedbackRoutingState,
+  vexometerFriction: vexometerFrictionState,
 }
 
 /// Initial model state - "Dark Start" mode
@@ -1146,6 +1170,7 @@ let init = (): model => {
   provisioner: ProvisionerEngine.defaultState,
   voiceTag: VoiceTagEngine.defaultState,
   provenance: ProvenanceEngine.defaultState,
+  codeMriTimeline: TimelineModel.defaultTimelineState(),
   watcher: {
     running: false,
     watchedPaths: [],
@@ -1365,4 +1390,15 @@ let init = (): model => {
   teamDashboard: TeamDashboardEngine.defaultState,
   debuggingWorkbench: DebuggingWorkbenchEngine.defaultState,
   wiringInspector: WiringInspectorEngine.defaultState,
+  // K9 and Contractile management panels
+  k9Manager: K9Model.init,
+
+  // Floor Raise campaign panels
+  floorRaise: FloorRaiseEngine.defaultState,
+  provenAdoption: ProvenAdoptionEngine.defaultState,
+  contractileCompleteness: ContractileCompletenessEngine.defaultState,
+  manifestCoverage: ManifestCoverageEngine.defaultState,
+  verisimdbFeeds: VerisimdbFeedsEngine.defaultState,
+  feedbackRouting: FeedbackRoutingEngine.defaultState,
+  vexometerFriction: VexometerFrictionEngine.defaultState,
 }

@@ -571,8 +571,8 @@ let updatePaneW = (model: model, msg: paneWMsg): (model, Tea_Cmd.t<msg>) => {
 // VeriSimDB Parsers
 // ===========================================================================
 
-/// Parse proof obligations from a VQL-DT JSON response.
-/// VQL-DT queries return a `proof_certificate` object with an array of proofs.
+/// Parse proof obligations from a VQL-UT JSON response.
+/// VQL-UT queries return a `proof_certificate` object with an array of proofs.
 /// Each proof has type, contract, verified status, and hash fields.
 /// Tea_Json decoder for a single proof obligation.
 let proofObligationDecoder: Tea_Json.decoder<proofObligation> =
@@ -828,7 +828,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
   | QueryResult(result) =>
     switch result {
     | Ok(json) =>
-      // Parse proof obligations from VQL-DT responses
+      // Parse proof obligations from VQL-UT responses
       let proofs = parseProofObligations(json)
       (
         {...model, verisimdb: {...db, queryResult: Some(json), queryError: None, proofObligations: proofs}},
@@ -12218,6 +12218,118 @@ let updateEnsaidConfig = (model: model, msg: ensaidConfigMsg): (model, Tea_Cmd.t
   }
 }
 
+// ===========================================================================
+// Code MRI Timeline Sub-Updater (Layer 2)
+//
+// Handles VeriSimDB connection, snapshot capture/load, scrubber navigation,
+// and export. All metric computation is delegated to TimelineEngine (pure).
+// ===========================================================================
+
+let updateTimeline = (model: model, msg: timelineMsg): (model, Tea_Cmd.t<msg>) => {
+  let tl = model.codeMriTimeline
+  switch msg {
+  | Connect => (
+      {...model, codeMriTimeline: {...tl, error: None}},
+      TimelineCmd.connect(".", result => Timeline(Connected(result))),
+    )
+  | Connected(Ok(dbPath)) => (
+      {...model, codeMriTimeline: {...tl, dbPath: Some(dbPath), connected: true, error: None}},
+      Tea_Cmd.none,
+    )
+  | Connected(Error(err)) => (
+      {...model, codeMriTimeline: {...tl, connected: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | CaptureSnapshot => (
+      {...model, codeMriTimeline: {...tl, capturing: true, error: None}},
+      TimelineCmd.captureSnapshot(".", result => Timeline(SnapshotCaptured(result))),
+    )
+  | SnapshotCaptured(Ok(_json)) => {
+      // Parse snapshot from JSON and add to timeline
+      // For now, create a snapshot from current model state
+      let snap: TimelineEngine.timelineSnapshot = {
+        timestamp: Float.toString(Date.now()),
+        linesOfCode: 0, // Will be populated by Rust backend
+        todoCount: model.voiceTag.summary.todoCount,
+        fixmeCount: model.voiceTag.summary.fixmeCount,
+        tagCount: model.voiceTag.summary.totalTags,
+        libraryCount: 0,
+        failedTypeChecks: 0,
+        panicAttackFindings: 0,
+        aiAttributionPercent: 0.0,
+        vexometerReading: model.vexometer.index,
+        commitHash: "",
+      }
+      let newSnapshots = TimelineEngine.addSnapshot(tl.snapshots, snap)
+      let newMetrics = TimelineEngine.allMetrics(newSnapshots)
+      (
+        {
+          ...model,
+          codeMriTimeline: {
+            ...tl,
+            snapshots: newSnapshots,
+            cachedMetrics: newMetrics,
+            capturing: false,
+            error: None,
+          },
+        },
+        Tea_Cmd.none,
+      )
+    }
+  | SnapshotCaptured(Error(err)) => (
+      {...model, codeMriTimeline: {...tl, capturing: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | LoadHistory => (
+      model,
+      TimelineCmd.loadHistory(".", result => Timeline(HistoryLoaded(result))),
+    )
+  | HistoryLoaded(Ok(_json)) => {
+      // Parsing will be done properly when VeriSimDB backend is wired.
+      // For now, refresh metrics from existing snapshots.
+      let newMetrics = TimelineEngine.allMetrics(tl.snapshots)
+      (
+        {...model, codeMriTimeline: {...tl, cachedMetrics: newMetrics, error: None}},
+        Tea_Cmd.none,
+      )
+    }
+  | HistoryLoaded(Error(err)) => (
+      {...model, codeMriTimeline: {...tl, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | QueryRange(startDate, endDate) => (
+      model,
+      TimelineCmd.queryRange(".", startDate, endDate, result => Timeline(RangeLoaded(result))),
+    )
+  | RangeLoaded(Ok(_json)) => (model, Tea_Cmd.none)
+  | RangeLoaded(Error(err)) => (
+      {...model, codeMriTimeline: {...tl, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | SeekScrubber(pos) => (
+      {...model, codeMriTimeline: {...tl, scrubberPosition: pos}},
+      Tea_Cmd.none,
+    )
+  | ToggleDashboard => (
+      {...model, codeMriTimeline: {...tl, dashboardExpanded: !tl.dashboardExpanded}},
+      Tea_Cmd.none,
+    )
+  | ExportTimeline(outputPath) => (
+      model,
+      TimelineCmd.exportTimeline(".", outputPath, result => Timeline(TimelineExported(result))),
+    )
+  | TimelineExported(Ok(_path)) => (model, Tea_Cmd.none)
+  | TimelineExported(Error(err)) => (
+      {...model, codeMriTimeline: {...tl, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | DismissError => (
+      {...model, codeMriTimeline: {...tl, error: None}},
+      Tea_Cmd.none,
+    )
+  }
+}
+
 let updateStapeln = (model: model, msg: stapelnMsg): (model, Tea_Cmd.t<msg>) => {
   let st = model.stapeln
   switch msg {
@@ -13155,6 +13267,103 @@ let updateWiringInspector = (model: model, msg: wiringInspectorMsg): (model, Tea
 /// Routes each message to its domain-specific sub-updater, then applies
 /// contractile evaluation as a post-processing cognitive governance step.
 ///
+// ════════════════════════════════════════════════════════════════════════
+// Floor Raise campaign panel sub-updaters
+// ════════════════════════════════════════════════════════════════════════
+
+/// Floor Raise campaign dashboard — tab switching, scan, campaign dispatch.
+let updateFloorRaise = (model: model, msg: floorRaiseMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.floorRaise
+  switch msg {
+  | SetTab(tab) => ({...model, floorRaise: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | ScanAdoption => ({...model, floorRaise: {...state, scanning: true, error: None}}, Tea_Cmd.none)
+  | AdoptionScanned(Ok(_json)) => ({...model, floorRaise: {...state, scanning: false}}, Tea_Cmd.none)
+  | AdoptionScanned(Error(err)) => ({...model, floorRaise: {...state, scanning: false, error: Some(err)}}, Tea_Cmd.none)
+  | RunCampaign(_tool) => (model, Tea_Cmd.none)
+  | CampaignResult(Ok(_json)) => (model, Tea_Cmd.none)
+  | CampaignResult(Error(err)) => ({...model, floorRaise: {...state, error: Some(err)}}, Tea_Cmd.none)
+  | ClearError => ({...model, floorRaise: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Proven Adoption scanner — tab switching, scan, repo selection.
+let updateProvenAdoption = (model: model, msg: provenAdoptionMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.provenAdoption
+  switch msg {
+  | SetTab(tab) => ({...model, provenAdoption: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | ScanRepos => ({...model, provenAdoption: {...state, scanning: true, error: None}}, Tea_Cmd.none)
+  | ReposScanned(Ok(_json)) => ({...model, provenAdoption: {...state, scanning: false}}, Tea_Cmd.none)
+  | ReposScanned(Error(err)) => ({...model, provenAdoption: {...state, scanning: false, error: Some(err)}}, Tea_Cmd.none)
+  | SelectRepo(name) => ({...model, provenAdoption: {...state, selectedRepo: Some(name)}}, Tea_Cmd.none)
+  | ClearError => ({...model, provenAdoption: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Contractile Completeness scanner — tab switching, scan, repo selection.
+let updateContractileCompleteness = (model: model, msg: contractileCompletenessMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.contractileCompleteness
+  switch msg {
+  | SetTab(tab) => ({...model, contractileCompleteness: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | ScanRepos => ({...model, contractileCompleteness: {...state, scanning: true, error: None}}, Tea_Cmd.none)
+  | ReposScanned(Ok(_json)) => ({...model, contractileCompleteness: {...state, scanning: false}}, Tea_Cmd.none)
+  | ReposScanned(Error(err)) => ({...model, contractileCompleteness: {...state, scanning: false, error: Some(err)}}, Tea_Cmd.none)
+  | SelectRepo(name) => ({...model, contractileCompleteness: {...state, selectedRepo: Some(name)}}, Tea_Cmd.none)
+  | ClearError => ({...model, contractileCompleteness: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Manifest Coverage scanner — tab switching, scan, repo selection.
+let updateManifestCoverage = (model: model, msg: manifestCoverageMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.manifestCoverage
+  switch msg {
+  | SetTab(tab) => ({...model, manifestCoverage: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | ScanRepos => ({...model, manifestCoverage: {...state, scanning: true, error: None}}, Tea_Cmd.none)
+  | ReposScanned(Ok(_json)) => ({...model, manifestCoverage: {...state, scanning: false}}, Tea_Cmd.none)
+  | ReposScanned(Error(err)) => ({...model, manifestCoverage: {...state, scanning: false, error: Some(err)}}, Tea_Cmd.none)
+  | SelectRepo(name) => ({...model, manifestCoverage: {...state, selectedRepo: Some(name)}}, Tea_Cmd.none)
+  | ClearError => ({...model, manifestCoverage: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// VeriSimDB Feeds viewer — tab switching, health check, feed selection.
+let updateVerisimdbFeeds = (model: model, msg: verisimdbFeedsMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.verisimdbFeeds
+  switch msg {
+  | SetTab(tab) => ({...model, verisimdbFeeds: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | CheckFeeds => ({...model, verisimdbFeeds: {...state, checking: true, error: None}}, Tea_Cmd.none)
+  | FeedsChecked(Ok(_json)) => ({...model, verisimdbFeeds: {...state, checking: false}}, Tea_Cmd.none)
+  | FeedsChecked(Error(err)) => ({...model, verisimdbFeeds: {...state, checking: false, error: Some(err)}}, Tea_Cmd.none)
+  | SelectFeed(feedId) => ({...model, verisimdbFeeds: {...state, selectedFeed: Some(feedId)}}, Tea_Cmd.none)
+  | ClearError => ({...model, verisimdbFeeds: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Feedback Routing viewer — tab switching, refresh, report selection.
+let updateFeedbackRouting = (model: model, msg: feedbackRoutingMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.feedbackRouting
+  switch msg {
+  | SetTab(tab) => ({...model, feedbackRouting: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | RefreshReports => ({...model, feedbackRouting: {...state, refreshing: true, error: None}}, Tea_Cmd.none)
+  | ReportsRefreshed(Ok(_json)) => ({...model, feedbackRouting: {...state, refreshing: false}}, Tea_Cmd.none)
+  | ReportsRefreshed(Error(err)) => ({...model, feedbackRouting: {...state, refreshing: false, error: Some(err)}}, Tea_Cmd.none)
+  | SelectReport(reportId) => ({...model, feedbackRouting: {...state, selectedReport: Some(reportId)}}, Tea_Cmd.none)
+  | ClearError => ({...model, feedbackRouting: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
+/// Vexometer Friction viewer — tab switching, measurement, tool selection.
+let updateVexometerFriction = (model: model, msg: vexometerFrictionMsg): (model, Tea_Cmd.t<msg>) => {
+  let state = model.vexometerFriction
+  switch msg {
+  | SetTab(tab) => ({...model, vexometerFriction: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | MeasureAll => ({...model, vexometerFriction: {...state, measuring: true, error: None}}, Tea_Cmd.none)
+  | MeasureResult(Ok(_json)) => ({...model, vexometerFriction: {...state, measuring: false}}, Tea_Cmd.none)
+  | MeasureResult(Error(err)) => ({...model, vexometerFriction: {...state, measuring: false, error: Some(err)}}, Tea_Cmd.none)
+  | SelectTool(name) => ({...model, vexometerFriction: {...state, selectedTool: Some(name)}}, Tea_Cmd.none)
+  | ClearError => ({...model, vexometerFriction: {...state, error: None}}, Tea_Cmd.none)
+  }
+}
+
 /// The contractile check runs after every state-modifying update (not NoOp)
 /// to enforce the Binary Star system's behavioural contracts:
 ///   - Orbital Stability Bound (Strict)
@@ -13254,6 +13463,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
     | DismissVdError => ({...model, verificationDashboard: {...model.verificationDashboard, error: None}}, Tea_Cmd.none)
     }
   | EnsaidConfig(subMsg) => updateEnsaidConfig(model, subMsg)
+  | Timeline(subMsg) => updateTimeline(model, subMsg)
   | Bus(busMsg) =>
     switch busMsg {
     | BusSubscribe(cladeId, topics) =>
@@ -13644,6 +13854,14 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | DebuggingWorkbench(subMsg) => updateDebuggingWorkbench(model, subMsg)
   // Infrastructure panels
   | WiringInspector(subMsg) => updateWiringInspector(model, subMsg)
+  // Floor Raise campaign panels
+  | FloorRaise(subMsg) => updateFloorRaise(model, subMsg)
+  | ProvenAdoption(subMsg) => updateProvenAdoption(model, subMsg)
+  | ContractileCompleteness(subMsg) => updateContractileCompleteness(model, subMsg)
+  | ManifestCoverage(subMsg) => updateManifestCoverage(model, subMsg)
+  | VerisimdbFeeds(subMsg) => updateVerisimdbFeeds(model, subMsg)
+  | FeedbackRouting(subMsg) => updateFeedbackRouting(model, subMsg)
+  | VexometerFriction(subMsg) => updateVexometerFriction(model, subMsg)
   | NoOp => (model, Tea_Cmd.none)
   }
 

@@ -218,6 +218,25 @@ let oodaPhaseCycling = (model: model): Tea_Sub.t<msg> => {
   }
 }
 
+/// S5: Filesystem watcher subscriptions — relay watcher events into TEA loop.
+/// The Rust watcher emits on `watcher://event` when files change on disk.
+/// This parses the JSON payload into a typed watchEvent and dispatches it.
+let watcherSubscriptions = (_model: model): Tea_Sub.t<msg> => {
+  Tea_Sub.batch(list{
+    // Filesystem events → Watcher panel + consuming panels (Farm, Hypatia, etc.)
+    TauriEvents.onWatcherEvent(payload => {
+      switch WatcherCmd.parseEvent(payload) {
+      | Some(evt) => Watcher(FileEvent(evt))
+      | None => NoOp
+      }
+    }),
+    // Watcher errors → Observatory activity log
+    TauriEvents.onWatcherError(payload =>
+      Watcher(WatcherResult(Error(payload)))
+    ),
+  })
+}
+
 /// Combined subscriptions — all subscription layers merged.
 let all = (model: model): Tea_Sub.t<msg> => {
   Tea_Sub.batch(list{
@@ -226,5 +245,6 @@ let all = (model: model): Tea_Sub.t<msg> => {
     neurosymbolicSubscriptions(model),
     tokenDripFeed(model),
     oodaPhaseCycling(model),
+    watcherSubscriptions(model),
   })
 }

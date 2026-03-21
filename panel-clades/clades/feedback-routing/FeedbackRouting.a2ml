@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Feedback Routing panel.
+
+(clade
+  (id "feedback-routing")
+  (name "Feedback Routing")
+  (kind "viewer")
+  (parent "viewer")
+  (description "Feedback-o-Tron routing — upstream bug report status and integration map")
+  (traits
+    (has-backend true)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (RefreshReports "Refresh upstream report status from all platforms"))
+  (integrations
+    (model "FeedbackRoutingModel")
+    (component "FeedbackRouting")
+    (engine "FeedbackRoutingEngine")))

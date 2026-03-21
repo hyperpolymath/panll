@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Contractile Completeness panel.
+
+(clade
+  (id "contractile-completeness")
+  (name "Contractile Completeness")
+  (kind "scanner")
+  (parent "scanner")
+  (description "Contractile completeness — Mustfile/Trustfile/Dustfile/K9 coverage")
+  (traits
+    (has-backend false)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (ScanRepos "Scan filesystem for contractile file presence"))
+  (integrations
+    (model "ContractileCompletenessModel")
+    (component "ContractileCompleteness")
+    (engine "ContractileCompletenessEngine")))

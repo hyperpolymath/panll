@@ -22,6 +22,13 @@
 // happen in the Tauri command layer.
 
 /// Voice session state for PanLL.
+/// Panel context for voice sessions.
+type panelContext =
+  | GlobalHuddle          // Workspace-wide voice
+  | PanelSpecific(string) // Voice tied to a panel
+  | PairProgramming       // Two-person session
+  | CodeReview            // Review session (may record)
+
 type voiceSessionState =
   | Inactive          // No voice session running
   | Connecting        // Burble connection in progress
@@ -34,12 +41,13 @@ type voiceSessionState =
     })
   | Error(string)     // Voice failed
 
-/// Panel context for voice sessions.
-and panelContext =
-  | GlobalHuddle          // Workspace-wide voice
-  | PanelSpecific(string) // Voice tied to a panel
-  | PairProgramming       // Two-person session
-  | CodeReview            // Review session (may record)
+/// A speech transcript for VoiceTag integration.
+type transcript = {
+  text: string,
+  speaker: string,
+  timestamp: float,
+  panelId: option<string>,
+}
 
 /// Burble engine state (part of PanLL's Model).
 type state = {
@@ -48,14 +56,6 @@ type state = {
   serverAvailable: bool,
   speechToTextEnabled: bool,
   recentTranscripts: array<transcript>,
-}
-
-/// A speech transcript for VoiceTag integration.
-and transcript = {
-  text: string,
-  speaker: string,
-  timestamp: float,
-  panelId: option<string>,
 }
 
 /// Default initial state.
@@ -95,7 +95,7 @@ type msg =
 /// Process a Burble message, returning updated state + PanelBus events.
 let update = (state: state, msg: msg): (state, array<PanelBus.panelEvent>) => {
   switch msg {
-  | StartHuddle(context) =>
+  | StartHuddle(_context) =>
     let newState = {...state, voiceSession: Connecting}
     (newState, [])
 
@@ -165,7 +165,7 @@ let update = (state: state, msg: msg): (state, array<PanelBus.panelEvent>) => {
   | SpeechStopped(userId) =>
     (state, [PanelBus.BurbleSpeechEnded(userId)])
 
-  | TranscriptReceived(userId, displayName, text) =>
+  | TranscriptReceived(_userId, displayName, text) =>
     let transcript: transcript = {
       text,
       speaker: displayName,

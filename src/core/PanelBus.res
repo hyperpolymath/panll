@@ -252,6 +252,7 @@ let defaultSubscribers: array<subscriber> = [
   { cladeId: "fleet",     topics: [TopicScan, TopicHealth, TopicWorkflow],    active: true, priority: Critical },
   { cladeId: "hypatia",   topics: [TopicScan, TopicGovernance, TopicHealth],  active: true, priority: Critical },
   { cladeId: "databases",  topics: [TopicDatabase, TopicType],                active: true, priority: Normal },
+  { cladeId: "vql",       topics: [TopicDatabase, TopicType, TopicProtocol],  active: true, priority: Normal },
   { cladeId: "typell",    topics: [TopicType, TopicProtocol, TopicBuild],     active: true, priority: Normal },
   { cladeId: "security",  topics: [TopicSecurity, TopicScan],                 active: true, priority: Critical },
   { cladeId: "workspace", topics: [TopicUI, TopicHealth],                     active: true, priority: Normal },

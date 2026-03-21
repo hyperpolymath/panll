@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the VeriSimDB Feeds panel.
+
+(clade
+  (id "verisimdb-feeds")
+  (name "VeriSimDB Feeds")
+  (kind "viewer")
+  (parent "viewer")
+  (description "VeriSimDB data feeds — cross-repo analytics health and flow")
+  (traits
+    (has-backend true)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (CheckFeeds "Check health of all VeriSimDB data feeds"))
+  (integrations
+    (model "VerisimdbFeedsModel")
+    (component "VerisimdbFeeds")
+    (engine "VerisimdbFeedsEngine")))

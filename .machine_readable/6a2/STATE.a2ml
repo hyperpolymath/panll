@@ -4,7 +4,7 @@
 
 [metadata]
 version = "1.1.0"
-last-updated = "2026-03-15"
+last-updated = "2026-03-20"
 format-spec = "hyperpolymath/rsr-template-repo/spec/STATE-FORMAT-SPEC.adoc"
 
 [project-context]
@@ -32,7 +32,7 @@ engines = 280
 commands = 116
 clades = 83
 test-files = 129
-rust-backend-modules = 39
+rust-backend-modules = 41
 tea-modules = 18
 build-status = "0 errors, 0 warnings (all 42 warnings eliminated 2026-03-15)"
 test-count = 2263
@@ -40,7 +40,7 @@ test-count = 2263
 [current-position]
 milestone = "v0.2.0 — TypeLL Cross-Panel Intelligence & Backend Connections"
 phase = "alpha-complete"
-current-focus = "CRG D→C promotion (requires author dogfooding), live backend connections, infrastructure sync"
+current-focus = "CRG D→C promotion (requires author dogfooding), remaining integration tests, SeamEngine polish"
 
 [current-position.completion-percentage]
 frontend = 100
@@ -48,25 +48,26 @@ backend-connections = 100
 typell-coverage = 100
 testing = 92
 documentation = 85
-overall = 95
+overall = 97
 
 [current-position.status-summary]
 text = """95% overall — 79 panels defined (301 components), 83 clades, 129 test files,
 412 ReScript + 98 Rust source files, TypeLL covers all wired panels,
 39 Rust backend modules, 2263 tests passing, 0 build errors, 0 warnings.
-28 game dev panels (clade definitions only — ReScript pending).
-K9 Manager, Contractile Manager, Wiring Inspector added 2026-03-15.
-Live BoJ-server connection module added. Full contractiles system built (K9 validators,
-Hunt recipes, 11 runtime contractiles, 81 clade configs).
+All game dev panels implemented (clade + ReScript + Rust).
+K9 Manager and Contractile Manager now wired in View.res (2026-03-20).
+Live BoJ-server, VeriSimDB, and ECHIDNA connection modules all active.
+Full contractiles system built (K9 validators, Hunt recipes, 11 runtime contractiles, 81 clade configs).
 Panel Contract Compiler (PCC) with structure-aware ReScript scanner.
-Rainbow agent family — 7 colour-coded agents mapped to panels."""
+Rainbow agent family — 7 colour-coded agents mapped to panels.
+Build: 0 errors, 0 warnings. Flaky tests fixed (mutex poison recovery, session cleanup)."""
 
 [current-position.honesty-notes]
 notes = [
   "Source file count is 510 (.res + .rs); previous count of 361 predates game dev panels",
   "Test count of 2263 is individual assertions across 129 test files",
   "TypeLL cross-panel intelligence wired to all original panels via TypeCheckResult Msg variants",
-  "28 game dev panels are clade definitions only (no ReScript/Rust implementation yet)",
+  "All game dev panels now have ReScript implementations",
   "CRG grade D (Alpha) across all components — C (Beta) requires author dogfooding",
   "5% gap: CRG promotion (0%), benchmark tests (60%), some integration tests, SeamEngine polish",
   "TOPOLOGY.md and PANEL-INVENTORY.md panel counts lag behind actual state",
@@ -78,7 +79,7 @@ crg-promotion = "0% — requires author dogfooding, cannot automate"
 benchmark-tests = "60% — need more performance baselines"
 integration-tests = "80% — need cross-panel integration scenarios"
 seam-engine = "80% — need remaining compliance seam definitions"
-flaky-rust-tests = "Race conditions in multiplayer_monitor, valence_shell"
+flaky-rust-tests = "Fixed — mutex poison recovery + session cleanup (2026-03-20)"
 
 # --- Work completed (cumulative) ---
 

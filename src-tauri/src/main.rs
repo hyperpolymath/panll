@@ -100,6 +100,14 @@ mod boj;
 /// Async alternative to `boj::commands` using the shared `http_client` module.
 mod boj_live;
 
+/// VeriSimDB Live — async VeriSimDB connection for proof-carrying data operations.
+/// Connects to localhost:8080 for octad CRUD, VQL queries, and health monitoring.
+mod verisimdb_live;
+
+/// ECHIDNA Live — async ECHIDNA theorem prover connection.
+/// Connects to localhost:9000 for tactic selection, obligation dispatch, and prover stats.
+mod echidna_live;
+
 /// Shared async HTTP client for backend service connections.
 /// Centralises timeout, error handling, and connection pooling for all
 /// panel backends (BoJ, VeriSimDB, ECHIDNA, Fleet, etc.).
@@ -2172,6 +2180,17 @@ fn main() {
             boj_live::boj_live_invoke,
             boj_live::boj_live_topology,
             boj_live::boj_live_check,
+            // VeriSimDB Live — proof-carrying data operations
+            verisimdb_live::verisimdb_live_health,
+            verisimdb_live::verisimdb_live_list_octads,
+            verisimdb_live::verisimdb_live_query,
+            verisimdb_live::verisimdb_live_get_octad,
+            // ECHIDNA Live — theorem prover connection
+            echidna_live::echidna_live_health,
+            echidna_live::echidna_live_recommend_tactics,
+            echidna_live::echidna_live_submit_obligation,
+            echidna_live::echidna_live_get_result,
+            echidna_live::echidna_live_stats,
             // TypeLL — Type-level language server
             typell::commands::typell_health,
             typell::commands::typell_check,

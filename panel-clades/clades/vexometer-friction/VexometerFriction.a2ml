@@ -1,0 +1,21 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Vexometer Friction panel.
+
+(clade
+  (id "vexometer-friction")
+  (name "Vexometer Friction")
+  (kind "viewer")
+  (parent "viewer")
+  (description "Vexometer friction — irritation surface measurements across tools")
+  (traits
+    (has-backend true)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly true))
+  (capabilities
+    (MeasureAll "Measure friction dimensions for all tools"))
+  (integrations
+    (model "VexometerFrictionModel")
+    (component "VexometerFriction")
+    (engine "VexometerFrictionEngine")))

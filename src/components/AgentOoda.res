@@ -178,7 +178,7 @@ let sessionDetailView = (detail: sessionDetail): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("text-xl font-bold font-mono text-gray-100")},
                 list{
                   text(
-                    Float.toFixedWithPrecision(loopRate(detail), ~digits=2) ++ "/s",
+                    Float.toFixed(loopRate(detail), ~digits=2) ++ "/s",
                   ),
                 },
               ),
@@ -195,7 +195,7 @@ let sessionDetailView = (detail: sessionDetail): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("text-xl font-bold font-mono text-gray-100")},
                 list{
                   text(
-                    Float.toFixedWithPrecision(detail.avgLoopMs, ~digits=0) ++ "ms",
+                    Float.toFixed(detail.avgLoopMs, ~digits=0) ++ "ms",
                   ),
                 },
               ),
@@ -277,7 +277,7 @@ let view = (state: agentOodaState): Tea_Vdom.t<msg> => {
             ->Array.map(session =>
               sessionListItem(session, state.selectedSessionId == Some(session.id))
             )
-            ->Array.toList,
+            ->List.fromArray,
           ),
         },
       ),

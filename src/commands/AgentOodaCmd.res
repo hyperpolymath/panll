@@ -15,7 +15,7 @@ let listSessions = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("agent_ooda_list_sessions", {})
+    invoke("agent_ooda_list_sessions", ())
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()

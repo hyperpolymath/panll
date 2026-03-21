@@ -51,6 +51,18 @@ type oodaSession = {
   haltReason: option<string>,
 }
 
+/// A single state transition in a session's history.
+type stateTransition = {
+  /// State before the transition.
+  fromState: agentState,
+  /// State after the transition.
+  toState: agentState,
+  /// ISO 8601 timestamp of the transition.
+  timestamp: string,
+  /// Duration in milliseconds from the previous transition.
+  durationMs: float,
+}
+
 /// Detailed view of a single session, including transition history.
 type sessionDetail = {
   /// The session itself.
@@ -61,16 +73,6 @@ type sessionDetail = {
   avgLoopMs: float,
   /// Total elapsed time in milliseconds.
   totalElapsedMs: float,
-}
-
-/// A single state transition in a session's history.
-type stateTransition = {
-  /// State before the transition.
-  fromState: agentState,
-  /// State after the transition.
-  toState: agentState,
-  /// ISO 8601 timestamp of the transition.
-  timestamp: string,
 }
 
 // ============================================================================

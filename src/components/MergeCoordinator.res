@@ -218,7 +218,7 @@ let renderMergeQueueTab = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
     div(
       list{Attrs.class_("flex flex-col gap-1 p-4 max-h-80 overflow-y-auto")},
       state.mergeQueue
-      ->Array.mapWithIndex((branchName, idx) => {
+      ->Array.mapWithIndex((entry, idx) => {
         div(
           list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-800 rounded")},
           list{
@@ -228,8 +228,19 @@ let renderMergeQueueTab = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
             ),
             span(
               list{Attrs.class_("text-sm font-mono text-gray-300 flex-1")},
-              list{text(branchName)},
+              list{text(entry.branchName)},
             ),
+            if entry.checksPassed {
+              span(
+                list{Attrs.class_("text-xs text-green-400")},
+                list{text("Checks passed")},
+              )
+            } else {
+              span(
+                list{Attrs.class_("text-xs text-yellow-400")},
+                list{text(`${Int.toString(Array.length(entry.pendingChecks))} checks pending`)},
+              )
+            },
           },
         )
       })

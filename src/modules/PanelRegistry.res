@@ -82,6 +82,16 @@ let allPanels: array<panelMeta> = [
     cladeId: Some("databases"),
   },
   {
+    id: PanelVql,
+    name: "VQL-UT",
+    shortName: "VQL",
+    description: "Type-safe query language for VeriSimDB — 10-level progressive safety, cross-prover dispatch, dedicated linter and formatter",
+    icon: "database-search",
+    connectionStatus: ServiceDisconnected,
+    hasBackend: true,
+    cladeId: Some("vql"),
+  },
+  {
     id: PanelAerie,
     name: "Aerie",
     shortName: "Net",
@@ -845,6 +855,77 @@ let allPanels: array<panelMeta> = [
     connectionStatus: ServiceConnected, // Pure client-side state, always available
     hasBackend: false, // All contractile evaluation runs client-side
     cladeId: Some("contractile-manager"),
+  },
+  // ── Floor Raise campaign panels ─────────────────────────────────────────
+  {
+    id: PanelFloorRaise,
+    name: "Floor Raise",
+    shortName: "FR",
+    description: "Floor Raise campaign — foundational tool adoption dashboard",
+    icon: "trending-up",
+    connectionStatus: ServiceDisconnected, // Reads verisimdb data
+    hasBackend: true, // VeriSimDB queries for adoption metrics
+    cladeId: Some("floor-raise"),
+  },
+  {
+    id: PanelProvenAdoption,
+    name: "Proven Adoption",
+    shortName: "PrA",
+    description: "Proven library adoption — which repos use formally verified safety primitives",
+    icon: "check-circle",
+    connectionStatus: ServiceConnected, // Filesystem scanning, always available
+    hasBackend: false, // Pure filesystem scanning
+    cladeId: Some("proven-adoption"),
+  },
+  {
+    id: PanelContractileCompleteness,
+    name: "Contractile Completeness",
+    shortName: "CC",
+    description: "Contractile completeness — Mustfile/Trustfile/Dustfile/K9 coverage",
+    icon: "file-check",
+    connectionStatus: ServiceConnected, // Filesystem scanning, always available
+    hasBackend: false, // Pure filesystem scanning
+    cladeId: Some("contractile-completeness"),
+  },
+  {
+    id: PanelManifestCoverage,
+    name: "Manifest Coverage",
+    shortName: "MC",
+    description: "AI manifest coverage — 0-AI-MANIFEST.a2ml presence across all repos",
+    icon: "clipboard-check",
+    connectionStatus: ServiceConnected, // Filesystem scanning, always available
+    hasBackend: false, // Pure filesystem scanning
+    cladeId: Some("manifest-coverage"),
+  },
+  {
+    id: PanelVerisimdbFeeds,
+    name: "VeriSimDB Feeds",
+    shortName: "VF",
+    description: "VeriSimDB data feeds — cross-repo analytics health and flow",
+    icon: "activity",
+    connectionStatus: ServiceDisconnected, // Connects to VeriSimDB
+    hasBackend: true, // VeriSimDB queries
+    cladeId: Some("verisimdb-feeds"),
+  },
+  {
+    id: PanelFeedbackRouting,
+    name: "Feedback Routing",
+    shortName: "FBR",
+    description: "Feedback-o-Tron routing — upstream bug report status and integration map",
+    icon: "message-circle",
+    connectionStatus: ServiceDisconnected, // Connects to feedback-o-tron
+    hasBackend: true, // HTTP calls to feedback platforms
+    cladeId: Some("feedback-routing"),
+  },
+  {
+    id: PanelVexometerFriction,
+    name: "Vexometer Friction",
+    shortName: "VxF",
+    description: "Vexometer friction — irritation surface measurements across tools",
+    icon: "gauge",
+    connectionStatus: ServiceDisconnected, // Connects to vexometer backend
+    hasBackend: true, // Vexometer measurement queries
+    cladeId: Some("vexometer-friction"),
   },
 ]
 

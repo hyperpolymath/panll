@@ -1,0 +1,22 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+;
+; Clade manifest for the Floor Raise panel.
+
+(clade
+  (id "floor-raise")
+  (name "Floor Raise")
+  (kind "directive")
+  (parent "directive")
+  (description "Floor Raise campaign — foundational tool adoption dashboard")
+  (traits
+    (has-backend true)
+    (has-persistence false)
+    (has-customisation false)
+    (is-readonly false))
+  (capabilities
+    (ScanAdoption "Scan ecosystem for foundational tool adoption")
+    (RunCampaign "Dispatch gitbot-fleet fix campaigns"))
+  (integrations
+    (model "FloorRaiseModel")
+    (component "FloorRaise")
+    (engine "FloorRaiseEngine")))

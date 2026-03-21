@@ -148,7 +148,7 @@ type verisimdbMsg =
   | OrchStatusLoaded(result<string, string>)
   /// TypeLL cross-panel type check result for the last VQL query.
   | VqlTypeCheckResult(result<string, string>)
-  /// Toggle VQL-DT proof obligation display in Panel-L.
+  /// Toggle VQL-UT proof obligation display in Panel-L.
   | ToggleProofDisplay
   /// Neural advisor suggestion for the current VQL query.
   | InferenceSuggestion(string)
@@ -1914,6 +1914,38 @@ type ensaidConfigMsg =
   /// TypeLL cross-panel type check result for ENSAID config types.
   | TypeCheckResult(result<string, string>)
 
+/// Code MRI Timeline messages (Layer 2) — VeriSimDB-backed development timeline.
+/// Handles database connection, snapshot capture, history loading, scrubber
+/// navigation, and export. The timeline is append-only and passive — it reads
+/// metrics from other panels but never modifies the codebase.
+type timelineMsg =
+  /// Connect to the VeriSimDB timeline database for the loaded repo.
+  | Connect
+  /// Connection result (Ok = db path, Error = message).
+  | Connected(result<string, string>)
+  /// Capture a new snapshot of the current codebase state.
+  | CaptureSnapshot
+  /// Snapshot captured (Ok = snapshot JSON, Error = message).
+  | SnapshotCaptured(result<string, string>)
+  /// Load all historical snapshots from VeriSimDB.
+  | LoadHistory
+  /// History loaded (Ok = snapshots JSON array, Error = message).
+  | HistoryLoaded(result<string, string>)
+  /// Query snapshots within a date range (startDate, endDate in ISO 8601).
+  | QueryRange(string, string)
+  /// Range query result.
+  | RangeLoaded(result<string, string>)
+  /// Move the time-machine scrubber to a specific snapshot index.
+  | SeekScrubber(option<int>)
+  /// Toggle the dashboard panel expanded/collapsed.
+  | ToggleDashboard
+  /// Export timeline to a standalone JSON file.
+  | ExportTimeline(string)
+  /// Export result.
+  | TimelineExported(result<string, string>)
+  /// Dismiss a timeline error.
+  | DismissError
+
 /// Clade Browser messages — exploring and customising panel clades.
 type cladeBrowserMsg =
   /// Switch the active category tab.
@@ -2631,6 +2663,65 @@ type wiringInspectorMsg =
   | SetSortBy(string)
   | ToggleStateSection(WiringInspectorModel.panelState)
 
+// ── Floor Raise campaign message types ──────────────────────────────────
+
+/// Messages for the Floor Raise campaign dashboard.
+type floorRaiseMsg =
+  | SetTab(FloorRaiseModel.floorRaiseTab)
+  | ScanAdoption
+  | AdoptionScanned(result<string, string>)
+  | RunCampaign(string)
+  | CampaignResult(result<string, string>)
+  | ClearError
+
+/// Messages for the Proven Adoption scanner panel.
+type provenAdoptionMsg =
+  | SetTab(ProvenAdoptionModel.provenAdoptionTab)
+  | ScanRepos
+  | ReposScanned(result<string, string>)
+  | SelectRepo(string)
+  | ClearError
+
+/// Messages for the Contractile Completeness scanner panel.
+type contractileCompletenessMsg =
+  | SetTab(ContractileCompletenessModel.contractileCompletenessTab)
+  | ScanRepos
+  | ReposScanned(result<string, string>)
+  | SelectRepo(string)
+  | ClearError
+
+/// Messages for the Manifest Coverage scanner panel.
+type manifestCoverageMsg =
+  | SetTab(ManifestCoverageModel.manifestCoverageTab)
+  | ScanRepos
+  | ReposScanned(result<string, string>)
+  | SelectRepo(string)
+  | ClearError
+
+/// Messages for the VeriSimDB Feeds viewer panel.
+type verisimdbFeedsMsg =
+  | SetTab(VerisimdbFeedsModel.verisimdbFeedsTab)
+  | CheckFeeds
+  | FeedsChecked(result<string, string>)
+  | SelectFeed(string)
+  | ClearError
+
+/// Messages for the Feedback Routing viewer panel.
+type feedbackRoutingMsg =
+  | SetTab(FeedbackRoutingModel.feedbackRoutingTab)
+  | RefreshReports
+  | ReportsRefreshed(result<string, string>)
+  | SelectReport(string)
+  | ClearError
+
+/// Messages for the Vexometer Friction viewer panel.
+type vexometerFrictionMsg =
+  | SetTab(VexometerFrictionModel.vexometerFrictionTab)
+  | MeasureAll
+  | MeasureResult(result<string, string>)
+  | SelectTool(string)
+  | ClearError
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -2691,6 +2782,7 @@ type msg =
   | MyLang(myLangMsg) // AI-native language workbench
   | TypeLL(typellMsg) // Verification kernel (cross-panel type intelligence)
   | EnsaidConfig(ensaidConfigMsg) // Cross-panel ENSAID_CONFIG generation and I/O
+  | Timeline(timelineMsg) // Code MRI Layer 2 — VeriSimDB development timeline
   | Bus(panelBusMsg) // Panel Bus subscriber management
   | RecordBojLatency(string, string, float) // cartridge, tool, elapsed ms
   | GovernanceNesyResult(result<string, string>) // nesy-mcp governance query response
@@ -2748,6 +2840,14 @@ type msg =
   | DebuggingWorkbench(debuggingWorkbenchMsg) // Time-travel debugging, state inspection
   // Infrastructure panels
   | WiringInspector(wiringInspectorMsg) // PCC constraint state and bottleneck analysis
+  // Floor Raise panels — foundational tool adoption campaign
+  | FloorRaise(floorRaiseMsg) // Floor Raise campaign dashboard
+  | ProvenAdoption(provenAdoptionMsg) // Proven library adoption scanner
+  | ContractileCompleteness(contractileCompletenessMsg) // Contractile coverage scanner
+  | ManifestCoverage(manifestCoverageMsg) // AI manifest coverage scanner
+  | VerisimdbFeeds(verisimdbFeedsMsg) // VeriSimDB data feed viewer
+  | FeedbackRouting(feedbackRoutingMsg) // Feedback-o-Tron routing viewer
+  | VexometerFriction(vexometerFrictionMsg) // Vexometer friction viewer
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

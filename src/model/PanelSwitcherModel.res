@@ -19,6 +19,8 @@ type panelId =
   | PanelHypatia
   | PanelReposystem
   | PanelDatabases
+  /// VQL-UT — type-safe query language for VeriSimDB (flagship panel).
+  | PanelVql
   | PanelAerie
   | PanelInterfaces
   | PanelPlaygrounds
@@ -137,6 +139,21 @@ type panelId =
   | PanelK9Manager
   /// Contractile Manager — cognitive governance dashboard for the 11 built-in contractiles.
   | PanelContractileManager
+  // Floor Raise panels — foundational tool adoption campaign
+  /// Floor Raise campaign — foundational tool adoption dashboard.
+  | PanelFloorRaise
+  /// Proven adoption scanner — which repos use formally verified safety primitives.
+  | PanelProvenAdoption
+  /// Contractile completeness scanner — Mustfile/Trustfile/Dustfile/K9 coverage.
+  | PanelContractileCompleteness
+  /// AI manifest coverage scanner — 0-AI-MANIFEST.a2ml presence.
+  | PanelManifestCoverage
+  /// VeriSimDB data feeds viewer — cross-repo analytics health.
+  | PanelVerisimdbFeeds
+  /// Feedback-o-Tron routing viewer — upstream bug report status.
+  | PanelFeedbackRouting
+  /// Vexometer friction viewer — irritation surface measurements.
+  | PanelVexometerFriction
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

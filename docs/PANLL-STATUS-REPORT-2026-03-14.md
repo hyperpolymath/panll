@@ -141,10 +141,10 @@ The eNSAID spec (DD-001) defines PanLL as the reference implementation. Here's h
 | Code Provenance (DD-006) | Yes | No | No git blame wiring |
 | Cognitive Governance Stack (DD-007) | Yes | Partial | Vexometer works, others mock |
 | Panel Clades (DD-010) | Yes | Yes | Working, 44 clades |
-| Code MRI (DD-016) | Partial | No | VoiceTag, Blake3, Timeline not built |
+| Code MRI (DD-016) | Yes | Partial | VoiceTag (L0), Blake3 provenance (L1), Timeline engine (L2) built; TimelineCmd + TimelineModel + dashboard wiring added 2026-03-21 |
 | Care-On/Eco-Mode (DD-017) | No | No | Not started |
 | Dogfood Mode (DD-018) | No | No | Not started |
-| eNSAID as independent spec | No | No | Still lives inside PanLL |
+| eNSAID as independent spec | Yes | Yes | Separated to ensaid-spec repo; PanLL retains implementation code (EnsaidConfigEngine, EnsaidConfigCmd) |
 
 **Honest assessment: ~60% of the eNSAID vision is implemented at UI level, ~15% is operational end-to-end.**
 

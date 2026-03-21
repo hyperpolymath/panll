@@ -115,6 +115,70 @@ pub async fn post_json<B: serde::Serialize, T: DeserializeOwned>(
         .map_err(|e| format!("Failed to parse response from {}: {}", url, e))
 }
 
+/// Make a GET request and return the raw response body as a String.
+///
+/// Useful when the caller wants to forward the raw JSON to the frontend
+/// without deserialising into a specific Rust type.
+pub async fn get_raw(
+    endpoint: &ServiceEndpoint,
+    path: &str,
+) -> Result<String, String> {
+    let url = format!("{}{}", endpoint.base_url, path);
+    let client = reqwest::Client::builder()
+        .timeout(endpoint.timeout)
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Request to {} failed: {}", url, e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("HTTP {} from {}", response.status(), url));
+    }
+
+    response
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read response from {}: {}", url, e))
+}
+
+/// Make a POST request with a JSON body and return the raw response body.
+///
+/// Like [`post_json`] but returns the raw response text instead of
+/// deserialising into a specific type.
+pub async fn post_json_raw<B: serde::Serialize>(
+    endpoint: &ServiceEndpoint,
+    path: &str,
+    body: &B,
+) -> Result<String, String> {
+    let url = format!("{}{}", endpoint.base_url, path);
+    let client = reqwest::Client::builder()
+        .timeout(endpoint.timeout)
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    let response = client
+        .post(&url)
+        .json(body)
+        .send()
+        .await
+        .map_err(|e| format!("Request to {} failed: {}", url, e))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body_text = response.text().await.unwrap_or_default();
+        return Err(format!("HTTP {} from {}: {}", status, url, body_text));
+    }
+
+    response
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read response from {}: {}", url, e))
+}
+
 /// Check if a service is reachable (simple health probe).
 ///
 /// Uses a short 5-second timeout regardless of the endpoint's configured

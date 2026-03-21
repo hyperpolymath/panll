@@ -723,6 +723,18 @@ mod tests {
         let _ = fs::remove_dir_all(&ckp);
         let _ = fs::create_dir_all(&rec);
         let _ = fs::create_dir_all(&ckp);
+
+        // Also clear any leaked shell sessions from previous tests.
+        // Recover from poisoned mutex to prevent cascading test failures.
+        if let Ok(mut sessions) = SESSIONS
+            .lock()
+            .map_or_else(|poisoned| Ok(poisoned.into_inner()), Ok)
+        {
+            // Kill any lingering child processes before dropping sessions.
+            for (_, mut session) in sessions.drain() {
+                let _ = session.child.kill();
+            }
+        }
     }
 
     #[tokio::test]
