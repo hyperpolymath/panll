@@ -448,6 +448,9 @@ type model = {
   // Provenance Map — Qubes-style code trust surface (always visible, ambient)
   provenance: provenanceState,
 
+  // Code MRI Timeline — VeriSimDB-backed development time series (Layer 2)
+  codeMriTimeline: TimelineModel.timelineState,
+
   // Watcher — filesystem observation infrastructure (feeds all panels)
   watcher: watcherState,
 
@@ -1167,6 +1170,7 @@ let init = (): model => {
   provisioner: ProvisionerEngine.defaultState,
   voiceTag: VoiceTagEngine.defaultState,
   provenance: ProvenanceEngine.defaultState,
+  codeMriTimeline: TimelineModel.defaultTimelineState(),
   watcher: {
     running: false,
     watchedPaths: [],

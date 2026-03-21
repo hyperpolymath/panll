@@ -373,8 +373,8 @@ let computeRegionHash = (
   let hashB = ref(0x01000193) // FNV prime (32-bit)
   for i in 0 to len - 1 {
     let charCode = String.charCodeAt(input, i)->Float.toInt
-    hashA := lxor(hashA.contents * 16777619, charCode)
-    hashB := lxor(hashB.contents * 16777259, charCode + i)
+    hashA := Int.bitwiseXor(hashA.contents * 16777619, charCode)
+    hashB := Int.bitwiseXor(hashB.contents * 16777259, charCode + i)
   }
   // Convert both 32-bit halves to 8-char hex each, yielding 16 hex digits.
   let toHex8 = (n: int): string => {
@@ -383,9 +383,9 @@ let computeRegionHash = (
     let result = ref("")
     let remaining = ref(positive)
     for _ in 0 to 7 {
-      let digit = land(remaining.contents, 15)
+      let digit = Int.bitwiseAnd(remaining.contents, 15)
       result := String.charAt(hexChars, digit) ++ result.contents
-      remaining := asr(remaining.contents, 4)
+      remaining := Int.shiftRight(remaining.contents, 4)
     }
     result.contents
   }
