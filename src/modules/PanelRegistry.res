@@ -82,6 +82,16 @@ let allPanels: array<panelMeta> = [
     cladeId: Some("databases"),
   },
   {
+    id: PanelVql,
+    name: "VQL-UT",
+    shortName: "VQL",
+    description: "Type-safe query language for VeriSimDB — 10-level progressive safety, cross-prover dispatch, dedicated linter and formatter",
+    icon: "database-search",
+    connectionStatus: ServiceDisconnected,
+    hasBackend: true,
+    cladeId: Some("vql"),
+  },
+  {
     id: PanelAerie,
     name: "Aerie",
     shortName: "Net",

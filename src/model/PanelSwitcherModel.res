@@ -19,6 +19,8 @@ type panelId =
   | PanelHypatia
   | PanelReposystem
   | PanelDatabases
+  /// VQL-UT — type-safe query language for VeriSimDB (flagship panel).
+  | PanelVql
   | PanelAerie
   | PanelInterfaces
   | PanelPlaygrounds

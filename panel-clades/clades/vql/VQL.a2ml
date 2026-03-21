@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// VQL-UT Panel Clade Definition — Attested Markup Language
+
+[clade]
+id = "vql"
+kind = "service"
+version = "1.0.0"
+name = "VQL-UT: Type-Safe Query Language"
+description = """
+The flagship PanLL panel. VQL-UT provides a 10-level progressive type safety
+system for querying VeriSimDB's 8-modality octad storage, dispatching across
+ECHIDNA's 30 prover backends, and generating formally verified query plans.
+
+Features:
+- 10-level type safety ratchet (L0 Unsafe → L10 Linear-Safe)
+- Dedicated linter with 30+ rules across 6 categories
+- Dedicated formatter with 5 style presets
+- Cross-prover federated query dispatch
+- VeriSimDB octad-aware schema browser
+- Query plan visualization with cost estimation
+- TypeLL integration for dependent-type checking
+- Proof obligation tracking and discharge
+- Evangeliser narratives (celebrate/minimize/improve/safety)
+"""
+
+capabilities = [
+  "VqlQuery",
+  "VqlLint",
+  "VqlFormat",
+  "VqlTypeCheck",
+  "VqlExplain",
+  "SchemaIntrospect",
+  "CrossProverDispatch",
+  "ProofObligationTrack",
+  "QueryHistoryManage",
+  "ResultExport",
+]
+
+consumed-by = [
+  "typell",       // TypeLL provides type checking for VQL expressions
+  "echidna",      // ECHIDNA provides cross-prover dispatch
+  "verisimdb",    // VeriSimDB provides octad storage
+  "databases",    // Databases panel shares connection state
+  "boj",          // BoJ routes queries through cartridges
+]
+
+consumes = [
+  "verisimdb",    // Query execution target
+  "echidna",      // Prover dispatch
+  "typell",       // Type checking service
+]
+
+[endpoints]
+verisimdb = "http://localhost:8200"
+echidna = "http://localhost:8000"
+typell = "http://localhost:7800"
+boj = "http://localhost:7700"
+
+[health]
+check-interval-ms = 10000
+endpoints = [
+  "http://localhost:8200/api/v1/health",
+  "http://localhost:8000/api/v1/health",
+  "http://localhost:7800/api/v1/health",
+]
+
+[bus]
+subscribes = ["TopicDatabase", "TopicType", "TopicProtocol"]
+publishes = ["TopicDatabase", "TopicType"]
+
+[taxonomy]
+domain = "data"
+group = "Data"
+priority = 1
+icon = "database-search"
