@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[clade-metadata]
+id = "gsa-actions"
+name = "GSA Server Actions"
+short-name = "Actions"
+version = "1.0.0"
+kind = "terminal"
+icon = "play-circle"
+description = "Start, stop, restart, update, backup, and validate game servers. Executes container commands via SSH with confirmation dialogs and progress tracking."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = false
+has-work-items = false
+has-real-time = true
+is-directive = false
+is-readonly = false
+is-ambient = false
+
+[clade-capabilities]
+capabilities = ["Network", "Shell", "ProcessSpawn", "Containerised"]
+
+[clade-protocols]
+protocols = ["REST", "TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = "gsa"
+sibling-clades = ["gsa-browser", "gsa-logs"]
+supersedes = ""
+
+[clade-panel-integration]
+panel-id = "PanelGsaServerActions"
+model-module = "GsaActionsModel"
+component-module = "GsaActions"
+command-module = "GsaActionsCmd"
+module-module = "GsaActionsModule"

@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[clade-metadata]
+id = "gsa-logs"
+name = "GSA Live Logs"
+short-name = "Logs"
+version = "1.0.0"
+kind = "terminal"
+icon = "terminal"
+description = "Real-time game server log streaming with ANSI color rendering, severity filtering, search, and auto-scroll. Streams via SSH tail or RCON log commands."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = false
+has-work-items = false
+has-real-time = true
+is-directive = false
+is-readonly = true
+is-ambient = false
+
+[clade-capabilities]
+capabilities = ["Network", "Streaming"]
+
+[clade-protocols]
+protocols = ["WebSocket", "TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = "gsa"
+sibling-clades = ["gsa-actions"]
+supersedes = ""
+
+[clade-panel-integration]
+panel-id = "PanelGsaLiveLogs"
+model-module = "GsaLogsModel"
+component-module = "GsaLogs"
+command-module = "GsaLogsCmd"
+module-module = "GsaLogsModule"

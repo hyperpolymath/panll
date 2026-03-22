@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[clade-metadata]
+id = "gsa-history"
+name = "GSA Config History"
+short-name = "History"
+version = "1.0.0"
+kind = "database"
+icon = "git-branch"
+description = "Config version timeline with side-by-side diff viewer and provenance chain. Uses VeriSimDB temporal modality for version history and provenance for hash-chain audit trail."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = true
+has-real-time = false
+is-directive = false
+is-readonly = false
+is-ambient = false
+
+[clade-capabilities]
+capabilities = ["Network"]
+
+[clade-protocols]
+protocols = ["REST", "TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = "gsa"
+sibling-clades = ["gsa-config", "gsa-health"]
+supersedes = ""
+
+[clade-panel-integration]
+panel-id = "PanelGsaConfigHistory"
+model-module = "GsaHistoryModel"
+component-module = "GsaHistory"
+command-module = "GsaHistoryCmd"
+module-module = "GsaHistoryModule"

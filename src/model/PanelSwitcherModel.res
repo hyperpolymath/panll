@@ -160,6 +160,21 @@ type panelId =
   | PanelLlmCoding
   /// Agent Coordination View — multi-agent topology and strategy visualiser.
   | PanelAgentCoordination
+  // Game Server Admin panels — universal game server probe + config management
+  /// GSA Server Browser — discover and fingerprint game servers.
+  | PanelGsaServerBrowser
+  /// GSA Config Editor — A2ML-aware config editing with type validation.
+  | PanelGsaConfigEditor
+  /// GSA Server Actions — start/stop/restart with confirmation.
+  | PanelGsaServerActions
+  /// GSA Live Logs — real-time log streaming with ANSI color.
+  | PanelGsaLiveLogs
+  /// GSA Health Dashboard — VeriSimDB drift detection and health gauges.
+  | PanelGsaHealthDashboard
+  /// GSA Config History — temporal version timeline with diff viewer.
+  | PanelGsaConfigHistory
+  /// GSA Cross-Server Search — VQL-powered cross-server config search.
+  | PanelGsaCrossSearch
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

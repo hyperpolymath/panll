@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[clade-metadata]
+id = "gsa-search"
+name = "GSA Cross-Server Search"
+short-name = "Search"
+version = "1.0.0"
+kind = "database"
+icon = "search"
+description = "Search across all managed servers using VQL full-text search, vector similarity, or raw VQL queries. Supports faceted filtering by game type, status, and drift level."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-real-time = false
+is-directive = false
+is-readonly = true
+is-ambient = false
+
+[clade-capabilities]
+capabilities = ["Network"]
+
+[clade-protocols]
+protocols = ["REST", "TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = "gsa"
+sibling-clades = ["gsa-health", "gsa-history"]
+supersedes = ""
+
+[clade-panel-integration]
+panel-id = "PanelGsaCrossSearch"
+model-module = "GsaSearchModel"
+component-module = "GsaSearch"
+command-module = "GsaSearchCmd"
+module-module = "GsaSearchModule"

@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[clade-metadata]
+id = "gsa"
+name = "Game Server Admin"
+short-name = "GSA"
+version = "1.0.0"
+kind = "network"
+icon = "server-cog"
+description = "Universal game server probe, config extraction, and management via Gossamer webview + VeriSimDB backing store. Root clade for all GSA panels and game profiles."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = false
+has-real-time = true
+is-directive = false
+is-readonly = false
+is-ambient = false
+
+[clade-capabilities]
+capabilities = [
+  "Network",
+  "Shell",
+  "ProcessSpawn",
+  "Containerised",
+  "Streaming",
+  "SecretManagement",
+  "Visualisation",
+  "SessionRecording"
+]
+
+[clade-protocols]
+protocols = ["REST", "WebSocket", "SSE", "TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = ""
+sibling-clades = ["databases", "infrastructure"]
+supersedes = ""
+
+[clade-panel-integration]
+panel-id = "PanelGsa"
+model-module = "GsaModel"
+component-module = "Gsa"
+command-module = "GsaCmd"
+module-module = "GsaModule"
+
+[clade-dependencies]
+requires = [
+  { id = "databases", required = false, reason = "VeriSimDB backing store for config persistence and drift detection" }
+]
+enhances = ["infrastructure", "databases"]

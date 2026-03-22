@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[clade-metadata]
+id = "gsa-health"
+name = "GSA Health Dashboard"
+short-name = "Health"
+version = "1.0.0"
+kind = "scanner"
+icon = "activity"
+description = "Server health monitoring and config drift detection. Displays VeriSimDB drift scores across all 8 modalities with per-server health gauges and alert timeline."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = false
+has-real-time = true
+is-directive = false
+is-readonly = true
+is-ambient = false
+
+[clade-capabilities]
+capabilities = ["Network"]
+
+[clade-protocols]
+protocols = ["REST", "SSE", "TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = "gsa"
+sibling-clades = ["gsa-history"]
+supersedes = ""
+
+[clade-panel-integration]
+panel-id = "PanelGsaHealthDashboard"
+model-module = "GsaHealthModel"
+component-module = "GsaHealth"
+command-module = "GsaHealthCmd"
+module-module = "GsaHealthModule"

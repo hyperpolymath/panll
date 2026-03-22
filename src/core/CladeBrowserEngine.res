@@ -1025,6 +1025,66 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
       ~enhances=["workspace", "accessibility"],
       entry,
     )
+  // Game Server Admin — universal game server probe + config management via Gossamer + VeriSimDB
+  | "gsa" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoWebSocket, ProtoSSE, ProtoTauriIPC],
+      ~capabilities=[CapNetwork, CapShell, CapProcessSpawn, CapContainerised, CapStreaming, CapSecretManagement, CapVisualisation, CapSessionRecording],
+      ~enhances=["databases", "infrastructure"],
+      ~isolation=IsolationProcess,
+      entry,
+    )
+  | "gsa-browser" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~capabilities=[CapNetwork],
+      entry,
+    )
+  | "gsa-config" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~capabilities=[CapNetwork, CapShell, CapSecretManagement],
+      entry,
+    )
+  | "gsa-actions" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~capabilities=[CapNetwork, CapShell, CapProcessSpawn, CapContainerised],
+      entry,
+    )
+  | "gsa-logs" =>
+    withDefaults(
+      ~protocols=[ProtoWebSocket, ProtoTauriIPC],
+      ~capabilities=[CapNetwork, CapStreaming],
+      entry,
+    )
+  | "gsa-health" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoSSE, ProtoTauriIPC],
+      ~capabilities=[CapNetwork],
+      ~enhances=["databases"],
+      entry,
+    )
+  | "gsa-history" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~capabilities=[CapNetwork],
+      ~enhances=["databases"],
+      entry,
+    )
+  | "gsa-search" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~capabilities=[CapNetwork],
+      ~enhances=["databases"],
+      entry,
+    )
+  | "gsa-game" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~capabilities=[CapNetwork, CapShell, CapContainerised],
+      entry,
+    )
   | _ => entry
   }
 

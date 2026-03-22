@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[clade-metadata]
+id = "gsa-game"
+name = "GSA Game Profile"
+short-name = "Game"
+version = "1.0.0"
+kind = "game-profile"
+icon = "gamepad"
+description = "Abstract parent clade for all game server profiles. Each game (Valheim, Minecraft, Factorio, etc.) gets a child clade that inherits from this. New profiles automatically extend the cladogram."
+
+[clade-traits]
+has-backend = true
+has-scanning = true
+has-persistence = true
+has-work-items = false
+has-real-time = true
+is-directive = false
+is-readonly = false
+is-ambient = false
+
+[clade-capabilities]
+capabilities = ["Network", "Shell", "Containerised"]
+
+[clade-protocols]
+protocols = ["REST", "TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = "gsa"
+sibling-clades = []
+supersedes = ""
+
+[clade-panel-integration]
+panel-id = ""
+model-module = ""
+component-module = ""
+command-module = ""
+module-module = ""
+# Abstract clade — no direct panel, only inherited by game-specific children

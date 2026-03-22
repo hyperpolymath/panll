@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+[clade-metadata]
+id = "gsa-config"
+name = "GSA Config Editor"
+short-name = "Config"
+version = "1.0.0"
+kind = "editor"
+icon = "sliders"
+description = "A2ML-aware configuration editor for game servers. Generates dynamic forms from config field metadata with type validation, diff view, and raw format preview."
+
+[clade-traits]
+has-backend = true
+has-scanning = false
+has-persistence = true
+has-work-items = true
+has-real-time = false
+is-directive = false
+is-readonly = false
+is-ambient = false
+
+[clade-capabilities]
+capabilities = ["Network", "Shell", "SecretManagement"]
+
+[clade-protocols]
+protocols = ["REST", "TauriIPC"]
+
+[clade-taxonomy]
+inherits-from = "gsa"
+sibling-clades = ["gsa-browser", "gsa-history"]
+supersedes = ""
+
+[clade-panel-integration]
+panel-id = "PanelGsaConfigEditor"
+model-module = "GsaConfigModel"
+component-module = "GsaConfig"
+command-module = "GsaConfigCmd"
+module-module = "GsaConfigModule"
