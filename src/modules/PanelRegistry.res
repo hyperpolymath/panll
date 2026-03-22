@@ -1020,6 +1020,72 @@ let allPanels: array<panelMeta> = [
     hasBackend: true,
     cladeId: Some("gsa-search"),
   },
+  // ════════════════════════════════════════════════════════════════════════
+  // Burble Admin panels
+  // ════════════════════════════════════════════════════════════════════════
+  {
+    id: PanelBurbleServerStatus,
+    name: "Burble Status",
+    shortName: "Status",
+    description: "Burble voice server health, uptime, and room overview",
+    icon: "mic",
+    connectionStatus: ServiceConnected,
+    hasBackend: true,
+    cladeId: Some("burble-admin"),
+  },
+  {
+    id: PanelBurbleVoiceQuality,
+    name: "Voice Quality",
+    shortName: "Voice",
+    description: "WebRTC voice metrics — bandwidth, jitter, packet loss",
+    icon: "bar-chart",
+    connectionStatus: ServiceConnected,
+    hasBackend: true,
+    cladeId: Some("burble-admin"),
+  },
+  {
+    id: PanelBurbleRoomMonitor,
+    name: "Room Monitor",
+    shortName: "Rooms",
+    description: "Active voice rooms, recordings, participant activity",
+    icon: "users",
+    connectionStatus: ServiceConnected,
+    hasBackend: true,
+    cladeId: Some("burble-admin"),
+  },
+  // ════════════════════════════════════════════════════════════════════════
+  // IDApTIK Admin panels
+  // ════════════════════════════════════════════════════════════════════════
+  {
+    id: PanelIdaptikServerStatus,
+    name: "IDApTIK Status",
+    shortName: "Server",
+    description: "IDApTIK game server state, sessions, and player count",
+    icon: "shield",
+    connectionStatus: ServiceConnected,
+    hasBackend: true,
+    cladeId: Some("idaptik-admin"),
+  },
+  {
+    id: PanelIdaptikSessionMonitor,
+    name: "Session Monitor",
+    shortName: "Sessions",
+    description: "Active game sessions, completion rates, difficulty balance",
+    icon: "monitor",
+    connectionStatus: ServiceConnected,
+    hasBackend: true,
+    cladeId: Some("idaptik-admin"),
+  },
+  {
+    id: PanelIdaptikPlayerOverview,
+    name: "Player Overview",
+    shortName: "Players",
+    description: "Jessica/Q player stats, asymmetric balance ratio",
+    icon: "users",
+    connectionStatus: ServiceConnected,
+    hasBackend: true,
+    cladeId: Some("idaptik-admin"),
+  },
 ]
 
 /// Look up panel metadata by ID.

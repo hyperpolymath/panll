@@ -1085,6 +1085,24 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
       ~capabilities=[CapNetwork, CapShell, CapContainerised],
       entry,
     )
+  // Burble Admin — voice platform management
+  | "burble-admin" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoWebSocket, ProtoTauriIPC],
+      ~capabilities=[CapNetwork, CapStreaming, CapVisualisation],
+      ~enhances=["infrastructure"],
+      ~isolation=IsolationProcess,
+      entry,
+    )
+  // IDApTIK Admin — game server management
+  | "idaptik-admin" =>
+    withDefaults(
+      ~protocols=[ProtoREST, ProtoWebSocket, ProtoTauriIPC],
+      ~capabilities=[CapNetwork, CapShell, CapContainerised, CapStreaming],
+      ~enhances=["infrastructure", "gsa"],
+      ~isolation=IsolationProcess,
+      entry,
+    )
   | _ => entry
   }
 

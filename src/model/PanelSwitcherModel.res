@@ -175,6 +175,20 @@ type panelId =
   | PanelGsaConfigHistory
   /// GSA Cross-Server Search — VQL-powered cross-server config search.
   | PanelGsaCrossSearch
+  // Burble Admin panels — voice platform management via Gossamer
+  /// Burble Server Status — node health, rooms, participants, uptime.
+  | PanelBurbleServerStatus
+  /// Burble Voice Quality — bandwidth, jitter, packet loss metrics.
+  | PanelBurbleVoiceQuality
+  /// Burble Room Monitor — active rooms, recordings, participant activity.
+  | PanelBurbleRoomMonitor
+  // IDApTIK Admin panels — game server management via Gossamer
+  /// IDApTIK Server Status — running state, sessions, player count.
+  | PanelIdaptikServerStatus
+  /// IDApTIK Session Monitor — active sessions, completion rates, balance.
+  | PanelIdaptikSessionMonitor
+  /// IDApTIK Player Overview — Jessica/Q stats, asymmetric balance ratio.
+  | PanelIdaptikPlayerOverview
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

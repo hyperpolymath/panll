@@ -17,8 +17,8 @@ import {
   init,
 } from "../src/modules/PanelRegistry.res.js";
 
-Deno.test("allPanels has 88 entries", () => {
-  assertEquals(allPanels.length, 88);
+Deno.test("allPanels has 94 entries", () => {
+  assertEquals(allPanels.length, 94);
 });
 
 Deno.test("every panel has required fields", () => {
@@ -122,4 +122,36 @@ Deno.test("panelsInClade returns GSA config editor", () => {
   const panels = panelsInClade("gsa-config");
   assertEquals(panels.length, 1);
   assertEquals(panels[0].id, "PanelGsaConfigEditor");
+});
+
+// ════════════════════════════════════════════════════════════════════════
+// Burble Admin panel tests
+// ════════════════════════════════════════════════════════════════════════
+
+Deno.test("Burble has 3 admin panels", () => {
+  const burblePanels = panelsInClade("burble-admin");
+  assertEquals(burblePanels.length, 3);
+});
+
+Deno.test("Burble Voice Quality panel exists", () => {
+  const panel = findPanel("PanelBurbleVoiceQuality");
+  assertExists(panel);
+  assertEquals(panel.shortName, "Voice");
+  assertEquals(panel.icon, "bar-chart");
+});
+
+// ════════════════════════════════════════════════════════════════════════
+// IDApTIK Admin panel tests
+// ════════════════════════════════════════════════════════════════════════
+
+Deno.test("IDApTIK has 3 admin panels", () => {
+  const idaptikPanels = panelsInClade("idaptik-admin");
+  assertEquals(idaptikPanels.length, 3);
+});
+
+Deno.test("IDApTIK Player Overview panel exists", () => {
+  const panel = findPanel("PanelIdaptikPlayerOverview");
+  assertExists(panel);
+  assertEquals(panel.shortName, "Players");
+  assertEquals(panel.cladeId, "idaptik-admin");
 });
