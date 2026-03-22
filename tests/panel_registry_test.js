@@ -17,8 +17,8 @@ import {
   init,
 } from "../src/modules/PanelRegistry.res.js";
 
-Deno.test("allPanels has 81 entries", () => {
-  assertEquals(allPanels.length, 81);
+Deno.test("allPanels has 88 entries", () => {
+  assertEquals(allPanels.length, 88);
 });
 
 Deno.test("every panel has required fields", () => {
@@ -96,4 +96,30 @@ Deno.test("BoJ panel metadata is correct", () => {
   assertEquals(boj.icon, "box");
   assertEquals(boj.hasBackend, true);
   assertEquals(boj.cladeId, "boj");
+});
+
+// ════════════════════════════════════════════════════════════════════════
+// Game Server Admin panel tests
+// ════════════════════════════════════════════════════════════════════════
+
+Deno.test("GSA Server Browser panel exists", () => {
+  const panel = findPanel("PanelGsaServerBrowser");
+  assertExists(panel);
+  assertEquals(panel.shortName, "Servers");
+  assertEquals(panel.icon, "radar");
+  assertEquals(panel.hasBackend, true);
+  assertEquals(panel.cladeId, "gsa-browser");
+});
+
+Deno.test("GSA has 7 panels in gsa-* clades", () => {
+  const gsaPanels = allPanels.filter(
+    (p) => p.cladeId && p.cladeId.startsWith("gsa-"),
+  );
+  assertEquals(gsaPanels.length, 7);
+});
+
+Deno.test("panelsInClade returns GSA config editor", () => {
+  const panels = panelsInClade("gsa-config");
+  assertEquals(panels.length, 1);
+  assertEquals(panels[0].id, "PanelGsaConfigEditor");
 });
