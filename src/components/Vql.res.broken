@@ -1,0 +1,1075 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// VQL-UT Panel — The flagship PanLL panel.
+//
+// This is the primary interface through which PanLL users interact with
+// VeriSimDB, ECHIDNA provers, and the VQL-UT type-safe query language.
+//
+// 7 tabs:
+//   1. Editor    — Query authoring with live linting and formatting
+//   2. Results   — Tabular results with sorting, filtering, export
+//   3. Plan      — Query execution plan tree visualization
+//   4. Schema    — VeriSimDB octad schema browser
+//   5. Provers   — ECHIDNA cross-prover dispatch configuration
+//   6. History   — Query history with favourites and replay
+//   7. Config    — Linter rules, formatter options, connection settings
+//
+// Design principles:
+//   - Progressive disclosure via 4 view layers (Raw/Folded/Glyphed/WYSIWYG)
+//   - 10-level type safety ratchet — always visible, always encouraging
+//   - Evangeliser narratives — celebrate achievement, minimize fear
+//   - Graceful degradation — works without TypeLL, ECHIDNA, or VeriSimDB
+
+open VqlModel
+open VqlEngine
+
+// ============================================================
+// SECTION 1: Shared Sub-Components
+// ============================================================
+
+/// Render the 10-level type safety gauge — a horizontal bar showing
+/// achieved level with colour-coded segments.
+let viewSafetyGauge = (achieved: typeSafetyLevel, minimum: typeSafetyLevel) => {
+  let achievedInt = levelToInt(achieved)
+  let minimumInt = levelToInt(minimum)
+
+  <div className="flex items-center gap-1 py-2">
+    <span className="text-xs text-gray-500 w-6">{"L0"->React.string}</span>
+    {levelMetas->Array.mapWithIndex((meta, idx) => {
+      let isFilled = idx <= achievedInt
+      let isBelowMinimum = idx < minimumInt && !isFilled
+      let colour = if isFilled {
+        meta.bgColour ++ " " ++ meta.colour
+      } else if isBelowMinimum {
+        "bg-red-900/20 text-red-800"
+      } else {
+        "bg-gray-800/30 text-gray-700"
+      }
+      <div
+        key={meta.shortName}
+        className={`flex-1 h-6 rounded text-center text-xs leading-6 cursor-pointer transition-all hover:brightness-125 ${colour}`}
+        title={meta.name ++ ": " ++ meta.description}
+      >
+        {meta.shortName->React.string}
+      </div>
+    })->React.array}
+    <span className="text-xs text-gray-500 w-8">{"L10"->React.string}</span>
+  </div>
+}
+
+/// Render a single lint diagnostic as a row.
+let viewDiagnostic = (d: lintDiagnostic) => {
+  let sevClass = severityColour(d.severity)
+  let catClass = categoryColour(d.category)
+  <div key={d.ruleId ++ Int.toString(d.line)} className="flex items-start gap-2 py-1 px-2 hover:bg-gray-800/40 rounded text-sm">
+    <span className={`${sevClass} flex-shrink-0`}>{severityIcon(d.severity)->React.string}</span>
+    <span className={`${catClass} text-xs font-mono flex-shrink-0 w-20`}>{d.ruleId->React.string}</span>
+    <span className="text-gray-300 flex-1">{d.message->React.string}</span>
+    <span className="text-gray-600 text-xs">{`L${Int.toString(d.line)}:${Int.toString(d.column)}`->React.string}</span>
+    {switch d.suggestion {
+    | Some(fix) =>
+      <button
+        className="text-xs px-1.5 py-0.5 bg-emerald-900/40 text-emerald-400 rounded hover:bg-emerald-900/60"
+        title={`Fix: ${fix}`}
+      >
+        {"Fix"->React.string}
+      </button>
+    | None => React.null
+    }}
+  </div>
+}
+
+/// Render the 4-part evangeliser narrative.
+let viewNarrative = (narrative: typeNarrative) => {
+  <div className="space-y-2 p-3 bg-gray-900/50 rounded-lg border border-gray-800">
+    <div className="flex items-start gap-2">
+      <span className="text-emerald-400 text-lg flex-shrink-0">"\u2713|j->React.string}</span>
+      <p className="text-emerald-300 text-sm">{narrative.celebrate->React.string}</p>
+    </div>
+    <div className="flex items-start gap-2">
+      <span className="text-amber-400 text-lg flex-shrink-0">"\u25CB|j->React.string}</span>
+      <p className="text-amber-300 text-sm">{narrative.minimize->React.string}</p>
+    </div>
+    <div className="flex items-start gap-2">
+      <span className="text-cyan-400 text-lg flex-shrink-0">"\u2191|j->React.string}</span>
+      <p className="text-cyan-300 text-sm">{narrative.showBetter->React.string}</p>
+    </div>
+    <div className="flex items-start gap-2">
+      <span className="text-violet-400 text-lg flex-shrink-0">"\u{1F6E1}|j->React.string}</span>
+      <p className="text-violet-300 text-sm">{narrative.safety->React.string}</p>
+    </div>
+  </div>
+}
+
+/// Render a tab button.
+let viewTabButton = (
+  ~activeTab: vqlTab,
+  ~tab: vqlTab,
+  ~label: string,
+  ~icon: string,
+  ~dispatch: vqlMsg => unit,
+) => {
+  let isActive = activeTab == tab
+  let baseClass = "px-3 py-1.5 text-sm rounded-t transition-colors"
+  let activeClass = if isActive {
+    "bg-gray-800 text-gray-100 border-b-2 border-cyan-500"
+  } else {
+    "text-gray-500 hover:text-gray-300 hover:bg-gray-800/40"
+  }
+  <button className={`${baseClass} ${activeClass}`} onClick={_ => dispatch(SetTab(tab))}>
+    <span className="mr-1.5">{icon->React.string}</span>
+    {label->React.string}
+  </button>
+}
+
+/// View layer selector buttons (shared with TypeLL).
+let viewLayerSelector = (activeLayer: viewLayer, dispatch: vqlMsg => unit) => {
+  let layers: array<viewLayer> = [Raw, Folded, Glyphed, Wysiwyg]
+  <div className="flex gap-1">
+    {layers->Array.map(vl => {
+      let isActive = activeLayer == vl
+      let colour = viewLayerColour(vl)
+      let cls = if isActive { colour ++ " ring-1 ring-white/20" } else { "text-gray-600 bg-gray-800/20 hover:bg-gray-800/40" }
+      <button
+        key={viewLayerLabel(vl)}
+        className={`px-2 py-0.5 text-xs rounded ${cls}`}
+        onClick={_ => dispatch(SetViewLayer(vl))}
+      >
+        {viewLayerLabel(vl)->React.string}
+      </button>
+    })->React.array}
+  </div>
+}
+
+/// Connection status badge.
+let viewConnectionBadge = (status: connectionStatus) => {
+  let (colour, label) = switch status {
+  | VqlDisconnected => ("bg-gray-700 text-gray-400", "Disconnected")
+  | VqlConnecting => ("bg-amber-900/40 text-amber-400 animate-pulse", "Connecting\u2026")
+  | VqlConnected(url) => ("bg-emerald-900/40 text-emerald-400", `Connected: ${url}`)
+  | VqlError(msg) => ("bg-red-900/40 text-red-400", `Error: ${msg}`)
+  }
+  <span className={`text-xs px-2 py-0.5 rounded ${colour}`}>{label->React.string}</span>
+}
+
+// ============================================================
+// SECTION 2: Tab — Editor
+// ============================================================
+
+/// The query editor tab — the primary authoring surface.
+/// Features: textarea with live linting, operation selector, template picker,
+/// parameter inputs, format button, type-check button, execute button.
+let viewEditorTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+  let diagnosticCounts = {
+    let errors = state.linter.diagnostics->Array.filter(d => d.severity == LintError)->Array.length
+    let warnings = state.linter.diagnostics->Array.filter(d => d.severity == LintWarning)->Array.length
+    (errors, warnings)
+  }
+  let (errorCount, warnCount) = diagnosticCounts
+
+  <div className="flex flex-col h-full">
+    // Operation selector ribbon
+    <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-800">
+      <span className="text-xs text-gray-500">{"Operation:"->React.string}</span>
+      {[OpFindProof, OpFindSimilar, OpCrossProverSearch, OpProvenanceTrace, OpTemporalHistory, OpDependencyGraph, OpTacticStats, OpCustom]
+        ->Array.map(op => {
+          let isActive = state.editor.activeOperation == op
+          let cls = if isActive { "bg-cyan-900/40 text-cyan-300 ring-1 ring-cyan-700" } else { "text-gray-500 hover:text-gray-300 hover:bg-gray-800/40" }
+          <button
+            key={operationLabel(op)}
+            className={`px-2 py-1 text-xs rounded ${cls}`}
+            onClick={_ => dispatch(SetOperation(op))}
+            title={operationLabel(op)}
+          >
+            <span className="mr-1">{operationGlyph(op)->React.string}</span>
+            {operationLabel(op)->React.string}
+          </button>
+        })->React.array}
+    </div>
+
+    // Template picker (when an operation is selected)
+    {
+      let matchingTemplates = builtinTemplates->Array.filter(t => t.operation == state.editor.activeOperation)
+      if Array.length(matchingTemplates) > 0 {
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-900/30 border-b border-gray-800">
+          <span className="text-xs text-gray-500">{"Templates:"->React.string}</span>
+          {matchingTemplates->Array.map(t => {
+            let isActive = switch state.editor.activeTemplate {
+            | Some(at) => at.id == t.id
+            | None => false
+            }
+            let cls = if isActive { "bg-violet-900/40 text-violet-300" } else { "text-gray-500 hover:text-gray-300" }
+            <button
+              key={t.id}
+              className={`px-2 py-0.5 text-xs rounded ${cls}`}
+              onClick={_ => dispatch(ApplyTemplate(t))}
+              title={t.description}
+            >
+              {t.name->React.string}
+            </button>
+          })->React.array}
+        </div>
+      } else {
+        React.null
+      }
+    }
+
+    // Template parameter inputs (when a template is active)
+    {switch state.editor.activeTemplate {
+    | Some(template) =>
+      <div className="flex flex-wrap items-center gap-3 px-3 py-2 bg-gray-900/20 border-b border-gray-800">
+        {template.parameters->Array.map(param => {
+          let value = switch state.editor.parameterValues->Array.find(((k, _)) => k == param.name) {
+          | Some((_, v)) => v
+          | None => switch param.defaultValue { | Some(d) => d | None => "" }
+          }
+          <div key={param.name} className="flex items-center gap-1">
+            <label className="text-xs text-gray-500">{param.name->React.string}</label>
+            <input
+              type_="text"
+              value
+              onChange={e => {
+                let v = (e->ReactEvent.Form.target)["value"]
+                dispatch(SetParameterValue(param.name, v))
+              }}
+              className="px-2 py-0.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700 focus:border-cyan-600 focus:outline-none w-32"
+              placeholder={param.description}
+              title={param.description}
+            />
+          </div>
+        })->React.array}
+      </div>
+    | None => React.null
+    }}
+
+    // Main editor area
+    <div className="flex-1 flex flex-col min-h-0">
+      // Toolbar
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-gray-800">
+        <div className="flex items-center gap-2">
+          <button
+            className="px-2 py-1 text-xs bg-cyan-900/40 text-cyan-300 rounded hover:bg-cyan-900/60"
+            onClick={_ => dispatch(RunFormat)}
+            title="Format query (Ctrl+Shift+F)"
+          >
+            {"Format"->React.string}
+          </button>
+          <button
+            className="px-2 py-1 text-xs bg-violet-900/40 text-violet-300 rounded hover:bg-violet-900/60"
+            onClick={_ => dispatch(RequestTypeCheck)}
+            title="Type-check query (Ctrl+Shift+T)"
+          >
+            {"Type Check"->React.string}
+          </button>
+          <button
+            className="px-2 py-1 text-xs bg-emerald-900/40 text-emerald-300 rounded hover:bg-emerald-900/60 font-medium"
+            onClick={_ => dispatch(ExecuteQuery)}
+            title="Execute query (Ctrl+Enter)"
+          >
+            {`${operationGlyph(state.editor.activeOperation)} Execute`->React.string}
+          </button>
+        </div>
+        <div className="flex items-center gap-3">
+          // Execution target selector
+          <select
+            className="text-xs bg-gray-800 text-gray-300 rounded border border-gray-700 px-1.5 py-0.5"
+            value={targetLabel(state.execution.target)}
+            onChange={e => {
+              let v = (e->ReactEvent.Form.target)["value"]
+              let target = switch v {
+              | "VeriSimDB" => TargetVeriSimDB
+              | "ECHIDNA" => TargetEchidna
+              | "BoJ Server" => TargetBoJ
+              | "TypeLL (check only)" => TargetTypeLL
+              | _ => TargetDryRun
+              }
+              dispatch(SetExecutionTarget(target))
+            }}
+          >
+            <option>{targetLabel(TargetVeriSimDB)->React.string}</option>
+            <option>{targetLabel(TargetEchidna)->React.string}</option>
+            <option>{targetLabel(TargetBoJ)->React.string}</option>
+            <option>{targetLabel(TargetTypeLL)->React.string}</option>
+            <option>{targetLabel(TargetDryRun)->React.string}</option>
+          </select>
+          {viewLayerSelector(state.viewLayer, dispatch)}
+        </div>
+      </div>
+
+      // Query textarea
+      <div className="flex-1 relative">
+        <textarea
+          className="w-full h-full bg-gray-950 text-gray-200 font-mono text-sm p-3 resize-none focus:outline-none border-none"
+          value={
+            switch state.viewLayer {
+            | Raw => state.editor.content
+            | Glyphed => toGlyphed(state.editor.content)
+            | Folded | Wysiwyg => state.editor.content // Future: rich rendering
+            }
+          }
+          onChange={e => {
+            let v = (e->ReactEvent.Form.target)["value"]
+            dispatch(SetContent(v))
+          }}
+          placeholder="Write your VQL-UT query here\u2026\n\nFIND proof, theorem, goal\nFROM proof_states\nWHERE prover = 'Lean'\nLIMIT 100"
+          spellCheck=false
+        />
+        // Execution status overlay
+        {switch state.execution.status {
+        | Idle => React.null
+        | Parsing => <div className="absolute top-2 right-2 text-xs text-amber-400 animate-pulse">{"Parsing\u2026"->React.string}</div>
+        | TypeChecking(level) =>
+          let meta = getLevelMeta(level)
+          <div className="absolute top-2 right-2 text-xs text-cyan-400 animate-pulse">
+            {`Checking ${meta.shortName}\u2026`->React.string}
+          </div>
+        | Planning => <div className="absolute top-2 right-2 text-xs text-violet-400 animate-pulse">{"Planning\u2026"->React.string}</div>
+        | Executing => <div className="absolute top-2 right-2 text-xs text-emerald-400 animate-pulse">{"Executing\u2026"->React.string}</div>
+        | Streaming(n) => <div className="absolute top-2 right-2 text-xs text-emerald-400 animate-pulse">{`Streaming\u2026 ${Int.toString(n)} rows`->React.string}</div>
+        | Complete(ms) => <div className="absolute top-2 right-2 text-xs text-emerald-400">{`Done in ${formatDuration(ms)}`->React.string}</div>
+        | Failed(msg) => <div className="absolute top-2 right-2 text-xs text-red-400">{`Failed: ${msg}`->React.string}</div>
+        }}
+      </div>
+
+      // Safety gauge
+      {viewSafetyGauge(
+        switch state.typeCheckResult {
+        | Some(r) => r.achievedLevel
+        | None => L0_Unsafe
+        },
+        state.linter.minimumLevel,
+      )}
+
+      // Diagnostics panel
+      {if Array.length(state.linter.diagnostics) > 0 {
+        <div className="max-h-40 overflow-y-auto border-t border-gray-800 bg-gray-950/50">
+          <div className="flex items-center justify-between px-3 py-1 bg-gray-900/50">
+            <span className="text-xs text-gray-500">
+              {`Diagnostics: ${Int.toString(errorCount)} error(s), ${Int.toString(warnCount)} warning(s)`->React.string}
+            </span>
+            {if errorCount == 0 {
+              <span className="text-xs text-emerald-400">{"Ready to execute"->React.string}</span>
+            } else {
+              <span className="text-xs text-red-400">{`${Int.toString(errorCount)} error(s) blocking execution`->React.string}</span>
+            }}
+          </div>
+          {state.linter.diagnostics->Array.map(d => viewDiagnostic(d))->React.array}
+        </div>
+      } else if String.length(state.editor.content) > 0 {
+        <div className="px-3 py-1 border-t border-gray-800 bg-gray-950/50">
+          <span className="text-xs text-emerald-400">{"No issues detected"->React.string}</span>
+        </div>
+      } else {
+        React.null
+      }}
+
+      // Narrative (when type check result is available)
+      {switch state.typeCheckResult {
+      | Some(report) =>
+        switch report.narrative {
+        | Some(narrative) =>
+          <div className="border-t border-gray-800 px-3 py-2">
+            {viewNarrative(narrative)}
+          </div>
+        | None => React.null
+        }
+      | None => React.null
+      }}
+    </div>
+  </div>
+}
+
+// ============================================================
+// SECTION 3: Tab — Results
+// ============================================================
+
+/// The results tab — tabular display of query results.
+let viewResultsTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+  switch state.execution.lastResult {
+  | None =>
+    <div className="flex flex-col items-center justify-center h-full text-gray-600">
+      <span className="text-4xl mb-4">"\u{1F50D}|j->React.string}</span>
+      <p className="text-sm">{"No results yet. Execute a query from the Editor tab."->React.string}</p>
+    </div>
+  | Some(result) =>
+    <div className="flex flex-col h-full">
+      // Result header
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800">
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-300">
+            {`${formatRowCount(result.totalRows)} rows`->React.string}
+            {if result.truncated {
+              <span className="text-amber-400 ml-1">{"(truncated)"->React.string}</span>
+            } else {
+              React.null
+            }}
+          </span>
+          <span className="text-xs text-gray-500">
+            {`${formatDuration(result.executionTimeMs)}`->React.string}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-200 bg-gray-800 rounded"
+            onClick={_ => dispatch(ExportResults("csv"))}
+          >
+            {"Export CSV"->React.string}
+          </button>
+          <button
+            className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-200 bg-gray-800 rounded"
+            onClick={_ => dispatch(ExportResults("json"))}
+          >
+            {"Export JSON"->React.string}
+          </button>
+          <button
+            className="px-2 py-0.5 text-xs text-gray-400 hover:text-gray-200 bg-gray-800 rounded"
+            onClick={_ => dispatch(ExportResults("a2ml"))}
+          >
+            {"Export A2ML"->React.string}
+          </button>
+        </div>
+      </div>
+
+      // Proof obligations (if any)
+      {if Array.length(result.proofObligations) > 0 {
+        <div className="px-3 py-2 bg-violet-950/20 border-b border-gray-800">
+          <span className="text-xs text-violet-400 font-medium">
+            {`${Int.toString(Array.length(result.proofObligations))} proof obligation(s):`->React.string}
+          </span>
+          {result.proofObligations->Array.map(po => {
+            let statusClass = switch po.status {
+            | Pending => "text-amber-400"
+            | Discharged(_) => "text-emerald-400"
+            | Refuted(_) => "text-red-400"
+            | Timeout => "text-gray-500"
+            }
+            <div key={po.id} className="flex items-center gap-2 mt-1">
+              <span className={`text-xs ${statusClass}`}>
+                {(switch po.status {
+                | Pending => "\u25CB"
+                | Discharged(_) => "\u2713"
+                | Refuted(_) => "\u2716"
+                | Timeout => "\u29D6"
+                })->React.string}
+              </span>
+              <span className="text-xs text-gray-300">{po.description->React.string}</span>
+              {switch po.prover {
+              | Some(p) => <span className="text-xs text-gray-600">{`(${p})`->React.string}</span>
+              | None => React.null
+              }}
+            </div>
+          })->React.array}
+        </div>
+      } else {
+        React.null
+      }}
+
+      // Result table
+      <div className="flex-1 overflow-auto">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-gray-900">
+            <tr>
+              {result.columns->Array.map(col => {
+                <th
+                  key={col.name}
+                  className="px-3 py-1.5 text-left text-xs text-gray-400 font-medium border-b border-gray-800 cursor-pointer hover:text-gray-200"
+                  onClick={_ => dispatch(SortResults(col.name, true))}
+                >
+                  {col.name->React.string}
+                  <span className="ml-1 text-gray-600">{`(${col.columnType})`->React.string}</span>
+                </th>
+              })->React.array}
+            </tr>
+          </thead>
+          <tbody>
+            {result.rows->Array.mapWithIndex((row, rowIdx) => {
+              let bgClass = if mod(rowIdx, 2) == 0 { "" } else { "bg-gray-900/30" }
+              <tr key={Int.toString(rowIdx)} className={`${bgClass} hover:bg-gray-800/40`}>
+                {row->Array.mapWithIndex((cell, colIdx) => {
+                  let cellClass = switch cell {
+                  | CellNull => "text-gray-600 italic"
+                  | CellProver(_) => "text-cyan-400"
+                  | CellProof(_) => "text-violet-400 cursor-pointer underline"
+                  | CellTactic(_) => "text-amber-400"
+                  | CellLevel(_) => "font-medium"
+                  | CellBool(b) => if b { "text-emerald-400" } else { "text-red-400" }
+                  | _ => "text-gray-300"
+                  }
+                  <td key={Int.toString(colIdx)} className={`px-3 py-1 text-xs font-mono ${cellClass}`}>
+                    {formatCell(cell)->React.string}
+                  </td>
+                })->React.array}
+              </tr>
+            })->React.array}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+}
+
+// ============================================================
+// SECTION 4: Tab — Query Plan
+// ============================================================
+
+/// Render a query plan step as a tree node.
+let rec viewPlanStep = (step: planStep, depth: int) => {
+  let indent = String.repeat("  ", depth)
+  <div key={step.operation ++ step.target ++ Int.toString(depth)} className="font-mono text-xs">
+    <div className="flex items-center gap-2 py-0.5 px-3 hover:bg-gray-800/40">
+      <span className="text-gray-600">{indent->React.string}</span>
+      <span className="text-cyan-400 font-medium">{String.toUpperCase(step.operation)->React.string}</span>
+      <span className="text-gray-300">{step.target->React.string}</span>
+      <span className="text-gray-600">{`~${formatRowCount(step.estimatedRows)} rows`->React.string}</span>
+      <span className="text-amber-400">{`${Float.toFixedWithPrecision(step.estimatedCostPct, ~digits=1)}%`->React.string}</span>
+    </div>
+    {step.children->Array.map(child => viewPlanStep(child, depth + 1))->React.array}
+  </div>
+}
+
+/// The query plan tab — visualizes how the query will be executed.
+let viewPlanTab = (state: vqlState, _dispatch: vqlMsg => unit) => {
+  switch state.execution.lastResult {
+  | Some({queryPlan: Some(plan)}) =>
+    <div className="flex flex-col h-full">
+      <div className="flex items-center gap-4 px-3 py-2 border-b border-gray-800">
+        <span className="text-sm text-gray-300">{"Query Execution Plan"->React.string}</span>
+        <span className="text-xs text-gray-500">
+          {`Estimated cost: ${Float.toFixedWithPrecision(plan.estimatedCost, ~digits=1)} | Estimated rows: ${formatRowCount(plan.estimatedRows)}`->React.string}
+        </span>
+      </div>
+      // Prover and modality badges
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-900/30 border-b border-gray-800">
+        <span className="text-xs text-gray-500">{"Provers:"->React.string}</span>
+        {plan.proversInvolved->Array.map(p =>
+          <span key={p} className="text-xs px-1.5 py-0.5 bg-cyan-900/30 text-cyan-400 rounded">{p->React.string}</span>
+        )->React.array}
+        <span className="text-xs text-gray-500 ml-3">{"Modalities:"->React.string}</span>
+        {plan.octadModalities->Array.map(m =>
+          <span key={m} className="text-xs px-1.5 py-0.5 bg-violet-900/30 text-violet-400 rounded">{m->React.string}</span>
+        )->React.array}
+      </div>
+      // Plan tree
+      <div className="flex-1 overflow-auto p-2">
+        {plan.steps->Array.map(step => viewPlanStep(step, 0))->React.array}
+      </div>
+    </div>
+  | _ =>
+    <div className="flex flex-col items-center justify-center h-full text-gray-600">
+      <span className="text-4xl mb-4">"\u{1F5FA}|j->React.string}</span>
+      <p className="text-sm">{"No query plan available. Execute a query or use Dry Run mode."->React.string}</p>
+    </div>
+  }
+}
+
+// ============================================================
+// SECTION 5: Tab — Schema Browser
+// ============================================================
+
+/// The schema tab — browse VeriSimDB octad entities.
+let viewSchemaTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+  let filteredEntities = state.schema.entities->Array.filter(e => {
+    let matchesSearch = String.length(state.schema.searchFilter) == 0 ||
+      String.includes(String.toLowerCase(e.name), String.toLowerCase(state.schema.searchFilter)) ||
+      String.includes(String.toLowerCase(e.description), String.toLowerCase(state.schema.searchFilter))
+    let matchesModality = switch state.schema.modalityFilter {
+    | None => true
+    | Some(m) => e.modalities->Array.includes(m)
+    }
+    matchesSearch && matchesModality
+  })
+
+  <div className="flex flex-col h-full">
+    // Search and filter bar
+    <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-800">
+      <input
+        type_="text"
+        value={state.schema.searchFilter}
+        onChange={e => {
+          let v = (e->ReactEvent.Form.target)["value"]
+          dispatch(SetSchemaFilter(v))
+        }}
+        className="flex-1 px-2 py-1 text-sm bg-gray-800 text-gray-200 rounded border border-gray-700 focus:border-cyan-600 focus:outline-none"
+        placeholder="Search"
+      />
+      <button
+        className="px-2 py-1 text-xs bg-gray-800 text-gray-400 rounded hover:text-gray-200"
+        onClick={_ => dispatch(RefreshSchema)}
+      >
+        {(if state.schema.loading { "Loading\u2026" } else { "Refresh" })->React.string}
+      </button>
+    </div>
+
+    // Modality filter chips
+    <div className="flex items-center gap-1 px-3 py-1.5 border-b border-gray-800 overflow-x-auto">
+      <button
+        className={`px-2 py-0.5 text-xs rounded ${switch state.schema.modalityFilter { | None => "bg-cyan-900/40 text-cyan-300" | _ => "text-gray-500 hover:text-gray-300" }}`}
+        onClick={_ => dispatch(SetModalityFilter(None))}
+      >
+        {"All"->React.string}
+      </button>
+      {[ModSemantic, ModTemporal, ModProvenance, ModDocument, ModGraph, ModVector, ModTensor, ModSpatial]
+        ->Array.map(m => {
+          let label = switch m {
+          | ModSemantic => "Semantic"
+          | ModTemporal => "Temporal"
+          | ModProvenance => "Provenance"
+          | ModDocument => "Document"
+          | ModGraph => "Graph"
+          | ModVector => "Vector"
+          | ModTensor => "Tensor"
+          | ModSpatial => "Spatial"
+          }
+          let isActive = state.schema.modalityFilter == Some(m)
+          let cls = if isActive { "bg-violet-900/40 text-violet-300" } else { "text-gray-500 hover:text-gray-300" }
+          <button key={label} className={`px-2 py-0.5 text-xs rounded ${cls}`} onClick={_ => dispatch(SetModalityFilter(Some(m)))}>
+            {label->React.string}
+          </button>
+        })->React.array}
+    </div>
+
+    // Entity list
+    <div className="flex-1 overflow-auto">
+      {filteredEntities->Array.map(entity => {
+        let isExpanded = state.schema.expandedEntities->Array.includes(entity.name)
+        <div key={entity.name} className="border-b border-gray-800/50">
+          <div
+            className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800/40 cursor-pointer"
+            onClick={_ => dispatch(ToggleEntity(entity.name))}
+          >
+            <span className="text-xs text-gray-600">{(if isExpanded { "\u25BC" } else { "\u25B6" })->React.string}</span>
+            <span className="text-sm text-gray-200 font-medium">{entity.name->React.string}</span>
+            <span className="text-xs text-gray-600">{`(${entity.entityType})`->React.string}</span>
+            <span className="text-xs text-gray-500">{`~${formatRowCount(entity.rowEstimate)} rows`->React.string}</span>
+            <div className="flex gap-0.5 ml-auto">
+              {entity.modalities->Array.map(m => {
+                let label = switch m {
+                | ModSemantic => "S"
+                | ModTemporal => "T"
+                | ModProvenance => "P"
+                | ModDocument => "D"
+                | ModGraph => "G"
+                | ModVector => "V"
+                | ModTensor => "X"
+                | ModSpatial => "L"
+                }
+                <span key={label} className="text-xs px-1 bg-gray-800 text-gray-500 rounded" title={label}>{label->React.string}</span>
+              })->React.array}
+            </div>
+          </div>
+          {if isExpanded {
+            <div className="pl-8 pb-2">
+              <p className="text-xs text-gray-500 mb-1">{entity.description->React.string}</p>
+              {entity.columns->Array.map(col => {
+                <div key={col.name} className="flex items-center gap-2 py-0.5 text-xs">
+                  <span className="text-cyan-400 font-mono w-32">{col.name->React.string}</span>
+                  <span className="text-gray-500 w-20">{col.dataType->React.string}</span>
+                  {if col.nullable { <span className="text-amber-400">{"?"->React.string}</span> } else { React.null }}
+                  {if col.indexed { <span className="text-emerald-400">{"idx"->React.string}</span> } else { React.null }}
+                  {switch col.foreignKey {
+                  | Some((table, fkCol)) => <span className="text-violet-400">{`FK -> ${table}.${fkCol}`->React.string}</span>
+                  | None => React.null
+                  }}
+                  <span className="text-gray-600 ml-auto">{col.description->React.string}</span>
+                </div>
+              })->React.array}
+            </div>
+          } else {
+            React.null
+          }}
+        </div>
+      })->React.array}
+    </div>
+  </div>
+}
+
+// ============================================================
+// SECTION 6: Tab — Provers
+// ============================================================
+
+/// The provers tab — ECHIDNA cross-prover dispatch configuration.
+let viewProversTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+  let proversByKind = (kind: string) =>
+    state.dispatch.availableProvers->Array.filter(p => p.kind == kind)
+
+  let viewProverCard = (prover: proverStatus) => {
+    let isSelected = state.dispatch.selectedProvers->Array.includes(prover.name)
+    let availClass = if prover.available { "border-emerald-800" } else { "border-red-900 opacity-50" }
+    let selectClass = if isSelected { "ring-1 ring-cyan-600" } else { "" }
+    <div
+      key={prover.name}
+      className={`p-2 rounded bg-gray-900/50 border ${availClass} ${selectClass} cursor-pointer hover:bg-gray-800/40`}
+      onClick={_ => dispatch(ToggleProver(prover.name))}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-200 font-medium">{prover.name->React.string}</span>
+        <span className={`text-xs ${if prover.available { "text-emerald-400" } else { "text-red-400" }}`}>
+          {(if prover.available { "online" } else { "offline" })->React.string}
+        </span>
+      </div>
+      {switch prover.lastLatencyMs {
+      | Some(ms) => <span className="text-xs text-gray-500">{`${formatDuration(ms)} latency`->React.string}</span>
+      | None => React.null
+      }}
+      {switch prover.successRate {
+      | Some(rate) =>
+        <div className="mt-1">
+          <div className="w-full h-1 bg-gray-800 rounded">
+            <div
+              className="h-1 bg-emerald-600 rounded"
+              style={ReactDOM.Style.make(~width=`${Float.toFixedWithPrecision(rate *. 100.0, ~digits=0)}%`, ())}
+            />
+          </div>
+          <span className="text-xs text-gray-600">{`${Float.toFixedWithPrecision(rate *. 100.0, ~digits=0)}% success`->React.string}</span>
+        </div>
+      | None => React.null
+      }}
+    </div>
+  }
+
+  <div className="flex flex-col h-full">
+    // Strategy selector
+    <div className="flex items-center gap-3 px-3 py-2 border-b border-gray-800">
+      <span className="text-xs text-gray-500">{"Strategy:"->React.string}</span>
+      {[StrategyAuto, StrategyPortfolio, StrategyTiered, StrategyConsensus]
+        ->Array.map(s => {
+          let label = switch s {
+          | StrategyAuto => "Auto"
+          | StrategyPortfolio => "Portfolio"
+          | StrategySingle(_) => "Single"
+          | StrategyTiered => "Tiered"
+          | StrategyConsensus => "Consensus"
+          }
+          let isActive = switch (state.dispatch.strategy, s) {
+          | (StrategyAuto, StrategyAuto) | (StrategyPortfolio, StrategyPortfolio)
+          | (StrategyTiered, StrategyTiered) | (StrategyConsensus, StrategyConsensus) => true
+          | _ => false
+          }
+          let cls = if isActive { "bg-cyan-900/40 text-cyan-300" } else { "text-gray-500 hover:text-gray-300" }
+          <button key={label} className={`px-2 py-1 text-xs rounded ${cls}`} onClick={_ => dispatch(SetProverStrategy(s))}>
+            {label->React.string}
+          </button>
+        })->React.array}
+      <button
+        className="ml-auto px-2 py-1 text-xs bg-gray-800 text-gray-400 rounded hover:text-gray-200"
+        onClick={_ => dispatch(RefreshProverStatus)}
+      >
+        {"Refresh"->React.string}
+      </button>
+    </div>
+
+    // Prover grid by category
+    <div className="flex-1 overflow-auto p-3 space-y-4">
+      {["interactive", "smt", "atp", "declarative", "autoactive", "constraint"]
+        ->Array.map(kind => {
+          let provers = proversByKind(kind)
+          if Array.length(provers) > 0 {
+            <div key={kind}>
+              <h3 className="text-xs text-gray-500 font-medium mb-2">{proverKindLabel(kind)->React.string}</h3>
+              <div className="grid grid-cols-3 gap-2">
+                {provers->Array.map(viewProverCard)->React.array}
+              </div>
+            </div>
+          } else {
+            React.null
+          }
+        })->React.array}
+    </div>
+  </div>
+}
+
+// ============================================================
+// SECTION 7: Tab — History
+// ============================================================
+
+/// The history tab — past queries with replay and favourites.
+let viewHistoryTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+  let sortedHistory = state.execution.history
+    ->Array.copy
+    ->Array.toSorted((a, b) => b.timestamp -. a.timestamp)
+
+  <div className="flex flex-col h-full">
+    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800">
+      <span className="text-sm text-gray-300">{`${Int.toString(Array.length(sortedHistory))} queries`->React.string}</span>
+      <button
+        className="text-xs text-red-400 hover:text-red-300"
+        onClick={_ => dispatch(ClearHistory)}
+      >
+        {"Clear All"->React.string}
+      </button>
+    </div>
+    <div className="flex-1 overflow-auto">
+      {sortedHistory->Array.map(entry => {
+        let levelMeta = getLevelMeta(entry.achievedLevel)
+        let successClass = if entry.success { "border-l-emerald-600" } else { "border-l-red-600" }
+        <div
+          key={entry.id}
+          className={`border-b border-gray-800/50 border-l-2 ${successClass} hover:bg-gray-800/40 cursor-pointer`}
+          onClick={_ => dispatch(LoadFromHistory(entry))}
+        >
+          <div className="flex items-center justify-between px-3 py-2">
+            <div className="flex items-center gap-2">
+              <span className={`text-xs px-1 rounded ${levelMeta.bgColour} ${levelMeta.colour}`}>{levelMeta.shortName->React.string}</span>
+              <span className="text-xs text-gray-400">{operationGlyph(entry.operation)->React.string}</span>
+              <span className="text-sm text-gray-300 font-mono truncate max-w-md">{entry.query->React.string}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">{`${formatRowCount(entry.rowCount)} rows`->React.string}</span>
+              <span className="text-xs text-gray-600">{formatDuration(entry.durationMs)->React.string}</span>
+              <button
+                className={`text-sm ${if entry.favourite { "text-amber-400" } else { "text-gray-700 hover:text-amber-400" }}`}
+                onClick={e => {
+                  ReactEvent.Mouse.stopPropagation(e)
+                  dispatch(ToggleFavourite(entry.id))
+                }}
+              >
+                {(if entry.favourite { "\u2605" } else { "\u2606" })->React.string}
+              </button>
+            </div>
+          </div>
+        </div>
+      })->React.array}
+    </div>
+  </div>
+}
+
+// ============================================================
+// SECTION 8: Tab — Lint/Format Config
+// ============================================================
+
+/// The config tab — linter rules, formatter options, connections.
+let viewConfigTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+  <div className="flex flex-col h-full overflow-auto p-4 space-y-6">
+    // Linter configuration
+    <div>
+      <h3 className="text-sm text-gray-200 font-medium mb-3">{"Linter Configuration"->React.string}</h3>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">{"Lint Profile"->React.string}</span>
+          <div className="flex gap-1">
+            {[ProfileStrict, ProfileRecommended, ProfileRelaxed]->Array.map(p => {
+              let label = switch p { | ProfileStrict => "Strict" | ProfileRecommended => "Recommended" | ProfileRelaxed => "Relaxed" | ProfileCustom => "Custom" }
+              let isActive = state.linter.profile == p
+              let cls = if isActive { "bg-cyan-900/40 text-cyan-300" } else { "text-gray-500 hover:text-gray-300" }
+              <button key={label} className={`px-2 py-0.5 text-xs rounded ${cls}`} onClick={_ => dispatch(SetLintProfile(p))}>
+                {label->React.string}
+              </button>
+            })->React.array}
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">{"Minimum Safety Level"->React.string}</span>
+          <select
+            className="text-xs bg-gray-800 text-gray-300 rounded border border-gray-700 px-1.5 py-0.5"
+            value={Int.toString(levelToInt(state.linter.minimumLevel))}
+            onChange={e => {
+              let v = Int.fromString((e->ReactEvent.Form.target)["value"])
+              let level = switch v {
+              | Some(0) => L0_Unsafe | Some(1) => L1_Parsed | Some(2) => L2_SchemaBound
+              | Some(3) => L3_TypeCompat | Some(4) => L4_NullSafe | Some(5) => L5_InjectionProof
+              | Some(6) => L6_ResultTyped | Some(7) => L7_CardinalitySafe | Some(8) => L8_EffectTracked
+              | Some(9) => L9_TemporalSafe | Some(10) => L10_LinearSafe | _ => L1_Parsed
+              }
+              dispatch(SetMinimumLevel(level))
+            }}
+          >
+            {levelMetas->Array.map(m =>
+              <option key={m.shortName} value={Int.toString(levelToInt(m.level))}>
+                {`${m.shortName}: ${m.name}`->React.string}
+              </option>
+            )->React.array}
+          </select>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">{"Lint on Type"->React.string}</span>
+          <button
+            className={`text-xs px-2 py-0.5 rounded ${if state.linter.lintOnType { "bg-emerald-900/40 text-emerald-400" } else { "bg-gray-800 text-gray-500" }}`}
+            onClick={_ => dispatch(ToggleLintOnType)}
+          >
+            {(if state.linter.lintOnType { "Enabled" } else { "Disabled" })->React.string}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    // Formatter configuration
+    <div>
+      <h3 className="text-sm text-gray-200 font-medium mb-3">{"Formatter Configuration"->React.string}</h3>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">{"Format Style"->React.string}</span>
+          <div className="flex gap-1">
+            {[StyleStandard, StyleCompact, StyleExpanded, StyleProof]->Array.map(s => {
+              let label = switch s { | StyleStandard => "Standard" | StyleCompact => "Compact" | StyleExpanded => "Expanded" | StyleProof => "Proof" | StyleCustom => "Custom" }
+              let isActive = state.formatter.options.style == s
+              let cls = if isActive { "bg-violet-900/40 text-violet-300" } else { "text-gray-500 hover:text-gray-300" }
+              <button key={label} className={`px-2 py-0.5 text-xs rounded ${cls}`} onClick={_ => dispatch(SetFormatStyle(s))}>
+                {label->React.string}
+              </button>
+            })->React.array}
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">{"Uppercase Keywords"->React.string}</span>
+          <button
+            className={`text-xs px-2 py-0.5 rounded ${if state.formatter.options.uppercaseKeywords { "bg-emerald-900/40 text-emerald-400" } else { "bg-gray-800 text-gray-500" }}`}
+            onClick={_ => dispatch(SetFormatOption("uppercaseKeywords", if state.formatter.options.uppercaseKeywords { "false" } else { "true" }))}
+          >
+            {(if state.formatter.options.uppercaseKeywords { "ON" } else { "OFF" })->React.string}
+          </button>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">{"Align Clauses"->React.string}</span>
+          <button
+            className={`text-xs px-2 py-0.5 rounded ${if state.formatter.options.alignClauses { "bg-emerald-900/40 text-emerald-400" } else { "bg-gray-800 text-gray-500" }}`}
+            onClick={_ => dispatch(SetFormatOption("alignClauses", if state.formatter.options.alignClauses { "false" } else { "true" }))}
+          >
+            {(if state.formatter.options.alignClauses { "ON" } else { "OFF" })->React.string}
+          </button>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">{"Format on Save"->React.string}</span>
+          <button
+            className={`text-xs px-2 py-0.5 rounded ${if state.formatter.formatOnSave { "bg-emerald-900/40 text-emerald-400" } else { "bg-gray-800 text-gray-500" }}`}
+            onClick={_ => dispatch(ToggleFormatOnSave)}
+          >
+            {(if state.formatter.formatOnSave { "ON" } else { "OFF" })->React.string}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    // Connection settings
+    <div>
+      <h3 className="text-sm text-gray-200 font-medium mb-3">{"Connection Settings"->React.string}</h3>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400 w-24">{"VeriSimDB"->React.string}</span>
+          <input
+            type_="text"
+            value={state.verisimEndpoint}
+            onChange={e => dispatch(SetVeriSimEndpoint((e->ReactEvent.Form.target)["value"]))}
+            className="flex-1 px-2 py-0.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400 w-24">{"ECHIDNA"->React.string}</span>
+          <input
+            type_="text"
+            value={state.echidnaEndpoint}
+            onChange={e => dispatch(SetEchidnaEndpoint((e->ReactEvent.Form.target)["value"]))}
+            className="flex-1 px-2 py-0.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700"
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">{"Route through BoJ"->React.string}</span>
+          <button
+            className={`text-xs px-2 py-0.5 rounded ${if state.bojRouting { "bg-cyan-900/40 text-cyan-400" } else { "bg-gray-800 text-gray-500" }}`}
+            onClick={_ => dispatch(ToggleBojRouting)}
+          >
+            {(if state.bojRouting { "ON" } else { "OFF" })->React.string}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    // Keyboard shortcuts reference
+    <div>
+      <h3 className="text-sm text-gray-200 font-medium mb-3">{"Keyboard Shortcuts"->React.string}</h3>
+      <div className="space-y-1">
+        {[
+          ("Ctrl+Enter", "Execute query"),
+          ("Ctrl+Shift+F", "Format query"),
+          ("Ctrl+Shift+T", "Type-check query"),
+          ("Ctrl+Shift+L", "Run linter"),
+          ("Ctrl+Z", "Undo"),
+          ("Ctrl+Shift+Z", "Redo"),
+          ("Ctrl+S", "Save to history"),
+          ("Ctrl+E", "Explain (dry run)"),
+        ]->Array.map(((key, desc)) =>
+          <div key={key} className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">{desc->React.string}</span>
+            <kbd className="text-xs px-1.5 py-0.5 bg-gray-800 text-gray-300 rounded border border-gray-700 font-mono">{key->React.string}</kbd>
+          </div>
+        )->React.array}
+      </div>
+    </div>
+  </div>
+}
+
+// ============================================================
+// SECTION 9: Main Panel View
+// ============================================================
+
+/// The complete VQL panel — assembled from all tabs.
+/// This is the entry point rendered by PanLL's View.res.
+@react.component
+let make = (~state: vqlState, ~dispatch: vqlMsg => unit) => {
+  <div className="fixed inset-0 bg-gray-950 z-50 flex flex-col">
+    // Panel header
+    <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800">
+      <div className="flex items-center gap-3">
+        <span className="text-lg font-semibold text-cyan-400">{"VQL-UT"->React.string}</span>
+        <span className="text-xs text-gray-500">{"Type-Safe Query Language for VeriSimDB"->React.string}</span>
+        {viewConnectionBadge(state.connection)}
+      </div>
+      <div className="flex items-center gap-3">
+        {viewLayerSelector(state.viewLayer, dispatch)}
+        <button
+          className="text-gray-500 hover:text-gray-200 text-xl"
+          onClick={_ => dispatch(ToggleFullscreen)}
+          title="Toggle fullscreen"
+        >
+          {(if state.fullscreen { "\u2716" } else { "\u26F6" })->React.string}
+        </button>
+      </div>
+    </div>
+
+    // Tab bar
+    <div className="flex items-center gap-1 px-2 border-b border-gray-800 bg-gray-900/50">
+      {viewTabButton(~activeTab=state.activeTab, ~tab=TabEditor, ~label="Editor", ~icon="\u2328", ~dispatch)}
+      {viewTabButton(~activeTab=state.activeTab, ~tab=TabResults, ~label="Results", ~icon="\u{1F4CB}", ~dispatch)}
+      {viewTabButton(~activeTab=state.activeTab, ~tab=TabPlan, ~label="Plan", ~icon="\u{1F5FA}", ~dispatch)}
+      {viewTabButton(~activeTab=state.activeTab, ~tab=TabSchema, ~label="Schema", ~icon="\u{1F4D6}", ~dispatch)}
+      {viewTabButton(~activeTab=state.activeTab, ~tab=TabProvers, ~label="Provers", ~icon="\u{1F9EA}", ~dispatch)}
+      {viewTabButton(~activeTab=state.activeTab, ~tab=TabHistory, ~label="History", ~icon="\u{1F4DA}", ~dispatch)}
+      {viewTabButton(~activeTab=state.activeTab, ~tab=TabLintConfig, ~label="Config", ~icon="\u2699", ~dispatch)}
+    </div>
+
+    // Active tab content
+    <div className="flex-1 min-h-0">
+      {switch state.activeTab {
+      | TabEditor => viewEditorTab(state, dispatch)
+      | TabResults => viewResultsTab(state, dispatch)
+      | TabPlan => viewPlanTab(state, dispatch)
+      | TabSchema => viewSchemaTab(state, dispatch)
+      | TabProvers => viewProversTab(state, dispatch)
+      | TabHistory => viewHistoryTab(state, dispatch)
+      | TabLintConfig => viewConfigTab(state, dispatch)
+      }}
+    </div>
+
+    // Status bar
+    <div className="flex items-center justify-between px-3 py-1 bg-gray-900 border-t border-gray-800 text-xs text-gray-600">
+      <div className="flex items-center gap-3">
+        <span>{`L${Int.toString(state.editor.cursorLine)}:C${Int.toString(state.editor.cursorColumn)}`->React.string}</span>
+        <span>{operationLabel(state.editor.activeOperation)->React.string}</span>
+        <span>{targetLabel(state.execution.target)->React.string}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        {switch state.execution.status {
+        | Idle => <span>{"Ready"->React.string}</span>
+        | Complete(ms) => <span className="text-emerald-500">{`Last: ${formatDuration(ms)}`->React.string}</span>
+        | Failed(msg) => <span className="text-red-500">{`Error: ${msg}`->React.string}</span>
+        | _ => <span className="text-amber-400 animate-pulse">{"Working\u2026"->React.string}</span>
+        }}
+        <span>{`Min: ${(getLevelMeta(state.linter.minimumLevel)).shortName}`->React.string}</span>
+        {switch state.typeCheckResult {
+        | Some(r) =>
+          let meta = getLevelMeta(r.achievedLevel)
+          <span className={meta.colour}>{`${meta.glyph} ${meta.shortName}`->React.string}</span>
+        | None => React.null
+        }}
+      </div>
+    </div>
+  </div>
+}

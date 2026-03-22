@@ -1,7 +1,9 @@
 {
   "name": "@hyperpolymath/panll",
-  "version": "0.1.0",
-  "exports": "./mod.ts",
+  "version": "0.1.1",
+  "license": "MPL-2.0",
+  "description": "Panel workspace framework — TEA (The Elm Architecture) for ReScript with tiling layout, smart routing, keyboard navigation, undo engine, and security-hardened DOM. Build panel-based UIs for desktop and web.",
+  "exports": "./mod.js",
   "tasks": {
     "dev": "cargo tauri dev",
     "build": "cargo tauri build",
@@ -25,9 +27,37 @@
     "@tauri-apps/api": "npm:@tauri-apps/api@^2.10.0",
     "@tauri-apps/plugin-dialog": "npm:@tauri-apps/plugin-dialog",
     "@tauri-apps/plugin-fs": "npm:@tauri-apps/plugin-fs",
-    "rescript": "^12.0.0",
-    "@rescript/core": "npm:@rescript/core@1.6.1",
-    "@rescript/runtime": "npm:@rescript/runtime@12.2.0/"
+    "rescript": "npm:rescript@^12.0.0",
+    "@rescript/core/": "npm:@rescript/core@1.6.1/",
+    "@rescript/runtime/": "npm:@rescript/runtime@12.2.0/"
+  },
+  "publish": {
+    "include": [
+      "mod.js",
+      "src/tea/**/*.res.js",
+      "src/core/PanelBus.res.js",
+      "src/core/TilingEngine.res.js",
+      "src/core/EventChain.res.js",
+      "src/core/SmartRouter.res.js",
+      "src/core/SafeMount.res.js",
+      "src/core/SafeDOMCore.res.js",
+      "src/core/WindowBridge.res.js",
+      "src/core/KeyboardUtil.res.js",
+      "src/core/DebugLogger.res.js",
+      "src/core/AntiCrash.res.js",
+      "src/core/UndoEngine.res.js",
+      "src/core/Decoders.res.js",
+      "src/core/DOMPurify.res.js",
+      "src/core/TrustedTypes.res.js",
+      "src/core/FocusDimmingEngine.res.js",
+      "src/core/HelpContent.res.js",
+      "src/core/HelpEngine.res.js",
+      "LICENSE",
+      "README.adoc"
+    ],
+    "exclude": [
+      "!**/*.res.js"
+    ]
   },
   "compilerOptions": {
     "strict": true,
