@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Workspace Commands — Tauri IPC wrappers for workspace operations.
+/// PanLL Workspace Commands — IPC wrappers for workspace operations.
 ///
 /// These functions bridge the ReScript TEA loop with the Rust backend
 /// for workspace persistence (arrangements, sessions) and system info
@@ -10,12 +10,11 @@
 
 open Msg
 
-/// External binding to Tauri's invoke function.
-/// All Tauri commands return Promise<string> or throw on error.
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<string> = "invoke"
+/// Backend invoke binding via RuntimeBridge.
+/// All backend commands return Promise<string> or throw on error.
+let invoke = RuntimeBridge.invoke
 
-/// Save an arrangement to disk via Tauri backend.
+/// Save an arrangement to disk via backend.
 let saveArrangement = (arrangementJson: string): Tea_Cmd.t<msg> => {
   Tea_Cmd.call(_callbacks => {
     invoke("save_arrangement", {"arrangement": arrangementJson})->ignore
@@ -46,7 +45,7 @@ let deleteArrangement = (arrangementId: string): Tea_Cmd.t<msg> => {
   })
 }
 
-/// Save a session to disk via Tauri backend.
+/// Save a session to disk via backend.
 let saveSession = (sessionJson: string): Tea_Cmd.t<msg> => {
   Tea_Cmd.call(_callbacks => {
     invoke("save_session", {"session": sessionJson})->ignore

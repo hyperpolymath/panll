@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// CloudGuard Tauri Command Wrappers — TEA commands for Cloudflare API operations.
+/// CloudGuard Backend Command Wrappers — TEA commands for Cloudflare API operations.
 ///
 /// Each function wraps a `#[tauri::command]` handler from
 /// `src-tauri/src/cloudguard/commands.rs`, using the `Tea_Cmd.call` pattern
-/// to bridge async Tauri invocations into the TEA update loop.
+/// to bridge async backend invocations into the TEA update loop.
 ///
 /// Pattern:
 ///   1. Call `invoke("cloudguard_*", params)` → returns Promise
@@ -14,9 +14,8 @@
 /// The frontend parses JSON strings from `Ok(...)` results in the Update.res
 /// sub-updater using `JSON.parseExn` and `JSON.Classify.classify`.
 
-/// External binding to Tauri's invoke function (shared with TauriCmd.res).
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+/// Backend invoke binding via RuntimeBridge (shared with TauriCmd.res).
+let invoke = RuntimeBridge.invoke
 
 // ============================================================================
 // Token verification (health check / connection)

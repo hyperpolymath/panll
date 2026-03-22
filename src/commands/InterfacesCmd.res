@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Interfaces Commands — Tauri wrappers for ABI/FFI scanning.
+/// PanLL Interfaces Commands — Backend wrappers for ABI/FFI scanning.
 ///
 /// Scans src/abi/ for Idris2 definitions and ffi/zig/ for implementations.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Scan ABI/FFI definitions and binding coverage.
 let scanInterfaces = (

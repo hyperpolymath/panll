@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-/// PanLL Agent Safety command wrappers — Tauri invoke bridge for the
+/// PanLL Agent Safety command wrappers — invoke bridge for the
 /// safety gate panel.
 ///
 /// All commands invoke BoJ cartridge endpoints for agent tool call
 /// safety management. Uses `Tea_Cmd.call` for async operations.
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Fetch all pending safety events awaiting human review.
 /// Returns JSON array of safety event objects.

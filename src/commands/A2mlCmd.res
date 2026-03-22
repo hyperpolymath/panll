@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL A2ML Commands — Tauri invoke wrappers for A2ML manifest operations.
+/// PanLL A2ML Commands — backend invoke wrappers for A2ML manifest operations.
 /// These call into the Rust backend at src-tauri/src/a2ml/commands.rs which
 /// handles filesystem access for loading, validating, and listing .a2ml files.
 ///
@@ -8,8 +8,7 @@
 /// ReScript A2mlEngine then handles the actual parsing and validation logic
 /// on the client side for maximum testability.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Load an A2ML manifest file from disk. Returns the raw file content
 /// as a JSON-wrapped string for client-side parsing by A2mlEngine.

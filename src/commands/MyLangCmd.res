@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL My-Lang Commands — Tauri wrappers for the AI-native language tools.
+/// PanLL My-Lang Commands — Backend wrappers for the AI-native language tools.
 ///
-/// Invokes the my-lang CLI through Tauri backend commands.
+/// Invokes the my-lang CLI through backend commands.
 /// The Rust backend shells out to `my compile`, `my repl`, etc.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Check whether the my-lang CLI binary is available.
 let checkCli = (

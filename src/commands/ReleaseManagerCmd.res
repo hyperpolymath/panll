@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Release Manager Commands — Tauri invoke wrappers for versioning,
+/// PanLL Release Manager Commands — backend invoke wrappers for versioning,
 /// changelog generation, artifact building, and distribution.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Generate a changelog from git history.
 let generateChangelog = (

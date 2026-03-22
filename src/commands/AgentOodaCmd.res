@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-/// PanLL Agent OODA command wrappers — Tauri invoke bridge for the
+/// PanLL Agent OODA command wrappers — invoke bridge for the
 /// OODA session monitor panel.
 ///
 /// All commands invoke BoJ cartridge endpoints for agent OODA session
 /// management. Uses `Tea_Cmd.call` for async operations.
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 /// List all active OODA sessions.
 /// Returns JSON array of session summary objects.

@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Stapeln Commands — Tauri invoke wrappers for the container
+/// PanLL Stapeln Commands — backend invoke wrappers for the container
 /// assembly pipeline. These call into the Rust backend which proxies
 /// to the Stapeln server API (default http://localhost:8420/api/v1).
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Connect to the stapeln backend and check availability.
 let connect = (

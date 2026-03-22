@@ -14,7 +14,7 @@
 /// Dependency: leaf module — no imports from other PanLL models.
 
 /// Backend type for the panel — determines what kind of Rust backend
-/// and Tauri commands are scaffolded.
+/// and command stubs are scaffolded.
 type panelBackendKind =
   /// No backend — pure frontend panel (e.g. documentation viewer).
   | NoBackend
@@ -73,7 +73,7 @@ type minterForm = {
   endpoint: string,
 }
 
-/// Result of a minting operation — returned by the Tauri backend.
+/// Result of a minting operation — returned by the backend.
 type mintResult = {
   /// Whether the operation succeeded.
   success: bool,

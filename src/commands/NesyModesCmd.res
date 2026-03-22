@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-/// PanLL NeSy Modes command wrappers — Tauri invoke bridge for the
+/// PanLL NeSy Modes command wrappers — invoke bridge for the
 /// reasoning mode selector panel.
 ///
 /// All commands invoke BoJ cartridge endpoints for reasoning mode
 /// management. Uses `Tea_Cmd.call` for async operations.
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Get the currently active reasoning mode.
 /// Returns JSON with the mode identifier and metadata.

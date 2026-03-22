@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Minter Commands — Tauri command wrappers for panel scaffolding.
+/// PanLL Minter Commands — Backend command wrappers for panel scaffolding.
 ///
 /// The minter backend generates ReScript source files and Rust backend
 /// stubs, then patches the global wiring files to register the new panel.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Mint a new panel from the given form data.
-/// The Tauri backend generates all files and patches wiring.
+/// The backend generates all files and patches wiring.
 /// Returns a JSON-serialised MintResult.
 let mintPanel = (
   panelName: string,

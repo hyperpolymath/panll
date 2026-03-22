@@ -1,30 +1,20 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL TypeLL Commands — Tauri wrappers for the verification kernel.
+/// PanLL TypeLL Commands — Backend wrappers for the verification kernel.
 ///
 /// TypeLL exposes a JSON-RPC-style API at TYPELL_URL (default http://localhost:7800/api/v1).
-/// These bindings wrap the 7 Tauri commands defined in src-tauri/src/typell/commands.rs.
+/// These bindings wrap the 7 backend commands defined in src-tauri/src/typell/commands.rs.
 ///
-/// In browser-only mode (no Tauri runtime), commands fall back to direct
+/// In browser-only mode (no desktop runtime), commands fall back to direct
 /// fetch() calls against the TypeLL server URL.
 ///
 /// Unlike most panels which are self-contained, TypeLL commands are also called
 /// by other panels through TypeLLService — making TypeLL a cross-cutting concern.
 
-@module("@tauri-apps/api/core")
-external invokeRaw: (string, 'a) => promise<'b> = "invoke"
 
-/// Detect whether the real Tauri runtime is available (not the browser shim).
-%%raw(`
-function hasTauri() {
-  return typeof window !== 'undefined'
-    && window.__TAURI_INTERNALS__ != null
-    && !window.__TAURI_INTERNALS__.__BROWSER_SHIM__;
-}
-`)
-@val external hasTauri: unit => bool = "hasTauri"
+let hasDesktopRuntime = RuntimeBridge.hasDesktopRuntime
 
-/// GET helper for TypeLL direct fetch (bypasses Tauri invoke).
+/// GET helper for TypeLL direct fetch (bypasses backend invoke).
 let fetchGet: string => promise<string> = %raw(`
   function(path) {
     return fetch("http://localhost:7800/api/v1" + path)
@@ -35,7 +25,7 @@ let fetchGet: string => promise<string> = %raw(`
   }
 `)
 
-/// POST helper for TypeLL direct fetch (bypasses Tauri invoke).
+/// POST helper for TypeLL direct fetch (bypasses backend invoke).
 let fetchPost: (string, string) => promise<string> = %raw(`
   function(path, body) {
     return fetch("http://localhost:7800/api/v1" + path, {
@@ -52,8 +42,8 @@ let fetchPost: (string, string) => promise<string> = %raw(`
 /// Check TypeLL server health.
 let health = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("typell_health", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_health", ())
     } else {
       fetchGet("/health")
     }
@@ -79,8 +69,8 @@ let check = (
 ): Tea_Cmd.t<'msg> => {
   let ctx = context->Option.getOr("")
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("typell_check", {"expression": expression, "context": ctx})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_check", {"expression": expression, "context": ctx})
     } else {
       fetchPost("/check", `{"expression":${JSON.stringifyAny(expression)->Option.getOr("\"\"")}, "context":${JSON.stringifyAny(ctx)->Option.getOr("{}")}}`)
     }
@@ -101,8 +91,8 @@ let check = (
 /// POST /infer — returns the most general type.
 let infer = (expression: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("typell_infer", {"expression": expression})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_infer", {"expression": expression})
     } else {
       fetchPost("/infer", `{"expression":${JSON.stringifyAny(expression)->Option.getOr("\"\"")}}`)
     }
@@ -128,8 +118,8 @@ let refine = (
 ): Tea_Cmd.t<'msg> => {
   let cons = constraints->Option.getOr("")
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("typell_refine", {"spec": spec, "constraints": cons})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_refine", {"spec": spec, "constraints": cons})
     } else {
       fetchPost("/refine", `{"spec":${JSON.stringifyAny(spec)->Option.getOr("\"\"")}, "constraints":${JSON.stringifyAny(cons)->Option.getOr("[]")}}`)
     }
@@ -150,8 +140,8 @@ let refine = (
 /// POST /compute — evaluates normalisation, unification, etc.
 let compute = (term: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("typell_compute", {"term": term})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_compute", {"term": term})
     } else {
       fetchPost("/compute", `{"term":${JSON.stringifyAny(term)->Option.getOr("\"\"")}}`)
     }
@@ -172,8 +162,8 @@ let compute = (term: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
 /// GET /signatures — returns the signature catalogue.
 let listSignatures = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("typell_list_signatures", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_list_signatures", ())
     } else {
       fetchGet("/signatures")
     }
@@ -194,8 +184,8 @@ let listSignatures = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> =
 /// GET /universes — returns the hierarchy of type universes.
 let universes = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("typell_universes", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_universes", ())
     } else {
       fetchGet("/universes")
     }
@@ -225,8 +215,8 @@ let checkType = (
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let body = TypeLLEngine.buildCheckBody(source, language)
-    let p = if hasTauri() {
-      invokeRaw("typell_check", {"expression": source, "context": language})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_check", {"expression": source, "context": language})
     } else {
       fetchPost("/check", body)
     }
@@ -251,8 +241,8 @@ let inferUsage = (
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let body = TypeLLEngine.buildInferUsageBody(source)
-    let p = if hasTauri() {
-      invokeRaw("typell_infer", {"expression": source})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_infer", {"expression": source})
     } else {
       fetchPost("/infer-usage", body)
     }
@@ -277,8 +267,8 @@ let checkEffects = (
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let body = TypeLLEngine.buildCheckEffectsBody(source)
-    let p = if hasTauri() {
-      invokeRaw("typell_compute", {"term": source})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_compute", {"term": source})
     } else {
       fetchPost("/check-effects", body)
     }
@@ -303,8 +293,8 @@ let checkDimensional = (
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let body = TypeLLEngine.buildCheckDimensionalBody(source)
-    let p = if hasTauri() {
-      invokeRaw("typell_compute", {"term": source})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_compute", {"term": source})
     } else {
       fetchPost("/check-dimensional", body)
     }
@@ -329,8 +319,8 @@ let generateProofObligation = (
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let body = TypeLLEngine.buildGenerateProofObligationBody(source)
-    let p = if hasTauri() {
-      invokeRaw("typell_compute", {"term": source})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("typell_compute", {"term": source})
     } else {
       fetchPost("/generate-obligations", body)
     }

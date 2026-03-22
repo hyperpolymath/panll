@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Palimpsest Plaza Commands — Tauri command wrappers for the
+/// PanLL Palimpsest Plaza Commands — Backend command wrappers for the
 /// PMPL licensing panel.
 ///
-/// Each function wraps a Tauri `invoke` call for license compliance
+/// Each function wraps a backend `invoke` call for license compliance
 /// scanning, adoption statistics, and compatibility checking.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Scan a single repository for PMPL compliance indicators.
 /// Returns JSON with license detection, SPDX header counts, exhibit status.

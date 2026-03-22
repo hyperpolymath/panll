@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Build Dashboard Commands — Tauri invoke wrappers for triggering
+/// PanLL Build Dashboard Commands — backend invoke wrappers for triggering
 /// builds, reading build status, and running tests.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Trigger a build for a specific target.
 let triggerBuild = (

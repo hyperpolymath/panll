@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Fleet Commands — Tauri command wrappers for Gitbot-Fleet.
+/// PanLL Fleet Commands — Backend command wrappers for Gitbot-Fleet.
 ///
 /// The fleet backend connects to the gitbot-fleet Axum dashboard API
 /// at :8080 for bot status, findings, and dispatch operations.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Fetch the current status of all 6 bots.
 let fetchBots = (

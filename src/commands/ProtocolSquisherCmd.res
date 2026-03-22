@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Protocol-Squisher Commands — Tauri wrappers for format analysis.
+/// PanLL Protocol-Squisher Commands — Backend wrappers for format analysis.
 ///
-/// Invokes the protocol-squisher CLI through Tauri backend commands.
+/// Invokes the protocol-squisher CLI through backend commands.
 /// The Rust backend shells out to `protocol-squisher analyze`, `compare`, etc.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Check whether the protocol-squisher CLI binary is available.
 let checkCli = (

@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL ScriptGist Commands — Tauri invoke wrappers for gist persistence,
+/// PanLL ScriptGist Commands — backend invoke wrappers for gist persistence,
 /// execution dispatch, and diachronic snapshot restoration.
 ///
 /// Routes to Rust backend at src-tauri/src/script_gist/commands.rs which
 /// handles filesystem I/O and target dispatch.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Save a gist to persistent storage (`~/.panll/gists/<id>.json`).
 /// The gist is serialised as a JSON string on the frontend side.

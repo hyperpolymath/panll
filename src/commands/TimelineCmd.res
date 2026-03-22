@@ -2,7 +2,7 @@
 
 /// Code MRI — Timeline Commands (Layer 2)
 ///
-/// Tauri invoke wrappers for VeriSimDB-backed development timeline persistence.
+/// backend invoke wrappers for VeriSimDB-backed development timeline persistence.
 /// The Rust backend manages the VeriSimDB connection, stores timeline snapshots,
 /// and retrieves historical data for the "time machine" scrubber.
 ///
@@ -14,8 +14,7 @@
 /// from git, panic-attack findings, Vexometer readings, and .mri.json tag
 /// counts into a single TimelineEngine.timelineSnapshot struct.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Connect to the VeriSimDB timeline database for the current repo.
 ///

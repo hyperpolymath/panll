@@ -11,7 +11,7 @@
 /// No heavy backend operations — this is mostly client-side state management
 /// with optional persistence calls.
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Save TSDM directive preferences to persistent storage.
 /// Accepts JSON-serialised TsdmState.

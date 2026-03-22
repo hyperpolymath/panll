@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Feedback Commands — Tauri command wrapper for saving Feedback-O-Tron reports.
+/// PanLL Feedback Commands — Backend command wrapper for saving Feedback-O-Tron reports.
 ///
 /// Persists feedback reports to `~/.panll/feedback/<timestamp>.json` via the
 /// Rust backend. The report includes the feedback text, report type, and
 /// optional BoJ context snapshot.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Save a feedback report to disk via the Rust backend.
 let saveReport = (

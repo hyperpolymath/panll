@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://panll.dev/schemas/harness/v2.json",
+  "title": "PanLL Panel Harness Manifest v2",
+  "description": "Declares a panel service's endpoints, data sources, capabilities, and runtime configuration. v2 adds Gossamer support alongside Tauri.",
+  "type": "object",
+  "required": ["$schema", "service_id", "default_endpoint"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "panll-harness/v2",
+      "description": "Schema version identifier"
+    },
+    "service_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Unique identifier for this panel service"
+    },
+    "default_endpoint": {
+      "type": "string",
+      "pattern": "^panll://",
+      "description": "Runtime-agnostic endpoint URI (panll:// scheme). Resolved by RuntimeResolver to gossamer:// or tauri:// based on active runtime."
+    },
+    "runtime_endpoints": {
+      "type": "object",
+      "description": "Runtime-specific endpoint overrides. If omitted, RuntimeResolver auto-generates from default_endpoint.",
+      "properties": {
+        "gossamer": {
+          "type": "string",
+          "pattern": "^gossamer://",
+          "description": "Gossamer-specific IPC endpoint"
+        },
+        "tauri": {
+          "type": "string",
+          "pattern": "^tauri://",
+          "description": "Tauri-specific IPC endpoint (legacy)"
+        },
+        "http": {
+          "type": "string",
+          "pattern": "^https?://",
+          "description": "Direct HTTP endpoint for browser-only mode"
+        }
+      },
+      "additionalProperties": false
+    },
+    "health_check": {
+      "type": "object",
+      "description": "Health check configuration for the panel service",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Health check endpoint path"
+        },
+        "interval_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "description": "Polling interval in milliseconds"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "description": "Request timeout in milliseconds"
+        },
+        "unhealthy_threshold": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Consecutive failures before marking unhealthy"
+        }
+      },
+      "required": ["path", "interval_ms", "timeout_ms"]
+    },
+    "data_sources": {
+      "type": "object",
+      "description": "Named data source endpoints. Keys are panll:// URIs.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["path", "method", "returns"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "IPC invoke path (e.g., /invoke/command_name)"
+          },
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "DELETE"],
+            "description": "HTTP method semantics for the data source"
+          },
+          "body": {
+            "type": "object",
+            "description": "Request body template with {param} placeholders"
+          },
+          "returns": {
+            "type": "string",
+            "description": "Return type name for documentation"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of this data source"
+          }
+        }
+      }
+    },
+    "panels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Relative paths to panel.json files"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["filesystem", "network", "shell", "clipboard", "notification", "tray"]
+      },
+      "description": "Gossamer capability tokens required by this service. Maps to ResourceKind in Gossamer.ABI.Types."
+    },
+    "clade": {
+      "type": "string",
+      "description": "Clade taxonomy path for topic-based event routing"
+    },
+    "integrations": {
+      "type": "object",
+      "description": "Connections to other PanLL services",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "This service's role in the integration"
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Communication protocol"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "panll-harness/v2",
+  "service_id": "system-update",
+  "default_endpoint": "panll://system-update",
+  "runtime_endpoints": {
+    "gossamer": "gossamer://system-update/bridge",
+    "tauri": "tauri://system-update"
+  },
+  "health_check": {
+    "path": "/health",
+    "interval_ms": 60000,
+    "timeout_ms": 10000,
+    "unhealthy_threshold": 3
+  },
+  "data_sources": {
+    "panll://system-update/components": {
+      "path": "/invoke/system_update_list_components",
+      "method": "GET",
+      "returns": "ComponentList",
+      "description": "All updatable components with version info"
+    },
+    "panll://system-update/check": {
+      "path": "/invoke/system_update_check_all",
+      "method": "POST",
+      "returns": "UpdateSummary",
+      "description": "Scan all components for available updates"
+    },
+    "panll://system-update/check/{component_id}": {
+      "path": "/invoke/system_update_check_component",
+      "method": "POST",
+      "body": { "component_id": "{component_id}" },
+      "returns": "Component",
+      "description": "Check a single component for updates"
+    },
+    "panll://system-update/apply/{component_id}": {
+      "path": "/invoke/system_update_apply_component",
+      "method": "POST",
+      "body": { "component_id": "{component_id}" },
+      "returns": "UpdateResult",
+      "description": "Apply update to a single component"
+    },
+    "panll://system-update/apply-all": {
+      "path": "/invoke/system_update_apply_all",
+      "method": "POST",
+      "returns": "UpdateResult",
+      "description": "Apply all available updates"
+    },
+    "panll://system-update/asdf": {
+      "path": "/invoke/system_update_asdf_status",
+      "method": "GET",
+      "returns": "AsdfPluginList",
+      "description": "Detailed asdf plugin versions and update status"
+    },
+    "panll://system-update/logs": {
+      "path": "/invoke/system_update_logs",
+      "method": "GET",
+      "returns": "LogHistory",
+      "description": "Past update log entries"
+    },
+    "panll://system-update/summary": {
+      "path": "/invoke/system_update_last_summary",
+      "method": "GET",
+      "returns": "String",
+      "description": "Last update run summary text"
+    }
+  },
+  "panels": [
+    "panels/system-update/panel.json"
+  ],
+  "capabilities": [
+    "shell",
+    "filesystem"
+  ],
+  "clade": "infrastructure/system-maintenance",
+  "integrations": {
+    "game-server-admin": {
+      "role": "dependency-provider",
+      "protocol": "component-version",
+      "description": "Game servers depend on runtime versions (Deno, Elixir) managed here"
+    }
+  }
+}

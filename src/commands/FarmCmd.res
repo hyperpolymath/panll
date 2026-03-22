@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Farm Commands — Tauri command wrappers for the Git-Private-Farm panel.
+/// PanLL Farm Commands — Backend command wrappers for the Git-Private-Farm panel.
 ///
-/// Each function wraps a Tauri `invoke` call in a `Tea_Cmd.call`, converting
-/// the Promise-based Tauri IPC into the TEA command model. Results arrive as
+/// Each function wraps a backend `invoke` call in a `Tea_Cmd.call`, converting
+/// the Promise-based IPC into the TEA command model. Results arrive as
 /// JSON strings; parsing happens in the Update layer, not here.
 ///
 /// Pattern: `commandName(args..., tagger) => Tea_Cmd.t<'msg>`
 /// where `tagger: result<string, string> => 'msg` wraps the result into
 /// the panel's message type.
 ///
-/// ON THE COMMAND PATTERN: Every Tauri call goes through `Tea_Cmd.call` which
+/// ON THE COMMAND PATTERN: Every backend call goes through `Tea_Cmd.call` which
 /// hands us a `callbacks` object with `.enqueue`. This is TEA's answer to the
 /// "where do side effects go?" question. In React, you'd `useEffect` with an
 /// async function, manage loading/error states manually, worry about cleanup
@@ -18,8 +18,7 @@
 /// returns a tagged Result, the Update switch arm handles both cases, done.
 /// No effect cleanup, no stale closures, no forgotten error boundaries.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Load the full repo inventory from farm-manifest.json.
 /// Returns a JSON string containing the FarmInventory structure

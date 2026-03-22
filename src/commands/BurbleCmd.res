@@ -3,11 +3,11 @@
 //
 // BurbleCmd — TEA command wrappers for PanLL's Burble voice integration.
 //
-// All commands use the Tauri invoke bridge to communicate with the Rust
+// All commands use the invoke bridge to communicate with the Rust
 // backend, which manages the WebSocket connection to the Burble voice
 // server at ws://localhost:6473/voice.
 //
-// Pattern: same as LlmCodingCmd.res — Tea_Cmd.call wrapping Tauri invokes
+// Pattern: same as LlmCodingCmd.res — Tea_Cmd.call wrapping backend invokes
 // with Promise-based async flow and result tagging.
 //
 // The Workspace profile is always used:
@@ -17,7 +17,7 @@
 //   - No spatial audio
 //   - E2EE ON
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 // ============================================================================
 // Connection lifecycle

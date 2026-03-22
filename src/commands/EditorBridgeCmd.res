@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Editor Bridge Commands — Tauri invoke wrappers for connecting
+/// PanLL Editor Bridge Commands — backend invoke wrappers for connecting
 /// to external editors via LSP, extension protocols, or file watchers.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Detect which editor is running and attempt to connect.
 let detectEditor = (

@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Tentacles Commands — Tauri invoke wrappers for the ECHIDNA FFI bridge.
+/// PanLL Tentacles Commands — backend invoke wrappers for the ECHIDNA FFI bridge.
 ///
 /// These call into the Rust backend which proxies to the ECHIDNA V-lang REST
 /// adapters. Used for "without" mode — agents operating through the FFI/ABI
 /// layer rather than embedded TEA state.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Check ECHIDNA FFI bridge health.
 let checkFfiBridge = (

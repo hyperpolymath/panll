@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Repo Loader Commands — Tauri command wrappers for the repo loading panel.
+/// PanLL Repo Loader Commands — Backend command wrappers for the repo loading panel.
 ///
-/// Each function wraps a Tauri `invoke` call in a `Tea_Cmd.call`, converting
-/// the Promise-based Tauri IPC into the TEA command model.
+/// Each function wraps a backend `invoke` call in a `Tea_Cmd.call`, converting
+/// the Promise-based IPC into the TEA command model.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
-@module("@tauri-apps/plugin-dialog")
-external openDialog: JSON.t => promise<Nullable.t<JSON.t>> = "open"
+let openDialog = RuntimeBridge.Dialog.open
 
 /// Scan a repository directory and return info + panel suggestions.
 let scan = (

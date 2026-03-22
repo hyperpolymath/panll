@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Automation Router Commands — Tauri invoke wrappers for loading,
+/// PanLL Automation Router Commands — backend invoke wrappers for loading,
 /// saving, and executing automation workflow rules.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Load automation rules from .machine_readable/ENSAID_CONFIG.a2ml or local storage.
 let loadRules = (

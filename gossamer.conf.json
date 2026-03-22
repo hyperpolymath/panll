@@ -1,0 +1,62 @@
+{
+  "$schema": "https://gossamer.dev/schemas/config/v1",
+  "productName": "PanLL",
+  "version": "0.1.0",
+  "identifier": "com.hyperpolymath.panll",
+  "build": {
+    "frontendDist": "./public",
+    "devUrl": "http://localhost:8000/public/",
+    "beforeDevCommand": "deno task bundle && deno task bundle:watch & deno task css:watch & deno task serve:dev",
+    "beforeBuildCommand": "deno task bundle && deno task css:build",
+    "runner": "deno"
+  },
+  "app": {
+    "windows": [{
+      "label": "main",
+      "title": "PanLL eNSAID",
+      "width": 1400,
+      "height": 900,
+      "minWidth": 1000,
+      "minHeight": 600,
+      "resizable": true,
+      "fullscreen": false,
+      "decorations": true,
+      "center": true
+    }],
+    "security": {
+      "csp": null,
+      "capabilities": ["filesystem", "network", "shell", "clipboard", "notification", "tray"],
+      "capabilityTokens": {
+        "enabled": false,
+        "issuer": "gossamer-runtime",
+        "ttl": 3600
+      }
+    },
+    "ipc": {
+      "protocol": "json",
+      "bridgeInjection": true
+    }
+  },
+  "plugins": {},
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "appimage"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png"
+    ],
+    "copyright": "Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)",
+    "license": "MPL-2.0",
+    "linux": {
+      "desktopEntry": true,
+      "category": "Development"
+    }
+  },
+  "ephapax": {
+    "modules": [],
+    "region": "window",
+    "linearVerification": true,
+    "regionBoundary": "strict"
+  }
+}

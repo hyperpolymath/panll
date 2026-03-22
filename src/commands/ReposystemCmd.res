@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Reposystem Commands — Tauri wrappers for RSR compliance scanning.
+/// PanLL Reposystem Commands — Backend wrappers for RSR compliance scanning.
 ///
 /// The reposystem backend scans local repo directories for required files.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Scan all repos for RSR compliance.
 let scanAll = (

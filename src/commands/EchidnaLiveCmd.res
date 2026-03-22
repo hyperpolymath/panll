@@ -3,7 +3,7 @@
 
 /// ECHIDNA Live Commands — async ECHIDNA proof assistant connection via the shared HTTP client.
 ///
-/// These wrap the async Tauri commands from `echidna_live.rs` and provide the same
+/// These wrap the async backend commands from `echidna_live.rs` and provide the same
 /// TEA-compatible callback interface used throughout PanLL. Panels can switch between
 /// mock and live backends by routing through the panel config's routing flag.
 ///
@@ -13,23 +13,13 @@
 /// ECHIDNA is the multi-solver dispatch layer — it receives proof obligations,
 /// farms them out to Idris2/Lean/Coq/Z3 backends, and returns tactics or results.
 ///
-/// In browser-only mode (no Tauri runtime), commands fall back to direct
+/// In browser-only mode (no desktop runtime), commands fall back to direct
 /// fetch() calls against the ECHIDNA server URL.
 
-@module("@tauri-apps/api/core")
-external invokeRaw: (string, 'a) => promise<'b> = "invoke"
 
-/// Detect whether the real Tauri runtime is available (not the browser shim).
-%%raw(`
-function hasTauri() {
-  return typeof window !== 'undefined'
-    && window.__TAURI_INTERNALS__ != null
-    && !window.__TAURI_INTERNALS__.__BROWSER_SHIM__;
-}
-`)
-@val external hasTauri: unit => bool = "hasTauri"
+let hasDesktopRuntime = RuntimeBridge.hasDesktopRuntime
 
-/// GET helper for ECHIDNA direct fetch (bypasses Tauri invoke).
+/// GET helper for ECHIDNA direct fetch (bypasses backend invoke).
 /// panic-attack:allow insecure-protocol — localhost development endpoint.
 let fetchGet: string => promise<string> = %raw(`
   function(path) {
@@ -41,7 +31,7 @@ let fetchGet: string => promise<string> = %raw(`
   }
 `)
 
-/// POST helper for ECHIDNA direct fetch (bypasses Tauri invoke).
+/// POST helper for ECHIDNA direct fetch (bypasses backend invoke).
 /// panic-attack:allow insecure-protocol — localhost development endpoint.
 let fetchPost: (string, string) => promise<string> = %raw(`
   function(path, body) {
@@ -63,8 +53,8 @@ let fetchPost: (string, string) => promise<string> = %raw(`
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let checkHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("echidna_live_health", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("echidna_live_health", ())
     } else {
       fetchGet("/health")
     }
@@ -93,8 +83,8 @@ let recommendTactics = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("echidna_live_recommend_tactics", {"obligation": obligation})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("echidna_live_recommend_tactics", {"obligation": obligation})
     } else {
       fetchPost("/tactics/recommend", `{"obligation":${JSON.stringifyAny(obligation)->Option.getOr("\"\"")}}`)
     }
@@ -125,8 +115,8 @@ let submitObligation = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("echidna_live_submit_obligation", {"obligation": obligation})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("echidna_live_submit_obligation", {"obligation": obligation})
     } else {
       fetchPost("/obligations/submit", `{"obligation":${JSON.stringifyAny(obligation)->Option.getOr("\"\"")}}`)
     }
@@ -155,8 +145,8 @@ let getResult = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("echidna_live_get_result", {"obligation_id": obligationId})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("echidna_live_get_result", {"obligation_id": obligationId})
     } else {
       fetchGet("/obligations/" ++ obligationId ++ "/result")
     }
@@ -181,8 +171,8 @@ let getResult = (
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let getStats = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("echidna_live_stats", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("echidna_live_stats", ())
     } else {
       fetchGet("/stats")
     }

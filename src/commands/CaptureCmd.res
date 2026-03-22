@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Capture Commands — Tauri IPC wrappers for screenshot, recording,
+/// PanLL Capture Commands — IPC wrappers for screenshot, recording,
 /// and demo operations (DD-022).
 ///
 /// These functions bridge the ReScript TEA loop with the Rust backend
@@ -10,9 +10,8 @@
 
 open Msg
 
-/// External binding to Tauri's invoke function.
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<string> = "invoke"
+/// Backend invoke binding via RuntimeBridge.
+let invoke = RuntimeBridge.invoke
 
 /// Save a screenshot to disk. The base64 data is captured in the frontend
 /// via html2canvas and sent to Rust for file I/O.

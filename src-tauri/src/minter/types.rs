@@ -3,15 +3,16 @@
 //! PanLL Minter Types — data structures for the Panel Minter backend.
 //!
 //! These types mirror the ReScript `MinterModel.res` definitions so the
-//! Tauri command boundary can deserialise frontend requests and serialise
-//! results back.
+//! backend command boundary can deserialise frontend requests and serialise
+//! results back. The frontend communicates via RuntimeBridge (Gossamer or
+//! Tauri).
 
 #![allow(dead_code)]
 
 use serde::{Deserialize, Serialize};
 
 /// Backend type for the panel — determines what kind of Rust backend
-/// and Tauri commands are scaffolded.
+/// and command stubs are scaffolded.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum BackendKind {
@@ -34,7 +35,7 @@ pub struct Capability {
     pub label: String,
 }
 
-/// The minting request — sent from the ReScript frontend via Tauri invoke.
+/// The minting request — sent from the ReScript frontend via RuntimeBridge.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MintRequest {

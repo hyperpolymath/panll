@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL DLC Workshop Commands — Tauri invoke wrappers for DLC puzzle
+/// PanLL DLC Workshop Commands — backend invoke wrappers for DLC puzzle
 /// pack creation, testing, and packaging operations.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Load puzzles from the DLC directory.
 let loadPuzzles = (

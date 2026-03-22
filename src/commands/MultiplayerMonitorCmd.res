@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Multiplayer Monitor Commands — Tauri invoke wrappers for
+/// PanLL Multiplayer Monitor Commands — backend invoke wrappers for
 /// connecting to the IDApTIK Phoenix sync server and reading
 /// multiplayer state.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Connect to the Phoenix WebSocket sync server.
 let connectToServer = (

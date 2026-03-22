@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Network Topology Commands — Tauri invoke wrappers for reading
+/// PanLL Network Topology Commands — backend invoke wrappers for reading
 /// the in-game network topology from the running IDApTIK instance.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Read the current network topology from the running game.
 let readTopology = (

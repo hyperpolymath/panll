@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-/// ObservabilityCmd — Tauri invoke wrappers for the observe-mcp BoJ cartridge.
+/// ObservabilityCmd — backend invoke wrappers for the observe-mcp BoJ cartridge.
 ///
 /// Routes SARIF export and OpenTelemetry trace collection through the
 /// observe-mcp cartridge backend (src-tauri/src/observability/commands.rs),
 /// enabling BoJ-routed observability when bojRouting is on.
 ///
-/// All commands use `Tea_Cmd.call` for async Tauri invocations, matching
+/// All commands use `Tea_Cmd.call` for async backend invocations, matching
 /// the pattern established in BojCmd.res and PanicAttackCmd.res.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Export a panic-attack report as SARIF via the observe-mcp cartridge.
 ///

@@ -1,0 +1,72 @@
+{
+  "$schema": "panll-harness/v2",
+  "service_id": "clade-portal",
+  "default_endpoint": "clade://portal",
+  "runtime_endpoints": {
+    "gossamer": "gossamer://clade-portal/bridge"
+  },
+  "health_check": {
+    "path": "/health",
+    "interval_ms": 30000,
+    "timeout_ms": 10000,
+    "unhealthy_threshold": 3
+  },
+  "data_sources": {
+    "clade://portal/clades": {
+      "path": "/invoke/clade_list_directories",
+      "method": "GET",
+      "returns": "CladeDirectoryList",
+      "description": "List all clade directories in the panel-clades path"
+    },
+    "clade://portal/clades/all": {
+      "path": "/invoke/clade_load_all_summaries",
+      "method": "GET",
+      "returns": "CladeSummaryArray",
+      "description": "Load summary metadata for all clades in one batch"
+    },
+    "clade://portal/clades/{clade_id}": {
+      "path": "/invoke/clade_read_detail",
+      "method": "GET",
+      "returns": "CladeDetail",
+      "description": "Full metadata detail for a single clade"
+    },
+    "clade://portal/clades/{clade_id}/relationships": {
+      "path": "/invoke/clade_get_relationships",
+      "method": "GET",
+      "returns": "CladeRelationships",
+      "description": "Parent, child, sibling, and dependency relationships"
+    },
+    "clade://portal/search": {
+      "path": "/invoke/clade_search",
+      "method": "POST",
+      "body": { "query": "{search_query}" },
+      "returns": "SearchResultArray",
+      "description": "Full-text search across all clade metadata"
+    },
+    "clade://portal/clades/{clade_id}/health": {
+      "path": "/invoke/clade_check_health",
+      "method": "GET",
+      "returns": "CladeHealthStatus",
+      "description": "Health status of panels belonging to a clade"
+    },
+    "clade://portal/health/all": {
+      "path": "/invoke/clade_check_all_health",
+      "method": "GET",
+      "returns": "BatchHealthStatus",
+      "description": "Batch health check for all clades with backends"
+    }
+  },
+  "panels": [],
+  "capabilities": [
+    "filesystem",
+    "network"
+  ],
+  "clade": "meta/taxonomy",
+  "integrations": {
+    "panll-panel-clades": {
+      "role": "taxonomy-browser",
+      "protocol": "gossamer-ipc",
+      "description": "Gossamer-native taxonomy browser for PanLL panel clades"
+    }
+  }
+}

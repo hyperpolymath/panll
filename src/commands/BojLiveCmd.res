@@ -3,15 +3,14 @@
 
 /// BoJ Live Commands — async BoJ-server connection via the shared HTTP client.
 ///
-/// These wrap the async Tauri commands from `boj_live.rs` and provide the same
+/// These wrap the async backend commands from `boj_live.rs` and provide the same
 /// TEA-compatible callback interface as `BojCmd.res`. Panels can switch between
 /// mock (BojCmd) and live (BojLiveCmd) backends by routing through the panel
 /// config's `bojRouting` flag.
 ///
 /// All commands talk to the BoJ server at BOJ_URL (default localhost:7700).
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Check BoJ-server health (async endpoint).
 /// Calls `boj_live_health` which hits `GET /health` on the BoJ server.

@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL VM Inspector Commands — Tauri async bindings for the reversible
+/// PanLL VM Inspector Commands — Backend async bindings for the reversible
 /// VM debugger. Handles VM state reading, step execution, breakpoint
 /// management, and state export.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Read the current VM state from the running game (inter-webview).
 let readVmState = (

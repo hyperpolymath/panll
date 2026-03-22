@@ -2,7 +2,7 @@
 
 /// Code MRI — VoiceTag Commands (Layer 0)
 ///
-/// Tauri command wrappers for .mri.json file I/O and Web Speech API voice input.
+/// Backend command wrappers for .mri.json file I/O and Web Speech API voice input.
 /// The file format is portable — any tool can read/write .mri.json files. PanLL
 /// adds voice input and agentic integration on top.
 ///
@@ -13,8 +13,7 @@
 /// The sidecar lives alongside the source file. It's a plain JSON file that
 /// editors, CLI tools, and CI pipelines can all consume without PanLL installed.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Load tags from a .mri.json sidecar file.
 /// Returns the raw JSON string; parsing happens in the Update layer.

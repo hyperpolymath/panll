@@ -1,0 +1,24 @@
+{
+  "name": "@hyperpolymath/clade-portal",
+  "version": "0.1.0",
+  "license": "PMPL-1.0-or-later",
+  "tasks": {
+    "gossamer:dev": "deno task res:build && deno task css:build && deno run --allow-net --allow-read --allow-env dev-server.ts",
+    "gossamer:build": "deno task res:build && deno task css:build && deno run --allow-all build.ts",
+    "res:build": "npx rescript build",
+    "res:watch": "npx rescript build -w",
+    "bundle": "deno task gossamer:build && gossamer bundle",
+    "css:build": "cp src/styles.css public/styles.css",
+    "check": "deno check dev-server.ts build.ts",
+    "clean": "npx rescript clean && rm -rf public/*.js public/*.css"
+  },
+  "imports": {
+    "@gossamer/api": "https://deno.land/x/gossamer_api@0.1.0/mod.ts",
+    "rescript": "npm:rescript@12",
+    "@rescript/core": "npm:@rescript/core@1"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": true
+  }
+}

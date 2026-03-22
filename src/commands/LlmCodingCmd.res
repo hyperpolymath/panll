@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-/// PanLL LLM Coding command wrappers — Tauri invoke bridge for spawning
+/// PanLL LLM Coding command wrappers — invoke bridge for spawning
 /// and managing LLM coding sessions.
 ///
-/// All commands invoke Tauri backend commands registered in
+/// All commands invoke backend commands registered in
 /// src-tauri/src/llm_coding/commands.rs.
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 // ============================================================================
 // Session Management

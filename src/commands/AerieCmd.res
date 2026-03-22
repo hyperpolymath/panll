@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Aerie Commands — Tauri wrappers for network diagnostics.
+/// PanLL Aerie Commands — Backend wrappers for network diagnostics.
 ///
 /// Backend is V-lang API gateway at :4000 (GraphQL + REST).
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Fetch latest latency measurements.
 let fetchLatency = (

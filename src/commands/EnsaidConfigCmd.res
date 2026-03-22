@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL ENSAID_CONFIG Commands — Tauri invoke wrappers for reading and writing
+/// PanLL ENSAID_CONFIG Commands — backend invoke wrappers for reading and writing
 /// .machine_readable/ENSAID_CONFIG.a2ml files.
 ///
 /// Used by Minter, Provisioner, Workspace, and Automation Router to export
 /// the current PanLL configuration as a well-annotated, human-editable file.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Write ENSAID_CONFIG.a2ml to a repo's .machine_readable/ directory.
 /// Creates the directory if it doesn't exist.

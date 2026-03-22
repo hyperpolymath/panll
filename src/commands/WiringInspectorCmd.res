@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-/// PanLL Wiring Inspector Command Wrappers — Tauri bindings for PCC invocation.
+/// PanLL Wiring Inspector Command Wrappers — Backend bindings for PCC invocation.
 ///
 /// Two commands:
 ///   - `runVerification`: invoke PCC against all panel contracts.
@@ -10,7 +10,7 @@
 /// Both return JSON strings that the frontend parses with
 /// WiringInspectorEngine.parseVerificationJson.
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Run PCC verification against all panel contracts.
 /// Returns JSON string with all panel verification results.

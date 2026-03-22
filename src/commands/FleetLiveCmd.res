@@ -5,28 +5,18 @@
 ///
 /// These provide live connections to the gitbot-fleet Axum dashboard API
 /// for bot status, findings, dispatch operations, and fleet health monitoring.
-/// Falls back to direct fetch() in browser-only mode (no Tauri runtime).
+/// Falls back to direct fetch() in browser-only mode (no desktop runtime).
 ///
 /// All commands talk to the gitbot-fleet API at ServiceEndpoints.fleet
 /// (default http://localhost:8090/api/v1).
 ///
-/// In browser-only mode (no Tauri runtime), commands fall back to direct
+/// In browser-only mode (no desktop runtime), commands fall back to direct
 /// fetch() calls against the fleet server URL.
 
-@module("@tauri-apps/api/core")
-external invokeRaw: (string, 'a) => promise<'b> = "invoke"
 
-/// Detect whether the real Tauri runtime is available (not the browser shim).
-%%raw(`
-function hasTauri() {
-  return typeof window !== 'undefined'
-    && window.__TAURI_INTERNALS__ != null
-    && !window.__TAURI_INTERNALS__.__BROWSER_SHIM__;
-}
-`)
-@val external hasTauri: unit => bool = "hasTauri"
+let hasDesktopRuntime = RuntimeBridge.hasDesktopRuntime
 
-/// GET helper for fleet direct fetch (bypasses Tauri invoke).
+/// GET helper for fleet direct fetch (bypasses backend invoke).
 /// panic-attack:allow insecure-protocol — localhost development endpoint.
 let fetchGet: string => promise<string> = %raw(`
   function(path) {
@@ -38,7 +28,7 @@ let fetchGet: string => promise<string> = %raw(`
   }
 `)
 
-/// POST helper for fleet direct fetch (bypasses Tauri invoke).
+/// POST helper for fleet direct fetch (bypasses backend invoke).
 /// panic-attack:allow insecure-protocol — localhost development endpoint.
 let fetchPost: (string, string) => promise<string> = %raw(`
   function(path, body) {
@@ -60,8 +50,8 @@ let fetchPost: (string, string) => promise<string> = %raw(`
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let checkHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("fleet_live_health", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("fleet_live_health", ())
     } else {
       fetchGet("/health")
     }
@@ -85,8 +75,8 @@ let checkHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let fetchBots = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("fleet_live_bots", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("fleet_live_bots", ())
     } else {
       fetchGet("/bots")
     }
@@ -111,8 +101,8 @@ let fetchBots = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let fetchFindings = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("fleet_live_findings", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("fleet_live_findings", ())
     } else {
       fetchGet("/findings")
     }
@@ -141,8 +131,8 @@ let dispatchFinding = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("fleet_live_dispatch", {"finding_id": findingId, "bot_id": botId})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("fleet_live_dispatch", {"finding_id": findingId, "bot_id": botId})
     } else {
       fetchPost(
         "/dispatch",
@@ -171,8 +161,8 @@ let dispatchFinding = (
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let checkReachable = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("fleet_live_health", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("fleet_live_health", ())
     } else {
       fetchGet("/health")
     }

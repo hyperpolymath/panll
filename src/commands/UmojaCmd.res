@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Umoja Commands — Tauri invoke wrappers for Umoja peer management.
+/// PanLL Umoja Commands — backend invoke wrappers for Umoja peer management.
 ///
 /// These call into the Rust backend at src-tauri/src/umoja/commands.rs
 /// for federation peer lifecycle operations: add, disconnect, gossip,
 /// catalogue sync, and metrics retrieval.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Add a new peer to the Umoja federation by address.
 let addPeer = (

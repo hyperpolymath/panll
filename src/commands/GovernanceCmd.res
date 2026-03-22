@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Governance Commands — Tauri invoke wrappers for nesy-MCP governance
+/// PanLL Governance Commands — backend invoke wrappers for nesy-MCP governance
 /// queries. These call into the Rust backend at src-tauri/src/governance/commands.rs
 /// which routes governance decisions through the BoJ nesy-mcp cartridge for
 /// real-time neural validation.
@@ -8,8 +8,7 @@
 /// Used by the GovernanceEngine's `evaluateWithCmd` path when the engine cannot
 /// make a confident pure decision and needs async neural consultation.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Query nesy-mcp for a confidence assessment on a borderline governance
 /// decision. Returns JSON with confidence score, recommended action, and

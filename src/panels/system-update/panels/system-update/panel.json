@@ -1,0 +1,105 @@
+{
+  "$schema": "https://panll.dev/schemas/panel/v1.json",
+  "spdx": "PMPL-1.0-or-later",
+  "id": "system-update",
+  "title": "System Update",
+  "description": "Component update management panel — tracks versions, checks for updates, and applies upgrades across rpm-ostree, Flatpak, asdf (33 plugins), Cargo, Deno, GHCup, opam, mix, Julia, pipx, and firmware.",
+  "version": "0.1.0",
+  "author": "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
+  "type": "interactive",
+  "runtime": "panll-tea",
+  "entry": "../../SystemUpdatePanel.res",
+  "dimensions": {
+    "default_width": 1200,
+    "default_height": 800,
+    "min_width": 900,
+    "min_height": 600,
+    "resizable": true
+  },
+  "data_sources": [
+    {
+      "id": "component-list",
+      "uri": "panll://system-update/components",
+      "refresh_interval_ms": 0,
+      "description": "All updatable components"
+    },
+    {
+      "id": "update-summary",
+      "uri": "panll://system-update/check",
+      "refresh_interval_ms": 0,
+      "description": "Update availability summary"
+    },
+    {
+      "id": "asdf-plugins",
+      "uri": "panll://system-update/asdf",
+      "refresh_interval_ms": 0,
+      "description": "Detailed asdf plugin status (33 plugins)"
+    },
+    {
+      "id": "update-logs",
+      "uri": "panll://system-update/logs",
+      "refresh_interval_ms": 0,
+      "description": "Historical update logs"
+    }
+  ],
+  "widgets": [
+    {
+      "type": "summary-bar",
+      "data_source": "update-summary",
+      "fields": [
+        { "field": "totalComponents", "label": "Components", "icon": "package" },
+        { "field": "upToDate", "label": "Up to Date", "icon": "check-circle", "color": "#2ecc71" },
+        { "field": "updatesAvailable", "label": "Updates Available", "icon": "arrow-up-circle", "color": "#f39c12" },
+        { "field": "failed", "label": "Failed", "icon": "alert-circle", "color": "#e74c3c" }
+      ]
+    },
+    {
+      "type": "grouped-table",
+      "data_source": "component-list",
+      "group_by": "category",
+      "columns": [
+        { "field": "name", "label": "Component", "width": "200px" },
+        { "field": "managed_by", "label": "Manager", "width": "100px" },
+        { "field": "currentVersion", "label": "Current", "width": "120px", "font": "mono" },
+        { "field": "latestVersion", "label": "Latest", "width": "120px", "font": "mono" },
+        { "field": "status", "label": "Status", "width": "160px", "render": "status-badge" },
+        { "field": "actions", "label": "", "width": "120px", "render": "action-buttons" }
+      ],
+      "row_actions": [
+        { "id": "check", "label": "Check", "target": "panll://system-update/check/{id}" },
+        { "id": "update", "label": "Update", "target": "panll://system-update/apply/{id}", "style": "success", "confirm": true }
+      ]
+    },
+    {
+      "type": "action-bar",
+      "actions": [
+        { "id": "check-all", "label": "Check All", "style": "default", "target": "panll://system-update/check" },
+        { "id": "update-all", "label": "Update All", "style": "success", "target": "panll://system-update/apply-all", "confirm": true },
+        { "id": "view-logs", "label": "History", "style": "default", "target": "panll://system-update/logs" }
+      ]
+    },
+    {
+      "type": "log-viewer",
+      "data_source": "update-logs",
+      "max_lines": 200,
+      "auto_scroll": true,
+      "font": "monospace",
+      "collapsible": true,
+      "default_collapsed": true
+    }
+  ],
+  "capabilities_required": [
+    "shell",
+    "filesystem"
+  ],
+  "tags": [
+    "system",
+    "update",
+    "asdf",
+    "rpm-ostree",
+    "flatpak",
+    "toolchain",
+    "maintenance",
+    "infrastructure"
+  ]
+}

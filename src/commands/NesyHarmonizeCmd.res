@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-/// PanLL NeSy Harmonization command wrappers — Tauri invoke bridge for the
+/// PanLL NeSy Harmonization command wrappers — invoke bridge for the
 /// harmonization monitor panel.
 ///
 /// All commands invoke BoJ cartridge endpoints for neural-symbolic
 /// harmonization data. Uses `Tea_Cmd.call` for async operations.
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Fetch current harmonization entries from the BoJ NeSy cartridge.
 /// Returns JSON array of harmonization entry objects.

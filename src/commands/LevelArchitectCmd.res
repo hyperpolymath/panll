@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Level Architect Commands — Tauri invoke wrappers for level
+/// PanLL Level Architect Commands — backend invoke wrappers for level
 /// file I/O, asset browsing, level validation, and LevelConfig export.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Load a level from a JSON file.
 let loadLevel = (

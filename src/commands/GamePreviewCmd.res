@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Game Preview Commands — Tauri async bindings for the live game
+/// PanLL Game Preview Commands — Backend async bindings for the live game
 /// preview panel. Handles dev server health checks, game loop control,
 /// gameplay recording, and render stats polling.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Check whether the Vite dev server is running and responding.
 let checkDevServer = (

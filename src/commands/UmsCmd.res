@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Universal Modding Studio Commands — Tauri invoke wrappers for
+/// PanLL Universal Modding Studio Commands — backend invoke wrappers for
 /// mod project management, ABI validation, template instantiation,
 /// asset pipeline, distribution, and API reference loading.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Load all mod projects from the UMS projects directory.
 let loadProjects = (

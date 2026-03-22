@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL K9 Commands — Tauri invoke wrappers for K9 contractile operations.
+/// PanLL K9 Commands — backend invoke wrappers for K9 contractile operations.
 /// These call into the Rust backend at src-tauri/src/k9/commands.rs which
 /// handles filesystem access for loading, validating, and applying K9
 /// contractile files (.k9.ncl).
@@ -9,8 +9,7 @@
 /// ReScript K9Engine then handles the actual parsing and validation logic
 /// on the client side for maximum testability.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Load a K9 contractile file from disk. Returns the raw file content
 /// as a JSON-wrapped string for client-side parsing by K9Engine.

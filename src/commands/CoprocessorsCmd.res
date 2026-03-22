@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Coprocessors Commands — Tauri invoke wrappers for reading
+/// PanLL Coprocessors Commands — backend invoke wrappers for reading
 /// coprocessor metrics, call logs, and backend health from the
 /// running IDApTIK game instance.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Read metrics for all coprocessor backends.
 let readMetrics = (

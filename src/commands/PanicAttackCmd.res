@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-/// PanLL panic-attack command wrappers — Tauri invoke bridge for
+/// PanLL panic-attack command wrappers — invoke bridge for
 /// the panic-attack stress testing and weak point analysis panel.
 ///
-/// All commands invoke the panic-attack binary via the Tauri backend,
+/// All commands invoke the panic-attack binary via the backend,
 /// returning JSON results. Uses `Tea_Cmd.call` for async operations.
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Check panic-attack capability (is the binary available? what mode?).
 let checkCapability = (

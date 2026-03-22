@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Clade Commands — Tauri command wrappers for scanning `.a2ml` clade files.
+/// PanLL Clade Commands — Backend command wrappers for scanning `.a2ml` clade files.
 ///
 /// Invokes `scan_clade_files` on the Rust backend to read all clade definitions
 /// from `panel-clades/clades/`. Returns a JSON array of `{id, content}` objects.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Scan all `.a2ml` clade files from the panel-clades directory.
 /// Returns a JSON string: `[{"id": "...", "content": "..."}]`.

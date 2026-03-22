@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Hypatia Commands — Tauri command wrappers for the Hypatia scanner.
+/// PanLL Hypatia Commands — Backend command wrappers for the Hypatia scanner.
 ///
 /// The Hypatia backend is an Elixir Phoenix API at /api/v1/.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Fetch the status of all 5 neural networks.
 let fetchNetworks = (

@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Playgrounds Commands — Tauri wrappers for code execution.
+/// PanLL Playgrounds Commands — Backend wrappers for code execution.
 ///
 /// Connects to the NQC proxy at :4000 for VQL/KQL/GQL queries.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Execute a query through the NQC proxy.
 let executeQuery = (

@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL AI Commands — Tauri command wrappers for the multi-provider AI panel.
+/// PanLL AI Commands — Backend command wrappers for the multi-provider AI panel.
 ///
-/// Each function wraps a Tauri `invoke` call in a `Tea_Cmd.call`, converting
-/// the Promise-based Tauri IPC into the TEA command model. Results arrive as
+/// Each function wraps a backend `invoke` call in a `Tea_Cmd.call`, converting
+/// the Promise-based IPC into the TEA command model. Results arrive as
 /// JSON strings; parsing happens in the Update layer, not here.
 ///
 /// Pattern: `commandName(args..., tagger) => Tea_Cmd.t<'msg>`
 /// where `tagger: result<string, string> => 'msg` wraps the result into
 /// the panel's message type.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Send a message to the AI provider. The backend selects the highest-priority
 /// enabled provider (or uses the specified one) and returns the response.
@@ -163,7 +162,7 @@ let buildContext = (
   })
 }
 
-/// Fire-and-forget streaming message. Results arrive via Tauri events on
+/// Fire-and-forget streaming message. Results arrive via backend events on
 /// `ai:stream-chunk`. This command returns immediately with "streaming_started".
 ///
 /// The streaming provider emits StreamChunk events that the frontend receives

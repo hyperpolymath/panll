@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL BoJ Commands — Tauri invoke wrappers for the Bundle of Joy
+/// PanLL BoJ Commands — backend invoke wrappers for the Bundle of Joy
 /// cartridge server. These call into the Rust backend at src-tauri/src/boj/commands.rs
 /// which proxies to the BoJ server at BOJ_URL (default http://localhost:7700/api/v1).
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Check BoJ server health.
 let health = (

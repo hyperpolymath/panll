@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-/// PanLL Agent Coordination command wrappers — Tauri invoke bridge for the
+/// PanLL Agent Coordination command wrappers — invoke bridge for the
 /// coordination view panel.
 ///
 /// All commands invoke BoJ cartridge endpoints for multi-agent topology
 /// and strategy management. Uses `Tea_Cmd.call` for async operations.
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Fetch the current agent coordination topology.
 /// Returns JSON with nodes, edges, and active strategy.

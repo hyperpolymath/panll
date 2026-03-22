@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-//! PanLL Minter Commands — Tauri command handlers for panel scaffolding.
+//! PanLL Minter Commands — backend command handlers for panel scaffolding.
 //!
-//! These commands are invoked from the ReScript frontend via `@tauri-apps/api/core`
-//! invoke(). They generate ReScript source files, Rust backend stubs, and patch
-//! the global wiring files to register the new panel.
+//! These commands are invoked from the ReScript frontend via RuntimeBridge.invoke
+//! (runtime-agnostic: works with both Gossamer and Tauri). They generate ReScript
+//! source files, Rust backend stubs, and patch the global wiring files to register
+//! the new panel.
 //!
 //! All generated panels include:
 //! - ARIA labels on every interactive element
@@ -227,6 +228,15 @@ pub async fn minter_mint_panel(
     } else {
         files_patched.push("src/Update.res".to_string());
     }
+
+    // =========================================================================
+    // Generate panll-harness/v2 manifest
+    // =========================================================================
+
+    let manifest_dir = format!("src/panels/{}/panels", snake);
+    let manifest_path = format!("{}/manifest.json", manifest_dir);
+    let manifest_content = generate_panel_manifest(&panel_name, &snake, has_backend);
+    write_file_safe(&manifest_path, &manifest_content, &mut files_created, &mut warnings)?;
 
     // =========================================================================
     // Generate clade manifest (A2ML)
@@ -484,16 +494,17 @@ let view = ({camel}: {camel}State): Tea_Vdom.t<msg> => {{
     )
 }
 
-/// Generate the XCmd.res file — Tauri command wrappers.
+/// Generate the XCmd.res file — backend command wrappers via RuntimeBridge.
 fn generate_cmd(name: &str, _camel: &str, _endpoint: &str) -> String {
     let snake = to_snake_case(name);
     format!(
         r#"// SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// {name} Commands — Tauri command wrappers for the {name} panel.
+/// {name} Commands — backend command wrappers for the {name} panel.
+///
+/// Uses RuntimeBridge.invoke for runtime-agnostic IPC (Gossamer or Tauri).
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Check backend health.
 let checkHealth = (
@@ -562,7 +573,9 @@ fn generate_rust_commands(name: &str, snake: &str) -> String {
     format!(
         r#"// SPDX-License-Identifier: PMPL-1.0-or-later
 
-//! PanLL {name} Commands — Tauri command handlers for the {name} panel.
+//! PanLL {name} Commands — backend command handlers for the {name} panel.
+//!
+//! These handlers are invoked via RuntimeBridge (Gossamer or Tauri).
 
 use serde_json::json;
 
@@ -766,6 +779,67 @@ fn patch_view(name: &str, camel: &str) -> Result<(), String> {
 
     fs::write(path, patched)
         .map_err(|e| format!("Write failed: {}", e))
+}
+
+// =============================================================================
+// Panel harness manifest generator (panll-harness/v2)
+// =============================================================================
+
+/// Generate a panll-harness/v2 manifest for the new panel.
+///
+/// This manifest declares the panel's endpoints for both Gossamer and Tauri
+/// runtimes, health check configuration, and data sources. PanelHarness
+/// discovers this file and wires the panel into the runtime.
+fn generate_panel_manifest(name: &str, snake: &str, has_backend: bool) -> String {
+    let health_block = if has_backend {
+        format!(
+            r#",
+  "health_check": {{
+    "path": "/health",
+    "interval_ms": 60000,
+    "timeout_ms": 10000,
+    "unhealthy_threshold": 3
+  }},
+  "data_sources": {{
+    "panll://{snake}/health": {{
+      "path": "/invoke/{snake}_health",
+      "method": "GET",
+      "returns": "HealthResponse",
+      "description": "Backend health check"
+    }}
+  }}"#,
+            snake = snake,
+        )
+    } else {
+        String::new()
+    };
+
+    let capabilities = if has_backend {
+        r#"["shell"]"#
+    } else {
+        "[]"
+    };
+
+    format!(
+        r#"{{
+  "$schema": "panll-harness/v2",
+  "service_id": "{snake}",
+  "default_endpoint": "panll://{snake}",
+  "runtime_endpoints": {{
+    "gossamer": "gossamer://{snake}/bridge",
+    "tauri": "tauri://{snake}"
+  }}{health_block},
+  "panels": [
+    "panels/{snake}/panel.json"
+  ],
+  "capabilities": {capabilities},
+  "clade": "overlay/{snake}"
+}}
+"#,
+        snake = snake,
+        health_block = health_block,
+        capabilities = capabilities,
+    )
 }
 
 // =============================================================================

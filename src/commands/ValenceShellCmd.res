@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Valence Shell Commands — Tauri async bindings for PTY, Valence
+/// PanLL Valence Shell Commands — Backend async bindings for PTY, Valence
 /// shell binary, session recording, and checkpoint operations.
 ///
-/// Each function returns a `Tea_Cmd.t<'msg>` that wraps a Tauri invoke
+/// Each function returns a `Tea_Cmd.t<'msg>` that wraps a backend invoke
 /// call in a Promise, tagging the result back into the TEA message loop.
 ///
-/// The terminal PTY is managed by @tauri-apps/plugin-shell. The Valence
+/// The terminal PTY is managed by the shell plugin. The Valence
 /// shell binary handles reversible filesystem ops. Recordings use the
 /// asciinema .cast format for portability.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Check whether the Valence shell binary is available on PATH.
 /// Returns the version string on success, or an error if not found.

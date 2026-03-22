@@ -3,30 +3,20 @@
 
 /// VeriSimDB Live Commands — async VeriSimDB connection via the shared HTTP client.
 ///
-/// These wrap the async Tauri commands from `verisimdb_live.rs` and provide the same
+/// These wrap the async backend commands from `verisimdb_live.rs` and provide the same
 /// TEA-compatible callback interface used throughout PanLL. Panels can switch between
 /// mock and live backends by routing through the panel config's routing flag.
 ///
 /// All commands talk to the VeriSimDB server at ServiceEndpoints.verisimdb
 /// (default http://localhost:8080/api/v1).
 ///
-/// In browser-only mode (no Tauri runtime), commands fall back to direct
+/// In browser-only mode (no desktop runtime), commands fall back to direct
 /// fetch() calls against the VeriSimDB server URL.
 
-@module("@tauri-apps/api/core")
-external invokeRaw: (string, 'a) => promise<'b> = "invoke"
 
-/// Detect whether the real Tauri runtime is available (not the browser shim).
-%%raw(`
-function hasTauri() {
-  return typeof window !== 'undefined'
-    && window.__TAURI_INTERNALS__ != null
-    && !window.__TAURI_INTERNALS__.__BROWSER_SHIM__;
-}
-`)
-@val external hasTauri: unit => bool = "hasTauri"
+let hasDesktopRuntime = RuntimeBridge.hasDesktopRuntime
 
-/// GET helper for VeriSimDB direct fetch (bypasses Tauri invoke).
+/// GET helper for VeriSimDB direct fetch (bypasses backend invoke).
 /// panic-attack:allow insecure-protocol — localhost development endpoint.
 let fetchGet: string => promise<string> = %raw(`
   function(path) {
@@ -38,7 +28,7 @@ let fetchGet: string => promise<string> = %raw(`
   }
 `)
 
-/// POST helper for VeriSimDB direct fetch (bypasses Tauri invoke).
+/// POST helper for VeriSimDB direct fetch (bypasses backend invoke).
 /// panic-attack:allow insecure-protocol — localhost development endpoint.
 let fetchPost: (string, string) => promise<string> = %raw(`
   function(path, body) {
@@ -60,8 +50,8 @@ let fetchPost: (string, string) => promise<string> = %raw(`
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let checkHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("verisimdb_live_health", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("verisimdb_live_health", ())
     } else {
       fetchGet("/health")
     }
@@ -85,8 +75,8 @@ let checkHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let listOctads = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("verisimdb_live_list_octads", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("verisimdb_live_list_octads", ())
     } else {
       fetchGet("/octads")
     }
@@ -114,8 +104,8 @@ let executeQuery = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("verisimdb_live_query", {"query": query})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("verisimdb_live_query", {"query": query})
     } else {
       fetchPost("/query", `{"query":${JSON.stringifyAny(query)->Option.getOr("\"\"")}}`)
     }
@@ -143,8 +133,8 @@ let getOctad = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("verisimdb_live_get_octad", {"id": id})
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("verisimdb_live_get_octad", {"id": id})
     } else {
       fetchGet("/octads/" ++ id)
     }
@@ -169,8 +159,8 @@ let getOctad = (
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let checkReachable = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if hasTauri() {
-      invokeRaw("verisimdb_live_health", ())
+    let p = if hasDesktopRuntime() {
+      RuntimeBridge.invoke("verisimdb_live_health", ())
     } else {
       fetchGet("/health")
     }

@@ -385,23 +385,23 @@ let updatePaneW = (model: model, msg: paneWMsg): (model, Tea_Cmd.t<msg>) => {
   // --- File import commands (issue Tauri commands, await result) ---
   | ImportEventChainFile => (
       model,
-      TauriCmd.openEventChainFile(result => PaneW(EventChainFileLoaded(result))),
+      GossamerCmd.openEventChainFile(result => PaneW(EventChainFileLoaded(result))),
     )
   | ImportPanicAttackerReportFile => (
       model,
-      TauriCmd.openPanicAttackerReportFile(result =>
+      GossamerCmd.openPanicAttackerReportFile(result =>
         PaneW(PanicAttackerReportPathLoaded(result))
       ),
     )
   | ImportLatestPanicAttacker => (
       model,
-      TauriCmd.importLatestPanicAttackerReport(result =>
+      GossamerCmd.importLatestPanicAttackerReport(result =>
         PaneW(PanicAttackerImportLoaded(result))
       ),
     )
   | CheckPanicAttackerCapability => (
       model,
-      TauriCmd.getPanicAttackerCapability(result =>
+      GossamerCmd.getPanicAttackerCapability(result =>
         PaneW(PanicAttackerCapabilityLoaded(result))
       ),
     )
@@ -430,7 +430,7 @@ let updatePaneW = (model: model, msg: paneWMsg): (model, Tea_Cmd.t<msg>) => {
     switch result {
     | Ok(path) => (
         model,
-        TauriCmd.importPanicAttackerReport(path, result =>
+        GossamerCmd.importPanicAttackerReport(path, result =>
           PaneW(PanicAttackerImportLoaded(result))
         ),
       )
@@ -501,7 +501,7 @@ let updatePaneW = (model: model, msg: paneWMsg): (model, Tea_Cmd.t<msg>) => {
   // --- Security command lifecycle ---
   | LoadSecurityTimelineFile => (
       model,
-      TauriCmd.openSecurityTimelineFile(result =>
+      GossamerCmd.openSecurityTimelineFile(result =>
         PaneW(SecurityTimelineFileLoaded(result))
       ),
     )
@@ -528,7 +528,7 @@ let updatePaneW = (model: model, msg: paneWMsg): (model, Tea_Cmd.t<msg>) => {
       }
       (
         {...model, paneW: {...paneW, securityStatus: Some("Running..."), securityError: None}},
-        TauriCmd.runPanicAttackAmbush(
+        GossamerCmd.runPanicAttackAmbush(
           paneW.securityTarget,
           timeline,
           axes,
@@ -776,7 +776,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       let cmd = if db.bojRouting {
         BojCmd.invokeCartridgeWithLatency("database-mcp", "health", "", result => VeriSimDB(HealthResult(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
-        TauriCmd.checkVeriSimDBHealth(result => VeriSimDB(HealthResult(result)))
+        GossamerCmd.checkVeriSimDBHealth(result => VeriSimDB(HealthResult(result)))
       }
       (model, cmd)
     }
@@ -809,7 +809,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       let queryCmd = if db.bojRouting {
         BojCmd.invokeCartridgeWithLatency("database-mcp", "query", query, result => VeriSimDB(QueryResult(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
-        TauriCmd.queryVeriSimDB(query, result => VeriSimDB(QueryResult(result)))
+        GossamerCmd.queryVeriSimDB(query, result => VeriSimDB(QueryResult(result)))
       }
       (
         {...model, verisimdb: newDb},
@@ -840,7 +840,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       let cmd = if db.bojRouting {
         BojCmd.invokeCartridgeWithLatency("database-mcp", "list_entities", "{\"limit\":50,\"offset\":0}", result => VeriSimDB(EntitiesLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
-        TauriCmd.listOctads(50, 0, result => VeriSimDB(EntitiesLoaded(result)))
+        GossamerCmd.listOctads(50, 0, result => VeriSimDB(EntitiesLoaded(result)))
       }
       (model, cmd)
     }
@@ -857,8 +857,8 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
         )
       } else {
         (
-          TauriCmd.getDrift(entityId, result => VeriSimDB(DriftLoaded(result))),
-          TauriCmd.getEntityDetail(entityId, result => VeriSimDB(EntityDetailLoaded(result))),
+          GossamerCmd.getDrift(entityId, result => VeriSimDB(DriftLoaded(result))),
+          GossamerCmd.getEntityDetail(entityId, result => VeriSimDB(EntityDetailLoaded(result))),
         )
       }
       (
@@ -889,7 +889,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     )
   | TriggerNormalise(entityId) => (
       {...model, verisimdb: {...db, normalisingEntity: Some(entityId)}},
-      TauriCmd.triggerNormalise(entityId, result => VeriSimDB(NormaliseResult(result))),
+      GossamerCmd.triggerNormalise(entityId, result => VeriSimDB(NormaliseResult(result))),
     )
   | NormaliseResult(result) =>
     switch result {
@@ -898,7 +898,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
         // Refresh drift status after normalisation
         switch db.selectedEntity {
         | Some(entityId) =>
-          TauriCmd.getDrift(entityId, result => VeriSimDB(DriftLoaded(result)))
+          GossamerCmd.getDrift(entityId, result => VeriSimDB(DriftLoaded(result)))
         | None => Tea_Cmd.none
         },
       )
@@ -909,7 +909,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     }
   | LoadEntityDetail(entityId) => (
       model,
-      TauriCmd.getEntityDetail(entityId, result => VeriSimDB(EntityDetailLoaded(result))),
+      GossamerCmd.getEntityDetail(entityId, result => VeriSimDB(EntityDetailLoaded(result))),
     )
   | EntityDetailLoaded(result) =>
     switch result {
@@ -920,7 +920,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       let cmd = if db.bojRouting {
         BojCmd.invokeCartridgeWithLatency("database-mcp", "telemetry", "", result => VeriSimDB(TelemetryLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
-        TauriCmd.getTelemetry(result => VeriSimDB(TelemetryLoaded(result)))
+        GossamerCmd.getTelemetry(result => VeriSimDB(TelemetryLoaded(result)))
       }
       (model, cmd)
     }
@@ -939,7 +939,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       let cmd = if db.bojRouting {
         BojCmd.invokeCartridgeWithLatency("database-mcp", "orch_status", "", result => VeriSimDB(OrchStatusLoaded(result)), (c, t, e) => RecordBojLatency(c, t, e))
       } else {
-        TauriCmd.getOrchStatus(result => VeriSimDB(OrchStatusLoaded(result)))
+        GossamerCmd.getOrchStatus(result => VeriSimDB(OrchStatusLoaded(result)))
       }
       (model, cmd)
     }
@@ -1406,7 +1406,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
   // --- Connection lifecycle ---
   | CheckHealth => (
       model,
-      TauriCmd.checkEchidnaHealth(result =>
+      GossamerCmd.checkEchidnaHealth(result =>
         switch result {
         | Ok(json) => Echidna(HealthOk(json))
         | Error(err) => Echidna(HealthError(err))
@@ -1424,7 +1424,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
   // --- Prover catalog ---
   | ListProvers => (
       model,
-      TauriCmd.listEchidnaProvers(result => Echidna(ProversLoaded(result))),
+      GossamerCmd.listEchidnaProvers(result => Echidna(ProversLoaded(result))),
     )
   | ProversLoaded(result) =>
     switch result {
@@ -1445,7 +1445,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
           (cart, tool, elapsed) => RecordBojLatency(cart, tool, elapsed),
         )
       } else {
-        TauriCmd.echidnaProve(ec.proofInput, ec.selectedProver, result =>
+        GossamerCmd.echidnaProve(ec.proofInput, ec.selectedProver, result =>
           Echidna(ProofResult(result))
         )
       }
@@ -1492,7 +1492,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
   // --- Verification ---
   | SubmitVerify => (
       {...model, echidna: {...ec, proofLoading: true, proofError: None, lastProofResult: None}},
-      TauriCmd.echidnaVerify(ec.proofInput, result => Echidna(VerifyResult(result))),
+      GossamerCmd.echidnaVerify(ec.proofInput, result => Echidna(VerifyResult(result))),
     )
   | VerifyResult(result) =>
     switch result {
@@ -1511,7 +1511,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
   // --- Theorem search ---
   | SearchTheorems(query) => (
       model,
-      TauriCmd.echidnaSearchTheorems(query, result => Echidna(SearchResult(result))),
+      GossamerCmd.echidnaSearchTheorems(query, result => Echidna(SearchResult(result))),
     )
   | SearchResult(_result) =>
     // Search results display is Phase 2 — for now just clear errors.
@@ -1525,7 +1525,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
       }
       (
         {...model, echidna: {...ec, sessionLoading: true, proofError: None}},
-        TauriCmd.createEchidnaSession(ec.proofInput, prover, result =>
+        GossamerCmd.createEchidnaSession(ec.proofInput, prover, result =>
           Echidna(SessionCreated(result))
         ),
       )
@@ -1538,7 +1538,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
       | Some(s) => (
           {...model, echidna: {...ec, session: Some(s), sessionLoading: false, proofError: None}},
           // Auto-request tactic suggestions after session creation
-          TauriCmd.suggestEchidnaTactics(s.sessionId, 5, result =>
+          GossamerCmd.suggestEchidnaTactics(s.sessionId, 5, result =>
             Echidna(TacticSuggestionsLoaded(result))
           ),
         )
@@ -1556,7 +1556,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     switch ec.session {
     | Some(s) => (
         model,
-        TauriCmd.applyEchidnaTactic(s.sessionId, name, args, result =>
+        GossamerCmd.applyEchidnaTactic(s.sessionId, name, args, result =>
           Echidna(TacticApplied(result))
         ),
       )
@@ -1580,7 +1580,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
           (
             {...model, echidna: {...ec, session: Some(updatedSession), proofError: None}, paneN: newPaneN},
             // Auto-request fresh suggestions after tactic application
-            TauriCmd.suggestEchidnaTactics(updatedSession.sessionId, 5, result =>
+            GossamerCmd.suggestEchidnaTactics(updatedSession.sessionId, 5, result =>
               Echidna(TacticSuggestionsLoaded(result))
             ),
           )
@@ -1599,7 +1599,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     switch ec.session {
     | Some(s) => (
         model,
-        TauriCmd.getEchidnaSession(s.sessionId, result =>
+        GossamerCmd.getEchidnaSession(s.sessionId, result =>
           Echidna(SessionStateLoaded(result))
         ),
       )
@@ -1629,7 +1629,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     switch ec.session {
     | Some(s) => (
         model,
-        TauriCmd.suggestEchidnaTactics(s.sessionId, 5, result =>
+        GossamerCmd.suggestEchidnaTactics(s.sessionId, 5, result =>
           Echidna(TacticSuggestionsLoaded(result))
         ),
       )
@@ -1760,20 +1760,20 @@ let updateVexometer = (model: model, msg: vexometerMsg): (model, Tea_Cmd.t<msg>)
   switch msg {
   | RecordCancellation => (
       {...model, vexometer: {...vex, recentCancellations: vex.recentCancellations + 1}},
-      TauriCmd.recordVexationEvent("cancellation", _result => NoOp),
+      GossamerCmd.recordVexationEvent("cancellation", _result => NoOp),
     )
   | RecordCorrection => (
       {...model, vexometer: {...vex, recentCorrections: vex.recentCorrections + 1}},
-      TauriCmd.recordVexationEvent("correction", _result => NoOp),
+      GossamerCmd.recordVexationEvent("correction", _result => NoOp),
     )
   | RecordVqlQuery => (
       // VQL queries contribute to cognitive load — tracked as a lighter-weight event.
       model,
-      TauriCmd.recordVexationEvent("vql_query", _result => NoOp),
+      GossamerCmd.recordVexationEvent("vql_query", _result => NoOp),
     )
   | RequestVexationIndex => (
       model,
-      TauriCmd.getVexationIndex(index => Vexometer(UpdateVexationIndex(index))),
+      GossamerCmd.getVexationIndex(index => Vexometer(UpdateVexationIndex(index))),
     )
   | UpdateVexationIndex(index) => (
       {...model, vexometer: {...vex, index}},
@@ -1795,7 +1795,7 @@ let updateVexometer = (model: model, msg: vexometerMsg): (model, Tea_Cmd.t<msg>)
         antiInflammatoryActive: false,
         inertiaDetected: false,
       }},
-      TauriCmd.recordVexationEvent("reset", _result => NoOp),
+      GossamerCmd.recordVexationEvent("reset", _result => NoOp),
     )
   }
 }
@@ -1867,7 +1867,7 @@ let updateFeedback = (model: model, msg: feedbackMsg): (model, Tea_Cmd.t<msg>) =
       }
       (
         model,
-        TauriCmd.submitFeedback(
+        GossamerCmd.submitFeedback(
           text,
           model.paneN.monologue,
           model.paneW.content,
@@ -11912,12 +11912,12 @@ let updateMenuBar = (model: model, msg: menuBarMsg): (model, Tea_Cmd.t<msg>) => 
     | "file:import-chain" => (
       // Open file dialog to import an event chain JSON file (same as PaneW import button).
       model,
-      TauriCmd.openEventChainFile(result => PaneW(EventChainFileLoaded(result))),
+      GossamerCmd.openEventChainFile(result => PaneW(EventChainFileLoaded(result))),
     )
     | "file:import-panic" => (
       // Open file dialog to import a panic-attacker report file (same as PaneW import button).
       model,
-      TauriCmd.openPanicAttackerReportFile(result =>
+      GossamerCmd.openPanicAttackerReportFile(result =>
         PaneW(PanicAttackerReportPathLoaded(result))
       ),
     )

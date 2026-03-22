@@ -110,8 +110,8 @@ let accessibilityDescription = (level: accessibilityLevel): string => {
 /// Description for a backend kind.
 let backendKindDescription = (kind: panelBackendKind): string => {
   switch kind {
-  | NoBackend => "Pure frontend panel with no Tauri commands"
-  | FilesystemBackend => "Reads local files via Tauri (like Farm, Plaza)"
+  | NoBackend => "Pure frontend panel with no backend commands"
+  | FilesystemBackend => "Reads local files via backend (like Farm, Plaza)"
   | HttpBackend => "Connects to an external HTTP API (like CloudGuard)"
   | DatabaseBackend => "Uses existing database module connections"
   }
@@ -465,13 +465,13 @@ let generateCmd = (form: minterForm): option<string> => {
   | _ =>
     Some(`// SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL ${form.panelName} Commands - Tauri command wrappers.
+/// PanLL ${form.panelName} Commands - backend command wrappers.
 ///
-/// Each function wraps a Tauri \`invoke\` call in a \`Tea_Cmd.call\`, converting
-/// the Promise-based Tauri IPC into the TEA command model.
+/// Each function wraps a RuntimeBridge.invoke call in a \`Tea_Cmd.call\`,
+/// converting the Promise-based IPC into the TEA command model.
+/// Works with both Gossamer and Tauri runtimes.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Load the primary data for this panel.
 let loadData = (
@@ -507,15 +507,17 @@ let fileSummary = (form: minterForm): array<(string, string)> => {
     (`src/components/${form.panelName}.res`, "View component"),
   ]
 
+  let manifestFile = [(`src/panels/${snake}/panels/manifest.json`, "panll-harness/v2 manifest")]
+
   let cmdFile = hasBackend
-    ? [(`src/commands/${form.panelName}Cmd.res`, "Tauri commands")]
+    ? [(`src/commands/${form.panelName}Cmd.res`, "Backend commands")]
     : []
 
   let rustFiles = hasBackend
     ? [
         (`src-tauri/src/${snake}/mod.rs`, "Rust module"),
         (`src-tauri/src/${snake}/types.rs`, "Rust types"),
-        (`src-tauri/src/${snake}/commands.rs`, "Tauri handlers"),
+        (`src-tauri/src/${snake}/commands.rs`, "Backend handlers"),
       ]
     : []
 
@@ -528,7 +530,7 @@ let fileSummary = (form: minterForm): array<(string, string)> => {
     ("src/Update.res", `Add update${form.panelName} handler`),
   ]
 
-  Array.concat(Array.concat(Array.concat(files, cmdFile), rustFiles), patches)
+  Array.concat(Array.concat(Array.concat(Array.concat(files, manifestFile), cmdFile), rustFiles), patches)
 }
 
 /// Default form state for a new minting session.

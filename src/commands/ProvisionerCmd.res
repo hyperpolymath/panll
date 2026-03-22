@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL ProvisionerCmd — Tauri command wrappers for portfolio provisioning.
+/// PanLL ProvisionerCmd — Backend command wrappers for portfolio provisioning.
 ///
 /// Handles panel installation (native or containerised), configuration
 /// persistence, and portfolio management. Container operations route through
 /// Stapeln when available, falling back to direct Podman commands.
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Install a panel. For native panels this is a no-op (they're built in).
 /// For podded panels, this pulls/builds the container image.

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL ProvenanceCmd — Tauri command wrappers for git blame provenance analysis.
+/// PanLL ProvenanceCmd — Backend command wrappers for git blame provenance analysis.
 ///
 /// The Rust backend runs `git blame --porcelain` on a file and enriches each
 /// region with Co-Authored-By trailer parsing. Results come back as JSON that
@@ -8,8 +8,7 @@
 ///
 /// Pattern: `commandName(args..., tagger) => Tea_Cmd.t<'msg>`
 
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<'b> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Analyse a file's provenance via git blame + Co-Authored-By parsing.
 ///

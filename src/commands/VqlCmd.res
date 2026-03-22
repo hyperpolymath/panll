@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-// VQL-UT Commands — Tauri FFI bridge for VQL panel I/O.
+// VQL-UT Commands — backend command bridge for VQL panel I/O.
 //
 // All side effects (HTTP calls, file I/O, clipboard) route through here.
 // The VQL panel's Engine layer is pure; this module handles the real world.
@@ -13,16 +13,10 @@
 open VqlModel
 
 // ============================================================
-// SECTION 1: Tauri Command Bindings
+// SECTION 1: Backend Command Bindings
 // ============================================================
 
-/// Generic Tauri invoke binding.
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<string> = "invoke"
-
-/// Invoke with no arguments.
-@module("@tauri-apps/api/core")
-external invokeNoArgs: string => promise<string> = "invoke"
+let invoke = RuntimeBridge.invoke
 
 // ============================================================
 // SECTION 2: VeriSimDB Commands

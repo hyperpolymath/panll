@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-/// PanLL Mass Panic command wrappers — Tauri invoke bridge for the
+/// PanLL Mass Panic command wrappers — invoke bridge for the
 /// organisation-scale batch scanning panel (assemblyline + incremental
 /// BLAKE3 + verisimdb + delta reporting + notifications).
 ///
-/// All commands invoke panic-attack assemblyline via the Tauri backend.
+/// All commands invoke panic-attack assemblyline via the backend.
 /// Uses `Tea_Cmd.call` for async operations.
 
-@val external invoke: (string, 'a) => promise<string> = "__TAURI__.core.invoke"
+let invoke = RuntimeBridge.invoke
 
 /// Discover git repos in a directory.
 /// Returns JSON array of { path, name, has_git } objects.

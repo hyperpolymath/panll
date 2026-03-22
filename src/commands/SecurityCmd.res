@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-/// PanLL Security Commands — Tauri IPC wrappers for redaction, vault,
+/// PanLL Security Commands — IPC wrappers for redaction, vault,
 /// 2FA, and Trustfile operations (DD-026, DD-027).
 ///
 /// Each function returns a Tea_Cmd that dispatches a result message
@@ -8,9 +8,8 @@
 
 open Msg
 
-/// External binding to Tauri's invoke function.
-@module("@tauri-apps/api/core")
-external invoke: (string, 'a) => promise<string> = "invoke"
+/// Backend invoke binding via RuntimeBridge.
+let invoke = RuntimeBridge.invoke
 
 /// Redact secrets from text using backend regex patterns.
 let redactText = (text: string, panelId: string, patternsJson: string): Tea_Cmd.t<msg> => {
