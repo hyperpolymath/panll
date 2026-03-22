@@ -367,29 +367,29 @@ let computeRegionHash = (
   // Concatenate all fields with a pipe separator to avoid ambiguity
   let input = content ++ "|" ++ author ++ "|" ++ timestamp ++ "|" ++ parentHash
   // Prime-mixing accumulator: fold over character codes with two accumulators
-  // to produce a 64-bit-equivalent hash spread across 16 hex digits.
-  let len = String.length(input)
-  let hashA = ref(0x811c9dc5) // FNV offset basis (32-bit)
-  let hashB = ref(0x01000193) // FNV prime (32-bit)
-  for i in 0 to len - 1 {
-    let charCode = String.charCodeAt(input, i)->Float.toInt
-    hashA := Int.bitwiseXor(hashA.contents * 16777619, charCode)
-    hashB := Int.bitwiseXor(hashB.contents * 16777259, charCode + i)
-  }
-  // Convert both 32-bit halves to 8-char hex each, yielding 16 hex digits.
-  let toHex8 = (n: int): string => {
-    let positive = if n < 0 { -n } else { n }
-    let hexChars = "0123456789abcdef"
-    let result = ref("")
-    let remaining = ref(positive)
-    for _ in 0 to 7 {
-      let digit = Int.bitwiseAnd(remaining.contents, 15)
-      result := String.charAt(hexChars, digit) ++ result.contents
-      remaining := Int.shiftRight(remaining.contents, 4)
-    }
-    result.contents
-  }
-  toHex8(hashA.contents) ++ toHex8(hashB.contents)
+  // Use raw JS for bitwise hash — ReScript lacks bitwise operators.
+  let hash: string = %raw(`
+    (function(input) {
+      var len = input.length;
+      var hashA = 0x811c9dc5;
+      var hashB = 0x01000193;
+      for (var i = 0; i < len; i++) {
+        var c = input.charCodeAt(i);
+        hashA = (hashA * 16777619 ^ c) >>> 0;
+        hashB = (hashB * 16777259 ^ (c + i)) >>> 0;
+      }
+      var hex = "";
+      var vals = [hashA, hashB];
+      for (var j = 0; j < 2; j++) {
+        var n = vals[j];
+        for (var k = 7; k >= 0; k--) {
+          hex += "0123456789abcdef"[(n >> (k * 4)) & 15];
+        }
+      }
+      return hex;
+    })(input)
+  `)
+  hash
 }
 
 /// Create a new provenance chain entry with a computed hash.

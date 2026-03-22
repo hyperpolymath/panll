@@ -25,7 +25,7 @@ let levelMetas: array<levelMeta> = [
     name: "Unsafe",
     shortName: "L0",
     description: "Raw string queries with no type checking. Use only for exploration.",
-    glyph: {j|\u26A0|j},
+    glyph: "\u26A0",
     colour: "text-red-400",
     bgColour: "bg-red-900/30",
     proverRequired: false,
@@ -35,7 +35,7 @@ let levelMetas: array<levelMeta> = [
     name: "Parsed",
     shortName: "L1",
     description: "Query is syntactically valid VQL-UT. Keywords, clauses, and structure verified.",
-    glyph: {j|\u2713|j},
+    glyph: "\u2713",
     colour: "text-orange-400",
     bgColour: "bg-orange-900/30",
     proverRequired: false,
@@ -45,7 +45,7 @@ let levelMetas: array<levelMeta> = [
     name: "Schema-Bound",
     shortName: "L2",
     description: "All referenced tables and columns exist in VeriSimDB schema.",
-    glyph: {j|\u{1F517}|j},
+    glyph: "\u{1F517}",
     colour: "text-yellow-400",
     bgColour: "bg-yellow-900/30",
     proverRequired: false,
@@ -55,7 +55,7 @@ let levelMetas: array<levelMeta> = [
     name: "Type-Compatible",
     shortName: "L3",
     description: "Expression types are compatible. No comparing integers to strings.",
-    glyph: {j|\u2261|j},
+    glyph: "\u2261",
     colour: "text-lime-400",
     bgColour: "bg-lime-900/30",
     proverRequired: false,
@@ -65,7 +65,7 @@ let levelMetas: array<levelMeta> = [
     name: "Null-Safe",
     shortName: "L4",
     description: "Nullable columns are handled explicitly. No surprise NULL propagation.",
-    glyph: {j|\u2205|j},
+    glyph: "\u2205",
     colour: "text-emerald-400",
     bgColour: "bg-emerald-900/30",
     proverRequired: false,
@@ -75,7 +75,7 @@ let levelMetas: array<levelMeta> = [
     name: "Injection-Proof",
     shortName: "L5",
     description: "No string interpolation reaches query positions. Parameterised only.",
-    glyph: {j|\u{1F6E1}|j},
+    glyph: "\u{1F6E1}",
     colour: "text-teal-400",
     bgColour: "bg-teal-900/30",
     proverRequired: false,
@@ -85,7 +85,7 @@ let levelMetas: array<levelMeta> = [
     name: "Result-Typed",
     shortName: "L6",
     description: "Return type fully determined at compile time. Every column has a known type.",
-    glyph: {j|\u{1F4CB}|j},
+    glyph: "\u{1F4CB}",
     colour: "text-cyan-400",
     bgColour: "bg-cyan-900/30",
     proverRequired: false,
@@ -95,7 +95,7 @@ let levelMetas: array<levelMeta> = [
     name: "Cardinality-Safe",
     shortName: "L7",
     description: "Proven bounds on result size. No unbounded full-table scans.",
-    glyph: {j|\u{1F4CA}|j},
+    glyph: "\u{1F4CA}",
     colour: "text-blue-400",
     bgColour: "bg-blue-900/30",
     proverRequired: true,
@@ -105,7 +105,7 @@ let levelMetas: array<levelMeta> = [
     name: "Effect-Tracked",
     shortName: "L8",
     description: "Side effects (writes, locks, external calls) declared and tracked.",
-    glyph: {j|\u26A1|j},
+    glyph: "\u26A1",
     colour: "text-indigo-400",
     bgColour: "bg-indigo-900/30",
     proverRequired: true,
@@ -115,7 +115,7 @@ let levelMetas: array<levelMeta> = [
     name: "Temporal-Safe",
     shortName: "L9",
     description: "Temporal consistency proven. No stale joins or future reads.",
-    glyph: {j|\u231B|j},
+    glyph: "\u231B",
     colour: "text-violet-400",
     bgColour: "bg-violet-900/30",
     proverRequired: true,
@@ -125,7 +125,7 @@ let levelMetas: array<levelMeta> = [
     name: "Linear-Safe",
     shortName: "L10",
     description: "Linear resource usage proven. Every proof consumed exactly once.",
-    glyph: {j|\u{1F48E}|j},
+    glyph: "\u{1F48E}",
     colour: "text-fuchsia-400",
     bgColour: "bg-fuchsia-900/30",
     proverRequired: true,
@@ -358,9 +358,11 @@ let ruleStringIntComparison = (content: string): array<lintDiagnostic> => {
         patterns->Array.forEach(pat => {
           let lowerLine = String.toLowerCase(trimLine)
           if String.includes(lowerLine, pat) {
-            let afterPat = switch String.indexOf(lowerLine, pat) {
-            | Some(idx) => String.sliceToEnd(trimLine, ~start=idx + String.length(pat))
-            | None => ""
+            let idx = String.indexOf(lowerLine, pat)
+            let afterPat = if idx >= 0 {
+              String.sliceToEnd(trimLine, ~start=idx + String.length(pat))
+            } else {
+              ""
             }
             let firstChar = String.charAt(String.trim(afterPat), 0)
             if firstChar >= "0" && firstChar <= "9" {
@@ -537,9 +539,11 @@ let ruleUnknownModality = (content: string): array<lintDiagnostic> => {
       let upperLine = String.toUpperCase(line)
       if String.includes(upperLine, "MODALITY") {
         // Check if any word after MODALITY is not a known modality
-        let afterModality = switch String.indexOf(upperLine, "MODALITY") {
-        | Some(idx) => String.sliceToEnd(line, ~start=idx + 8)
-        | None => ""
+        let modIdx = String.indexOf(upperLine, "MODALITY")
+        let afterModality = if modIdx >= 0 {
+          String.sliceToEnd(line, ~start=modIdx + 8)
+        } else {
+          ""
         }
         let words = String.split(String.trim(afterModality), " ")
         words->Array.forEach(word => {
@@ -1002,15 +1006,15 @@ let operationLabel = (op: queryOperation): string =>
 /// Glyph for a query operation.
 let operationGlyph = (op: queryOperation): string =>
   switch op {
-  | OpFindProof => {j|\u{1F50D}|j}
-  | OpFindSimilar => {j|\u{1F9F2}|j}
-  | OpCrossProverSearch => {j|\u{1F310}|j}
-  | OpProvenanceTrace => {j|\u{1F4DC}|j}
-  | OpTemporalHistory => {j|\u231B|j}
-  | OpDependencyGraph => {j|\u{1F578}|j}
-  | OpAxiomUsage => {j|\u{1F3DB}|j}
-  | OpTacticStats => {j|\u{1F4CA}|j}
-  | OpCustom => {j|\u2328|j}
+  | OpFindProof => "\u{1F50D}"
+  | OpFindSimilar => "\u{1F9F2}"
+  | OpCrossProverSearch => "\u{1F310}"
+  | OpProvenanceTrace => "\u{1F4DC}"
+  | OpTemporalHistory => "\u231B"
+  | OpDependencyGraph => "\u{1F578}"
+  | OpAxiomUsage => "\u{1F3DB}"
+  | OpTacticStats => "\u{1F4CA}"
+  | OpCustom => "\u2328"
   }
 
 /// Execution target label.
@@ -1060,10 +1064,10 @@ let categoryColour = (cat: lintCategory): string =>
 /// Severity icon.
 let severityIcon = (sev: lintSeverity): string =>
   switch sev {
-  | LintError => {j|\u2716|j}
-  | LintWarning => {j|\u26A0|j}
-  | LintInfo => {j|\u2139|j}
-  | LintHint => {j|\u{1F4A1}|j}
+  | LintError => "\u2716"
+  | LintWarning => "\u26A0"
+  | LintInfo => "\u2139"
+  | LintHint => "\u{1F4A1}"
   }
 
 /// Severity colour.
@@ -1100,19 +1104,19 @@ let viewLayerLabel = (vl: viewLayer): string =>
 /// Transform query text for the Glyphed view (mathematical symbols).
 let toGlyphed = (content: string): string => {
   content
-  ->String.replaceAll("FORALL", {j|\u2200|j})
-  ->String.replaceAll("EXISTS", {j|\u2203|j})
-  ->String.replaceAll("AND", {j|\u2227|j})
-  ->String.replaceAll("OR", {j|\u2228|j})
-  ->String.replaceAll("NOT", {j|\u00AC|j})
-  ->String.replaceAll("IN", {j|\u2208|j})
-  ->String.replaceAll("=>", {j|\u21D2|j})
-  ->String.replaceAll("<=", {j|\u2264|j})
-  ->String.replaceAll(">=", {j|\u2265|j})
-  ->String.replaceAll("!=", {j|\u2260|j})
-  ->String.replaceAll("PROVE", {j|\u22A2|j})
-  ->String.replaceAll("LINEAR", {j|\u2AAF|j})
-  ->String.replaceAll("TEMPORAL", {j|\u29D6|j})
+  ->String.replaceAll("FORALL", "\u2200")
+  ->String.replaceAll("EXISTS", "\u2203")
+  ->String.replaceAll("AND", "\u2227")
+  ->String.replaceAll("OR", "\u2228")
+  ->String.replaceAll("NOT", "\u00AC")
+  ->String.replaceAll("IN", "\u2208")
+  ->String.replaceAll("=>", "\u21D2")
+  ->String.replaceAll("<=", "\u2264")
+  ->String.replaceAll(">=", "\u2265")
+  ->String.replaceAll("!=", "\u2260")
+  ->String.replaceAll("PROVE", "\u22A2")
+  ->String.replaceAll("LINEAR", "\u2AAF")
+  ->String.replaceAll("TEMPORAL", "\u29D6")
 }
 
 // ============================================================
@@ -1242,7 +1246,7 @@ let formatCell = (cell: resultCell): string =>
 /// Format execution time for display.
 let formatDuration = (ms: float): string => {
   if ms < 1.0 {
-    Float.toFixedWithPrecision(ms *. 1000.0, ~digits=0) ++ {j|\u00B5s|j}
+    Float.toFixedWithPrecision(ms *. 1000.0, ~digits=0) ++ "\u00B5s"
   } else if ms < 1000.0 {
     Float.toFixedWithPrecision(ms, ~digits=1) ++ "ms"
   } else {

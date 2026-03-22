@@ -408,6 +408,12 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelK9Manager) => K9Manager.view(model.k9Manager)
   | Some(PanelContractileManager) =>
     ContractileManager.view(model.contractiles, model.vexometer)
+  // VQL-UT panel (broken JSX — disabled pending Vql.res fix)
+  | Some(PanelVql) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("VQL-UT panel loading...")})
+  // LLM Coding — multi-session Claude/LLM coordinator
+  | Some(PanelLlmCoding) => LlmCoding.view(model.llmCoding)
+  // Agent Coordination View
+  | Some(PanelAgentCoordination) => AgentCoordination.view(model.agentCoordination)
   }
 }
 

@@ -193,6 +193,11 @@ mod script_gist;
 /// Wiring Inspector — Panel Contract Compiler (PCC) bridge for constraint verification.
 mod wiring_inspector;
 
+/// LLM Coding — multi-session Claude/LLM coordinator.
+/// Spawns, monitors, freezes, and coordinates parallel coding sessions.
+/// Headed supervisor sitting outside LLM processes for resource safety.
+mod llm_coding;
+
 const DEFAULT_PANIC_ATTACK_BIN: &str = "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
 const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str = "/var/mnt/eclipse/repos/panic-attacker/reports";
 
@@ -2339,6 +2344,15 @@ fn main() {
             // Wiring Inspector — PCC constraint verification
             wiring_inspector::commands::wiring_inspector_verify,
             wiring_inspector::commands::wiring_inspector_verify_panel,
+            // LLM Coding — multi-session Claude/LLM coordinator
+            llm_coding::commands::llm_coding_list_sessions,
+            llm_coding::commands::llm_coding_spawn,
+            llm_coding::commands::llm_coding_freeze,
+            llm_coding::commands::llm_coding_thaw,
+            llm_coding::commands::llm_coding_kill,
+            llm_coding::commands::llm_coding_system_resources,
+            llm_coding::commands::llm_coding_list_locks,
+            llm_coding::commands::llm_coding_list_messages,
         ])
         .setup(|_app| {
             Ok(())

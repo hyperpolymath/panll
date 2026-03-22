@@ -445,6 +445,46 @@ deployment:
     server. Layout presets remain at Yard level (pure config, no I/O).
 
 ---
+### [LLM_CODING_SECURITY]
+description: |
+  The LLM Coding panel spawns and manages external Claude/LLM processes.
+  This section defines the security boundaries for process management.
+
+process_management:
+  spawn:
+    method: "konsole -e claude"
+    working_dir: "user-specified, validated against allowed repos"
+    task_file: "~/.claude/coordination/tasks/<session-id>.md"
+    permissions: "0600 (owner only)"
+  signals:
+    validation: "PID checked against /proc/<pid>/comm before any signal"
+    allowed_targets: ["konsole", "claude", "bash", "zsh", "node", "deno"]
+    operations: ["SIGSTOP (freeze)", "SIGCONT (thaw)", "SIGTERM (kill)"]
+  coordination:
+    directory: "~/.claude/coordination/"
+    subdirs: ["sessions/", "locks/", "tasks/", "messages/", "completed/"]
+    file_permissions: "0600 (owner read/write only)"
+    lock_type: "advisory (filesystem-based)"
+
+resource_limits:
+  per_session:
+    max_memory_mb: 4096
+    max_cpu_percent: 80
+    max_subagents: 3
+  enforcement: "resource-guardian.service monitors /proc/<pid>/status"
+  escalation: "warn → freeze (SIGSTOP) → thaw (auto on recovery) → kill (last resort)"
+
+permission_gating:
+  description: "Destructive actions require explicit supervisor approval via panel UI"
+  gated_actions:
+    - "git push (any remote)"
+    - "git force push"
+    - "file/directory deletion"
+    - "CI/CD workflow modification"
+    - "GitHub PR/issue creation"
+  policy: "deny by default, explicit approve/deny per action"
+
+---
 ### [SIGNATURE_BLOCK]
 primary:
   algorithm: "Ed448+Dilithium5"

@@ -927,6 +927,26 @@ let allPanels: array<panelMeta> = [
     hasBackend: true, // Vexometer measurement queries
     cladeId: Some("vexometer-friction"),
   },
+  {
+    id: PanelLlmCoding,
+    name: "LLM Coding",
+    shortName: "LLM",
+    description: "Multi-session Claude/LLM coordinator — spawn, monitor, freeze, and coordinate parallel coding sessions with resource limits and workspace locking",
+    icon: "terminal-square",
+    connectionStatus: ServiceDisconnected, // Connects to llm-coding daemon on port 7900
+    hasBackend: true, // Manages Claude/LLM processes
+    cladeId: Some("llm-coding"),
+  },
+  {
+    id: PanelAgentCoordination,
+    name: "Agent Coordination",
+    shortName: "Coord",
+    description: "Multi-agent topology and coordination strategy visualiser",
+    icon: "network",
+    connectionStatus: ServiceDisconnected,
+    hasBackend: true,
+    cladeId: Some("agent-coordination"),
+  },
 ]
 
 /// Look up panel metadata by ID.

@@ -670,6 +670,10 @@ type model = {
   verisimdbFeeds: verisimdbFeedsState,
   feedbackRouting: feedbackRoutingState,
   vexometerFriction: vexometerFrictionState,
+  // LLM Coding — multi-session Claude/LLM coordinator
+  llmCoding: LlmCodingModel.llmCodingState,
+  // Agent Coordination View
+  agentCoordination: AgentCoordinationModel.agentCoordinationState,
 }
 
 /// Initial model state - "Dark Start" mode
@@ -1401,4 +1405,6 @@ let init = (): model => {
   verisimdbFeeds: VerisimdbFeedsEngine.defaultState,
   feedbackRouting: FeedbackRoutingEngine.defaultState,
   vexometerFriction: VexometerFrictionEngine.defaultState,
+  llmCoding: LlmCodingEngine.init,
+  agentCoordination: AgentCoordinationEngine.init,
 }

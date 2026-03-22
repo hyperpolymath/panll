@@ -154,6 +154,12 @@ type panelId =
   | PanelFeedbackRouting
   /// Vexometer friction viewer — irritation surface measurements.
   | PanelVexometerFriction
+  /// LLM Coding — multi-session Claude/LLM coordinator. Headed supervisor for
+  /// spawning, monitoring, freezing, and coordinating parallel coding sessions.
+  /// First panel targeting Gossamer migration.
+  | PanelLlmCoding
+  /// Agent Coordination View — multi-agent topology and strategy visualiser.
+  | PanelAgentCoordination
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

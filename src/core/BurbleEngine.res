@@ -1,256 +1,164 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 //
-// BurbleEngine.res — Burble voice integration engine for PanLL.
+// BurbleEngine — Pure computation for PanLL's Burble voice integration.
 //
-// Pure computation module that bridges Burble's embeddable client
-// library into PanLL's TEA architecture. Handles:
+// Manages workspace huddle voice chat using the Burble Workspace profile
+// (always-on VAD, noise suppression, echo cancellation, no spatial audio).
+// All functions are pure — side effects (WebSocket, Tauri invoke) happen
+// in BurbleCmd.
 //
-//   - Voice session lifecycle (start/stop huddles)
-//   - PanelBus event emission on voice state changes
-//   - VoiceTag integration (speech transcripts → code annotations)
-//   - Panel context tracking (which panel initiated voice)
-//   - Graceful degradation when Burble server is unavailable
+// TEA integration:
+//   Model:   BurbleModel.burbleState (the state)
+//   Update:  BurbleEngine.update (pure state transitions)
+//   Cmd:     BurbleCmd (side-effectful commands)
+//   View:    consumes burbleState for rendering
 //
-// Integration path:
-//   1. TauriEvents.res subscribes to "burble:*" Tauri events
-//   2. Msg.res includes BurbleMsg variants
-//   3. Update.res routes BurbleMsg to this engine
-//   4. This engine emits PanelBus events for other panels to consume
-//
-// This engine does NOT own the Burble client directly — it provides
-// pure state + event computation. Side effects (WebSocket, audio)
-// happen in the Tauri command layer.
+// The Burble server runs on ws://localhost:6473/voice.
 
-/// Voice session state for PanLL.
-/// Panel context for voice sessions.
-type panelContext =
-  | GlobalHuddle          // Workspace-wide voice
-  | PanelSpecific(string) // Voice tied to a panel
-  | PairProgramming       // Two-person session
-  | CodeReview            // Review session (may record)
+open BurbleModel
 
-type voiceSessionState =
-  | Inactive          // No voice session running
-  | Connecting        // Burble connection in progress
-  | Active({          // Voice session active
-      roomId: string,
-      context: panelContext,
-      participantCount: int,
-      isMuted: bool,
-      isDeafened: bool,
-    })
-  | Error(string)     // Voice failed
+// ============================================================================
+// Default state
+// ============================================================================
 
-/// A speech transcript for VoiceTag integration.
-type transcript = {
-  text: string,
-  speaker: string,
-  timestamp: float,
-  panelId: option<string>,
+/// Initial Burble state — disconnected, no huddle, unmuted.
+let defaultState: burbleState = {
+  connection: Disconnected,
+  participants: Dict.make(),
+  isMuted: false,
+  isDeafened: false,
+  currentHuddle: None,
+  error: None,
 }
 
-/// Burble engine state (part of PanLL's Model).
-type state = {
-  voiceSession: voiceSessionState,
-  serverUrl: string,
-  serverAvailable: bool,
-  speechToTextEnabled: bool,
-  recentTranscripts: array<transcript>,
-}
+// ============================================================================
+// Pure update — TEA state transitions
+// ============================================================================
 
-/// Default initial state.
-let init = (): state => {
-  voiceSession: Inactive,
-  serverUrl: "ws://localhost:4000/voice",
-  serverAvailable: false,
-  speechToTextEnabled: false,
-  recentTranscripts: [],
-}
-
-// ---------------------------------------------------------------------------
-// Messages (to be included in PanLL's Msg.res)
-// ---------------------------------------------------------------------------
-
-/// Burble-related messages for PanLL's TEA update loop.
-type msg =
-  | StartHuddle(panelContext)
-  | StopHuddle
-  | VoiceConnected(string)     // roomId
-  | VoiceDisconnected
-  | VoiceError(string)
-  | ParticipantJoined(string, string) // userId, displayName
-  | ParticipantLeft(string)           // userId
-  | SpeechStarted(string, string)     // userId, displayName
-  | SpeechStopped(string)             // userId
-  | TranscriptReceived(string, string, string) // userId, displayName, text
-  | ToggleMute
-  | ToggleDeafen
-  | ToggleSpeechToText
-  | ServerAvailabilityChanged(bool)
-
-// ---------------------------------------------------------------------------
-// Update (pure computation — no side effects)
-// ---------------------------------------------------------------------------
-
-/// Process a Burble message, returning updated state + PanelBus events.
-let update = (state: state, msg: msg): (state, array<PanelBus.panelEvent>) => {
+/// Process a Burble message and return the updated state.
+/// This is the pure core of the TEA update loop for voice huddles.
+let update = (state: burbleState, msg: burbleMsg): burbleState => {
   switch msg {
-  | StartHuddle(_context) =>
-    let newState = {...state, voiceSession: Connecting}
-    (newState, [])
-
-  | StopHuddle =>
-    let events = switch state.voiceSession {
-    | Active({context}) =>
-      let ctxStr = switch context {
-      | GlobalHuddle => "global"
-      | PanelSpecific(id) => "panel:" ++ id
-      | PairProgramming => "pair"
-      | CodeReview => "review"
-      }
-      [PanelBus.BurbleVoiceEnded(ctxStr)]
-    | _ => []
-    }
-    ({...state, voiceSession: Inactive}, events)
-
-  | VoiceConnected(roomId) =>
-    let context = switch state.voiceSession {
-    | Connecting => GlobalHuddle  // Default context if not set
-    | Active({context}) => context
-    | _ => GlobalHuddle
-    }
-    let ctxStr = switch context {
-    | GlobalHuddle => "global"
-    | PanelSpecific(id) => "panel:" ++ id
-    | PairProgramming => "pair"
-    | CodeReview => "review"
-    }
-    let newState = {
+  | ConnectionChanged(newConnection) => {
       ...state,
-      voiceSession: Active({
-        roomId,
-        context,
-        participantCount: 1,
-        isMuted: false,
-        isDeafened: false,
-      }),
-    }
-    (newState, [PanelBus.BurbleVoiceStarted(ctxStr, roomId)])
-
-  | VoiceDisconnected =>
-    ({...state, voiceSession: Inactive}, [])
-
-  | VoiceError(err) =>
-    ({...state, voiceSession: Error(err)}, [])
-
-  | ParticipantJoined(_, _) =>
-    let newState = switch state.voiceSession {
-    | Active(s) =>
-      {...state, voiceSession: Active({...s, participantCount: s.participantCount + 1})}
-    | _ => state
-    }
-    (newState, [])
-
-  | ParticipantLeft(_) =>
-    let newState = switch state.voiceSession {
-    | Active(s) =>
-      {...state, voiceSession: Active({...s, participantCount: max(0, s.participantCount - 1)})}
-    | _ => state
-    }
-    (newState, [])
-
-  | SpeechStarted(userId, displayName) =>
-    (state, [PanelBus.BurbleSpeechStarted(userId, displayName)])
-
-  | SpeechStopped(userId) =>
-    (state, [PanelBus.BurbleSpeechEnded(userId)])
-
-  | TranscriptReceived(_userId, displayName, text) =>
-    let transcript: transcript = {
-      text,
-      speaker: displayName,
-      timestamp: Date.now(),
-      panelId: switch state.voiceSession {
-      | Active({context: PanelSpecific(id)}) => Some(id)
-      | _ => None
+      connection: newConnection,
+      // Clear error on successful connection.
+      error: switch newConnection {
+      | Connected => None
+      | Failed(reason) => Some(reason)
+      | _ => state.error
       },
     }
-    let transcripts = Array.concat([transcript], state.recentTranscripts)
-    let trimmed = if Array.length(transcripts) > 50 {
-      Array.slice(transcripts, ~start=0, ~end=50)
-    } else {
-      transcripts
-    }
-    let events = if state.speechToTextEnabled {
-      [PanelBus.BurbleVoiceTagCreated(text, "Note")]
-    } else {
-      []
-    }
-    ({...state, recentTranscripts: trimmed}, events)
 
-  | ToggleMute =>
-    let newState = switch state.voiceSession {
-    | Active(s) => {...state, voiceSession: Active({...s, isMuted: !s.isMuted})}
-    | _ => state
+  | JoinedHuddle(huddleId) => {
+      ...state,
+      currentHuddle: Some(huddleId),
+      participants: Dict.make(),
+      error: None,
     }
-    (newState, [])
 
-  | ToggleDeafen =>
-    let newState = switch state.voiceSession {
-    | Active(s) => {...state, voiceSession: Active({...s, isDeafened: !s.isDeafened})}
-    | _ => state
+  | LeftHuddle => {
+      ...state,
+      currentHuddle: None,
+      participants: Dict.make(),
     }
-    (newState, [])
 
-  | ToggleSpeechToText =>
-    ({...state, speechToTextEnabled: !state.speechToTextEnabled}, [])
+  | ParticipantUpdated(participant) =>
+    let newParticipants = Dict.fromArray(Dict.toArray(state.participants))
+    Dict.set(newParticipants, participant.id, participant)
+    {
+      ...state,
+      participants: newParticipants,
+    }
 
-  | ServerAvailabilityChanged(available) =>
-    ({...state, serverAvailable: available}, [])
+  | ParticipantLeft(participantId) =>
+    let newParticipants = Dict.fromArray(
+      Dict.toArray(state.participants)->Array.filter(((key, _)) => key !== participantId),
+    )
+    {
+      ...state,
+      participants: newParticipants,
+    }
+
+  | MuteToggled(isMuted) => {
+      ...state,
+      isMuted,
+    }
+
+  | DeafenToggled(isDeafened) => {
+      ...state,
+      isDeafened,
+      // Deafening also mutes.
+      isMuted: isDeafened ? true : state.isMuted,
+    }
+
+  | ErrorOccurred(errorMsg) => {
+      ...state,
+      error: Some(errorMsg),
+    }
+
+  | ErrorCleared => {
+      ...state,
+      error: None,
+    }
   }
 }
 
-// ---------------------------------------------------------------------------
-// Query helpers
-// ---------------------------------------------------------------------------
+// ============================================================================
+// Query helpers — pure functions for reading state
+// ============================================================================
 
-/// Whether a voice session is currently active.
-let isActive = (state: state): bool => {
-  switch state.voiceSession {
-  | Active(_) => true
-  | _ => false
-  }
-}
+/// Whether the user is connected to the Burble server.
+let isConnected = (state: burbleState): bool =>
+  state.connection == Connected
 
-/// Current participant count (0 if not in session).
-let participantCount = (state: state): int => {
-  switch state.voiceSession {
-  | Active({participantCount}) => participantCount
-  | _ => 0
-  }
-}
+/// Whether the user is currently in a huddle.
+let isInHuddle = (state: burbleState): bool =>
+  Option.isSome(state.currentHuddle)
 
-/// Whether the local user is muted.
-let isMuted = (state: state): bool => {
-  switch state.voiceSession {
-  | Active({isMuted}) => isMuted
-  | _ => false
-  }
-}
+/// Get the list of participants in the current huddle.
+let getParticipants = (state: burbleState): array<participant> =>
+  Dict.valuesToArray(state.participants)
 
-/// Status string for display in the workspace UI.
-let statusLabel = (state: state): string => {
-  switch state.voiceSession {
-  | Inactive => "Voice: Off"
-  | Connecting => "Voice: Connecting..."
-  | Active({participantCount, context}) =>
-    let ctxLabel = switch context {
-    | GlobalHuddle => "Huddle"
-    | PanelSpecific(id) => "Panel " ++ id
-    | PairProgramming => "Pair"
-    | CodeReview => "Review"
+/// Get the count of participants in the current huddle.
+let participantCount = (state: burbleState): int =>
+  Array.length(Dict.keysToArray(state.participants))
+
+/// Get participants who are currently speaking (VAD-detected).
+let speakingParticipants = (state: burbleState): array<participant> =>
+  Dict.valuesToArray(state.participants)->Array.filter(p => p.isSpeaking)
+
+/// Get a specific participant by ID.
+let getParticipant = (state: burbleState, participantId: string): option<participant> =>
+  Dict.get(state.participants, participantId)
+
+/// Human-readable label for the connection state (for status bar).
+let connectionLabel = (state: burbleState): string =>
+  switch state.connection {
+  | Disconnected => "Disconnected"
+  | Connecting => "Connecting..."
+  | Connected =>
+    switch state.currentHuddle {
+    | Some(huddle) =>
+      let count = participantCount(state)
+      `In huddle: ${huddle} (${Int.toString(count)} participants)`
+    | None => "Connected (no huddle)"
     }
-    `Voice: ${ctxLabel} (${Int.toString(participantCount)})`
-  | Error(err) => "Voice: Error — " ++ err
+  | Reconnecting => "Reconnecting..."
+  | Failed(reason) => `Failed: ${reason}`
   }
-}
+
+/// Voice state label for the local user (muted/deafened/active).
+let localVoiceLabel = (state: burbleState): string =>
+  if state.isDeafened {
+    "Deafened"
+  } else if state.isMuted {
+    "Muted"
+  } else {
+    "Active"
+  }
+
+/// Whether the Burble state has an active error to display.
+let hasError = (state: burbleState): bool =>
+  Option.isSome(state.error)
