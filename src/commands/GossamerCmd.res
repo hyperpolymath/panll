@@ -49,7 +49,7 @@ let echidnaPost: (string, string) => promise<string> = %raw(`
 module Dialog = {
   /// Open a file picker dialog through the RuntimeBridge.
   let openDialog = (opts: JSON.t): promise<Nullable.t<JSON.t>> => {
-    RuntimeBridge.Dialog.open(opts)
+    RuntimeBridge.Dialog.openDialog(opts)
   }
 }
 

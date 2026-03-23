@@ -2848,6 +2848,7 @@ type msg =
   | VerisimdbFeeds(verisimdbFeedsMsg) // VeriSimDB data feed viewer
   | FeedbackRouting(feedbackRoutingMsg) // Feedback-o-Tron routing viewer
   | VexometerFriction(vexometerFrictionMsg) // Vexometer friction viewer
+  | Burble(BurbleModel.burbleMsg) // Burble voice huddle (groove-aware)
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage

@@ -674,6 +674,9 @@ type model = {
   llmCoding: LlmCodingModel.llmCodingState,
   // Agent Coordination View
   agentCoordination: AgentCoordinationModel.agentCoordinationState,
+
+  // Burble — voice huddle integration (groove-aware, workspace profile)
+  burble: BurbleModel.burbleState,
 }
 
 /// Initial model state - "Dark Start" mode
@@ -1407,4 +1410,5 @@ let init = (): model => {
   vexometerFriction: VexometerFrictionEngine.defaultState,
   llmCoding: LlmCodingEngine.init,
   agentCoordination: AgentCoordinationEngine.init,
+  burble: BurbleEngine.defaultState,
 }

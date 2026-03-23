@@ -1202,7 +1202,7 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
           Attrs.class_(
             "w-full h-24 bg-gray-950 border border-gray-800 rounded p-2 font-mono text-[11px] text-gray-400 resize-none focus:border-gray-600 focus:outline-none",
           ),
-          Attrs.placeholder("Paste panic-attack PanLL export JSON here, or use the panic-attacker buttons..."),
+          Attrs.placeholder("Paste event-chain JSON here then click \"Import JSON\".\nFormat: {\"events\":[{\"id\":\"e1\",\"axis\":\"cpu\",\"durationMs\":100,\"intensity\":\"high\",\"status\":\"pass\"}]}"),
           Attrs.value(state.eventChainInput),
           Events.onInput(value => PaneW(UpdateEventChainInput(value))),
           Attrs.ariaLabel("Event chain JSON input"),

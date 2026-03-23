@@ -1,0 +1,170 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+
+= PanLL Design Philosophy: Effortless Immersion
+:author: Jonathan D.A. Jewell
+:date: 2026-03-23
+:status: STANDING
+:tags: philosophy, UX, flow, immersion, design-principle
+
+== The Motorcycle Principle
+
+Development should feel like riding a motorcycle through the countryside as an
+experienced driver. You feel the wind on your face, the sun, the sense of
+embodied motion. You move from this to that effortlessly and performantly. You
+are not held up fiddling with things. You are enjoying the view and the sense of
+love of the craft and how beautiful it is.
+
+Only when you misplace the gear or an emergency arises are you pulled out of it
+— and that _is_ necessary, that is the system correctly alerting you — but for
+most of your time you are in the experience.
+
+This is the experience of human and machine for the coder. Not the semicolon
+gauntlet.
+
+== Theoretical Grounding
+
+=== Csikszentmihalyi's Flow (1990)
+
+Mihaly Csikszentmihalyi's concept of _flow_ describes a state of complete
+absorption in an activity where:
+
+- **Challenge matches skill** — not too easy (boredom), not too hard (anxiety)
+- **Clear goals** — you know what you are trying to do at each moment
+- **Immediate feedback** — the system tells you how you are doing, continuously
+- **Deep concentration** — distractions are excluded from consciousness
+- **Loss of self-consciousness** — the ego dissolves into the activity
+- **Transformation of time** — hours feel like minutes
+- **Autotelic experience** — the activity is intrinsically rewarding
+
+PanLL should create and protect the _conditions_ for flow, not try to simulate
+or gamify it.
+
+=== Social Presence (Short, Williams & Christie, 1976)
+
+The feeling of being _with_ another person even through a mediated channel. When
+you are on the phone and it feels like you are together. This applies to PanLL
+in two ways:
+
+1. **Presence with the codebase** — the workspace should feel like you are
+   _inside_ the project, not looking at it through a window
+2. **Presence with collaborators** — when working with AI agents, other
+   developers, or the ECHIDNA prover, the interaction should feel like they are
+   _here_, not that you are sending messages to a remote service
+
+=== Bio-Psycho-Social Model
+
+Immersion in development is not purely cognitive. It is:
+
+- **Biological** — ergonomic, not fatiguing, respecting circadian and attention
+  rhythms, sensory comfort (colours, motion, contrast)
+- **Psychological** — clear mental model, predictable behaviour, no anxiety from
+  unexplained state changes, autonomy and competence
+- **Social** — feeling connected to the broader ecosystem, seeing your work in
+  context, understanding who else is affected
+
+== Design Implications for PanLL
+
+=== What Creates Flow
+
+[cols="1,2", options="header"]
+|===
+| Principle | PanLL Implementation
+
+| Challenge-skill balance
+| Adaptive complexity — show simple views by default, reveal depth on demand.
+  DarkStart is calm. Complexity appears when you reach for it.
+
+| Clear proximal goals
+| Panel layout makes current task visible. The workspace _is_ the goal structure.
+  You can see what you are working on without navigating away.
+
+| Immediate feedback
+| Live connection dots, health checks, proof status, build output — all visible
+  without requesting them. Feedback is ambient, not modal.
+
+| Elimination of distraction
+| Full-screen panels, keyboard-driven navigation, no unnecessary chrome. The
+  semicolons and brackets and boilerplate are handled by the tools so you can
+  think about the problem.
+
+| Sense of control
+| Undo engine, reversible operations, session restore. You cannot break things
+  irreversibly. Fear of breakage is a flow-killer.
+
+| Intrinsic motivation
+| Beautiful, well-crafted interface. Satisfying transitions. The tool itself is
+  pleasant to use, not merely functional.
+|===
+
+=== What Breaks Flow (and When It Should)
+
+[cols="1,2", options="header"]
+|===
+| Interruption | When It Is Justified
+
+| Build failure
+| Always — this is the "misplaced gear". The system must pull you out clearly and
+  help you recover quickly.
+
+| Security alert
+| Always — Hypatia/panic-attacker findings are genuine emergencies.
+
+| Type error
+| Always — but presented in-context, not as a wall of terminal output. The
+  motorcycle swerves, it does not crash.
+
+| Configuration demand
+| Never during flow. Configuration should happen before or after a session, not
+  during one.
+
+| Authentication prompt
+| Minimise. Pre-authenticate. Token refresh should be invisible.
+
+| Network latency
+| Hide it. Optimistic UI. Show stale data with a subtle staleness indicator
+  rather than a spinner that blocks everything.
+|===
+
+=== The Motorcycle Checklist
+
+Before shipping any PanLL feature, ask:
+
+1. **Does this keep the rider on the road?** — Does the feature maintain flow or
+   introduce a speed bump?
+2. **Is the view beautiful?** — Does the UI feel crafted, or merely functional?
+3. **Can I feel the wind?** — Is the feedback ambient and continuous, or do I
+   have to stop and check?
+4. **Am I fiddling with the controls?** — Does configuration happen once, or does
+   it interrupt every session?
+5. **Does the emergency brake work?** — When something goes wrong, does the
+   system pull me out clearly and help me recover, or does it leave me confused?
+
+== Relationship to NAFA
+
+The NAFA journey planning app (for neurodiverse adventurers) embodies related
+principles through a different lens: _psychological safety through clarity,
+structure, and sensory awareness_. NAFA creates conditions for calm confidence.
+PanLL creates conditions for absorbed creativity. Both reject the idea that
+software should demand cognitive overhead as the price of functionality.
+
+== Relationship to Productive Meandering
+
+The Productive Meandering methodology (see `gossamer/docs/`) describes a mode of
+exploration where serendipitous discovery is encouraged within guardrails. This
+is the _countryside_ in the motorcycle metaphor — you have a direction but not a
+rigid route, and the joy is partly in what you discover along the way. PanLL's
+workspace model should support this: structured enough to maintain flow, open
+enough to allow productive wandering.
+
+== References
+
+- Csikszentmihalyi, M. (1990). _Flow: The Psychology of Optimal Experience_.
+  Harper & Row.
+- Short, J., Williams, E., & Christie, B. (1976). _The Social Psychology of
+  Telecommunications_. Wiley.
+- Nakamura, J., & Csikszentmihalyi, M. (2002). The concept of flow. In C. R.
+  Snyder & S. J. Lopez (Eds.), _Handbook of Positive Psychology_ (pp. 89–105).
+  Oxford University Press.
+- Engel, G. L. (1977). The need for a new medical model: A challenge for
+  biomedicine. _Science_, 196(4286), 129–136.

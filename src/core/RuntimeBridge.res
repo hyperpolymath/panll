@@ -77,8 +77,8 @@ function detectRuntime() {
 `)
 @val external detectRuntimeRaw: unit => string = "detectRuntime"
 
-/// Detect and return the current runtime.
-let detectRuntime = (): runtime => {
+/// Detect and return the current runtime as a typed variant.
+let currentRuntime = (): runtime => {
   switch detectRuntimeRaw() {
   | "gossamer" => Gossamer
   | "tauri" => Tauri
@@ -99,11 +99,10 @@ let invoke = (cmd: string, args: 'a): promise<'b> => {
   } else if isTauriRuntime() {
     tauriInvoke(cmd, args)
   } else {
-    Promise.reject(
-      JsError.throwWithMessage(
-        `No desktop runtime — "${cmd}" requires Gossamer or Tauri`,
-      ),
-    )
+    // Return a rejected promise — do NOT use JsError.throwWithMessage which
+    // throws synchronously and crashes the TEA dispatch loop.
+    let err: exn = %raw(`new Error('No desktop runtime — "' + cmd + '" requires Gossamer or Tauri')`)
+    Promise.reject(err)
   }
 }
 
@@ -114,7 +113,7 @@ let hasDesktopRuntime = (): bool => {
 
 /// Get a human-readable name for the current runtime.
 let runtimeName = (): string => {
-  switch detectRuntime() {
+  switch currentRuntime() {
   | Gossamer => "Gossamer"
   | Tauri => "Tauri"
   | BrowserOnly => "Browser"
@@ -137,17 +136,14 @@ module Dialog = {
   /// Open a file picker dialog.
   /// On Gossamer, routes through IPC to gossamer_dialog_open.
   /// On Tauri, uses the native plugin-dialog.
-  let open = (opts: JSON.t): promise<Nullable.t<JSON.t>> => {
+  let openDialog = (opts: JSON.t): promise<Nullable.t<JSON.t>> => {
     if isGossamerRuntime() {
       gossamerInvoke("__gossamer_dialog_open", opts)
     } else if isTauriRuntime() {
       tauriOpenRaw(opts)
     } else {
-      Promise.reject(
-        JsError.throwWithMessage(
-          "No desktop runtime — file dialogs require Gossamer or Tauri",
-        ),
-      )
+      let err: exn = %raw(`new Error('No desktop runtime — file dialogs require Gossamer or Tauri')`)
+      Promise.reject(err)
     }
   }
 
@@ -158,11 +154,8 @@ module Dialog = {
     } else if isTauriRuntime() {
       tauriSaveRaw(opts)
     } else {
-      Promise.reject(
-        JsError.throwWithMessage(
-          "No desktop runtime — save dialogs require Gossamer or Tauri",
-        ),
-      )
+      let err: exn = %raw(`new Error('No desktop runtime — save dialogs require Gossamer or Tauri')`)
+      Promise.reject(err)
     }
   }
 }
@@ -185,11 +178,8 @@ module Fs = {
     } else if isTauriRuntime() {
       tauriReadTextFileRaw(path)
     } else {
-      Promise.reject(
-        JsError.throwWithMessage(
-          "No desktop runtime — filesystem access requires Gossamer or Tauri",
-        ),
-      )
+      let err: exn = %raw(`new Error('No desktop runtime — filesystem access requires Gossamer or Tauri')`)
+      Promise.reject(err)
     }
   }
 
@@ -200,11 +190,8 @@ module Fs = {
     } else if isTauriRuntime() {
       tauriWriteTextFileRaw(path, contents)
     } else {
-      Promise.reject(
-        JsError.throwWithMessage(
-          "No desktop runtime — filesystem access requires Gossamer or Tauri",
-        ),
-      )
+      let err: exn = %raw(`new Error('No desktop runtime — filesystem access requires Gossamer or Tauri')`)
+      Promise.reject(err)
     }
   }
 }

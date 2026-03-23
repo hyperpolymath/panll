@@ -13862,6 +13862,8 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | VerisimdbFeeds(subMsg) => updateVerisimdbFeeds(model, subMsg)
   | FeedbackRouting(subMsg) => updateFeedbackRouting(model, subMsg)
   | VexometerFriction(subMsg) => updateVexometerFriction(model, subMsg)
+  // Burble — groove-aware voice huddle integration
+  | Burble(subMsg) => ({...model, burble: BurbleEngine.update(model.burble, subMsg)}, Tea_Cmd.none)
   | NoOp => (model, Tea_Cmd.none)
   }
 

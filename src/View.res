@@ -414,6 +414,22 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelLlmCoding) => LlmCoding.view(model.llmCoding)
   // Agent Coordination View
   | Some(PanelAgentCoordination) => AgentCoordination.view(model.agentCoordination)
+  // GSA (Game Server Admin) panels — Clade-registered, views pending
+  | Some(PanelGsaServerBrowser) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("GSA Server Browser — panel loading...")})
+  | Some(PanelGsaConfigEditor) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("GSA Config Editor — panel loading...")})
+  | Some(PanelGsaServerActions) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("GSA Server Actions — panel loading...")})
+  | Some(PanelGsaLiveLogs) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("GSA Live Logs — panel loading...")})
+  | Some(PanelGsaHealthDashboard) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("GSA Health Dashboard — panel loading...")})
+  | Some(PanelGsaConfigHistory) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("GSA Config History — panel loading...")})
+  | Some(PanelGsaCrossSearch) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("GSA Cross-Search — panel loading...")})
+  // Burble panels — groove-aware voice integration
+  | Some(PanelBurbleServerStatus) => BurbleServerStatus.view(model.burble)
+  | Some(PanelBurbleVoiceQuality) => BurbleVoiceQuality.view(model.burble)
+  | Some(PanelBurbleRoomMonitor) => BurbleRoomMonitor.view(model.burble)
+  // IDApTIK panels — Clade-registered, views pending
+  | Some(PanelIdaptikServerStatus) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("IDApTIK Server Status — panel loading...")})
+  | Some(PanelIdaptikSessionMonitor) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("IDApTIK Session Monitor — panel loading...")})
+  | Some(PanelIdaptikPlayerOverview) => div(list{Attrs.class_("p-4 text-gray-400")}, list{text("IDApTIK Player Overview — panel loading...")})
   }
 }
 
@@ -565,23 +581,22 @@ let view = (model: model): Tea_Vdom.t<msg> => {
         // Status bar — hidden in fullscreen
         if !model.fullscreenActive { StatusBar.view(model) } else { noNode },
 
-        // Home button — fixed top-left, visible when any panel overlay is open.
+        // Home button — fixed top-right, visible when any panel overlay is open.
         // Provides a constant escape hatch back to the main three-panel view.
+        // Positioned top-right to avoid obscuring panel titles and left-side controls.
         if model.panelSwitcher.activePanel !== None {
           button(
             list{
               Attrs.class_(
-                "fixed top-3 left-3 z-[9998] w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white shadow-lg flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-400 border border-gray-700",
+                "fixed top-2 right-14 z-[9998] h-8 px-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white shadow-lg flex items-center gap-1.5 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-400 border border-gray-700 text-xs font-medium",
               ),
-              Attrs.title("Return to main view"),
+              Attrs.title("Return to main view (Escape)"),
               Attrs.ariaLabel("Return to main view"),
               Events.onClick(PanelSwitcher(ClosePanels)),
             },
             list{
-              span(
-                list{Attrs.class_("text-sm font-bold")},
-                list{text("\xe2\x86\x90")},
-              ),
+              span(list{Attrs.class_("text-sm")}, list{text("\xe2\x86\x90")}),
+              span(list{}, list{text("Back")}),
             },
           )
         } else {

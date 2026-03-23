@@ -25,7 +25,16 @@ let init = (): (Model.model, Tea_Cmd.t<Msg.msg>) => {
   // Apply saved font size on startup (sets <html> font-size for rem scaling).
   let fontSizeCmd = AccessibilityEngine.applyFontSizeCmd(model.accessibility.fontSize)
 
-  (model, Tea_Cmd.batch(list{colorSchemeCmd, fontSizeCmd}))
+  // Probe Burble groove endpoint at startup for capability discovery.
+  // Non-blocking — if Burble is not running, the error is silently recorded.
+  let grooveCmd = BurbleCmd.checkGroove(result =>
+    switch result {
+    | Ok(_json) => Msg.Burble(BurbleModel.ConnectionChanged(BurbleModel.Connected))
+    | Error(err) => Msg.Burble(BurbleModel.ErrorOccurred(err))
+    }
+  )
+
+  (model, Tea_Cmd.batch(list{colorSchemeCmd, fontSizeCmd, grooveCmd}))
 }
 
 /// Main TEA program

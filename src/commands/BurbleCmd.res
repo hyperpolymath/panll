@@ -169,3 +169,104 @@ let getParticipants = (
     ->ignore
   })
 }
+
+// ============================================================================
+// Groove discovery — probe Burble's /.well-known/groove endpoint
+// ============================================================================
+
+/// Probe the Burble groove endpoint to discover capabilities.
+/// GET http://localhost:6473/.well-known/groove
+/// Returns the groove manifest JSON (service_id, capabilities, endpoints).
+let checkGroove = (
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("burble_check_groove", {
+      "url": "http://localhost:6473/.well-known/groove",
+    })
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Groove probe failed — Burble not reachable")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+// ============================================================================
+// Room management — list and query rooms via groove API
+// ============================================================================
+
+/// List active rooms on the Burble server.
+/// GET http://localhost:6473/api/v1/servers/:id/rooms
+/// The serverId "local" is used for the default local Burble instance.
+let listRooms = (
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("burble_list_rooms", {
+      "url": "http://localhost:6473/api/v1/servers/local/rooms",
+    })
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to list rooms")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+// ============================================================================
+// Health check — query Burble server health
+// ============================================================================
+
+/// Check the Burble server health endpoint.
+/// GET http://localhost:6473/api/v1/health
+/// Returns JSON with server status, uptime, room count, participant count.
+let getHealth = (
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("burble_get_health", {
+      "url": "http://localhost:6473/api/v1/health",
+    })
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Health check failed — Burble not reachable")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+// ============================================================================
+// Voice stats — WebRTC quality metrics
+// ============================================================================
+
+/// Query WebRTC voice statistics for the active session.
+/// Returns latency, jitter, packet loss, bitrate, codec info as JSON.
+let getVoiceStats = (
+  tagger: result<string, string> => 'msg,
+): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("burble_get_voice_stats", ())
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Failed to get voice stats")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}

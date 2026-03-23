@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
+<!-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) -->
+<!--
+  OPSM Runtime Manager — PanLL Panel
+  ===================================
+  Visual interface for managing tool/runtime versions.
+  Communicates with OPSM Elixir core via PanLL IPC bridge.
+
+  This panel provides:
+  - Installed runtimes list with version/EOL/CVE status
+  - One-click install from the plugin catalogue
+  - Per-project .tool-versions editing
+  - Trust pipeline dashboard
+  - Per-panel version switching (PanLL's environment injection)
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OPSM Runtime Manager</title>
+  <style>
+    :root {
+      --bg: #1e1e2e;
+      --surface: #313244;
+      --text: #cdd6f4;
+      --subtext: #a6adc8;
+      --accent: #89b4fa;
+      --green: #a6e3a1;
+      --yellow: #f9e2af;
+      --red: #f38ba8;
+      --border: #45475a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* --- Tab bar --- */
+    .tab-bar {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 8px;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      cursor: pointer;
+      color: var(--subtext);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* --- Content area --- */
+    .content {
+      height: calc(100vh - 36px);
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* --- Runtime list --- */
+    .runtime-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      margin-bottom: 4px;
+      background: var(--surface);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      transition: border-color 0.15s;
+    }
+
+    .runtime-item:hover { border-color: var(--accent); }
+
+    .runtime-info { flex: 1; }
+
+    .runtime-name {
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    .runtime-version {
+      color: var(--accent);
+      margin-left: 8px;
+    }
+
+    .runtime-meta {
+      font-size: 11px;
+      color: var(--subtext);
+      margin-top: 2px;
+    }
+
+    /* --- Badges --- */
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: bold;
+      margin-left: 4px;
+    }
+
+    .badge-core { background: var(--accent); color: var(--bg); }
+    .badge-community { background: var(--green); color: var(--bg); }
+    .badge-experimental { background: var(--yellow); color: var(--bg); }
+    .badge-eol { background: var(--red); color: var(--bg); }
+
+    /* --- Actions --- */
+    .actions { display: flex; gap: 4px; }
+
+    .btn {
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.15s;
+    }
+
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    .btn-primary:hover { opacity: 0.9; }
+
+    /* --- Search --- */
+    .search-bar {
+      width: 100%;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .search-bar:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    /* --- Trust dashboard --- */
+    .trust-score {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--surface);
+      border-radius: 6px;
+      margin-bottom: 4px;
+    }
+
+    .trust-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .trust-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    .trust-high .trust-fill { background: var(--green); }
+    .trust-medium .trust-fill { background: var(--yellow); }
+    .trust-low .trust-fill { background: var(--red); }
+
+    /* --- Empty state --- */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--subtext);
+    }
+
+    .empty-state h3 { color: var(--text); margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <!-- Tab navigation -->
+  <div class="tab-bar">
+    <div class="tab active" data-view="installed">Installed</div>
+    <div class="tab" data-view="available">Available</div>
+    <div class="tab" data-view="project">Project</div>
+    <div class="tab" data-view="trust">Trust</div>
+  </div>
+
+  <!-- Installed runtimes view -->
+  <div class="content">
+    <div class="view active" id="installed">
+      <input class="search-bar" placeholder="Filter installed runtimes..." id="search-installed">
+      <div id="runtime-list">
+        <!-- Populated by JS via PanLL IPC -->
+      </div>
+    </div>
+
+    <!-- Available plugins view -->
+    <div class="view" id="available">
+      <input class="search-bar" placeholder="Search plugins (71 core, community...)">
+      <div id="plugin-catalogue">
+        <!-- Populated by reading runtime/core/*.ncl + runtime/community/*.ncl -->
+      </div>
+    </div>
+
+    <!-- Project .tool-versions view -->
+    <div class="view" id="project">
+      <div id="project-versions">
+        <!-- Reads .tool-versions from workspace root -->
+      </div>
+    </div>
+
+    <!-- Trust dashboard view -->
+    <div class="view" id="trust">
+      <div id="trust-dashboard">
+        <!-- Shows OPSM trust pipeline results per tool -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // OPSM Runtime Manager — PanLL Panel Script
+    // =========================================================================
+    // Communicates with OPSM via Gossamer's IPC bridge.
+    // The Gossamer CLI binds an 'opsm_runtime' handler that shells out
+    // to opsm-runtime. Falls back to placeholder when not in Gossamer.
+
+    const panll = window.__panll || null;
+
+    // Gossamer IPC helper — invokes opsm-runtime via the shell-exec handler
+    async function opsmInvoke(cmd, tool, version) {
+      if (typeof window.__gossamer_invoke === 'function') {
+        const payload = { cmd };
+        if (tool) payload.tool = tool;
+        if (version) payload.version = version;
+        const result = await window.__gossamer_invoke('opsm_runtime', payload);
+        // Result is JSON: {output: "...", exit_code: 0}
+        if (typeof result === 'string') {
+          try { return JSON.parse(result); } catch(_) { return { output: result, exit_code: 0 }; }
+        }
+        return result;
+      }
+      throw new Error('Gossamer IPC not available — run PanLL via gossamer dev');
+    }
+
+    // --- Tab switching ---
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.view).classList.add('active');
+      });
+    });
+
+    // --- Runtime list rendering ---
+    function renderRuntime(runtime) {
+      const tierClass = `badge-${runtime.tier.toLowerCase()}`;
+      return `
+        <div class="runtime-item" data-tool="${runtime.name}">
+          <div class="runtime-info">
+            <span class="runtime-name">${runtime.name}</span>
+            <span class="runtime-version">${runtime.version}</span>
+            <span class="badge ${tierClass}">${runtime.tier}</span>
+            ${runtime.eol ? '<span class="badge badge-eol">EOL</span>' : ''}
+            <div class="runtime-meta">
+              ${runtime.ecosystem} · ${runtime.functions.join(', ')}
+              ${runtime.source ? ` · from ${runtime.source}` : ''}
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="switchVersion('${runtime.name}')">Switch</button>
+            <button class="btn" onclick="updateTool('${runtime.name}')">Update</button>
+          </div>
+        </div>`;
+    }
+
+    // --- PanLL IPC commands ---
+    async function loadInstalled() {
+      const list = document.getElementById('runtime-list');
+      try {
+        const result = await opsmInvoke('list');
+        const output = result.output || result;
+        // Parse the text output into HTML
+        if (typeof output === 'string' && output.includes('Installed')) {
+          // Render as preformatted text with ANSI stripped
+          const clean = output.replace(/\x1b\[[0-9;]*m/g, '');
+          list.innerHTML = `<pre style="padding:12px;font-size:12px;line-height:1.6;white-space:pre-wrap;">${clean}</pre>`;
+        } else {
+          list.innerHTML = `<pre style="padding:12px;">${JSON.stringify(output, null, 2)}</pre>`;
+        }
+      } catch (err) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <h3>OPSM Runtime Manager</h3>
+            <p>${err.message}</p>
+            <p style="margin-top: 12px; font-size: 11px;">
+              Run PanLL via Gossamer to enable IPC, or use 'opsm-runtime list' in terminal.
+            </p>
+          </div>`;
+      }
+    }
+
+    async function switchVersion(tool) {
+      const version = prompt(`Switch ${tool} to version:`);
+      if (version) {
+        try {
+          await opsmInvoke('set', tool, version);
+          loadInstalled();
+        } catch (err) {
+          alert('Failed: ' + err.message);
+        }
+      }
+    }
+
+    async function updateTool(tool) {
+      try {
+        const result = await opsmInvoke('install', tool, 'latest');
+        alert(result.output || 'Done');
+        loadInstalled();
+      } catch (err) {
+        alert('Failed: ' + err.message);
+      }
+    }
+
+    async function installTool() {
+      const tool = prompt('Tool name (e.g., deno, zig, just):');
+      if (!tool) return;
+      const version = prompt(`Version for ${tool}:`);
+      if (!version) return;
+      try {
+        const result = await opsmInvoke('install', tool, version);
+        alert(result.output || 'Installed!');
+        loadInstalled();
+      } catch (err) {
+        alert('Install failed: ' + err.message);
+      }
+    }
+
+    async function runDoctor() {
+      try {
+        const result = await opsmInvoke('doctor');
+        const clean = (result.output || '').replace(/\x1b\[[0-9;]*m/g, '');
+        document.getElementById('trust-content').innerHTML =
+          `<pre style="padding:12px;font-size:12px;line-height:1.6;white-space:pre-wrap;">${clean}</pre>`;
+        // Switch to trust tab
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelector('[data-view="trust"]').classList.add('active');
+        document.getElementById('view-trust').classList.add('active');
+      } catch (err) {
+        alert('Doctor failed: ' + err.message);
+      }
+    }
+
+    // --- Search filtering ---
+    document.getElementById('search-installed')?.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      document.querySelectorAll('.runtime-item').forEach(item => {
+        item.style.display = item.dataset.tool.includes(q) ? '' : 'none';
+      });
+    });
+
+    // --- Init ---
+    loadInstalled();
+  </script>
+</body>
+</html>

@@ -54,6 +54,16 @@ let standardProgram = (
     container: None,
   }
 
+  // Live diagnostic — writes to the blue bar at the bottom of the page
+  let diagWrite: string => unit = %raw(`
+    function(text) {
+      var d = document.getElementById('panll-diag');
+      if (d) d.textContent = text;
+    }
+  `)
+
+  let diagCount = ref(0)
+
   // Message dispatch function
   let rec dispatch = (msg: 'msg): unit => {
     // Queue message if already dispatching (prevent recursion)
@@ -61,16 +71,45 @@ let standardProgram = (
       Array.push(state.messageQueue, msg)
     } else {
       state.isDispatching = true
+      diagCount := diagCount.contents + 1
 
-      // Process this message
-      processMessage(msg)
+      // Show the message tag in the diagnostic bar for debugging
+      let msgTag: string = %raw(`
+        (function() {
+          var m = msg;
+          if (m && m.TAG) return m.TAG;
+          if (typeof m === 'string') return m;
+          if (typeof m === 'object' && m !== null) return JSON.stringify(Object.keys(m)).slice(0,60);
+          return String(m);
+        })()
+      `)
+      diagWrite("#" ++ Int.toString(diagCount.contents) ++ " " ++ msgTag)
 
-      // Process queued messages
-      while Array.length(state.messageQueue) > 0 {
-        let queuedMsg = Array.shift(state.messageQueue)
-        switch queuedMsg {
-        | Some(m) => processMessage(m)
-        | None => ()
+      try {
+        // Process this message
+        processMessage(msg)
+
+        // Process queued messages
+        while Array.length(state.messageQueue) > 0 {
+          let queuedMsg = Array.shift(state.messageQueue)
+          switch queuedMsg {
+          | Some(m) => processMessage(m)
+          | None => ()
+          }
+        }
+      } catch {
+      | exn => {
+          Console.error2("[PanLL TEA] dispatch crash — recovering:", exn)
+          let errMsg: string = %raw(`(function() {
+            var e = exn;
+            if (e && e.RE_EXN_ID) return 'ReScript: ' + e.RE_EXN_ID + ' ' + JSON.stringify(e._1 || e._2 || '').slice(0,200);
+            if (e && e.message) return e.message;
+            if (e && e.stack) return e.stack.split('\\n')[0];
+            return JSON.stringify(e).slice(0,300);
+          })()`)
+          diagWrite("CRASH: " ++ errMsg)
+          // Drain the queue to avoid replaying the crashing message
+          state.messageQueue = []
         }
       }
 
@@ -83,11 +122,29 @@ let standardProgram = (
     let (newModel, cmd) = config.update(state.model, msg)
     state.model = newModel
 
-    // Re-render
-    render()
+    // Re-render — wrapped in try/catch so a crashing view() doesn't kill dispatch
+    try {
+      render()
+    } catch {
+    | exn => {
+        Console.error2("[PanLL TEA] render crash:", exn)
+        let errMsg: string = %raw(`(function() {
+            var e = exn;
+            if (e && e.RE_EXN_ID) return 'ReScript: ' + e.RE_EXN_ID + ' ' + JSON.stringify(e._1 || e._2 || '').slice(0,200);
+            if (e && e.message) return e.message;
+            if (e && e.stack) return e.stack.split('\\n')[0];
+            return JSON.stringify(e).slice(0,300);
+          })()`)
+        diagWrite("RENDER CRASH: " ++ errMsg)
+      }
+    }
 
     // Update subscriptions if they changed
-    updateSubscriptions()
+    try {
+      updateSubscriptions()
+    } catch {
+    | exn => Console.error2("[PanLL TEA] subscription crash:", exn)
+    }
 
     // Execute commands (may dispatch more messages)
     Tea_Cmd.execute(cmd, dispatch)
@@ -157,6 +214,45 @@ let standardProgram = (
 
   // Execute initial commands
   Tea_Cmd.execute(initialCmd, dispatch)
+
+  // Expose debug API on window for agent/developer introspection.
+  // window.__panll.getModel()  — read full model state as JS object
+  // window.__panll.dispatch(msg) — inject a TEA message
+  // window.__panll.snapshot()   — JSON summary of key state fields
+  // window.__panll.diagCount    — number of messages dispatched
+  let _exposeDebugApi: (unit => 'model, 'msg => unit, ref<int>) => unit = %raw(`
+    function(getModel, dispatch, diagCount) {
+      window.__panll = {
+        getModel: getModel,
+        dispatch: dispatch,
+        diagCount: diagCount,
+        snapshot: function() {
+          var m = getModel();
+          return {
+            viewMode: m.viewMode,
+            activePanel: m.panelSwitcher ? m.panelSwitcher.activePanel : null,
+            panelBarVisible: m.panelBarVisible,
+            paneLVisible: m.paneLVisible,
+            paneNVisible: m.paneNVisible,
+            paneWVisible: m.paneWVisible,
+            fullscreen: m.fullscreenActive,
+            constraintCount: m.paneL ? m.paneL.constraints.length : 0,
+            tokenCount: m.paneN ? m.paneN.tokens.length : 0,
+            inferenceActive: m.paneN ? m.paneN.inferenceActive : false,
+            eventChainCount: m.paneW ? m.paneW.eventChain.length : 0,
+            focusDimming: m.focusDimming ? m.focusDimming.mode : null,
+            humidity: m.humidity,
+            orbitalStability: m.orbital ? m.orbital.stability : null,
+            echidnaConnected: m.echidna ? m.echidna.connected : false,
+            keybindingCount: m.keybindings ? m.keybindings.bindings.length : 0,
+            dispatched: diagCount.contents
+          };
+        }
+      };
+      window.__panll_log && window.__panll_log('debug API ready');
+    }
+  `)
+  _exposeDebugApi(() => state.model, dispatch, diagCount)
 
   // Return program interface
   {

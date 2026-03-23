@@ -7,7 +7,7 @@
 
 let invoke = RuntimeBridge.invoke
 
-let openDialog = RuntimeBridge.Dialog.open
+let openDialog = RuntimeBridge.Dialog.openDialog
 
 /// Scan a repository directory and return info + panel suggestions.
 let scan = (

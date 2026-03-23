@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
-# Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}>
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # RSR Standard Justfile Template
 # https://just.systems/man/en/
@@ -15,7 +15,9 @@ set dotenv-load := true
 set positional-arguments := true
 
 # Project metadata — customize these
-project := "{{PROJECT_NAME}}"
+project := "panel-clades"
+OWNER := "hyperpolymath"
+REPO := "panel-clades"
 version := "0.1.0"
 tier := "infrastructure"  # 1 | 2 | infrastructure
 

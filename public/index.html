@@ -10,8 +10,9 @@
 
   <!-- DOMPurify: DOM-parser-based XSS sanitisation (Layer 1 of SafeDOM defence-in-depth).
        cure53/DOMPurify v3.3.2 — OWASP-recommended, handles mXSS, DOM clobbering, SVG/MathML.
-       If this fails to load, SafeDOM falls back to built-in regex sanitiser (Layer 2). -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.3.2/purify.min.js"
+       If this fails to load, SafeDOM falls back to built-in regex sanitiser (Layer 2).
+       NOTE: loaded async to prevent CDN timeout from blocking the entire page in Tauri. -->
+  <script async src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.3.2/purify.min.js"
           integrity="sha384-ZSs6LKr2GoUPDyHrN+rCQgyHL1yUyok5xMniSrgeRG7rUvA6vTmxronM1eZOfjgz"
           crossorigin="anonymous"
           referrerpolicy="no-referrer"></script>
@@ -21,13 +22,20 @@
     #app {
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
+      /* overflow: hidden removed — was clipping fixed-position DarkStart overlay
+         in WebKitGTK. The TEA view manages its own overflow per-panel. */
     }
   </style>
 </head>
 <body>
   <!-- TEA app mount point -->
-  <div id="app"></div>
+  <div id="app">
+    <!-- Pre-render loading indicator — replaced once ReScript TEA mounts -->
+    <div id="panll-preload" style="display:flex;align-items:center;justify-content:center;height:100vh;background:#030712;color:#9ca3af;font-family:monospace;flex-direction:column;gap:1rem;">
+      <div style="font-size:1.5rem;font-weight:300;">PanLL</div>
+      <div style="font-size:0.75rem;color:#4b5563;">Loading eNSAID...</div>
+    </div>
+  </div>
 
   <!-- Tauri runtime shim: provides stub __TAURI_INTERNALS__ when running
        in browser-only mode (dev server, headless testing). All invoke/listen
@@ -53,8 +61,53 @@
     }
   </script>
 
+  <!-- Diagnostic overlay — renders on top of everything to confirm rendering works -->
+  <script>
+    window.__panll_diag = [];
+    window.__panll_log = function(msg) {
+      window.__panll_diag.push(msg);
+      var d = document.getElementById('panll-diag');
+      if (d) d.textContent = window.__panll_diag.join(' | ');
+    };
+    window.__panll_log('HTML parsed');
+  </script>
+
   <!-- Load the bundled ReScript application (built by scripts/bundle.ts) -->
-  <script type="module" src="app.bundle.js"></script>
+  <script type="module">
+    window.__panll_log('module start');
+    try {
+      const mod = await import("./app.bundle.js?v=" + Date.now());
+      window.__panll_log('bundle loaded OK');
+      // TEA mounts itself during import — remove preload indicator
+      const preload = document.getElementById("panll-preload");
+      if (preload) preload.remove();
+      // Check what's actually in #app
+      const app = document.getElementById("app");
+      window.__panll_log('app children: ' + (app ? app.children.length : 'NO APP'));
+      window.__panll_log('app innerHTML len: ' + (app ? app.innerHTML.length : 0));
+    } catch(err) {
+      window.__panll_log('CRASH: ' + (err.message || err));
+      const preload = document.getElementById("panll-preload");
+      if (preload) {
+        preload.innerHTML =
+          '<div style="font-size:1.2rem;color:#ef4444;">PanLL failed to start</div>' +
+          '<pre style="font-size:0.7rem;color:#9ca3af;max-width:80vw;overflow:auto;white-space:pre-wrap;">' +
+          (err.stack || err.message || err) + '</pre>';
+      }
+      console.error("[PanLL] Fatal init error:", err);
+    }
+  </script>
+
+  <!-- Diagnostic bar — fixed at bottom, always visible regardless of app state. -->
+  <div style="position:fixed;bottom:0;left:0;right:0;z-index:999999;display:flex;font-family:monospace;font-size:11px;pointer-events:auto;">
+    <div id="panll-diag"
+         style="flex:1;background:#1e40af;color:#fff;padding:4px 8px;cursor:pointer;overflow:hidden;white-space:nowrap;"
+         title="Click to copy state snapshot to clipboard"
+         onclick="if(window.__panll){var s=JSON.stringify(window.__panll.snapshot(),null,2);navigator.clipboard.writeText(s);this.textContent='Copied snapshot!';}">
+      waiting...
+    </div>
+    <button onclick="location.reload(true)" style="background:#dc2626;color:#fff;border:none;padding:4px 12px;cursor:pointer;font-family:monospace;font-size:11px;white-space:nowrap;">Hard Refresh</button>
+  </div>
 
   <noscript>
     <div style="padding: 2rem; text-align: center;">

@@ -33,12 +33,13 @@ let parseUri = (uri: string): option<(string, string)> => {
   switch stripped {
   | None => None
   | Some(rest) =>
-    switch String.indexOf(rest, "/") {
-    | Some(idx) =>
+    let idx = String.indexOf(rest, "/")
+    if idx >= 0 {
       let serviceId = String.slice(rest, ~start=0, ~end=idx)
       let path = String.sliceToEnd(rest, ~start=idx)
       Some((serviceId, path))
-    | None => Some((rest, "/"))
+    } else {
+      Some((rest, "/"))
     }
   }
 }
@@ -90,7 +91,7 @@ let healthCheck = (
 /// Get the runtime-specific endpoint URI for a service.
 /// Returns gossamer:// or tauri:// based on the active runtime.
 let resolvedEndpoint = (serviceId: string): string => {
-  switch RuntimeBridge.detectRuntime() {
+  switch RuntimeBridge.currentRuntime() {
   | RuntimeBridge.Gossamer => gossamerPrefix ++ serviceId ++ "/bridge"
   | RuntimeBridge.Tauri => tauriPrefix ++ serviceId
   | RuntimeBridge.BrowserOnly => "http://localhost:8000/api/" ++ serviceId
