@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (2026-03-23 — TEA Crash Recovery)
+- **RuntimeBridge.invoke browser-mode crash** — `JsError.throwWithMessage` threw synchronously instead of returning a rejected Promise, killing the TEA dispatch loop on the first backend call in browser mode. Fixed to use `Promise.reject(new Error(...))`. Same fix applied to `Dialog.openDialog` and Fs methods.
+- **TEA dispatch loop freeze** — Added try/catch around `processMessage`, `render`, and `subscriptions` in `Tea_App.res` so one thrown exception no longer permanently freezes all event handling.
+- **ReScript build errors** — `open` reserved keyword in `RuntimeBridge.Dialog` renamed to `openDialog` (propagated to `GossamerCmd.res`, `RepoLoaderCmd.res`); `String.indexOf` return type mismatch in `RuntimeResolver.res`; duplicate `detectRuntime` symbol renamed to `currentRuntime`.
+- **Missing panel view cases** — Added 13 placeholder view cases in `View.res` for GSA, Burble, and IDApTIK panels registered in the Clade system.
+
+### Added (2026-03-23 — Diagnostics & Debug API)
+- **`window.__panll` debug API** — `getModel()`, `dispatch(msg)`, `snapshot()` for live browser-console diagnostics.
+- **Diagnostic bar** (`public/index.html`) — Live message counter, crash display, click-to-copy snapshot, red Hard Refresh button, cache-busting import.
+- **Back button repositioned** — Moved from top-left (obscuring panel headers) to top-right as a labelled "← Back" pill.
+- **Event chain textarea** — Improved placeholder with JSON format example.
+
+### Changed (2026-03-23 — Tauri→Gossamer Migration)
+- **Gossamer-only RuntimeBridge** — Removed all Tauri runtime references (`isTauriRuntime`, `tauriInvoke`, `@tauri-apps` imports) from `RuntimeBridge.res`.
+- **270 commands migrated** — All Tauri invoke commands rewritten for Gossamer IPC in `src-gossamer/`.
+- **`src-tauri/` deleted** — Replaced by `src-gossamer/` with migrated Rust backend.
+
 ### Fixed (2026-03-10)
 - **SVG className crash** — `Tea_Render.res` was setting `el.className` on SVG elements which throws because `SVGAnimatedString` is read-only. Now uses `setAttribute("class", ...)` for SVG elements. This was causing the grey screen on startup.
 
