@@ -5,11 +5,11 @@
   "description": "Panel workspace framework — TEA (The Elm Architecture) for ReScript with tiling layout, smart routing, keyboard navigation, undo engine, and security-hardened DOM. Build panel-based UIs for desktop and web.",
   "exports": "./mod.js",
   "tasks": {
-    "dev": "cargo tauri dev",
-    "build": "cargo tauri build",
-    "gossamer:dev": "cd src-gossamer && zig build && cd .. && deno task bundle && deno task serve:dev",
-    "gossamer:build": "cd src-gossamer && zig build -Doptimize=ReleaseSafe && cd .. && deno task bundle && deno task css:build",
-    "gossamer:run": "cd src-gossamer && zig build && zig-out/bin/panll-gossamer",
+    "dev": "cargo build && cargo run --bin panll-gossamer & deno task bundle && deno task serve:dev",
+    "build": "cargo build --release && deno task bundle && deno task css:build",
+    "gossamer:dev": "cargo build && cargo run --bin panll-gossamer & deno task bundle && deno task serve:dev",
+    "gossamer:build": "cargo build --release && deno task bundle && deno task css:build",
+    "gossamer:run": "cargo run --bin panll-gossamer",
     "bundle": "DENO_NO_PACKAGE_JSON=1 deno run -A scripts/bundle.ts",
     "bundle:watch": "DENO_NO_PACKAGE_JSON=1 deno run -A scripts/bundle.ts --watch",
     "css:build": "deno run -A npm:tailwindcss -i ./src/styles/input.css -o ./public/styles.css --minify",
@@ -28,9 +28,6 @@
   "imports": {
     "@std/": "jsr:@std/",
     "@gossamer/api": "./src-gossamer/bindings/rescript/src/Gossamer.res.js",
-    "@tauri-apps/api": "npm:@tauri-apps/api@^2.10.0",
-    "@tauri-apps/plugin-dialog": "npm:@tauri-apps/plugin-dialog",
-    "@tauri-apps/plugin-fs": "npm:@tauri-apps/plugin-fs",
     "rescript": "npm:rescript@^12.0.0",
     "@rescript/core/": "npm:@rescript/core@1.6.1/",
     "@rescript/runtime/": "npm:@rescript/runtime@12.2.0/"

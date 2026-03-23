@@ -14,7 +14,7 @@
 /// The frontend parses JSON strings from `Ok(...)` results in the Update.res
 /// sub-updater using `JSON.parseExn` and `JSON.Classify.classify`.
 
-/// Backend invoke binding via RuntimeBridge (shared with TauriCmd.res).
+/// Backend invoke binding via RuntimeBridge.
 let invoke = RuntimeBridge.invoke
 
 // ============================================================================

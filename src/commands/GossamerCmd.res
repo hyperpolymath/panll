@@ -2,10 +2,9 @@
 
 /// Gossamer Command Integration for TEA
 ///
-/// Drop-in replacement for TauriCmd.res. Provides TEA commands for invoking
+/// Gossamer command integration for TEA. Provides TEA commands for invoking
 /// backend functions through the RuntimeBridge, which dispatches to Gossamer
-/// (preferred), Tauri (legacy), or rejects with a descriptive error in
-/// browser-only mode.
+/// or rejects with a descriptive error in browser-only mode.
 ///
 /// All panel command modules should use RuntimeBridge.invoke directly.
 /// This module provides higher-level TEA command wrappers for the core
@@ -501,7 +500,7 @@ let getOrchStatus = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> =>
 /// In browser mode, calls ECHIDNA directly via fetch.
 let checkEchidnaHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if RuntimeBridge.hasDesktopRuntime() {
+    let p = if isGossamerRuntime() {
       invoke("echidna_health", ())
     } else {
       echidnaGet("/health")
@@ -522,7 +521,7 @@ let checkEchidnaHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'ms
 /// List available provers from the ECHIDNA catalog.
 let listEchidnaProvers = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if RuntimeBridge.hasDesktopRuntime() {
+    let p = if isGossamerRuntime() {
       invoke("echidna_list_provers", ())
     } else {
       echidnaGet("/provers")
@@ -547,7 +546,7 @@ let echidnaProve = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if RuntimeBridge.hasDesktopRuntime() {
+    let p = if isGossamerRuntime() {
       let payload = Dict.fromArray([
         ("content", JSON.Encode.string(content)),
         ("prover", optionToJson(prover)),
@@ -579,7 +578,7 @@ let echidnaVerify = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if RuntimeBridge.hasDesktopRuntime() {
+    let p = if isGossamerRuntime() {
       invoke("echidna_verify", {"content": content})
     } else {
       echidnaPost("/verify", `{"content":${JSON.stringifyAny(content)->Option.getOr("\"\"")}}`)
@@ -604,7 +603,7 @@ let echidnaSearchTheorems = (
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let encoded = query->String.replaceAll(" ", "%20")
-    let p = if RuntimeBridge.hasDesktopRuntime() {
+    let p = if isGossamerRuntime() {
       invoke("echidna_search_theorems", {"query": query})
     } else {
       echidnaGet(`/search?q=${encoded}`)
@@ -633,7 +632,7 @@ let createEchidnaSession = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if RuntimeBridge.hasDesktopRuntime() {
+    let p = if isGossamerRuntime() {
       invoke("echidna_create_session", {"goal": goal, "prover": prover})
     } else {
       echidnaPost("/proofs", `{"goal":${JSON.stringifyAny(goal)->Option.getOr("\"\"")}, "prover":${JSON.stringifyAny(prover)->Option.getOr("\"\"")}}`)
@@ -657,7 +656,7 @@ let getEchidnaSession = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if RuntimeBridge.hasDesktopRuntime() {
+    let p = if isGossamerRuntime() {
       invoke("echidna_get_session", {"session_id": sessionId})
     } else {
       echidnaGet(`/proofs/${sessionId}`)
@@ -683,7 +682,7 @@ let applyEchidnaTactic = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if RuntimeBridge.hasDesktopRuntime() {
+    let p = if isGossamerRuntime() {
       let payload = Dict.fromArray([
         ("session_id", JSON.Encode.string(sessionId)),
         ("name", JSON.Encode.string(name)),
@@ -714,7 +713,7 @@ let suggestEchidnaTactics = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let p = if RuntimeBridge.hasDesktopRuntime() {
+    let p = if isGossamerRuntime() {
       invoke("echidna_suggest_tactics", {"session_id": sessionId, "limit": limit})
     } else {
       echidnaGet(`/proofs/${sessionId}/tactics/suggest?limit=${Int.toString(limit)}`)
