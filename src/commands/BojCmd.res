@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
 /// PanLL BoJ Commands — backend invoke wrappers for the Bundle of Joy
-/// cartridge server. These call into the Rust backend at src-tauri/src/boj/commands.rs
+/// cartridge server. These call into the Rust backend at src-gossamer/src/boj/commands.rs
 /// which proxies to the BoJ server at BOJ_URL (default http://localhost:7700/api/v1).
 
 let invoke = RuntimeBridge.invoke

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
 /// PanLL A2ML Commands — backend invoke wrappers for A2ML manifest operations.
-/// These call into the Rust backend at src-tauri/src/a2ml/commands.rs which
+/// These call into the Rust backend at src-gossamer/src/a2ml/commands.rs which
 /// handles filesystem access for loading, validating, and listing .a2ml files.
 ///
 /// The Rust backend reads files and returns content as JSON strings. The

@@ -115,7 +115,7 @@ notes = "18 cartridges (Grade D Alpha), bojRouting toggle for 6 panels, Umoja fe
 relationship = "game-development-module"
 nature = "PanLL as development environment for IDApTIK game. 11 IDApTIK eNSAID panels."
 integration-status = "active"
-notes = "All 11 panels with Rust backends and Tauri commands."
+notes = "All 11 panels with Rust backends and Gossamer commands."
 
 [related-projects.eclexia]
 relationship = "potential-language-backend"
@@ -137,7 +137,7 @@ nodejs = { version = "18.x+", purpose = "ReScript compiler runtime (temporary)",
 [dependencies.build-time]
 rescript = { version = "11.1.4", purpose = "Type-safe frontend compilation", license = "MIT", criticality = "critical" }
 tailwind = { version = "4.1.18", purpose = "Styling framework", license = "MIT", criticality = "medium" }
-tauri-cli = { version = "2.0.0", purpose = "Desktop app bundling", license = "MIT/Apache-2.0", criticality = "critical" }
+gossamer = { version = "0.1.0", purpose = "Desktop webview shell (Zig + WebKitGTK)", license = "PMPL-1.0-or-later", criticality = "critical" }
 
 [dependencies.libraries]
 rescript-core = { version = "1.6.1", purpose = "ReScript standard library", license = "MIT" }

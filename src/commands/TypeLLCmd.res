@@ -3,7 +3,7 @@
 /// PanLL TypeLL Commands — Backend wrappers for the verification kernel.
 ///
 /// TypeLL exposes a JSON-RPC-style API at TYPELL_URL (default http://localhost:7800/api/v1).
-/// These bindings wrap the 7 backend commands defined in src-tauri/src/typell/commands.rs.
+/// These bindings wrap the 7 backend commands defined in src-gossamer/src/typell/commands.rs.
 ///
 /// In browser-only mode (no desktop runtime), commands fall back to direct
 /// fetch() calls against the TypeLL server URL.

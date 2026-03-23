@@ -48,8 +48,8 @@ This is not a passive text editor. It is an active, synchronous environment that
 |Actually type-safe — no `any` escape hatch, exhaustive pattern matching on every variant, and the compiler catches state bugs that TypeScript structurally cannot. We tried TypeScript early on; the `as` casts and `Partial<T>` workarounds in a 14-panel stateful app were untenable. See https://rescript-lang.org/docs/manual/latest/overview[ReScript docs] for the sound type system that made this possible.
 
 |Backend
-|Rust + Tauri 2.0
-|5 MB binary vs 100+ MB Electron. No garbage collector pauses during real-time panel updates. The `notify` crate handles filesystem watching across Linux/macOS/Windows without the cross-platform pain that Go's `fsnotify` brings (goroutine leak on recursive watches, anyone?). See https://v2.tauri.app/start/[Tauri v2].
+|Rust + Gossamer (WebKitGTK)
+|5 MB binary vs 100+ MB Electron. No garbage collector pauses during real-time panel updates. The `notify` crate handles filesystem watching across Linux/macOS/Windows without the cross-platform pain that Go's `fsnotify` brings (goroutine leak on recursive watches, anyone?). Gossamer uses Zig + WebKitGTK for a lightweight, container-friendly webview shell.
 
 |Runtime
 |Deno (tests, build orchestration)
@@ -61,7 +61,7 @@ This is not a passive text editor. It is an active, synchronous environment that
 
 |Styling
 |Tailwind CSS 4.x
-|Utility-first, purged in production. Keeps panel styling consistent across 76 panels without CSS specificity wars.
+|Utility-first, purged in production. Keeps panel styling consistent across 106 panels without CSS specificity wars.
 
 |Middleware
 |Elixir/BEAM (`beam/panll_beam`)
@@ -94,7 +94,7 @@ deno task test
 # Watch mode for tests
 deno task test:watch
 
-# Development mode (Tailwind + static dev server + Tauri hot reload)
+# Development mode (Tailwind + static dev server + Gossamer dev mode)
 deno task dev
 
 # Build Tailwind CSS
@@ -151,7 +151,7 @@ For containerized runtime orchestration (Chainguard base + Cerro Torre pack/veri
 == Local Dev Server
 
 `deno task dev` starts a static server for `public/` on `http://localhost:8000`
-to satisfy the Tauri `devUrl`.
+to satisfy the Gossamer webview.
 
 == Keyboard Shortcuts
 
@@ -169,11 +169,11 @@ PMPL-1.0-or-later
 
 == Status
 
-**v0.1.0-alpha** (95% complete, 76 panels defined)
+**v0.2.0-dev** (85% complete, 106 panels defined)
 
 ✅ Complete TEA implementation (Model-Update-View)
 ✅ All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron)
-✅ Tauri 2.0 backend with 8 working commands
+✅ Gossamer backend with 270 migrated commands
 ✅ 109 tests passing (97 JS via Deno.test + 12 Rust via cargo test)
 ✅ npm→Deno migration complete
 ✅ Full ReScript compilation (180ms, 0 warnings)

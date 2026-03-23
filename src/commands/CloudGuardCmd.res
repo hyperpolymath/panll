@@ -2,8 +2,8 @@
 
 /// CloudGuard Backend Command Wrappers — TEA commands for Cloudflare API operations.
 ///
-/// Each function wraps a `#[tauri::command]` handler from
-/// `src-tauri/src/cloudguard/commands.rs`, using the `Tea_Cmd.call` pattern
+/// Each function wraps a backend command handler from
+/// `src-gossamer/src/cloudguard/commands.rs`, using the `Tea_Cmd.call` pattern
 /// to bridge async backend invocations into the TEA update loop.
 ///
 /// Pattern:

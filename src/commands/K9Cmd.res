@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
 /// PanLL K9 Commands — backend invoke wrappers for K9 contractile operations.
-/// These call into the Rust backend at src-tauri/src/k9/commands.rs which
+/// These call into the Rust backend at src-gossamer/src/k9/commands.rs which
 /// handles filesystem access for loading, validating, and applying K9
 /// contractile files (.k9.ncl).
 ///

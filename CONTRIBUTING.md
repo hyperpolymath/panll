@@ -16,12 +16,13 @@ are correct — no escape hatches, no `as unknown as`, no runtime type errors.
 Exhaustive pattern matching on variant types caught dozens of "missing case" bugs
 during the panel expansion. See [rescript-lang.org](https://rescript-lang.org).
 
-**Rust + Tauri instead of Electron** — PanLL's release binary is ~5 MB. An
+**Rust + Gossamer instead of Electron** — PanLL's release binary is ~5 MB. An
 equivalent Electron app would be 100+ MB (shipping an entire Chromium). The Rust
-backend also means filesystem watching, git blame parsing, and HTTP clients run
-with no garbage collector pauses — important when 14 panels are subscribed to
-live events. We evaluated Go for the backend; the `if err != nil` boilerplate on
-every function call made the command routing code twice as long.
+backend runs through Gossamer (Zig + WebKitGTK), a lightweight container-friendly
+webview shell. Filesystem watching, git blame parsing, and HTTP clients run with
+no garbage collector pauses — important when 106 panels are subscribed to live
+events. PanLL originally used Tauri 2.0 but migrated to Gossamer for better
+container support and tighter integration with the hyperpolymath stack.
 
 **Deno instead of npm/Node** — No `node_modules` directory (1,200+ transitive
 deps for a typical Node project). Built-in test runner. Secure-by-default

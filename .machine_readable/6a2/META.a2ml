@@ -64,10 +64,12 @@ date = "2026-01-18"
 decision = "Use ReScript 11.1+ compiling to JavaScript. Follows hyperpolymath language policy."
 
 [architecture-decisions.adr-004]
-title = "Tauri 2.0 for Desktop App Framework"
+title = "Gossamer for Desktop App Framework"
 status = "accepted"
 date = "2026-01-22"
-decision = "Use Tauri 2.0 with Rust backend. Frontend in webview, backend handles system operations."
+decision = """Originally used Tauri 2.0; migrated to Gossamer (Zig + WebKitGTK) in March 2026
+for better container support, tighter hyperpolymath stack integration, and lighter runtime.
+Frontend in webview, Rust backend handles system operations via Gossamer IPC."""
 
 [architecture-decisions.adr-005]
 title = "Anti-Crash Library as Circuit Breaker"
@@ -87,7 +89,7 @@ triggers anti-inflammatory UI adjustments."""
 title = "Deno + npm Hybrid Build System"
 status = "accepted"
 date = "2026-02-02"
-decision = """Deno tasks for Tailwind CSS and Tauri orchestration.
+decision = """Deno tasks for Tailwind CSS and Gossamer orchestration.
 npm scripts only for ReScript compilation (res:build, res:watch).
 Future migration to eliminate npm entirely pending ReScript Deno support."""
 
@@ -96,7 +98,7 @@ Future migration to eliminate npm entirely pending ReScript Deno support."""
 [development-practices]
 testing-strategy = """Test-driven development for core logic (Model, Update, Commands, Subscriptions).
 Deno.test for JavaScript unit tests; cargo test for Rust backend tests.
-Integration tests for Tauri backend commands. Manual testing for UI/UX flows."""
+Integration tests for Gossamer backend commands. Manual testing for UI/UX flows."""
 versioning-scheme = "Semantic versioning. v0.x.y = pre-1.0 (breaking changes allowed)."
 license-policy = "All original code PMPL-1.0-or-later. Third-party dependencies respect original licenses."
 
@@ -118,7 +120,7 @@ Operator-initiated activation (first keypress). Reduces startup anxiety."""
 # --- Cross-Cutting Concerns ---
 
 [cross-cutting-concerns]
-security = """Tauri enforces CSP. Validate all Tauri command inputs.
+security = """Gossamer enforces CSP. Validate all backend command inputs.
 No eval() or unsafe JavaScript. SafeDOM 4-layer defence-in-depth."""
 performance = """ReScript compiles to optimised JavaScript. Rust backend for CPU-intensive tasks.
 Virtual DOM diffing for efficient UI updates."""

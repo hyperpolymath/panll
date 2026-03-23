@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
 /// PanLL Governance Commands — backend invoke wrappers for nesy-MCP governance
-/// queries. These call into the Rust backend at src-tauri/src/governance/commands.rs
+/// queries. These call into the Rust backend at src-gossamer/src/governance/commands.rs
 /// which routes governance decisions through the BoJ nesy-mcp cartridge for
 /// real-time neural validation.
 ///

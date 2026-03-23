@@ -4,7 +4,7 @@
 /// ObservabilityCmd — backend invoke wrappers for the observe-mcp BoJ cartridge.
 ///
 /// Routes SARIF export and OpenTelemetry trace collection through the
-/// observe-mcp cartridge backend (src-tauri/src/observability/commands.rs),
+/// observe-mcp cartridge backend (src-gossamer/src/observability/commands.rs),
 /// enabling BoJ-routed observability when bojRouting is on.
 ///
 /// All commands use `Tea_Cmd.call` for async backend invocations, matching

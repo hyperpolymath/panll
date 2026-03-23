@@ -3,7 +3,7 @@
 /// PanLL ScriptGist Commands — backend invoke wrappers for gist persistence,
 /// execution dispatch, and diachronic snapshot restoration.
 ///
-/// Routes to Rust backend at src-tauri/src/script_gist/commands.rs which
+/// Routes to Rust backend at src-gossamer/src/script_gist/commands.rs which
 /// handles filesystem I/O and target dispatch.
 
 let invoke = RuntimeBridge.invoke

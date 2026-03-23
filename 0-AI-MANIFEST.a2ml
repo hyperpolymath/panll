@@ -60,25 +60,25 @@
     ;; TypeLL — cross-panel type intelligence (CRITICAL service)
     (typell-model    "src/model/TypeLLModel.res"     "TypeLL state types")
     (typell-engine   "src/core/TypeLLEngine.res"     "TypeLL inference engine")
-    (typell-cmd      "src/commands/TypeLLCmd.res"     "TypeLL Tauri bridge commands")
+    (typell-cmd      "src/commands/TypeLLCmd.res"     "TypeLL Gossamer bridge commands")
     (typell-service  "src/modules/TypeLLService.res"  "CRITICAL — cross-panel type intelligence service; any panel can call helpers")
     (typell-view     "src/components/TypeLL.res"      "TypeLL panel view")
 
     ;; ProtocolSquisher — protocol compression panel
     (protsquish-model "src/model/ProtocolSquisherModel.res" "ProtocolSquisher state types")
     (protsquish-engine "src/core/ProtocolSquisherEngine.res" "ProtocolSquisher engine")
-    (protsquish-cmd   "src/commands/ProtocolSquisherCmd.res" "ProtocolSquisher Tauri bridge commands")
+    (protsquish-cmd   "src/commands/ProtocolSquisherCmd.res" "ProtocolSquisher Gossamer bridge commands")
     (protsquish-view  "src/components/ProtocolSquisher.res"  "ProtocolSquisher panel view")
 
     ;; MyLang — personal language panel
     (mylang-model    "src/model/MyLangModel.res"     "MyLang state types")
     (mylang-engine   "src/core/MyLangEngine.res"     "MyLang engine")
-    (mylang-cmd      "src/commands/MyLangCmd.res"     "MyLang Tauri bridge commands")
+    (mylang-cmd      "src/commands/MyLangCmd.res"     "MyLang Gossamer bridge commands")
     (mylang-view     "src/components/MyLang.res"      "MyLang panel view")
 
     ;; Infrastructure
-    (tauri-backend   "src-tauri/src/main.rs"        "Rust/Tauri 2.0 backend commands")
-    (tauri-config    "src-tauri/tauri.conf.json"    "Tauri configuration")
+    (gossamer-backend "src-gossamer/src/main.rs"     "Rust/Gossamer backend commands")
+    (gossamer-config  "src-gossamer/gossamer.conf.json" "Gossamer configuration")
     (elixir-backend  "beam/"                        "Elixir/BEAM API layer")
     (mock-echidna    "scripts/mock-echidna.ts"      "Mock ECHIDNA REST server (port 9000)")
 
@@ -100,9 +100,9 @@
   ;; ===================================================================
 
   (tech-stack
-    (primary    "ReScript"      "Tauri 2.0 (Rust)")
+    (primary    "ReScript"      "Gossamer (Rust + Zig + WebKitGTK)")
     (secondary  "Elixir/OTP"    "Deno")
-    (runtime    "Tauri webview"  "BEAM/OTP")
+    (runtime    "Gossamer webview"  "BEAM/OTP")
     (styling    "Tailwind CSS")
     (testing    "Deno.test")
     (backend-provers "ECHIDNA REST API on port 9000")
@@ -132,8 +132,8 @@
       (panel-L "Symbolic Mass — formal constraints, proof editor, symbolic notation")
       (panel-N "Neural Stream — inference tokens, ECHIDNA advisor, agency monitor")
       (panel-W "World Barycentre — task canvas, security tools, VeriSimDB, event chain")
-      (total-panels 41)
-      (total-clades 41))
+      (total-panels 106)
+      (total-clades 106))
 
     (cognitive-governance
       (anti-crash     "Circuit breaker — validates all neural tokens against symbolic constraints")
@@ -176,7 +176,7 @@
     (rule "Contractiles evaluate after EVERY state-modifying update")
 
     ;; Ports and services
-    (rule "Dev server: port 8000 (Tauri devUrl)")
+    (rule "Dev server: port 8000 (Gossamer webview)")
     (rule "ECHIDNA: port 9000 (avoids dev server conflict)")
     (rule "VeriSimDB: port 8080")
 
@@ -230,11 +230,11 @@
      │   ├── tea/                    # Custom TEA runtime
      │   ├── components/             # 41 panels: PanelL, PanelN, PanelW, TypeLL, ProtocolSquisher, MyLang, ...
      │   ├── core/                   # AntiCrash, OrbitalSync, Contractiles, EventChain, TypeLLEngine, ...
-     │   ├── commands/               # Tauri bridge commands
-     │   ├── bindings/               # FFI bindings (Tauri)
+     │   ├── commands/               # Gossamer bridge commands
+     │   ├── bindings/               # FFI bindings (Gossamer)
      │   ├── modules/                # Module registry + TypeLLService (cross-panel)
      │   └── subscriptions/          # Keyboard + polling subscriptions
-     ├── src-tauri/                  # Rust/Tauri 2.0 backend (63 Rust files)
+     ├── src-gossamer/               # Rust/Gossamer backend (migrated from Tauri)
      ├── beam/                       # Elixir/BEAM API layer
      ├── scripts/                    # Development tools (mock-echidna.ts)
      ├── tests/                      # Deno.test suite (979 tests, 41 suites)
@@ -269,6 +269,6 @@
     (version "2.0.0")
     (media-type "application/a2ml")
     (created "2026-02-09")
-    (last-updated "2026-03-08")
+    (last-updated "2026-03-23")
     (maintained-by "Jonathan D.A. Jewell / hyperpolymath")
     (protocol "https://github.com/hyperpolymath/0-ai-gatekeeper-protocol")))

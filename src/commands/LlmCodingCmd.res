@@ -5,7 +5,7 @@
 /// and managing LLM coding sessions.
 ///
 /// All commands invoke backend commands registered in
-/// src-tauri/src/llm_coding/commands.rs.
+/// src-gossamer/src/llm_coding/commands.rs.
 
 let invoke = RuntimeBridge.invoke
 

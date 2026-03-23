@@ -2,7 +2,7 @@
 
 /// PanLL Umoja Commands — backend invoke wrappers for Umoja peer management.
 ///
-/// These call into the Rust backend at src-tauri/src/umoja/commands.rs
+/// These call into the Rust backend at src-gossamer/src/umoja/commands.rs
 /// for federation peer lifecycle operations: add, disconnect, gossip,
 /// catalogue sync, and metrics retrieval.
 
