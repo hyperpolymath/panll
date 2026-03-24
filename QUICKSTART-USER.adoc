@@ -1,0 +1,188 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+= PanLL Quickstart
+:author: Jonathan D.A. Jewell
+:toc: macro
+:icons: font
+:source-highlighter: rouge
+
+toc::[]
+
+== What is PanLL?
+
+PanLL (eNSAID) is a three-panel neurosymbolic AI development environment built with ReScript (TEA architecture) and Gossamer (Rust + WebKitGTK). It provides Panel-L (Symbolic), Panel-N (Neural), and Panel-W (World) with cognitive governance through Anti-Crash validation, Vexometer friction tracking, and Orbital synchronisation. 106 panels across three panes.
+
+== Prerequisites
+
+[cols="1,2,2"]
+|===
+| Tool | Minimum Version | Install
+
+| Deno
+| >= 2.0
+| `curl -fsSL https://deno.land/install.sh \| sh`
+
+| ReScript
+| >= 12.0
+| `deno install -A npm:rescript` (or via `deno run -A npm:rescript`)
+
+| Rust / Cargo
+| >= 1.80 (nightly recommended)
+| `asdf install rust nightly` or https://rustup.rs
+
+| Zig
+| >= 0.13
+| `asdf install zig latest`
+
+| just
+| >= 1.25
+| `cargo install just`
+
+| Elixir (optional)
+| >= 1.16
+| `asdf install elixir latest` (only for beam/ middleware)
+|===
+
+Verify all tools are installed:
+
+[source,bash]
+----
+just doctor
+----
+
+== Clone and First Build
+
+[source,bash]
+----
+cd ~/Documents/hyperpolymath-repos
+git clone https://github.com/hyperpolymath/panll.git
+cd panll
+----
+
+Install ReScript dependencies (Deno-managed npm):
+
+[source,bash]
+----
+deno install
+----
+
+Build ReScript, Tailwind CSS, and Gossamer backend:
+
+[source,bash]
+----
+just build
+----
+
+== First Run
+
+Start the full development environment (Gossamer webview + ReScript watcher + CSS watcher):
+
+[source,bash]
+----
+just dev
+----
+
+This starts:
+
+- ReScript watch compiler
+- Tailwind CSS watcher
+- Gossamer backend (Rust) serving WebKitGTK webview
+- Dev server at http://localhost:8000/public/
+
+For browser-only (no native window):
+
+[source,bash]
+----
+just serve
+----
+
+== Run Tests
+
+[source,bash]
+----
+just test
+----
+
+979 tests across 41 suites run via `deno test`.
+
+== Optional: Mock ECHIDNA Prover
+
+The theorem prover advisor runs on port 9000. Start the mock server:
+
+[source,bash]
+----
+just mock
+----
+
+== Key Ports
+
+[cols="1,1,2"]
+|===
+| Port | Service | Notes
+
+| 8000
+| Dev server
+| Gossamer webview content
+
+| 9000
+| ECHIDNA
+| Theorem prover (mock: `just mock`)
+
+| 8080
+| VeriSimDB
+| External dependency (optional)
+
+| 7700
+| BoJ server
+| External dependency (optional)
+|===
+
+== Guided Tour
+
+[source,bash]
+----
+just tour
+----
+
+== Troubleshooting
+
+Run the doctor to diagnose missing tools:
+
+[source,bash]
+----
+just doctor
+----
+
+If tools are missing, attempt automatic repair:
+
+[source,bash]
+----
+just heal
+----
+
+== Project Structure (Key Paths)
+
+----
+src/                   ReScript source (TEA architecture)
+  Model.res            State composition root
+  Msg.res              Message variants
+  Update.res           State transition kernel (~7500 lines)
+  View.res             Root view renderer
+  tea/                 Custom TEA runtime (18 modules)
+  model/               Domain type modules
+  core/                Engines (AntiCrash, OrbitalSync, etc.)
+  components/          Panel view components
+  commands/            Gossamer bridge commands
+src-gossamer/          Rust backend (Gossamer/WebKitGTK)
+beam/                  Elixir/BEAM API layer (optional)
+tests/                 Deno test suite
+public/                Static assets
+ffi/zig/               Zig FFI layer
+----
+
+== Further Reading
+
+- `docs/TEA_GUIDE.md` -- TEA architecture guide
+- `docs/design/` -- Session design documents
+- `0-AI-MANIFEST.a2ml` -- Machine-readable project manifest
+- `.claude/CLAUDE.md` -- AI assistant instructions

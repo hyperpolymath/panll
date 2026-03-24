@@ -4,7 +4,7 @@
 ; 0-AI-MANIFEST.a2ml — Universal AI entry point for PanLL
 ; Media-Type: application/a2ml
 
-; ⚠️  THIS FILE MUST BE READ FIRST BY ALL AI AGENTS
+; THIS FILE MUST BE READ FIRST BY ALL AI AGENTS
 
 (manifest
   (identity
@@ -16,84 +16,55 @@
     (author "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"))
 
   (purpose
-    "Three-panel neurosymbolic workbench built on the Binary Star co-orbit
-     model. Panel-L (Symbolic) holds formal constraints and the proof editor.
-     Panel-N (Neural) streams inference tokens with the ECHIDNA theorem prover
-     advisor. Panel-W (World) hosts the task barycentre, VeriSimDB database
-     tools, and panic-attacker security analysis. The environment enforces
-     cognitive governance through Anti-Crash validation, Vexometer operator
-     friction tracking, Orbital synchronisation, and elastic Contractiles.
+    "Three-panel neurosymbolic workbench (Binary Star co-orbit model).
+     Panel-L (Symbolic), Panel-N (Neural/ECHIDNA), Panel-W (World/VeriSimDB).
+     Cognitive governance via Anti-Crash, Vexometer, Orbital sync, Contractiles.
      TypeLL provides cross-panel type intelligence as a shared service.")
 
   ;; ===================================================================
-  ;; CANONICAL LOCATIONS — these are non-negotiable
+  ;; CONTEXT TIERS — controls what agents should load and when
+  ;; ===================================================================
+
+  (context-tiers
+    ; Tier 0 (always load): This file + .claude/CLAUDE.md — orientation only
+    ; Tier 1 (load if working on code): README.adoc, EXPLAINME.adoc, Justfile
+    ; Tier 2 (load on demand): .machine_readable/*.scm, docs/design/
+    ; Tier 3 (never load unless asked): tests/, generated/, CI configs
+    ;
+    ; DO NOT READ unless specifically asked:
+    ;   tests/          — test files (run them, don't read them)
+    ;   generated/      — auto-generated code
+    ;   target/         — build artifacts
+    ;   node_modules/   — dependencies
+    ;   lib/bs/         — ReScript compiler cache
+    ;   *.lock          — lock files
+    ;   src-gossamer/target/ — Rust build output
+    )
+
+  ;; ===================================================================
+  ;; CANONICAL LOCATIONS
   ;; ===================================================================
 
   (canonical-locations
-    ;; AI and agent instructions
     (ai-manifest     "0-AI-MANIFEST.a2ml"         "THIS FILE — read first")
     (ai-instructions ".claude/CLAUDE.md"           "Claude-specific patterns")
 
-    ;; Machine-readable checkpoint files (ONLY in .machine_readable/)
+    ; Machine-readable checkpoint files (ONLY in .machine_readable/)
     (state           ".machine_readable/STATE.scm")
     (meta            ".machine_readable/META.scm")
     (ecosystem       ".machine_readable/ECOSYSTEM.scm")
-    (agentic         ".machine_readable/AGENTIC.scm")
-    (neurosym        ".machine_readable/NEUROSYM.scm")
-    (playbook        ".machine_readable/PLAYBOOK.scm")
 
-    ;; Source code — ReScript TEA architecture (230 ReScript + 63 Rust files)
-    (model-root      "src/Model.res"               "Composition root — includes domain modules")
-    (model-panes     "src/model/PaneModel.res"      "Panel-L/N/W state types")
-    (model-echidna   "src/model/EchidnaModel.res"   "ECHIDNA prover types")
-    (model-verisim   "src/model/VeriSimModel.res"    "VeriSimDB database types")
-    (model-governance "src/model/GovernanceModel.res" "AntiCrash, Vexometer, Orbital, Contractiles")
-    (model-vab       "src/model/VabModel.res"        "VAB (Verified Assembly Building) state types")
-    (vab-catalog     "src/core/VabCatalog.res"        "108+3 proven-servers component catalog")
-    (vab-engine      "src/core/VabEngine.res"         "Dependency checking + capability computation")
-    (vab-component   "src/components/Vab.res"         "KSP-inspired VAB panel view (TEA)")
+    ; Key source files — see .claude/CLAUDE.md for full file table
+    (model-root      "src/Model.res"               "Composition root")
     (messages        "src/Msg.res"                  "TEA message variants")
-    (update-engine   "src/Update.res"               "State transition kernel (~7500 lines)")
+    (update-engine   "src/Update.res"               "State transition kernel")
     (view-root       "src/View.res"                 "Root view renderer")
-    (storage         "src/Storage.res"              "localStorage persistence")
 
-    ;; TypeLL — cross-panel type intelligence (CRITICAL service)
-    (typell-model    "src/model/TypeLLModel.res"     "TypeLL state types")
-    (typell-engine   "src/core/TypeLLEngine.res"     "TypeLL inference engine")
-    (typell-cmd      "src/commands/TypeLLCmd.res"     "TypeLL Gossamer bridge commands")
-    (typell-service  "src/modules/TypeLLService.res"  "CRITICAL — cross-panel type intelligence service; any panel can call helpers")
-    (typell-view     "src/components/TypeLL.res"      "TypeLL panel view")
-
-    ;; ProtocolSquisher — protocol compression panel
-    (protsquish-model "src/model/ProtocolSquisherModel.res" "ProtocolSquisher state types")
-    (protsquish-engine "src/core/ProtocolSquisherEngine.res" "ProtocolSquisher engine")
-    (protsquish-cmd   "src/commands/ProtocolSquisherCmd.res" "ProtocolSquisher Gossamer bridge commands")
-    (protsquish-view  "src/components/ProtocolSquisher.res"  "ProtocolSquisher panel view")
-
-    ;; MyLang — personal language panel
-    (mylang-model    "src/model/MyLangModel.res"     "MyLang state types")
-    (mylang-engine   "src/core/MyLangEngine.res"     "MyLang engine")
-    (mylang-cmd      "src/commands/MyLangCmd.res"     "MyLang Gossamer bridge commands")
-    (mylang-view     "src/components/MyLang.res"      "MyLang panel view")
-
-    ;; Infrastructure
-    (gossamer-backend "src-gossamer/src/main.rs"     "Rust/Gossamer backend commands")
-    (gossamer-config  "src-gossamer/gossamer.conf.json" "Gossamer configuration")
+    ; Infrastructure
+    (gossamer-backend "src-gossamer/src/main.rs"    "Rust/Gossamer backend")
     (elixir-backend  "beam/"                        "Elixir/BEAM API layer")
-    (mock-echidna    "scripts/mock-echidna.ts"      "Mock ECHIDNA REST server (port 9000)")
-
-    ;; Build and test
-    (rescript-config "rescript.json"                "ReScript compiler config")
-    (deno-config     "deno.json"                    "Deno tasks and import map")
-    (tests           "tests/"                       "Deno.test suite (979 tests, 41 suites)")
-
-    ;; Design documentation
-    (design-docs     "docs/design/"                 "Session design documents (dated)")
-    (tea-guide       "docs/TEA_GUIDE.md"            "TEA architecture guide")
-
-    ;; Security and trust
-    (security        ".well-known/security.txt")
-    (bot-directives  ".bot_directives/"             "Bot-specific instructions"))
+    (rescript-config "rescript.json"                 "ReScript compiler config")
+    (deno-config     "deno.json"                    "Deno tasks and import map"))
 
   ;; ===================================================================
   ;; TECH STACK
@@ -102,147 +73,51 @@
   (tech-stack
     (primary    "ReScript"      "Gossamer (Rust + Zig + WebKitGTK)")
     (secondary  "Elixir/OTP"    "Deno")
-    (runtime    "Gossamer webview"  "BEAM/OTP")
-    (styling    "Tailwind CSS")
     (testing    "Deno.test")
-    (backend-provers "ECHIDNA REST API on port 9000")
-    (backend-db      "VeriSimDB REST API on port 8080"))
-
-  ;; ===================================================================
-  ;; ARCHITECTURE — The Binary Star Co-Orbit
-  ;; ===================================================================
-
-  (architecture
-    (paradigm "Elm Architecture (TEA) — Model/Msg/Update/View/Subscriptions")
-
-    (model-structure
-      (description "Model.res is a composition root that includes 4 domain modules")
-      (modules
-        (PaneModel      "Pane-L/N/W types, neuralToken, symbolicConstraint, eventChain")
-        (EchidnaModel   "Trust levels, axiom danger, provers, sessions, dispatch results")
-        (VeriSimModel   "Proof obligations, drift scores, telemetry, database state")
-        (GovernanceModel "AntiCrash, Vexometer, Orbital, Contractiles, sync events")
-        (VabModel       "VAB (Verified Assembly Building) types — vabComponent, vabWarning, capabilityStatus, vabState"))
-      (dependency-order "PaneModel → EchidnaModel → VeriSimModel → GovernanceModel → VabModel → Model")
-      (constraint "GovernanceModel depends on PaneModel for neuralToken only")
-      (constraint "VabModel is a leaf module — VabCatalog and VabEngine use VabModel directly to avoid cycles"))
-
-
-    (panels
-      (panel-L "Symbolic Mass — formal constraints, proof editor, symbolic notation")
-      (panel-N "Neural Stream — inference tokens, ECHIDNA advisor, agency monitor")
-      (panel-W "World Barycentre — task canvas, security tools, VeriSimDB, event chain")
-      (total-panels 106)
-      (total-clades 106))
-
-    (cognitive-governance
-      (anti-crash     "Circuit breaker — validates all neural tokens against symbolic constraints")
-      (vexometer      "Operator friction tracking — 0.0 (calm) to 1.0 (frustrated)")
-      (orbital-sync   "Cross-pane synchronisation — stability, divergence, drift aura")
-      (contractiles   "Elastic state contracts — orbital stability, vexation ceiling, divergence limit, autonomy bound")
-      (humidity       "Information density — High (detail) / Medium / Low (shed noise)"))
-
-    (backends
-      (echidna
-        (description "Multi-solver theorem prover dispatch")
-        (endpoint "http://localhost:9000/api/v1")
-        (mock "scripts/mock-echidna.ts — standalone Deno mock server")
-        (capabilities "health, provers, prove, verify, search, sessions, tactics, suggestions"))
-      (verisimdb
-        (description "8-modality versioned database")
-        (endpoint "http://localhost:8080/api/v1")
-        (capabilities "query, entities, drift, normalise, telemetry, orchestrator"))
-      (boj-server
-        (description "Bundle of Joy — cartridge server and protocol gateway")
-        (endpoint "http://localhost:8080/boj/v1")
-        (cartridges "lsp-mcp, dap-mcp, bsp-mcp, database-mcp, nesy-mcp, agent-mcp, observe-mcp + 7 more")
-        (routing "4 panels route through BoJ via bojRouting toggle: Editor Bridge, VeriSimDB, VM Inspector, Build Dashboard")
-        (federation "Umoja peer-to-peer federation runtime"))))
+    (backend-provers "ECHIDNA REST on port 9000")
+    (backend-db      "VeriSimDB REST on port 8080"))
 
   ;; ===================================================================
   ;; CRITICAL INVARIANTS
   ;; ===================================================================
 
   (critical-invariants
-    ;; File organisation
-    (rule "SCM files ONLY in .machine_readable/ — NEVER in root directory")
-    (rule "Bot directives ONLY in .bot_directives/")
-    (rule "Model types in src/model/ domain modules — Model.res only composes via include")
-
-    ;; Architecture
-    (rule "TEA pattern: Model → Msg → Update → View — no MVC, no Redux")
+    ; Architecture
+    (rule "TEA pattern: Model -> Msg -> Update -> View — no MVC, no Redux")
     (rule "All state lives in Model.model — no global mutable state")
-    (rule "Anti-Crash validates ALL neural tokens — no inference bypasses the circuit breaker")
+    (rule "Anti-Crash validates ALL neural tokens — no bypasses")
     (rule "Contractiles evaluate after EVERY state-modifying update")
+    (rule "TypeLL is cross-cutting — any panel can call TypeLLService")
+    (rule "SCM files ONLY in .machine_readable/ — NEVER in root")
+    (rule "Panels, not panes — PanLL uses 'panels' terminology")
 
-    ;; Ports and services
-    (rule "Dev server: port 8000 (Gossamer webview)")
-    (rule "ECHIDNA: port 9000 (avoids dev server conflict)")
-    (rule "VeriSimDB: port 8080")
+    ; Ports
+    (rule "Dev server: 8000 | ECHIDNA: 9000 | VeriSimDB: 8080")
 
-    ;; Code quality
-    (rule "License: PMPL-1.0-or-later on all source files")
-    (rule "Author: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>")
+    ; Code policy
     (rule "No TypeScript — ReScript only")
     (rule "No npm/bun — Deno only")
-    (rule "WCAG 2.3 A minimum, AA target, AAA best-effort")
-
-    ;; TypeLL cross-cutting service
-    (rule "TypeLL is a cross-cutting service, not just a panel — any panel can call TypeLLService helpers")
-    (rule "All panels MUST degrade gracefully when TypeLL is unavailable"))
+    (rule "PMPL-1.0-or-later on all source files"))
 
   ;; ===================================================================
-  ;; RELATED PROJECTS
-  ;; ===================================================================
-
-  (related-projects
-    (echidna     "Theorem prover dispatch engine — PanLL's primary proof backend")
-    (verisimdb   "8-modality database — entity browsing, drift, normalisation in Pane-W")
-    (panic-attack "Security analysis — event chain data imported into Pane-W")
-    (hypatia     "Neurosymbolic CI/CD — scans PanLL repo for quality")
-    (gitbot-fleet "Bot orchestration — rhodibot, echidnabot, sustainabot, glambot, seambot, finishbot")
-    (contractiles "Elastic contract framework — cognitive governance engine")
-    (k9-svc      "Self-validating components — layout presets and community extensions")
-    (rescript-evangeliser "Pedagogy/heutagogy tool — cross-pollinates progressive sophistication design"))
-
-  ;; ===================================================================
-  ;; REPOSITORY STRUCTURE
+  ;; STRUCTURE OVERVIEW (detail in CLAUDE.md)
   ;; ===================================================================
 
   (structure
     "panll/
-     ├── 0-AI-MANIFEST.a2ml         # THIS FILE — universal entry point
-     ├── src/                        # ReScript source (230 files, TEA architecture)
-     │   ├── Model.res               # Composition root (includes domain modules)
-     │   ├── model/                  # Domain type modules
-     │   │   ├── PaneModel.res       #   Panel-L/N/W state types
-     │   │   ├── EchidnaModel.res    #   ECHIDNA theorem prover types
-     │   │   ├── VeriSimModel.res    #   VeriSimDB database types
-     │   │   ├── GovernanceModel.res #   Cognitive governance types
-     │   │   ├── TypeLLModel.res     #   TypeLL type intelligence types
-     │   │   ├── ProtocolSquisherModel.res # ProtocolSquisher types
-     │   │   └── MyLangModel.res     #   MyLang types
-     │   ├── Msg.res                 # TEA message variants
-     │   ├── Update.res              # State transition kernel
-     │   ├── View.res                # Root view renderer
-     │   ├── App.res                 # Application entry point
-     │   ├── Storage.res             # Persistence layer
-     │   ├── tea/                    # Custom TEA runtime
-     │   ├── components/             # 41 panels: PanelL, PanelN, PanelW, TypeLL, ProtocolSquisher, MyLang, ...
-     │   ├── core/                   # AntiCrash, OrbitalSync, Contractiles, EventChain, TypeLLEngine, ...
+     ├── 0-AI-MANIFEST.a2ml         # THIS FILE
+     ├── src/                        # ReScript source (230 files, TEA)
+     │   ├── Model.res, Msg.res, Update.res, View.res, App.res
+     │   ├── model/                  # Domain modules (Pane, Echidna, VeriSim, Governance, TypeLL, ...)
+     │   ├── core/                   # Engines (AntiCrash, Orbital, Contractiles, TypeLL, Vab, ...)
+     │   ├── components/             # 106 panel views
      │   ├── commands/               # Gossamer bridge commands
-     │   ├── bindings/               # FFI bindings (Gossamer)
-     │   ├── modules/                # Module registry + TypeLLService (cross-panel)
-     │   └── subscriptions/          # Keyboard + polling subscriptions
-     ├── src-gossamer/               # Rust/Gossamer backend (migrated from Tauri)
+     │   └── modules/                # Module registry + TypeLLService
+     ├── src-gossamer/               # Rust/Gossamer backend
      ├── beam/                       # Elixir/BEAM API layer
-     ├── scripts/                    # Development tools (mock-echidna.ts)
-     ├── tests/                      # Deno.test suite (979 tests, 41 suites)
-     ├── docs/                       # Documentation and design docs
-     │   └── design/                 # Session design documents (dated)
-     ├── public/                     # Static assets
-     ├── .machine_readable/          # SCM checkpoint files (7 files)
-     └── .bot_directives/            # Bot-specific instructions")
+     ├── tests/                      # 979 tests, 41 suites
+     ├── .machine_readable/          # SCM checkpoint files
+     └── .bot_directives/            # Bot instructions")
 
   ;; ===================================================================
   ;; SESSION LIFECYCLE
@@ -250,25 +125,18 @@
 
   (lifecycle
     (on-enter
-      (step "Read THIS file (0-AI-MANIFEST.a2ml) first")
-      (step "Acknowledge canonical locations and invariants")
-      (step "Read .machine_readable/STATE.scm for current status")
-      (step "Read .machine_readable/ECOSYSTEM.scm for project relationships")
-      (step "Check for blockers before starting work"))
+      (step "Read THIS file first")
+      (step "Read .claude/CLAUDE.md for build commands and conventions")
+      (step "Read .machine_readable/STATE.scm for current status"))
 
     (on-exit
       (step "Update .machine_readable/STATE.scm if changes were made")
-      (step "Document new blockers or completed milestones")
       (step "Summarise outcomes for session continuity")))
 
-  ;; ===================================================================
-  ;; FORMAT META
-  ;; ===================================================================
-
   (format-meta
-    (version "2.0.0")
+    (version "2.1.0")
     (media-type "application/a2ml")
     (created "2026-02-09")
-    (last-updated "2026-03-23")
+    (last-updated "2026-03-24")
     (maintained-by "Jonathan D.A. Jewell / hyperpolymath")
     (protocol "https://github.com/hyperpolymath/0-ai-gatekeeper-protocol")))

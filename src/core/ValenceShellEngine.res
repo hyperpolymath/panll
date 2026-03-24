@@ -87,7 +87,7 @@ let defaultState: valenceShellState = {
   backend: SystemShell("bash"),
   valenceAvailable: false,
   ptyConnected: false,
-  cwd: "/var/mnt/eclipse/repos/idaptik",
+  cwd: ".",
   outputBuffer: [],
   inputLine: "",
   commandHistory: [],

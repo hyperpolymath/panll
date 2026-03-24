@@ -90,9 +90,12 @@ fn read_disk_usage() -> (u64, u64) {
         Err(_) => return (0, 0),
     };
 
-    // Prefer /mnt/eclipse, then /var/mnt/eclipse, then root.
+    // Prefer the mount point named in PANLL_DATA_MOUNT (default: "eclipse"),
+    // then fall back to root.
+    let mount_hint = std::env::var("PANLL_DATA_MOUNT")
+        .unwrap_or_else(|_| "eclipse".to_string());
     let mount_point = content.lines()
-        .find(|l| l.contains("/mnt/eclipse"))
+        .find(|l| l.contains(&mount_hint))
         .or_else(|| content.lines().find(|l| l.starts_with("/ ")))
         .and_then(|l| l.split_whitespace().nth(1))
         .unwrap_or("/");

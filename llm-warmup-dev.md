@@ -1,0 +1,186 @@
+# PanLL LLM Warmup (Developer Context)
+
+## Identity
+
+- **Name**: PanLL eNSAID (Neurosymbolic AI Development Environment)
+- **License**: PMPL-1.0-or-later
+- **Author**: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+- **Repo**: https://github.com/hyperpolymath/panll
+
+## Architecture
+
+ReScript TEA (The Elm Architecture) frontend with Gossamer (Rust + WebKitGTK) backend.
+106 panels across three panes. Optional Elixir/BEAM middleware. Zig FFI layer.
+
+### TEA Flow
+
+```
+Model.model → Msg.msg → Update.update → View.view → DOM
+     ↑                      |
+     └── Tea_Cmd / Tea_Sub ─┘
+```
+
+### Model Dependency Chain
+
+```
+PaneModel → EchidnaModel → VeriSimModel → GovernanceModel → VabModel → Model
+```
+
+- `Model.res` is a composition root using `include` on domain modules
+- GovernanceModel depends on PaneModel for neuralToken only
+- VabModel is a leaf module (VabCatalog/VabEngine use it directly)
+
+## Source Layout
+
+```
+src/
+  App.res              Entry point
+  Model.res            Composition root
+  Msg.res              Message variants
+  Update.res           State transition kernel (~7500 lines)
+  View.res             Root view renderer
+  Storage.res          localStorage persistence
+  tea/                 Custom TEA runtime (18 modules, permanent)
+  model/               Domain type modules
+    PaneModel.res      Panel-L/N/W state types
+    EchidnaModel.res   ECHIDNA prover types
+    VeriSimModel.res   VeriSimDB types
+    GovernanceModel.res  AntiCrash, Vexometer, Orbital, Contractiles
+    VabModel.res       Verified Assembly Building types
+    TypeLLModel.res    TypeLL type intelligence types
+    ProtocolSquisherModel.res  Protocol compression
+    MyLangModel.res    Personal language panel
+  core/                Engines
+    AntiCrash.res      Circuit breaker (validates neural tokens)
+    OrbitalSync.res    Cross-panel synchronisation
+    Contractiles.res   Elastic state contracts
+    TypeLLEngine.res   Type inference engine
+    VabEngine.res      Dependency checking + capability computation
+    VabCatalog.res     108+3 proven-servers component catalog
+    EventChain.res     Event chain
+    ProtocolSquisherEngine.res
+    MyLangEngine.res
+  components/          Panel view components (41+ files)
+    PanelL.res, PanelN.res, PanelW.res
+    TypeLL.res, ProtocolSquisher.res, MyLang.res, Vab.res
+  commands/            Gossamer bridge commands (invoke wrappers)
+    TypeLLCmd.res, ProtocolSquisherCmd.res, MyLangCmd.res
+  modules/             Module registry + TypeLLService (cross-panel)
+  bindings/            FFI bindings (Gossamer)
+  subscriptions/       Keyboard + polling subscriptions
+src-gossamer/          Rust backend (migrated from Tauri)
+  src/main.rs          Backend commands
+  gossamer.conf.json   Configuration
+beam/panll_beam/       Elixir/BEAM API layer
+ffi/zig/               Zig FFI
+  build.zig
+tests/                 Deno.test suite (979 tests, 41 suites)
+scripts/
+  bundle.ts            Deno bundler
+  mock-echidna.ts      Mock ECHIDNA REST server
+  dev-server.ts        Static file server
+```
+
+## Build System
+
+- **deno.json**: Tasks for bundle, css, test, serve, res:build, res:watch
+- **rescript.json**: ReScript compiler config (rescript >= 12.0)
+- **Cargo.toml**: Rust workspace (src-gossamer, tools/pcc)
+- **Justfile**: Orchestration (dev, serve, build, test, mock, etc.)
+
+### Build Commands
+
+```bash
+just build            # Full production build (ReScript + CSS + Gossamer)
+just dev              # Dev environment (watchers + Gossamer)
+just serve            # Browser-only dev (no native window)
+just test             # 979 tests via deno test
+just mock             # Mock ECHIDNA on port 9000
+just lint / just fmt  # Linting and formatting
+just clean            # Remove artifacts
+```
+
+### Deno Tasks (via deno.json)
+
+```bash
+deno task dev         # Gossamer + bundle + serve
+deno task build       # Production: cargo build --release + bundle + css
+deno task bundle      # Bundle JS output
+deno task css:build   # Tailwind CSS minified
+deno task res:build   # ReScript compile
+deno task test        # Deno test suite
+deno task mock:echidna  # Mock ECHIDNA server
+```
+
+## Cognitive Governance System
+
+| Engine | Purpose | Threshold |
+|--------|---------|-----------|
+| Anti-Crash | Validates all neural tokens against symbolic constraints | Circuit breaker |
+| Vexometer | Operator friction tracking | 0.0 (calm) to 1.0 (frustrated) |
+| Orbital Sync | Cross-pane synchronisation | Stability, divergence, drift aura |
+| Contractiles | Elastic state contracts | Orbital stability, vexation ceiling, divergence limit |
+| Humidity | Information density | High/Medium/Low |
+
+## TypeLL Cross-Panel Service
+
+TypeLL is NOT just a panel -- it is a cross-cutting service. Any panel can call
+TypeLLService helpers. All panels MUST degrade gracefully when TypeLL unavailable.
+
+Files: TypeLLModel.res, TypeLLEngine.res, TypeLLCmd.res, TypeLLService.res, TypeLL.res
+
+## Backend Services
+
+| Service | Port | Endpoint | Mock |
+|---------|------|----------|------|
+| ECHIDNA | 9000 | /api/v1 | scripts/mock-echidna.ts |
+| VeriSimDB | 8080 | /api/v1 | External |
+| BoJ server | 7700 | /boj/v1 | External |
+| TypeLL | 7800 | - | - |
+| Dev server | 8000 | /public/ | scripts/dev-server.ts |
+
+## ReScript Conventions
+
+- `list{}` for vdom children: `Tea_Html.div(list{}, list{...})`
+- `Events.onClick` / `Events.onInput` for event handlers
+- Pattern match exhaustively on all variant types
+- Domain model types in `src/model/` -- `Model.res` only composes via `include`
+- Command wrappers in `src/commands/` using `Tea_Cmd.call` pattern
+
+## Critical Invariants
+
+1. SCM files ONLY in `.machine_readable/` -- never root
+2. TEA pattern: Model -> Msg -> Update -> View -- no MVC, no Redux
+3. All state in `Model.model` -- no global mutable state
+4. Anti-Crash validates ALL neural tokens
+5. Contractiles evaluate after EVERY state-modifying update
+6. No TypeScript -- ReScript only
+7. No npm/bun -- Deno only (npm only for ReScript compiler via Deno)
+8. WCAG 2.3 A minimum, AA target
+9. License: PMPL-1.0-or-later on all source files
+
+## Related Projects
+
+| Project | Role |
+|---------|------|
+| ECHIDNA | Theorem prover dispatch |
+| VeriSimDB | 8-modality versioned database |
+| panic-attacker | Security analysis |
+| BoJ server | Cartridge server, protocol gateway |
+| TypeLL | Type verification kernel |
+| contractiles | Elastic contract framework |
+| gossamer | Desktop shell (Zig + WebKitGTK) |
+
+## Testing
+
+```bash
+deno test --no-check --allow-read --allow-env tests/
+```
+
+979 tests across 41 suites. Coverage via `deno task test:coverage`.
+
+## Pre-commit
+
+```bash
+just assail    # panic-attacker scan
+```

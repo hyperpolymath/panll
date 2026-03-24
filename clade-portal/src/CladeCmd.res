@@ -19,8 +19,9 @@
 /// Zig runtime, which holds the filesystem capability and reads from disk.
 
 /// The base path to the panel-clades directory on disk.
-/// This is the canonical location in the PanLL monorepo.
-let _cladesBasePath = "/var/mnt/eclipse/repos/panll/panel-clades/clades"
+/// Resolved by the Gossamer backend via IPC — this constant is a hint only.
+/// The backend uses PANLL_ROOT env var or its own exe-relative discovery.
+let _cladesBasePath = "panel-clades/clades"
 
 // ---------------------------------------------------------------------------
 // Directory listing

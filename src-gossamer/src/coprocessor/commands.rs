@@ -83,9 +83,24 @@ pub struct FfiDispatchResult {
 // Path constants
 // ============================================================================
 
-/// Path to the Zig FFI shared library for local compute dispatch.
-const FFI_SO_PATH: &str =
-    "/var/mnt/eclipse/repos/panll/ffi/zig/zig-out/lib/libpanll_copro.so";
+/// Discover the Zig FFI shared library for local compute dispatch.
+/// Checks `PANLL_FFI_SO` env var, then a path relative to the current exe.
+fn ffi_so_path() -> std::path::PathBuf {
+    if let Ok(p) = std::env::var("PANLL_FFI_SO") {
+        return std::path::PathBuf::from(p);
+    }
+    // Relative to the binary: ../../ffi/zig/zig-out/lib/libpanll_copro.so
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(root) = exe.parent().and_then(|p| p.parent()) {
+            let candidate = root.join("ffi/zig/zig-out/lib/libpanll_copro.so");
+            if candidate.exists() {
+                return candidate;
+            }
+        }
+    }
+    // Last resort: assume it is next to the binary.
+    std::path::PathBuf::from("libpanll_copro.so")
+}
 
 // ============================================================================
 // Phase 1 commands — external engine queries
@@ -209,11 +224,11 @@ pub async fn discover_compute_devices() -> Result<String, String> {
 ///   - `copro_dispatch(backend: u8, op: *const u8, payload: *const u8) -> *mut u8`
 ///   - `copro_free(ptr: *mut u8)`
 ///
-/// If `lib_path` is empty, uses the default path: `FFI_SO_PATH`.
+/// If `lib_path` is empty, uses runtime discovery via `ffi_so_path()`.
 
 pub async fn coprocessor_load_ffi(lib_path: String) -> Result<String, String> {
     let path = if lib_path.is_empty() {
-        FFI_SO_PATH.to_string()
+        ffi_so_path().to_string_lossy().to_string()
     } else {
         lib_path
     };
@@ -419,7 +434,8 @@ pub async fn coprocessor_dispatch_local(
         // Delegate to the new Phase 2 dispatch.
         coprocessor_ffi_dispatch("maths".to_string(), operation, input).await
     } else {
-        let so_exists = std::path::Path::new(FFI_SO_PATH).exists();
+        let so_path = ffi_so_path();
+        let so_exists = so_path.exists();
         if so_exists {
             let result = ComputeResult {
                 operation: operation.clone(),
@@ -434,7 +450,7 @@ pub async fn coprocessor_dispatch_local(
         } else {
             Err(format!(
                 "Zig FFI not built yet: {} does not exist. Run `zig build` in ffi/zig/ first.",
-                FFI_SO_PATH
+                so_path.display()
             ))
         }
     }
@@ -490,7 +506,7 @@ pub async fn coprocessor_local_resources() -> Result<String, String> {
 
     let result = serde_json::json!({
         "ffi_loaded": guard.loaded,
-        "ffi_path": if guard.loaded { &guard.lib_path } else { FFI_SO_PATH },
+        "ffi_path": if guard.loaded { guard.lib_path.clone() } else { ffi_so_path().to_string_lossy().to_string() },
         "cpu_utilisation": cpu_utilisation,
         "gpu_memory_mb": gpu_memory_mb,
         "pending_dispatches": 0,

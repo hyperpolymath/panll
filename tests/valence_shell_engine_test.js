@@ -125,7 +125,7 @@ Deno.test("defaultState ptyConnected is false", () => {
 });
 
 Deno.test("defaultState cwd points to idaptik", () => {
-  assertEquals(defaultState.cwd, "/var/mnt/eclipse/repos/idaptik");
+  assertEquals(defaultState.cwd, ".");
 });
 
 Deno.test("defaultState has empty outputBuffer", () => {

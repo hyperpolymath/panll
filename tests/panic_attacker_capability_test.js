@@ -8,7 +8,7 @@ Deno.test("PanicAttackerCapability.parse - accepts full payload", () => {
     mode: "full",
     supports_panll: true,
     supports_ambush: true,
-    binary: "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack",
+    binary: "/usr/local/bin/panic-attack",
     detail: "panic-attack panll export is available"
   });
 
@@ -17,7 +17,7 @@ Deno.test("PanicAttackerCapability.parse - accepts full payload", () => {
   assertEquals(result._0.mode, "full");
   assertEquals(
     result._0.binary,
-    "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack"
+    "/usr/local/bin/panic-attack"
   );
   assertEquals(result._0.detail, "panic-attack panll export is available");
 });

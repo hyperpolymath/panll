@@ -10,7 +10,7 @@
 /// and sequencing work items.
 ///
 /// The methodology originates from:
-///   /home/hyper/Zotero/storage/UJXF97XW/SOFTWARE-DEVELOPMENT-APPROACH.a2ml
+///   Zotero: SOFTWARE-DEVELOPMENT-APPROACH.a2ml (item key: UJXF97XW)
 ///
 /// Dependency: leaf module — no imports from other PanLL models.
 

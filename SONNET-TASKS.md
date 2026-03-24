@@ -33,7 +33,7 @@ or OrbitalSync.
 
 ## TASK 1: Fix deprecated ReScript module config (P0 - BLOCKING)
 
-**Files:** `/var/mnt/eclipse/repos/panll/rescript.json`
+**Files:** `./rescript.json`
 
 **Problem:** Line 11 uses `"module": "es6"` which is deprecated and produces a build
 warning on every compile. The correct value is `"module": "esmodule"`.
@@ -46,7 +46,7 @@ warning on every compile. The correct value is `"module": "esmodule"`.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 node_modules/rescript/rescript clean && node_modules/rescript/rescript build 2>&1 | grep -c "es6"
 # Expected output: 0 (no mentions of es6 deprecation warning)
 ```
@@ -56,8 +56,8 @@ node_modules/rescript/rescript clean && node_modules/rescript/rescript build 2>&
 ## TASK 2: Remove duplicate subscription files (P1 - CODE HYGIENE)
 
 **Files:**
-- `/var/mnt/eclipse/repos/panll/src/Subscriptions.res` (UNUSED - uses old `Keyboard` module)
-- `/var/mnt/eclipse/repos/panll/src/subscriptions/Keyboard.res` (UNUSED - parameter named `enabler` vs `dispatch`)
+- `./src/Subscriptions.res` (UNUSED - uses old `Keyboard` module)
+- `./src/subscriptions/Keyboard.res` (UNUSED - parameter named `enabler` vs `dispatch`)
 
 **Problem:** Two pairs of duplicate files exist:
 - `Subscriptions.res` (uses `Keyboard.onKeyDown`) vs `SubscriptionsFixed.res` (uses `KeyboardFixed.onKeyDown`). Only `SubscriptionsFixed` is wired into `App.res` on line 29.
@@ -65,17 +65,17 @@ node_modules/rescript/rescript clean && node_modules/rescript/rescript build 2>&
 - `Subscriptions.res` line 43-49 also has a `Tea_Animationframe.onAnimationFrame` that dispatches `NoOp` -- pure waste.
 
 **What to do:**
-1. Delete `/var/mnt/eclipse/repos/panll/src/Subscriptions.res`.
-2. Delete `/var/mnt/eclipse/repos/panll/src/subscriptions/Keyboard.res`.
+1. Delete `./src/Subscriptions.res`.
+2. Delete `./src/subscriptions/Keyboard.res`.
 3. Delete the corresponding compiled `.res.js` files:
-   - `/var/mnt/eclipse/repos/panll/src/Subscriptions.res.js`
-   - `/var/mnt/eclipse/repos/panll/src/subscriptions/Keyboard.res.js`
+   - `./src/Subscriptions.res.js`
+   - `./src/subscriptions/Keyboard.res.js`
 4. Confirm `App.res` line 29 references `SubscriptionsFixed.all` (it already does).
 5. Rebuild ReScript.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 test ! -f src/Subscriptions.res && test ! -f src/subscriptions/Keyboard.res && echo "PASS: duplicates removed"
 node_modules/rescript/rescript clean && node_modules/rescript/rescript build 2>&1 | tail -5
 # Expected: build succeeds with no errors
@@ -87,7 +87,7 @@ deno task test 2>&1 | tail -3
 
 ## TASK 3: Implement real `validate_inference` Tauri command (P0 - CORE)
 
-**Files:** `/var/mnt/eclipse/repos/panll/src-tauri/src/main.rs`
+**Files:** `./src-tauri/src/main.rs`
 
 **Problem:** Lines 524-533. The `validate_inference` command does naive substring matching:
 it checks if the token string *contains* any constraint string, which is backwards logic
@@ -114,7 +114,7 @@ the current implementation is logically wrong and needs to be a proper constrain
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll/src-tauri
+cd ./src-tauri
 cargo test validate -- --nocapture 2>&1 | tail -10
 # Expected: test result: ok. 3+ passed
 cargo check 2>&1 | tail -3
@@ -125,7 +125,7 @@ cargo check 2>&1 | tail -3
 
 ## TASK 4: Implement real `get_vexation_index` Tauri command (P0 - CORE)
 
-**Files:** `/var/mnt/eclipse/repos/panll/src-tauri/src/main.rs`
+**Files:** `./src-tauri/src/main.rs`
 
 **Problem:** Lines 537-540. `get_vexation_index` always returns `0.0`. The TODO on line 538
 says "Implement actual stress indicator tracking." The Vexometer is a core product concept
@@ -148,21 +148,21 @@ vexometer UI meaningless.
    where `decay_factor = max(0.1, 1.0 - elapsed_seconds / 120.0)` (decays over 2 minutes).
 4. Register `record_vexation_event` in the `invoke_handler` macro on line 777.
 5. Add a corresponding `TauriCmd.recordVexationEvent` in
-   `/var/mnt/eclipse/repos/panll/src/commands/TauriCmd.res` and wire
+   `./src/commands/TauriCmd.res` and wire
    `Vexometer(RecordCancellation)` and `Vexometer(RecordCorrection)` in
-   `/var/mnt/eclipse/repos/panll/src/Update.res` (currently lines 159-160 only
+   `./src/Update.res` (currently lines 159-160 only
    increment the local counter but never talk to the backend).
 6. Add 2 unit tests: one verifying initial index is 0.0, one verifying index rises
    after recording events.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll/src-tauri
+cd ./src-tauri
 cargo test vexation -- --nocapture 2>&1 | tail -10
 # Expected: test result: ok. 2+ passed
 cargo check 2>&1 | tail -3
 # Expected: no errors
-cd /var/mnt/eclipse/repos/panll
+cd .
 node_modules/rescript/rescript build 2>&1 | tail -3
 # Expected: no errors
 ```
@@ -171,7 +171,7 @@ node_modules/rescript/rescript build 2>&1 | tail -3
 
 ## TASK 5: Implement real `submit_feedback` Tauri command (P0 - CORE)
 
-**Files:** `/var/mnt/eclipse/repos/panll/src-tauri/src/main.rs`
+**Files:** `./src-tauri/src/main.rs`
 
 **Problem:** Lines 544-552. `submit_feedback` ignores all three pane state arguments
 (prefixed with `_`) and just returns a formatted string. The TODO on line 550 says
@@ -192,7 +192,7 @@ node_modules/rescript/rescript build 2>&1 | tail -3
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll/src-tauri
+cd ./src-tauri
 cargo test feedback -- --nocapture 2>&1 | tail -10
 # Expected: test result: ok. 2+ passed
 cargo check 2>&1 | tail -3
@@ -204,9 +204,9 @@ cargo check 2>&1 | tail -3
 ## TASK 6: Wire OrbitalSync into the update loop (P1 - FEATURE COMPLETION)
 
 **Files:**
-- `/var/mnt/eclipse/repos/panll/src/core/OrbitalSync.res`
-- `/var/mnt/eclipse/repos/panll/src/Update.res`
-- `/var/mnt/eclipse/repos/panll/src/Model.res`
+- `./src/core/OrbitalSync.res`
+- `./src/Update.res`
+- `./src/Model.res`
 
 **Problem:** `OrbitalSync.res` is a complete 172-line module with sync detection,
 divergence calculation, stability computation, drift aura colour selection, and
@@ -237,7 +237,7 @@ compute orbital metrics from pane content changes.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 node_modules/rescript/rescript clean && node_modules/rescript/rescript build 2>&1 | tail -5
 # Expected: build succeeds
 deno task test 2>&1 | tail -3
@@ -249,9 +249,9 @@ deno task test 2>&1 | tail -3
 ## TASK 7: Wire Contractiles into the update loop (P1 - FEATURE COMPLETION)
 
 **Files:**
-- `/var/mnt/eclipse/repos/panll/src/core/Contractiles.res`
-- `/var/mnt/eclipse/repos/panll/src/Update.res`
-- `/var/mnt/eclipse/repos/panll/src/Model.res`
+- `./src/core/Contractiles.res`
+- `./src/Update.res`
+- `./src/Model.res`
 
 **Problem:** `Contractiles.res` is a complete 163-line module with 4 built-in contracts
 (orbital stability bound, vexation ceiling, divergence limit, autonomy bound), evaluation
@@ -279,7 +279,7 @@ model has no `contractiles` field, and no update logic evaluates or adapts contr
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 node_modules/rescript/rescript clean && node_modules/rescript/rescript build 2>&1 | tail -5
 # Expected: build succeeds
 deno task test 2>&1 | tail -3
@@ -290,7 +290,7 @@ deno task test 2>&1 | tail -3
 
 ## TASK 8: Replace AntiCrash placeholder validation with real logic (P1 - CORE)
 
-**Files:** `/var/mnt/eclipse/repos/panll/src/core/AntiCrash.res`
+**Files:** `./src/core/AntiCrash.res`
 
 **Problem:** Three validation functions use trivial string matching as placeholders:
 
@@ -322,7 +322,7 @@ deno task test 2>&1 | tail -3
      says `x > 0` but token contains `x = -1`).
    - Support at least: equality checks, inequality checks, and boolean assertions.
 
-3. Add a new test file `/var/mnt/eclipse/repos/panll/tests/anti_crash_test.js` that
+3. Add a new test file `./tests/anti_crash_test.js` that
    tests the compiled output `src/core/AntiCrash.res.js`:
    - Test: high-confidence clean token passes validation.
    - Test: token containing "eval(" is rejected by security check.
@@ -333,7 +333,7 @@ deno task test 2>&1 | tail -3
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 node_modules/rescript/rescript build 2>&1 | tail -3
 deno test --no-check --allow-read --allow-env tests/anti_crash_test.js 2>&1 | tail -5
 # Expected: 6 tests passed
@@ -343,7 +343,7 @@ deno test --no-check --allow-read --allow-env tests/anti_crash_test.js 2>&1 | ta
 
 ## TASK 9: Add tests for OrbitalSync module (P1 - TESTING)
 
-**Files:** Create `/var/mnt/eclipse/repos/panll/tests/orbital_sync_test.js`
+**Files:** Create `./tests/orbital_sync_test.js`
 
 **Problem:** OrbitalSync has zero test coverage. It computes divergence, stability,
 drift aura colour, and humidity level -- all core product metrics -- with no tests.
@@ -361,7 +361,7 @@ drift aura colour, and humidity level -- all core product metrics -- with no tes
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 deno test --no-check --allow-read --allow-env tests/orbital_sync_test.js 2>&1 | tail -5
 # Expected: 5+ tests passed, 0 failed
 ```
@@ -370,7 +370,7 @@ deno test --no-check --allow-read --allow-env tests/orbital_sync_test.js 2>&1 | 
 
 ## TASK 10: Add tests for Contractiles module (P1 - TESTING)
 
-**Files:** Create `/var/mnt/eclipse/repos/panll/tests/contractiles_test.js`
+**Files:** Create `./tests/contractiles_test.js`
 
 **Problem:** Contractiles has zero test coverage. It defines 4 built-in contracts,
 evaluation logic, and adaptive elasticity -- all untested.
@@ -387,7 +387,7 @@ evaluation logic, and adaptive elasticity -- all untested.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 deno test --no-check --allow-read --allow-env tests/contractiles_test.js 2>&1 | tail -5
 # Expected: 5+ tests passed, 0 failed
 ```
@@ -396,7 +396,7 @@ deno test --no-check --allow-read --allow-env tests/contractiles_test.js 2>&1 | 
 
 ## TASK 11: Add tests for Update module (P1 - TESTING)
 
-**Files:** Create `/var/mnt/eclipse/repos/panll/tests/update_test.js`
+**Files:** Create `./tests/update_test.js`
 
 **Problem:** The Update module is the heart of the TEA architecture -- it processes
 every message and transitions the model. It has ZERO test coverage. Zero.
@@ -417,7 +417,7 @@ every message and transitions the model. It has ZERO test coverage. Zero.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 deno test --no-check --allow-read --allow-env tests/update_test.js 2>&1 | tail -5
 # Expected: 10+ tests passed, 0 failed
 ```
@@ -427,12 +427,12 @@ deno test --no-check --allow-read --allow-env tests/update_test.js 2>&1 | tail -
 ## TASK 12: Add ARIA accessibility attributes to all UI components (P2 - A11Y)
 
 **Files:**
-- `/var/mnt/eclipse/repos/panll/src/components/PaneL.res`
-- `/var/mnt/eclipse/repos/panll/src/components/PaneN.res`
-- `/var/mnt/eclipse/repos/panll/src/components/PaneW.res`
-- `/var/mnt/eclipse/repos/panll/src/components/Vexometer.res`
-- `/var/mnt/eclipse/repos/panll/src/components/FeedbackOTron.res`
-- `/var/mnt/eclipse/repos/panll/src/tea/Tea_Vdom.res`
+- `./src/components/PaneL.res`
+- `./src/components/PaneN.res`
+- `./src/components/PaneW.res`
+- `./src/components/Vexometer.res`
+- `./src/components/FeedbackOTron.res`
+- `./src/tea/Tea_Vdom.res`
 
 **Problem:** Zero ARIA attributes exist anywhere in the codebase. The ROADMAP.adoc
 (line 47) lists "Accessibility improvements (ARIA labels)" as a v0.2.0 Should Have.
@@ -470,7 +470,7 @@ are present on any element.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 node_modules/rescript/rescript clean && node_modules/rescript/rescript build 2>&1 | tail -5
 # Expected: build succeeds
 grep -c "aria-label\|role\|aria-live\|aria-expanded" src/components/*.res
@@ -483,7 +483,7 @@ deno task test 2>&1 | tail -3
 
 ## TASK 13: Implement VDOM diffing in Tea_Render instead of full re-render (P2 - PERFORMANCE)
 
-**Files:** `/var/mnt/eclipse/repos/panll/src/tea/Tea_Render.res`
+**Files:** `./src/tea/Tea_Render.res`
 
 **Problem:** The `update` function on line 169-175 calls `render()` which does a full
 re-render: `containerObj["innerHTML"] = ""` (line 116) followed by creating all DOM nodes
@@ -509,7 +509,7 @@ animation flicker.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 node_modules/rescript/rescript clean && node_modules/rescript/rescript build 2>&1 | tail -5
 # Expected: build succeeds
 deno task test 2>&1 | tail -3
@@ -520,7 +520,7 @@ deno task test 2>&1 | tail -3
 
 ## TASK 14: Update ROADMAP.adoc to reflect actual status (P2 - DOCS)
 
-**Files:** `/var/mnt/eclipse/repos/panll/ROADMAP.adoc`
+**Files:** `./ROADMAP.adoc`
 
 **Problem:** The roadmap (lines 38-41) lists "State persistence" and "Keyboard shortcuts"
 as TODO items under v0.2.0, but both are already implemented (`src/Storage.res` and
@@ -544,7 +544,7 @@ which is inflated.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 grep -c "\[x\] State persistence" ROADMAP.adoc
 # Expected: 1
 grep -c "\[x\] Keyboard shortcuts" ROADMAP.adoc
@@ -557,7 +557,7 @@ grep "80%" ROADMAP.adoc | head -1
 
 ## TASK 15: Update README.adoc completion badge and status (P2 - DOCS)
 
-**Files:** `/var/mnt/eclipse/repos/panll/README.adoc`
+**Files:** `./README.adoc`
 
 **Problem:** Line 9 claims `completion-95%25` in the badge. Line 11 claims `33 passing`
 tests but there are actually 36. Line 146 says "95% complete". These are inaccurate.
@@ -572,7 +572,7 @@ tests but there are actually 36. Line 146 says "95% complete". These are inaccur
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 grep -c "80%" README.adoc
 # Expected: at least 2
 grep -c "36" README.adoc
@@ -583,7 +583,7 @@ grep -c "36" README.adoc
 
 ## TASK 16: Fix the PanllBeam module boilerplate (P3 - CLEANUP)
 
-**Files:** `/var/mnt/eclipse/repos/panll/beam/panll_beam/lib/panll_beam.ex`
+**Files:** `./beam/panll_beam/lib/panll_beam.ex`
 
 **Problem:** The root module `PanllBeam` (lines 1-18) still has the default Phoenix
 `hello/0` function that returns `:world`. This is mix generator boilerplate that was
@@ -604,7 +604,7 @@ never replaced with actual module documentation or API.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll/beam/panll_beam
+cd ./beam/panll_beam
 grep -c "hello" lib/panll_beam.ex
 # Expected: 0
 mix compile 2>&1 | tail -3
@@ -615,7 +615,7 @@ mix compile 2>&1 | tail -3
 
 ## TASK 17: Add tests for EventChain edge cases (P2 - TESTING)
 
-**Files:** Modify `/var/mnt/eclipse/repos/panll/tests/panic_attacker_event_chain_test.js`
+**Files:** Modify `./tests/panic_attacker_event_chain_test.js`
 
 **Problem:** Only 3 tests exist for the event-chain parser. Missing: empty event_chain
 array, missing fields on individual events, extra unknown fields, numeric vs string id
@@ -630,7 +630,7 @@ coercion.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 deno test --no-check --allow-read --allow-env tests/panic_attacker_event_chain_test.js 2>&1 | tail -5
 # Expected: 8 tests passed (3 original + 5 new), 0 failed
 ```
@@ -639,7 +639,7 @@ deno test --no-check --allow-read --allow-env tests/panic_attacker_event_chain_t
 
 ## TASK 18: Add Storage round-trip tests for edge cases (P2 - TESTING)
 
-**Files:** Modify `/var/mnt/eclipse/repos/panll/tests/storage_timeline_roundtrip_test.js`
+**Files:** Modify `./tests/storage_timeline_roundtrip_test.js`
 
 **Problem:** Only 1 test exists for storage round-trip. Missing: empty model round-trip,
 model with constraints, viewMode persistence, humidity persistence.
@@ -655,7 +655,7 @@ model with constraints, viewMode persistence, humidity persistence.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 deno test --no-check --allow-read --allow-env tests/storage_timeline_roundtrip_test.js 2>&1 | tail -5
 # Expected: 6 tests passed (1 original + 5 new), 0 failed
 ```
@@ -664,7 +664,7 @@ deno test --no-check --allow-read --allow-env tests/storage_timeline_roundtrip_t
 
 ## TASK 19: Update STATE.scm with honest completion percentages (P1 - METADATA)
 
-**Files:** `/var/mnt/eclipse/repos/panll/.machine_readable/STATE.scm`
+**Files:** `./.machine_readable/STATE.scm`
 
 **Problem:** Line 22 claims `(completion-percentage 100)` for v0.1.0. This is false.
 Line 23 says `(phase "release")`. The project is not release-ready.
@@ -693,7 +693,7 @@ Line 23 says `(phase "release")`. The project is not release-ready.
 
 **Verification:**
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 grep "completion-percentage 80" .machine_readable/STATE.scm
 # Expected: 1 match
 grep "phase.*development" .machine_readable/STATE.scm
@@ -707,7 +707,7 @@ grep "phase.*development" .machine_readable/STATE.scm
 After completing all 19 tasks, run:
 
 ```bash
-cd /var/mnt/eclipse/repos/panll
+cd .
 
 # 1. ReScript compiles clean
 node_modules/rescript/rescript clean && node_modules/rescript/rescript build 2>&1
@@ -722,7 +722,7 @@ cd src-tauri && cargo check 2>&1
 cargo test 2>&1
 
 # 5. No deprecated module config
-cd /var/mnt/eclipse/repos/panll
+cd .
 grep '"es6"' rescript.json
 # Expected: no output
 

@@ -123,7 +123,7 @@ Roadmap currently marks these as TODO, but code shows they are already present:
 
 ### 4.1 Panic-Attacker Binary Version Drift
 
-- In this environment, `/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack`
+- In the original dev environment, the `panic-attack` binary (from the `panic-attacker` repo)
   currently exposes older commands only (no `ambush`/`panll` in `--help` output).
 - PanLL integration now handles this by falling back to a local assault-report → event-chain converter in backend (`src-tauri/src/main.rs`), so import still works.
 

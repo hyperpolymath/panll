@@ -292,7 +292,7 @@ let selectRoute = (state: coprocessorsState, operation: string): routingDecision
 /// Default local dispatch state (Phase 2).
 let defaultLocalDispatch: localDispatchState = {
   ffiLoaded: false,
-  ffiPath: "/var/mnt/eclipse/repos/panll/ffi/zig/zig-out/lib/libpanll_copro.so",
+  ffiPath: "ffi/zig/zig-out/lib/libpanll_copro.so",
   ffiLibPath: None,
   localDevices: [],
   cpuUtilisation: 0.0,

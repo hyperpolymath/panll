@@ -80,7 +80,7 @@ function makeSystemImagePayload(nodeCount) {
   return {
     format: "panll.system-image.v0",
     generated_at: "2026-03-09T12:00:00Z",
-    scan_surface: "/var/mnt/eclipse/repos",
+    scan_surface: "/tmp/test-repos",
     global_health: 72.5,
     global_risk: 0.275,
     node_count: nodeCount,
@@ -533,7 +533,7 @@ Deno.test("MassPanicModel: very large scan results (1000 repos)", () => {
   const largeResults = [];
   for (let i = 0; i < 1000; i++) {
     largeResults.push({
-      repoPath: `/var/mnt/eclipse/repos/repo-${i}`,
+      repoPath: `/tmp/test-repos/repo-${i}`,
       repoName: `repo-${i}`,
       status: "Complete",
       totalFindings: i % 10,

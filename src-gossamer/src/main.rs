@@ -165,10 +165,13 @@ mod groove;
 // Constants and helpers (moved from old Tauri main.rs)
 // ===========================================================================
 
-const DEFAULT_PANIC_ATTACK_BIN: &str =
-    "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack";
-const DEFAULT_PANIC_ATTACK_REPORTS_DIR: &str =
-    "/var/mnt/eclipse/repos/panic-attacker/reports";
+/// Fallback binary name for panic-attack.  Resolved at runtime via
+/// `PANIC_ATTACK_BIN` env var, then `$PATH` lookup, then sibling directory.
+const DEFAULT_PANIC_ATTACK_BIN_NAME: &str = "panic-attack";
+
+/// Fallback reports directory — resolved via `PANIC_ATTACK_REPORTS_DIR` env
+/// var, then a `reports/` sibling of the discovered binary.
+const DEFAULT_PANIC_ATTACK_REPORTS_SUBDIR: &str = "reports";
 
 /// Tracks operator vexation indicators for the Vexometer.
 struct VexationTracker {
@@ -209,21 +212,43 @@ struct AmbushOptions {
 
 fn panic_attack_binaries() -> Vec<PathBuf> {
     let mut bins = Vec::new();
+
+    // 1. Explicit env var override (highest priority).
     if let Ok(custom_bin) = env::var("PANIC_ATTACK_BIN") {
         bins.push(PathBuf::from(custom_bin));
     }
-    bins.push(PathBuf::from(DEFAULT_PANIC_ATTACK_BIN));
-    bins.push(PathBuf::from(
-        "/var/mnt/eclipse/repos/panic-attacker/target/release/panic-attack",
-    ));
-    bins.push(PathBuf::from("panic-attack"));
+
+    // 2. PANIC_ATTACKER_DIR — look for debug and release builds inside it.
+    if let Ok(dir) = env::var("PANIC_ATTACKER_DIR") {
+        let base = PathBuf::from(&dir);
+        bins.push(base.join("target/debug").join(DEFAULT_PANIC_ATTACK_BIN_NAME));
+        bins.push(base.join("target/release").join(DEFAULT_PANIC_ATTACK_BIN_NAME));
+    }
+
+    // 3. Sibling directory (relative to this binary's location).
+    if let Ok(exe) = env::current_exe() {
+        if let Some(parent) = exe.parent().and_then(|p| p.parent()) {
+            let sibling = parent.join("panic-attacker/target/release").join(DEFAULT_PANIC_ATTACK_BIN_NAME);
+            bins.push(sibling);
+        }
+    }
+
+    // 4. Bare name — relies on $PATH (lowest priority).
+    bins.push(PathBuf::from(DEFAULT_PANIC_ATTACK_BIN_NAME));
     bins
 }
 
 fn panic_attack_reports_dir() -> PathBuf {
-    env::var("PANIC_ATTACK_REPORTS_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| PathBuf::from(DEFAULT_PANIC_ATTACK_REPORTS_DIR))
+    // 1. Explicit env var.
+    if let Ok(dir) = env::var("PANIC_ATTACK_REPORTS_DIR") {
+        return PathBuf::from(dir);
+    }
+    // 2. Sibling of PANIC_ATTACKER_DIR.
+    if let Ok(dir) = env::var("PANIC_ATTACKER_DIR") {
+        return PathBuf::from(dir).join(DEFAULT_PANIC_ATTACK_REPORTS_SUBDIR);
+    }
+    // 3. Fallback: temp directory.
+    env::temp_dir().join("panic-attack-reports")
 }
 
 fn ambush_report_path() -> PathBuf {

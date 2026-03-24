@@ -1,0 +1,57 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+; INTENT.contractile — Purpose and scope for panll
+; Helps LLM/SLM agents understand what this repo IS and IS NOT.
+
+(intent-contractile
+  (version "1.0.0")
+  (repo "panll")
+
+  ; === Purpose (what this repo IS) ===
+  (purpose
+    "PanLL is a neurosymbolic IDE built in ReScript using The Elm Architecture (TEA).
+     It provides 106 panels across three domains — Panel-L (Symbolic), Panel-N (Neural),
+     Panel-W (World) — running on a Gossamer (Zig + WebKitGTK) backend with optional
+     Elixir/BEAM middleware. PanLL is the primary development environment for the
+     hyperpolymath ecosystem, integrating ECHIDNA theorem proving, VeriSimDB data,
+     TypeLL type intelligence, and contractile validation into a unified workspace."
+  )
+
+  ; === Anti-Purpose (what this repo is NOT — prevents scope creep) ===
+  (anti-purpose
+    "PanLL is NOT a general-purpose text editor or VS Code replacement. It is NOT a
+     web application — it runs as a native desktop app via Gossamer. It is NOT a
+     framework for building other IDEs. It does NOT implement its own type checker
+     (TypeLL provides that), its own theorem prover (ECHIDNA provides that), or its
+     own database (VeriSimDB provides that). PanLL is the integration surface, not
+     the engine."
+  )
+
+  ; === Key Architectural Decisions That Must Not Be Reversed ===
+  (architectural-invariants
+    "TEA pattern (Model -> Msg -> Update -> View) — no MVC, Redux, or hooks"
+    "ReScript only — no TypeScript anywhere in the codebase"
+    "Custom TEA runtime in src/tea/ (18 modules) — not rescript-tea"
+    "Gossamer backend (migrated from Tauri) — no Tauri/Electron/Wails"
+    "All state in Model.model — no global mutable state"
+    "Anti-Crash validates ALL neural tokens — no inference bypasses the circuit breaker"
+    "Terminology: 'panels' not 'panes'"
+    "Three-domain panel layout: Panel-L (Symbolic), Panel-N (Neural), Panel-W (World)"
+  )
+
+  ; === Sensitive Areas (if in doubt, ask) ===
+  (ask-before-touching
+    "src/tea/ — custom TEA runtime; 18 permanent modules, not a temporary fork"
+    "src/Update.res — state transition kernel (~7500 lines); changes cascade everywhere"
+    "src/core/AntiCrash — neural token circuit breaker; disabling risks unvalidated inference"
+    "src/core/TypeLLEngine — cross-panel type intelligence service"
+    "src-gossamer/ — Rust backend; bridges to Gossamer native layer"
+    ".machine_readable/ — checkpoint files, format is specified"
+  )
+
+  ; === Ecosystem Position ===
+  (ecosystem
+    (belongs-to "standalone")
+    (depends-on ("gossamer" "echidna" "verisimdb" "proven"))
+    (depended-on-by ("idaptik"))
+  )
+)

@@ -1,0 +1,87 @@
+; SPDX-License-Identifier: PMPL-1.0-or-later
+; MUST.contractile — Baseline invariants for panll
+; These constraints MUST NOT be violated. K9 validators enforce them.
+
+(must-contractile
+  (version "1.0.0")
+  (repo "panll")
+
+  ; === Universal Invariants (apply to ALL repos) ===
+
+  (invariants
+    ; Paths
+    (must "no hardcoded absolute paths (/home/*, /mnt/*, /var/mnt/*)")
+    (must "all paths use env vars, XDG dirs, or relative references")
+
+    ; Language policy
+    (must "no new TypeScript files")
+    (must "no new Python files")
+    (must "no new Go files")
+    (must "no npm/bun/yarn/pnpm dependencies — Deno only")
+
+    ; Dangerous patterns
+    (must "no believe_me (Idris2)")
+    (must "no assert_total (Idris2)")
+    (must "no Admitted (Coq)")
+    (must "no sorry (Lean)")
+    (must "no unsafeCoerce (Haskell)")
+    (must "no Obj.magic (OCaml)")
+    (must "no unsafe {} blocks without safety comment (Rust)")
+
+    ; License
+    (must "SPDX-License-Identifier header on every source file")
+    (must "no removal or modification of LICENSE file")
+
+    ; Structure
+    (must ".machine_readable/ directory preserved")
+    (must "0-AI-MANIFEST.a2ml preserved")
+    (must "no SCM files in repo root — only in .machine_readable/")
+
+    ; CI
+    (must "no removal of CI workflows without explicit approval")
+    (must "all GitHub Actions SHA-pinned")
+
+    ; Code quality
+    (must "tests must not be deleted or weakened")
+    (must "generated code in generated/ directory only")
+    (must "no introduction of OWASP top 10 vulnerabilities")
+
+    ; ABI/FFI (if applicable)
+    (must "no modification of ABI contracts without proof update")
+    (must "no removal of formal verification proofs")
+  )
+
+  ; === Project-Specific Invariants (panll) ===
+
+  (invariants
+    ; TEA architecture
+    (must "TEA pattern (Model -> Msg -> Update -> View) must not be replaced with MVC, Redux, or hooks")
+    (must "all state must live in Model.model — no global mutable state")
+    (must "custom TEA runtime in src/tea/ (18 modules) must not be replaced with rescript-tea")
+
+    ; Gossamer backend
+    (must "no Tauri references — project migrated to Gossamer (src-gossamer/)")
+    (must "Gossamer bridge commands in src/commands/ must use invoke wrappers only")
+
+    ; Panel system
+    (must "106 panels across Panel-L (Symbolic), Panel-N (Neural), Panel-W (World) must not be bulk-deleted")
+    (must "terminology is 'panels' not 'panes' — enforced everywhere")
+
+    ; Anti-Crash circuit breaker
+    (must "Anti-Crash engine must validate ALL neural tokens — no inference bypass")
+    (must "AntiCrash module in src/core/ must not be disabled or weakened")
+
+    ; Language policy
+    (must "ReScript only — no TypeScript anywhere in the codebase")
+    (must "Deno only for JS runtime — npm used only for ReScript compiler")
+
+    ; Core engines
+    (must "OrbitalSync, Contractiles, TypeLLEngine, VabEngine in src/core/ must be preserved")
+    (must "TypeLLService cross-panel type intelligence must not be removed")
+  )
+
+  (enforcement
+    (k9-validator "contractiles/k9/must-check.k9.ncl")
+    (ci "quality.yml runs must-check on every PR")
+  )
+)

@@ -284,7 +284,7 @@ let init: llmCodingState = {
   selectedSession: None,
   showSpawnDialog: false,
   newSessionName: "",
-  newSessionWorkDir: "/var/mnt/eclipse/repos",
+  newSessionWorkDir: "",
   newSessionTaskList: "",
   loading: false,
   lastError: None,

@@ -139,7 +139,7 @@ Do **not** move the following out of root if you want default tool behavior:
 Use the helper script first, then use the checklist for deeper/manual follow-up.
 
 Script locations:
-- `/var/mnt/eclipse/repos/run-maintenance.sh`
+- `$REPOS_ROOT/run-maintenance.sh` (set REPOS_ROOT to your repos directory)
 - `~/Desktop/run-maintenance.sh`
 
 ```bash
@@ -258,7 +258,7 @@ find . -type f \( -name '*.idr' -o -name '*.idris2' -o -name '*.zig' \)
 - [ ] Re-run until acceptable.
 
 ```bash
-PANIC_BIN="/var/mnt/eclipse/repos/panic-attacker/target/release/panic-attack"
+PANIC_BIN="$(command -v panic-attack || echo "${PANIC_ATTACKER_DIR:-../panic-attacker}/target/release/panic-attack")"
 "$PANIC_BIN" assail "$REPO" --output /tmp/assail.json --output-format json --quiet
 jq -r '.weak_points | length' /tmp/assail.json
 jq -r '.weak_points[] | "\(.severity)|\(.location)|\(.description)"' /tmp/assail.json
@@ -549,20 +549,20 @@ Fail closed: if evidence is missing for any checklist item, treat that item as N
 For centralized coverage across existing and new repos:
 
 ```bash
-cd /var/mnt/eclipse/repos/gitbot-fleet
+cd "$REPOS_ROOT/gitbot-fleet"
 just enroll-repos
 ```
 
 Optional directive write-back to repos that already have `.machine_readable/`:
 
 ```bash
-cd /var/mnt/eclipse/repos/gitbot-fleet
-just enroll-repos /var/mnt/eclipse/repos true
+cd "$REPOS_ROOT/gitbot-fleet"
+just enroll-repos "$REPOS_ROOT" true
 ```
 
 Release hard gate from fleet:
 
 ```bash
-cd /var/mnt/eclipse/repos/gitbot-fleet
+cd "$REPOS_ROOT/gitbot-fleet"
 just maintenance-hard-pass /absolute/path/to/repo
 ```

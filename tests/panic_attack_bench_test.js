@@ -26,7 +26,7 @@ function makeFullCapability() {
     mode: "full",
     supports_panll: true,
     supports_ambush: true,
-    binary: "/var/mnt/eclipse/repos/panic-attacker/target/debug/panic-attack",
+    binary: "/usr/local/bin/panic-attack",
     detail: "panic-attack panll export is available",
   });
 }
