@@ -10,6 +10,7 @@ image:https://img.shields.io/badge/completion-95%25-green[Completion]
 image:https://img.shields.io/badge/License-PMPL--1.0-indigo.svg[PMPL-1.0-or-later,link="LICENSE"]
 image:https://img.shields.io/badge/Tests-109%20passing-brightgreen[Tests]
 image:https://img.shields.io/badge/RSR-compliant-blue[RSR Compliant]
+image:https://api.thegreenwebfoundation.org/greencheckimage/jewell.nexus[Green Hosting,link="https://www.thegreenwebfoundation.org/green-web-check/?url=jewell.nexus"]
 
 **Environment for NeSy-Agentic Integrated Development**
 
