@@ -1181,7 +1181,17 @@ let applicationComponents: array<vabComponent> = [
     ports: [8080],
     dependencies: ["proven-httpd"],
     softDependencies: ["proven-tls", "proven-config"],
-    capabilities: ["document-json", "document-yaml", "document-toml", "document-xml", "document-adoc", "document-djot", "document-markdown", "document-pdf", "i18n"],
+    capabilities: [
+      "document-json",
+      "document-yaml",
+      "document-toml",
+      "document-xml",
+      "document-adoc",
+      "document-djot",
+      "document-markdown",
+      "document-pdf",
+      "i18n",
+    ],
     description: "Multi-format document server with verified parsing for JSON, YAML, TOML, XML, AsciiDoc, Djot, Markdown, and PDF. I18n-aware content negotiation via Accept-Language.",
     rackUnits: 2,
   },
@@ -1451,20 +1461,19 @@ let connectorComponents: array<vabComponent> = [
 
 /// The full catalog of all 108 proven-servers components, merged from all categories.
 /// This is loaded once into vabState.catalog at init time.
-let allComponents: array<vabComponent> =
-  Array.flat([
-    coreComponents,
-    networkComponents,
-    dnsComponents,
-    webComponents,
-    iotComponents,
-    emailComponents,
-    securityComponents,
-    dataComponents,
-    applicationComponents,
-    infrastructureComponents,
-    connectorComponents,
-  ])
+let allComponents: array<vabComponent> = Array.flat([
+  coreComponents,
+  networkComponents,
+  dnsComponents,
+  webComponents,
+  iotComponents,
+  emailComponents,
+  securityComponents,
+  dataComponents,
+  applicationComponents,
+  infrastructureComponents,
+  connectorComponents,
+])
 
 /// Get all components for a specific category.
 let getByCategory = (catalog: array<vabComponent>, cat: vabCategory): array<vabComponent> =>

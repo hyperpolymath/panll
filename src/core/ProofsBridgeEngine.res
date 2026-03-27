@@ -48,12 +48,14 @@ let countVerifiedModules = (modules: array<provenModule>): int =>
 
 /// Count modules that still have pending (unverified or stale) proofs.
 let countPendingModules = (modules: array<provenModule>): int =>
-  modules->Array.filter(m =>
+  modules
+  ->Array.filter(m =>
     switch m.status {
     | Unverified | Stale | PartiallyProven => true
     | FullyProven => false
     }
-  )->Array.length
+  )
+  ->Array.length
 
 /// Count modules matching a given verification status.
 let countModulesByStatus = (modules: array<provenModule>, status: moduleVerificationStatus): int =>

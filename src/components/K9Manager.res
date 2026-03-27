@@ -118,10 +118,7 @@ let view = (state: K9Model.k9ManagerState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("text-xs text-gray-400")},
                 list{
                   text(
-                    Int.toString(fileCount) ++
-                    " files, " ++
-                    Int.toString(validCount) ++
-                    " valid",
+                    Int.toString(fileCount) ++ " files, " ++ Int.toString(validCount) ++ " valid",
                   ),
                 },
               ),

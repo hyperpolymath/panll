@@ -29,7 +29,11 @@ open Tea.Html
 let valueClass = (value: option<string>, policyValue: option<string>): string => {
   switch (value, policyValue) {
   | (Some(v), Some(p)) =>
-    if v === p { "text-green-400" } else { "text-red-400" }
+    if v === p {
+      "text-green-400"
+    } else {
+      "text-red-400"
+    }
   | (None, _) => "text-gray-600 italic"
   | (_, None) => "text-gray-400"
   }
@@ -52,9 +56,8 @@ let renderDiffEntry = (entry: configDiffEntry): Tea_Vdom.t<msg> => {
 
   // Determine if this is a drift (live != offline) or conflict (all three differ)
   let isDrift = entry.offlineValue !== entry.liveValue
-  let isConflict = isDrift
-    && entry.offlineValue !== entry.policyValue
-    && entry.liveValue !== entry.policyValue
+  let isConflict =
+    isDrift && entry.offlineValue !== entry.policyValue && entry.liveValue !== entry.policyValue
 
   let rowBg = if isConflict {
     " bg-red-950/20"
@@ -74,12 +77,23 @@ let renderDiffEntry = (entry: configDiffEntry): Tea_Vdom.t<msg> => {
       ),
       // Offline value
       div(
-        list{Attrs.class_(`py-1.5 px-2 text-sm font-mono w-28 ${valueClass(entry.offlineValue, entry.policyValue)}`)},
+        list{
+          Attrs.class_(
+            `py-1.5 px-2 text-sm font-mono w-28 ${valueClass(
+                entry.offlineValue,
+                entry.policyValue,
+              )}`,
+          ),
+        },
         list{text(offlineDisplay)},
       ),
       // Live value
       div(
-        list{Attrs.class_(`py-1.5 px-2 text-sm font-mono w-28 ${valueClass(entry.liveValue, entry.policyValue)}`)},
+        list{
+          Attrs.class_(
+            `py-1.5 px-2 text-sm font-mono w-28 ${valueClass(entry.liveValue, entry.policyValue)}`,
+          ),
+        },
         list{text(liveDisplay)},
       ),
       // Policy value
@@ -92,20 +106,11 @@ let renderDiffEntry = (entry: configDiffEntry): Tea_Vdom.t<msg> => {
         list{Attrs.class_("py-1.5 px-2 w-20")},
         list{
           if isConflict {
-            span(
-              list{Attrs.class_("text-xs text-red-400 font-medium")},
-              list{text("CONFLICT")},
-            )
+            span(list{Attrs.class_("text-xs text-red-400 font-medium")}, list{text("CONFLICT")})
           } else if isDrift {
-            span(
-              list{Attrs.class_("text-xs text-yellow-400 font-medium")},
-              list{text("DRIFT")},
-            )
+            span(list{Attrs.class_("text-xs text-yellow-400 font-medium")}, list{text("DRIFT")})
           } else {
-            span(
-              list{Attrs.class_("text-xs text-green-400")},
-              list{text("OK")},
-            )
+            span(list{Attrs.class_("text-xs text-green-400")}, list{text("OK")})
           },
         },
       ),
@@ -144,10 +149,7 @@ let renderDiffHeader = (): Tea_Vdom.t<msg> => {
 /// Render the complete diff viewer panel.
 /// Shows the three-way diff table when a diff is available, or a prompt to
 /// download configs first.
-let view = (
-  configDiff: option<configDiff>,
-  _loading: bool,
-): Tea_Vdom.t<msg> => {
+let view = (configDiff: option<configDiff>, _loading: bool): Tea_Vdom.t<msg> => {
   div(
     list{
       Attrs.class_("w-72 border-l border-gray-800 p-3 overflow-y-auto"),
@@ -155,10 +157,7 @@ let view = (
       Attrs.ariaLabel("Configuration Diff Viewer"),
     },
     list{
-      div(
-        list{Attrs.class_("text-xs text-gray-500 mb-3 font-medium")},
-        list{text("CONFIG DIFF")},
-      ),
+      div(list{Attrs.class_("text-xs text-gray-500 mb-3 font-medium")}, list{text("CONFIG DIFF")}),
       switch configDiff {
       | None =>
         div(
@@ -186,8 +185,8 @@ let view = (
                   list{
                     text(
                       `${Int.toString(
-                        Array.length(diff.entries) - diff.driftCount - diff.conflictCount,
-                      )} OK`,
+                          Array.length(diff.entries) - diff.driftCount - diff.conflictCount,
+                        )} OK`,
                     ),
                   },
                 ),
@@ -217,18 +216,9 @@ let view = (
                     div(
                       list{Attrs.class_("flex items-center gap-1")},
                       list{
-                        span(
-                          list{Attrs.class_("text-gray-500")},
-                          list{text(offlineDisplay)},
-                        ),
-                        span(
-                          list{Attrs.class_("text-gray-600")},
-                          list{text(" -> ")},
-                        ),
-                        span(
-                          list{Attrs.class_("text-yellow-400")},
-                          list{text(liveDisplay)},
-                        ),
+                        span(list{Attrs.class_("text-gray-500")}, list{text(offlineDisplay)}),
+                        span(list{Attrs.class_("text-gray-600")}, list{text(" -> ")}),
+                        span(list{Attrs.class_("text-yellow-400")}, list{text(liveDisplay)}),
                       },
                     ),
                   },
@@ -245,9 +235,7 @@ let view = (
 
 /// Render the diff viewer as a full-width table (for modal/expanded view).
 /// This is an alternative layout for when the diff is shown in the main content area.
-let viewExpanded = (
-  configDiff: option<configDiff>,
-): Tea_Vdom.t<msg> => {
+let viewExpanded = (configDiff: option<configDiff>): Tea_Vdom.t<msg> => {
   switch configDiff {
   | None =>
     div(

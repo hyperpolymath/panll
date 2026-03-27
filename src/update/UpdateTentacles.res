@@ -13,9 +13,15 @@ let updateTentacles = (model: model, msg: tentaclesMsg): (model, Tea_Cmd.t<msg>)
       let updatedAgents = st.agents->Array.map(a => {...a, stage})
       ({...model, tentacles: {...st, globalStage: stage, agents: updatedAgents}}, Tea_Cmd.none)
     }
-  | ToggleOrchestraCompact => ({...model, tentacles: {...st, orchestraCompact: !st.orchestraCompact}}, Tea_Cmd.none)
+  | ToggleOrchestraCompact => (
+      {...model, tentacles: {...st, orchestraCompact: !st.orchestraCompact}},
+      Tea_Cmd.none,
+    )
   | BroadcastFromAgent(_source, payload) => (
-      {...model, tentacles: {...st, pendingBroadcasts: Array.concat(st.pendingBroadcasts, [payload])}},
+      {
+        ...model,
+        tentacles: {...st, pendingBroadcasts: Array.concat(st.pendingBroadcasts, [payload])},
+      },
       Tea_Cmd.none,
     )
   | DeliverBroadcasts => ({...model, tentacles: {...st, pendingBroadcasts: []}}, Tea_Cmd.none)
@@ -23,7 +29,12 @@ let updateTentacles = (model: model, msg: tentaclesMsg): (model, Tea_Cmd.t<msg>)
       let agents = TentaclesEngine.updateAgent(st.agents, id, a =>
         TentaclesEngine.startTask(a, task)
       )
-      ({...model, tentacles: {...st, agents}}, TypeLLService.checkCodeTypes(task, "tentacles", result => Tentacles(TypeCheckResult(result))))
+      (
+        {...model, tentacles: {...st, agents}},
+        TypeLLService.checkCodeTypes(task, "tentacles", result => Tentacles(
+          TypeCheckResult(result),
+        )),
+      )
     }
   | AgentPhaseAdvanced(id, _phase) => {
       // S1: Use OODA progression engine — advance through Observe→Orient→Decide→Act.
@@ -64,21 +75,22 @@ let updateTentacles = (model: model, msg: tentaclesMsg): (model, Tea_Cmd.t<msg>)
       ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
     }
   | AgentError(id, err) => {
-      let agents = TentaclesEngine.updateAgent(st.agents, id, a =>
-        TentaclesEngine.failTask(a, err)
-      )
+      let agents = TentaclesEngine.updateAgent(st.agents, id, a => TentaclesEngine.failTask(a, err))
       ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
     }
   | ClearAgentError(id) => {
       let agents = TentaclesEngine.updateAgent(st.agents, id, a => {...a, lastError: None})
       ({...model, tentacles: {...st, agents}}, Tea_Cmd.none)
     }
-  | CheckFfiBridge => (model, TentaclesCmd.checkFfiBridge(result =>
-      switch result {
-      | Ok(_) => Tentacles(FfiBridgeResult(true, None))
-      | Error(err) => Tentacles(FfiBridgeResult(false, Some(err)))
-      }
-    ))
+  | CheckFfiBridge => (
+      model,
+      TentaclesCmd.checkFfiBridge(result =>
+        switch result {
+        | Ok(_) => Tentacles(FfiBridgeResult(true, None))
+        | Error(err) => Tentacles(FfiBridgeResult(false, Some(err)))
+        }
+      ),
+    )
   | FfiBridgeResult(connected, error) => (
       {...model, tentacles: {...st, ffiConnected: connected, ffiError: error, ffiLastCheck: 0.0}},
       Tea_Cmd.none,
@@ -86,11 +98,14 @@ let updateTentacles = (model: model, msg: tentaclesMsg): (model, Tea_Cmd.t<msg>)
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "tentacles", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
   }
 }

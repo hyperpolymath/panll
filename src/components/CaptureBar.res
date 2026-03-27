@@ -25,9 +25,11 @@ let captureButton = (
 ): Tea_Vdom.t<msg> => {
   button(
     list{
-      Attrs.class_(`w-6 h-6 flex items-center justify-center rounded text-xs ${
-        active ? "bg-red-700 text-white" : "bg-gray-800/80 text-gray-500 hover:text-gray-300 hover:bg-gray-700"
-      } transition-colors`),
+      Attrs.class_(
+        `w-6 h-6 flex items-center justify-center rounded text-xs ${active
+            ? "bg-red-700 text-white"
+            : "bg-gray-800/80 text-gray-500 hover:text-gray-300 hover:bg-gray-700"} transition-colors`,
+      ),
       Events.onClick(onClick),
       Attrs.title(tooltip),
       Attrs.ariaLabel(label),
@@ -45,35 +47,37 @@ let view = (panelId: string, isRecording: bool, visible: bool): Tea_Vdom.t<msg> 
   } else {
     div(
       list{
-        Attrs.class_("absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-1 p-1 bg-gray-950/70 rounded-l z-30"),
+        Attrs.class_(
+          "absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-1 p-1 bg-gray-950/70 rounded-l z-30",
+        ),
         Attrs.role("toolbar"),
         Attrs.ariaLabel("Capture controls for " ++ panelId),
       },
       list{
         captureButton(
           "Screenshot " ++ panelId,
-          "C",  // Camera icon placeholder (would be SVG in production)
+          "C", // Camera icon placeholder (would be SVG in production)
           "Screenshot this panel",
           Capture(CaptureScreenshot(panelId)),
           false,
         ),
         captureButton(
           (isRecording ? "Stop recording " : "Record ") ++ panelId,
-          "R",  // Record icon placeholder
+          "R", // Record icon placeholder
           isRecording ? "Stop recording this panel" : "Start recording this panel",
           isRecording ? Capture(StopRecording) : Capture(StartRecording(panelId)),
           isRecording,
         ),
         captureButton(
           "Clone " ++ panelId,
-          "D",  // Duplicate/clone icon placeholder
+          "D", // Duplicate/clone icon placeholder
           "Clone this panel's state into an independent copy",
           Capture(ClonePanel(panelId)),
           false,
         ),
         captureButton(
           "Compare " ++ panelId,
-          "=",  // Compare icon placeholder
+          "=", // Compare icon placeholder
           "Enter comparison mode with this panel",
           Capture(ToggleCaptureSelection(panelId)),
           false,

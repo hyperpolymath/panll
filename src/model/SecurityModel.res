@@ -80,7 +80,7 @@ type vaultKey = {
 type twoFactorStatus =
   | TwoFactorNotConfigured
   | TwoFactorConfigured
-  | TwoFactorAuthenticated(float)  // authenticated until timestamp
+  | TwoFactorAuthenticated(float) // authenticated until timestamp
   | TwoFactorExpired
 
 /// Which operations require 2FA (configured via Trustfile).

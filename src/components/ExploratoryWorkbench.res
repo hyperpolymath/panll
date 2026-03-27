@@ -56,10 +56,7 @@ let severityBadge = (severity: anomalySeverity): Tea_Vdom.t<msg> => {
   | AnomalyHigh => ("bg-orange-600 text-white", "HIGH")
   | AnomalyCritical => ("bg-red-600 text-white", "CRIT")
   }
-  span(
-    list{Attrs.class_(`px-1.5 py-0.5 text-xs rounded font-mono ${colour}`)},
-    list{text(lbl)},
-  )
+  span(list{Attrs.class_(`px-1.5 py-0.5 text-xs rounded font-mono ${colour}`)}, list{text(lbl)})
 }
 
 // =========================================================================
@@ -143,11 +140,7 @@ let renderSessionTab = (state: exploratoryWorkbenchState): Tea_Vdom.t<msg> => {
                 Events.onClick(ExploratoryWorkbench(ToggleAnomalyDetection)),
               },
               list{
-                text(
-                  state.anomalyDetectionEnabled
-                    ? "Auto-Detection: ON"
-                    : "Auto-Detection: OFF",
-                ),
+                text(state.anomalyDetectionEnabled ? "Auto-Detection: ON" : "Auto-Detection: OFF"),
               },
             ),
             span(
@@ -189,22 +182,12 @@ let renderAnomaliesTab = (state: exploratoryWorkbenchState): Tea_Vdom.t<msg> => 
                 )
               : noNode
             div(
-              list{
-                Attrs.class_(
-                  "flex items-center gap-3 px-3 py-2 bg-gray-800 rounded text-sm",
-                ),
-              },
+              list{Attrs.class_("flex items-center gap-3 px-3 py-2 bg-gray-800 rounded text-sm")},
               list{
                 severityBadge(anomaly.severity),
                 autoTag,
-                span(
-                  list{Attrs.class_("text-gray-300 flex-1")},
-                  list{text(anomaly.description)},
-                ),
-                span(
-                  list{Attrs.class_("text-gray-600 text-xs")},
-                  list{text(anomaly.category)},
-                ),
+                span(list{Attrs.class_("text-gray-300 flex-1")}, list{text(anomaly.description)}),
+                span(list{Attrs.class_("text-gray-600 text-xs")}, list{text(anomaly.category)}),
               },
             )
           })
@@ -224,10 +207,7 @@ let renderNotesTab = (state: exploratoryWorkbenchState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex flex-col gap-3 p-4")},
     list{
-      h3(
-        list{Attrs.class_("text-sm font-medium text-gray-300")},
-        list{text("Session Notes")},
-      ),
+      h3(list{Attrs.class_("text-sm font-medium text-gray-300")}, list{text("Session Notes")}),
       textarea(
         list{
           Attrs.class_(
@@ -241,11 +221,7 @@ let renderNotesTab = (state: exploratoryWorkbenchState): Tea_Vdom.t<msg> => {
       ),
       div(
         list{Attrs.class_("text-xs text-gray-500")},
-        list{
-          text(
-            `${Int.toString(String.length(currentNotes))} character(s)`,
-          ),
-        },
+        list{text(`${Int.toString(String.length(currentNotes))} character(s)`)},
       ),
     },
   )
@@ -275,10 +251,7 @@ let renderHistoryTab = (state: exploratoryWorkbenchState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("text-sm font-medium text-gray-200")},
                   list{text(session.name)},
                 ),
-                span(
-                  list{Attrs.class_("text-xs text-gray-500 font-mono")},
-                  list{text(session.id)},
-                ),
+                span(list{Attrs.class_("text-xs text-gray-500 font-mono")}, list{text(session.id)}),
               },
             ),
             div(
@@ -357,7 +330,9 @@ let view = (state: exploratoryWorkbenchState): Tea_Vdom.t<msg> => {
       // Recording indicator
       if state.recording {
         div(
-          list{Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700")},
+          list{
+            Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700"),
+          },
           list{
             div(list{Attrs.class_("w-3 h-3 bg-red-500 rounded-full animate-pulse")}, list{}),
             span(list{Attrs.class_("text-sm text-red-300")}, list{text("Recording...")}),
@@ -370,7 +345,9 @@ let view = (state: exploratoryWorkbenchState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

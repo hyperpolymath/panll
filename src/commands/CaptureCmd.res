@@ -22,12 +22,15 @@ let saveScreenshot = (
   format: string,
 ): Tea_Cmd.t<msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("save_screenshot", {
-      "captureId": captureId,
-      "panelId": panelId,
-      "base64Data": base64Data,
-      "format": format,
-    })
+    invoke(
+      "save_screenshot",
+      {
+        "captureId": captureId,
+        "panelId": panelId,
+        "base64Data": base64Data,
+        "format": format,
+      },
+    )
     ->Promise.then(result => {
       callbacks.enqueue(Capture(ScreenshotSaved(Ok(result))))
       Promise.resolve()

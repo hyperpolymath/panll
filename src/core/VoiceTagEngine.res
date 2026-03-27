@@ -253,9 +253,10 @@ let methodLabel = (method: mriInputMethod): string => {
 /// ARIA label for a tag (screen reader accessibility).
 let tagAriaLabel = (tag: mriTag): string => {
   let typeStr = tagTypeLabel(tag.tagType)
-  let lineStr = tag.startLine === tag.endLine
-    ? `line ${Int.toString(tag.startLine)}`
-    : `lines ${Int.toString(tag.startLine)} to ${Int.toString(tag.endLine)}`
+  let lineStr =
+    tag.startLine === tag.endLine
+      ? `line ${Int.toString(tag.startLine)}`
+      : `lines ${Int.toString(tag.startLine)} to ${Int.toString(tag.endLine)}`
   let resolvedStr = tag.resolved ? ", resolved" : ""
   let msgStr = switch tag.message {
   | Some(m) => `: ${m}`
@@ -319,7 +320,8 @@ let parseInt = (s: string): option<int> => {
 ///   "attribute human"
 ///   "attribute ai <model>"
 let parseVoiceCommand = (transcript: string): voiceCommand => {
-  let words = transcript
+  let words =
+    transcript
     ->String.toLowerCase
     ->String.trim
     ->String.split(" ")
@@ -368,60 +370,51 @@ let parseVoiceCommand = (transcript: string): voiceCommand => {
         }
       | None => VoiceUnrecognised(transcript)
       }
-    }
-    // "edit tag N"
+    } // "edit tag N"
     else if w0 === "edit" && w1 === "tag" && len >= 3 {
       switch parseInt(words->Array.getUnsafe(2)) {
       | Some(n) => EditTag(n)
       | None => VoiceUnrecognised(transcript)
       }
-    }
-    // "delete tag N"
+    } // "delete tag N"
     else if w0 === "delete" && w1 === "tag" && len >= 3 {
       switch parseInt(words->Array.getUnsafe(2)) {
       | Some(n) => DeleteTag(n)
       | None => VoiceUnrecognised(transcript)
       }
-    }
-    // "resolve tag N"
+    } // "resolve tag N"
     else if w0 === "resolve" && w1 === "tag" && len >= 3 {
       switch parseInt(words->Array.getUnsafe(2)) {
       | Some(n) => ResolveTag(n)
       | None => VoiceUnrecognised(transcript)
       }
-    }
-    // "show tag N"
+    } // "show tag N"
     else if w0 === "show" && w1 === "tag" && len >= 3 {
       switch parseInt(words->Array.getUnsafe(2)) {
       | Some(n) => ShowTag(n)
       | None => VoiceUnrecognised(transcript)
       }
-    }
-    // "show all [type]"
+    } // "show all [type]"
     else if w0 === "show" && w1 === "all" {
       if len >= 3 {
         ShowAll(parseTagType(words->Array.getUnsafe(2)))
       } else {
         ShowAll(None)
       }
-    }
-    // "who wrote line N"
+    } // "who wrote line N"
     else if w0 === "who" && w1 === "wrote" && len >= 4 {
       let w3 = words->Array.getUnsafe(3)
       switch parseInt(w3) {
       | Some(n) => WhoWroteLine(n)
       | None => VoiceUnrecognised(transcript)
       }
-    }
-    // "attribute human"
+    } // "attribute human"
     else if w0 === "attribute" && w1 === "human" {
       AttributeHuman
-    }
-    // "attribute ai MODEL"
+    } // "attribute ai MODEL"
     else if w0 === "attribute" && w1 === "ai" && len >= 3 {
       AttributeAi(words->Array.getUnsafe(2))
-    }
-    else {
+    } else {
       VoiceUnrecognised(transcript)
     }
   } else {

@@ -35,10 +35,7 @@
 
 /// Check types for a VQL query expression.
 /// Used by VeriSimDB panel to validate queries before execution.
-let checkVqlTypes = (
-  query: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkVqlTypes = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   let context = `{"language":"vql","dialect":"vql-ut","features":["dependent","linear","proof-carrying"]}`
   TypeLLCmd.check(query, Some(context), tagger)
 }
@@ -79,7 +76,8 @@ let validateToken = (
   constraintExpressions: array<string>,
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
-  let constraintsJson = constraintExpressions
+  let constraintsJson =
+    constraintExpressions
     ->Array.map(c => `"${c}"`)
     ->Array.join(",")
   let _context = `{"language":"constraint","features":["dependent","refinement"]}`
@@ -88,19 +86,17 @@ let validateToken = (
 
 /// Infer types for a Pane-L constraint expression.
 /// Used by Pane-L to show the type of constraint expressions.
-let inferConstraintType = (
-  expression: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let inferConstraintType = (expression: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   TypeLLCmd.infer(expression, tagger)
 }
 
 /// Check types for a BoJ cartridge ABI definition.
 /// Used by BoJ panel to validate Idris2 formal specs.
-let checkCartridgeAbi = (
-  abiSpec: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkCartridgeAbi = (abiSpec: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   let context = `{"language":"idris2","features":["dependent","linear","quantitative"]}`
   TypeLLCmd.check(abiSpec, Some(context), tagger)
 }
@@ -149,10 +145,7 @@ let checkSecurityTypes = (
 /// Check types for UMS ABI validation results.
 /// Used by Universal Modding Studio to type-check level data against the
 /// 14 Idris2 ABI module interface (dependent types, quantitative erasure).
-let checkUmsAbi = (
-  levelData: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkUmsAbi = (levelData: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   let context = `{"language":"idris2","domain":"ums-level-abi","features":["dependent","quantitative","erasure","proof-carrying"],"modules":14}`
   TypeLLCmd.check(levelData, Some(context), tagger)
 }

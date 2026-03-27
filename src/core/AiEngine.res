@@ -101,12 +101,7 @@ let categoryLabel = (cat: aiCategory): string => {
 }
 
 /// All category tabs in display order.
-let allCategories: array<aiCategory> = [
-  Conversation,
-  SystemPrompt,
-  Providers,
-  Context,
-]
+let allCategories: array<aiCategory> = [Conversation, SystemPrompt, Providers, Context]
 
 /// Human-readable label for a message role.
 let roleLabel = (role: aiRole): string => {
@@ -268,8 +263,14 @@ let messageResponseDecoder: Tea_Json.decoder<aiMessage> = json => {
   open Decoders
   open Tea_Json
   let inner = map6(
-    (providerStr, content, model, inputTokens, outputTokens, quotaExhausted) =>
-      (providerStr, content, model, inputTokens, outputTokens, quotaExhausted),
+    (providerStr, content, model, inputTokens, outputTokens, quotaExhausted) => (
+      providerStr,
+      content,
+      model,
+      inputTokens,
+      outputTokens,
+      quotaExhausted,
+    ),
     stringField("provider"),
     stringField("content"),
     stringField("model"),
@@ -278,18 +279,21 @@ let messageResponseDecoder: Tea_Json.decoder<aiMessage> = json => {
     boolField("quota_exhausted"),
   )
   switch inner(json) {
-  | Ok((_, _, _, _, _, true)) =>
-    Error(Failure("quota_exhausted", json))
+  | Ok((_, _, _, _, _, true)) => Error(Failure("quota_exhausted", json))
   | Ok((providerStr, content, model, inputTokens, outputTokens, _)) =>
-    Ok({
-      role: Assistant,
-      content,
-      provider: providerIdFromString(providerStr),
-      model: Some(model),
-      inputTokens,
-      outputTokens,
-      timestamp: Date.now(),
-    }: aiMessage)
+    Ok(
+      (
+        {
+          role: Assistant,
+          content,
+          provider: providerIdFromString(providerStr),
+          model: Some(model),
+          inputTokens,
+          outputTokens,
+          timestamp: Date.now(),
+        }: aiMessage
+      ),
+    )
   | Error(e) => Error(e)
   }
 }
@@ -304,8 +308,7 @@ let providerConfigDecoder: Tea_Json.decoder<aiProviderConfig> = json => {
   open Decoders
   open Tea_Json
   let inner = map5(
-    (idStr, envVar, enabled, priority, model) =>
-      (idStr, envVar, enabled, priority, model),
+    (idStr, envVar, enabled, priority, model) => (idStr, envVar, enabled, priority, model),
     stringField("id"),
     stringField("env_var"),
     boolField("enabled"),
@@ -316,15 +319,19 @@ let providerConfigDecoder: Tea_Json.decoder<aiProviderConfig> = json => {
   | Ok((idStr, envVar, enabled, priority, model)) =>
     switch providerIdFromString(idStr) {
     | Some(id) =>
-      Ok({
-        id,
-        apiKey: None,
-        envVar,
-        enabled,
-        priority,
-        selectedModel: model,
-        quotaExhausted: false,
-      }: aiProviderConfig)
+      Ok(
+        (
+          {
+            id,
+            apiKey: None,
+            envVar,
+            enabled,
+            priority,
+            selectedModel: model,
+            quotaExhausted: false,
+          }: aiProviderConfig
+        ),
+      )
     | None => Error(Failure(`Unknown provider id: ${idStr}`, json))
     }
   | Error(e) => Error(e)
@@ -332,8 +339,10 @@ let providerConfigDecoder: Tea_Json.decoder<aiProviderConfig> = json => {
 }
 
 /// Tea_Json decoder for the provider state response envelope.
-let providerStateDecoder: Tea_Json.decoder<array<aiProviderConfig>> =
-  Tea_Json.field("providers", Decoders.lenientArray(providerConfigDecoder))
+let providerStateDecoder: Tea_Json.decoder<array<aiProviderConfig>> = Tea_Json.field(
+  "providers",
+  Decoders.lenientArray(providerConfigDecoder),
+)
 
 /// Parse provider config state from the Tauri backend JSON.
 let parseProviderState = (jsonStr: string): result<array<aiProviderConfig>, string> =>
@@ -425,9 +434,7 @@ type toolCallDispatchInfo = {
 
 /// Mark the most recent pending tool call as ready for execution (ToolUseEnd).
 /// Returns the tool call info for dispatch, if any.
-let finalizeToolCall = (
-  state: streamingState,
-): (streamingState, option<toolCallDispatchInfo>) => {
+let finalizeToolCall = (state: streamingState): (streamingState, option<toolCallDispatchInfo>) => {
   let len = Array.length(state.pendingToolCalls)
   if len === 0 {
     (state, None)

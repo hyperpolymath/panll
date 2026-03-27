@@ -35,10 +35,9 @@ let computeStats = (entries: array<harmonizationEntry>): harmonizeStats => {
 
 /// Filter entries by harmonized verdict type. Returns all entries if filter
 /// is None.
-let filterEntries = (
-  entries: array<harmonizationEntry>,
-  filter: option<harmonizedVerdict>,
-): array<harmonizationEntry> => {
+let filterEntries = (entries: array<harmonizationEntry>, filter: option<harmonizedVerdict>): array<
+  harmonizationEntry,
+> => {
   switch filter {
   | None => entries
   | Some(verdict) => entries->Array.filter(e => e.verdict == verdict)
@@ -50,17 +49,14 @@ let filterEntries = (
 // ============================================================================
 
 /// Add a new entry to the front of the entries array (newest first).
-let addEntry = (
-  entries: array<harmonizationEntry>,
-  entry: harmonizationEntry,
-): array<harmonizationEntry> => {
+let addEntry = (entries: array<harmonizationEntry>, entry: harmonizationEntry): array<
+  harmonizationEntry,
+> => {
   Array.concat([entry], entries)
 }
 
 /// Sort entries by timestamp (newest first, lexicographic ISO 8601 sort).
-let sortByTimestamp = (
-  entries: array<harmonizationEntry>,
-): array<harmonizationEntry> => {
+let sortByTimestamp = (entries: array<harmonizationEntry>): array<harmonizationEntry> => {
   let sorted = Array.copy(entries)
   sorted->Array.sort((a, b) => String.compare(b.timestamp, a.timestamp))
   sorted

@@ -7,9 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Fetch the status of all 5 neural networks.
-let fetchNetworks = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let fetchNetworks = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("hypatia_get_networks", ())
     ->Promise.then(result => {
@@ -25,9 +23,7 @@ let fetchNetworks = (
 }
 
 /// Fetch scan results across all repos.
-let fetchScans = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let fetchScans = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("hypatia_get_scans", ())
     ->Promise.then(result => {
@@ -43,10 +39,7 @@ let fetchScans = (
 }
 
 /// Trigger a scan on a specific repo.
-let scanRepo = (
-  repoName: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let scanRepo = (repoName: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("hypatia_scan_repo", {"repoName": repoName})
     ->Promise.then(result => {

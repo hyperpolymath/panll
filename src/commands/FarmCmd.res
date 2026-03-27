@@ -23,9 +23,7 @@ let invoke = RuntimeBridge.invoke
 /// Load the full repo inventory from farm-manifest.json.
 /// Returns a JSON string containing the FarmInventory structure
 /// (total, repos array, groups, languages, forge_names).
-let listRepos = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listRepos = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("farm_list_repos", ())
     ->Promise.then(result => {
@@ -42,10 +40,7 @@ let listRepos = (
 
 /// Get details for a single repo by name.
 /// Returns a JSON string containing the FarmRepoEntry.
-let getRepo = (
-  name: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getRepo = (name: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("farm_get_repo", {"name": name})
     ->Promise.then(result => {
@@ -62,9 +57,7 @@ let getRepo = (
 
 /// Get aggregate statistics from the manifest (counts by language,
 /// forge, priority, group).
-let getStats = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getStats = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("farm_get_stats", ())
     ->Promise.then(result => {

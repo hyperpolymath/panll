@@ -15,7 +15,10 @@ let updateTypingBridge = (model: model, msg: typingBridgeMsg): (model, Tea_Cmd.t
   | TbCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, typingBridge: {...state, running: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, typingBridge: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, typingBridge: {...state, running: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissTbError => ({...model, typingBridge: {...state, error: None}}, Tea_Cmd.none)
   }
@@ -26,11 +29,17 @@ let updateNeurosymBridge = (model: model, msg: neurosymBridgeMsg): (model, Tea_C
   let state = model.neurosymBridge
   switch msg {
   | SetNbTab(tab) => ({...model, neurosymBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | NbStarted => ({...model, neurosymBridge: {...state, simulating: true, error: None}}, Tea_Cmd.none)
+  | NbStarted => (
+      {...model, neurosymBridge: {...state, simulating: true, error: None}},
+      Tea_Cmd.none,
+    )
   | NbCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, neurosymBridge: {...state, simulating: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, neurosymBridge: {...state, simulating: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, neurosymBridge: {...state, simulating: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissNbError => ({...model, neurosymBridge: {...state, error: None}}, Tea_Cmd.none)
   }
@@ -45,7 +54,10 @@ let updateAgenticBridge = (model: model, msg: agenticBridgeMsg): (model, Tea_Cmd
   | AbCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, agenticBridge: {...state, running: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, agenticBridge: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, agenticBridge: {...state, running: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissAbError => ({...model, agenticBridge: {...state, error: None}}, Tea_Cmd.none)
   }
@@ -56,11 +68,17 @@ let updateAutomationBridge = (model: model, msg: automationBridgeMsg): (model, T
   let state = model.automationBridge
   switch msg {
   | SetAutoBTab(tab) => ({...model, automationBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | AutoBStarted => ({...model, automationBridge: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | AutoBStarted => (
+      {...model, automationBridge: {...state, running: true, error: None}},
+      Tea_Cmd.none,
+    )
   | AutoBCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, automationBridge: {...state, running: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, automationBridge: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, automationBridge: {...state, running: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissAutoBError => ({...model, automationBridge: {...state, error: None}}, Tea_Cmd.none)
   }
@@ -71,11 +89,17 @@ let updateDatabaseBridge = (model: model, msg: databaseBridgeMsg): (model, Tea_C
   let state = model.databaseBridge
   switch msg {
   | SetDbBTab(tab) => ({...model, databaseBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | DbBStarted => ({...model, databaseBridge: {...state, connected: true, error: None}}, Tea_Cmd.none)
+  | DbBStarted => (
+      {...model, databaseBridge: {...state, connected: true, error: None}},
+      Tea_Cmd.none,
+    )
   | DbBCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, databaseBridge: {...state, connected: true}}, Tea_Cmd.none)
-    | Error(err) => ({...model, databaseBridge: {...state, connected: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, databaseBridge: {...state, connected: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissDbBError => ({...model, databaseBridge: {...state, error: None}}, Tea_Cmd.none)
   }
@@ -86,11 +110,17 @@ let updateProtocolBridge = (model: model, msg: protocolBridgeMsg): (model, Tea_C
   let state = model.protocolBridge
   switch msg {
   | SetPbTab(tab) => ({...model, protocolBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | PbStarted => ({...model, protocolBridge: {...state, connected: true, error: None}}, Tea_Cmd.none)
+  | PbStarted => (
+      {...model, protocolBridge: {...state, connected: true, error: None}},
+      Tea_Cmd.none,
+    )
   | PbCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, protocolBridge: {...state, connected: true}}, Tea_Cmd.none)
-    | Error(err) => ({...model, protocolBridge: {...state, connected: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, protocolBridge: {...state, connected: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissPbError => ({...model, protocolBridge: {...state, error: None}}, Tea_Cmd.none)
   }
@@ -105,7 +135,10 @@ let updateProofsBridge = (model: model, msg: proofsBridgeMsg): (model, Tea_Cmd.t
   | PrBCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, proofsBridge: {...state, verifying: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, proofsBridge: {...state, verifying: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, proofsBridge: {...state, verifying: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissPrBError => ({...model, proofsBridge: {...state, error: None}}, Tea_Cmd.none)
   }
@@ -116,11 +149,17 @@ let updateScriptingBridge = (model: model, msg: scriptingBridgeMsg): (model, Tea
   let state = model.scriptingBridge
   switch msg {
   | SetScBTab(tab) => ({...model, scriptingBridge: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | ScBStarted => ({...model, scriptingBridge: {...state, executing: true, error: None}}, Tea_Cmd.none)
+  | ScBStarted => (
+      {...model, scriptingBridge: {...state, executing: true, error: None}},
+      Tea_Cmd.none,
+    )
   | ScBCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, scriptingBridge: {...state, executing: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, scriptingBridge: {...state, executing: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, scriptingBridge: {...state, executing: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissScBError => ({...model, scriptingBridge: {...state, error: None}}, Tea_Cmd.none)
   }

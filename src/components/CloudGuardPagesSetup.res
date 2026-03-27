@@ -32,7 +32,11 @@ open Tea.Html
 /// Render a single Pages project card showing project metadata and status.
 let renderProjectCard = (project: cfPagesProject): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("border border-gray-700 rounded-lg p-3 mb-2 hover:border-gray-600 transition-colors")},
+    list{
+      Attrs.class_(
+        "border border-gray-700 rounded-lg p-3 mb-2 hover:border-gray-600 transition-colors",
+      ),
+    },
     list{
       // Project header
       div(
@@ -55,7 +59,11 @@ let renderProjectCard = (project: cfPagesProject): Tea_Vdom.t<msg> => {
           switch project.framework {
           | Some(fw) =>
             span(
-              list{Attrs.class_("text-xs text-purple-400 font-medium px-1.5 py-0.5 bg-purple-900/30 rounded")},
+              list{
+                Attrs.class_(
+                  "text-xs text-purple-400 font-medium px-1.5 py-0.5 bg-purple-900/30 rounded",
+                ),
+              },
               list{text(fw)},
             )
           | None => noNode
@@ -67,16 +75,17 @@ let renderProjectCard = (project: cfPagesProject): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("mb-1.5")},
           list{
-            div(
-              list{Attrs.class_("text-xs text-gray-500 mb-0.5")},
-              list{text("Custom domains:")},
-            ),
+            div(list{Attrs.class_("text-xs text-gray-500 mb-0.5")}, list{text("Custom domains:")}),
             div(
               list{Attrs.class_("flex flex-wrap gap-1")},
               project.customDomains
               ->Array.map(domain =>
                 span(
-                  list{Attrs.class_("text-xs text-green-400 font-mono px-1.5 py-0.5 bg-green-900/20 rounded")},
+                  list{
+                    Attrs.class_(
+                      "text-xs text-green-400 font-mono px-1.5 py-0.5 bg-green-900/20 rounded",
+                    ),
+                  },
                   list{text(domain)},
                 )
               )
@@ -136,12 +145,18 @@ let renderHeadersTemplate = (currentDomain: option<string>): Tea_Vdom.t<msg> => 
       ),
       div(
         list{Attrs.class_("text-xs text-gray-500 mb-2")},
-        list{text("Add this _headers file to your Pages project root for free security headers (no Workers needed).")},
+        list{
+          text(
+            "Add this _headers file to your Pages project root for free security headers (no Workers needed).",
+          ),
+        },
       ),
       // Template preview
       pre(
         list{
-          Attrs.class_("text-xs text-gray-400 bg-gray-900 rounded p-2 overflow-x-auto max-h-40 font-mono whitespace-pre"),
+          Attrs.class_(
+            "text-xs text-gray-400 bg-gray-900 rounded p-2 overflow-x-auto max-h-40 font-mono whitespace-pre",
+          ),
         },
         list{text(securityHeadersTemplate(domain))},
       ),
@@ -190,7 +205,6 @@ let view = (
           },
         },
       ),
-
       // Security headers template
       renderHeadersTemplate(currentDomain),
     },

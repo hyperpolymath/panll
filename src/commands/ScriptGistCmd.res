@@ -10,10 +10,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Save a gist to persistent storage (`~/.panll/gists/<id>.json`).
 /// The gist is serialised as a JSON string on the frontend side.
-let saveGist = (
-  gistJson: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let saveGist = (gistJson: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("script_gist_save", {"gistJson": gistJson})
     ->Promise.then(result => {
@@ -30,10 +27,7 @@ let saveGist = (
 
 /// Execute a gist by dispatching to its target backend.
 /// Returns a JSON string representing a gistResult.
-let executeGist = (
-  gistJson: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let executeGist = (gistJson: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("script_gist_execute", {"gistJson": gistJson})
     ->Promise.then(result => {
@@ -50,10 +44,9 @@ let executeGist = (
 
 /// Restore a diachronic checkpoint by deserialising the snapshot.
 /// Returns the validated scriptGistState JSON for the frontend to parse.
-let restoreSnapshot = (
-  snapshotJson: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let restoreSnapshot = (snapshotJson: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("script_gist_restore_snapshot", {"snapshotJson": snapshotJson})
     ->Promise.then(result => {
@@ -69,9 +62,7 @@ let restoreSnapshot = (
 }
 
 /// List all saved gist files from persistent storage.
-let listGists = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listGists = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("script_gist_list", {"_": true})
     ->Promise.then(result => {

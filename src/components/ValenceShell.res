@@ -83,7 +83,11 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
     list{
       // Backend status bar
       div(
-        list{Attrs.class_("flex items-center justify-between px-4 py-2 bg-gray-900/50 border-b border-gray-800")},
+        list{
+          Attrs.class_(
+            "flex items-center justify-between px-4 py-2 bg-gray-900/50 border-b border-gray-800",
+          ),
+        },
         list{
           div(
             list{Attrs.class_("flex items-center gap-3")},
@@ -102,10 +106,7 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
                 list{text(ValenceShellEngine.backendLabel(state.backend))},
               ),
               // CWD display
-              span(
-                list{Attrs.class_("text-xs text-gray-500 font-mono")},
-                list{text(state.cwd)},
-              ),
+              span(list{Attrs.class_("text-xs text-gray-500 font-mono")}, list{text(state.cwd)}),
             },
           ),
           div(
@@ -117,7 +118,10 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center gap-1")},
                   list{
-                    div(list{Attrs.class_("w-2 h-2 rounded-full bg-red-500 animate-pulse")}, list{}),
+                    div(
+                      list{Attrs.class_("w-2 h-2 rounded-full bg-red-500 animate-pulse")},
+                      list{},
+                    ),
                     span(list{Attrs.class_("text-xs text-red-400")}, list{text("REC")}),
                     button(
                       list{
@@ -139,7 +143,9 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
               | RecordingIdle =>
                 button(
                   list{
-                    Attrs.class_("text-xs text-gray-500 hover:text-gray-300 px-2 py-1 rounded bg-gray-800"),
+                    Attrs.class_(
+                      "text-xs text-gray-500 hover:text-gray-300 px-2 py-1 rounded bg-gray-800",
+                    ),
                     Events.onClick(ValenceShell(StartRecordingSession)),
                   },
                   list{text("Record")},
@@ -148,7 +154,9 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
               // Screenshot button
               button(
                 list{
-                  Attrs.class_("text-xs text-gray-500 hover:text-gray-300 px-2 py-1 rounded bg-gray-800"),
+                  Attrs.class_(
+                    "text-xs text-gray-500 hover:text-gray-300 px-2 py-1 rounded bg-gray-800",
+                  ),
                   Events.onClick(ValenceShell(ScreenshotTerminal)),
                 },
                 list{text("Screenshot")},
@@ -178,7 +186,10 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center gap-1")},
                   list{
-                    span(list{Attrs.class_("text-xs text-purple-400 font-medium")}, list{text("Claude")}),
+                    span(
+                      list{Attrs.class_("text-xs text-purple-400 font-medium")},
+                      list{text("Claude")},
+                    ),
                   },
                 )
               } else {
@@ -199,10 +210,7 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("px-4 py-8 text-center")},
               list{
-                div(
-                  list{Attrs.class_("text-gray-600 text-sm mb-2")},
-                  list{text("Valence Shell")},
-                ),
+                div(list{Attrs.class_("text-gray-600 text-sm mb-2")}, list{text("Valence Shell")}),
                 div(
                   list{Attrs.class_("text-gray-700 text-xs")},
                   list{
@@ -233,7 +241,9 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
               list{Attrs.class_("text-xs text-amber-400 mb-2 font-medium")},
               list{
                 text(
-                  `${Int.toString(Array.length(state.pendingCommands))} command(s) awaiting approval`,
+                  `${Int.toString(
+                      Array.length(state.pendingCommands),
+                    )} command(s) awaiting approval`,
                 ),
               },
             ),
@@ -242,7 +252,9 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
               state.pendingCommands
               ->Array.mapWithIndex((cmd, idx) => {
                 div(
-                  list{Attrs.class_("flex items-center justify-between bg-gray-900 rounded px-3 py-1")},
+                  list{
+                    Attrs.class_("flex items-center justify-between bg-gray-900 rounded px-3 py-1"),
+                  },
                   list{
                     span(
                       list{Attrs.class_("font-mono text-sm text-amber-200")},
@@ -283,12 +295,11 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
       },
       // Input line
       div(
-        list{Attrs.class_("border-t border-gray-800 bg-gray-900 px-4 py-2 flex items-center gap-2")},
         list{
-          span(
-            list{Attrs.class_("text-emerald-400 font-mono text-sm")},
-            list{text("$")},
-          ),
+          Attrs.class_("border-t border-gray-800 bg-gray-900 px-4 py-2 flex items-center gap-2"),
+        },
+        list{
+          span(list{Attrs.class_("text-emerald-400 font-mono text-sm")}, list{text("$")}),
           input(
             list{
               Attrs.class_(
@@ -307,9 +318,10 @@ let renderTerminal = (state: valenceShellState): Tea_Vdom.t<msg> => {
         },
       ),
       // Completions popup
-      if state.completionsVisible && Array.length(
-        ValenceShellEngine.filterCompletions(state.inputLine, state.completions),
-      ) > 0 {
+      if (
+        state.completionsVisible &&
+        Array.length(ValenceShellEngine.filterCompletions(state.inputLine, state.completions)) > 0
+      ) {
         let filtered = ValenceShellEngine.filterCompletions(state.inputLine, state.completions)
         div(
           list{
@@ -352,7 +364,9 @@ let renderRecordings = (state: valenceShellState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("text-xs text-gray-400 hover:text-gray-200 px-3 py-1 rounded bg-gray-800"),
+              Attrs.class_(
+                "text-xs text-gray-400 hover:text-gray-200 px-3 py-1 rounded bg-gray-800",
+              ),
               Events.onClick(ValenceShell(LoadRecordings)),
             },
             list{text("Refresh")},
@@ -387,7 +401,9 @@ let renderRecordings = (state: valenceShellState): Tea_Vdom.t<msg> => {
                       list{Attrs.class_("text-xs text-gray-500 mt-1")},
                       list{
                         text(
-                          `${Float.toString(recording.durationSecs)}s | ${Int.toString(recording.sizeBytes)} bytes`,
+                          `${Float.toString(recording.durationSecs)}s | ${Int.toString(
+                              recording.sizeBytes,
+                            )} bytes`,
                         ),
                       },
                     ),
@@ -398,14 +414,18 @@ let renderRecordings = (state: valenceShellState): Tea_Vdom.t<msg> => {
                   list{
                     button(
                       list{
-                        Attrs.class_("text-xs text-gray-400 hover:text-gray-200 px-2 py-1 bg-gray-800 rounded"),
+                        Attrs.class_(
+                          "text-xs text-gray-400 hover:text-gray-200 px-2 py-1 bg-gray-800 rounded",
+                        ),
                         Events.onClick(ValenceShell(ExportRecordingAs(recording.id, "html"))),
                       },
                       list{text("Export HTML")},
                     ),
                     button(
                       list{
-                        Attrs.class_("text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-gray-800 rounded"),
+                        Attrs.class_(
+                          "text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-gray-800 rounded",
+                        ),
                         Events.onClick(ValenceShell(DeleteRecordingById(recording.id))),
                       },
                       list{text("Delete")},
@@ -450,7 +470,9 @@ let renderCheckpoints = (state: valenceShellState): Tea_Vdom.t<msg> => {
               ),
               button(
                 list{
-                  Attrs.class_("text-xs text-gray-400 hover:text-gray-200 px-3 py-1 rounded bg-gray-800"),
+                  Attrs.class_(
+                    "text-xs text-gray-400 hover:text-gray-200 px-3 py-1 rounded bg-gray-800",
+                  ),
                   Events.onClick(ValenceShell(LoadCheckpoints)),
                 },
                 list{text("Refresh")},
@@ -469,7 +491,9 @@ let renderCheckpoints = (state: valenceShellState): Tea_Vdom.t<msg> => {
             ),
             div(
               list{Attrs.class_("text-amber-500/70 text-xs")},
-              list{text("Checkpoints require the Valence shell binary for reversible filesystem ops.")},
+              list{
+                text("Checkpoints require the Valence shell binary for reversible filesystem ops."),
+              },
             ),
           },
         )
@@ -577,17 +601,16 @@ let renderSettings = (state: valenceShellState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("space-y-2")},
         list{
-          h3(
-            list{Attrs.class_("text-sm font-medium text-gray-300")},
-            list{text("Shell Backend")},
-          ),
+          h3(list{Attrs.class_("text-sm font-medium text-gray-300")}, list{text("Shell Backend")}),
           div(
             list{Attrs.class_("flex items-center gap-3 bg-gray-900 rounded-lg px-4 py-3")},
             list{
               div(
                 list{
                   Attrs.class_(
-                    `w-2 h-2 rounded-full ${state.valenceAvailable ? "bg-emerald-400" : "bg-gray-600"}`,
+                    `w-2 h-2 rounded-full ${state.valenceAvailable
+                        ? "bg-emerald-400"
+                        : "bg-gray-600"}`,
                   ),
                 },
                 list{},
@@ -678,10 +701,7 @@ let renderSettings = (state: valenceShellState): Tea_Vdom.t<msg> => {
           div(
             list{},
             list{
-              div(
-                list{Attrs.class_("text-sm text-gray-200")},
-                list{text("Split View")},
-              ),
+              div(list{Attrs.class_("text-sm text-gray-200")}, list{text("Split View")}),
               div(
                 list{Attrs.class_("text-xs text-gray-500 mt-0.5")},
                 list{text("Show two terminal instances side by side.")},
@@ -727,12 +747,11 @@ let view = (state: valenceShellState): Tea_Vdom.t<msg> => {
             list{
               // Terminal icon placeholder (text-based for now)
               div(
-                list{Attrs.class_("w-6 h-6 rounded bg-emerald-900 flex items-center justify-center")},
                 list{
-                  span(
-                    list{Attrs.class_("text-emerald-400 text-xs font-bold")},
-                    list{text(">_")},
-                  ),
+                  Attrs.class_("w-6 h-6 rounded bg-emerald-900 flex items-center justify-center"),
+                },
+                list{
+                  span(list{Attrs.class_("text-emerald-400 text-xs font-bold")}, list{text(">_")}),
                 },
               ),
               div(

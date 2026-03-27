@@ -13,7 +13,6 @@
 /// In browser-only mode (no desktop runtime), commands fall back to direct
 /// fetch() calls against the VeriSimDB server URL.
 
-
 let hasDesktopRuntime = RuntimeBridge.hasDesktopRuntime
 
 /// GET helper for VeriSimDB direct fetch (bypasses backend invoke).
@@ -99,10 +98,7 @@ let listOctads = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
 ///
 /// @param query — VQL-UT query string (e.g. "SELECT * FROM octad WHERE modality = 'text'")
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
-let executeQuery = (
-  query: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let executeQuery = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let p = if hasDesktopRuntime() {
       RuntimeBridge.invoke("verisimdb_live_query", {"query": query})
@@ -128,10 +124,7 @@ let executeQuery = (
 ///
 /// @param id — the octad identifier (UUID or slug)
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
-let getOctad = (
-  id: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getOctad = (id: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let p = if hasDesktopRuntime() {
       RuntimeBridge.invoke("verisimdb_live_get_octad", {"id": id})
@@ -166,9 +159,7 @@ let checkReachable = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> =
     }
     p
     ->Promise.then(_result => {
-      callbacks.enqueue(
-        tagger(Ok(`{"reachable":true,"endpoint":"${ServiceEndpoints.verisimdb}"}`)),
-      )
+      callbacks.enqueue(tagger(Ok(`{"reachable":true,"endpoint":"${ServiceEndpoints.verisimdb}"}`)))
       Promise.resolve()
     })
     ->Promise.catch(_err => {

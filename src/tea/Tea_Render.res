@@ -23,14 +23,45 @@ let svgNS = "http://www.w3.org/2000/svg"
 /// Tags that require SVG namespace
 let isSvgTag = (tag: string): bool => {
   switch tag {
-  | "svg" | "circle" | "ellipse" | "line" | "path" | "polygon" | "polyline"
-  | "rect" | "g" | "defs" | "use" | "symbol" | "clipPath" | "mask"
-  | "pattern" | "image" | "text" | "tspan" | "textPath" | "foreignObject"
-  | "marker" | "linearGradient" | "radialGradient" | "stop" | "filter"
-  | "feBlend" | "feColorMatrix" | "feComposite" | "feFlood" | "feGaussianBlur"
-  | "feMerge" | "feMergeNode" | "feOffset" | "animate" | "animateTransform"
-  | "set" | "desc" | "title" | "metadata" =>
-    true
+  | "svg"
+  | "circle"
+  | "ellipse"
+  | "line"
+  | "path"
+  | "polygon"
+  | "polyline"
+  | "rect"
+  | "g"
+  | "defs"
+  | "use"
+  | "symbol"
+  | "clipPath"
+  | "mask"
+  | "pattern"
+  | "image"
+  | "text"
+  | "tspan"
+  | "textPath"
+  | "foreignObject"
+  | "marker"
+  | "linearGradient"
+  | "radialGradient"
+  | "stop"
+  | "filter"
+  | "feBlend"
+  | "feColorMatrix"
+  | "feComposite"
+  | "feFlood"
+  | "feGaussianBlur"
+  | "feMerge"
+  | "feMergeNode"
+  | "feOffset"
+  | "animate"
+  | "animateTransform"
+  | "set"
+  | "desc"
+  | "title"
+  | "metadata" => true
   | _ => false
   }
 }
@@ -74,7 +105,9 @@ let removeAllChildren = (_el: {..}): unit => {
 let domElementsEqual: (domElement, domElement) => bool = %raw(`function(a, b) { return a === b; }`)
 
 /// Remove event listener from element
-@send external removeEventListenerDom: (domElement, string, Dom.event => unit) => unit = "removeEventListener"
+@send
+external removeEventListenerDom: (domElement, string, Dom.event => unit) => unit =
+  "removeEventListener"
 
 /// Remove event listener from element (typed wrapper)
 let removeEventListener = (listener: eventListener): unit => {
@@ -84,15 +117,26 @@ let removeEventListener = (listener: eventListener): unit => {
 /// Boolean properties that should be set directly on the element
 let isBoolProp = (key: string): bool => {
   switch key {
-  | "checked" | "disabled" | "readonly" | "required" | "autofocus"
-  | "multiple" | "selected" | "hidden" | "novalidate" =>
-    true
+  | "checked"
+  | "disabled"
+  | "readonly"
+  | "required"
+  | "autofocus"
+  | "multiple"
+  | "selected"
+  | "hidden"
+  | "novalidate" => true
   | _ => false
   }
 }
 
 /// Apply a single attribute to a DOM element
-let applyAttribute = (el: {..}, attr: attribute<'msg>, state: renderState<'msg>, domEl: domElement): unit => {
+let applyAttribute = (
+  el: {..},
+  attr: attribute<'msg>,
+  state: renderState<'msg>,
+  domEl: domElement,
+): unit => {
   switch attr {
   | Property(key, value) =>
     if key === "" {
@@ -126,18 +170,20 @@ let applyAttribute = (el: {..}, attr: attribute<'msg>, state: renderState<'msg>,
     } else {
       el["setAttribute"](key, value)
     }
-  | Style(prop, value) =>
-    setStyleProperty(el["style"], prop, value)
+  | Style(prop, value) => setStyleProperty(el["style"], prop, value)
   | Event(name, handler) => {
       let eventHandler = (_: Dom.event) => {
         state.dispatch(handler())
       }
       el["addEventListener"](name, eventHandler)->ignore
-      Array.push(state.listeners, {
-        element: domEl,
-        eventName: name,
-        handler: eventHandler,
-      })->ignore
+      Array.push(
+        state.listeners,
+        {
+          element: domEl,
+          eventName: name,
+          handler: eventHandler,
+        },
+      )->ignore
     }
   | EventWithValue(name, handler) => {
       let eventHandler = (_e: Dom.event) => {
@@ -145,11 +191,14 @@ let applyAttribute = (el: {..}, attr: attribute<'msg>, state: renderState<'msg>,
         state.dispatch(handler(value))
       }
       el["addEventListener"](name, eventHandler)->ignore
-      Array.push(state.listeners, {
-        element: domEl,
-        eventName: name,
-        handler: eventHandler,
-      })->ignore
+      Array.push(
+        state.listeners,
+        {
+          element: domEl,
+          eventName: name,
+          handler: eventHandler,
+        },
+      )->ignore
     }
   | EventWithKey(name, handler) => {
       let eventHandler = (_e: Dom.event) => {
@@ -163,11 +212,14 @@ let applyAttribute = (el: {..}, attr: attribute<'msg>, state: renderState<'msg>,
         }
       }
       el["addEventListener"](name, eventHandler)->ignore
-      Array.push(state.listeners, {
-        element: domEl,
-        eventName: name,
-        handler: eventHandler,
-      })->ignore
+      Array.push(
+        state.listeners,
+        {
+          element: domEl,
+          eventName: name,
+          handler: eventHandler,
+        },
+      )->ignore
     }
   | EventPreventDefault(name, handler) => {
       let eventHandler = (_e: Dom.event) => {
@@ -175,11 +227,14 @@ let applyAttribute = (el: {..}, attr: attribute<'msg>, state: renderState<'msg>,
         state.dispatch(handler())
       }
       el["addEventListener"](name, eventHandler)->ignore
-      Array.push(state.listeners, {
-        element: domEl,
-        eventName: name,
-        handler: eventHandler,
-      })->ignore
+      Array.push(
+        state.listeners,
+        {
+          element: domEl,
+          eventName: name,
+          handler: eventHandler,
+        },
+      )->ignore
     }
   | EventStopPropagation(name, handler) => {
       let eventHandler = (_e: Dom.event) => {
@@ -187,11 +242,14 @@ let applyAttribute = (el: {..}, attr: attribute<'msg>, state: renderState<'msg>,
         state.dispatch(handler())
       }
       el["addEventListener"](name, eventHandler)->ignore
-      Array.push(state.listeners, {
-        element: domEl,
-        eventName: name,
-        handler: eventHandler,
-      })->ignore
+      Array.push(
+        state.listeners,
+        {
+          element: domEl,
+          eventName: name,
+          handler: eventHandler,
+        },
+      )->ignore
     }
   }
 }
@@ -297,7 +355,7 @@ let attributesEqual = (a1: array<attribute<'msg>>, a2: array<attribute<'msg>>): 
     false
   } else {
     Array.everyWithIndex(a1, (attr, i) => {
-      switch (attr, Array.get(a2, i)) {
+      switch (attr, a2[i]) {
       | (Property(k1, v1), Some(Property(k2, v2))) => k1 === k2 && v1 === v2
       | (Style(k1, v1), Some(Style(k2, v2))) => k1 === k2 && v1 === v2
       | (Event(n1, _), Some(Event(n2, _))) => n1 === n2
@@ -341,13 +399,14 @@ let rec diff = (oldVdom: t<'msg>, newVdom: t<'msg>): patch<'msg> => {
     } else {
       let attrsChanged = !attributesEqual(attrs1, attrs2)
       // Check if keyed children changed
-      let keysChanged = Array.length(children1) !== Array.length(children2) ||
-        Array.someWithIndex(children1, ((k1, _), i) => {
-          switch Array.get(children2, i) {
-          | Some((k2, _)) => k1 !== k2
-          | None => true
-          }
-        })
+      let keysChanged =
+        Array.length(children1) !== Array.length(children2) ||
+          Array.someWithIndex(children1, ((k1, _), i) => {
+            switch children2[i] {
+            | Some((k2, _)) => k1 !== k2
+            | None => true
+            }
+          })
 
       if attrsChanged || keysChanged {
         UpdateKeyedChildren(children1, children2)
@@ -355,7 +414,7 @@ let rec diff = (oldVdom: t<'msg>, newVdom: t<'msg>): patch<'msg> => {
         // Same keys in same order — diff each child
         let hasChanges = ref(false)
         Array.forEachWithIndex(children1, ((_k, oldChild), i) => {
-          switch Array.get(children2, i) {
+          switch children2[i] {
           | Some((_k2, newChild)) =>
             if diff(oldChild, newChild) !== NoChange {
               hasChanges := true
@@ -378,10 +437,12 @@ let rec diff = (oldVdom: t<'msg>, newVdom: t<'msg>): patch<'msg> => {
 }
 
 /// Diff two arrays of child nodes, producing a patch per index.
-and diffChildren = (oldChildren: array<t<'msg>>, newChildren: array<t<'msg>>): array<childPatch<'msg>> => {
+and diffChildren = (oldChildren: array<t<'msg>>, newChildren: array<t<'msg>>): array<
+  childPatch<'msg>,
+> => {
   let maxLen = Pervasives.max(Array.length(oldChildren), Array.length(newChildren))
   Array.fromInitializer(~length=maxLen, i => {
-    switch (Array.get(oldChildren, i), Array.get(newChildren, i)) {
+    switch (oldChildren[i], newChildren[i]) {
     | (None, Some(newChild)) => {index: i, patch: Replace(newChild)}
     | (Some(_), None) => {index: i, patch: RemoveNode}
     | (Some(oldChild), Some(newChild)) => {index: i, patch: diff(oldChild, newChild)}
@@ -402,7 +463,11 @@ let getAttrKeys = (attrs: array<attribute<'msg>>): array<(string, string)> => {
 }
 
 /// Remove attributes that existed in old but not in new
-let removeStaleAttrs = (el: {..}, oldAttrs: array<attribute<'msg>>, newAttrs: array<attribute<'msg>>): unit => {
+let removeStaleAttrs = (
+  el: {..},
+  oldAttrs: array<attribute<'msg>>,
+  newAttrs: array<attribute<'msg>>,
+): unit => {
   let oldKeys = getAttrKeys(oldAttrs)
   let newKeys = getAttrKeys(newAttrs)
   Array.forEach(oldKeys, ((kind, key)) => {
@@ -417,15 +482,21 @@ let removeStaleAttrs = (el: {..}, oldAttrs: array<attribute<'msg>>, newAttrs: ar
           } else {
             el["className"] = ""
           }
-        } else if key === "checked" || key === "disabled" || key === "readonly"
-          || key === "required" || key === "autofocus" || key === "multiple"
-          || key === "selected" || key === "hidden" {
+        } else if (
+          key === "checked" ||
+          key === "disabled" ||
+          key === "readonly" ||
+          key === "required" ||
+          key === "autofocus" ||
+          key === "multiple" ||
+          key === "selected" ||
+          key === "hidden"
+        ) {
           el["removeAttribute"](key)
         } else {
           el["removeAttribute"](key)
         }
-      | "style" =>
-        removeStyleProperty(el["style"], key)
+      | "style" => removeStyleProperty(el["style"], key)
       | _ => ()
       }
     }
@@ -517,7 +588,11 @@ let applyKeyedPatch = (
 }
 
 /// Apply a patch to a DOM node
-let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderState<'msg>): unit => {
+let rec applyPatch = (
+  domNode: domElement,
+  patchVal: patch<'msg>,
+  state: renderState<'msg>,
+): unit => {
   switch patchVal {
   | NoChange => ()
   | Replace(newVdom) => {
@@ -544,7 +619,7 @@ let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderS
       let childNodes: array<domElement> = %raw(`Array.from(domNode.childNodes)`)
       let domObj = domElementToObj(domNode)
       Array.forEach(childPatches, cp => {
-        switch Array.get(childNodes, cp.index) {
+        switch childNodes[cp.index] {
         | Some(childNode) => applyPatch(childNode, cp.patch, state)
         | None =>
           switch cp.patch {
@@ -570,7 +645,7 @@ let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderS
       // Update children
       let childNodes: array<domElement> = %raw(`Array.from(domNode.childNodes)`)
       Array.forEach(childPatches, cp => {
-        switch Array.get(childNodes, cp.index) {
+        switch childNodes[cp.index] {
         | Some(childNode) => applyPatch(childNode, cp.patch, state)
         | None =>
           switch cp.patch {
@@ -583,9 +658,7 @@ let rec applyPatch = (domNode: domElement, patchVal: patch<'msg>, state: renderS
         }
       })
     }
-  | UpdateKeyedChildren(oldKeyed, newKeyed) => {
-      applyKeyedPatch(domNode, oldKeyed, newKeyed, state)
-    }
+  | UpdateKeyedChildren(oldKeyed, newKeyed) => applyKeyedPatch(domNode, oldKeyed, newKeyed, state)
   | RemoveNode => {
       let parent: {..} = %raw(`domNode.parentNode`)
       if !Nullable.isNullable(Nullable.make(parent)) {
@@ -603,11 +676,9 @@ let createState = (dispatch: 'msg => unit): renderState<'msg> => {
 }
 
 /// Mount a TEA app to a container selector
-let mount = (
-  containerSelector: string,
-  vdom: t<'msg>,
-  dispatch: 'msg => unit,
-): option<renderState<'msg>> => {
+let mount = (containerSelector: string, vdom: t<'msg>, dispatch: 'msg => unit): option<
+  renderState<'msg>,
+> => {
   switch querySelector(containerSelector) {
   | None => {
       Console.error(`Mount point not found: ${containerSelector}`)
@@ -622,11 +693,7 @@ let mount = (
 }
 
 /// Update render - use diffing when possible, fallback to full render
-let update = (
-  container: domElement,
-  vdom: t<'msg>,
-  state: renderState<'msg>,
-): unit => {
+let update = (container: domElement, vdom: t<'msg>, state: renderState<'msg>): unit => {
   switch state.previousVdom {
   | None => {
       render(container, vdom, state)
@@ -636,9 +703,7 @@ let update = (
       let patchVal = diff(oldVdom, vdom)
       switch patchVal {
       | NoChange => ()
-      | Replace(_) => {
-          render(container, vdom, state)
-        }
+      | Replace(_) => render(container, vdom, state)
       | _ => {
           let containerObj = domElementToObj(container)
           let firstChild: option<domElement> = switch containerObj["firstChild"] {

@@ -107,7 +107,9 @@ let renderMatrixTab = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
             list{Attrs.class_("text-gray-400")},
             list{
               text(
-                `${Int.toString(browserCount)} browser(s) x ${Int.toString(deviceCount)} device(s) = ${Int.toString(totalCells)} cell(s)`,
+                `${Int.toString(browserCount)} browser(s) x ${Int.toString(
+                    deviceCount,
+                  )} device(s) = ${Int.toString(totalCells)} cell(s)`,
               ),
             },
           ),
@@ -166,8 +168,8 @@ let renderMatrixTab = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
                         state.browsers
                         ->Array.map(browser => {
                           let cell =
-                            state.cells->Array.find(c =>
-                              c.browser.name === browser.name && c.device.name === device.name
+                            state.cells->Array.find(
+                              c => c.browser.name === browser.name && c.device.name === device.name,
                             )
                           let result = switch cell {
                           | Some(c) => c.result
@@ -176,7 +178,9 @@ let renderMatrixTab = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
                           div(
                             list{
                               Attrs.class_(
-                                `w-16 h-8 flex items-center justify-center rounded text-xs text-white font-mono cursor-pointer hover:opacity-80 ${cellColour(result)}`,
+                                `w-16 h-8 flex items-center justify-center rounded text-xs text-white font-mono cursor-pointer hover:opacity-80 ${cellColour(
+                                    result,
+                                  )}`,
                               ),
                               Events.onClick(
                                 CompatibilityMatrix(SelectCell(browser.name, device.name)),
@@ -202,13 +206,12 @@ let renderMatrixTab = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
 
 /// Failures tab: detail view of failing cells with error messages.
 let renderFailuresTab = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
-  let failures =
-    state.cells->Array.filter(c =>
-      switch c.result {
-      | CompatFailing(_) => true
-      | _ => false
-      }
-    )
+  let failures = state.cells->Array.filter(c =>
+    switch c.result {
+    | CompatFailing(_) => true
+    | _ => false
+    }
+  )
   if Array.length(failures) === 0 {
     div(
       list{Attrs.class_("p-4 text-gray-500 text-sm italic")},
@@ -234,7 +237,9 @@ let renderFailuresTab = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
                   list{text(`${cell.browser.name} / ${cell.device.name}`)},
                 ),
                 span(
-                  list{Attrs.class_("px-1.5 py-0.5 text-xs rounded bg-red-600 text-white font-mono")},
+                  list{
+                    Attrs.class_("px-1.5 py-0.5 text-xs rounded bg-red-600 text-white font-mono"),
+                  },
                   list{text("FAIL")},
                 ),
               },
@@ -277,9 +282,7 @@ let renderScreenshotsTab = (state: compatibilityMatrixState): Tea_Vdom.t<msg> =>
           list{
             div(
               list{Attrs.class_("bg-gray-900 rounded h-24 flex items-center justify-center mb-2")},
-              list{
-                span(list{Attrs.class_("text-gray-600 text-xs")}, list{text("[screenshot]")}),
-              },
+              list{span(list{Attrs.class_("text-gray-600 text-xs")}, list{text("[screenshot]")})},
             ),
             div(
               list{Attrs.class_("text-xs text-gray-400 text-center")},
@@ -313,10 +316,7 @@ let renderTargetsTab = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("flex items-center gap-3 px-3 py-2 bg-gray-800 rounded text-xs")},
                 list{
-                  span(
-                    list{Attrs.class_("text-gray-300 font-medium")},
-                    list{text(browser.name)},
-                  ),
+                  span(list{Attrs.class_("text-gray-300 font-medium")}, list{text(browser.name)}),
                   span(list{Attrs.class_("text-gray-500")}, list{text(`v${browser.version}`)}),
                   span(list{Attrs.class_("text-gray-600")}, list{text(browser.engine)}),
                 },
@@ -342,14 +342,18 @@ let renderTargetsTab = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("flex items-center gap-3 px-3 py-2 bg-gray-800 rounded text-xs")},
                 list{
-                  span(
-                    list{Attrs.class_("text-gray-300 font-medium")},
-                    list{text(device.name)},
-                  ),
+                  span(list{Attrs.class_("text-gray-300 font-medium")}, list{text(device.name)}),
                   span(list{Attrs.class_("text-gray-500")}, list{text(device.category)}),
                   span(
                     list{Attrs.class_("text-gray-600 font-mono")},
-                    list{text(`${Int.toString(w)}x${Int.toString(h)} @${Float.toFixed(device.pixelRatio, ~digits=0)}x`)},
+                    list{
+                      text(
+                        `${Int.toString(w)}x${Int.toString(h)} @${Float.toFixed(
+                            device.pixelRatio,
+                            ~digits=0,
+                          )}x`,
+                      ),
+                    },
                   ),
                 },
               )
@@ -400,7 +404,9 @@ let view = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
       // Running indicator
       if state.running {
         div(
-          list{Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700")},
+          list{
+            Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700"),
+          },
           list{
             div(list{Attrs.class_("w-3 h-3 bg-amber-400 rounded-full animate-pulse")}, list{}),
             span(
@@ -416,7 +422,9 @@ let view = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

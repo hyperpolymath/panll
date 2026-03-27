@@ -48,12 +48,16 @@ let updateVab = (model: model, msg: vabMsg): (model, Tea_Cmd.t<msg>) => {
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "vab", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
   | TypeCheckResult(Error(_)) => {
-    UpdateHelpers.logDegradedService("TypeLL", "cross-panel type check failed")
-    (model, Tea_Cmd.none)
-  }
+      UpdateHelpers.logDegradedService("TypeLL", "cross-panel type check failed")
+      (model, Tea_Cmd.none)
+    }
   }
 }

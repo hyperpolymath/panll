@@ -38,13 +38,11 @@
 
 /// A CSS selector that has been validated for well-formedness.
 /// Wrapping in a variant prevents accidental use of unvalidated strings.
-type validSelector =
-  | ValidSelector(string)
+type validSelector = ValidSelector(string)
 
 /// HTML content that has been sanitised and structurally validated.
 /// Only validated HTML can be passed to mount functions.
-type validHtml =
-  | ValidHTML(string)
+type validHtml = ValidHTML(string)
 
 /// Result of a DOM mount operation.
 /// Pattern-match to handle each outcome:
@@ -68,9 +66,9 @@ type mountSpec = {
 /// Sanitisation strategy used for a particular validation.
 /// Recorded in MountTracer for audit/debugging.
 type sanitisationMethod =
-  | DOMPurifyMethod   // DOMPurify was available and used
-  | RegexFallback     // DOMPurify unavailable, regex sanitiser used
-  | DualLayer         // Both DOMPurify and regex ran (defence-in-depth)
+  | DOMPurifyMethod // DOMPurify was available and used
+  | RegexFallback // DOMPurify unavailable, regex sanitiser used
+  | DualLayer // Both DOMPurify and regex ran (defence-in-depth)
 
 // ------------------------------------------------------------------
 // Runtime trace instrumentation
@@ -105,8 +103,7 @@ module MountTracer = {
   }
 
   /// Record a named event with detail context.
-  let record = (event: string, detail: string) =>
-    appendEntry({event, detail, timestampMs: nowMs()})
+  let record = (event: string, detail: string) => appendEntry({event, detail, timestampMs: nowMs()})
 
   /// Return all recorded entries (read-only snapshot).
   let entries = () => logRef.contents
@@ -118,7 +115,7 @@ module MountTracer = {
     if len === 0 {
       None
     } else {
-      Array.get(current, len - 1)
+      current[len - 1]
     }
   }
 
@@ -156,15 +153,14 @@ module ProvenSelector = {
   /// Regex matching characters NOT allowed in CSS selectors.
   /// Permits: word chars (\w), hyphens, hash, dots, brackets, parens,
   /// colons, combinators (>~+), equals, spaces, quotes, commas, asterisk.
-  let invalidSelectorRegex = %re("/[^\w\-#\.\[\]():>~+= \"',*]/g")
+  let invalidSelectorRegex = /[^\w\-#\.\[\]():>~+= \"',*]/g
 
   /// Log the outcome of a validation attempt.
   let recordOutcome = (selector: string, outcome: result<validated, string>) => {
-    let detail =
-      switch outcome {
-      | Ok(_) => "selector valid"
-      | Error(err) => err
-      }
+    let detail = switch outcome {
+    | Ok(_) => "selector valid"
+    | Error(err) => err
+    }
     MountTracer.record("selector-validation", selector ++ ";" ++ detail)
   }
 
@@ -173,18 +169,17 @@ module ProvenSelector = {
   let validate = (selector: string): result<validated, string> => {
     let trimmed = SafeString.trim(selector)
     let len = SafeString.length(trimmed)
-    let outcome =
-      if len === 0 {
-        Error("Selector cannot be empty")
-      } else if len > 255 {
-        Error("Selector exceeds maximum length (255 characters)")
-      } else if RegExp.test(invalidSelectorRegex, trimmed) {
-        RegExp.setLastIndex(invalidSelectorRegex, 0)
-        Error("Selector contains invalid CSS characters")
-      } else {
-        RegExp.setLastIndex(invalidSelectorRegex, 0)
-        Ok(ValidSelector(trimmed))
-      }
+    let outcome = if len === 0 {
+      Error("Selector cannot be empty")
+    } else if len > 255 {
+      Error("Selector exceeds maximum length (255 characters)")
+    } else if RegExp.test(invalidSelectorRegex, trimmed) {
+      RegExp.setLastIndex(invalidSelectorRegex, 0)
+      Error("Selector contains invalid CSS characters")
+    } else {
+      RegExp.setLastIndex(invalidSelectorRegex, 0)
+      Ok(ValidSelector(trimmed))
+    }
     recordOutcome(trimmed, outcome)
     outcome
   }
@@ -214,12 +209,15 @@ module ProvenHTML = {
   let maxSize = 1_048_576
 
   /// Log the outcome of HTML validation.
-  let recordOutcome = (html: string, outcome: result<validated, string>, method: sanitisationMethod) => {
-    let detail =
-      switch outcome {
-      | Ok(_) => "html valid"
-      | Error(err) => err
-      }
+  let recordOutcome = (
+    html: string,
+    outcome: result<validated, string>,
+    method: sanitisationMethod,
+  ) => {
+    let detail = switch outcome {
+    | Ok(_) => "html valid"
+    | Error(err) => err
+    }
     let methodStr = switch method {
     | DOMPurifyMethod => "dompurify"
     | RegexFallback => "regex-fallback"
@@ -255,35 +253,35 @@ module ProvenHTML = {
   let regexSanitise = (html: string): string => {
     html
     // -- Dangerous elements (remove with content) --
-    ->String.replaceRegExp(%re("/<script[^>]*>[\s\S]*?<\/script>/gi"), "")
-    ->String.replaceRegExp(%re("/<iframe[^>]*>[\s\S]*?<\/iframe>/gi"), "")
-    ->String.replaceRegExp(%re("/<object[^>]*>[\s\S]*?<\/object>/gi"), "")
-    ->String.replaceRegExp(%re("/<embed[^>]*>[\s\S]*?<\/embed>/gi"), "")
-    ->String.replaceRegExp(%re("/<form[^>]*>[\s\S]*?<\/form>/gi"), "")
-    ->String.replaceRegExp(%re("/<math[^>]*>[\s\S]*?<\/math>/gi"), "")
-    ->String.replaceRegExp(%re("/<svg[^>]*>[\s\S]*?<\/svg>/gi"), "")
-    ->String.replaceRegExp(%re("/<template[^>]*>[\s\S]*?<\/template>/gi"), "")
+    ->String.replaceRegExp(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    ->String.replaceRegExp(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, "")
+    ->String.replaceRegExp(/<object[^>]*>[\s\S]*?<\/object>/gi, "")
+    ->String.replaceRegExp(/<embed[^>]*>[\s\S]*?<\/embed>/gi, "")
+    ->String.replaceRegExp(/<form[^>]*>[\s\S]*?<\/form>/gi, "")
+    ->String.replaceRegExp(/<math[^>]*>[\s\S]*?<\/math>/gi, "")
+    ->String.replaceRegExp(/<svg[^>]*>[\s\S]*?<\/svg>/gi, "")
+    ->String.replaceRegExp(/<template[^>]*>[\s\S]*?<\/template>/gi, "")
     // -- Dangerous elements (self-closing / void) --
-    ->String.replaceRegExp(%re("/<script[^>]*\/?>/gi"), "")
-    ->String.replaceRegExp(%re("/<iframe[^>]*\/?>/gi"), "")
-    ->String.replaceRegExp(%re("/<object[^>]*\/?>/gi"), "")
-    ->String.replaceRegExp(%re("/<embed[^>]*\/?>/gi"), "")
-    ->String.replaceRegExp(%re("/<base[^>]*\/?>/gi"), "")
-    ->String.replaceRegExp(%re("/<link[^>]*\/?>/gi"), "")
-    ->String.replaceRegExp(%re("/<meta[^>]*http-equiv[^>]*\/?>/gi"), "")
+    ->String.replaceRegExp(/<script[^>]*\/?>/gi, "")
+    ->String.replaceRegExp(/<iframe[^>]*\/?>/gi, "")
+    ->String.replaceRegExp(/<object[^>]*\/?>/gi, "")
+    ->String.replaceRegExp(/<embed[^>]*\/?>/gi, "")
+    ->String.replaceRegExp(/<base[^>]*\/?>/gi, "")
+    ->String.replaceRegExp(/<link[^>]*\/?>/gi, "")
+    ->String.replaceRegExp(/<meta[^>]*http-equiv[^>]*\/?>/gi, "")
     // -- Dangerous attributes --
-    ->String.replaceRegExp(%re("/\s+on\w+\s*=\s*[\"'][^\"']*[\"']/gi"), "")
-    ->String.replaceRegExp(%re("/\s+on\w+\s*=\s*[^\s>]+/gi"), "")
-    ->String.replaceRegExp(%re("/\s+formaction\s*=\s*[\"'][^\"']*[\"']/gi"), "")
-    ->String.replaceRegExp(%re("/\s+formaction\s*=\s*[^\s>]+/gi"), "")
-    ->String.replaceRegExp(%re("/\s+xlink:href\s*=\s*[\"'][^\"']*[\"']/gi"), "")
-    ->String.replaceRegExp(%re("/\s+srcdoc\s*=\s*[\"'][^\"']*[\"']/gi"), "")
+    ->String.replaceRegExp(/\s+on\w+\s*=\s*[\"'][^\"']*[\"']/gi, "")
+    ->String.replaceRegExp(/\s+on\w+\s*=\s*[^\s>]+/gi, "")
+    ->String.replaceRegExp(/\s+formaction\s*=\s*[\"'][^\"']*[\"']/gi, "")
+    ->String.replaceRegExp(/\s+formaction\s*=\s*[^\s>]+/gi, "")
+    ->String.replaceRegExp(/\s+xlink:href\s*=\s*[\"'][^\"']*[\"']/gi, "")
+    ->String.replaceRegExp(/\s+srcdoc\s*=\s*[\"'][^\"']*[\"']/gi, "")
     // -- Dangerous URL protocols --
-    ->String.replaceRegExp(%re("/javascript\s*:/gi"), "blocked:")
-    ->String.replaceRegExp(%re("/vbscript\s*:/gi"), "blocked:")
-    ->String.replaceRegExp(%re("/\s+(src|href|action)\s*=\s*[\"']data:[^\"']*[\"']/gi"), "")
+    ->String.replaceRegExp(/javascript\s*:/gi, "blocked:")
+    ->String.replaceRegExp(/vbscript\s*:/gi, "blocked:")
+    ->String.replaceRegExp(/\s+(src|href|action)\s*=\s*[\"']data:[^\"']*[\"']/gi, "")
     // -- CSS exfiltration via style containing url() --
-    ->String.replaceRegExp(%re("/style\s*=\s*[\"'][^\"']*url\s*\([^)]*\)[^\"']*[\"']/gi"), "")
+    ->String.replaceRegExp(/style\s*=\s*[\"'][^\"']*url\s*\([^)]*\)[^\"']*[\"']/gi, "")
   }
 
   /// Full sanitisation pipeline: DOMPurify first (if available), then regex.
@@ -312,8 +310,20 @@ module ProvenHTML = {
   /// HTML void elements that have no closing tag (HTML spec).
   /// These are excluded from stack-based matching.
   let voidElements = [
-    "area", "base", "br", "col", "embed", "hr", "img", "input",
-    "link", "meta", "param", "source", "track", "wbr",
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "source",
+    "track",
+    "wbr",
   ]
 
   /// Check if a tag name is a void element.
@@ -379,15 +389,14 @@ module ProvenHTML = {
   let validate = (html: string): result<validated, string> => {
     let (sanitised, method) = sanitise(html)
     let len = SafeString.length(sanitised)
-    let outcome =
-      if len > maxSize {
-        Error("HTML content exceeds maximum size (1MB)")
-      } else {
-        switch checkTagNesting(sanitised) {
-        | Error(nestingError) => Error(nestingError)
-        | Ok() => Ok(ValidHTML(sanitised))
-        }
+    let outcome = if len > maxSize {
+      Error("HTML content exceeds maximum size (1MB)")
+    } else {
+      switch checkTagNesting(sanitised) {
+      | Error(nestingError) => Error(nestingError)
+      | Ok() => Ok(ValidHTML(sanitised))
       }
+    }
     recordOutcome(sanitised, outcome, method)
     outcome
   }
@@ -407,12 +416,10 @@ let initTrustedTypes = (): bool => {
   let result = TrustedTypes.init()
   if result {
     MountTracer.record("trusted-types-init", "panll-safe-dom policy created")
+  } else if TrustedTypes.isSupported() {
+    MountTracer.record("trusted-types-init", "policy already exists or creation failed")
   } else {
-    if TrustedTypes.isSupported() {
-      MountTracer.record("trusted-types-init", "policy already exists or creation failed")
-    } else {
-      MountTracer.record("trusted-types-init", "browser does not support Trusted Types")
-    }
+    MountTracer.record("trusted-types-init", "browser does not support Trusted Types")
   }
   result
 }
@@ -431,10 +438,7 @@ let findMountPoint = (selector: ProvenSelector.validated): option<Dom.element> =
 /// Mount validated HTML into a validated selector's element.
 /// Uses Trusted Types if available for browser-engine-level enforcement.
 /// Returns Mounted(element) on success or the specific failure reason.
-let mount = (
-  selector: ProvenSelector.validated,
-  html: ProvenHTML.validated,
-): mountResult => {
+let mount = (selector: ProvenSelector.validated, html: ProvenHTML.validated): mountResult => {
   let selectorStr = ProvenSelector.toString(selector)
   let htmlStr = ProvenHTML.toString(html)
   MountTracer.record("mount-attempt", "selector=" ++ selectorStr)
@@ -457,10 +461,7 @@ let mount = (
     | "" => "anonymous"
     | id => id
     }
-    MountTracer.record(
-      "mount-success",
-      "selector=" ++ selectorStr ++ ";element=" ++ identity,
-    )
+    MountTracer.record("mount-success", "selector=" ++ selectorStr ++ ";element=" ++ identity)
     Mounted(element)
   }
 }
@@ -475,16 +476,16 @@ let mount = (
 ///
 /// Use this for untrusted HTML content. For trusted/pre-validated content,
 /// regular mount() is faster.
-let mountParsed = (
-  selector: ProvenSelector.validated,
-  html: ProvenHTML.validated,
-): mountResult => {
+let mountParsed = (selector: ProvenSelector.validated, html: ProvenHTML.validated): mountResult => {
   let selectorStr = ProvenSelector.toString(selector)
   let _htmlStr = ProvenHTML.toString(html)
   MountTracer.record("mount-parsed-attempt", "selector=" ++ selectorStr)
   switch findMountPoint(selector) {
   | None =>
-    MountTracer.record("mount-parsed-failure", "selector=" ++ selectorStr ++ ";reason=mount-point-missing")
+    MountTracer.record(
+      "mount-parsed-failure",
+      "selector=" ++ selectorStr ++ ";reason=mount-point-missing",
+    )
     MountPointNotFound(selectorStr)
   | Some(element) =>
     // Parse HTML into a document, extract body's children,
@@ -631,8 +632,7 @@ let mountWhenReady = (
   ~html: string,
   ~onSuccess: Dom.element => unit,
   ~onError: string => unit,
-): unit =>
-  onDOMReady(() => mountSafe(selector, html, ~onSuccess, ~onError))
+): unit => onDOMReady(() => mountSafe(selector, html, ~onSuccess, ~onError))
 
 // ------------------------------------------------------------------
 // Lifecycle: unmount and remount
@@ -682,8 +682,7 @@ let mountWithNonce = (selector: string, html: string, ~nonce: string): mountResu
   switch ProvenSelector.validate(selector) {
   | Error(e) => InvalidSelector(e)
   | Ok(validSelector) =>
-    let noncedHtml = html
-      ->String.replaceRegExp(%re("/<style/gi"), `<style nonce="${nonce}"`)
+    let noncedHtml = html->String.replaceRegExp(/<style/gi, `<style nonce="${nonce}"`)
     switch ProvenHTML.validate(noncedHtml) {
     | Error(e) => InvalidHTML(e)
     | Ok(validHtml) =>
@@ -718,7 +717,7 @@ let safetyDiagnostics = (): safetyReport => {
     trustedTypesSupported: TrustedTypes.isSupported(),
     trustedTypesPolicyActive: TrustedTypes.hasPanllPolicy(),
     regexSanitiserActive: true, // Always active as fallback/second-pass
-    stackBasedNesting: true,    // Always active
+    stackBasedNesting: true, // Always active
     traceEntryCount: MountTracer.count(),
   }
 }

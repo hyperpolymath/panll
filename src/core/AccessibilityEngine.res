@@ -182,7 +182,11 @@ let detectOsColorScheme = (): AccessibilityModel.themeMode => {
   try {
     let _mql = %raw(`window.matchMedia("(prefers-color-scheme: light)")`)
     let matches: bool = %raw(`_mql.matches`)
-    if matches { AccessibilityModel.ThemeLight } else { ThemeDark }
+    if matches {
+      AccessibilityModel.ThemeLight
+    } else {
+      ThemeDark
+    }
   } catch {
   | _ => ThemeDark
   }
@@ -340,8 +344,13 @@ let accessibilityDecoder: Tea_Json.decoder<AccessibilityModel.accessibilityState
   open Decoders
   open Tea_Json
   let inner = map5(
-    (themeStr, paletteStr, animStr, fontStr, focusStr) =>
-      (themeStr, paletteStr, animStr, fontStr, focusStr),
+    (themeStr, paletteStr, animStr, fontStr, focusStr) => (
+      themeStr,
+      paletteStr,
+      animStr,
+      fontStr,
+      focusStr,
+    ),
     optionalFieldDecoder("theme", string),
     optionalFieldDecoder("palette", string),
     optionalFieldDecoder("animations", string),
@@ -376,30 +385,34 @@ let accessibilityDecoder: Tea_Json.decoder<AccessibilityModel.accessibilityState
       | Some(t) => t
       | None => ThemeDark
       }
-      Ok({
-        palette: switch palette {
-        | Some(p) => p
-        | None => StandardPalette
-        },
-        theme: switch theme {
-        | Some(t) => t
-        | None => ThemeDark
-        },
-        animations: switch animations {
-        | Some(a) => a
-        | None => AnimationsOn
-        },
-        fontSize: switch fontSize {
-        | Some(f) => f
-        | None => FontMedium
-        },
-        focusStyle: switch focusStyle {
-        | Some(f) => f
-        | None => FocusDefault
-        },
-        toolbarExpanded: false,
-        resolvedTheme,
-      }: AccessibilityModel.accessibilityState)
+      Ok(
+        (
+          {
+            palette: switch palette {
+            | Some(p) => p
+            | None => StandardPalette
+            },
+            theme: switch theme {
+            | Some(t) => t
+            | None => ThemeDark
+            },
+            animations: switch animations {
+            | Some(a) => a
+            | None => AnimationsOn
+            },
+            fontSize: switch fontSize {
+            | Some(f) => f
+            | None => FontMedium
+            },
+            focusStyle: switch focusStyle {
+            | Some(f) => f
+            | None => FocusDefault
+            },
+            toolbarExpanded: false,
+            resolvedTheme,
+          }: AccessibilityModel.accessibilityState
+        ),
+      )
     }
   | Error(e) => Error(e)
   }
@@ -454,7 +467,7 @@ let defaultState: AccessibilityModel.accessibilityState = {
 /// Create a TEA command that persists the current accessibility state to
 /// localStorage. Fire-and-forget — no result message needed.
 let saveCmd = (state: AccessibilityModel.accessibilityState): Tea_Cmd.t<'msg> => {
-  Tea_Cmd.call((_callbacks) => {
+  Tea_Cmd.call(_callbacks => {
     saveToLocalStorage(state)
   })
 }
@@ -468,9 +481,7 @@ let saveCmd = (state: AccessibilityModel.accessibilityState): Tea_Cmd.t<'msg> =>
 /// is in System theme mode, dispatches a message to update resolvedTheme.
 ///
 /// The tagger receives a bool: true = OS prefers light, false = OS prefers dark.
-let listenColorSchemeChange = (
-  _tagger: bool => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listenColorSchemeChange = (_tagger: bool => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(_callbacks => {
     try {
       let _: unit = %raw(`

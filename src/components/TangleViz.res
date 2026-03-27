@@ -23,16 +23,15 @@ open Tea.Html
 // ════════════════════════════════════════════════════════════════════════
 
 /// Render a single view mode tab button.
-let renderViewTab = (
-  mode: TangleVizModel.tangleViewMode,
-  isActive: bool,
-): Tea_Vdom.t<msg> => {
+let renderViewTab = (mode: TangleVizModel.tangleViewMode, isActive: bool): Tea_Vdom.t<msg> => {
   let activeClass = isActive
     ? "border-indigo-500 text-indigo-300 bg-gray-800/50"
     : "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600"
   button(
     list{
-      Attrs.class_(`px-4 py-2 text-sm font-medium border-b-2 cursor-pointer transition-colors ${activeClass}`),
+      Attrs.class_(
+        `px-4 py-2 text-sm font-medium border-b-2 cursor-pointer transition-colors ${activeClass}`,
+      ),
       Attrs.role("tab"),
       Events.onClick(TangleViz(SetViewMode(mode))),
     },
@@ -59,7 +58,10 @@ let renderViewTabBar = (activeMode: TangleVizModel.tangleViewMode): Tea_Vdom.t<m
 // ════════════════════════════════════════════════════════════════════════
 
 /// Render the Tangle source code input area.
-let renderSourceInput = (inputText: string, parsedProgram: option<TangleVizModel.parsedStatus>): Tea_Vdom.t<msg> => {
+let renderSourceInput = (
+  inputText: string,
+  parsedProgram: option<TangleVizModel.parsedStatus>,
+): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("p-4 border-b border-gray-800")},
     list{
@@ -69,7 +71,9 @@ let renderSourceInput = (inputText: string, parsedProgram: option<TangleVizModel
       ),
       textarea(
         list{
-          Attrs.class_("w-full h-24 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-600 focus:border-indigo-500 focus:outline-none resize-y"),
+          Attrs.class_(
+            "w-full h-24 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-600 focus:border-indigo-500 focus:outline-none resize-y",
+          ),
           Attrs.placeholder("Enter Tangle source code or use an example below..."),
           Attrs.value(inputText),
           Events.onInput(text => TangleViz(SetInputText(text))),
@@ -79,20 +83,11 @@ let renderSourceInput = (inputText: string, parsedProgram: option<TangleVizModel
       // Parse status indicator
       switch parsedProgram {
       | None =>
-        div(
-          list{Attrs.class_("mt-1 text-xs text-gray-600")},
-          list{text("No input parsed yet")},
-        )
+        div(list{Attrs.class_("mt-1 text-xs text-gray-600")}, list{text("No input parsed yet")})
       | Some(ParsedOk) =>
-        div(
-          list{Attrs.class_("mt-1 text-xs text-emerald-400")},
-          list{text("Parsed successfully")},
-        )
+        div(list{Attrs.class_("mt-1 text-xs text-emerald-400")}, list{text("Parsed successfully")})
       | Some(ParseFailed(err)) =>
-        div(
-          list{Attrs.class_("mt-1 text-xs text-red-400")},
-          list{text(`Parse error: ${err}`)},
-        )
+        div(list{Attrs.class_("mt-1 text-xs text-red-400")}, list{text(`Parse error: ${err}`)})
       },
       // Parse button
       div(
@@ -100,14 +95,18 @@ let renderSourceInput = (inputText: string, parsedProgram: option<TangleVizModel
         list{
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors",
+              ),
               Events.onClick(TangleViz(ParseInput)),
             },
             list{text("Parse")},
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition-colors"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition-colors",
+              ),
               Events.onClick(TangleViz(ClearAll)),
             },
             list{text("Clear")},
@@ -137,7 +136,9 @@ let renderExamples = (): Tea_Vdom.t<msg> => {
         ->Array.map(ex =>
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-gray-800 text-gray-300 rounded border border-gray-700 hover:bg-gray-700 hover:border-gray-600 transition-colors"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-gray-800 text-gray-300 rounded border border-gray-700 hover:bg-gray-700 hover:border-gray-600 transition-colors",
+              ),
               Attrs.title(ex.description),
               Events.onClick(TangleViz(LoadExample(ex.generators))),
             },
@@ -155,7 +156,10 @@ let renderExamples = (): Tea_Vdom.t<msg> => {
 // ════════════════════════════════════════════════════════════════════════
 
 /// Render the algebraic braid word with Unicode notation.
-let renderBraidWord = (generators: array<TangleVizModel.braidGenerator>, strandCount: int): Tea_Vdom.t<msg> => {
+let renderBraidWord = (
+  generators: array<TangleVizModel.braidGenerator>,
+  strandCount: int,
+): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("p-4 border-b border-gray-800")},
     list{
@@ -197,7 +201,9 @@ let renderBraidWord = (generators: array<TangleVizModel.braidGenerator>, strandC
             span(
               list{
                 Attrs.class_(`text-xs px-2 py-0.5 rounded border font-mono ${colour}`),
-                Attrs.title(`Generator ${Int.toString(idx + 1)}: ${TangleVizEngine.generatorLabel(gen)}`),
+                Attrs.title(
+                  `Generator ${Int.toString(idx + 1)}: ${TangleVizEngine.generatorLabel(gen)}`,
+                ),
               },
               list{text(TangleVizEngine.generatorLabel(gen))},
             )
@@ -223,7 +229,10 @@ let renderBraidWord = (generators: array<TangleVizModel.braidGenerator>, strandC
 ///
 /// The strands maintain their physical position tracking through crossings
 /// so colours follow the actual strand paths.
-let renderBraidSvg = (generators: array<TangleVizModel.braidGenerator>, strandCount: int): Tea_Vdom.t<msg> => {
+let renderBraidSvg = (
+  generators: array<TangleVizModel.braidGenerator>,
+  strandCount: int,
+): Tea_Vdom.t<msg> => {
   let crossingW = TangleVizEngine.crossingWidth
   let strandSp = TangleVizEngine.strandSpacing
   let leftM = TangleVizEngine.svgLeftMargin
@@ -245,18 +254,19 @@ let renderBraidSvg = (generators: array<TangleVizModel.braidGenerator>, strandCo
   for pos in 0 to strandCount - 1 {
     let y = topM +. Int.toFloat(pos) *. strandSp
     let colour = TangleVizEngine.strandColour(pos)
-    let _ = elements->Array.push(
-      Tea_Svg.text'(
-        list{
-          Tea_Svg.Attrs.class_("text-xs"),
-          Tea_Svg.Attrs.x(Float.toString(leftM -. 20.0)),
-          Tea_Svg.Attrs.y(Float.toString(y +. 4.0)),
-          Tea_Svg.Attrs.fill(colour),
-          Tea_Svg.Attrs.textAnchor("middle"),
-        },
-        list{Tea.Html.text(Int.toString(pos + 1))},
+    let _ =
+      elements->Array.push(
+        Tea_Svg.text'(
+          list{
+            Tea_Svg.Attrs.class_("text-xs"),
+            Tea_Svg.Attrs.x(Float.toString(leftM -. 20.0)),
+            Tea_Svg.Attrs.y(Float.toString(y +. 4.0)),
+            Tea_Svg.Attrs.fill(colour),
+            Tea_Svg.Attrs.textAnchor("middle"),
+          },
+          list{Tea.Html.text(Int.toString(pos + 1))},
+        ),
       )
-    )
   }
 
   // For each crossing column, draw the crossing and straight-through strands
@@ -272,19 +282,20 @@ let renderBraidSvg = (generators: array<TangleVizModel.braidGenerator>, strandCo
         let y = topM +. Int.toFloat(pos) *. strandSp
         let origStrand = strandAt->Array.getUnsafe(pos)
         let colour = TangleVizEngine.strandColour(origStrand)
-        let _ = elements->Array.push(
-          Tea_Svg.line(
-            list{
-              Tea_Svg.Attrs.x1(Float.toString(x1)),
-              Tea_Svg.Attrs.y1(Float.toString(y)),
-              Tea_Svg.Attrs.x2(Float.toString(x2)),
-              Tea_Svg.Attrs.y2(Float.toString(y)),
-              Tea_Svg.Attrs.stroke(colour),
-              Tea_Svg.Attrs.strokeWidth("2.5"),
-            },
-            list{},
+        let _ =
+          elements->Array.push(
+            Tea_Svg.line(
+              list{
+                Tea_Svg.Attrs.x1(Float.toString(x1)),
+                Tea_Svg.Attrs.y1(Float.toString(y)),
+                Tea_Svg.Attrs.x2(Float.toString(x2)),
+                Tea_Svg.Attrs.y2(Float.toString(y)),
+                Tea_Svg.Attrs.stroke(colour),
+                Tea_Svg.Attrs.strokeWidth("2.5"),
+              },
+              list{},
+            ),
           )
-        )
       }
     }
 
@@ -304,57 +315,85 @@ let renderBraidSvg = (generators: array<TangleVizModel.braidGenerator>, strandCo
         // Positive crossing: top strand goes OVER
         // Draw under-strand first (with gap), then over-strand
         // Under strand: bottom→top, drawn with a gap in the middle
-        let _ = elements->Array.push(
-          Tea_Svg.path(
-            list{
-              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yBot)} C ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(x2)} ${Float.toString(yTop)}`),
-              Tea_Svg.Attrs.stroke(colourBot),
-              Tea_Svg.Attrs.strokeWidth("2.5"),
-              Tea_Svg.Attrs.fill("none"),
-              Tea_Svg.Attrs.strokeDasharray("20 12 20 0"),
-            },
-            list{},
+        let _ =
+          elements->Array.push(
+            Tea_Svg.path(
+              list{
+                Tea_Svg.Attrs.d(
+                  `M ${Float.toString(x1)} ${Float.toString(yBot)} C ${Float.toString(
+                      mx,
+                    )} ${Float.toString(yBot)}, ${Float.toString(mx)} ${Float.toString(
+                      yTop,
+                    )}, ${Float.toString(x2)} ${Float.toString(yTop)}`,
+                ),
+                Tea_Svg.Attrs.stroke(colourBot),
+                Tea_Svg.Attrs.strokeWidth("2.5"),
+                Tea_Svg.Attrs.fill("none"),
+                Tea_Svg.Attrs.strokeDasharray("20 12 20 0"),
+              },
+              list{},
+            ),
           )
-        )
         // Over strand: top→bottom, solid line on top
-        let _ = elements->Array.push(
-          Tea_Svg.path(
-            list{
-              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yTop)} C ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(x2)} ${Float.toString(yBot)}`),
-              Tea_Svg.Attrs.stroke(colourTop),
-              Tea_Svg.Attrs.strokeWidth("2.5"),
-              Tea_Svg.Attrs.fill("none"),
-            },
-            list{},
+        let _ =
+          elements->Array.push(
+            Tea_Svg.path(
+              list{
+                Tea_Svg.Attrs.d(
+                  `M ${Float.toString(x1)} ${Float.toString(yTop)} C ${Float.toString(
+                      mx,
+                    )} ${Float.toString(yTop)}, ${Float.toString(mx)} ${Float.toString(
+                      yBot,
+                    )}, ${Float.toString(x2)} ${Float.toString(yBot)}`,
+                ),
+                Tea_Svg.Attrs.stroke(colourTop),
+                Tea_Svg.Attrs.strokeWidth("2.5"),
+                Tea_Svg.Attrs.fill("none"),
+              },
+              list{},
+            ),
           )
-        )
       } else {
         // Negative crossing: top strand goes UNDER
         // Draw over-strand first (bottom→top, solid), then under-strand (top→bottom, gapped)
-        let _ = elements->Array.push(
-          Tea_Svg.path(
-            list{
-              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yTop)} C ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(x2)} ${Float.toString(yBot)}`),
-              Tea_Svg.Attrs.stroke(colourTop),
-              Tea_Svg.Attrs.strokeWidth("2.5"),
-              Tea_Svg.Attrs.fill("none"),
-              Tea_Svg.Attrs.strokeDasharray("20 12 20 0"),
-            },
-            list{},
+        let _ =
+          elements->Array.push(
+            Tea_Svg.path(
+              list{
+                Tea_Svg.Attrs.d(
+                  `M ${Float.toString(x1)} ${Float.toString(yTop)} C ${Float.toString(
+                      mx,
+                    )} ${Float.toString(yTop)}, ${Float.toString(mx)} ${Float.toString(
+                      yBot,
+                    )}, ${Float.toString(x2)} ${Float.toString(yBot)}`,
+                ),
+                Tea_Svg.Attrs.stroke(colourTop),
+                Tea_Svg.Attrs.strokeWidth("2.5"),
+                Tea_Svg.Attrs.fill("none"),
+                Tea_Svg.Attrs.strokeDasharray("20 12 20 0"),
+              },
+              list{},
+            ),
           )
-        )
         // Over strand: bottom→top, solid line on top
-        let _ = elements->Array.push(
-          Tea_Svg.path(
-            list{
-              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yBot)} C ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(x2)} ${Float.toString(yTop)}`),
-              Tea_Svg.Attrs.stroke(colourBot),
-              Tea_Svg.Attrs.strokeWidth("2.5"),
-              Tea_Svg.Attrs.fill("none"),
-            },
-            list{},
+        let _ =
+          elements->Array.push(
+            Tea_Svg.path(
+              list{
+                Tea_Svg.Attrs.d(
+                  `M ${Float.toString(x1)} ${Float.toString(yBot)} C ${Float.toString(
+                      mx,
+                    )} ${Float.toString(yBot)}, ${Float.toString(mx)} ${Float.toString(
+                      yTop,
+                    )}, ${Float.toString(x2)} ${Float.toString(yTop)}`,
+                ),
+                Tea_Svg.Attrs.stroke(colourBot),
+                Tea_Svg.Attrs.strokeWidth("2.5"),
+                Tea_Svg.Attrs.fill("none"),
+              },
+              list{},
+            ),
           )
-        )
       }
 
       // Swap the strand tracking
@@ -371,19 +410,20 @@ let renderBraidSvg = (generators: array<TangleVizModel.braidGenerator>, strandCo
     let y = topM +. Int.toFloat(pos) *. strandSp
     let origStrand = strandAt->Array.getUnsafe(pos)
     let colour = TangleVizEngine.strandColour(origStrand)
-    let _ = elements->Array.push(
-      Tea_Svg.line(
-        list{
-          Tea_Svg.Attrs.x1(Float.toString(xFinal)),
-          Tea_Svg.Attrs.y1(Float.toString(y)),
-          Tea_Svg.Attrs.x2(Float.toString(xEnd)),
-          Tea_Svg.Attrs.y2(Float.toString(y)),
-          Tea_Svg.Attrs.stroke(colour),
-          Tea_Svg.Attrs.strokeWidth("2.5"),
-        },
-        list{},
+    let _ =
+      elements->Array.push(
+        Tea_Svg.line(
+          list{
+            Tea_Svg.Attrs.x1(Float.toString(xFinal)),
+            Tea_Svg.Attrs.y1(Float.toString(y)),
+            Tea_Svg.Attrs.x2(Float.toString(xEnd)),
+            Tea_Svg.Attrs.y2(Float.toString(y)),
+            Tea_Svg.Attrs.stroke(colour),
+            Tea_Svg.Attrs.strokeWidth("2.5"),
+          },
+          list{},
+        ),
       )
-    )
   }
 
   // Also draw initial left-side straight segments from edge to first crossing
@@ -391,26 +431,24 @@ let renderBraidSvg = (generators: array<TangleVizModel.braidGenerator>, strandCo
   for pos in 0 to strandCount - 1 {
     let y = topM +. Int.toFloat(pos) *. strandSp
     let colour = TangleVizEngine.strandColour(pos)
-    let _ = elements->Array.push(
-      Tea_Svg.line(
-        list{
-          Tea_Svg.Attrs.x1(Float.toString(xStart)),
-          Tea_Svg.Attrs.y1(Float.toString(y)),
-          Tea_Svg.Attrs.x2(Float.toString(leftM)),
-          Tea_Svg.Attrs.y2(Float.toString(y)),
-          Tea_Svg.Attrs.stroke(colour),
-          Tea_Svg.Attrs.strokeWidth("2.5"),
-        },
-        list{},
+    let _ =
+      elements->Array.push(
+        Tea_Svg.line(
+          list{
+            Tea_Svg.Attrs.x1(Float.toString(xStart)),
+            Tea_Svg.Attrs.y1(Float.toString(y)),
+            Tea_Svg.Attrs.x2(Float.toString(leftM)),
+            Tea_Svg.Attrs.y2(Float.toString(y)),
+            Tea_Svg.Attrs.stroke(colour),
+            Tea_Svg.Attrs.strokeWidth("2.5"),
+          },
+          list{},
+        ),
       )
-    )
   }
 
   div(
-    list{
-      Attrs.class_("p-4 flex-1 overflow-auto"),
-      Attrs.ariaLabel("Braid diagram visualization"),
-    },
+    list{Attrs.class_("p-4 flex-1 overflow-auto"), Attrs.ariaLabel("Braid diagram visualization")},
     list{
       div(
         list{Attrs.class_("text-xs font-medium text-gray-500 uppercase tracking-wider mb-2")},
@@ -428,8 +466,12 @@ let renderBraidSvg = (generators: array<TangleVizModel.braidGenerator>, strandCo
             Tea_Svg.svg(
               list{
                 Tea_Svg.Attrs.class_("block mx-auto"),
-                Tea_Svg.Attrs.viewBox(`0 0 ${Float.toString(svgWidth)} ${Float.toString(svgHeight)}`),
-                Tea_Svg.Attrs.width(Float.toString(Float.fromInt(Math.Int.min(Float.toInt(svgWidth), 800)))),
+                Tea_Svg.Attrs.viewBox(
+                  `0 0 ${Float.toString(svgWidth)} ${Float.toString(svgHeight)}`,
+                ),
+                Tea_Svg.Attrs.width(
+                  Float.toString(Float.fromInt(Math.Int.min(Float.toInt(svgWidth), 800))),
+                ),
                 Tea_Svg.Attrs.height(Float.toString(svgHeight)),
               },
               // Background
@@ -465,7 +507,10 @@ let renderBraidSvg = (generators: array<TangleVizModel.braidGenerator>, strandCo
 /// right endpoint back to its corresponding left endpoint with semicircular
 /// arcs on the right and left sides. This produces the standard braid
 /// closure, turning the braid into a knot or link diagram.
-let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, strandCount: int): Tea_Vdom.t<msg> => {
+let renderKnotDiagram = (
+  generators: array<TangleVizModel.braidGenerator>,
+  strandCount: int,
+): Tea_Vdom.t<msg> => {
   let crossingW = TangleVizEngine.crossingWidth
   let strandSp = TangleVizEngine.strandSpacing
   let topM = TangleVizEngine.svgTopMargin
@@ -490,19 +535,20 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
   for pos in 0 to strandCount - 1 {
     let y = topM +. Int.toFloat(pos) *. strandSp
     let colour = TangleVizEngine.strandColour(pos)
-    let _ = elements->Array.push(
-      Tea_Svg.line(
-        list{
-          Tea_Svg.Attrs.x1(Float.toString(xStart)),
-          Tea_Svg.Attrs.y1(Float.toString(y)),
-          Tea_Svg.Attrs.x2(Float.toString(xStart +. crossingW *. 0.3)),
-          Tea_Svg.Attrs.y2(Float.toString(y)),
-          Tea_Svg.Attrs.stroke(colour),
-          Tea_Svg.Attrs.strokeWidth("2.5"),
-        },
-        list{},
+    let _ =
+      elements->Array.push(
+        Tea_Svg.line(
+          list{
+            Tea_Svg.Attrs.x1(Float.toString(xStart)),
+            Tea_Svg.Attrs.y1(Float.toString(y)),
+            Tea_Svg.Attrs.x2(Float.toString(xStart +. crossingW *. 0.3)),
+            Tea_Svg.Attrs.y2(Float.toString(y)),
+            Tea_Svg.Attrs.stroke(colour),
+            Tea_Svg.Attrs.strokeWidth("2.5"),
+          },
+          list{},
+        ),
       )
-    )
   }
 
   // Draw crossings (same logic as braid view)
@@ -518,19 +564,20 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
         let y = topM +. Int.toFloat(pos) *. strandSp
         let origStrand = strandAt->Array.getUnsafe(pos)
         let colour = TangleVizEngine.strandColour(origStrand)
-        let _ = elements->Array.push(
-          Tea_Svg.line(
-            list{
-              Tea_Svg.Attrs.x1(Float.toString(x1)),
-              Tea_Svg.Attrs.y1(Float.toString(y)),
-              Tea_Svg.Attrs.x2(Float.toString(x2)),
-              Tea_Svg.Attrs.y2(Float.toString(y)),
-              Tea_Svg.Attrs.stroke(colour),
-              Tea_Svg.Attrs.strokeWidth("2.5"),
-            },
-            list{},
+        let _ =
+          elements->Array.push(
+            Tea_Svg.line(
+              list{
+                Tea_Svg.Attrs.x1(Float.toString(x1)),
+                Tea_Svg.Attrs.y1(Float.toString(y)),
+                Tea_Svg.Attrs.x2(Float.toString(x2)),
+                Tea_Svg.Attrs.y2(Float.toString(y)),
+                Tea_Svg.Attrs.stroke(colour),
+                Tea_Svg.Attrs.strokeWidth("2.5"),
+              },
+              list{},
+            ),
           )
-        )
       }
     }
 
@@ -546,56 +593,84 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
 
       if gen.exponent > 0 {
         // Under strand (gapped)
-        let _ = elements->Array.push(
-          Tea_Svg.path(
-            list{
-              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yBot)} C ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(x2)} ${Float.toString(yTop)}`),
-              Tea_Svg.Attrs.stroke(colourBot),
-              Tea_Svg.Attrs.strokeWidth("2.5"),
-              Tea_Svg.Attrs.fill("none"),
-              Tea_Svg.Attrs.strokeDasharray("20 12 20 0"),
-            },
-            list{},
+        let _ =
+          elements->Array.push(
+            Tea_Svg.path(
+              list{
+                Tea_Svg.Attrs.d(
+                  `M ${Float.toString(x1)} ${Float.toString(yBot)} C ${Float.toString(
+                      mx,
+                    )} ${Float.toString(yBot)}, ${Float.toString(mx)} ${Float.toString(
+                      yTop,
+                    )}, ${Float.toString(x2)} ${Float.toString(yTop)}`,
+                ),
+                Tea_Svg.Attrs.stroke(colourBot),
+                Tea_Svg.Attrs.strokeWidth("2.5"),
+                Tea_Svg.Attrs.fill("none"),
+                Tea_Svg.Attrs.strokeDasharray("20 12 20 0"),
+              },
+              list{},
+            ),
           )
-        )
         // Over strand (solid)
-        let _ = elements->Array.push(
-          Tea_Svg.path(
-            list{
-              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yTop)} C ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(x2)} ${Float.toString(yBot)}`),
-              Tea_Svg.Attrs.stroke(colourTop),
-              Tea_Svg.Attrs.strokeWidth("2.5"),
-              Tea_Svg.Attrs.fill("none"),
-            },
-            list{},
+        let _ =
+          elements->Array.push(
+            Tea_Svg.path(
+              list{
+                Tea_Svg.Attrs.d(
+                  `M ${Float.toString(x1)} ${Float.toString(yTop)} C ${Float.toString(
+                      mx,
+                    )} ${Float.toString(yTop)}, ${Float.toString(mx)} ${Float.toString(
+                      yBot,
+                    )}, ${Float.toString(x2)} ${Float.toString(yBot)}`,
+                ),
+                Tea_Svg.Attrs.stroke(colourTop),
+                Tea_Svg.Attrs.strokeWidth("2.5"),
+                Tea_Svg.Attrs.fill("none"),
+              },
+              list{},
+            ),
           )
-        )
       } else {
         // Under strand (gapped)
-        let _ = elements->Array.push(
-          Tea_Svg.path(
-            list{
-              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yTop)} C ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(x2)} ${Float.toString(yBot)}`),
-              Tea_Svg.Attrs.stroke(colourTop),
-              Tea_Svg.Attrs.strokeWidth("2.5"),
-              Tea_Svg.Attrs.fill("none"),
-              Tea_Svg.Attrs.strokeDasharray("20 12 20 0"),
-            },
-            list{},
+        let _ =
+          elements->Array.push(
+            Tea_Svg.path(
+              list{
+                Tea_Svg.Attrs.d(
+                  `M ${Float.toString(x1)} ${Float.toString(yTop)} C ${Float.toString(
+                      mx,
+                    )} ${Float.toString(yTop)}, ${Float.toString(mx)} ${Float.toString(
+                      yBot,
+                    )}, ${Float.toString(x2)} ${Float.toString(yBot)}`,
+                ),
+                Tea_Svg.Attrs.stroke(colourTop),
+                Tea_Svg.Attrs.strokeWidth("2.5"),
+                Tea_Svg.Attrs.fill("none"),
+                Tea_Svg.Attrs.strokeDasharray("20 12 20 0"),
+              },
+              list{},
+            ),
           )
-        )
         // Over strand (solid)
-        let _ = elements->Array.push(
-          Tea_Svg.path(
-            list{
-              Tea_Svg.Attrs.d(`M ${Float.toString(x1)} ${Float.toString(yBot)} C ${Float.toString(mx)} ${Float.toString(yBot)}, ${Float.toString(mx)} ${Float.toString(yTop)}, ${Float.toString(x2)} ${Float.toString(yTop)}`),
-              Tea_Svg.Attrs.stroke(colourBot),
-              Tea_Svg.Attrs.strokeWidth("2.5"),
-              Tea_Svg.Attrs.fill("none"),
-            },
-            list{},
+        let _ =
+          elements->Array.push(
+            Tea_Svg.path(
+              list{
+                Tea_Svg.Attrs.d(
+                  `M ${Float.toString(x1)} ${Float.toString(yBot)} C ${Float.toString(
+                      mx,
+                    )} ${Float.toString(yBot)}, ${Float.toString(mx)} ${Float.toString(
+                      yTop,
+                    )}, ${Float.toString(x2)} ${Float.toString(yTop)}`,
+                ),
+                Tea_Svg.Attrs.stroke(colourBot),
+                Tea_Svg.Attrs.strokeWidth("2.5"),
+                Tea_Svg.Attrs.fill("none"),
+              },
+              list{},
+            ),
           )
-        )
       }
 
       // Swap strand tracking
@@ -612,19 +687,20 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
     let y = topM +. Int.toFloat(pos) *. strandSp
     let origStrand = strandAt->Array.getUnsafe(pos)
     let colour = TangleVizEngine.strandColour(origStrand)
-    let _ = elements->Array.push(
-      Tea_Svg.line(
-        list{
-          Tea_Svg.Attrs.x1(Float.toString(xBraidEnd)),
-          Tea_Svg.Attrs.y1(Float.toString(y)),
-          Tea_Svg.Attrs.x2(Float.toString(xRightArc)),
-          Tea_Svg.Attrs.y2(Float.toString(y)),
-          Tea_Svg.Attrs.stroke(colour),
-          Tea_Svg.Attrs.strokeWidth("2.5"),
-        },
-        list{},
+    let _ =
+      elements->Array.push(
+        Tea_Svg.line(
+          list{
+            Tea_Svg.Attrs.x1(Float.toString(xBraidEnd)),
+            Tea_Svg.Attrs.y1(Float.toString(y)),
+            Tea_Svg.Attrs.x2(Float.toString(xRightArc)),
+            Tea_Svg.Attrs.y2(Float.toString(y)),
+            Tea_Svg.Attrs.stroke(colour),
+            Tea_Svg.Attrs.strokeWidth("2.5"),
+          },
+          list{},
+        ),
       )
-    )
   }
 
   // Draw closure arcs: connect right-side strand endpoints back to left-side.
@@ -648,18 +724,25 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
       // Right arc: semicircle from right endpoint going right and looping back
       let arcRadius = 15.0 +. Int.toFloat(pos) *. 5.0
       // Right semicircular arc (goes out right and comes back to same y)
-      let _ = elements->Array.push(
-        Tea_Svg.path(
-          list{
-            Tea_Svg.Attrs.d(`M ${Float.toString(xRightArc)} ${Float.toString(yRight)} A ${Float.toString(arcRadius)} ${Float.toString(arcRadius)} 0 1 1 ${Float.toString(xRightArc)} ${Float.toString(yRight -. 0.01)}`),
-            Tea_Svg.Attrs.stroke(colour),
-            Tea_Svg.Attrs.strokeWidth("2.5"),
-            Tea_Svg.Attrs.fill("none"),
-            Tea_Svg.Attrs.opacity("0.0"),
-          },
-          list{},
+      let _ =
+        elements->Array.push(
+          Tea_Svg.path(
+            list{
+              Tea_Svg.Attrs.d(
+                `M ${Float.toString(xRightArc)} ${Float.toString(yRight)} A ${Float.toString(
+                    arcRadius,
+                  )} ${Float.toString(arcRadius)} 0 1 1 ${Float.toString(
+                    xRightArc,
+                  )} ${Float.toString(yRight -. 0.01)}`,
+              ),
+              Tea_Svg.Attrs.stroke(colour),
+              Tea_Svg.Attrs.strokeWidth("2.5"),
+              Tea_Svg.Attrs.fill("none"),
+              Tea_Svg.Attrs.opacity("0.0"),
+            },
+            list{},
+          ),
         )
-      )
       // Actually, for same-position strands: draw a full right-side arc out and
       // a left-side arc out. The braid closure connects right pos to left pos
       // by going around the outside.
@@ -670,30 +753,44 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
       let xLeft = xStart -. arcMargin *. 0.7
       // Top path: right endpoint -> right arc point -> top -> left arc point -> left endpoint
       let yMid = (yRight +. yLeft) /. 2.0
-      let _ = elements->Array.push(
-        Tea_Svg.path(
-          list{
-            Tea_Svg.Attrs.d(`M ${Float.toString(xRightArc)} ${Float.toString(yRight)} C ${Float.toString(xRight)} ${Float.toString(yRight)}, ${Float.toString(xRight)} ${Float.toString(yMid)}, ${Float.toString(xRight)} ${Float.toString(yMid -. strandSp *. 1.5)}`),
-            Tea_Svg.Attrs.stroke(colour),
-            Tea_Svg.Attrs.strokeWidth("2.0"),
-            Tea_Svg.Attrs.fill("none"),
-            Tea_Svg.Attrs.opacity("0.6"),
-          },
-          list{},
+      let _ =
+        elements->Array.push(
+          Tea_Svg.path(
+            list{
+              Tea_Svg.Attrs.d(
+                `M ${Float.toString(xRightArc)} ${Float.toString(yRight)} C ${Float.toString(
+                    xRight,
+                  )} ${Float.toString(yRight)}, ${Float.toString(xRight)} ${Float.toString(
+                    yMid,
+                  )}, ${Float.toString(xRight)} ${Float.toString(yMid -. strandSp *. 1.5)}`,
+              ),
+              Tea_Svg.Attrs.stroke(colour),
+              Tea_Svg.Attrs.strokeWidth("2.0"),
+              Tea_Svg.Attrs.fill("none"),
+              Tea_Svg.Attrs.opacity("0.6"),
+            },
+            list{},
+          ),
         )
-      )
-      let _ = elements->Array.push(
-        Tea_Svg.path(
-          list{
-            Tea_Svg.Attrs.d(`M ${Float.toString(xStart)} ${Float.toString(yLeft)} C ${Float.toString(xLeft)} ${Float.toString(yLeft)}, ${Float.toString(xLeft)} ${Float.toString(yMid)}, ${Float.toString(xLeft)} ${Float.toString(yMid -. strandSp *. 1.5)}`),
-            Tea_Svg.Attrs.stroke(colour),
-            Tea_Svg.Attrs.strokeWidth("2.0"),
-            Tea_Svg.Attrs.fill("none"),
-            Tea_Svg.Attrs.opacity("0.6"),
-          },
-          list{},
+      let _ =
+        elements->Array.push(
+          Tea_Svg.path(
+            list{
+              Tea_Svg.Attrs.d(
+                `M ${Float.toString(xStart)} ${Float.toString(yLeft)} C ${Float.toString(
+                    xLeft,
+                  )} ${Float.toString(yLeft)}, ${Float.toString(xLeft)} ${Float.toString(
+                    yMid,
+                  )}, ${Float.toString(xLeft)} ${Float.toString(yMid -. strandSp *. 1.5)}`,
+              ),
+              Tea_Svg.Attrs.stroke(colour),
+              Tea_Svg.Attrs.strokeWidth("2.0"),
+              Tea_Svg.Attrs.fill("none"),
+              Tea_Svg.Attrs.opacity("0.6"),
+            },
+            list{},
+          ),
         )
-      )
     } else {
       // Strand ends at a different vertical position: draw closure arcs
       // connecting right `pos` to left `origStrand`.
@@ -704,48 +801,67 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
 
       // Right-side closure arc: from right endpoint, curve outward, to a midpoint
       let xOutRight = xRightArc +. spread
-      let _ = elements->Array.push(
-        Tea_Svg.path(
-          list{
-            Tea_Svg.Attrs.d(`M ${Float.toString(xRightArc)} ${Float.toString(yRight)} C ${Float.toString(xOutRight)} ${Float.toString(yRight)}, ${Float.toString(xOutRight)} ${Float.toString(yMid)}, ${Float.toString(xRightArc +. spread *. 0.5)} ${Float.toString(yMid)}`),
-            Tea_Svg.Attrs.stroke(colour2),
-            Tea_Svg.Attrs.strokeWidth("2.0"),
-            Tea_Svg.Attrs.fill("none"),
-            Tea_Svg.Attrs.opacity("0.6"),
-          },
-          list{},
+      let _ =
+        elements->Array.push(
+          Tea_Svg.path(
+            list{
+              Tea_Svg.Attrs.d(
+                `M ${Float.toString(xRightArc)} ${Float.toString(yRight)} C ${Float.toString(
+                    xOutRight,
+                  )} ${Float.toString(yRight)}, ${Float.toString(xOutRight)} ${Float.toString(
+                    yMid,
+                  )}, ${Float.toString(xRightArc +. spread *. 0.5)} ${Float.toString(yMid)}`,
+              ),
+              Tea_Svg.Attrs.stroke(colour2),
+              Tea_Svg.Attrs.strokeWidth("2.0"),
+              Tea_Svg.Attrs.fill("none"),
+              Tea_Svg.Attrs.opacity("0.6"),
+            },
+            list{},
+          ),
         )
-      )
 
       // Left-side closure arc: from midpoint, curve outward to left endpoint
       let xOutLeft = xStart -. spread
-      let _ = elements->Array.push(
-        Tea_Svg.path(
-          list{
-            Tea_Svg.Attrs.d(`M ${Float.toString(xStart -. spread *. 0.5)} ${Float.toString(yMid)} C ${Float.toString(xOutLeft)} ${Float.toString(yMid)}, ${Float.toString(xOutLeft)} ${Float.toString(yLeft)}, ${Float.toString(xStart)} ${Float.toString(yLeft)}`),
-            Tea_Svg.Attrs.stroke(colour2),
-            Tea_Svg.Attrs.strokeWidth("2.0"),
-            Tea_Svg.Attrs.fill("none"),
-            Tea_Svg.Attrs.opacity("0.6"),
-          },
-          list{},
+      let _ =
+        elements->Array.push(
+          Tea_Svg.path(
+            list{
+              Tea_Svg.Attrs.d(
+                `M ${Float.toString(xStart -. spread *. 0.5)} ${Float.toString(
+                    yMid,
+                  )} C ${Float.toString(xOutLeft)} ${Float.toString(yMid)}, ${Float.toString(
+                    xOutLeft,
+                  )} ${Float.toString(yLeft)}, ${Float.toString(xStart)} ${Float.toString(yLeft)}`,
+              ),
+              Tea_Svg.Attrs.stroke(colour2),
+              Tea_Svg.Attrs.strokeWidth("2.0"),
+              Tea_Svg.Attrs.fill("none"),
+              Tea_Svg.Attrs.opacity("0.6"),
+            },
+            list{},
+          ),
         )
-      )
 
       // Top/bottom connecting segment (dashed, shows the closure path)
-      let _ = elements->Array.push(
-        Tea_Svg.path(
-          list{
-            Tea_Svg.Attrs.d(`M ${Float.toString(xRightArc +. spread *. 0.5)} ${Float.toString(yMid)} L ${Float.toString(xStart -. spread *. 0.5)} ${Float.toString(yMid)}`),
-            Tea_Svg.Attrs.stroke(colour2),
-            Tea_Svg.Attrs.strokeWidth("1.5"),
-            Tea_Svg.Attrs.fill("none"),
-            Tea_Svg.Attrs.opacity("0.35"),
-            Tea_Svg.Attrs.strokeDasharray("4 3"),
-          },
-          list{},
+      let _ =
+        elements->Array.push(
+          Tea_Svg.path(
+            list{
+              Tea_Svg.Attrs.d(
+                `M ${Float.toString(xRightArc +. spread *. 0.5)} ${Float.toString(
+                    yMid,
+                  )} L ${Float.toString(xStart -. spread *. 0.5)} ${Float.toString(yMid)}`,
+              ),
+              Tea_Svg.Attrs.stroke(colour2),
+              Tea_Svg.Attrs.strokeWidth("1.5"),
+              Tea_Svg.Attrs.fill("none"),
+              Tea_Svg.Attrs.opacity("0.35"),
+              Tea_Svg.Attrs.strokeDasharray("4 3"),
+            },
+            list{},
+          ),
         )
-      )
     }
   }
 
@@ -777,7 +893,13 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
                   list{
                     div(
                       list{Attrs.class_("text-xs text-gray-400")},
-                      list{text(`${Int.toString(strandCount)}-strand braid with ${Int.toString(numCrossings)} crossings`)},
+                      list{
+                        text(
+                          `${Int.toString(strandCount)}-strand braid with ${Int.toString(
+                              numCrossings,
+                            )} crossings`,
+                        ),
+                      },
                     ),
                     div(
                       list{Attrs.class_("text-xs font-mono text-indigo-300")},
@@ -789,8 +911,12 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
                 Tea_Svg.svg(
                   list{
                     Tea_Svg.Attrs.class_("block mx-auto"),
-                    Tea_Svg.Attrs.viewBox(`0 0 ${Float.toString(svgWidth)} ${Float.toString(svgHeight)}`),
-                    Tea_Svg.Attrs.width(Float.toString(Float.fromInt(Math.Int.min(Float.toInt(svgWidth), 900)))),
+                    Tea_Svg.Attrs.viewBox(
+                      `0 0 ${Float.toString(svgWidth)} ${Float.toString(svgHeight)}`,
+                    ),
+                    Tea_Svg.Attrs.width(
+                      Float.toString(Float.fromInt(Math.Int.min(Float.toInt(svgWidth), 900))),
+                    ),
                     Tea_Svg.Attrs.height(Float.toString(svgHeight)),
                   },
                   list{
@@ -812,7 +938,11 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
                 // Legend
                 div(
                   list{Attrs.class_("mt-2 text-[10px] text-gray-600 text-center")},
-                  list{text("Solid lines = braid crossings | Curved lines = closure arcs connecting strand endpoints")},
+                  list{
+                    text(
+                      "Solid lines = braid crossings | Curved lines = closure arcs connecting strand endpoints",
+                    ),
+                  },
                 ),
               },
             )
@@ -828,7 +958,10 @@ let renderKnotDiagram = (generators: array<TangleVizModel.braidGenerator>, stran
 // ════════════════════════════════════════════════════════════════════════
 
 /// Render the algebraic view — braid group notation and relations.
-let renderAlgebraicView = (generators: array<TangleVizModel.braidGenerator>, strandCount: int): Tea_Vdom.t<msg> => {
+let renderAlgebraicView = (
+  generators: array<TangleVizModel.braidGenerator>,
+  strandCount: int,
+): Tea_Vdom.t<msg> => {
   let writhe = TangleVizEngine.computeWrithe(generators)
   div(
     list{Attrs.class_("p-4 flex-1")},
@@ -877,8 +1010,22 @@ let renderAlgebraicView = (generators: array<TangleVizModel.braidGenerator>, str
                   div(
                     list{Attrs.class_("text-xs font-mono text-gray-500 space-y-1")},
                     list{
-                      div(list{}, list{text("\xcf\x83\xe2\x82\x96\xcf\x83\xe2\x82\x97 = \xcf\x83\xe2\x82\x97\xcf\x83\xe2\x82\x96  when |i-j| \xe2\x89\xa5 2")}), // σᵢσⱼ = σⱼσᵢ
-                      div(list{}, list{text("\xcf\x83\xe2\x82\x96\xcf\x83\xe2\x82\x97\xcf\x83\xe2\x82\x96 = \xcf\x83\xe2\x82\x97\xcf\x83\xe2\x82\x96\xcf\x83\xe2\x82\x97  when |i-j| = 1")}), // σᵢσⱼσᵢ = σⱼσᵢσⱼ
+                      div(
+                        list{},
+                        list{
+                          text(
+                            "\xcf\x83\xe2\x82\x96\xcf\x83\xe2\x82\x97 = \xcf\x83\xe2\x82\x97\xcf\x83\xe2\x82\x96  when |i-j| \xe2\x89\xa5 2",
+                          ),
+                        },
+                      ), // σᵢσⱼ = σⱼσᵢ
+                      div(
+                        list{},
+                        list{
+                          text(
+                            "\xcf\x83\xe2\x82\x96\xcf\x83\xe2\x82\x97\xcf\x83\xe2\x82\x96 = \xcf\x83\xe2\x82\x97\xcf\x83\xe2\x82\x96\xcf\x83\xe2\x82\x97  when |i-j| = 1",
+                          ),
+                        },
+                      ), // σᵢσⱼσᵢ = σⱼσᵢσⱼ
                     },
                   ),
                 },
@@ -936,7 +1083,9 @@ let renderInvariants = (
           list{
             button(
               list{
-                Attrs.class_("px-4 py-2 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-500 transition-colors"),
+                Attrs.class_(
+                  "px-4 py-2 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-500 transition-colors",
+                ),
                 Events.onClick(TangleViz(ComputeInvariant)),
               },
               list{text("Compute")},
@@ -946,7 +1095,11 @@ let renderInvariants = (
             | None => noNode
             | Some(result) =>
               div(
-                list{Attrs.class_("text-sm font-mono text-emerald-300 bg-gray-900 px-3 py-2 rounded border border-gray-800")},
+                list{
+                  Attrs.class_(
+                    "text-sm font-mono text-emerald-300 bg-gray-900 px-3 py-2 rounded border border-gray-800",
+                  ),
+                },
                 list{text(result)},
               )
             },
@@ -978,10 +1131,7 @@ let renderHeader = (): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center gap-4")},
         list{
-          div(
-            list{Attrs.class_("text-lg font-medium text-gray-200")},
-            list{text("Tangle Viz")},
-          ),
+          div(list{Attrs.class_("text-lg font-medium text-gray-200")}, list{text("Tangle Viz")}),
           div(
             list{Attrs.class_("text-xs text-gray-500")},
             list{text("Topological Programming Visualizer")},
@@ -993,7 +1143,9 @@ let renderHeader = (): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors"),
+              Attrs.class_(
+                "px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors",
+              ),
               Events.onClick(PanelSwitcher(ClosePanels)),
             },
             list{text("Close")},
@@ -1014,7 +1166,11 @@ let renderError = (error: option<string>): Tea_Vdom.t<msg> => {
   | None => noNode
   | Some(err) =>
     div(
-      list{Attrs.class_("mx-4 mt-2 px-4 py-2 bg-red-900/30 border border-red-800 rounded text-sm text-red-300")},
+      list{
+        Attrs.class_(
+          "mx-4 mt-2 px-4 py-2 bg-red-900/30 border border-red-800 rounded text-sm text-red-300",
+        ),
+      },
       list{
         text(err),
         button(

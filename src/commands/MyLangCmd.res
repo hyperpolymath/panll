@@ -8,9 +8,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Check whether the my-lang CLI binary is available.
-let checkCli = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkCli = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("mylang_check", ())
     ->Promise.then(result => {
@@ -26,11 +24,9 @@ let checkCli = (
 }
 
 /// Compile source code in a given dialect. Returns JSON compilation result.
-let compile = (
-  source: string,
-  dialect: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let compile = (source: string, dialect: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("mylang_compile", {"source": source, "dialect": dialect})
     ->Promise.then(result => {
@@ -46,9 +42,7 @@ let compile = (
 }
 
 /// Connect to the my-lang LSP server. Returns connection status JSON.
-let connectLsp = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let connectLsp = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("mylang_lsp_connect", ())
     ->Promise.then(result => {
@@ -85,11 +79,9 @@ let requestDiagnostics = (
 }
 
 /// Send a line to the REPL. Returns the REPL output.
-let replEval = (
-  input: string,
-  dialect: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let replEval = (input: string, dialect: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("mylang_repl", {"input": input, "dialect": dialect})
     ->Promise.then(result => {

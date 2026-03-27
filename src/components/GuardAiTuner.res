@@ -55,10 +55,19 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              h2(list{Attrs.class_("text-lg font-bold text-orange-300")}, list{text("Guard AI Tuner")}),
+              h2(
+                list{Attrs.class_("text-lg font-bold text-orange-300")},
+                list{text("Guard AI Tuner")},
+              ),
               span(
                 list{Attrs.class_("text-xs text-gray-400")},
-                list{text(Int.toString(guardCount) ++ " guards, " ++ Int.toString(routeCount) ++ " routes")},
+                list{
+                  text(
+                    Int.toString(guardCount) ++
+                    " guards, " ++
+                    Int.toString(routeCount) ++ " routes",
+                  ),
+                },
               ),
               if state.editing {
                 span(list{Attrs.class_("text-xs text-yellow-400")}, list{text("Editing...")})
@@ -69,7 +78,9 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1 text-xs bg-orange-800 hover:bg-orange-700 text-white rounded"),
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-orange-800 hover:bg-orange-700 text-white rounded",
+              ),
               Events.onClick(GuardAiTuner(GatStarted)),
             },
             list{text("Apply Tuning")},
@@ -83,8 +94,11 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Profiles { "bg-orange-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Profiles {
+                  "bg-orange-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(GuardAiTuner(SetGatCategory(Profiles))),
             },
@@ -93,8 +107,11 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == PatrolEditor { "bg-orange-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == PatrolEditor {
+                  "bg-orange-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(GuardAiTuner(SetGatCategory(PatrolEditor))),
             },
@@ -103,8 +120,11 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Thresholds { "bg-orange-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Thresholds {
+                  "bg-orange-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(GuardAiTuner(SetGatCategory(Thresholds))),
             },
@@ -113,8 +133,11 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Presets { "bg-orange-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Presets {
+                  "bg-orange-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(GuardAiTuner(SetGatCategory(Presets))),
             },
@@ -126,11 +149,18 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center",
+            ),
+          },
           list{
             text(err),
             button(
-              list{Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"), Events.onClick(GuardAiTuner(DismissGatError))},
+              list{
+                Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
+                Events.onClick(GuardAiTuner(DismissGatError)),
+              },
               list{text("Dismiss")},
             ),
           },
@@ -151,17 +181,27 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
                 div(
                   list{
                     Attrs.class_(
-                      "px-3 py-2 border rounded " ++
-                      if isSelected { "bg-orange-900/20 border-orange-700" } else { "bg-gray-900 border-gray-800" },
+                      "px-3 py-2 border rounded " ++ if isSelected {
+                        "bg-orange-900/20 border-orange-700"
+                      } else {
+                        "bg-gray-900 border-gray-800"
+                      },
                     ),
                   },
                   list{
                     div(
                       list{Attrs.class_("flex items-center justify-between mb-2")},
                       list{
-                        span(list{Attrs.class_("text-sm font-bold text-orange-300")}, list{text(g.name)}),
                         span(
-                          list{Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-gray-300 rounded font-mono")},
+                          list{Attrs.class_("text-sm font-bold text-orange-300")},
+                          list{text(g.name)},
+                        ),
+                        span(
+                          list{
+                            Attrs.class_(
+                              "px-2 py-0.5 text-xs bg-gray-800 text-gray-300 rounded font-mono",
+                            ),
+                          },
                           list{text(g.patrolPattern)},
                         ),
                       },
@@ -169,11 +209,32 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
                     div(
                       list{Attrs.class_("grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-400")},
                       list{
-                        span(list{}, list{text("Alert: " ++ Float.toFixed(g.alertThreshold, ~digits=2))}),
-                        span(list{}, list{text("Spawn: " ++ Float.toFixed(g.spawnRate, ~digits=1) ++ "x")}),
-                        span(list{}, list{text("Speed: " ++ Float.toFixed(g.speed, ~digits=1) ++ " u/s")}),
-                        span(list{}, list{text("Detection: " ++ Float.toFixed(g.detectionRange, ~digits=0) ++ " u")}),
-                        span(list{}, list{text("Response: " ++ Float.toFixed(g.responseTime, ~digits=1) ++ "s")}),
+                        span(
+                          list{},
+                          list{text("Alert: " ++ Float.toFixed(g.alertThreshold, ~digits=2))},
+                        ),
+                        span(
+                          list{},
+                          list{text("Spawn: " ++ Float.toFixed(g.spawnRate, ~digits=1) ++ "x")},
+                        ),
+                        span(
+                          list{},
+                          list{text("Speed: " ++ Float.toFixed(g.speed, ~digits=1) ++ " u/s")},
+                        ),
+                        span(
+                          list{},
+                          list{
+                            text(
+                              "Detection: " ++ Float.toFixed(g.detectionRange, ~digits=0) ++ " u",
+                            ),
+                          },
+                        ),
+                        span(
+                          list{},
+                          list{
+                            text("Response: " ++ Float.toFixed(g.responseTime, ~digits=1) ++ "s"),
+                          },
+                        ),
                       },
                     ),
                   },
@@ -192,10 +253,21 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
                     div(
                       list{Attrs.class_("flex items-center justify-between mb-2")},
                       list{
-                        span(list{Attrs.class_("text-sm text-gray-200 font-mono")}, list{text("Route: " ++ route.id)}),
+                        span(
+                          list{Attrs.class_("text-sm text-gray-200 font-mono")},
+                          list{text("Route: " ++ route.id)},
+                        ),
                         span(
                           list{Attrs.class_("text-xs text-gray-500")},
-                          list{text(if route.looping { "Looping" } else { "Ping-pong" })},
+                          list{
+                            text(
+                              if route.looping {
+                                "Looping"
+                              } else {
+                                "Ping-pong"
+                              },
+                            ),
+                          },
                         ),
                       },
                     ),
@@ -206,12 +278,25 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
                         div(
                           list{Attrs.class_("flex items-center gap-2 text-xs text-gray-400")},
                           list{
-                            span(list{Attrs.class_("w-6 text-gray-600")}, list{text(Int.toString(idx + 1))}),
+                            span(
+                              list{Attrs.class_("w-6 text-gray-600")},
+                              list{text(Int.toString(idx + 1))},
+                            ),
                             span(
                               list{Attrs.class_("font-mono")},
-                              list{text("(" ++ Float.toFixed(pt.x, ~digits=0) ++ ", " ++ Float.toFixed(pt.y, ~digits=0) ++ ")")},
+                              list{
+                                text(
+                                  "(" ++
+                                  Float.toFixed(pt.x, ~digits=0) ++
+                                  ", " ++
+                                  Float.toFixed(pt.y, ~digits=0) ++ ")",
+                                ),
+                              },
                             ),
-                            span(list{Attrs.class_("text-gray-600")}, list{text("wait " ++ Float.toFixed(pt.waitTime, ~digits=1) ++ "s")}),
+                            span(
+                              list{Attrs.class_("text-gray-600")},
+                              list{text("wait " ++ Float.toFixed(pt.waitTime, ~digits=1) ++ "s")},
+                            ),
                           },
                         )
                       )
@@ -230,7 +315,10 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("space-y-2")},
                   list{
-                    div(list{Attrs.class_("text-sm text-orange-300 font-bold mb-3")}, list{text(g.name ++ " — Thresholds")}),
+                    div(
+                      list{Attrs.class_("text-sm text-orange-300 font-bold mb-3")},
+                      list{text(g.name ++ " — Thresholds")},
+                    ),
                     guardParamRow("Alert Threshold", g.alertThreshold, 1.0, ""),
                     guardParamRow("Spawn Rate", g.spawnRate, 5.0, "x"),
                     guardParamRow("Speed", g.speed, 20.0, " u/s"),
@@ -256,13 +344,20 @@ let view = (state: guardAiTunerState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("px-3 py-2 bg-gray-900 border border-gray-800 rounded")},
                   list{
                     div(list{Attrs.class_("text-sm font-bold text-gray-200")}, list{text(p.name)}),
-                    div(list{Attrs.class_("text-xs text-gray-500 mt-1")}, list{text(p.description)}),
+                    div(
+                      list{Attrs.class_("text-xs text-gray-500 mt-1")},
+                      list{text(p.description)},
+                    ),
                     div(
                       list{Attrs.class_("flex gap-2 mt-2")},
                       p.profiles
                       ->Array.map(prof =>
                         span(
-                          list{Attrs.class_("px-2 py-0.5 text-xs bg-orange-900/30 text-orange-300 rounded")},
+                          list{
+                            Attrs.class_(
+                              "px-2 py-0.5 text-xs bg-orange-900/30 text-orange-300 rounded",
+                            ),
+                          },
                           list{text(prof.name)},
                         )
                       )

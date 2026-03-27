@@ -23,11 +23,13 @@ let updateMergeCoordinator = (model: model, msg: mergeCoordinatorMsg): (model, T
   let state = model.mergeCoordinator
   switch msg {
   | SetMcTab(tab) => ({...model, mergeCoordinator: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | SelectBranch(name) => ({...model, mergeCoordinator: {...state, selectedBranch: Some(name)}}, Tea_Cmd.none)
+  | SelectBranch(name) => (
+      {...model, mergeCoordinator: {...state, selectedBranch: Some(name)}},
+      Tea_Cmd.none,
+    )
   | ResolveConflict(filePath, _resolution) => {
-      let newConflicts = state.conflicts->Array.map(c =>
-        c.filePath === filePath ? {...c, resolved: true} : c
-      )
+      let newConflicts =
+        state.conflicts->Array.map(c => c.filePath === filePath ? {...c, resolved: true} : c)
       ({...model, mergeCoordinator: {...state, conflicts: newConflicts}}, Tea_Cmd.none)
     }
   | DismissMcError => ({...model, mergeCoordinator: {...state, error: None}}, Tea_Cmd.none)
@@ -45,7 +47,10 @@ let updateTeamDashboard = (model: model, msg: teamDashboardMsg): (model, Tea_Cmd
 }
 
 /// Handles all Debugging Workbench messages — time-travel, state inspection, watches.
-let updateDebuggingWorkbench = (model: model, msg: debuggingWorkbenchMsg): (model, Tea_Cmd.t<msg>) => {
+let updateDebuggingWorkbench = (model: model, msg: debuggingWorkbenchMsg): (
+  model,
+  Tea_Cmd.t<msg>,
+) => {
   let state = model.debuggingWorkbench
   let tt = state.timeTravel
   switch msg {
@@ -58,7 +63,10 @@ let updateDebuggingWorkbench = (model: model, msg: debuggingWorkbenchMsg): (mode
       | Some(s) => Some(s.id)
       | None => state.selectedSnapshot
       }
-      ({...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: selectedId}}, Tea_Cmd.none)
+      (
+        {...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: selectedId}},
+        Tea_Cmd.none,
+      )
     } else {
       (model, Tea_Cmd.none)
     }
@@ -70,7 +78,10 @@ let updateDebuggingWorkbench = (model: model, msg: debuggingWorkbenchMsg): (mode
       | Some(s) => Some(s.id)
       | None => state.selectedSnapshot
       }
-      ({...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: selectedId}}, Tea_Cmd.none)
+      (
+        {...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: selectedId}},
+        Tea_Cmd.none,
+      )
     } else {
       (model, Tea_Cmd.none)
     }
@@ -82,7 +93,10 @@ let updateDebuggingWorkbench = (model: model, msg: debuggingWorkbenchMsg): (mode
       | Some(s) => Some(s.id)
       | None => state.selectedSnapshot
       }
-      ({...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: selectedId}}, Tea_Cmd.none)
+      (
+        {...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: selectedId}},
+        Tea_Cmd.none,
+      )
     } else {
       (model, Tea_Cmd.none)
     }
@@ -95,8 +109,18 @@ let updateDebuggingWorkbench = (model: model, msg: debuggingWorkbenchMsg): (mode
         label: `Snapshot at ${Float.toFixed(now /. 1000.0, ~digits=1)}s`,
       }
       let newSnapshots = Array.concat(tt.snapshots, [snap])
-      let newTt = {snapshots: newSnapshots, currentIndex: Array.length(newSnapshots) - 1, isTimeTravelling: false}
-      ({...model, debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: Some(snap.id)}}, Tea_Cmd.none)
+      let newTt = {
+        snapshots: newSnapshots,
+        currentIndex: Array.length(newSnapshots) - 1,
+        isTimeTravelling: false,
+      }
+      (
+        {
+          ...model,
+          debuggingWorkbench: {...state, timeTravel: newTt, selectedSnapshot: Some(snap.id)},
+        },
+        Tea_Cmd.none,
+      )
     }
   | DwAddWatch => {
       let id = `watch-${Int.toString(Array.length(state.watches) + 1)}`
@@ -106,7 +130,10 @@ let updateDebuggingWorkbench = (model: model, msg: debuggingWorkbenchMsg): (mode
         currentValue: "(not evaluated)",
         lastUpdated: Date.now(),
       }
-      ({...model, debuggingWorkbench: {...state, watches: Array.concat(state.watches, [watch])}}, Tea_Cmd.none)
+      (
+        {...model, debuggingWorkbench: {...state, watches: Array.concat(state.watches, [watch])}},
+        Tea_Cmd.none,
+      )
     }
   | DwRemoveWatch(id) => {
       let newWatches = state.watches->Array.filter(w => w.id !== id)

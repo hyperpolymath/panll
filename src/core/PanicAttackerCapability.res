@@ -14,19 +14,16 @@ type payload = {
 let payloadDecoder: Tea_Json.decoder<payload> = {
   open Decoders
   open Tea_Json
-  map3(
-    (mode, binary, detail) => ({
-      mode,
-      binary,
-      detail,
-    }: payload),
-    fieldWithDefault("mode", string, "unavailable"),
-    optionalFieldDecoder("binary", string),
-    optionalFieldDecoder("detail", string),
-  )
+  map3((mode, binary, detail): payload => {
+    mode,
+    binary,
+    detail,
+  }, fieldWithDefault(
+    "mode",
+    string,
+    "unavailable",
+  ), optionalFieldDecoder("binary", string), optionalFieldDecoder("detail", string))
 }
 
 /// Parse a panic-attacker capability payload from JSON.
-let parse = (raw: string): result<payload, string> =>
-  Decoders.decode(payloadDecoder, raw)
-
+let parse = (raw: string): result<payload, string> => Decoders.decode(payloadDecoder, raw)

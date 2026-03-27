@@ -14,11 +14,14 @@ let invoke = RuntimeBridge.invoke
 /// Redact secrets from text using backend regex patterns.
 let redactText = (text: string, panelId: string, patternsJson: string): Tea_Cmd.t<msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("redact_text", {
-      "text": text,
-      "panelId": panelId,
-      "patternsJson": patternsJson,
-    })
+    invoke(
+      "redact_text",
+      {
+        "text": text,
+        "panelId": panelId,
+        "patternsJson": patternsJson,
+      },
+    )
     ->Promise.then(result => {
       callbacks.enqueue(Security(RedactionResult(Ok(result))))
       Promise.resolve()
@@ -34,10 +37,13 @@ let redactText = (text: string, panelId: string, patternsJson: string): Tea_Cmd.
 /// Store a secret in the vault.
 let vaultStore = (key: string, value: string): Tea_Cmd.t<msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("vault_store", {
-      "key": key,
-      "value": value,
-    })
+    invoke(
+      "vault_store",
+      {
+        "key": key,
+        "value": value,
+      },
+    )
     ->Promise.then(result => {
       callbacks.enqueue(Security(VaultStoreResult(Ok(result))))
       Promise.resolve()

@@ -24,10 +24,7 @@ let statusBadge = (status: repoScanStatus): Tea_Vdom.t<msg> => {
   | Skipped => ("bg-blue-600 text-white", "SKIPPED")
   | Failed(_) => ("bg-red-600 text-white", "FAILED")
   }
-  span(
-    list{Attrs.class_(`px-1.5 py-0.5 text-xs rounded font-mono ${colour}`)},
-    list{text(lbl)},
-  )
+  span(list{Attrs.class_(`px-1.5 py-0.5 text-xs rounded font-mono ${colour}`)}, list{text(lbl)})
 }
 
 /// Severity count pills for a repo row.
@@ -53,9 +50,7 @@ let severityPills = (repo: repoResult): Tea_Vdom.t<msg> => {
       },
       if repo.medium > 0 {
         span(
-          list{
-            Attrs.class_("px-1.5 py-0.5 text-xs rounded bg-amber-400 text-gray-900 font-mono"),
-          },
+          list{Attrs.class_("px-1.5 py-0.5 text-xs rounded bg-amber-400 text-gray-900 font-mono")},
           list{text(`${Int.toString(repo.medium)}M`)},
         )
       } else {
@@ -105,11 +100,7 @@ let summaryView = (summary: option<assemblylineSummary>): Tea_Vdom.t<msg> => {
       list{
         span(
           list{Attrs.class_("text-gray-300 font-mono")},
-          list{
-            text(
-              `${Int.toString(s.scannedRepos)}/${Int.toString(s.totalRepos)} repos scanned`,
-            ),
-          },
+          list{text(`${Int.toString(s.scannedRepos)}/${Int.toString(s.totalRepos)} repos scanned`)},
         ),
         if s.skippedRepos > 0 {
           span(
@@ -192,11 +183,7 @@ let filterAndSort = (
 }
 
 /// Single repo row in the results table.
-let repoRow = (
-  repo: repoResult,
-  index: int,
-  isSelected: bool,
-): Tea_Vdom.t<msg> => {
+let repoRow = (repo: repoResult, index: int, isSelected: bool): Tea_Vdom.t<msg> => {
   let selectedClass = isSelected ? "bg-gray-800/30" : ""
   div(
     list{
@@ -257,11 +244,7 @@ let repoRow = (
       ),
       // BLAKE3 hash indicator
       switch repo.blake3Hash {
-      | Some(_) =>
-        span(
-          list{Attrs.class_("text-xs text-emerald-600")},
-          list{text("#")},
-        )
+      | Some(_) => span(list{Attrs.class_("text-xs text-emerald-600")}, list{text("#")})
       | None => noNode
       },
     },
@@ -277,9 +260,7 @@ let deltaRow = (entry: deltaEntry): Tea_Vdom.t<msg> => {
   | _ => "text-gray-400"
   }
   div(
-    list{
-      Attrs.class_("flex items-center gap-3 py-1.5 px-3 border-b border-gray-700 text-sm"),
-    },
+    list{Attrs.class_("flex items-center gap-3 py-1.5 px-3 border-b border-gray-700 text-sm")},
     list{
       span(
         list{Attrs.class_(`font-mono font-bold ${dirColour} min-w-[80px]`)},
@@ -310,18 +291,16 @@ let deltaRow = (entry: deltaEntry): Tea_Vdom.t<msg> => {
 }
 
 /// Render a filter button.
-let filterBtn = (
-  mode: repoFilterMode,
-  lbl: string,
-  activeMode: repoFilterMode,
-): Tea_Vdom.t<msg> => {
+let filterBtn = (mode: repoFilterMode, lbl: string, activeMode: repoFilterMode): Tea_Vdom.t<
+  msg,
+> => {
   let active = activeMode == mode
   button(
     list{
       Attrs.class_(
         `px-2 py-0.5 rounded font-mono text-xs ${active
-          ? "bg-amber-600 text-white"
-          : "bg-gray-700 text-gray-400 hover:bg-gray-600"}`,
+            ? "bg-amber-600 text-white"
+            : "bg-gray-700 text-gray-400 hover:bg-gray-600"}`,
       ),
       Events.onClick(MassPanic(SetFilterMode(mode))),
     },
@@ -330,18 +309,14 @@ let filterBtn = (
 }
 
 /// Render a sort button.
-let sortBtn = (
-  mode: repoSortMode,
-  lbl: string,
-  activeMode: repoSortMode,
-): Tea_Vdom.t<msg> => {
+let sortBtn = (mode: repoSortMode, lbl: string, activeMode: repoSortMode): Tea_Vdom.t<msg> => {
   let active = activeMode == mode
   button(
     list{
       Attrs.class_(
         `px-2 py-0.5 rounded font-mono text-xs ${active
-          ? "bg-gray-600 text-white"
-          : "bg-gray-750 text-gray-500 hover:bg-gray-600"}`,
+            ? "bg-gray-600 text-white"
+            : "bg-gray-750 text-gray-500 hover:bg-gray-600"}`,
       ),
       Events.onClick(MassPanic(SetSortMode(mode))),
     },
@@ -350,18 +325,16 @@ let sortBtn = (
 }
 
 /// Sub-view tab button.
-let viewTab = (
-  targetView: massPanicView,
-  lbl: string,
-  activeView: massPanicView,
-): Tea_Vdom.t<msg> => {
+let viewTab = (targetView: massPanicView, lbl: string, activeView: massPanicView): Tea_Vdom.t<
+  msg,
+> => {
   let active = activeView == targetView
   button(
     list{
       Attrs.class_(
         `px-3 py-1.5 rounded-t font-mono text-xs border-b-2 ${active
-          ? "bg-gray-800 text-white border-amber-500"
-          : "bg-gray-900 text-gray-500 border-transparent hover:text-gray-300"}`,
+            ? "bg-gray-800 text-white border-amber-500"
+            : "bg-gray-900 text-gray-500 border-transparent hover:text-gray-300"}`,
       ),
       Events.onClick(MassPanic(SwitchView(targetView))),
     },
@@ -383,12 +356,7 @@ let riskBar = (intensity: float): Tea_Vdom.t<msg> => {
   }
   div(
     list{Attrs.class_("w-20 h-2 bg-gray-700 rounded overflow-hidden")},
-    list{
-      div(
-        list{Attrs.class_(`h-full ${colour} w-[${pct}%]`)},
-        list{},
-      ),
-    },
+    list{div(list{Attrs.class_(`h-full ${colour} w-[${pct}%]`)}, list{})},
   )
 }
 
@@ -409,7 +377,15 @@ let renderImagingView = (state: massPanicState): Tea_Vdom.t<msg> => {
               Attrs.disabled(state.imagingLoading || state.reposDirectory == ""),
               Events.onClick(MassPanic(BuildImage)),
             },
-            list{text(if state.imagingLoading { "building..." } else { "build image" })},
+            list{
+              text(
+                if state.imagingLoading {
+                  "building..."
+                } else {
+                  "build image"
+                },
+              ),
+            },
           ),
           button(
             list{
@@ -441,7 +417,10 @@ let renderImagingView = (state: massPanicState): Tea_Vdom.t<msg> => {
                   },
                   list{text(`health: ${Float.toFixed(img.globalHealth *. 100.0, ~digits=1)}%`)},
                 ),
-                span(list{}, list{text(`risk: ${Float.toFixed(img.globalRisk *. 100.0, ~digits=1)}%`)}),
+                span(
+                  list{},
+                  list{text(`risk: ${Float.toFixed(img.globalRisk *. 100.0, ~digits=1)}%`)},
+                ),
                 span(list{}, list{text(`${Int.toString(img.totalCritical)} critical`)}),
               },
             )
@@ -456,11 +435,26 @@ let renderImagingView = (state: massPanicState): Tea_Vdom.t<msg> => {
           list{Attrs.class_("flex items-center gap-1 px-4 py-2 border-b border-gray-700 text-xs")},
           list{
             span(list{Attrs.class_("text-gray-500 mr-2")}, list{text("Distribution:")}),
-            span(list{Attrs.class_("text-emerald-400 font-mono")}, list{text(`${Int.toString(img.riskDistribution.healthy)} healthy`)}),
-            span(list{Attrs.class_("text-blue-400 font-mono")}, list{text(`${Int.toString(img.riskDistribution.low)} low`)}),
-            span(list{Attrs.class_("text-amber-400 font-mono")}, list{text(`${Int.toString(img.riskDistribution.moderate)} mod`)}),
-            span(list{Attrs.class_("text-orange-400 font-mono")}, list{text(`${Int.toString(img.riskDistribution.high)} high`)}),
-            span(list{Attrs.class_("text-red-400 font-mono")}, list{text(`${Int.toString(img.riskDistribution.critical)} crit`)}),
+            span(
+              list{Attrs.class_("text-emerald-400 font-mono")},
+              list{text(`${Int.toString(img.riskDistribution.healthy)} healthy`)},
+            ),
+            span(
+              list{Attrs.class_("text-blue-400 font-mono")},
+              list{text(`${Int.toString(img.riskDistribution.low)} low`)},
+            ),
+            span(
+              list{Attrs.class_("text-amber-400 font-mono")},
+              list{text(`${Int.toString(img.riskDistribution.moderate)} mod`)},
+            ),
+            span(
+              list{Attrs.class_("text-orange-400 font-mono")},
+              list{text(`${Int.toString(img.riskDistribution.high)} high`)},
+            ),
+            span(
+              list{Attrs.class_("text-red-400 font-mono")},
+              list{text(`${Int.toString(img.riskDistribution.critical)} crit`)},
+            ),
           },
         )
       | None => noNode
@@ -491,12 +485,12 @@ let renderImagingView = (state: massPanicState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_(
                       `w-2 h-2 rounded-full ${if node.healthScore > 0.7 {
-                        "bg-emerald-500"
-                      } else if node.healthScore > 0.4 {
-                        "bg-amber-500"
-                      } else {
-                        "bg-red-500"
-                      }}`,
+                          "bg-emerald-500"
+                        } else if node.healthScore > 0.4 {
+                          "bg-amber-500"
+                        } else {
+                          "bg-red-500"
+                        }}`,
                     ),
                   },
                   list{},
@@ -539,10 +533,7 @@ let renderImagingView = (state: massPanicState): Tea_Vdom.t<msg> => {
                   noNode
                 },
                 if node.skipped {
-                  span(
-                    list{Attrs.class_("text-xs text-blue-500")},
-                    list{text("skipped")},
-                  )
+                  span(list{Attrs.class_("text-xs text-blue-500")}, list{text("skipped")})
                 } else {
                   noNode
                 },
@@ -573,7 +564,15 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
               Attrs.disabled(state.temporalLoading),
               Events.onClick(MassPanic(ListSnapshots)),
             },
-            list{text(if state.temporalLoading { "loading..." } else { "list snapshots" })},
+            list{
+              text(
+                if state.temporalLoading {
+                  "loading..."
+                } else {
+                  "list snapshots"
+                },
+              ),
+            },
           ),
           button(
             list{
@@ -635,10 +634,10 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
                   list{
                     text(
                       `health: ${if diff.healthDelta > 0.0 {
-                        "+"
-                      } else {
-                        ""
-                      }}${Float.toFixed(diff.healthDelta *. 100.0, ~digits=1)}%`,
+                          "+"
+                        } else {
+                          ""
+                        }}${Float.toFixed(diff.healthDelta *. 100.0, ~digits=1)}%`,
                     ),
                   },
                 ),
@@ -657,10 +656,10 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
                   list{
                     text(
                       `wp: ${if diff.weakPointDelta > 0 {
-                        "+"
-                      } else {
-                        ""
-                      }}${Int.toString(diff.weakPointDelta)}`,
+                          "+"
+                        } else {
+                          ""
+                        }}${Int.toString(diff.weakPointDelta)}`,
                     ),
                   },
                 ),
@@ -708,9 +707,7 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
                           span(
                             list{Attrs.class_("text-red-400")},
                             list{
-                              text(
-                                `${Float.toFixed(nd.healthDelta *. 100.0, ~digits=1)}% health`,
-                              ),
+                              text(`${Float.toFixed(nd.healthDelta *. 100.0, ~digits=1)}% health`),
                             },
                           ),
                           span(
@@ -718,10 +715,10 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
                             list{
                               text(
                                 `${if nd.weakPointDelta > 0 {
-                                  "+"
-                                } else {
-                                  ""
-                                }}${Int.toString(nd.weakPointDelta)} wp`,
+                                    "+"
+                                  } else {
+                                    ""
+                                  }}${Int.toString(nd.weakPointDelta)} wp`,
                               ),
                             },
                           ),
@@ -754,9 +751,7 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
                           span(
                             list{Attrs.class_("text-emerald-400")},
                             list{
-                              text(
-                                `+${Float.toFixed(nd.healthDelta *. 100.0, ~digits=1)}% health`,
-                              ),
+                              text(`+${Float.toFixed(nd.healthDelta *. 100.0, ~digits=1)}% health`),
                             },
                           ),
                         },
@@ -780,21 +775,24 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
           list{
             div(
               list{Attrs.class_("flex items-center justify-center h-32 text-gray-500 text-sm")},
-              list{text("No snapshots. Run an image scan and click 'take snapshot', or 'list snapshots' to load existing ones.")},
+              list{
+                text(
+                  "No snapshots. Run an image scan and click 'take snapshot', or 'list snapshots' to load existing ones.",
+                ),
+              },
             ),
           }
         } else {
           state.snapshots
           ->Array.map(snap => {
             let (selA, selB) = state.selectedSnapshots
-            let isSelected =
-              selA == Some(snap.sequence) || selB == Some(snap.sequence)
+            let isSelected = selA == Some(snap.sequence) || selB == Some(snap.sequence)
             div(
               list{
                 Attrs.class_(
                   `flex items-center gap-3 py-2 px-4 border-b border-gray-700 cursor-pointer hover:bg-gray-800/50 ${isSelected
-                    ? "bg-violet-900/20 border-l-2 border-l-violet-500"
-                    : ""}`,
+                      ? "bg-violet-900/20 border-l-2 border-l-violet-500"
+                      : ""}`,
                 ),
                 Events.onClick(MassPanic(SelectSnapshot(snap.sequence, 0))),
               },
@@ -803,10 +801,7 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("text-xs text-gray-500 font-mono min-w-[30px]")},
                   list{text(`#${Int.toString(snap.sequence)}`)},
                 ),
-                span(
-                  list{Attrs.class_("text-sm text-gray-200 font-mono")},
-                  list{text(snap.label)},
-                ),
+                span(list{Attrs.class_("text-sm text-gray-200 font-mono")}, list{text(snap.label)}),
                 span(
                   list{Attrs.class_("text-xs text-gray-500 font-mono")},
                   list{text(snap.timestamp)},
@@ -819,12 +814,12 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_(
                       `text-xs font-mono ${if snap.globalHealth > 0.7 {
-                        "text-emerald-400"
-                      } else if snap.globalHealth > 0.4 {
-                        "text-amber-400"
-                      } else {
-                        "text-red-400"
-                      }}`,
+                          "text-emerald-400"
+                        } else if snap.globalHealth > 0.4 {
+                          "text-amber-400"
+                        } else {
+                          "text-red-400"
+                        }}`,
                     ),
                   },
                   list{text(`${Float.toFixed(snap.globalHealth *. 100.0, ~digits=0)}%`)},
@@ -866,10 +861,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(
-                list{Attrs.class_("text-lg font-bold text-red-400")},
-                list{text("mass-panic")},
-              ),
+              span(list{Attrs.class_("text-lg font-bold text-red-400")}, list{text("mass-panic")}),
               // View tabs
               div(
                 list{Attrs.class_("flex items-center gap-0 ml-4")},
@@ -882,9 +874,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
               if state.incremental {
                 span(
                   list{
-                    Attrs.class_(
-                      "text-xs text-blue-400 font-mono px-2 py-0.5 rounded bg-gray-700",
-                    ),
+                    Attrs.class_("text-xs text-blue-400 font-mono px-2 py-0.5 rounded bg-gray-700"),
                   },
                   list{text("BLAKE3 incremental")},
                 )
@@ -926,16 +916,10 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                   Attrs.class_(
                     "px-3 py-1 text-xs rounded bg-amber-700 hover:bg-amber-600 text-white font-mono disabled:opacity-50",
                   ),
-                  Attrs.disabled(
-                    state.scanning || Array.length(state.selectedRepos) == 0,
-                  ),
+                  Attrs.disabled(state.scanning || Array.length(state.selectedRepos) == 0),
                   Events.onClick(MassPanic(RunSelected)),
                 },
-                list{
-                  text(
-                    `scan ${Int.toString(Array.length(state.selectedRepos))} selected`,
-                  ),
-                },
+                list{text(`scan ${Int.toString(Array.length(state.selectedRepos))} selected`)},
               ),
             },
           ),
@@ -946,9 +930,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
       | Some(err) =>
         div(
           list{
-            Attrs.class_(
-              "px-4 py-2 bg-red-900/30 border-b border-red-700 text-red-300 text-sm",
-            ),
+            Attrs.class_("px-4 py-2 bg-red-900/30 border-b border-red-700 text-red-300 text-sm"),
           },
           list{
             text(err),
@@ -976,10 +958,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("flex items-center gap-2 px-4 py-2 border-b border-gray-700")},
               list{
-                span(
-                  list{Attrs.class_("text-xs text-gray-500")},
-                  list{text("Repos:")},
-                ),
+                span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Repos:")}),
                 input(
                   list{
                     Attrs.type_("text"),
@@ -1007,9 +986,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
             // Options bar: incremental, storage, filter, sort
             div(
               list{
-                Attrs.class_(
-                  "flex items-center gap-4 px-4 py-2 border-b border-gray-700 text-xs",
-                ),
+                Attrs.class_("flex items-center gap-4 px-4 py-2 border-b border-gray-700 text-xs"),
               },
               list{
                 label(
@@ -1084,9 +1061,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                 },
                 list{
                   label(
-                    list{
-                      Attrs.class_("flex items-center gap-1 text-gray-400 cursor-pointer"),
-                    },
+                    list{Attrs.class_("flex items-center gap-1 text-gray-400 cursor-pointer")},
                     list{
                       input(
                         list{
@@ -1131,16 +1106,9 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("border-b border-gray-700")},
                 list{
                   div(
+                    list{Attrs.class_("flex items-center gap-2 px-4 py-1.5 bg-gray-800 text-xs")},
                     list{
-                      Attrs.class_(
-                        "flex items-center gap-2 px-4 py-1.5 bg-gray-800 text-xs",
-                      ),
-                    },
-                    list{
-                      span(
-                        list{Attrs.class_("text-gray-400 font-bold")},
-                        list{text("DELTA")},
-                      ),
+                      span(list{Attrs.class_("text-gray-400 font-bold")}, list{text("DELTA")}),
                       span(
                         list{Attrs.class_("text-gray-500")},
                         list{text("Changes since previous run")},
@@ -1170,9 +1138,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                 list{
                   div(
                     list{
-                      Attrs.class_(
-                        "flex items-center justify-center h-32 text-gray-500 text-sm",
-                      ),
+                      Attrs.class_("flex items-center justify-center h-32 text-gray-500 text-sm"),
                     },
                     list{
                       text(
@@ -1208,24 +1174,13 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(
-                list{},
-                list{
-                  text(`${Int.toString(Array.length(state.repoResults))} repos`),
-                },
-              ),
+              span(list{}, list{text(`${Int.toString(Array.length(state.repoResults))} repos`)}),
               switch state.storage {
               | NoStorage => noNode
               | Filesystem(path) =>
-                span(
-                  list{Attrs.class_("text-emerald-600")},
-                  list{text(`store: ${path}`)},
-                )
+                span(list{Attrs.class_("text-emerald-600")}, list{text(`store: ${path}`)})
               | VerisimDB(path) =>
-                span(
-                  list{Attrs.class_("text-cyan-500")},
-                  list{text(`verisimdb: ${path}`)},
-                )
+                span(list{Attrs.class_("text-cyan-500")}, list{text(`verisimdb: ${path}`)})
               },
             },
           ),
@@ -1244,10 +1199,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                   list{text("show delta")},
                 )
               },
-              span(
-                list{},
-                list{text("panic-attack 2.1.0 — mass-panic mode")},
-              ),
+              span(list{}, list{text("panic-attack 2.1.0 — mass-panic mode")}),
             },
           ),
         },

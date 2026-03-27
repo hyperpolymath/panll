@@ -18,11 +18,46 @@ let defaultState: databasesState = {
   queryLoading: false,
   queryHistory: [],
   schemaEntities: [
-    { name: "octads", kind: "table", fields: ["id", "graph", "vector", "tensor", "semantic", "document", "temporal", "provenance", "spatial"], entryCount: 5 },
-    { name: "entities", kind: "table", fields: ["id", "name", "modality", "created_at", "updated_at"], entryCount: 12 },
-    { name: "drift_log", kind: "table", fields: ["id", "dimension", "score", "timestamp", "resolved"], entryCount: 24 },
-    { name: "proof_certificates", kind: "table", fields: ["id", "type", "contract", "status", "hash"], entryCount: 8 },
-    { name: "federation_peers", kind: "table", fields: ["node_id", "address", "state", "last_seen"], entryCount: 3 },
+    {
+      name: "octads",
+      kind: "table",
+      fields: [
+        "id",
+        "graph",
+        "vector",
+        "tensor",
+        "semantic",
+        "document",
+        "temporal",
+        "provenance",
+        "spatial",
+      ],
+      entryCount: 5,
+    },
+    {
+      name: "entities",
+      kind: "table",
+      fields: ["id", "name", "modality", "created_at", "updated_at"],
+      entryCount: 12,
+    },
+    {
+      name: "drift_log",
+      kind: "table",
+      fields: ["id", "dimension", "score", "timestamp", "resolved"],
+      entryCount: 24,
+    },
+    {
+      name: "proof_certificates",
+      kind: "table",
+      fields: ["id", "type", "contract", "status", "hash"],
+      entryCount: 8,
+    },
+    {
+      name: "federation_peers",
+      kind: "table",
+      fields: ["node_id", "address", "state", "last_seen"],
+      entryCount: 3,
+    },
   ],
   selectedEntity: None,
   entityDetail: None,
@@ -44,7 +79,11 @@ let selectedModuleState = (state: databasesState): option<moduleState> => {
 }
 
 /// Update a specific module state by ID.
-let updateModule = (state: databasesState, id: string, updater: moduleState => moduleState): databasesState => {
+let updateModule = (
+  state: databasesState,
+  id: string,
+  updater: moduleState => moduleState,
+): databasesState => {
   {
     ...state,
     modules: state.modules->Array.map(m =>
@@ -59,12 +98,14 @@ let updateModule = (state: databasesState, id: string, updater: moduleState => m
 
 /// Count connected modules.
 let connectedCount = (state: databasesState): int => {
-  state.modules->Array.filter(m =>
+  state.modules
+  ->Array.filter(m =>
     switch m.connection {
     | Connected(_) => true
     | _ => false
     }
-  )->Array.length
+  )
+  ->Array.length
 }
 
 /// Count total capabilities across all modules.
@@ -80,7 +121,7 @@ let filteredEntities = (state: databasesState): array<schemaEntity> => {
     let needle = state.filterText->String.toLowerCase
     state.schemaEntities->Array.filter(e =>
       e.name->String.toLowerCase->String.includes(needle) ||
-      e.kind->String.toLowerCase->String.includes(needle)
+        e.kind->String.toLowerCase->String.includes(needle)
     )
   }
 }
@@ -93,7 +134,7 @@ let addToHistory = (state: databasesState, entry: queryHistoryEntry): databasesS
   } else {
     history
   }
-  { ...state, queryHistory: capped }
+  {...state, queryHistory: capped}
 }
 
 /// Connection status label for display.
@@ -119,10 +160,10 @@ let connectionColour = (status: connectionStatus): string => {
 /// Module accent colour for UI differentiation.
 let moduleAccent = (id: string): string => {
   switch id {
-  | "verisimdb" => "#34d399"   // emerald
-  | "quandledb" => "#818cf8"   // indigo
-  | "lithoglyph" => "#fb923c"  // orange
-  | _ => "#9ca3af"             // gray
+  | "verisimdb" => "#34d399" // emerald
+  | "quandledb" => "#818cf8" // indigo
+  | "lithoglyph" => "#fb923c" // orange
+  | _ => "#9ca3af" // gray
   }
 }
 

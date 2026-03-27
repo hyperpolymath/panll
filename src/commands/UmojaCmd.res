@@ -9,10 +9,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Add a new peer to the Umoja federation by address.
-let addPeer = (
-  address: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let addPeer = (address: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("umoja_add_peer", {"address": address})
     ->Promise.then(result => {
@@ -28,10 +25,7 @@ let addPeer = (
 }
 
 /// Disconnect a peer from the Umoja federation by node ID.
-let disconnectPeer = (
-  nodeId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let disconnectPeer = (nodeId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("umoja_disconnect_peer", {"nodeId": nodeId})
     ->Promise.then(result => {
@@ -47,9 +41,7 @@ let disconnectPeer = (
 }
 
 /// Trigger a manual gossip round across the Umoja federation.
-let triggerGossipRound = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let triggerGossipRound = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("umoja_trigger_gossip", {"_": true})
     ->Promise.then(result => {
@@ -65,10 +57,7 @@ let triggerGossipRound = (
 }
 
 /// Request a catalogue sync with a specific peer by node ID.
-let syncCatalogue = (
-  nodeId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let syncCatalogue = (nodeId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("umoja_sync_catalogue", {"nodeId": nodeId})
     ->Promise.then(result => {
@@ -84,10 +73,7 @@ let syncCatalogue = (
 }
 
 /// Retrieve metrics for a specific peer by node ID.
-let getPeerMetrics = (
-  nodeId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getPeerMetrics = (nodeId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("umoja_peer_metrics", {"nodeId": nodeId})
     ->Promise.then(result => {

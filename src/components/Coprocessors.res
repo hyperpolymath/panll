@@ -50,7 +50,10 @@ let renderMetricsCard = (metrics: coprocMetrics): Tea_Vdom.t<msg> => {
             list{},
             list{
               div(list{Attrs.class_("text-gray-500")}, list{text("Total Calls")}),
-              div(list{Attrs.class_("text-gray-200 font-mono")}, list{text(Int.toString(metrics.totalCalls))}),
+              div(
+                list{Attrs.class_("text-gray-200 font-mono")},
+                list{text(Int.toString(metrics.totalCalls))},
+              ),
             },
           ),
           div(
@@ -100,15 +103,33 @@ let renderMetricsCard = (metrics: coprocMetrics): Tea_Vdom.t<msg> => {
 /// Render a discovered compute device card.
 let renderDeviceCard = (device: computeDevice): Tea_Vdom.t<msg> => {
   let engineLabel = CoprocessorsEngine.engineLabel(device.engineId)
-  let statusCls = if device.available { "text-emerald-400" } else { "text-gray-500" }
+  let statusCls = if device.available {
+    "text-emerald-400"
+  } else {
+    "text-gray-500"
+  }
   div(
     list{Attrs.class_("p-3 bg-gray-800 rounded border border-gray-700")},
     list{
       div(
         list{Attrs.class_("flex items-center justify-between mb-1")},
         list{
-          span(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text(device.deviceName)}),
-          span(list{Attrs.class_(`text-xs ${statusCls}`)}, list{text(if device.available { "Online" } else { "Offline" })}),
+          span(
+            list{Attrs.class_("text-sm font-medium text-gray-200")},
+            list{text(device.deviceName)},
+          ),
+          span(
+            list{Attrs.class_(`text-xs ${statusCls}`)},
+            list{
+              text(
+                if device.available {
+                  "Online"
+                } else {
+                  "Offline"
+                },
+              ),
+            },
+          ),
         },
       ),
       div(
@@ -122,14 +143,21 @@ let renderDeviceCard = (device: computeDevice): Tea_Vdom.t<msg> => {
 /// Render the last compute result.
 let renderComputeResult = (result: computeQueryResult): Tea_Vdom.t<msg> => {
   let engineLabel = CoprocessorsEngine.engineLabel(result.engineId)
-  let borderCls = if result.success { "border-emerald-700" } else { "border-red-700" }
+  let borderCls = if result.success {
+    "border-emerald-700"
+  } else {
+    "border-red-700"
+  }
   div(
     list{Attrs.class_(`p-3 bg-gray-800 rounded border ${borderCls}`)},
     list{
       div(
         list{Attrs.class_("flex items-center justify-between mb-2")},
         list{
-          span(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text(`${engineLabel}: ${result.operation}`)}),
+          span(
+            list{Attrs.class_("text-sm font-medium text-gray-200")},
+            list{text(`${engineLabel}: ${result.operation}`)},
+          ),
           span(
             list{Attrs.class_("text-xs text-gray-400 font-mono")},
             list{text(`${Float.toString(result.durationMs)}ms`)},
@@ -137,7 +165,11 @@ let renderComputeResult = (result: computeQueryResult): Tea_Vdom.t<msg> => {
         },
       ),
       div(
-        list{Attrs.class_("text-xs text-gray-400 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto")},
+        list{
+          Attrs.class_(
+            "text-xs text-gray-400 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto",
+          ),
+        },
         list{text(result.result)},
       ),
     },
@@ -146,9 +178,21 @@ let renderComputeResult = (result: computeQueryResult): Tea_Vdom.t<msg> => {
 
 /// Render the Phase 2 FFI status indicator.
 let renderFfiStatus = (localDispatch: localDispatchState): Tea_Vdom.t<msg> => {
-  let statusColour = if localDispatch.ffiLoaded { "text-emerald-400" } else { "text-gray-500" }
-  let statusText = if localDispatch.ffiLoaded { "Loaded" } else { "Not Loaded" }
-  let dotColour = if localDispatch.ffiLoaded { "bg-emerald-400" } else { "bg-gray-600" }
+  let statusColour = if localDispatch.ffiLoaded {
+    "text-emerald-400"
+  } else {
+    "text-gray-500"
+  }
+  let statusText = if localDispatch.ffiLoaded {
+    "Loaded"
+  } else {
+    "Not Loaded"
+  }
+  let dotColour = if localDispatch.ffiLoaded {
+    "bg-emerald-400"
+  } else {
+    "bg-gray-600"
+  }
   div(
     list{Attrs.class_("p-3 bg-gray-800 rounded border border-gray-700 space-y-2")},
     list{
@@ -229,10 +273,7 @@ let renderFfiStatus = (localDispatch: localDispatchState): Tea_Vdom.t<msg> => {
       // Show library path when loaded.
       switch localDispatch.ffiLibPath {
       | Some(path) =>
-        div(
-          list{Attrs.class_("text-xs text-gray-600 font-mono truncate")},
-          list{text(path)},
-        )
+        div(list{Attrs.class_("text-xs text-gray-600 font-mono truncate")}, list{text(path)})
       | None => noNode
       },
     },
@@ -248,7 +289,10 @@ let renderDashboard = (state: coprocessorsState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("space-y-2")},
         list{
-          div(list{Attrs.class_("text-xs text-gray-400 font-medium")}, list{text("LOCAL DISPATCH (PHASE 2)")}),
+          div(
+            list{Attrs.class_("text-xs text-gray-400 font-medium")},
+            list{text("LOCAL DISPATCH (PHASE 2)")},
+          ),
           renderFfiStatus(state.localDispatch),
         },
       ),
@@ -259,10 +303,15 @@ let renderDashboard = (state: coprocessorsState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center justify-between")},
             list{
-              span(list{Attrs.class_("text-xs text-gray-400 font-medium")}, list{text("COMPUTE ENGINES")}),
+              span(
+                list{Attrs.class_("text-xs text-gray-400 font-medium")},
+                list{text("COMPUTE ENGINES")},
+              ),
               button(
                 list{
-                  Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(Coprocessors(DiscoverDevices)),
                 },
                 list{text("Discover")},
@@ -272,7 +321,9 @@ let renderDashboard = (state: coprocessorsState): Tea_Vdom.t<msg> => {
           if Array.length(state.discoveredDevices) === 0 {
             div(
               list{Attrs.class_("text-center text-gray-500 text-xs py-4")},
-              list{text("No compute engines discovered. Click Discover to probe Axiom.jl and BoJ.")},
+              list{
+                text("No compute engines discovered. Click Discover to probe Axiom.jl and BoJ."),
+              },
             )
           } else {
             div(
@@ -288,7 +339,10 @@ let renderDashboard = (state: coprocessorsState): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("space-y-2")},
           list{
-            div(list{Attrs.class_("text-xs text-gray-400 font-medium")}, list{text("LAST COMPUTE RESULT")}),
+            div(
+              list{Attrs.class_("text-xs text-gray-400 font-medium")},
+              list{text("LAST COMPUTE RESULT")},
+            ),
             renderComputeResult(result),
           },
         )
@@ -298,7 +352,10 @@ let renderDashboard = (state: coprocessorsState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("space-y-2")},
         list{
-          div(list{Attrs.class_("text-xs text-gray-400 font-medium")}, list{text("BACKEND METRICS")}),
+          div(
+            list{Attrs.class_("text-xs text-gray-400 font-medium")},
+            list{text("BACKEND METRICS")},
+          ),
           if Array.length(state.metrics) === 0 {
             div(
               list{Attrs.class_("text-center text-gray-500 text-xs py-4")},
@@ -306,7 +363,9 @@ let renderDashboard = (state: coprocessorsState): Tea_Vdom.t<msg> => {
                 text("No backend metrics available"),
                 button(
                   list{
-                    Attrs.class_("ml-2 px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                    Attrs.class_(
+                      "ml-2 px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                    ),
                     Events.onClick(Coprocessors(RefreshMetrics)),
                   },
                   list{text("Refresh")},
@@ -465,7 +524,9 @@ let renderHeatmap = (state: coprocessorsState): Tea_Vdom.t<msg> => {
                 div(
                   list{
                     Attrs.class_(`w-4 h-6 rounded-sm ${intensity}`),
-                    Attrs.title(`Slot ${Int.toString(cell.timeSlot)}: ${Int.toString(cell.callCount)} calls`),
+                    Attrs.title(
+                      `Slot ${Int.toString(cell.timeSlot)}: ${Int.toString(cell.callCount)} calls`,
+                    ),
                   },
                   list{},
                 )
@@ -493,14 +554,8 @@ let renderRoutingRow = (decision: routingDecision): Tea_Vdom.t<msg> => {
         list{Attrs.class_(`w-20 font-mono ${catColour}`)},
         list{text(SmartRouter.categoryLabel(category))},
       ),
-      span(
-        list{Attrs.class_("text-gray-200 w-36 truncate")},
-        list{text(decision.operation)},
-      ),
-      span(
-        list{Attrs.class_(`font-medium ${routeColour}`)},
-        list{text(routeLabel)},
-      ),
+      span(list{Attrs.class_("text-gray-200 w-36 truncate")}, list{text(decision.operation)}),
+      span(list{Attrs.class_(`font-medium ${routeColour}`)}, list{text(routeLabel)}),
       span(
         list{Attrs.class_("text-gray-500 font-mono ml-auto")},
         list{text(`${Float.toFixed(decision.latencyEstimateMs, ~digits=1)}ms`)},
@@ -544,8 +599,16 @@ let renderRouteDistribution = (stats: array<(string, int, float)>): Tea_Vdom.t<m
     list{Attrs.class_("space-y-2")},
     stats
     ->Array.map(((label, count, avgLatency)) => {
-      let pct = if total > 0 { Float.fromInt(count) /. Float.fromInt(total) *. 100.0 } else { 0.0 }
-      let widthPct = if total > 0 { Float.toFixed(pct, ~digits=0) } else { "0" }
+      let pct = if total > 0 {
+        Float.fromInt(count) /. Float.fromInt(total) *. 100.0
+      } else {
+        0.0
+      }
+      let widthPct = if total > 0 {
+        Float.toFixed(pct, ~digits=0)
+      } else {
+        "0"
+      }
       div(
         list{Attrs.class_("space-y-0.5")},
         list{
@@ -555,7 +618,14 @@ let renderRouteDistribution = (stats: array<(string, int, float)>): Tea_Vdom.t<m
               span(list{Attrs.class_("text-gray-300")}, list{text(label)}),
               span(
                 list{Attrs.class_("text-gray-500 font-mono")},
-                list{text(`${Int.toString(count)} (${Float.toFixed(pct, ~digits=1)}%) avg ${Float.toFixed(avgLatency, ~digits=1)}ms`)},
+                list{
+                  text(
+                    `${Int.toString(count)} (${Float.toFixed(pct, ~digits=1)}%) avg ${Float.toFixed(
+                        avgLatency,
+                        ~digits=1,
+                      )}ms`,
+                  ),
+                },
               ),
             },
           ),
@@ -580,9 +650,21 @@ let renderRouteDistribution = (stats: array<(string, int, float)>): Tea_Vdom.t<m
 
 /// Render the backend health indicators.
 let renderBackendHealthRow = (health: SmartRouter.backendHealth): Tea_Vdom.t<msg> => {
-  let dotColour = if health.available { "bg-emerald-400" } else { "bg-gray-600" }
-  let statusText = if health.available { "Online" } else { "Offline" }
-  let statusColour = if health.available { "text-emerald-400" } else { "text-gray-500" }
+  let dotColour = if health.available {
+    "bg-emerald-400"
+  } else {
+    "bg-gray-600"
+  }
+  let statusText = if health.available {
+    "Online"
+  } else {
+    "Offline"
+  }
+  let statusColour = if health.available {
+    "text-emerald-400"
+  } else {
+    "text-gray-500"
+  }
   div(
     list{Attrs.class_("flex items-center justify-between p-2 bg-gray-800 rounded")},
     list{
@@ -758,7 +840,15 @@ let renderSettings = (state: coprocessorsState): Tea_Vdom.t<msg> => {
               ),
               Events.onClick(Coprocessors(ToggleAutoRefresh)),
             },
-            list{text(if state.autoRefresh { "Enabled" } else { "Disabled" })},
+            list{
+              text(
+                if state.autoRefresh {
+                  "Enabled"
+                } else {
+                  "Disabled"
+                },
+              ),
+            },
           ),
         },
       ),
@@ -789,7 +879,15 @@ let renderSettings = (state: coprocessorsState): Tea_Vdom.t<msg> => {
                     ),
                     Events.onClick(Coprocessors(ToggleCoprocBackend(backend))),
                   },
-                  list{text(if isEnabled { "On" } else { "Off" })},
+                  list{
+                    text(
+                      if isEnabled {
+                        "On"
+                      } else {
+                        "Off"
+                      },
+                    ),
+                  },
                 ),
               },
             )
@@ -817,7 +915,10 @@ let view = (state: coprocessorsState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-lg font-semibold text-gray-100")}, list{text("Coprocessors")}),
+              span(
+                list{Attrs.class_("text-lg font-semibold text-gray-100")},
+                list{text("Coprocessors")},
+              ),
               span(
                 list{Attrs.class_("text-xs text-gray-500")},
                 list{text(`${Int.toString(Array.length(state.enabledBackends))} of 10 active`)},
@@ -826,7 +927,9 @@ let view = (state: coprocessorsState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+              ),
               Events.onClick(Coprocessors(RefreshMetrics)),
             },
             list{text("Refresh")},
@@ -848,7 +951,11 @@ let view = (state: coprocessorsState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300",
+            ),
+          },
           list{
             div(
               list{Attrs.class_("flex items-center justify-between")},

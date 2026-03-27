@@ -9,9 +9,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Scan all `.a2ml` clade files from the panel-clades directory.
 /// Returns a JSON string: `[{"id": "...", "content": "..."}]`.
-let scanCladeFiles = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let scanCladeFiles = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("scan_clade_files", ())
     ->Promise.then(result => {

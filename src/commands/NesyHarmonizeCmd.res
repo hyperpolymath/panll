@@ -11,9 +11,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Fetch current harmonization entries from the BoJ NeSy cartridge.
 /// Returns JSON array of harmonization entry objects.
-let fetchEntries = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let fetchEntries = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("nesy_harmonize_fetch_entries", ())
     ->Promise.then(result => {
@@ -31,11 +29,9 @@ let fetchEntries = (
 /// Submit a new harmonization request to the BoJ NeSy cartridge.
 /// Triggers neural-symbolic verdict fusion for the given input.
 /// Returns JSON with the resulting harmonization entry.
-let submit = (
-  source: string,
-  inputData: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let submit = (source: string, inputData: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("nesy_harmonize_submit", {"source": source, "input_data": inputData})
     ->Promise.then(result => {

@@ -45,15 +45,23 @@ let filterAudits = (audits: array<repoCompliance>, query: string): array<repoCom
 let computeStats = (audits: array<repoCompliance>): complianceStats => {
   let totalRepos = Array.length(audits)
   let allRequirements: array<rsrRequirement> = [
-    EditorConfig, AiManifest, StateMachineReadable, MetaMachineReadable,
-    EcosystemMachineReadable, Justfile, TopologyDiagram, SecurityPolicy,
-    LicenseFile, HypatiaScanWorkflow,
+    EditorConfig,
+    AiManifest,
+    StateMachineReadable,
+    MetaMachineReadable,
+    EcosystemMachineReadable,
+    Justfile,
+    TopologyDiagram,
+    SecurityPolicy,
+    LicenseFile,
+    HypatiaScanWorkflow,
   ]
 
   let requirementRates = allRequirements->Array.map(req => {
-    let metCount = audits->Array.filter(a =>
-      a.results->Array.some(r => r.requirement === req && r.met)
-    )->Array.length
+    let metCount =
+      audits
+      ->Array.filter(a => a.results->Array.some(r => r.requirement === req && r.met))
+      ->Array.length
     let rate = if totalRepos > 0 {
       Int.toFloat(metCount) /. Int.toFloat(totalRepos)
     } else {
@@ -78,19 +86,13 @@ let computeStats = (audits: array<repoCompliance>): complianceStats => {
 let complianceDecoder: Tea_Json.decoder<repoCompliance> = {
   open Decoders
   open Tea_Json
-  map4(
-    (repoName, score, metCount, totalCount) => ({
-      repoName,
-      results: [], // Parsed separately if needed
-      score,
-      metCount,
-      totalCount,
-    }: repoCompliance),
-    stringField("repo_name"),
-    floatField("score"),
-    intField("met_count"),
-    intField("total_count"),
-  )
+  map4((repoName, score, metCount, totalCount): repoCompliance => {
+    repoName,
+    results: [], // Parsed separately if needed
+    score,
+    metCount,
+    totalCount,
+  }, stringField("repo_name"), floatField("score"), intField("met_count"), intField("total_count"))
 }
 
 /// Parse compliance audits from JSON.
@@ -99,22 +101,27 @@ let parseAudits = (json: string): result<array<repoCompliance>, string> =>
 
 /// All RSR requirements.
 let allRequirements: array<rsrRequirement> = [
-  EditorConfig, AiManifest, StateMachineReadable, MetaMachineReadable,
-  EcosystemMachineReadable, Justfile, TopologyDiagram, SecurityPolicy,
-  LicenseFile, HypatiaScanWorkflow,
+  EditorConfig,
+  AiManifest,
+  StateMachineReadable,
+  MetaMachineReadable,
+  EcosystemMachineReadable,
+  Justfile,
+  TopologyDiagram,
+  SecurityPolicy,
+  LicenseFile,
+  HypatiaScanWorkflow,
 ]
 
 /// Find repos failing a specific requirement.
-let reposFailingRequirement = (audits: array<repoCompliance>, req: rsrRequirement): array<repoCompliance> =>
-  audits->Array.filter(a =>
-    a.results->Array.some(r => r.requirement === req && !r.met)
-  )
+let reposFailingRequirement = (audits: array<repoCompliance>, req: rsrRequirement): array<
+  repoCompliance,
+> => audits->Array.filter(a => a.results->Array.some(r => r.requirement === req && !r.met))
 
 /// Find repos passing a specific requirement.
-let reposPassingRequirement = (audits: array<repoCompliance>, req: rsrRequirement): array<repoCompliance> =>
-  audits->Array.filter(a =>
-    a.results->Array.some(r => r.requirement === req && r.met)
-  )
+let reposPassingRequirement = (audits: array<repoCompliance>, req: rsrRequirement): array<
+  repoCompliance,
+> => audits->Array.filter(a => a.results->Array.some(r => r.requirement === req && r.met))
 
 /// Get compliance rate for a single requirement.
 let requirementRate = (audits: array<repoCompliance>, req: rsrRequirement): float => {

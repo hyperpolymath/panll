@@ -33,31 +33,45 @@ let allTabs: array<loadTestTab> = [TabScenarios, TabLiveTest, TabResults, TabSat
 
 /// Count connected players.
 let connectedCount = (players: array<simulatedPlayer>): int =>
-  players->Array.filter(p => switch p.status {
-  | PlayerConnected => true
-  | _ => false
-  })->Array.length
+  players
+  ->Array.filter(p =>
+    switch p.status {
+    | PlayerConnected => true
+    | _ => false
+    }
+  )
+  ->Array.length
 
 /// Count errored players.
 let errorCount = (players: array<simulatedPlayer>): int =>
-  players->Array.filter(p => switch p.status {
-  | PlayerError(_) => true
-  | _ => false
-  })->Array.length
+  players
+  ->Array.filter(p =>
+    switch p.status {
+    | PlayerError(_) => true
+    | _ => false
+    }
+  )
+  ->Array.length
 
 /// Count connecting players (in-flight connections).
 let connectingCount = (players: array<simulatedPlayer>): int =>
-  players->Array.filter(p => switch p.status {
-  | PlayerConnecting => true
-  | _ => false
-  })->Array.length
+  players
+  ->Array.filter(p =>
+    switch p.status {
+    | PlayerConnecting => true
+    | _ => false
+    }
+  )
+  ->Array.length
 
 /// Average latency across connected players in milliseconds.
 let avgLatency = (players: array<simulatedPlayer>): float => {
-  let connected = players->Array.filter(p => switch p.status {
-  | PlayerConnected => true
-  | _ => false
-  })
+  let connected = players->Array.filter(p =>
+    switch p.status {
+    | PlayerConnected => true
+    | _ => false
+    }
+  )
   let count = connected->Array.length
   if count == 0 {
     0.0
@@ -71,7 +85,12 @@ let avgLatency = (players: array<simulatedPlayer>): float => {
 let maxLatency = (players: array<simulatedPlayer>): float =>
   players->Array.reduce(0.0, (acc, p) =>
     switch p.status {
-    | PlayerConnected => if p.latencyMs > acc { p.latencyMs } else { acc }
+    | PlayerConnected =>
+      if p.latencyMs > acc {
+        p.latencyMs
+      } else {
+        acc
+      }
     | _ => acc
     }
   )

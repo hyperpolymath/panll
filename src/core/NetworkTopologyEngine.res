@@ -59,8 +59,9 @@ let devicesByZone = (devices: array<networkDevice>, zone: networkZone): array<ne
   devices->Array.filter(d => d.zone === zone)
 
 /// Find connections involving a device.
-let connectionsForDevice = (connections: array<networkConnection>, deviceId: string): array<networkConnection> =>
-  connections->Array.filter(c => c.sourceId === deviceId || c.targetId === deviceId)
+let connectionsForDevice = (connections: array<networkConnection>, deviceId: string): array<
+  networkConnection,
+> => connections->Array.filter(c => c.sourceId === deviceId || c.targetId === deviceId)
 
 /// Default state for the Network Topology panel.
 let defaultState: networkTopologyState = {

@@ -32,10 +32,7 @@ let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, minter: {...minter, form: {...form, description: v}}},
       Tea_Cmd.none,
     )
-  | SetIcon(v) => (
-      {...model, minter: {...minter, form: {...form, icon: v}}},
-      Tea_Cmd.none,
-    )
+  | SetIcon(v) => ({...model, minter: {...minter, form: {...form, icon: v}}}, Tea_Cmd.none)
   | SetBackendKind(kind) => (
       {...model, minter: {...minter, form: {...form, backendKind: kind}}},
       Tea_Cmd.none,
@@ -44,10 +41,7 @@ let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, minter: {...minter, form: {...form, accessibility: level}}},
       Tea_Cmd.none,
     )
-  | SetEndpoint(v) => (
-      {...model, minter: {...minter, form: {...form, endpoint: v}}},
-      Tea_Cmd.none,
-    )
+  | SetEndpoint(v) => ({...model, minter: {...minter, form: {...form, endpoint: v}}}, Tea_Cmd.none)
   | AddCapability => {
       let newCap: minterCapability = {id: "", label: ""}
       (
@@ -90,7 +84,9 @@ let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
         ->Array.map(c => `{"id":"${c.id}","label":"${c.label}"}`)
         ->Array.join(",")
       let capsStr = `[${capsJson}]`
-      let specJson = `{"panel":"${form.panelName}","backend":"${MinterEngine.backendKindLabel(form.backendKind)}","caps":${capsStr}}`
+      let specJson = `{"panel":"${form.panelName}","backend":"${MinterEngine.backendKindLabel(
+          form.backendKind,
+        )}","caps":${capsStr}}`
       (
         {...model, minter: {...minter, minting: true, error: None}},
         Tea_Cmd.batch(list{
@@ -105,7 +101,9 @@ let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
             form.endpoint,
             result => Minter(MintResult(result)),
           ),
-          TypeLLService.checkConfigTypes(specJson, "minter", result => Minter(TypeCheckResult(result))),
+          TypeLLService.checkConfigTypes(specJson, "minter", result => Minter(
+            TypeCheckResult(result),
+          )),
         }),
       )
     }
@@ -156,10 +154,7 @@ let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
         )
       }
     }
-  | ResetMinter => (
-      {...model, minter: MinterEngine.defaultState},
-      Tea_Cmd.none,
-    )
+  | ResetMinter => ({...model, minter: MinterEngine.defaultState}, Tea_Cmd.none)
   | ExportToEnsaidConfig => {
       // Generate a preview showing what the minted panel would add to ENSAID_CONFIG.
       let form = model.minter.form
@@ -191,11 +186,14 @@ let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "minter", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
   }
 }

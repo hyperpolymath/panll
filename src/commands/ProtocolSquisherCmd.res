@@ -8,9 +8,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Check whether the protocol-squisher CLI binary is available.
-let checkCli = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkCli = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("protocol_squisher_check", ())
     ->Promise.then(result => {
@@ -26,10 +24,7 @@ let checkCli = (
 }
 
 /// Analyse a schema file. Returns JSON analysis result.
-let analyse = (
-  filePath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let analyse = (filePath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("protocol_squisher_analyze", {"file_path": filePath})
     ->Promise.then(result => {

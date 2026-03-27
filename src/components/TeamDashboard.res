@@ -93,9 +93,7 @@ let renderTeamTab = (state: teamDashboardState): Tea_Vdom.t<msg> => {
                   list{
                     div(
                       list{
-                        Attrs.class_(
-                          `w-2.5 h-2.5 rounded-full ${statusDotColour(member.status)}`,
-                        ),
+                        Attrs.class_(`w-2.5 h-2.5 rounded-full ${statusDotColour(member.status)}`),
                       },
                       list{},
                     ),
@@ -131,10 +129,7 @@ let renderTeamTab = (state: teamDashboardState): Tea_Vdom.t<msg> => {
 let renderActivityTab = (state: teamDashboardState): Tea_Vdom.t<msg> => {
   let recent = TeamDashboardEngine.recentActivity(state.activity, 50)
   if Array.length(recent) === 0 {
-    div(
-      list{Attrs.class_("p-4 text-gray-500 text-sm italic")},
-      list{text("No recent activity.")},
-    )
+    div(list{Attrs.class_("p-4 text-gray-500 text-sm italic")}, list{text("No recent activity.")})
   } else {
     div(
       list{Attrs.class_("flex flex-col gap-1 p-4 max-h-96 overflow-y-auto")},
@@ -150,21 +145,12 @@ let renderActivityTab = (state: teamDashboardState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("text-sm text-gray-300")},
                   list{
-                    span(
-                      list{Attrs.class_("font-medium text-gray-200")},
-                      list{text(entry.actor)},
-                    ),
+                    span(list{Attrs.class_("font-medium text-gray-200")}, list{text(entry.actor)}),
                     text(` ${entry.action} `),
-                    span(
-                      list{Attrs.class_("text-cyan-400")},
-                      list{text(entry.target)},
-                    ),
+                    span(list{Attrs.class_("text-cyan-400")}, list{text(entry.target)}),
                   },
                 ),
-                div(
-                  list{Attrs.class_("text-xs text-gray-600")},
-                  list{text(entry.timestamp)},
-                ),
+                div(list{Attrs.class_("text-xs text-gray-600")}, list{text(entry.timestamp)}),
               },
             ),
           },
@@ -193,10 +179,7 @@ let renderProgressTab = (state: teamDashboardState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("text-2xl font-light text-emerald-400")},
                 list{text(Int.toString(onlineCount))},
               ),
-              div(
-                list{Attrs.class_("text-xs text-gray-500 mt-1")},
-                list{text("Online")},
-              ),
+              div(list{Attrs.class_("text-xs text-gray-500 mt-1")}, list{text("Online")}),
             },
           ),
           div(
@@ -206,10 +189,7 @@ let renderProgressTab = (state: teamDashboardState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("text-2xl font-light text-gray-300")},
                 list{text(Int.toString(totalMembers))},
               ),
-              div(
-                list{Attrs.class_("text-xs text-gray-500 mt-1")},
-                list{text("Team Size")},
-              ),
+              div(list{Attrs.class_("text-xs text-gray-500 mt-1")}, list{text("Team Size")}),
             },
           ),
           div(
@@ -219,10 +199,7 @@ let renderProgressTab = (state: teamDashboardState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("text-2xl font-light text-cyan-400")},
                 list{text(Int.toString(activityCount))},
               ),
-              div(
-                list{Attrs.class_("text-xs text-gray-500 mt-1")},
-                list{text("Activities")},
-              ),
+              div(list{Attrs.class_("text-xs text-gray-500 mt-1")}, list{text("Activities")}),
             },
           ),
         },
@@ -291,7 +268,9 @@ let view = (state: teamDashboardState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

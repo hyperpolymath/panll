@@ -8,11 +8,14 @@ open RuntimeBridge
 
 /// Start a new rclone transfer batch.
 let startTransfer = (source, destination, options) => {
-  invoke("video_start_transfer", {
-    "source": source,
-    "destination": destination,
-    "options": options,
-  })
+  invoke(
+    "video_start_transfer",
+    {
+      "source": source,
+      "destination": destination,
+      "options": options,
+    },
+  )
 }
 
 /// Fetch the latest status of all active transfers.
@@ -21,6 +24,6 @@ let fetchStatus = () => {
 }
 
 /// Pause an ongoing transfer batch.
-let pauseTransfer = (batchId) => {
+let pauseTransfer = batchId => {
   invoke("video_pause_transfer", {"id": batchId})
 }

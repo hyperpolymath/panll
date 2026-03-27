@@ -64,7 +64,9 @@ let kindColor = (kind: snapshotKind): string =>
   }
 
 /// Filter snapshots by a case-insensitive search string on name.
-let filterSnapshots = (snapshots: array<regressionSnapshot>, filter: string): array<regressionSnapshot> =>
+let filterSnapshots = (snapshots: array<regressionSnapshot>, filter: string): array<
+  regressionSnapshot,
+> =>
   if filter == "" {
     snapshots
   } else {

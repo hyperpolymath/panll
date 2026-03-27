@@ -60,10 +60,7 @@ let messageCount = (sim: simulation<'model, 'msg>): int => Array.length(sim.mess
 let hasCommands = (sim: simulation<'model, 'msg>): bool => Array.length(sim.commands) > 0
 
 /// Reset the simulation to initial state
-let reset = (
-  sim: simulation<'model, 'msg>,
-  ~init: unit => ('model, Tea_Cmd.t<'msg>),
-): unit => {
+let reset = (sim: simulation<'model, 'msg>, ~init: unit => ('model, Tea_Cmd.t<'msg>)): unit => {
   let (initialModel, _) = init()
   sim.model = initialModel
   sim.messages = []
@@ -71,7 +68,11 @@ let reset = (
 }
 
 /// Assert that the current model satisfies a predicate
-let assertModel = (sim: simulation<'model, 'msg>, predicate: 'model => bool, label: string): bool => {
+let assertModel = (
+  sim: simulation<'model, 'msg>,
+  predicate: 'model => bool,
+  label: string,
+): bool => {
   if predicate(sim.model) {
     true
   } else {

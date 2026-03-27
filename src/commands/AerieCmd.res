@@ -7,9 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Fetch latest latency measurements.
-let fetchLatency = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let fetchLatency = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("aerie_get_latency", ())
     ->Promise.then(result => {
@@ -25,9 +23,7 @@ let fetchLatency = (
 }
 
 /// Run a speed test.
-let runSpeedTest = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let runSpeedTest = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("aerie_speed_test", ())
     ->Promise.then(result => {

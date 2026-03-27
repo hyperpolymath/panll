@@ -6,9 +6,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Read the current network topology from the running game.
-let readTopology = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readTopology = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("read_network_topology", {"_": true})
     ->Promise.then(result => {
@@ -24,9 +22,7 @@ let readTopology = (
 }
 
 /// Read DNS resolution table from the game.
-let readDnsTable = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readDnsTable = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("read_dns_table", {"_": true})
     ->Promise.then(result => {
@@ -42,9 +38,7 @@ let readDnsTable = (
 }
 
 /// Export the topology as SVG.
-let exportSvg = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let exportSvg = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("export_topology_svg", {"_": true})
     ->Promise.then(result => {
@@ -60,9 +54,7 @@ let exportSvg = (
 }
 
 /// Read packet flow events from the game.
-let readPacketFlow = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readPacketFlow = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("read_packet_flow", {"_": true})
     ->Promise.then(result => {

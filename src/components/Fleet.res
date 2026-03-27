@@ -24,7 +24,9 @@ let renderBotCard = (bot: botState): Tea_Vdom.t<msg> => {
 
   div(
     list{
-      Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-gray-500 transition-colors"),
+      Attrs.class_(
+        "bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-gray-500 transition-colors",
+      ),
       Attrs.role("article"),
       Attrs.ariaLabel(`${label} — ${statusText}`),
     },
@@ -37,16 +39,10 @@ let renderBotCard = (bot: botState): Tea_Vdom.t<msg> => {
             list{Attrs.class_("flex items-center gap-1.5")},
             list{
               span(
-                list{
-                  Attrs.class_("text-xs text-gray-500"),
-                  Attrs.prop("aria-hidden", "true"),
-                },
+                list{Attrs.class_("text-xs text-gray-500"), Attrs.prop("aria-hidden", "true")},
                 list{text(icon)},
               ),
-              span(
-                list{Attrs.class_("text-sm font-medium text-gray-200")},
-                list{text(label)},
-              ),
+              span(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text(label)}),
             },
           ),
           span(
@@ -60,10 +56,7 @@ let renderBotCard = (bot: botState): Tea_Vdom.t<msg> => {
         },
       ),
       // Description
-      div(
-        list{Attrs.class_("text-xs text-gray-500 mb-3")},
-        list{text(desc)},
-      ),
+      div(list{Attrs.class_("text-xs text-gray-500 mb-3")}, list{text(desc)}),
       // Metrics row
       div(
         list{Attrs.class_("flex justify-between text-xs")},
@@ -217,22 +210,18 @@ let renderFinding = (finding: fleetFinding): Tea_Vdom.t<msg> => {
   div(
     list{
       Attrs.class_(
-        `flex items-center gap-4 p-3 border-b border-gray-800 ${finding.resolved ? "opacity-50" : ""}`,
+        `flex items-center gap-4 p-3 border-b border-gray-800 ${finding.resolved
+            ? "opacity-50"
+            : ""}`,
       ),
       Attrs.role("row"),
       Attrs.ariaLabel(`${finding.summary} — ${tierText} — ${assignedText}`),
     },
     list{
       // Tier badge
-      span(
-        list{Attrs.class_(`text-xs px-2 py-0.5 rounded ${tierBadge}`)},
-        list{text(tierText)},
-      ),
+      span(list{Attrs.class_(`text-xs px-2 py-0.5 rounded ${tierBadge}`)}, list{text(tierText)}),
       // Repo name
-      span(
-        list{Attrs.class_("text-xs text-gray-500 w-32 truncate")},
-        list{text(finding.repoName)},
-      ),
+      span(list{Attrs.class_("text-xs text-gray-500 w-32 truncate")}, list{text(finding.repoName)}),
       // Summary
       span(
         list{Attrs.class_("flex-1 text-sm text-gray-300 truncate")},
@@ -244,10 +233,7 @@ let renderFinding = (finding: fleetFinding): Tea_Vdom.t<msg> => {
         list{text(`${Float.toFixed(finding.confidence *. 100.0, ~digits=0)}%`)},
       ),
       // Assigned bot
-      span(
-        list{Attrs.class_("text-xs text-gray-500 w-24 text-right")},
-        list{text(assignedText)},
-      ),
+      span(list{Attrs.class_("text-xs text-gray-500 w-24 text-right")}, list{text(assignedText)}),
     },
   )
 }
@@ -281,15 +267,14 @@ let renderDashboard = (fleet: fleetState): Tea_Vdom.t<msg> => {
             ),
             div(
               list{Attrs.class_("text-gray-400")},
-              list{text(`Avg confidence: ${Float.toFixed(health.avgConfidence *. 100.0, ~digits=0)}%`)},
+              list{
+                text(`Avg confidence: ${Float.toFixed(health.avgConfidence *. 100.0, ~digits=0)}%`),
+              },
             ),
           },
         )
       | None =>
-        div(
-          list{Attrs.class_("text-sm text-gray-500")},
-          list{text("No health data available")},
-        )
+        div(list{Attrs.class_("text-sm text-gray-500")}, list{text("No health data available")})
       },
       // Two-column layout: bot grid + safety triangle
       div(
@@ -306,11 +291,7 @@ let renderDashboard = (fleet: fleetState): Tea_Vdom.t<msg> => {
           ),
           // Safety triangle (right column)
           switch fleet.health {
-          | Some(health) =>
-            div(
-              list{Attrs.class_("w-80")},
-              list{renderSafetyTriangle(health)},
-            )
+          | Some(health) => div(list{Attrs.class_("w-80")}, list{renderSafetyTriangle(health)})
           | None => noNode
           },
         },
@@ -335,7 +316,9 @@ let renderFindings = (fleet: fleetState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-600"),
+              Attrs.class_(
+                "flex-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 placeholder-gray-600",
+              ),
               Attrs.placeholder("Filter findings by repo or summary..."),
               Attrs.ariaLabel("Filter findings"),
               Attrs.value(fleet.filterText),
@@ -359,7 +342,12 @@ let renderFindings = (fleet: fleetState): Tea_Vdom.t<msg> => {
         list{
           // Header
           div(
-            list{Attrs.class_("flex items-center gap-4 p-3 bg-gray-900 border-b border-gray-700 text-xs text-gray-500"), Attrs.role("row")},
+            list{
+              Attrs.class_(
+                "flex items-center gap-4 p-3 bg-gray-900 border-b border-gray-700 text-xs text-gray-500",
+              ),
+              Attrs.role("row"),
+            },
             list{
               span(list{Attrs.class_("w-20")}, list{text("Tier")}),
               span(list{Attrs.class_("w-32")}, list{text("Repo")}),
@@ -429,24 +417,28 @@ let renderDispatch = (fleet: fleetState): Tea_Vdom.t<msg> => {
           ),
           div(
             list{Attrs.class_("space-y-2")},
-            fleet.bots->Array.map(bot => {
-              let assignedToBot = fleet.findings->Array.filter(f =>
-                f.assignedBot === Some(bot.id)
-              )->Array.length
-              let resolvedByBot = fleet.findings->Array.filter(f =>
-                f.assignedBot === Some(bot.id) && f.resolved
-              )->Array.length
+            fleet.bots
+            ->Array.map(bot => {
+              let assignedToBot =
+                fleet.findings
+                ->Array.filter(f => f.assignedBot === Some(bot.id))
+                ->Array.length
+              let resolvedByBot =
+                fleet.findings
+                ->Array.filter(f => f.assignedBot === Some(bot.id) && f.resolved)
+                ->Array.length
               let botName = FleetEngine.botLabel(bot.id)
               div(
                 list{
                   Attrs.class_("flex items-center gap-3"),
-                  Attrs.ariaLabel(`${botName}: ${Int.toString(assignedToBot)} assigned, ${Int.toString(resolvedByBot)} resolved`),
+                  Attrs.ariaLabel(
+                    `${botName}: ${Int.toString(assignedToBot)} assigned, ${Int.toString(
+                        resolvedByBot,
+                      )} resolved`,
+                  ),
                 },
                 list{
-                  div(
-                    list{Attrs.class_("w-28 text-sm text-gray-300")},
-                    list{text(botName)},
-                  ),
+                  div(list{Attrs.class_("w-28 text-sm text-gray-300")}, list{text(botName)}),
                   div(
                     list{Attrs.class_("flex-1 h-3 bg-gray-800 rounded-full overflow-hidden")},
                     list{
@@ -475,7 +467,8 @@ let renderDispatch = (fleet: fleetState): Tea_Vdom.t<msg> => {
                   ),
                 },
               )
-            })->List.fromArray,
+            })
+            ->List.fromArray,
           ),
         },
       ),
@@ -501,7 +494,8 @@ let renderTabs = (active: fleetCategory): Tea_Vdom.t<msg> => {
       Attrs.role("tablist"),
       Attrs.ariaLabel("Fleet panel sections"),
     },
-    tabs->Array.map(tab => {
+    tabs
+    ->Array.map(tab => {
       let isActive = tab === active
       button(
         list{
@@ -516,7 +510,8 @@ let renderTabs = (active: fleetCategory): Tea_Vdom.t<msg> => {
         },
         list{text(FleetEngine.categoryLabel(tab))},
       )
-    })->List.fromArray,
+    })
+    ->List.fromArray,
   )
 }
 
@@ -544,10 +539,7 @@ let view = (fleet: fleetState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("text-lg font-medium text-gray-200")},
                 list{text("Gitbot Fleet")},
               ),
-              span(
-                list{Attrs.class_("text-xs text-gray-500")},
-                list{text("6-bot orchestration")},
-              ),
+              span(list{Attrs.class_("text-xs text-gray-500")}, list{text("6-bot orchestration")}),
             },
           ),
           div(
@@ -555,7 +547,9 @@ let view = (fleet: fleetState): Tea_Vdom.t<msg> => {
             list{
               button(
                 list{
-                  Attrs.class_("px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500"),
+                  Attrs.class_(
+                    "px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
+                  ),
                   Attrs.ariaLabel("Refresh fleet status"),
                   Events.onClick(Fleet(LoadFleet)),
                 },
@@ -563,7 +557,9 @@ let view = (fleet: fleetState): Tea_Vdom.t<msg> => {
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700"),
+                  Attrs.class_(
+                    "px-3 py-1 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700",
+                  ),
                   Attrs.ariaLabel("Close Fleet panel"),
                   Events.onClick(PanelSwitcher(ClosePanels)),
                 },
@@ -587,7 +583,10 @@ let view = (fleet: fleetState): Tea_Vdom.t<msg> => {
               list{Attrs.class_("text-center text-gray-500 mt-12")},
               list{
                 div(list{Attrs.class_("text-4xl mb-4")}, list{text("Fleet")}),
-                div(list{Attrs.class_("text-sm mb-6")}, list{text("6-bot gitbot-fleet orchestration")}),
+                div(
+                  list{Attrs.class_("text-sm mb-6")},
+                  list{text("6-bot gitbot-fleet orchestration")},
+                ),
                 button(
                   list{
                     Attrs.class_("px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-500"),
@@ -614,7 +613,12 @@ let view = (fleet: fleetState): Tea_Vdom.t<msg> => {
           switch fleet.error {
           | Some(e) =>
             div(
-              list{Attrs.class_("mt-4 p-3 bg-red-900/30 border border-red-700 rounded text-sm text-red-300"), Attrs.role("alert")},
+              list{
+                Attrs.class_(
+                  "mt-4 p-3 bg-red-900/30 border border-red-700 rounded text-sm text-red-300",
+                ),
+                Attrs.role("alert"),
+              },
               list{text(e)},
             )
           | None => noNode

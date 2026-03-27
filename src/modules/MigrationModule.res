@@ -92,8 +92,21 @@ let moduleConfig = {
     {"name": "verisimdb", "type": "api", "target": "http://localhost:8080/api/v1"},
   ],
   "panelMapping": {
-    "panelL": ["deprecated_apis", "config_format", "version_requirements", "proof_obligations", "merge_conflicts"],
+    "panelL": [
+      "deprecated_apis",
+      "config_format",
+      "version_requirements",
+      "proof_obligations",
+      "merge_conflicts",
+    ],
     "panelN": ["migration_order", "replacement_strategy", "merge_reasoning", "safety_routing"],
-    "panelW": ["health_dashboard", "comparison_cards", "performance_metrics", "review_queue", "merge_timeline", "aggregation_charts"],
+    "panelW": [
+      "health_dashboard",
+      "comparison_cards",
+      "performance_metrics",
+      "review_queue",
+      "merge_timeline",
+      "aggregation_charts",
+    ],
   },
 }

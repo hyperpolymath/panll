@@ -13,7 +13,7 @@ open Tea.Html
 open VideoCoordinationModel
 open VideoCoordinationEngine
 
-let viewBatch = (batch) => {
+let viewBatch = batch => {
   div(
     list{Attrs.class_("p-4 bg-gray-900 rounded-lg border border-gray-800 mb-4")},
     list{
@@ -56,13 +56,11 @@ let viewBatch = (batch) => {
         list{Attrs.class_("text-xs text-gray-500 flex justify-between")},
         list{
           text(
-            (batch.processedFiles->Belt.Int.toString ++ (" / " ++ batch.totalFiles->Belt.Int.toString)),
+            batch.processedFiles->Belt.Int.toString ++
+              (" / " ++
+              batch.totalFiles->Belt.Int.toString),
           ),
-          text(
-            batch.failedFiles > 0
-              ? (batch.failedFiles->Belt.Int.toString ++ " failed")
-              : "",
-          ),
+          text(batch.failedFiles > 0 ? batch.failedFiles->Belt.Int.toString ++ " failed" : ""),
         },
       ),
     },
@@ -98,10 +96,14 @@ let view = (state: videoCoordinationState) => {
           div(
             list{Attrs.class_("text-right")},
             list{
-              div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider")}, list{text("Daily Quota")}),
-              div(list{Attrs.class_("text-lg font-mono text-gray-300")}, list{
-                text("750 GB Limit")
-              }),
+              div(
+                list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider")},
+                list{text("Daily Quota")},
+              ),
+              div(
+                list{Attrs.class_("text-lg font-mono text-gray-300")},
+                list{text("750 GB Limit")},
+              ),
             },
           ),
         },
@@ -114,7 +116,7 @@ let view = (state: videoCoordinationState) => {
               div(
                 list{Attrs.class_("text-center text-gray-600 mt-20")},
                 list{text("No active transfers. Start a batch via CLI or Provisioner.")},
-              )
+              ),
             }
           : state.activeBatches->List.map(viewBatch),
       ),

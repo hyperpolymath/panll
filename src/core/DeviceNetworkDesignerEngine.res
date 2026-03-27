@@ -37,8 +37,7 @@ let countDevicesByType = (devices: array<deviceNode>, deviceType: string): int =
   devices->Array.filter(d => d.deviceType === deviceType)->Array.length
 
 /// Count total wire connections.
-let countConnections = (connections: array<wireConnection>): int =>
-  connections->Array.length
+let countConnections = (connections: array<wireConnection>): int => connections->Array.length
 
 /// Produce a human-readable validation summary string.
 /// Returns "No validation run" if no result is available.
@@ -49,6 +48,8 @@ let validationSummary = (validation: option<networkValidation>): string =>
       let status = v.valid ? "PASS" : "FAIL"
       let errorCount = v.errors->Array.length
       let warningCount = v.warnings->Array.length
-      `${status}: ${Int.toString(v.deviceCount)} devices, ${Int.toString(v.connectionCount)} connections, ${Int.toString(errorCount)} errors, ${Int.toString(warningCount)} warnings`
+      `${status}: ${Int.toString(v.deviceCount)} devices, ${Int.toString(
+          v.connectionCount,
+        )} connections, ${Int.toString(errorCount)} errors, ${Int.toString(warningCount)} warnings`
     }
   }

@@ -34,9 +34,7 @@ type grooveCapability = {
 
 /// Render a single groove capability as a status row.
 let renderCapability = (cap: grooveCapability): Tea_Vdom.t<msg> => {
-  let compatClass = cap.panelCompatible
-    ? "text-emerald-400"
-    : "text-gray-600"
+  let compatClass = cap.panelCompatible ? "text-emerald-400" : "text-gray-600"
   let protocolBadge = switch cap.protocol {
   | "webrtc" => "bg-purple-900/50 text-purple-300 border-purple-700"
   | "websocket" => "bg-blue-900/50 text-blue-300 border-blue-700"
@@ -48,20 +46,14 @@ let renderCapability = (cap: grooveCapability): Tea_Vdom.t<msg> => {
     list{Attrs.class_("flex items-center gap-3 py-1.5 px-3 border-b border-gray-800/50")},
     list{
       // Capability name
-      span(
-        list{Attrs.class_("text-sm text-gray-300 w-28")},
-        list{text(cap.name)},
-      ),
+      span(list{Attrs.class_("text-sm text-gray-300 w-28")}, list{text(cap.name)}),
       // Protocol badge
       span(
         list{Attrs.class_(`text-xs px-1.5 py-0.5 rounded border ${protocolBadge}`)},
         list{text(cap.protocol)},
       ),
       // Endpoint
-      span(
-        list{Attrs.class_("text-xs text-gray-500 font-mono flex-1")},
-        list{text(cap.endpoint)},
-      ),
+      span(list{Attrs.class_("text-xs text-gray-500 font-mono flex-1")}, list{text(cap.endpoint)}),
       // Panel compatible indicator
       span(
         list{
@@ -100,10 +92,7 @@ let renderConnectionStatus = (connection: BurbleModel.connectionState): Tea_Vdom
         },
       ),
       // Server URL
-      span(
-        list{Attrs.class_("text-xs text-gray-600 font-mono")},
-        list{text("localhost:6473")},
-      ),
+      span(list{Attrs.class_("text-xs text-gray-600 font-mono")}, list{text("localhost:6473")}),
     },
   )
 }
@@ -149,10 +138,34 @@ let renderStatsGrid = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
 /// These are rendered as a summary of what the Burble server offers.
 let burbleCapabilities: array<grooveCapability> = [
   {name: "Voice", capType: "voice", protocol: "webrtc", endpoint: "/voice", panelCompatible: true},
-  {name: "Text", capType: "text", protocol: "websocket", endpoint: "/socket/websocket", panelCompatible: true},
-  {name: "Presence", capType: "presence", protocol: "websocket", endpoint: "/socket/websocket", panelCompatible: true},
-  {name: "Spatial", capType: "spatial-audio", protocol: "webrtc", endpoint: "/voice", panelCompatible: false},
-  {name: "Recording", capType: "recording", protocol: "http", endpoint: "/api/v1/recordings", panelCompatible: true},
+  {
+    name: "Text",
+    capType: "text",
+    protocol: "websocket",
+    endpoint: "/socket/websocket",
+    panelCompatible: true,
+  },
+  {
+    name: "Presence",
+    capType: "presence",
+    protocol: "websocket",
+    endpoint: "/socket/websocket",
+    panelCompatible: true,
+  },
+  {
+    name: "Spatial",
+    capType: "spatial-audio",
+    protocol: "webrtc",
+    endpoint: "/voice",
+    panelCompatible: false,
+  },
+  {
+    name: "Recording",
+    capType: "recording",
+    protocol: "http",
+    endpoint: "/api/v1/recordings",
+    panelCompatible: true,
+  },
   {name: "TTS", capType: "tts", protocol: "http", endpoint: "/api/v1/tts", panelCompatible: false},
   {name: "STT", capType: "stt", protocol: "http", endpoint: "/api/v1/stt", panelCompatible: false},
 ]
@@ -169,17 +182,19 @@ let renderGrooveCapabilities = (connected: bool): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-2")},
             list{
-              span(list{Attrs.class_("text-sm text-gray-300 font-medium")}, list{text("Groove Capabilities")}),
               span(
-                list{Attrs.class_("text-xs text-gray-600")},
-                list{text("/.well-known/groove")},
+                list{Attrs.class_("text-sm text-gray-300 font-medium")},
+                list{text("Groove Capabilities")},
               ),
+              span(list{Attrs.class_("text-xs text-gray-600")}, list{text("/.well-known/groove")}),
             },
           ),
           // Refresh button
           button(
             list{
-              Attrs.class_("px-2 py-1 text-xs bg-gray-800 text-gray-400 rounded hover:bg-gray-700 border border-gray-700 transition-colors"),
+              Attrs.class_(
+                "px-2 py-1 text-xs bg-gray-800 text-gray-400 rounded hover:bg-gray-700 border border-gray-700 transition-colors",
+              ),
               Events.onClick(Burble(BurbleModel.ConnectionChanged(BurbleModel.Connecting))),
               Attrs.title("Re-probe groove endpoint"),
             },
@@ -190,12 +205,10 @@ let renderGrooveCapabilities = (connected: bool): Tea_Vdom.t<msg> => {
       // Capability list (dimmed if disconnected)
       div(
         list{Attrs.class_(connected ? "" : "opacity-50")},
-        list{
-          ...burbleCapabilities
-          ->Array.map(cap => renderCapability(cap))
-          ->List.fromArray
-          ->List.toArray,
-        }
+        burbleCapabilities
+        ->Array.map(cap => renderCapability(cap))
+        ->List.fromArray
+        ->List.toArray
         ->List.fromArray,
       ),
     },
@@ -246,13 +259,18 @@ let view = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              div(list{Attrs.class_("text-lg font-medium text-gray-200")}, list{text("Burble Server Status")}),
+              div(
+                list{Attrs.class_("text-lg font-medium text-gray-200")},
+                list{text("Burble Server Status")},
+              ),
               span(list{Attrs.class_("text-xs text-gray-500")}, list{text("groove-aware")}),
             },
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors"),
+              Attrs.class_(
+                "px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors",
+              ),
               Events.onClick(PanelSwitcher(ClosePanels)),
             },
             list{text("Close")},

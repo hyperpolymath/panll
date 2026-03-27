@@ -10,28 +10,31 @@ open Msg
 open Tea.Html
 
 /// Render a category tab button for the UMS panel.
-let renderTab = (
-  label: string,
-  cat: umsCategory,
-  active: umsCategory,
-): Tea_Vdom.t<msg> => {
+let renderTab = (label: string, cat: umsCategory, active: umsCategory): Tea_Vdom.t<msg> => {
   let isActive = cat === active
   let cls = isActive
     ? "px-3 py-1.5 text-xs font-medium bg-gray-700 text-white rounded"
     : "px-3 py-1.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-800 rounded cursor-pointer"
-  button(
-    list{Attrs.class_(cls), Events.onClick(Ums(SetUmsCategory(cat)))},
-    list{text(label)},
-  )
+  button(list{Attrs.class_(cls), Events.onClick(Ums(SetUmsCategory(cat)))}, list{text(label)})
 }
 
 /// Render a project card with name, stats, and validation badge.
 let renderProjectCard = (project: modProject, isSelected: bool): Tea_Vdom.t<msg> => {
-  let borderCls = if isSelected { "border-cyan-400" } else { "border-gray-700" }
-  let validBadge = if project.validated { "text-emerald-400" } else { "text-gray-500" }
+  let borderCls = if isSelected {
+    "border-cyan-400"
+  } else {
+    "border-gray-700"
+  }
+  let validBadge = if project.validated {
+    "text-emerald-400"
+  } else {
+    "text-gray-500"
+  }
   div(
     list{
-      Attrs.class_(`p-3 bg-gray-800 rounded border ${borderCls} cursor-pointer hover:border-gray-500`),
+      Attrs.class_(
+        `p-3 bg-gray-800 rounded border ${borderCls} cursor-pointer hover:border-gray-500`,
+      ),
       Events.onClick(Ums(SelectProject(project.id))),
     },
     list{
@@ -41,7 +44,15 @@ let renderProjectCard = (project: modProject, isSelected: bool): Tea_Vdom.t<msg>
           span(list{Attrs.class_("text-sm font-medium text-gray-100")}, list{text(project.name)}),
           span(
             list{Attrs.class_(`text-xs ${validBadge}`)},
-            list{text(if project.validated { "Validated" } else { "Unvalidated" })},
+            list{
+              text(
+                if project.validated {
+                  "Validated"
+                } else {
+                  "Unvalidated"
+                },
+              ),
+            },
           ),
         },
       ),
@@ -53,9 +64,18 @@ let renderProjectCard = (project: modProject, isSelected: bool): Tea_Vdom.t<msg>
         list{Attrs.class_("flex items-center gap-3 text-xs")},
         list{
           span(list{Attrs.class_("text-gray-500")}, list{text(`v${project.version}`)}),
-          span(list{Attrs.class_("text-gray-500")}, list{text(`${Int.toString(project.levelCount)} levels`)}),
-          span(list{Attrs.class_("text-gray-500")}, list{text(`${Int.toString(project.puzzleCount)} puzzles`)}),
-          span(list{Attrs.class_("text-gray-500")}, list{text(`${Int.toString(project.assetCount)} assets`)}),
+          span(
+            list{Attrs.class_("text-gray-500")},
+            list{text(`${Int.toString(project.levelCount)} levels`)},
+          ),
+          span(
+            list{Attrs.class_("text-gray-500")},
+            list{text(`${Int.toString(project.puzzleCount)} puzzles`)},
+          ),
+          span(
+            list{Attrs.class_("text-gray-500")},
+            list{text(`${Int.toString(project.assetCount)} assets`)},
+          ),
         },
       ),
     },
@@ -74,7 +94,9 @@ let renderProjects = (state: umsState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500"),
+              Attrs.class_(
+                "flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500",
+              ),
               Attrs.placeholder("Filter projects..."),
               Attrs.value(state.filterText),
               Events.onInput(text => Ums(SetUmsFilter(text))),
@@ -88,7 +110,12 @@ let renderProjects = (state: umsState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("flex items-center gap-4 text-xs text-gray-400")},
         list{
           span(list{}, list{text(`${Int.toString(Array.length(filtered))} projects`)}),
-          span(list{}, list{text(`${Int.toString(UmsEngine.validatedProjectCount(state.projects))} validated`)}),
+          span(
+            list{},
+            list{
+              text(`${Int.toString(UmsEngine.validatedProjectCount(state.projects))} validated`),
+            },
+          ),
         },
       ),
       // Project cards
@@ -122,7 +149,11 @@ let renderProjects = (state: umsState): Tea_Vdom.t<msg> => {
 let renderValidationRow = (result: abiValidationResult): Tea_Vdom.t<msg> => {
   let statusCls = UmsEngine.validationStatusColour(result)
   let proofItem = (label: string, passed: bool) => {
-    let cls = if passed { "text-emerald-400" } else { "text-red-400" }
+    let cls = if passed {
+      "text-emerald-400"
+    } else {
+      "text-red-400"
+    }
     span(list{Attrs.class_(`text-xs ${cls}`)}, list{text(label)})
   }
   div(
@@ -132,7 +163,10 @@ let renderValidationRow = (result: abiValidationResult): Tea_Vdom.t<msg> => {
         list{Attrs.class_("flex items-center justify-between mb-2")},
         list{
           span(list{Attrs.class_("text-sm text-gray-200")}, list{text(`Level: ${result.levelId}`)}),
-          span(list{Attrs.class_(`text-xs ${statusCls}`)}, list{text(UmsEngine.validationStatusLabel(result))}),
+          span(
+            list{Attrs.class_(`text-xs ${statusCls}`)},
+            list{text(UmsEngine.validationStatusLabel(result))},
+          ),
         },
       ),
       div(
@@ -149,12 +183,7 @@ let renderValidationRow = (result: abiValidationResult): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("mt-2 space-y-1")},
           result.errors
-          ->Array.map(err =>
-            div(
-              list{Attrs.class_("text-xs text-red-300")},
-              list{text(err)},
-            )
-          )
+          ->Array.map(err => div(list{Attrs.class_("text-xs text-red-300")}, list{text(err)}))
           ->List.fromArray,
         )
       } else {
@@ -176,21 +205,31 @@ let renderAbiValidator = (state: umsState): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+              ),
               Events.onClick(Ums(ValidateAll)),
             },
             list{text("Validate All Levels")},
           ),
           span(
             list{Attrs.class_("text-xs text-gray-400")},
-            list{text(`${Int.toString(passedCount)}/${Int.toString(totalCount)} levels pass all proofs`)},
+            list{
+              text(
+                `${Int.toString(passedCount)}/${Int.toString(totalCount)} levels pass all proofs`,
+              ),
+            },
           ),
         },
       ),
       // Validation results
       if totalCount === 0 {
         div(
-          list{Attrs.class_("text-center text-gray-500 text-sm py-8 border border-dashed border-gray-700 rounded")},
+          list{
+            Attrs.class_(
+              "text-center text-gray-500 text-sm py-8 border border-dashed border-gray-700 rounded",
+            ),
+          },
           list{text("No validation results — click 'Validate All Levels' to run ABI proofs")},
         )
       } else {
@@ -210,7 +249,9 @@ let renderTemplateCard = (tmpl: modTemplate): Tea_Vdom.t<msg> => {
   let catCls = UmsEngine.templateCategoryColour(tmpl.category)
   div(
     list{
-      Attrs.class_("p-3 bg-gray-800 rounded border border-gray-700 hover:border-gray-500 cursor-pointer"),
+      Attrs.class_(
+        "p-3 bg-gray-800 rounded border border-gray-700 hover:border-gray-500 cursor-pointer",
+      ),
       Events.onClick(Ums(InstantiateTemplate(tmpl.id))),
     },
     list{
@@ -248,7 +289,9 @@ let renderTemplates = (state: umsState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500"),
+              Attrs.class_(
+                "flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500",
+              ),
               Attrs.placeholder("Filter templates..."),
               Attrs.value(state.filterText),
               Events.onInput(text => Ums(SetUmsFilter(text))),
@@ -300,7 +343,9 @@ let renderAssets = (state: umsState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500"),
+              Attrs.class_(
+                "flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500",
+              ),
               Attrs.placeholder("Filter assets..."),
               Attrs.value(state.filterText),
               Events.onInput(text => Ums(SetUmsFilter(text))),
@@ -309,7 +354,9 @@ let renderAssets = (state: umsState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+              Attrs.class_(
+                "px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+              ),
               Events.onClick(Ums(ImportAsset(""))),
             },
             list{text("Import Asset")},
@@ -361,8 +408,14 @@ let renderAssets = (state: umsState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("p-2 bg-gray-800 rounded border border-gray-700")},
               list{
-                div(list{Attrs.class_("text-xs text-gray-100 font-medium truncate")}, list{text(asset.name)}),
-                div(list{Attrs.class_(`text-xs ${typeCls}`)}, list{text(UmsEngine.assetTypeLabel(asset.assetType))}),
+                div(
+                  list{Attrs.class_("text-xs text-gray-100 font-medium truncate")},
+                  list{text(asset.name)},
+                ),
+                div(
+                  list{Attrs.class_(`text-xs ${typeCls}`)},
+                  list{text(UmsEngine.assetTypeLabel(asset.assetType))},
+                ),
                 div(
                   list{Attrs.class_("text-xs text-gray-600")},
                   list{text(`${Int.toString(asset.sizeBytes / 1024)}KB`)},
@@ -391,7 +444,10 @@ let renderDistributionTarget = (target: distributionTarget): Tea_Vdom.t<msg> => 
   div(
     list{Attrs.class_("flex items-center gap-3 p-3 bg-gray-800 rounded border border-gray-700")},
     list{
-      span(list{Attrs.class_(`text-sm font-medium ${platCls}`)}, list{text(UmsEngine.platformLabel(target.platform))}),
+      span(
+        list{Attrs.class_(`text-sm font-medium ${platCls}`)},
+        list{text(UmsEngine.platformLabel(target.platform))},
+      ),
       span(list{Attrs.class_("text-xs text-gray-400 flex-1 truncate")}, list{text(target.url)}),
       span(list{Attrs.class_("text-xs text-gray-500")}, list{text(`v${target.version}`)}),
       if target.lastPublished !== "" {
@@ -401,7 +457,9 @@ let renderDistributionTarget = (target: distributionTarget): Tea_Vdom.t<msg> => 
       },
       button(
         list{
-          Attrs.class_("px-2 py-1 text-xs bg-purple-700 text-white rounded hover:bg-purple-600 cursor-pointer"),
+          Attrs.class_(
+            "px-2 py-1 text-xs bg-purple-700 text-white rounded hover:bg-purple-600 cursor-pointer",
+          ),
           Events.onClick(Ums(PublishMod)),
         },
         list{text("Publish")},
@@ -421,15 +479,21 @@ let renderDistribution = (state: umsState): Tea_Vdom.t<msg> => {
         list{
           span(list{Attrs.class_("text-sm text-gray-200")}, list{text("Distribution Targets")}),
           switch state.selectedProjectId {
-          | Some(id) => span(list{Attrs.class_("text-xs text-gray-500")}, list{text(`Project: ${id}`)})
-          | None => span(list{Attrs.class_("text-xs text-gray-500")}, list{text("No project selected")})
+          | Some(id) =>
+            span(list{Attrs.class_("text-xs text-gray-500")}, list{text(`Project: ${id}`)})
+          | None =>
+            span(list{Attrs.class_("text-xs text-gray-500")}, list{text("No project selected")})
           },
         },
       ),
       // Targets
       if Array.length(state.distributionTargets) === 0 {
         div(
-          list{Attrs.class_("text-center text-gray-500 text-sm py-8 border border-dashed border-gray-700 rounded")},
+          list{
+            Attrs.class_(
+              "text-center text-gray-500 text-sm py-8 border border-dashed border-gray-700 rounded",
+            ),
+          },
           list{text("No distribution targets configured")},
         )
       } else {
@@ -463,7 +527,9 @@ let renderApiReference = (state: umsState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500"),
+              Attrs.class_(
+                "flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500",
+              ),
               Attrs.placeholder("Search API reference..."),
               Attrs.value(state.filterText),
               Events.onInput(text => Ums(SetUmsFilter(text))),
@@ -472,7 +538,9 @@ let renderApiReference = (state: umsState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+              Attrs.class_(
+                "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+              ),
               Events.onClick(Ums(LoadApiReference)),
             },
             list{text("Refresh")},
@@ -510,7 +578,10 @@ let renderApiReference = (state: umsState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center justify-between mb-1")},
                   list{
-                    span(list{Attrs.class_("text-sm font-medium text-cyan-400 font-mono")}, list{text(entry.name)}),
+                    span(
+                      list{Attrs.class_("text-sm font-medium text-cyan-400 font-mono")},
+                      list{text(entry.name)},
+                    ),
                     span(list{Attrs.class_("text-xs text-gray-500")}, list{text(entry.category)}),
                   },
                 ),
@@ -551,10 +622,8 @@ let renderLevelArchitectSummary = (la: levelArchitectState): Tea_Vdom.t<msg> => 
   let validationBadge = switch la.umsValidation {
   | Some(v) if v.allPassed =>
     span(list{Attrs.class_("text-xs text-emerald-400")}, list{text("ABI: ALL PASSED")})
-  | Some(_) =>
-    span(list{Attrs.class_("text-xs text-red-400")}, list{text("ABI: HAS FAILURES")})
-  | None =>
-    span(list{Attrs.class_("text-xs text-gray-500")}, list{text("ABI: Not validated")})
+  | Some(_) => span(list{Attrs.class_("text-xs text-red-400")}, list{text("ABI: HAS FAILURES")})
+  | None => span(list{Attrs.class_("text-xs text-gray-500")}, list{text("ABI: Not validated")})
   }
   div(
     list{Attrs.class_("p-3 bg-gray-800/50 rounded border border-gray-700/50")},
@@ -562,7 +631,10 @@ let renderLevelArchitectSummary = (la: levelArchitectState): Tea_Vdom.t<msg> => 
       div(
         list{Attrs.class_("flex items-center justify-between mb-1")},
         list{
-          span(list{Attrs.class_("text-xs font-medium text-gray-300")}, list{text("Level Architect")}),
+          span(
+            list{Attrs.class_("text-xs font-medium text-gray-300")},
+            list{text("Level Architect")},
+          ),
           button(
             list{
               Attrs.class_("text-xs text-cyan-400 hover:text-cyan-300 cursor-pointer"),
@@ -575,7 +647,10 @@ let renderLevelArchitectSummary = (la: levelArchitectState): Tea_Vdom.t<msg> => 
       div(
         list{Attrs.class_("flex items-center gap-3 text-xs")},
         list{
-          span(list{Attrs.class_("text-gray-400")}, list{text(`${Int.toString(entityCount)} entities`)}),
+          span(
+            list{Attrs.class_("text-gray-400")},
+            list{text(`${Int.toString(entityCount)} entities`)},
+          ),
           span(list{Attrs.class_("text-gray-400")}, list{text(`${la.levelName}`)}),
           validationBadge,
         },
@@ -610,11 +685,11 @@ let view = (state: umsState, ~levelArchitect: levelArchitectState): Tea_Vdom.t<m
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-lg font-semibold text-gray-100")}, list{text("Universal Modding Studio")}),
               span(
-                list{Attrs.class_("text-xs text-gray-500")},
-                list{text(projectName)},
+                list{Attrs.class_("text-lg font-semibold text-gray-100")},
+                list{text("Universal Modding Studio")},
               ),
+              span(list{Attrs.class_("text-xs text-gray-500")}, list{text(projectName)}),
             },
           ),
           div(
@@ -622,7 +697,9 @@ let view = (state: umsState, ~levelArchitect: levelArchitectState): Tea_Vdom.t<m
             list{
               button(
                 list{
-                  Attrs.class_("px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+                  ),
                   Events.onClick(Ums(CreateProject(""))),
                 },
                 list{text("New Project")},
@@ -660,7 +737,11 @@ let view = (state: umsState, ~levelArchitect: levelArchitectState): Tea_Vdom.t<m
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300",
+            ),
+          },
           list{
             div(
               list{Attrs.class_("flex items-center justify-between")},
@@ -700,42 +781,54 @@ let view = (state: umsState, ~levelArchitect: levelArchitectState): Tea_Vdom.t<m
           span(list{Attrs.class_("text-xs text-gray-500 mr-1")}, list{text("Open:")}),
           button(
             list{
-              Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer"),
+              Attrs.class_(
+                "px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer",
+              ),
               Events.onClick(Ums(NavigateToPanel(PanelLevelArchitect))),
             },
             list{text("Level Architect")},
           ),
           button(
             list{
-              Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer"),
+              Attrs.class_(
+                "px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer",
+              ),
               Events.onClick(Ums(NavigateToPanel(PanelDlcWorkshop))),
             },
             list{text("DLC Workshop")},
           ),
           button(
             list{
-              Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer"),
+              Attrs.class_(
+                "px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer",
+              ),
               Events.onClick(Ums(NavigateToPanel(PanelGamePreview))),
             },
             list{text("Game Preview")},
           ),
           button(
             list{
-              Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer"),
+              Attrs.class_(
+                "px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer",
+              ),
               Events.onClick(Ums(NavigateToPanel(PanelVmInspector))),
             },
             list{text("VM Inspector")},
           ),
           button(
             list{
-              Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer"),
+              Attrs.class_(
+                "px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer",
+              ),
               Events.onClick(Ums(NavigateToPanel(PanelBuildDashboard))),
             },
             list{text("Build Dashboard")},
           ),
           button(
             list{
-              Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer"),
+              Attrs.class_(
+                "px-2 py-0.5 text-xs bg-gray-800 text-cyan-400 rounded hover:bg-gray-700 cursor-pointer",
+              ),
               Events.onClick(Ums(NavigateToPanel(PanelReleaseManager))),
             },
             list{text("Release Manager")},

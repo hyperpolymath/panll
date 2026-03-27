@@ -6,10 +6,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Trigger a build for a specific target.
-let triggerBuild = (
-  target: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let triggerBuild = (target: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("build_trigger", {"target": target})
     ->Promise.then(result => {
@@ -25,9 +22,7 @@ let triggerBuild = (
 }
 
 /// Read the current build status for all targets.
-let readBuildStatus = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readBuildStatus = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("build_read_status", {"_": true})
     ->Promise.then(result => {
@@ -43,10 +38,7 @@ let readBuildStatus = (
 }
 
 /// Run the test suite for a target.
-let runTests = (
-  target: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let runTests = (target: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("build_run_tests", {"target": target})
     ->Promise.then(result => {
@@ -62,10 +54,7 @@ let runTests = (
 }
 
 /// Cancel a running build.
-let cancelBuild = (
-  target: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let cancelBuild = (target: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("build_cancel", {"target": target})
     ->Promise.then(result => {
@@ -81,9 +70,7 @@ let cancelBuild = (
 }
 
 /// Read build history.
-let readHistory = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readHistory = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("build_read_history", {"_": true})
     ->Promise.then(result => {

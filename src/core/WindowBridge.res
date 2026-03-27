@@ -112,7 +112,7 @@ let postMessage: (broadcastChannel, string) => unit = %raw(`
 ///   - callback: function called with the message data string
 ///
 /// Returns: a cleanup function (unit => unit) that removes the listener
-let onMessage: (broadcastChannel, string => unit) => (unit => unit) = %raw(`
+let onMessage: (broadcastChannel, string => unit) => unit => unit = %raw(`
   function(channel, callback) {
     try {
       var handler = function(event) {

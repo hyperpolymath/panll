@@ -87,12 +87,12 @@ let colourPanelAffinity = (colour: agentColour): panelAffinity =>
 /// Map gitbot-fleet bots to rainbow colours.
 let botToColour = (botId: FleetModel.botId): agentColour =>
   switch botId {
-  | Rhodibot => Green    // RSR compliance
+  | Rhodibot => Green // RSR compliance
   | Echidnabot => Indigo // Formal verification
   | Sustainabot => Orange // Dependency management
-  | Glambot => Violet    // UI/aesthetics
-  | Seambot => Yellow    // Integration testing
-  | Finishbot => Blue    // Documentation/completion
+  | Glambot => Violet // UI/aesthetics
+  | Seambot => Yellow // Integration testing
+  | Finishbot => Blue // Documentation/completion
   }
 
 /// All colours in rainbow order.
@@ -180,7 +180,7 @@ let fail = (agent: rainbowAgent): unit => {
 
 /// Count active agents in the rainbow.
 let activeCount = (rainbow: rainbow): int =>
-  allColours->Array.filter(c => (getAgent(rainbow, c)).active)->Array.length
+  allColours->Array.filter(c => getAgent(rainbow, c).active)->Array.length
 
 /// Get all active agents with their colours.
 let activeAgents = (rainbow: rainbow): array<(agentColour, string)> =>

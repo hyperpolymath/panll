@@ -88,8 +88,7 @@ let hasNickelContracts = (content: string): bool => {
 
 /// Check if content contains execution recipes (Hunt-level).
 let hasRecipes = (content: string): bool => {
-  String.includes(content, "recipes = {") ||
-  String.includes(content, "recipes=")
+  String.includes(content, "recipes = {") || String.includes(content, "recipes=")
 }
 
 /// Check if content declares a specific leash level.
@@ -188,6 +187,7 @@ let extractStringArray = (content: string, key: string): array<string> => {
       ->String.split(",")
       ->Array.map(s => {
         let trimmed = trim(s)
+
         // Remove surrounding quotes
         if String.startsWith(trimmed, "\"") && String.endsWith(trimmed, "\"") {
           String.slice(trimmed, ~start=1, ~end=String.length(trimmed) - 1)
@@ -253,8 +253,8 @@ let validateContractile = (content: string, ~path: string=""): k9Contractile => 
   }
 
   // Check for pedigree block
-  let hasPedigree = String.includes(content, "pedigree = {") ||
-    String.includes(content, "pedigree=")
+  let hasPedigree =
+    String.includes(content, "pedigree = {") || String.includes(content, "pedigree=")
   if !hasPedigree && !String.includes(content, "LayoutPreset") {
     // Layout files import pedigree from pedigree-layout.ncl, so they're exempt
     let _ = errors->Array.push("Missing pedigree block")
@@ -407,9 +407,12 @@ let generateKennelSchema = (
   moduleName: string,
   fields: array<(string, string, string)>,
 ): string => {
-  let fieldLines = fields->Array.map(((name, typ, defaultVal)) => {
-    `    ${name} = ${defaultVal}, # ${typ}`
-  })->Array.join("\n")
+  let fieldLines =
+    fields
+    ->Array.map(((name, typ, defaultVal)) => {
+      `    ${name} = ${defaultVal}, # ${typ}`
+    })
+    ->Array.join("\n")
 
   `# K9 Kennel Schema — auto-generated from ${moduleName} module config
 # Security: Kennel (data-only, no contracts, no execution)
@@ -455,9 +458,15 @@ let generateYardContract = (
 ): string => {
   let protoArray = protocols->Array.map(p => `"${p}"`)->Array.join(", ")
   let portValidation = if restPort > 0 || grpcPort > 0 || graphqlPort > 0 {
-    `    rest_port | std.contract.from_predicate (fun p => p >= 1024 && p <= 65535) = ${Int.toString(restPort)},
-    grpc_port | std.contract.from_predicate (fun p => p >= 1024 && p <= 65535) = ${Int.toString(grpcPort)},
-    graphql_port | std.contract.from_predicate (fun p => p >= 1024 && p <= 65535) = ${Int.toString(graphqlPort)},`
+    `    rest_port | std.contract.from_predicate (fun p => p >= 1024 && p <= 65535) = ${Int.toString(
+        restPort,
+      )},
+    grpc_port | std.contract.from_predicate (fun p => p >= 1024 && p <= 65535) = ${Int.toString(
+        grpcPort,
+      )},
+    graphql_port | std.contract.from_predicate (fun p => p >= 1024 && p <= 65535) = ${Int.toString(
+        graphqlPort,
+      )},`
   } else {
     `    rest_port = 0,
     grpc_port = 0,
@@ -502,10 +511,11 @@ ${portValidation}
 
 /// Extract configurable fields from a BoJ cartridge for Kennel schema generation.
 /// Returns (field-name, field-type, default-value) triples.
-let cartridgeToKennelFields = (
-  name: string,
-  protocols: array<string>,
-): array<(string, string, string)> => {
+let cartridgeToKennelFields = (name: string, protocols: array<string>): array<(
+  string,
+  string,
+  string,
+)> => {
   let protoStr = "[" ++ protocols->Array.map(p => `"${p}"`)->Array.join(", ") ++ "]"
   [
     ("name", "String", `"${name}"`),
@@ -529,8 +539,8 @@ let checkHuntPermission = (
   cladeSigning: bool,
   contractileContent: string,
 ): (bool, string) => {
-  let huntAllowed = String.includes(cladeIsolation, "hunt") ||
-    String.includes(cladeIsolation, "full")
+  let huntAllowed =
+    String.includes(cladeIsolation, "hunt") || String.includes(cladeIsolation, "full")
   let hasSig = String.includes(contractileContent, "signature_required = true")
 
   if !huntAllowed {

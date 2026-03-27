@@ -35,10 +35,10 @@ let addBatch = (state, source, destination, totalFiles) => {
 }
 
 /// Calculate percentage completion for a batch.
-let batchProgress = (batch) => {
+let batchProgress = batch => {
   if batch.totalFiles == 0 {
     100.0
   } else {
-    (batch.processedFiles->Belt.Int.toFloat /. batch.totalFiles->Belt.Int.toFloat) *. 100.0
+    batch.processedFiles->Belt.Int.toFloat /. batch.totalFiles->Belt.Int.toFloat *. 100.0
   }
 }

@@ -137,18 +137,18 @@ let governanceToPanel = (evt: governanceEvent): panelEvent => {
 
 /// Event topic — coarse category for filtering subscriptions.
 type eventTopic =
-  | TopicScan         // Hypatia/panic-attack findings and scans
-  | TopicHealth       // Repo and system health changes
-  | TopicBuild        // Build, compile, test results
-  | TopicGovernance   // Contractile compliance, stability
-  | TopicDatabase     // Database connection, query, drift
-  | TopicType         // TypeLL type checking results
-  | TopicProtocol     // Protocol-Squisher analysis
-  | TopicSecurity     // Security events, vault, secrets
-  | TopicWorkflow     // Automation router, fleet dispatch
-  | TopicUI           // Workspace, layout, session changes
-  | TopicTesting      // Game testing: unit, functional, soak, compat
-  | TopicSimulation   // Balance simulation, procedural generation
+  | TopicScan // Hypatia/panic-attack findings and scans
+  | TopicHealth // Repo and system health changes
+  | TopicBuild // Build, compile, test results
+  | TopicGovernance // Contractile compliance, stability
+  | TopicDatabase // Database connection, query, drift
+  | TopicType // TypeLL type checking results
+  | TopicProtocol // Protocol-Squisher analysis
+  | TopicSecurity // Security events, vault, secrets
+  | TopicWorkflow // Automation router, fleet dispatch
+  | TopicUI // Workspace, layout, session changes
+  | TopicTesting // Game testing: unit, functional, soak, compat
+  | TopicSimulation // Balance simulation, procedural generation
 
 /// Classify a panel event into its topic.
 let eventTopic = (evt: panelEvent): eventTopic =>
@@ -196,9 +196,18 @@ let topicLabel = (t: eventTopic): string =>
 
 /// All topics for display.
 let allTopics: array<eventTopic> = [
-  TopicScan, TopicHealth, TopicBuild, TopicGovernance, TopicDatabase,
-  TopicType, TopicProtocol, TopicSecurity, TopicWorkflow, TopicUI,
-  TopicTesting, TopicSimulation,
+  TopicScan,
+  TopicHealth,
+  TopicBuild,
+  TopicGovernance,
+  TopicDatabase,
+  TopicType,
+  TopicProtocol,
+  TopicSecurity,
+  TopicWorkflow,
+  TopicUI,
+  TopicTesting,
+  TopicSimulation,
 ]
 
 /// Envelope wrapping an event with metadata for tracing and debugging.
@@ -249,45 +258,150 @@ let emptyRegistry: subscriberRegistry = {
 /// Default subscriber declarations for core panels.
 let defaultSubscribers: array<subscriber> = [
   // ── Core infrastructure panels ───────────────────────────────────────
-  { cladeId: "fleet",     topics: [TopicScan, TopicHealth, TopicWorkflow],    active: true, priority: Critical },
-  { cladeId: "hypatia",   topics: [TopicScan, TopicGovernance, TopicHealth],  active: true, priority: Critical },
-  { cladeId: "databases",  topics: [TopicDatabase, TopicType],                active: true, priority: Normal },
-  { cladeId: "vql",       topics: [TopicDatabase, TopicType, TopicProtocol],  active: true, priority: Normal },
-  { cladeId: "typell",    topics: [TopicType, TopicProtocol, TopicBuild],     active: true, priority: Normal },
-  { cladeId: "security",  topics: [TopicSecurity, TopicScan],                 active: true, priority: Critical },
-  { cladeId: "workspace", topics: [TopicUI, TopicHealth],                     active: true, priority: Normal },
-  { cladeId: "automation-router", topics: [TopicWorkflow, TopicBuild, TopicGovernance], active: true, priority: Normal },
-  { cladeId: "farm",      topics: [TopicHealth],                              active: true, priority: Background },
-  { cladeId: "protocol-squisher", topics: [TopicProtocol, TopicType],         active: true, priority: Normal },
-  { cladeId: "my-lang",   topics: [TopicBuild, TopicType],                    active: true, priority: Normal },
-  { cladeId: "boj",       topics: [TopicProtocol, TopicDatabase, TopicWorkflow], active: true, priority: Normal },
-  { cladeId: "ums",       topics: [TopicBuild, TopicUI, TopicWorkflow, TopicType], active: true, priority: Normal },
-  { cladeId: "level-architect", topics: [TopicBuild, TopicUI, TopicType],     active: true, priority: Normal },
+  {
+    cladeId: "fleet",
+    topics: [TopicScan, TopicHealth, TopicWorkflow],
+    active: true,
+    priority: Critical,
+  },
+  {
+    cladeId: "hypatia",
+    topics: [TopicScan, TopicGovernance, TopicHealth],
+    active: true,
+    priority: Critical,
+  },
+  {cladeId: "databases", topics: [TopicDatabase, TopicType], active: true, priority: Normal},
+  {
+    cladeId: "vql",
+    topics: [TopicDatabase, TopicType, TopicProtocol],
+    active: true,
+    priority: Normal,
+  },
+  {
+    cladeId: "typell",
+    topics: [TopicType, TopicProtocol, TopicBuild],
+    active: true,
+    priority: Normal,
+  },
+  {cladeId: "security", topics: [TopicSecurity, TopicScan], active: true, priority: Critical},
+  {cladeId: "workspace", topics: [TopicUI, TopicHealth], active: true, priority: Normal},
+  {
+    cladeId: "automation-router",
+    topics: [TopicWorkflow, TopicBuild, TopicGovernance],
+    active: true,
+    priority: Normal,
+  },
+  {cladeId: "farm", topics: [TopicHealth], active: true, priority: Background},
+  {
+    cladeId: "protocol-squisher",
+    topics: [TopicProtocol, TopicType],
+    active: true,
+    priority: Normal,
+  },
+  {cladeId: "my-lang", topics: [TopicBuild, TopicType], active: true, priority: Normal},
+  {
+    cladeId: "boj",
+    topics: [TopicProtocol, TopicDatabase, TopicWorkflow],
+    active: true,
+    priority: Normal,
+  },
+  {
+    cladeId: "ums",
+    topics: [TopicBuild, TopicUI, TopicWorkflow, TopicType],
+    active: true,
+    priority: Normal,
+  },
+  {
+    cladeId: "level-architect",
+    topics: [TopicBuild, TopicUI, TopicType],
+    active: true,
+    priority: Normal,
+  },
   // ── Game dev testing panels (24 new panels) ──────────────────────────
-  { cladeId: "unit-test-runner",        topics: [TopicTesting, TopicBuild],               active: true, priority: Normal },
-  { cladeId: "functional-tester",       topics: [TopicTesting, TopicBuild],               active: true, priority: Normal },
-  { cladeId: "integration-tester",      topics: [TopicTesting, TopicBuild],               active: true, priority: Normal },
-  { cladeId: "regression-tester",       topics: [TopicTesting, TopicBuild],               active: true, priority: Normal },
-  { cladeId: "performance-profiler",    topics: [TopicTesting, TopicHealth],              active: true, priority: Normal },
-  { cladeId: "soak-tester",            topics: [TopicTesting, TopicHealth],              active: true, priority: Normal },
-  { cladeId: "stress-tester",          topics: [TopicTesting, TopicHealth],              active: true, priority: Normal },
-  { cladeId: "fuzz-tester",            topics: [TopicTesting, TopicSecurity],            active: true, priority: Normal },
-  { cladeId: "compatibility-checker",   topics: [TopicTesting],                           active: true, priority: Background },
-  { cladeId: "accessibility-checker",   topics: [TopicTesting, TopicUI],                  active: true, priority: Background },
-  { cladeId: "localisation-checker",    topics: [TopicTesting, TopicUI],                  active: true, priority: Background },
-  { cladeId: "balance-simulator",       topics: [TopicSimulation, TopicTesting],          active: true, priority: Normal },
-  { cladeId: "economy-simulator",       topics: [TopicSimulation],                        active: true, priority: Normal },
-  { cladeId: "ai-behaviour-tester",     topics: [TopicSimulation, TopicTesting],          active: true, priority: Normal },
-  { cladeId: "world-generator",         topics: [TopicSimulation, TopicUI],               active: true, priority: Normal },
-  { cladeId: "replay-analyser",         topics: [TopicTesting, TopicWorkflow],            active: true, priority: Background },
-  { cladeId: "feedback-collector",      topics: [TopicTesting, TopicUI],                  active: true, priority: Background },
-  { cladeId: "crash-reporter",          topics: [TopicTesting, TopicHealth, TopicSecurity], active: true, priority: Critical },
-  { cladeId: "network-tester",          topics: [TopicTesting, TopicHealth],              active: true, priority: Normal },
-  { cladeId: "save-load-tester",        topics: [TopicTesting, TopicDatabase],            active: true, priority: Normal },
-  { cladeId: "input-tester",            topics: [TopicTesting, TopicUI],                  active: true, priority: Normal },
-  { cladeId: "audio-tester",            topics: [TopicTesting],                           active: true, priority: Background },
-  { cladeId: "visual-diff-tester",      topics: [TopicTesting, TopicUI],                  active: true, priority: Normal },
-  { cladeId: "memory-profiler",         topics: [TopicTesting, TopicHealth],              active: true, priority: Normal },
+  {cladeId: "unit-test-runner", topics: [TopicTesting, TopicBuild], active: true, priority: Normal},
+  {
+    cladeId: "functional-tester",
+    topics: [TopicTesting, TopicBuild],
+    active: true,
+    priority: Normal,
+  },
+  {
+    cladeId: "integration-tester",
+    topics: [TopicTesting, TopicBuild],
+    active: true,
+    priority: Normal,
+  },
+  {
+    cladeId: "regression-tester",
+    topics: [TopicTesting, TopicBuild],
+    active: true,
+    priority: Normal,
+  },
+  {
+    cladeId: "performance-profiler",
+    topics: [TopicTesting, TopicHealth],
+    active: true,
+    priority: Normal,
+  },
+  {cladeId: "soak-tester", topics: [TopicTesting, TopicHealth], active: true, priority: Normal},
+  {cladeId: "stress-tester", topics: [TopicTesting, TopicHealth], active: true, priority: Normal},
+  {cladeId: "fuzz-tester", topics: [TopicTesting, TopicSecurity], active: true, priority: Normal},
+  {cladeId: "compatibility-checker", topics: [TopicTesting], active: true, priority: Background},
+  {
+    cladeId: "accessibility-checker",
+    topics: [TopicTesting, TopicUI],
+    active: true,
+    priority: Background,
+  },
+  {
+    cladeId: "localisation-checker",
+    topics: [TopicTesting, TopicUI],
+    active: true,
+    priority: Background,
+  },
+  {
+    cladeId: "balance-simulator",
+    topics: [TopicSimulation, TopicTesting],
+    active: true,
+    priority: Normal,
+  },
+  {cladeId: "economy-simulator", topics: [TopicSimulation], active: true, priority: Normal},
+  {
+    cladeId: "ai-behaviour-tester",
+    topics: [TopicSimulation, TopicTesting],
+    active: true,
+    priority: Normal,
+  },
+  {cladeId: "world-generator", topics: [TopicSimulation, TopicUI], active: true, priority: Normal},
+  {
+    cladeId: "replay-analyser",
+    topics: [TopicTesting, TopicWorkflow],
+    active: true,
+    priority: Background,
+  },
+  {
+    cladeId: "feedback-collector",
+    topics: [TopicTesting, TopicUI],
+    active: true,
+    priority: Background,
+  },
+  {
+    cladeId: "crash-reporter",
+    topics: [TopicTesting, TopicHealth, TopicSecurity],
+    active: true,
+    priority: Critical,
+  },
+  {cladeId: "network-tester", topics: [TopicTesting, TopicHealth], active: true, priority: Normal},
+  {
+    cladeId: "save-load-tester",
+    topics: [TopicTesting, TopicDatabase],
+    active: true,
+    priority: Normal,
+  },
+  {cladeId: "input-tester", topics: [TopicTesting, TopicUI], active: true, priority: Normal},
+  {cladeId: "audio-tester", topics: [TopicTesting], active: true, priority: Background},
+  {cladeId: "visual-diff-tester", topics: [TopicTesting, TopicUI], active: true, priority: Normal},
+  {cladeId: "memory-profiler", topics: [TopicTesting, TopicHealth], active: true, priority: Normal},
 ]
 
 /// Default registry with core subscribers.
@@ -297,47 +411,51 @@ let defaultRegistry: subscriberRegistry = {
 }
 
 /// Register a new subscriber (or reactivate an existing one).
-let subscribe = (reg: subscriberRegistry, cladeId: string, topics: array<eventTopic>): subscriberRegistry => {
+let subscribe = (
+  reg: subscriberRegistry,
+  cladeId: string,
+  topics: array<eventTopic>,
+): subscriberRegistry => {
   let exists = reg.subscribers->Array.some(s => s.cladeId == cladeId)
   let subscribers = if exists {
     reg.subscribers->Array.map(s =>
       if s.cladeId == cladeId {
-        { ...s, topics, active: true }
+        {...s, topics, active: true}
       } else {
         s
       }
     )
   } else {
-    Array.concat(reg.subscribers, [{ cladeId, topics, active: true, priority: Normal }])
+    Array.concat(reg.subscribers, [{cladeId, topics, active: true, priority: Normal}])
   }
-  { ...reg, subscribers }
+  {...reg, subscribers}
 }
 
 /// Unsubscribe a clade (deactivate, don't remove — preserves history).
 let unsubscribe = (reg: subscriberRegistry, cladeId: string): subscriberRegistry => {
   let subscribers = reg.subscribers->Array.map(s =>
-    if s.cladeId == cladeId { { ...s, active: false } } else { s }
+    if s.cladeId == cladeId {
+      {...s, active: false}
+    } else {
+      s
+    }
   )
-  { ...reg, subscribers }
+  {...reg, subscribers}
 }
 
 /// Find all active subscribers interested in a given topic.
 let subscribersForTopic = (reg: subscriberRegistry, topic: eventTopic): array<subscriber> =>
-  reg.subscribers->Array.filter(s =>
-    s.active && s.topics->Array.some(t => t == topic)
-  )
+  reg.subscribers->Array.filter(s => s.active && s.topics->Array.some(t => t == topic))
 
 /// Find all active subscribers interested in a given event.
 let subscribersForEvent = (reg: subscriberRegistry, evt: panelEvent): array<subscriber> =>
   subscribersForTopic(reg, eventTopic(evt))
 
 /// Wrap an event in an envelope and advance the registry counter.
-let wrapEvent = (
-  reg: subscriberRegistry,
-  sourceCladeId: string,
-  evt: panelEvent,
-  nowMs: float,
-): (eventEnvelope, subscriberRegistry) => {
+let wrapEvent = (reg: subscriberRegistry, sourceCladeId: string, evt: panelEvent, nowMs: float): (
+  eventEnvelope,
+  subscriberRegistry,
+) => {
   let envelope = {
     eventId: reg.nextEventId,
     sourceCladeId,
@@ -352,7 +470,7 @@ let wrapEvent = (
   } else {
     recent
   }
-  (envelope, { ...reg, nextEventId: reg.nextEventId + 1, recentEvents: trimmed })
+  (envelope, {...reg, nextEventId: reg.nextEventId + 1, recentEvents: trimmed})
 }
 
 /// Get recent events filtered by topic.
@@ -368,8 +486,7 @@ let activeSubscriberCount = (reg: subscriberRegistry): int =>
   reg.subscribers->Array.filter(s => s.active)->Array.length
 
 /// Count total events processed.
-let totalEventsProcessed = (reg: subscriberRegistry): int =>
-  reg.nextEventId - 1
+let totalEventsProcessed = (reg: subscriberRegistry): int => reg.nextEventId - 1
 
 // ════════════════════════════════════════════════════════════════════════
 // Event Batching — group envelopes by topic for efficient bulk dispatch.
@@ -398,7 +515,7 @@ let batchEvents = (envelopes: array<eventEnvelope>): array<eventBatch> => {
   // Convert back to batches — use the topic from the first envelope.
   Dict.toArray(topicGroups)->Array.filterMap(((_, envs)) => {
     switch envs[0] {
-    | Some(first) => Some({ topic: first.topic, envelopes: envs })
+    | Some(first) => Some({topic: first.topic, envelopes: envs})
     | None => None
     }
   })

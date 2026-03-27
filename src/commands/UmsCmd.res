@@ -7,9 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Load all mod projects from the UMS projects directory.
-let loadProjects = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadProjects = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("ums_load_projects", {"_": true})
     ->Promise.then(result => {
@@ -45,10 +43,7 @@ let createProject = (
 }
 
 /// Open an existing mod project by its ID.
-let openProject = (
-  projectId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let openProject = (projectId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("ums_open_project", {"projectId": projectId})
     ->Promise.then(result => {
@@ -64,10 +59,9 @@ let openProject = (
 }
 
 /// Delete a mod project by its ID.
-let deleteProject = (
-  projectId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let deleteProject = (projectId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("ums_delete_project", {"projectId": projectId})
     ->Promise.then(result => {
@@ -83,10 +77,7 @@ let deleteProject = (
 }
 
 /// Run ABI validation on a level within the current project.
-let validateLevel = (
-  levelId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let validateLevel = (levelId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("ums_validate_level", {"levelId": levelId})
     ->Promise.then(result => {
@@ -102,9 +93,7 @@ let validateLevel = (
 }
 
 /// Load available mod templates.
-let loadTemplates = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadTemplates = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("ums_load_templates", {"_": true})
     ->Promise.then(result => {
@@ -140,10 +129,7 @@ let instantiateTemplate = (
 }
 
 /// Load assets for the currently selected project.
-let loadAssets = (
-  projectId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadAssets = (projectId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("ums_load_assets", {"projectId": projectId})
     ->Promise.then(result => {
@@ -199,9 +185,7 @@ let publishMod = (
 }
 
 /// Load the modding API reference documentation.
-let loadApiReference = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadApiReference = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("ums_load_api_reference", {"_": true})
     ->Promise.then(result => {

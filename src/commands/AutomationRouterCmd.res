@@ -6,9 +6,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Load automation rules from .machine_readable/ENSAID_CONFIG.a2ml or local storage.
-let loadRules = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadRules = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("automation_load_rules", {"_": true})
     ->Promise.then(result => {
@@ -24,10 +22,7 @@ let loadRules = (
 }
 
 /// Save automation rules to local storage.
-let saveRules = (
-  rulesJson: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let saveRules = (rulesJson: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("automation_save_rules", {"rulesJson": rulesJson})
     ->Promise.then(result => {
@@ -43,10 +38,7 @@ let saveRules = (
 }
 
 /// Execute an automation rule's actions.
-let executeRule = (
-  ruleId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let executeRule = (ruleId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("automation_execute_rule", {"ruleId": ruleId})
     ->Promise.then(result => {
@@ -62,10 +54,7 @@ let executeRule = (
 }
 
 /// Load rules from .machine_readable/ENSAID_CONFIG.a2ml in the current repo.
-let loadFromRepo = (
-  repoPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadFromRepo = (repoPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("automation_load_from_repo", {"repoPath": repoPath})
     ->Promise.then(result => {
@@ -81,9 +70,7 @@ let loadFromRepo = (
 }
 
 /// Read execution history.
-let readHistory = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readHistory = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("automation_read_history", {"_": true})
     ->Promise.then(result => {

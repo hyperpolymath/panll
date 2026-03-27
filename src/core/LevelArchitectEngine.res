@@ -151,20 +151,44 @@ let securityLevelLabel = (sl: zoneSecurityLevel): string =>
 
 /// Convert Level Architect entities to UMS JSON format for validation.
 let toUmsJson = (state: levelArchitectState): string => {
-  let entitiesJson = state.entities->Array.map(e => {
-    `{"id":"${e.id}","kind":"${entityKindLabel(e.kind)}","name":"${e.name}","gridX":${Int.toString(e.gridX)},"gridY":${Int.toString(e.gridY)}}`
-  })->Array.join(",")
-  let zonesJson = state.zones->Array.map(z => {
-    `{"name":"${z.name}","startX":${Float.toString(z.startX)},"endX":${Float.toString(z.endX)},"securityTier":${Int.toString(z.securityTier)}}`
-  })->Array.join(",")
-  let patrolsJson = state.patrols->Array.map(p => {
-    let wps = p.waypoints->Array.map(w =>
-      `{"x":${Int.toString(w.x)},"y":${Int.toString(w.y)},"pauseDuration":${Float.toString(w.pauseDuration)}}`
-    )->Array.join(",")
-    `{"guardId":"${p.guardId}","waypoints":[${wps}],"looping":${p.looping ? "true" : "false"},"speed":${Float.toString(p.speed)}}`
-  })->Array.join(",")
+  let entitiesJson =
+    state.entities
+    ->Array.map(e => {
+      `{"id":"${e.id}","kind":"${entityKindLabel(
+          e.kind,
+        )}","name":"${e.name}","gridX":${Int.toString(e.gridX)},"gridY":${Int.toString(e.gridY)}}`
+    })
+    ->Array.join(",")
+  let zonesJson =
+    state.zones
+    ->Array.map(z => {
+      `{"name":"${z.name}","startX":${Float.toString(z.startX)},"endX":${Float.toString(
+          z.endX,
+        )},"securityTier":${Int.toString(z.securityTier)}}`
+    })
+    ->Array.join(",")
+  let patrolsJson =
+    state.patrols
+    ->Array.map(p => {
+      let wps =
+        p.waypoints
+        ->Array.map(w =>
+          `{"x":${Int.toString(w.x)},"y":${Int.toString(w.y)},"pauseDuration":${Float.toString(
+              w.pauseDuration,
+            )}}`
+        )
+        ->Array.join(",")
+      `{"guardId":"${p.guardId}","waypoints":[${wps}],"looping":${p.looping
+          ? "true"
+          : "false"},"speed":${Float.toString(p.speed)}}`
+    })
+    ->Array.join(",")
   let flagsJson = state.defenceFlags->Array.map(f => `"${defenceFlagLabel(f)}"`)->Array.join(",")
-  `{"levelName":"${state.levelName}","gridWidth":${Int.toString(state.gridWidth)},"gridHeight":${Int.toString(state.gridHeight)},"entities":[${entitiesJson}],"zones":[${zonesJson}],"patrols":[${patrolsJson}],"defenceFlags":[${flagsJson}]}`
+  `{"levelName":"${state.levelName}","gridWidth":${Int.toString(
+      state.gridWidth,
+    )},"gridHeight":${Int.toString(
+      state.gridHeight,
+    )},"entities":[${entitiesJson}],"zones":[${zonesJson}],"patrols":[${patrolsJson}],"defenceFlags":[${flagsJson}]}`
 }
 
 /// Tea_Json decoder for a single UMS proof entry.
@@ -172,7 +196,7 @@ let abiProofDecoder: Tea_Json.decoder<abiProof> = {
   open Decoders
   open Tea_Json
   map3(
-    (name, passed, detail) => ({name, passed, detail}: abiProof),
+    (name, passed, detail): abiProof => {name, passed, detail},
     stringField("name"),
     boolField("passed"),
     stringField("detail"),
@@ -183,7 +207,7 @@ let abiProofDecoder: Tea_Json.decoder<abiProof> = {
 let umsValidationDecoder: Tea_Json.decoder<umsValidation> = {
   open Decoders
   map7(
-    (guardsInZones, defenceTargetsValid, zonesOrdered, pbxConsistent, devicesExist, allPassed, proofs) => ({
+    (
       guardsInZones,
       defenceTargetsValid,
       zonesOrdered,
@@ -191,7 +215,15 @@ let umsValidationDecoder: Tea_Json.decoder<umsValidation> = {
       devicesExist,
       allPassed,
       proofs,
-    }: umsValidation),
+    ): umsValidation => {
+      guardsInZones,
+      defenceTargetsValid,
+      zonesOrdered,
+      pbxConsistent,
+      devicesExist,
+      allPassed,
+      proofs,
+    },
     boolField("guardsInZones"),
     boolField("defenceTargetsValid"),
     boolField("zonesOrdered"),
@@ -208,15 +240,30 @@ let parseUmsValidation = (jsonStr: string): option<umsValidation> =>
 
 /// All device kinds for dropdowns.
 let allDeviceKinds: array<deviceKind> = [
-  DevLaptop, DevDesktop, DevServer, DevRouter, DevSwitch,
-  DevFirewall, DevCamera, DevAccessPoint, DevPatchPanel,
-  DevPowerSupply, DevPhoneSystem, DevFibreHub,
+  DevLaptop,
+  DevDesktop,
+  DevServer,
+  DevRouter,
+  DevSwitch,
+  DevFirewall,
+  DevCamera,
+  DevAccessPoint,
+  DevPatchPanel,
+  DevPowerSupply,
+  DevPhoneSystem,
+  DevFibreHub,
 ]
 
 /// All guard ranks for dropdowns.
 let allGuardRanks: array<guardRank> = [
-  RankBasic, RankEnforcer, RankAntiHacker, RankSentinel,
-  RankAssassin, RankElite, RankSecurityChief, RankRivalHacker,
+  RankBasic,
+  RankEnforcer,
+  RankAntiHacker,
+  RankSentinel,
+  RankAssassin,
+  RankElite,
+  RankSecurityChief,
+  RankRivalHacker,
 ]
 
 /// All dog breeds for dropdowns.

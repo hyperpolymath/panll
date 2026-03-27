@@ -37,11 +37,9 @@ let renderCategoryTab = (cat: repoLoaderCategory, isActive: bool): Tea_Vdom.t<ms
 let renderCategoryTabBar = (activeCategory: repoLoaderCategory): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex border-b border-gray-800")},
-    list{
-      ...RepoLoaderEngine.allCategories
-      ->Array.map(cat => renderCategoryTab(cat, cat === activeCategory))
-      ->List.fromArray
-    },
+    RepoLoaderEngine.allCategories
+    ->Array.map(cat => renderCategoryTab(cat, cat === activeCategory))
+    ->List.fromArray,
   )
 }
 
@@ -125,7 +123,6 @@ let renderBrowse = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-      // Current repo info (if loaded)
       {
         switch rl.currentRepo {
         | Some(repo) =>
@@ -146,29 +143,21 @@ let renderBrowse = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
                   noNode
                 }
               },
-              div(
-                list{Attrs.class_("text-xs text-gray-500 mb-2")},
-                list{text(repo.path)},
-              ),
-              // Languages
+              div(list{Attrs.class_("text-xs text-gray-500 mb-2")}, list{text(repo.path)}),
               {
                 if Array.length(repo.languages) > 0 {
                   div(
                     list{Attrs.class_("flex gap-1 flex-wrap mb-2")},
-                    list{
-                      ...repo.languages
-                      ->Array.map(lang =>
-                        span(
-                          list{
-                            Attrs.class_(
-                              "text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-300",
-                            ),
-                          },
-                          list{text(lang)},
-                        )
+                    repo.languages
+                    ->Array.map(lang =>
+                      span(
+                        list{
+                          Attrs.class_("text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-300"),
+                        },
+                        list{text(lang)},
                       )
-                      ->List.fromArray
-                    },
+                    )
+                    ->List.fromArray,
                   )
                 } else {
                   noNode
@@ -226,10 +215,7 @@ let renderBrowse = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("text-center text-gray-600 mt-12")},
             list{
-              div(
-                list{Attrs.class_("text-2xl mb-4")},
-                list{text("No Repository Loaded")},
-              ),
+              div(list{Attrs.class_("text-2xl mb-4")}, list{text("No Repository Loaded")}),
               div(
                 list{Attrs.class_("text-sm")},
                 list{text("Pick a directory or enter a path to scan a repository.")},
@@ -238,12 +224,15 @@ let renderBrowse = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
           )
         }
       },
-      // Error display
       {
         switch rl.error {
         | Some(e) =>
           div(
-            list{Attrs.class_("mt-4 px-3 py-2 bg-red-900/30 border border-red-700 rounded text-sm text-red-300")},
+            list{
+              Attrs.class_(
+                "mt-4 px-3 py-2 bg-red-900/30 border border-red-700 rounded text-sm text-red-300",
+              ),
+            },
             list{text(e)},
           )
         | None => noNode
@@ -262,7 +251,9 @@ let renderSuggestionCard = (suggestion: panelSuggestion): Tea_Vdom.t<msg> => {
   div(
     list{
       Attrs.class_(
-        `border ${suggestion.enabled ? "border-gray-700" : "border-gray-800"} rounded-lg p-4 transition-colors`,
+        `border ${suggestion.enabled
+            ? "border-gray-700"
+            : "border-gray-800"} rounded-lg p-4 transition-colors`,
       ),
     },
     list{
@@ -279,7 +270,9 @@ let renderSuggestionCard = (suggestion: panelSuggestion): Tea_Vdom.t<msg> => {
               span(
                 list{
                   Attrs.class_(
-                    `text-xs px-2 py-0.5 rounded ${RepoLoaderEngine.priorityColour(suggestion.priority)}`,
+                    `text-xs px-2 py-0.5 rounded ${RepoLoaderEngine.priorityColour(
+                        suggestion.priority,
+                      )}`,
                   ),
                 },
                 list{text(suggestion.priority)},
@@ -299,10 +292,7 @@ let renderSuggestionCard = (suggestion: panelSuggestion): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-      div(
-        list{Attrs.class_("text-xs text-gray-500")},
-        list{text(suggestion.reason)},
-      ),
+      div(list{Attrs.class_("text-xs text-gray-500")}, list{text(suggestion.reason)}),
     },
   )
 }
@@ -324,7 +314,9 @@ let renderConfigure = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
                     list{Attrs.class_("text-lg font-light text-gray-300")},
                     list{
                       text(
-                        `Panel Configuration (${Int.toString(RepoLoaderEngine.enabledCount(rl.suggestions))} enabled)`,
+                        `Panel Configuration (${Int.toString(
+                            RepoLoaderEngine.enabledCount(rl.suggestions),
+                          )} enabled)`,
                       ),
                     },
                   ),
@@ -347,11 +339,9 @@ let renderConfigure = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
               ),
               div(
                 list{Attrs.class_("space-y-3")},
-                list{
-                  ...rl.suggestions
-                  ->Array.map(renderSuggestionCard)
-                  ->List.fromArray
-                },
+                rl.suggestions
+                ->Array.map(renderSuggestionCard)
+                ->List.fromArray,
               ),
             },
           )
@@ -359,10 +349,7 @@ let renderConfigure = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("text-center text-gray-600 mt-12")},
             list{
-              div(
-                list{Attrs.class_("text-lg mb-2")},
-                list{text("No panel suggestions")},
-              ),
+              div(list{Attrs.class_("text-lg mb-2")}, list{text("No panel suggestions")}),
               div(
                 list{Attrs.class_("text-sm")},
                 list{text("Scan a repository first to get panel recommendations.")},
@@ -392,41 +379,31 @@ let renderRecent = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
         if Array.length(rl.recentPaths) > 0 {
           div(
             list{Attrs.class_("space-y-2")},
-            list{
-              ...rl.recentPaths
-              ->Array.map(path => {
-                let name = switch String.split(path, "/")->Array.at(-1) {
-                | Some(n) => n
-                | None => path
-                }
-                button(
-                  list{
-                    Attrs.class_(
-                      "w-full text-left px-4 py-3 border border-gray-800 rounded-lg hover:border-gray-600 transition-colors",
-                    ),
-                    Events.onClick(RepoLoader(ScanRepo(path))),
-                  },
-                  list{
-                    div(
-                      list{Attrs.class_("text-sm font-medium text-gray-200")},
-                      list{text(name)},
-                    ),
-                    div(
-                      list{Attrs.class_("text-xs text-gray-500 mt-1")},
-                      list{text(path)},
-                    ),
-                  },
-                )
-              })
-              ->List.fromArray
-            },
+            rl.recentPaths
+            ->Array.map(path => {
+              let name = switch String.split(path, "/")->Array.at(-1) {
+              | Some(n) => n
+              | None => path
+              }
+              button(
+                list{
+                  Attrs.class_(
+                    "w-full text-left px-4 py-3 border border-gray-800 rounded-lg hover:border-gray-600 transition-colors",
+                  ),
+                  Events.onClick(RepoLoader(ScanRepo(path))),
+                },
+                list{
+                  div(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text(name)}),
+                  div(list{Attrs.class_("text-xs text-gray-500 mt-1")}, list{text(path)}),
+                },
+              )
+            })
+            ->List.fromArray,
           )
         } else {
           div(
             list{Attrs.class_("text-center text-gray-600 mt-12")},
-            list{
-              div(list{Attrs.class_("text-sm")}, list{text("No recently loaded repos.")}),
-            },
+            list{div(list{Attrs.class_("text-sm")}, list{text("No recently loaded repos.")})},
           )
         }
       },
@@ -476,9 +453,7 @@ let renderFarmSearch = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
       ),
       div(
         list{Attrs.class_("text-xs text-gray-600")},
-        list{
-          text("Searches the farm-manifest.json for matching repos."),
-        },
+        list{text("Searches the farm-manifest.json for matching repos.")},
       ),
     },
   )
@@ -491,9 +466,7 @@ let renderFarmSearch = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
 /// Render the full Repo Loader panel overlay.
 let view = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
   div(
-    list{
-      Attrs.class_("fixed inset-0 bg-gray-950/95 z-40 flex flex-col"),
-    },
+    list{Attrs.class_("fixed inset-0 bg-gray-950/95 z-40 flex flex-col")},
     list{
       // Header bar
       div(
@@ -531,7 +504,6 @@ let view = (rl: repoLoaderState): Tea_Vdom.t<msg> => {
       ),
       // Category tabs
       renderCategoryTabBar(rl.activeCategory),
-      // Main content (switches by category)
       {
         switch rl.activeCategory {
         | Browse => renderBrowse(rl)

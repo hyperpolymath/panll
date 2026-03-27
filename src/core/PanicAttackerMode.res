@@ -17,4 +17,3 @@ let label = (mode: string): string =>
   | "unavailable" => "panic-attacker mode: unavailable"
   | _ => "panic-attacker mode: unknown (probe pending)"
   }
-

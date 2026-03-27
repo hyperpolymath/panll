@@ -104,10 +104,7 @@ let getOverride = (
 ///
 /// The panelKey parameter is a string (e.g. "paneL", "paneN", "paneW",
 /// or a panel ID string) that is compared against focusedPane.
-let panelOpacityClass = (
-  state: FocusDimmingModel.focusDimmingState,
-  panelKey: string,
-): string => {
+let panelOpacityClass = (state: FocusDimmingModel.focusDimmingState, panelKey: string): string => {
   // Determine the dim class for the current mode.
   let dimClass = switch state.mode {
   | DimmingOff => ""
@@ -154,10 +151,7 @@ let panelOpacityClass = (
 ///
 /// When true, the subscription layer should double polling intervals and
 /// halve refresh rates for this panel to conserve resources.
-let shouldThrottle = (
-  state: FocusDimmingModel.focusDimmingState,
-  panelKey: string,
-): bool => {
+let shouldThrottle = (state: FocusDimmingModel.focusDimmingState, panelKey: string): bool => {
   // Only SmartMemory mode throttles.
   if state.mode !== SmartMemory {
     false
@@ -180,6 +174,7 @@ let shouldThrottle = (
         | _ => false
         }
       })
+
       // This is a conservative check — if ANY panel has AlwaysActive, we
       // still throttle other panels. The proper per-panel check requires
       // panelId matching, which the full implementation will use.

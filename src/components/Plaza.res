@@ -16,17 +16,16 @@ open Msg
 open Tea.Html
 
 /// Render a single category tab.
-let renderCategoryTab = (
-  cat: plazaCategory,
-  isActive: bool,
-): Tea_Vdom.t<msg> => {
+let renderCategoryTab = (cat: plazaCategory, isActive: bool): Tea_Vdom.t<msg> => {
   let activeClass = isActive
     ? "border-indigo-500 text-indigo-300 bg-gray-800/50"
     : "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600"
 
   button(
     list{
-      Attrs.class_(`px-3 py-2 text-sm font-medium border-b-2 cursor-pointer transition-colors ${activeClass}`),
+      Attrs.class_(
+        `px-3 py-2 text-sm font-medium border-b-2 cursor-pointer transition-colors ${activeClass}`,
+      ),
       Attrs.role("tab"),
       Events.onClick(Plaza(SetPlazaCategory(cat))),
     },
@@ -49,12 +48,9 @@ let renderCategoryTabBar = (activeCategory: plazaCategory): Tea_Vdom.t<msg> => {
 }
 
 /// Render a stat card for the dashboard.
-let renderStatCard = (
-  label: string,
-  value: string,
-  colour: string,
-  subtitle: string,
-): Tea_Vdom.t<msg> => {
+let renderStatCard = (label: string, value: string, colour: string, subtitle: string): Tea_Vdom.t<
+  msg,
+> => {
   div(
     list{Attrs.class_("bg-gray-800/50 border border-gray-700 rounded-lg p-4")},
     list{
@@ -62,25 +58,16 @@ let renderStatCard = (
         list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-1")},
         list{text(label)},
       ),
-      div(
-        list{Attrs.class_(`text-2xl font-bold ${colour}`)},
-        list{text(value)},
-      ),
-      div(
-        list{Attrs.class_("text-xs text-gray-600 mt-1")},
-        list{text(subtitle)},
-      ),
+      div(list{Attrs.class_(`text-2xl font-bold ${colour}`)}, list{text(value)}),
+      div(list{Attrs.class_("text-xs text-gray-600 mt-1")}, list{text(subtitle)}),
     },
   )
 }
 
 /// Render a progress bar with label.
-let renderProgressBar = (
-  label: string,
-  count: int,
-  total: int,
-  colour: string,
-): Tea_Vdom.t<msg> => {
+let renderProgressBar = (label: string, count: int, total: int, colour: string): Tea_Vdom.t<
+  msg,
+> => {
   let pct = if total > 0 {
     Float.toFixed(Int.toFloat(count) /. Int.toFloat(total) *. 100.0, ~digits=0)
   } else {
@@ -89,10 +76,7 @@ let renderProgressBar = (
   div(
     list{Attrs.class_("flex items-center gap-3 py-1")},
     list{
-      div(
-        list{Attrs.class_("w-32 text-sm text-gray-400")},
-        list{text(label)},
-      ),
+      div(list{Attrs.class_("w-32 text-sm text-gray-400")}, list{text(label)}),
       div(
         list{Attrs.class_("flex-1 h-2 bg-gray-800 rounded-full overflow-hidden")},
         list{
@@ -126,11 +110,17 @@ let renderDashboard = (plaza: plazaState): Tea_Vdom.t<msg> => {
         ),
         div(
           list{Attrs.class_("text-gray-600 text-sm max-w-md text-center")},
-          list{text("Scan your ecosystem to see PMPL adoption, compliance, and provenance statistics across all repositories.")},
+          list{
+            text(
+              "Scan your ecosystem to see PMPL adoption, compliance, and provenance statistics across all repositories.",
+            ),
+          },
         ),
         button(
           list{
-            Attrs.class_("px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors font-medium"),
+            Attrs.class_(
+              "px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors font-medium",
+            ),
             Events.onClick(Plaza(LoadAdoptionStats)),
           },
           list{text("Scan Ecosystem")},
@@ -209,7 +199,9 @@ let renderDashboard = (plaza: plazaState): Tea_Vdom.t<msg> => {
           list{
             button(
               list{
-                Attrs.class_("px-4 py-2 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition-colors text-sm"),
+                Attrs.class_(
+                  "px-4 py-2 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition-colors text-sm",
+                ),
                 Events.onClick(Plaza(LoadAdoptionStats)),
               },
               list{text("Refresh Stats")},
@@ -235,7 +227,11 @@ let renderCompatibility = (_plaza: plazaState): Tea_Vdom.t<msg> => {
           ),
           div(
             list{Attrs.class_("text-sm text-gray-500 mb-6")},
-            list{text("PMPL-1.0-or-later uses file-level copyleft (inherited from MPL-2.0), making it compatible with most permissive and weak-copyleft licenses. PMPL files and MIT files can coexist in the same project.")},
+            list{
+              text(
+                "PMPL-1.0-or-later uses file-level copyleft (inherited from MPL-2.0), making it compatible with most permissive and weak-copyleft licenses. PMPL files and MIT files can coexist in the same project.",
+              ),
+            },
           ),
           // Static compatibility table
           div(
@@ -258,7 +254,11 @@ let renderCompatibility = (_plaza: plazaState): Tea_Vdom.t<msg> => {
                 : "text-red-400 bg-red-900/30 border-red-800"
               let statusLabel = compat ? "Compatible" : "Incompatible"
               div(
-                list{Attrs.class_("flex items-center gap-3 p-3 rounded border border-gray-800 bg-gray-800/20")},
+                list{
+                  Attrs.class_(
+                    "flex items-center gap-3 p-3 rounded border border-gray-800 bg-gray-800/20",
+                  ),
+                },
                 list{
                   div(
                     list{Attrs.class_("w-32 text-sm font-medium text-gray-300")},
@@ -268,10 +268,7 @@ let renderCompatibility = (_plaza: plazaState): Tea_Vdom.t<msg> => {
                     list{Attrs.class_(`text-xs px-2 py-0.5 rounded border ${statusClass}`)},
                     list{text(statusLabel)},
                   ),
-                  div(
-                    list{Attrs.class_("flex-1 text-xs text-gray-500")},
-                    list{text(notes)},
-                  ),
+                  div(list{Attrs.class_("flex-1 text-xs text-gray-500")}, list{text(notes)}),
                 },
               )
             })
@@ -297,7 +294,11 @@ let renderAdoptionWizard = (_plaza: plazaState): Tea_Vdom.t<msg> => {
           ),
           div(
             list{Attrs.class_("text-sm text-gray-500 mb-6")},
-            list{text("Three steps to protect your work with the Palimpsest License. File-level copyleft means you can mix PMPL with MIT, Apache, BSD — no project-wide infection.")},
+            list{
+              text(
+                "Three steps to protect your work with the Palimpsest License. File-level copyleft means you can mix PMPL with MIT, Apache, BSD — no project-wide infection.",
+              ),
+            },
           ),
           // Step 1
           div(
@@ -307,12 +308,19 @@ let renderAdoptionWizard = (_plaza: plazaState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("flex items-center gap-2 mb-2")},
                 list{
                   span(list{Attrs.class_("text-indigo-400 font-bold")}, list{text("1")}),
-                  span(list{Attrs.class_("text-sm font-medium text-gray-300")}, list{text("Add LICENSE file")}),
+                  span(
+                    list{Attrs.class_("text-sm font-medium text-gray-300")},
+                    list{text("Add LICENSE file")},
+                  ),
                 },
               ),
               div(
                 list{Attrs.class_("text-xs text-gray-500 font-mono bg-gray-900 rounded p-2")},
-                list{text("Copy LICENSE.txt from palimpsest-license/v1.0/LICENSE.txt to your project root")},
+                list{
+                  text(
+                    "Copy LICENSE.txt from palimpsest-license/v1.0/LICENSE.txt to your project root",
+                  ),
+                },
               ),
             },
           ),
@@ -324,7 +332,10 @@ let renderAdoptionWizard = (_plaza: plazaState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("flex items-center gap-2 mb-2")},
                 list{
                   span(list{Attrs.class_("text-indigo-400 font-bold")}, list{text("2")}),
-                  span(list{Attrs.class_("text-sm font-medium text-gray-300")}, list{text("Add SPDX headers to source files")}),
+                  span(
+                    list{Attrs.class_("text-sm font-medium text-gray-300")},
+                    list{text("Add SPDX headers to source files")},
+                  ),
                 },
               ),
               div(
@@ -341,12 +352,19 @@ let renderAdoptionWizard = (_plaza: plazaState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("flex items-center gap-2 mb-2")},
                 list{
                   span(list{Attrs.class_("text-indigo-400 font-bold")}, list{text("3")}),
-                  span(list{Attrs.class_("text-sm font-medium text-gray-300")}, list{text("Optional: Add exhibits and provenance")}),
+                  span(
+                    list{Attrs.class_("text-sm font-medium text-gray-300")},
+                    list{text("Optional: Add exhibits and provenance")},
+                  ),
                 },
               ),
               div(
                 list{Attrs.class_("text-xs text-gray-500")},
-                list{text("Exhibit A (Ethical Use) and Exhibit B (Quantum-Safe Provenance) are optional but recommended for projects with AI training or long-term archival needs.")},
+                list{
+                  text(
+                    "Exhibit A (Ethical Use) and Exhibit B (Quantum-Safe Provenance) are optional but recommended for projects with AI training or long-term archival needs.",
+                  ),
+                },
               ),
             },
           ),
@@ -361,10 +379,32 @@ let renderAdoptionWizard = (_plaza: plazaState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("text-xs text-gray-500 space-y-1")},
                 list{
-                  div(list{}, list{text("Ethical Use Guidelines — community norms for responsible use")}),
-                  div(list{}, list{text("Quantum-Safe Provenance — attribution that survives decades, not just years")}),
-                  div(list{}, list{text("Emotional Lineage — recognition that code carries cultural meaning")}),
-                  div(list{}, list{text("Same file-level copyleft as MPL-2.0 — no GPL-style project infection")}),
+                  div(
+                    list{},
+                    list{text("Ethical Use Guidelines — community norms for responsible use")},
+                  ),
+                  div(
+                    list{},
+                    list{
+                      text(
+                        "Quantum-Safe Provenance — attribution that survives decades, not just years",
+                      ),
+                    },
+                  ),
+                  div(
+                    list{},
+                    list{
+                      text("Emotional Lineage — recognition that code carries cultural meaning"),
+                    },
+                  ),
+                  div(
+                    list{},
+                    list{
+                      text(
+                        "Same file-level copyleft as MPL-2.0 — no GPL-style project infection",
+                      ),
+                    },
+                  ),
                 },
               ),
             },
@@ -383,10 +423,7 @@ let renderComplianceBadge = (level: complianceLevel): Tea_Vdom.t<msg> => {
   | NonCompliant => ("Non-Compliant", "bg-red-700")
   | Unknown => ("Unknown", "bg-gray-700")
   }
-  span(
-    list{Attrs.class_(`px-2 py-0.5 rounded text-xs ${colour} text-white`)},
-    list{text(label)},
-  )
+  span(list{Attrs.class_(`px-2 py-0.5 rounded text-xs ${colour} text-white`)}, list{text(label)})
 }
 
 /// Render the Compliance Audit tab — SPDX headers, LICENSE files, exhibit completeness.
@@ -403,7 +440,9 @@ let renderCompliance = (plaza: plazaState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1 text-xs bg-indigo-800 text-indigo-200 rounded hover:bg-indigo-700"),
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-indigo-800 text-indigo-200 rounded hover:bg-indigo-700",
+              ),
               Attrs.ariaLabel("Run compliance scan on all repos"),
               Events.onClick(Plaza(LoadAdoptionStats)),
             },
@@ -418,7 +457,11 @@ let renderCompliance = (plaza: plazaState): Tea_Vdom.t<msg> => {
             div(list{Attrs.class_("text-gray-500 mb-2")}, list{text("No audits yet")}),
             div(
               list{Attrs.class_("text-xs text-gray-600 max-w-md mx-auto")},
-              list{text("Scan repos for SPDX headers, LICENSE files, and exhibit completeness. Connect to pmpl-audit for deep scanning.")},
+              list{
+                text(
+                  "Scan repos for SPDX headers, LICENSE files, and exhibit completeness. Connect to pmpl-audit for deep scanning.",
+                ),
+              },
             ),
           },
         )
@@ -428,7 +471,11 @@ let renderCompliance = (plaza: plazaState): Tea_Vdom.t<msg> => {
           plaza.audits
           ->Array.map(audit =>
             div(
-              list{Attrs.class_("p-3 bg-gray-900/50 rounded border border-gray-800 flex items-center justify-between")},
+              list{
+                Attrs.class_(
+                  "p-3 bg-gray-900/50 rounded border border-gray-800 flex items-center justify-between",
+                ),
+              },
               list{
                 div(
                   list{Attrs.class_("flex-1")},
@@ -441,16 +488,15 @@ let renderCompliance = (plaza: plazaState): Tea_Vdom.t<msg> => {
                       list{Attrs.class_("text-xs text-gray-600 mt-1")},
                       list{
                         text(
-                          `${Int.toString(audit.filesWithHeaders)}/${Int.toString(audit.filesScanned)} files with SPDX headers`,
+                          `${Int.toString(audit.filesWithHeaders)}/${Int.toString(
+                              audit.filesScanned,
+                            )} files with SPDX headers`,
                         ),
                       },
                     ),
                   },
                 ),
-                div(
-                  list{Attrs.class_("text-xs text-gray-600")},
-                  list{text(audit.lastAudit)},
-                ),
+                div(list{Attrs.class_("text-xs text-gray-600")}, list{text(audit.lastAudit)}),
               },
             )
           )
@@ -475,7 +521,9 @@ let renderProvenance = (plaza: plazaState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1 text-xs bg-indigo-800 text-indigo-200 rounded hover:bg-indigo-700"),
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-indigo-800 text-indigo-200 rounded hover:bg-indigo-700",
+              ),
               Attrs.ariaLabel("Verify all provenance signatures"),
               Events.onClick(Plaza(LoadAdoptionStats)),
             },
@@ -490,7 +538,11 @@ let renderProvenance = (plaza: plazaState): Tea_Vdom.t<msg> => {
             div(list{Attrs.class_("text-gray-500 mb-2")}, list{text("No signatures found")}),
             div(
               list{Attrs.class_("text-xs text-gray-600 max-w-md mx-auto")},
-              list{text("Verify quantum-safe signatures (ML-DSA, SLH-DSA) on files and commits. Connect to pmpl-verify for signature chain validation.")},
+              list{
+                text(
+                  "Verify quantum-safe signatures (ML-DSA, SLH-DSA) on files and commits. Connect to pmpl-verify for signature chain validation.",
+                ),
+              },
             ),
           },
         )
@@ -554,7 +606,11 @@ let renderEthicalUse = (_plaza: plazaState): Tea_Vdom.t<msg> => {
               ),
               div(
                 list{Attrs.class_("text-xs text-gray-500")},
-                list{text("If you use PMPL-licensed code in AI training datasets, Exhibit A requires disclosure. Provide a clear statement in your model card or data sheet identifying the PMPL-licensed sources used.")},
+                list{
+                  text(
+                    "If you use PMPL-licensed code in AI training datasets, Exhibit A requires disclosure. Provide a clear statement in your model card or data sheet identifying the PMPL-licensed sources used.",
+                  ),
+                },
               ),
             },
           ),
@@ -567,7 +623,11 @@ let renderEthicalUse = (_plaza: plazaState): Tea_Vdom.t<msg> => {
               ),
               div(
                 list{Attrs.class_("text-xs text-gray-500")},
-                list{text("Respect the cultural context of code contributions. Attribution should preserve original authorship information and acknowledge cultural origins where relevant.")},
+                list{
+                  text(
+                    "Respect the cultural context of code contributions. Attribution should preserve original authorship information and acknowledge cultural origins where relevant.",
+                  ),
+                },
               ),
             },
           ),
@@ -580,7 +640,11 @@ let renderEthicalUse = (_plaza: plazaState): Tea_Vdom.t<msg> => {
               ),
               div(
                 list{Attrs.class_("text-xs text-gray-500")},
-                list{text("PMPL code should not be used in systems designed to cause harm, violate human rights, or circumvent legal protections. The stewardship council reviews edge cases.")},
+                list{
+                  text(
+                    "PMPL code should not be used in systems designed to cause harm, violate human rights, or circumvent legal protections. The stewardship council reviews edge cases.",
+                  ),
+                },
               ),
             },
           ),
@@ -611,7 +675,11 @@ let renderGovernance = (_plaza: plazaState): Tea_Vdom.t<msg> => {
               ),
               div(
                 list{Attrs.class_("text-xs text-gray-500")},
-                list{text("The Palimpsest License is governed by the Stewardship Council. Proposed amendments require council review and community feedback. Governance decisions are recorded in the transparency log.")},
+                list{
+                  text(
+                    "The Palimpsest License is governed by the Stewardship Council. Proposed amendments require council review and community feedback. Governance decisions are recorded in the transparency log.",
+                  ),
+                },
               ),
             },
           ),
@@ -624,20 +692,23 @@ let renderGovernance = (_plaza: plazaState): Tea_Vdom.t<msg> => {
               ),
               div(
                 list{Attrs.class_("text-xs text-gray-500")},
-                list{text("1. Proposal submission with rationale. 2. Community comment period (30 days). 3. Council deliberation. 4. Decision recorded in transparency log. 5. Implementation in next license version.")},
+                list{
+                  text(
+                    "1. Proposal submission with rationale. 2. Community comment period (30 days). 3. Council deliberation. 4. Decision recorded in transparency log. 5. Implementation in next license version.",
+                  ),
+                },
               ),
             },
           ),
           div(
             list{Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800 space-y-2")},
             list{
-              div(
-                list{Attrs.class_("text-xs text-gray-400 font-medium")},
-                list{text("Contact")},
-              ),
+              div(list{Attrs.class_("text-xs text-gray-400 font-medium")}, list{text("Contact")}),
               div(
                 list{Attrs.class_("text-xs text-gray-500")},
-                list{text("Governance proposals and ethical use questions: j.d.a.jewell@open.ac.uk")},
+                list{
+                  text("Governance proposals and ethical use questions: j.d.a.jewell@open.ac.uk"),
+                },
               ),
             },
           ),
@@ -663,9 +734,7 @@ let renderContent = (plaza: plazaState): Tea_Vdom.t<msg> => {
 /// Render the header bar.
 let renderHeader = (plaza: plazaState): Tea_Vdom.t<msg> => {
   div(
-    list{
-      Attrs.class_("flex items-center justify-between px-6 py-4 border-b border-gray-800"),
-    },
+    list{Attrs.class_("flex items-center justify-between px-6 py-4 border-b border-gray-800")},
     list{
       div(
         list{Attrs.class_("flex items-center gap-4")},
@@ -700,7 +769,9 @@ let renderHeader = (plaza: plazaState): Tea_Vdom.t<msg> => {
       ),
       button(
         list{
-          Attrs.class_("px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors"),
+          Attrs.class_(
+            "px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors",
+          ),
           Events.onClick(PanelSwitcher(ClosePanels)),
         },
         list{text("Close")},

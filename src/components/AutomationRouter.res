@@ -57,7 +57,13 @@ let renderDashboard = (state: automationRouterState): Tea_Vdom.t<msg> => {
             list{
               div(
                 list{Attrs.class_("text-2xl font-light text-emerald-400")},
-                list{text(AutomationRouterEngine.formatSuccessRate(AutomationRouterEngine.successRate(state.executionLog)))},
+                list{
+                  text(
+                    AutomationRouterEngine.formatSuccessRate(
+                      AutomationRouterEngine.successRate(state.executionLog),
+                    ),
+                  ),
+                },
               ),
               div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Success Rate")}),
             },
@@ -89,7 +95,15 @@ let renderDashboard = (state: automationRouterState): Tea_Vdom.t<msg> => {
               ),
               Events.onClick(AutomationRouter(ToggleGlobalEnabled)),
             },
-            list{text(if state.globalEnabled { "Automation: ON" } else { "Automation: OFF" })},
+            list{
+              text(
+                if state.globalEnabled {
+                  "Automation: ON"
+                } else {
+                  "Automation: OFF"
+                },
+              ),
+            },
           ),
           span(
             list{Attrs.class_("text-xs text-gray-500")},
@@ -110,8 +124,24 @@ let renderDashboard = (state: automationRouterState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-800 rounded text-xs")},
                 list{
                   span(
-                    list{Attrs.class_(if entry.success { "text-emerald-400" } else { "text-red-400" })},
-                    list{text(if entry.success { "OK" } else { "FAIL" })},
+                    list{
+                      Attrs.class_(
+                        if entry.success {
+                          "text-emerald-400"
+                        } else {
+                          "text-red-400"
+                        },
+                      ),
+                    },
+                    list{
+                      text(
+                        if entry.success {
+                          "OK"
+                        } else {
+                          "FAIL"
+                        },
+                      ),
+                    },
                   ),
                   span(list{Attrs.class_("text-gray-200 flex-1")}, list{text(entry.ruleName)}),
                   span(list{Attrs.class_("text-gray-500")}, list{text(entry.detail)}),
@@ -133,7 +163,11 @@ let renderDashboard = (state: automationRouterState): Tea_Vdom.t<msg> => {
 
 /// Render rules list.
 let renderRules = (state: automationRouterState): Tea_Vdom.t<msg> => {
-  let filtered = AutomationRouterEngine.filterRules(state.rules, state.filterText, state.showDisabled)
+  let filtered = AutomationRouterEngine.filterRules(
+    state.rules,
+    state.filterText,
+    state.showDisabled,
+  )
   div(
     list{Attrs.class_("space-y-3")},
     list{
@@ -143,7 +177,9 @@ let renderRules = (state: automationRouterState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700"),
+              Attrs.class_(
+                "flex-1 px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700",
+              ),
               Attrs.placeholder("Filter rules..."),
               Attrs.value(state.filterText),
               Events.onInput(text => AutomationRouter(SetRouterFilter(text))),
@@ -169,7 +205,11 @@ let renderRules = (state: automationRouterState): Tea_Vdom.t<msg> => {
       if Array.length(filtered) === 0 {
         div(
           list{Attrs.class_("text-center text-gray-500 text-sm py-8")},
-          list{text("No rules configured — load from .machine_readable/ENSAID_CONFIG.a2ml or create manually")},
+          list{
+            text(
+              "No rules configured — load from .machine_readable/ENSAID_CONFIG.a2ml or create manually",
+            ),
+          },
         )
       } else {
         div(
@@ -192,17 +232,32 @@ let renderRules = (state: automationRouterState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center gap-2 mb-2")},
                   list{
-                    span(list{Attrs.class_("text-sm text-gray-100 font-medium flex-1")}, list{text(rule.name)}),
-                    span(list{Attrs.class_(`text-xs ${triggerCls} font-mono`)}, list{text(AutomationRouterEngine.triggerKindLabel(rule.trigger))}),
-                    span(list{Attrs.class_(`text-xs ${approvalCls}`)}, list{text(AutomationRouterEngine.approvalLabel(rule.approval))}),
+                    span(
+                      list{Attrs.class_("text-sm text-gray-100 font-medium flex-1")},
+                      list{text(rule.name)},
+                    ),
+                    span(
+                      list{Attrs.class_(`text-xs ${triggerCls} font-mono`)},
+                      list{text(AutomationRouterEngine.triggerKindLabel(rule.trigger))},
+                    ),
+                    span(
+                      list{Attrs.class_(`text-xs ${approvalCls}`)},
+                      list{text(AutomationRouterEngine.approvalLabel(rule.approval))},
+                    ),
                   },
                 ),
                 div(list{Attrs.class_("text-xs text-gray-400 mb-2")}, list{text(rule.description)}),
                 div(
                   list{Attrs.class_("flex items-center gap-2")},
                   list{
-                    span(list{Attrs.class_("text-xs text-gray-500")}, list{text(`Trigger: ${AutomationRouterEngine.triggerLabel(rule.trigger)}`)}),
-                    span(list{Attrs.class_("text-xs text-gray-600")}, list{text(`Fired: ${Int.toString(rule.firedCount)}x`)}),
+                    span(
+                      list{Attrs.class_("text-xs text-gray-500")},
+                      list{text(`Trigger: ${AutomationRouterEngine.triggerLabel(rule.trigger)}`)},
+                    ),
+                    span(
+                      list{Attrs.class_("text-xs text-gray-600")},
+                      list{text(`Fired: ${Int.toString(rule.firedCount)}x`)},
+                    ),
                     button(
                       list{
                         Attrs.class_(
@@ -214,11 +269,21 @@ let renderRules = (state: automationRouterState): Tea_Vdom.t<msg> => {
                         ),
                         Events.onClick(AutomationRouter(ToggleRule(rule.id))),
                       },
-                      list{text(if rule.enabled { "Enabled" } else { "Disabled" })},
+                      list{
+                        text(
+                          if rule.enabled {
+                            "Enabled"
+                          } else {
+                            "Disabled"
+                          },
+                        ),
+                      },
                     ),
                     button(
                       list{
-                        Attrs.class_("px-2 py-1 text-xs bg-cyan-800 text-cyan-200 rounded hover:bg-cyan-700 cursor-pointer"),
+                        Attrs.class_(
+                          "px-2 py-1 text-xs bg-cyan-800 text-cyan-200 rounded hover:bg-cyan-700 cursor-pointer",
+                        ),
                         Events.onClick(AutomationRouter(ExecuteRule(rule.id))),
                       },
                       list{text("Run")},
@@ -246,14 +311,18 @@ let renderPending = (state: automationRouterState): Tea_Vdom.t<msg> => {
           list{
             button(
               list{
-                Attrs.class_("px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+                Attrs.class_(
+                  "px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+                ),
                 Events.onClick(AutomationRouter(ApproveAll)),
               },
               list{text("Approve All")},
             ),
             button(
               list{
-                Attrs.class_("px-3 py-1.5 text-xs bg-red-800 text-red-200 rounded hover:bg-red-700 cursor-pointer"),
+                Attrs.class_(
+                  "px-3 py-1.5 text-xs bg-red-800 text-red-200 rounded hover:bg-red-700 cursor-pointer",
+                ),
                 Events.onClick(AutomationRouter(RejectAll)),
               },
               list{text("Reject All")},
@@ -279,8 +348,14 @@ let renderPending = (state: automationRouterState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center gap-2 mb-2")},
                   list{
-                    span(list{Attrs.class_("text-sm text-amber-300 font-medium")}, list{text(action.ruleName)}),
-                    span(list{Attrs.class_("text-xs text-gray-500 ml-auto")}, list{text(action.triggerDetail)}),
+                    span(
+                      list{Attrs.class_("text-sm text-amber-300 font-medium")},
+                      list{text(action.ruleName)},
+                    ),
+                    span(
+                      list{Attrs.class_("text-xs text-gray-500 ml-auto")},
+                      list{text(action.triggerDetail)},
+                    ),
                   },
                 ),
                 div(
@@ -299,14 +374,18 @@ let renderPending = (state: automationRouterState): Tea_Vdom.t<msg> => {
                   list{
                     button(
                       list{
-                        Attrs.class_("px-3 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+                        Attrs.class_(
+                          "px-3 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+                        ),
                         Events.onClick(AutomationRouter(ApproveAction(idx))),
                       },
                       list{text("Approve")},
                     ),
                     button(
                       list{
-                        Attrs.class_("px-3 py-1 text-xs bg-red-800 text-red-200 rounded hover:bg-red-700 cursor-pointer"),
+                        Attrs.class_(
+                          "px-3 py-1 text-xs bg-red-800 text-red-200 rounded hover:bg-red-700 cursor-pointer",
+                        ),
                         Events.onClick(AutomationRouter(RejectAction(idx))),
                       },
                       list{text("Reject")},
@@ -339,8 +418,24 @@ let renderHistory = (state: automationRouterState): Tea_Vdom.t<msg> => {
           list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-800 rounded text-xs")},
           list{
             span(
-              list{Attrs.class_(if entry.success { "text-emerald-400 w-8" } else { "text-red-400 w-8" })},
-              list{text(if entry.success { "OK" } else { "FAIL" })},
+              list{
+                Attrs.class_(
+                  if entry.success {
+                    "text-emerald-400 w-8"
+                  } else {
+                    "text-red-400 w-8"
+                  },
+                ),
+              },
+              list{
+                text(
+                  if entry.success {
+                    "OK"
+                  } else {
+                    "FAIL"
+                  },
+                ),
+              },
             ),
             span(list{Attrs.class_("text-gray-200 flex-1")}, list{text(entry.ruleName)}),
             span(list{Attrs.class_("text-gray-500")}, list{text(entry.detail)}),
@@ -368,7 +463,11 @@ let renderSettings = (state: automationRouterState): Tea_Vdom.t<msg> => {
           div(list{Attrs.class_("text-sm text-gray-200 mb-3")}, list{text("Configuration Source")}),
           div(
             list{Attrs.class_("text-xs text-gray-400 mb-3")},
-            list{text("Rules can be loaded from the repo's .machine_readable/ENSAID_CONFIG.a2ml or stored locally in PanLL.")},
+            list{
+              text(
+                "Rules can be loaded from the repo's .machine_readable/ENSAID_CONFIG.a2ml or stored locally in PanLL.",
+              ),
+            },
           ),
           div(
             list{Attrs.class_("flex items-center gap-2")},
@@ -388,7 +487,9 @@ let renderSettings = (state: automationRouterState): Tea_Vdom.t<msg> => {
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(AutomationRouter(SaveRules)),
                 },
                 list{text("Save Rules")},
@@ -435,7 +536,10 @@ let view = (state: automationRouterState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-lg font-semibold text-gray-100")}, list{text("Automation Router")}),
+              span(
+                list{Attrs.class_("text-lg font-semibold text-gray-100")},
+                list{text("Automation Router")},
+              ),
               if state.globalEnabled {
                 span(list{Attrs.class_("text-xs text-emerald-400")}, list{text("ACTIVE")})
               } else {
@@ -455,14 +559,30 @@ let view = (state: automationRouterState): Tea_Vdom.t<msg> => {
                       "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
                     },
                   ),
-                  Attrs.ariaLabel(if state.bojRouting { "Disable BoJ routing" } else { "Enable BoJ routing" }),
+                  Attrs.ariaLabel(
+                    if state.bojRouting {
+                      "Disable BoJ routing"
+                    } else {
+                      "Enable BoJ routing"
+                    },
+                  ),
                   Events.onClick(AutomationRouter(ToggleAutomationBojRouting)),
                 },
-                list{text(if state.bojRouting { "BoJ On" } else { "BoJ" })},
+                list{
+                  text(
+                    if state.bojRouting {
+                      "BoJ On"
+                    } else {
+                      "BoJ"
+                    },
+                  ),
+                },
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(AutomationRouter(LoadRules)),
                 },
                 list{text("Refresh")},
@@ -484,7 +604,11 @@ let view = (state: automationRouterState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300",
+            ),
+          },
           list{text(err)},
         )
       | None => noNode

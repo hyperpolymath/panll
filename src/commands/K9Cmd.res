@@ -13,10 +13,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Load a K9 contractile file from disk. Returns the raw file content
 /// as a JSON-wrapped string for client-side parsing by K9Engine.
-let loadContractile = (
-  path: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadContractile = (path: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("k9_load_contractile", {"path": path})
     ->Promise.then(result => {
@@ -36,10 +33,9 @@ let loadContractile = (
 /// magic header presence) and returns a JSON validation result. Deeper
 /// semantic validation (security level, pedigree checks) is done
 /// client-side by K9Engine.validateContractile.
-let validateContractileFile = (
-  path: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let validateContractileFile = (path: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("k9_validate", {"path": path})
     ->Promise.then(result => {
@@ -58,10 +54,7 @@ let validateContractileFile = (
 /// file in the `layouts/` directory, reads it, and returns the parsed
 /// layout configuration as JSON. The client side then applies the panel
 /// arrangement to the PanLL workspace.
-let applyLayout = (
-  name: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let applyLayout = (name: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("k9_apply_layout", {"name": name})
     ->Promise.then(result => {

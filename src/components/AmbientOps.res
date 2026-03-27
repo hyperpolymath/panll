@@ -37,14 +37,17 @@ let findingRow = (finding: diagnosticFinding): Tea_Vdom.t<msg> => {
         list{Attrs.class_("flex-1")},
         list{
           div(list{Attrs.class_("text-sm text-gray-200")}, list{text(finding.summary)}),
-          div(list{Attrs.class_("text-xs text-gray-500 mt-0.5")}, list{
-            text(AmbientOpsEngine.departmentLabel(finding.department)),
-            if finding.repairAvailable {
-              span(list{Attrs.class_("ml-2 text-green-500")}, list{text("[repair available]")})
-            } else {
-              Tea_Html.noNode
+          div(
+            list{Attrs.class_("text-xs text-gray-500 mt-0.5")},
+            list{
+              text(AmbientOpsEngine.departmentLabel(finding.department)),
+              if finding.repairAvailable {
+                span(list{Attrs.class_("ml-2 text-green-500")}, list{text("[repair available]")})
+              } else {
+                Tea_Html.noNode
+              },
             },
-          }),
+          ),
         },
       ),
       span(list{Attrs.class_("text-xs text-gray-600 shrink-0")}, list{text(finding.timestamp)}),
@@ -58,8 +61,11 @@ let tabBtn = (current: ambientOpsTab, target: ambientOpsTab, label: string): Tea
   button(
     list{
       Attrs.class_(
-        "px-3 py-1 text-xs rounded " ++
-        if active { "bg-teal-700 text-white" } else { "bg-gray-800 text-gray-400 hover:bg-gray-700" },
+        "px-3 py-1 text-xs rounded " ++ if active {
+          "bg-teal-700 text-white"
+        } else {
+          "bg-gray-800 text-gray-400 hover:bg-gray-700"
+        },
       ),
       Events.onClick(AmbientOps(SetOpsTab(target))),
       Attrs.role("tab"),
@@ -75,10 +81,29 @@ let availDot = (available: bool, label: string): Tea_Vdom.t<msg> => {
     list{Attrs.class_("flex items-center gap-2 text-xs")},
     list{
       span(
-        list{Attrs.class_("w-2 h-2 rounded-full " ++ if available { "bg-green-400" } else { "bg-red-500" })},
+        list{
+          Attrs.class_(
+            "w-2 h-2 rounded-full " ++ if available {
+              "bg-green-400"
+            } else {
+              "bg-red-500"
+            },
+          ),
+        },
         list{},
       ),
-      span(list{Attrs.class_(if available { "text-gray-300" } else { "text-gray-600" })}, list{text(label)}),
+      span(
+        list{
+          Attrs.class_(
+            if available {
+              "text-gray-300"
+            } else {
+              "text-gray-600"
+            },
+          ),
+        },
+        list{text(label)},
+      ),
     },
   )
 }
@@ -102,10 +127,20 @@ let view = (state: ambientOpsState): Tea_Vdom.t<msg> => {
             list{
               button(
                 list{
-                  Attrs.class_("px-3 py-1 text-xs rounded bg-teal-700 text-white hover:bg-teal-600"),
+                  Attrs.class_(
+                    "px-3 py-1 text-xs rounded bg-teal-700 text-white hover:bg-teal-600",
+                  ),
                   Events.onClick(AmbientOps(RunDiagnostics)),
                 },
-                list{text(if state.scanning { "Scanning..." } else { "Run Diagnostics" })},
+                list{
+                  text(
+                    if state.scanning {
+                      "Scanning..."
+                    } else {
+                      "Run Diagnostics"
+                    },
+                  ),
+                },
               ),
             },
           ),
@@ -127,7 +162,9 @@ let view = (state: ambientOpsState): Tea_Vdom.t<msg> => {
       | Some(err) =>
         div(
           list{
-            Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200"),
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200",
+            ),
             Events.onClick(AmbientOps(DismissOpsError)),
           },
           list{text(err)},
@@ -147,9 +184,32 @@ let view = (state: ambientOpsState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex gap-4 px-4 py-1 text-xs text-gray-400 border-b border-gray-800")},
         list{
-          span(list{}, list{text("Critical: " ++ Int.toString(AmbientOpsEngine.countBySeverity(state.findings, Critical)))}),
-          span(list{}, list{text("Errors: " ++ Int.toString(AmbientOpsEngine.countBySeverity(state.findings, Error)))}),
-          span(list{}, list{text("Warnings: " ++ Int.toString(AmbientOpsEngine.countBySeverity(state.findings, Warning)))}),
+          span(
+            list{},
+            list{
+              text(
+                "Critical: " ++
+                Int.toString(AmbientOpsEngine.countBySeverity(state.findings, Critical)),
+              ),
+            },
+          ),
+          span(
+            list{},
+            list{
+              text(
+                "Errors: " ++ Int.toString(AmbientOpsEngine.countBySeverity(state.findings, Error)),
+              ),
+            },
+          ),
+          span(
+            list{},
+            list{
+              text(
+                "Warnings: " ++
+                Int.toString(AmbientOpsEngine.countBySeverity(state.findings, Warning)),
+              ),
+            },
+          ),
           span(list{}, list{text("Total: " ++ Int.toString(Array.length(state.findings)))}),
         },
       ),

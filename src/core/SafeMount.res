@@ -102,10 +102,15 @@ let diagnostics = (): SafeDOMCore.safetyReport => {
 /// Returns a JSON string in OTLP ResourceSpans format.
 let formatTraceAsOtelSpans = (): string => {
   let entries = SafeDOMCore.MountTracer.entries()
-  let spans = entries->Array.mapWithIndex((entry, idx) => {
-    let spanId = "safedom" ++ String.padStart(Int.toString(idx), 10, "0")
-    `{"traceId":"safedom-mount-trace","spanId":"${spanId}","operationName":"${entry.event}","startTimeUnixNano":"${Float.toString(entry.timestampMs *. 1_000_000.0)}","attributes":[{"key":"safedom.event","value":{"stringValue":"${entry.event}"}},{"key":"safedom.detail","value":{"stringValue":"${entry.detail}"}}]}`
-  })->Array.join(",")
+  let spans =
+    entries
+    ->Array.mapWithIndex((entry, idx) => {
+      let spanId = "safedom" ++ String.padStart(Int.toString(idx), 10, "0")
+      `{"traceId":"safedom-mount-trace","spanId":"${spanId}","operationName":"${entry.event}","startTimeUnixNano":"${Float.toString(
+          entry.timestampMs *. 1_000_000.0,
+        )}","attributes":[{"key":"safedom.event","value":{"stringValue":"${entry.event}"}},{"key":"safedom.detail","value":{"stringValue":"${entry.detail}"}}]}`
+    })
+    ->Array.join(",")
   `{"resourceSpans":[{"resource":{"attributes":[{"key":"service.name","value":{"stringValue":"panll-safedom"}}]},"scopeSpans":[{"scope":{"name":"panll.safedom","version":"1.0.0"},"spans":[${spans}]}]}]}`
 }
 
@@ -114,19 +119,30 @@ let formatTraceAsOtelSpans = (): string => {
 /// become warning-level results.
 let formatTraceAsSarif = (): string => {
   let entries = SafeDOMCore.MountTracer.entries()
-  let failures = entries->Array.filter(e =>
-    String.includes(e.event, "failure") ||
-    String.includes(e.event, "not_found") ||
-    String.includes(e.event, "invalid")
-  )
-  let results = failures->Array.mapWithIndex((entry, idx) => {
-    let ruleId = `SAFEDOM${Int.toString(idx + 1)->String.padStart(3, "0")}`
-    let level = if String.includes(entry.event, "failure") { "error" } else { "warning" }
-    `{"ruleId":"${ruleId}","level":"${level}","message":{"text":"[${entry.event}] ${entry.detail}"},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"safedom://mount-trace"}}}]}`
-  })->Array.join(",")
-  let rules = failures->Array.mapWithIndex((_entry, idx) => {
-    let ruleId = `SAFEDOM${Int.toString(idx + 1)->String.padStart(3, "0")}`
-    `{"id":"${ruleId}","shortDescription":{"text":"SafeDOM mount safety finding"}}`
-  })->Array.join(",")
+  let failures =
+    entries->Array.filter(e =>
+      String.includes(e.event, "failure") ||
+      String.includes(e.event, "not_found") ||
+      String.includes(e.event, "invalid")
+    )
+  let results =
+    failures
+    ->Array.mapWithIndex((entry, idx) => {
+      let ruleId = `SAFEDOM${Int.toString(idx + 1)->String.padStart(3, "0")}`
+      let level = if String.includes(entry.event, "failure") {
+        "error"
+      } else {
+        "warning"
+      }
+      `{"ruleId":"${ruleId}","level":"${level}","message":{"text":"[${entry.event}] ${entry.detail}"},"locations":[{"physicalLocation":{"artifactLocation":{"uri":"safedom://mount-trace"}}}]}`
+    })
+    ->Array.join(",")
+  let rules =
+    failures
+    ->Array.mapWithIndex((_entry, idx) => {
+      let ruleId = `SAFEDOM${Int.toString(idx + 1)->String.padStart(3, "0")}`
+      `{"id":"${ruleId}","shortDescription":{"text":"SafeDOM mount safety finding"}}`
+    })
+    ->Array.join(",")
   `{"$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json","version":"2.1.0","runs":[{"tool":{"driver":{"name":"panll-safedom","version":"1.0.0","rules":[${rules}]}},"results":[${results}]}]}`
 }

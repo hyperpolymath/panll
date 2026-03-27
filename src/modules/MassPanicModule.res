@@ -50,8 +50,7 @@ let config: massPanicModuleConfig = {
   ],
 }
 
-let hasCapability = (cap: massPanicCapability): bool =>
-  config.capabilities->Array.includes(cap)
+let hasCapability = (cap: massPanicCapability): bool => config.capabilities->Array.includes(cap)
 
 let capabilityLabel = (cap: massPanicCapability): string =>
   switch cap {

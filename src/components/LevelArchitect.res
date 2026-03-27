@@ -72,10 +72,16 @@ let renderGridCell = (state: levelArchitectState, x: int, y: int): Tea_Vdom.t<ms
     }
   | None => "bg-gray-900/30"
   }
-  let borderCls = if isSelected { "border-cyan-400" } else { "border-gray-700" }
+  let borderCls = if isSelected {
+    "border-cyan-400"
+  } else {
+    "border-gray-700"
+  }
   div(
     list{
-      Attrs.class_(`w-8 h-8 border ${borderCls} ${bgCls} flex items-center justify-center cursor-pointer hover:border-gray-500`),
+      Attrs.class_(
+        `w-8 h-8 border ${borderCls} ${bgCls} flex items-center justify-center cursor-pointer hover:border-gray-500`,
+      ),
       Events.onClick(LevelArchitect(ClickGrid(x, y))),
     },
     list{
@@ -134,8 +140,26 @@ let renderGrid = (state: levelArchitectState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("flex items-center gap-4 text-xs text-gray-400")},
         list{
           span(list{}, list{text(`Entities: ${Int.toString(Array.length(state.entities))}`)}),
-          span(list{}, list{text(`Guards: ${Int.toString(LevelArchitectEngine.countByKind(state.entities, EntityGuard))}`)}),
-          span(list{}, list{text(`Devices: ${Int.toString(LevelArchitectEngine.countByKind(state.entities, EntityDevice))}`)}),
+          span(
+            list{},
+            list{
+              text(
+                `Guards: ${Int.toString(
+                    LevelArchitectEngine.countByKind(state.entities, EntityGuard),
+                  )}`,
+              ),
+            },
+          ),
+          span(
+            list{},
+            list{
+              text(
+                `Devices: ${Int.toString(
+                    LevelArchitectEngine.countByKind(state.entities, EntityDevice),
+                  )}`,
+              ),
+            },
+          ),
         },
       ),
     },
@@ -165,7 +189,9 @@ let renderAssets = (state: levelArchitectState): Tea_Vdom.t<msg> => {
       ->Array.map(asset =>
         div(
           list{
-            Attrs.class_("p-2 bg-gray-800 rounded border border-gray-700 cursor-pointer hover:border-gray-500"),
+            Attrs.class_(
+              "p-2 bg-gray-800 rounded border border-gray-700 cursor-pointer hover:border-gray-500",
+            ),
             Events.onClick(LevelArchitect(SelectTool(ToolPlace(asset.entityKind)))),
           },
           list{
@@ -184,7 +210,11 @@ let renderPatrols = (state: levelArchitectState): Tea_Vdom.t<msg> => {
   if Array.length(state.patrols) === 0 {
     div(
       list{Attrs.class_("text-center text-gray-500 text-sm py-8")},
-      list{text("No guard patrols defined. Select the Patrol tool and click guard entities to add waypoints.")},
+      list{
+        text(
+          "No guard patrols defined. Select the Patrol tool and click guard entities to add waypoints.",
+        ),
+      },
     )
   } else {
     div(
@@ -197,7 +227,10 @@ let renderPatrols = (state: levelArchitectState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("flex items-center justify-between mb-1")},
               list{
-                span(list{Attrs.class_("text-sm text-gray-100")}, list{text(`Guard: ${patrol.guardId}`)}),
+                span(
+                  list{Attrs.class_("text-sm text-gray-100")},
+                  list{text(`Guard: ${patrol.guardId}`)},
+                ),
                 span(
                   list{Attrs.class_("text-xs text-gray-400")},
                   list{text(`${Int.toString(Array.length(patrol.waypoints))} waypoints`)},
@@ -251,14 +284,18 @@ let renderValidation = (state: levelArchitectState): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-amber-700 text-white rounded hover:bg-amber-600 cursor-pointer"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-amber-700 text-white rounded hover:bg-amber-600 cursor-pointer",
+              ),
               Events.onClick(LevelArchitect(ValidateLevel)),
             },
             list{text("Validate Level")},
           ),
           button(
             list{
-              Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-cyan-400 rounded hover:bg-gray-600 cursor-pointer"),
+              Attrs.class_(
+                "px-2 py-1 text-xs bg-gray-700 text-cyan-400 rounded hover:bg-gray-600 cursor-pointer",
+              ),
               Events.onClick(Ums(NavigateToPanel(PanelLevelArchitect))),
             },
             list{text("Open in UMS")},
@@ -308,7 +345,15 @@ let renderValidation = (state: levelArchitectState): Tea_Vdom.t<msg> => {
                           },
                         ),
                       },
-                      list{text(if v.allPassed { "ALL PASSED" } else { "HAS FAILURES" })},
+                      list{
+                        text(
+                          if v.allPassed {
+                            "ALL PASSED"
+                          } else {
+                            "HAS FAILURES"
+                          },
+                        ),
+                      },
                     ),
                   },
                 ),
@@ -394,7 +439,10 @@ let view = (state: levelArchitectState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-lg font-semibold text-gray-100")}, list{text("Level Architect")}),
+              span(
+                list{Attrs.class_("text-lg font-semibold text-gray-100")},
+                list{text("Level Architect")},
+              ),
               span(list{Attrs.class_("text-sm text-gray-400")}, list{text(state.levelName)}),
             },
           ),
@@ -487,7 +535,11 @@ let view = (state: levelArchitectState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300",
+            ),
+          },
           list{
             div(
               list{Attrs.class_("flex items-center justify-between")},

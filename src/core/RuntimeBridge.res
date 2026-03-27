@@ -156,7 +156,7 @@ let decodeDialogPath = (value: JSON.t): option<string> => {
   switch JSON.Classify.classify(value) {
   | String(path) => Some(path)
   | Array(arr) =>
-    switch Array.get(arr, 0) {
+    switch arr[0] {
     | Some(item) =>
       switch JSON.Classify.classify(item) {
       | String(s) => Some(s)

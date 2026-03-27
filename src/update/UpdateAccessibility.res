@@ -12,17 +12,20 @@ let updateAccessibility = (model: model, msg: accessibilityMsg): (model, Tea_Cmd
   }
   switch msg {
   | SetAccessibilityPalette(palette) => {
-    let newA = {...a, palette}
-    // Also update provenance palette for backward compatibility
-    ({...model, accessibility: newA, provenance: {...model.provenance, palette}}, AccessibilityEngine.saveCmd(newA))
-  }
-  | SetThemeMode(theme) => {
-    let resolvedTheme = switch theme {
-    | ThemeSystem => AccessibilityEngine.detectOsColorScheme()
-    | other => other
+      let newA = {...a, palette}
+      // Also update provenance palette for backward compatibility
+      (
+        {...model, accessibility: newA, provenance: {...model.provenance, palette}},
+        AccessibilityEngine.saveCmd(newA),
+      )
     }
-    withSave({...a, theme, resolvedTheme})
-  }
+  | SetThemeMode(theme) => {
+      let resolvedTheme = switch theme {
+      | ThemeSystem => AccessibilityEngine.detectOsColorScheme()
+      | other => other
+      }
+      withSave({...a, theme, resolvedTheme})
+    }
   | OsColorSchemeChanged(osTheme) =>
     // Only update resolvedTheme if user is in System mode.
     if a.theme === ThemeSystem {
@@ -30,19 +33,19 @@ let updateAccessibility = (model: model, msg: accessibilityMsg): (model, Tea_Cmd
     } else {
       (model, Tea_Cmd.none)
     }
-  | SetAnimations(pref) =>
-    withSave({...a, animations: pref})
+  | SetAnimations(pref) => withSave({...a, animations: pref})
   | SetFontSize(size) => {
-    let newA = {...a, fontSize: size}
-    ({...model, accessibility: newA}, Tea_Cmd.batch(list{
-      AccessibilityEngine.saveCmd(newA),
-      AccessibilityEngine.applyFontSizeCmd(size),
-    }))
-  }
-  | SetFocusStyle(style) =>
-    withSave({...a, focusStyle: style})
-  | ToggleAccessibilityToolbar =>
-    // Don't persist toolbar expanded state — it's transient.
+      let newA = {...a, fontSize: size}
+      (
+        {...model, accessibility: newA},
+        Tea_Cmd.batch(list{
+          AccessibilityEngine.saveCmd(newA),
+          AccessibilityEngine.applyFontSizeCmd(size),
+        }),
+      )
+    }
+  | SetFocusStyle(style) => withSave({...a, focusStyle: style})
+  | ToggleAccessibilityToolbar => // Don't persist toolbar expanded state — it's transient.
     ({...model, accessibility: {...a, toolbarExpanded: !a.toolbarExpanded}}, Tea_Cmd.none)
   }
 }

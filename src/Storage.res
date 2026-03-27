@@ -17,19 +17,16 @@ type persistedState = {
   editorContent: string,
   neuralTokens: array<neuralToken>,
   worldContent: string,
-
   // Event chain data (Priority 1 - imported analysis results)
   eventChain: array<eventChainEvent>,
   eventChainSummary: option<eventChainSummary>,
   eventChainTimeline: option<eventChainTimeline>,
-
   // User preferences (Priority 2)
   viewMode: viewMode,
   paneLVisible: bool,
   paneNVisible: bool,
   paneWVisible: bool,
   humidity: humidityLevel,
-
   // Session state (Priority 3)
   vexometerIndex: float,
   orbitalStability: float,
@@ -123,31 +120,34 @@ let toJsonObject = (state: persistedState): JSON.t => {
     d->Dict.set("pinned", JSON.Encode.bool(c.pinned))
     JSON.Encode.object(d)
   })
-  let sourceToString = (s: tokenSource): string => switch s {
-  | NeuralInference => "neural"
-  | EchidnaProver => "echidna"
-  | TypeLLKernel => "typell"
-  | VeriSimInference => "verisim"
-  | AntiCrashGate => "anticrash"
-  | OperatorInput => "operator"
-  | OrbitalSync => "orbital"
-  }
-  let categoryToString = (c: tokenCategory): string => switch c {
-  | Observation => "observation"
-  | Hypothesis => "hypothesis"
-  | Deduction => "deduction"
-  | Abduction => "abduction"
-  | ProofStep => "proof"
-  | Violation => "violation"
-  | Correction => "correction"
-  | Synthesis => "synthesis"
-  }
-  let phaseToString = (p: oodaPhase): string => switch p {
-  | Observe => "observe"
-  | Orient => "orient"
-  | Decide => "decide"
-  | Act => "act"
-  }
+  let sourceToString = (s: tokenSource): string =>
+    switch s {
+    | NeuralInference => "neural"
+    | EchidnaProver => "echidna"
+    | TypeLLKernel => "typell"
+    | VeriSimInference => "verisim"
+    | AntiCrashGate => "anticrash"
+    | OperatorInput => "operator"
+    | OrbitalSync => "orbital"
+    }
+  let categoryToString = (c: tokenCategory): string =>
+    switch c {
+    | Observation => "observation"
+    | Hypothesis => "hypothesis"
+    | Deduction => "deduction"
+    | Abduction => "abduction"
+    | ProofStep => "proof"
+    | Violation => "violation"
+    | Correction => "correction"
+    | Synthesis => "synthesis"
+    }
+  let phaseToString = (p: oodaPhase): string =>
+    switch p {
+    | Observe => "observe"
+    | Orient => "orient"
+    | Decide => "decide"
+    | Act => "act"
+    }
   let tokens = state.neuralTokens->Array.map(t => {
     let d = Dict.make()
     d->Dict.set("id", JSON.Encode.string(t.id))
@@ -229,7 +229,10 @@ let serialize = (state: persistedState): string => {
 }
 
 // Raw localStorage helpers that receive values as arguments
-let setItem: (string, string) => unit = %raw(`function(key, value) { localStorage.setItem(key, value) }`)
+let setItem: (
+  string,
+  string,
+) => unit = %raw(`function(key, value) { localStorage.setItem(key, value) }`)
 
 // Save model to localStorage
 let save = (model: model): unit => {
@@ -245,35 +248,38 @@ let save = (model: model): unit => {
 // ── Token source/category/phase string parsers (used by decoders) ────
 
 /// Parse a token source string into a tokenSource variant.
-let parseSource = (s: string): tokenSource => switch s {
-| "echidna" => EchidnaProver
-| "typell" => TypeLLKernel
-| "verisim" => VeriSimInference
-| "anticrash" => AntiCrashGate
-| "operator" => OperatorInput
-| "orbital" => OrbitalSync
-| _ => NeuralInference
-}
+let parseSource = (s: string): tokenSource =>
+  switch s {
+  | "echidna" => EchidnaProver
+  | "typell" => TypeLLKernel
+  | "verisim" => VeriSimInference
+  | "anticrash" => AntiCrashGate
+  | "operator" => OperatorInput
+  | "orbital" => OrbitalSync
+  | _ => NeuralInference
+  }
 
 /// Parse a token category string into a tokenCategory variant.
-let parseCategory = (s: string): tokenCategory => switch s {
-| "hypothesis" => Hypothesis
-| "deduction" => Deduction
-| "abduction" => Abduction
-| "proof" => ProofStep
-| "violation" => Violation
-| "correction" => Correction
-| "synthesis" => Synthesis
-| _ => Observation
-}
+let parseCategory = (s: string): tokenCategory =>
+  switch s {
+  | "hypothesis" => Hypothesis
+  | "deduction" => Deduction
+  | "abduction" => Abduction
+  | "proof" => ProofStep
+  | "violation" => Violation
+  | "correction" => Correction
+  | "synthesis" => Synthesis
+  | _ => Observation
+  }
 
 /// Parse an OODA phase string into an oodaPhase variant.
-let parsePhase = (s: string): oodaPhase => switch s {
-| "orient" => Orient
-| "decide" => Decide
-| "act" => Act
-| _ => Observe
-}
+let parsePhase = (s: string): oodaPhase =>
+  switch s {
+  | "orient" => Orient
+  | "decide" => Decide
+  | "act" => Act
+  | _ => Observe
+  }
 
 // ── Tea_Json decoders for persisted state ────────────────────────────
 
@@ -281,18 +287,14 @@ let parsePhase = (s: string): oodaPhase => switch s {
 let constraintDecoder: Tea_Json.decoder<symbolicConstraint> = {
   open Decoders
   open Tea_Json
-  map4(
-    (id, expression, active, pinned) => ({
-      id,
-      expression,
-      active,
-      pinned,
-    }: symbolicConstraint),
-    stringField("id"),
-    stringField("expression"),
-    fieldWithDefault("active", bool, true),
-    boolField("pinned"),
-  )
+  map4((id, expression, active, pinned): symbolicConstraint => {
+    id,
+    expression,
+    active,
+    pinned,
+  }, stringField(
+    "id",
+  ), stringField("expression"), fieldWithDefault("active", bool, true), boolField("pinned"))
 }
 
 /// Tea_Json decoder for a neural token.
@@ -300,7 +302,18 @@ let neuralTokenDecoder: Tea_Json.decoder<neuralToken> = {
   open Decoders
   open Tea_Json
   map10(
-    (id, content, timestamp, confidence, validated, sourceStr, categoryStr, phaseStr, causedBy, proofHash) => ({
+    (
+      id,
+      content,
+      timestamp,
+      confidence,
+      validated,
+      sourceStr,
+      categoryStr,
+      phaseStr,
+      causedBy,
+      proofHash,
+    ): neuralToken => {
       id,
       content,
       timestamp,
@@ -311,7 +324,7 @@ let neuralTokenDecoder: Tea_Json.decoder<neuralToken> = {
       emittedDuring: parsePhase(phaseStr),
       causedBy,
       proofHash,
-    }: neuralToken),
+    },
     stringField("id"),
     stringField("content"),
     floatField("timestamp"),
@@ -329,26 +342,29 @@ let neuralTokenDecoder: Tea_Json.decoder<neuralToken> = {
 let eventChainEventDecoder: Tea_Json.decoder<eventChainEvent> = {
   open Decoders
   open Tea_Json
-  map8(
-    (id, axis, startMs, durationMs, intensity, status, peakMemory, notes) => ({
-      id,
-      axis,
-      startMs,
-      durationMs,
-      intensity,
-      status,
-      peakMemory,
-      notes,
-    }: eventChainEvent),
-    stringField("id"),
-    stringField("axis"),
-    optionalFieldDecoder("startMs", float),
-    floatField("durationMs"),
-    stringField("intensity"),
-    stringField("status"),
-    optionalFieldDecoder("peakMemory", float),
-    optionalFieldDecoder("notes", string),
-  )
+  map8((id, axis, startMs, durationMs, intensity, status, peakMemory, notes): eventChainEvent => {
+    id,
+    axis,
+    startMs,
+    durationMs,
+    intensity,
+    status,
+    peakMemory,
+    notes,
+  }, stringField(
+    "id",
+  ), stringField(
+    "axis",
+  ), optionalFieldDecoder(
+    "startMs",
+    float,
+  ), floatField(
+    "durationMs",
+  ), stringField(
+    "intensity",
+  ), stringField(
+    "status",
+  ), optionalFieldDecoder("peakMemory", float), optionalFieldDecoder("notes", string))
 }
 
 /// Tea_Json decoder for a persisted event chain summary (camelCase field names).
@@ -356,13 +372,13 @@ let summaryDecoder: Tea_Json.decoder<eventChainSummary> = {
   open Decoders
   open Tea_Json
   map5(
-    (program, weakPoints, criticalWeakPoints, totalCrashes, robustnessScore) => ({
+    (program, weakPoints, criticalWeakPoints, totalCrashes, robustnessScore): eventChainSummary => {
       program,
       weakPoints,
       criticalWeakPoints,
       totalCrashes,
       robustnessScore,
-    }: eventChainSummary),
+    },
     stringField("program"),
     intField("weakPoints"),
     intField("criticalWeakPoints"),
@@ -375,14 +391,10 @@ let summaryDecoder: Tea_Json.decoder<eventChainSummary> = {
 let timelineDecoder: Tea_Json.decoder<eventChainTimeline> = {
   open Decoders
   open Tea_Json
-  map2(
-    (durationMs, events) => ({
-      durationMs,
-      events,
-    }: eventChainTimeline),
-    floatField("durationMs"),
-    intField("events"),
-  )
+  map2((durationMs, events): eventChainTimeline => {
+    durationMs,
+    events,
+  }, floatField("durationMs"), intField("events"))
 }
 
 /// Tea_Json decoder for the full persisted state.
@@ -390,27 +402,40 @@ let persistedStateDecoder: Tea_Json.decoder<persistedState> = {
   open Decoders
   open Tea_Json
   map13(
-    (constraints, editorContent, neuralTokens, worldContent,
-     eventChain, eventChainSummary, eventChainTimeline,
-     viewModeStr, paneLVisible, paneNVisible, paneWVisible,
-     humidityStr, vexAndOrbital) => {
+    (
+      constraints,
+      editorContent,
+      neuralTokens,
+      worldContent,
+      eventChain,
+      eventChainSummary,
+      eventChainTimeline,
+      viewModeStr,
+      paneLVisible,
+      paneNVisible,
+      paneWVisible,
+      humidityStr,
+      vexAndOrbital,
+    ) => {
       let (vexometerIndex, orbitalStability) = vexAndOrbital
-      ({
-        constraints,
-        editorContent,
-        neuralTokens,
-        worldContent,
-        eventChain,
-        eventChainSummary,
-        eventChainTimeline,
-        viewMode: stringToViewMode(viewModeStr),
-        paneLVisible,
-        paneNVisible,
-        paneWVisible,
-        humidity: stringToHumidity(humidityStr),
-        vexometerIndex,
-        orbitalStability,
-      }: persistedState)
+      (
+        {
+          constraints,
+          editorContent,
+          neuralTokens,
+          worldContent,
+          eventChain,
+          eventChainSummary,
+          eventChainTimeline,
+          viewMode: stringToViewMode(viewModeStr),
+          paneLVisible,
+          paneNVisible,
+          paneWVisible,
+          humidity: stringToHumidity(humidityStr),
+          vexometerIndex,
+          orbitalStability,
+        }: persistedState
+      )
     },
     fieldWithDefault("constraints", lenientArray(constraintDecoder), []),
     stringField("editorContent"),
@@ -478,7 +503,9 @@ let modelFromPersisted = (state: persistedState): model => {
 // Load persisted state from localStorage and merge with initial model
 let load = (): option<model> => {
   try {
-    let getItem: string => option<string> = %raw(`function(key) { var v = localStorage.getItem(key); return v === null ? undefined : v }`)
+    let getItem: string => option<
+      string,
+    > = %raw(`function(key) { var v = localStorage.getItem(key); return v === null ? undefined : v }`)
     let json: option<string> = getItem(storageKey)
 
     switch json {

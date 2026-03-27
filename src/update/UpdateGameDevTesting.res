@@ -15,7 +15,10 @@ let updateUnitTestRunner = (model: model, msg: unitTestRunnerMsg): (model, Tea_C
   | UtrCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, unitTestRunner: {...state, running: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, unitTestRunner: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, unitTestRunner: {...state, running: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissUtrError => ({...model, unitTestRunner: {...state, error: None}}, Tea_Cmd.none)
   | _ => (model, Tea_Cmd.none) // Stub: unhandled unit test runner messages
@@ -27,11 +30,17 @@ let updateFunctionalTester = (model: model, msg: functionalTesterMsg): (model, T
   let state = model.functionalTester
   switch msg {
   | SetFtTab(tab) => ({...model, functionalTester: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | FtStarted => ({...model, functionalTester: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | FtStarted => (
+      {...model, functionalTester: {...state, running: true, error: None}},
+      Tea_Cmd.none,
+    )
   | FtCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, functionalTester: {...state, running: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, functionalTester: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, functionalTester: {...state, running: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissFtError => ({...model, functionalTester: {...state, error: None}}, Tea_Cmd.none)
   | _ => (model, Tea_Cmd.none) // Stub: unhandled functional tester messages
@@ -47,7 +56,10 @@ let updateRegressionGuard = (model: model, msg: regressionGuardMsg): (model, Tea
   | RgCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, regressionGuard: {...state, running: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, regressionGuard: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, regressionGuard: {...state, running: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissRgError => ({...model, regressionGuard: {...state, error: None}}, Tea_Cmd.none)
   | _ => (model, Tea_Cmd.none) // Stub: unhandled regression guard messages
@@ -55,15 +67,24 @@ let updateRegressionGuard = (model: model, msg: regressionGuardMsg): (model, Tea
 }
 
 /// Handles all Performance Profiler messages — frame budget, GC pressure, flamegraphs.
-let updatePerformanceProfiler = (model: model, msg: performanceProfilerMsg): (model, Tea_Cmd.t<msg>) => {
+let updatePerformanceProfiler = (model: model, msg: performanceProfilerMsg): (
+  model,
+  Tea_Cmd.t<msg>,
+) => {
   let state = model.performanceProfiler
   switch msg {
   | SetPpTab(tab) => ({...model, performanceProfiler: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | PpStarted => ({...model, performanceProfiler: {...state, profiling: true, error: None}}, Tea_Cmd.none)
+  | PpStarted => (
+      {...model, performanceProfiler: {...state, profiling: true, error: None}},
+      Tea_Cmd.none,
+    )
   | PpCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, performanceProfiler: {...state, profiling: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, performanceProfiler: {...state, profiling: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, performanceProfiler: {...state, profiling: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissPpError => ({...model, performanceProfiler: {...state, error: None}}, Tea_Cmd.none)
   | _ => (model, Tea_Cmd.none) // Stub: unhandled performance profiler messages
@@ -79,7 +100,10 @@ let updateLoadTester = (model: model, msg: loadTesterMsg): (model, Tea_Cmd.t<msg
   | LtCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, loadTester: {...state, running: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, loadTester: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, loadTester: {...state, running: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissLtError => ({...model, loadTester: {...state, error: None}}, Tea_Cmd.none)
   | _ => (model, Tea_Cmd.none) // Stub: unhandled load tester messages
@@ -95,7 +119,10 @@ let updateSoakMonitor = (model: model, msg: soakMonitorMsg): (model, Tea_Cmd.t<m
   | SmCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, soakMonitor: {...state, monitoring: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, soakMonitor: {...state, monitoring: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, soakMonitor: {...state, monitoring: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissSmError => ({...model, soakMonitor: {...state, error: None}}, Tea_Cmd.none)
   | _ => (model, Tea_Cmd.none) // Stub: unhandled soak monitor messages
@@ -103,15 +130,24 @@ let updateSoakMonitor = (model: model, msg: soakMonitorMsg): (model, Tea_Cmd.t<m
 }
 
 /// Handles all Compatibility Matrix messages — browser/device/resolution test matrix.
-let updateCompatibilityMatrix = (model: model, msg: compatibilityMatrixMsg): (model, Tea_Cmd.t<msg>) => {
+let updateCompatibilityMatrix = (model: model, msg: compatibilityMatrixMsg): (
+  model,
+  Tea_Cmd.t<msg>,
+) => {
   let state = model.compatibilityMatrix
   switch msg {
   | SetCmTab(tab) => ({...model, compatibilityMatrix: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | CmStarted => ({...model, compatibilityMatrix: {...state, running: true, error: None}}, Tea_Cmd.none)
+  | CmStarted => (
+      {...model, compatibilityMatrix: {...state, running: true, error: None}},
+      Tea_Cmd.none,
+    )
   | CmCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, compatibilityMatrix: {...state, running: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, compatibilityMatrix: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, compatibilityMatrix: {...state, running: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissCmError => ({...model, compatibilityMatrix: {...state, error: None}}, Tea_Cmd.none)
   | _ => (model, Tea_Cmd.none) // Stub: unhandled compatibility matrix messages
@@ -119,15 +155,24 @@ let updateCompatibilityMatrix = (model: model, msg: compatibilityMatrixMsg): (mo
 }
 
 /// Handles all Exploratory Workbench messages — freeform play session recording.
-let updateExploratoryWorkbench = (model: model, msg: exploratoryWorkbenchMsg): (model, Tea_Cmd.t<msg>) => {
+let updateExploratoryWorkbench = (model: model, msg: exploratoryWorkbenchMsg): (
+  model,
+  Tea_Cmd.t<msg>,
+) => {
   let state = model.exploratoryWorkbench
   switch msg {
   | SetEwTab(tab) => ({...model, exploratoryWorkbench: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | EwStarted => ({...model, exploratoryWorkbench: {...state, recording: true, error: None}}, Tea_Cmd.none)
+  | EwStarted => (
+      {...model, exploratoryWorkbench: {...state, recording: true, error: None}},
+      Tea_Cmd.none,
+    )
   | EwCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, exploratoryWorkbench: {...state, recording: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, exploratoryWorkbench: {...state, recording: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, exploratoryWorkbench: {...state, recording: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissEwError => ({...model, exploratoryWorkbench: {...state, error: None}}, Tea_Cmd.none)
   | _ => (model, Tea_Cmd.none) // Stub: unhandled exploratory workbench messages
@@ -139,11 +184,17 @@ let updateBetaFeedbackHub = (model: model, msg: betaFeedbackHubMsg): (model, Tea
   let state = model.betaFeedbackHub
   switch msg {
   | SetBfhTab(tab) => ({...model, betaFeedbackHub: {...state, activeTab: tab}}, Tea_Cmd.none)
-  | BfhStarted => ({...model, betaFeedbackHub: {...state, submitting: true, error: None}}, Tea_Cmd.none)
+  | BfhStarted => (
+      {...model, betaFeedbackHub: {...state, submitting: true, error: None}},
+      Tea_Cmd.none,
+    )
   | BfhCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, betaFeedbackHub: {...state, submitting: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, betaFeedbackHub: {...state, submitting: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, betaFeedbackHub: {...state, submitting: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissBfhError => ({...model, betaFeedbackHub: {...state, error: None}}, Tea_Cmd.none)
   | _ => (model, Tea_Cmd.none) // Stub: unhandled beta feedback hub messages
@@ -159,7 +210,10 @@ let updateBalanceAnalyser = (model: model, msg: balanceAnalyserMsg): (model, Tea
   | BaCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, balanceAnalyser: {...state, running: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, balanceAnalyser: {...state, running: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, balanceAnalyser: {...state, running: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissBaError => ({...model, balanceAnalyser: {...state, error: None}}, Tea_Cmd.none)
   | _ => (model, Tea_Cmd.none) // Stub: unhandled balance analyser messages

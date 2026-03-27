@@ -11,9 +11,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Run a drift check on all monitored models.
 /// Returns JSON with per-model drift status and any new alerts.
-let check = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let check = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("nesy_drift_check", ())
     ->Promise.then(result => {
@@ -30,9 +28,7 @@ let check = (
 
 /// Fetch historical drift alerts.
 /// Returns JSON array of drift alert objects sorted by timestamp.
-let history = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let history = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("nesy_drift_history", ())
     ->Promise.then(result => {

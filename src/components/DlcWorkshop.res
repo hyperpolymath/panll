@@ -9,11 +9,9 @@ open Msg
 open Tea.Html
 
 /// Render a category tab button.
-let renderTab = (
-  label: string,
-  cat: dlcWorkshopCategory,
-  active: dlcWorkshopCategory,
-): Tea_Vdom.t<msg> => {
+let renderTab = (label: string, cat: dlcWorkshopCategory, active: dlcWorkshopCategory): Tea_Vdom.t<
+  msg,
+> => {
   let isActive = cat === active
   let cls = isActive
     ? "px-3 py-1.5 text-xs font-medium bg-gray-700 text-white rounded"
@@ -26,12 +24,18 @@ let renderTab = (
 
 /// Render a puzzle card.
 let renderPuzzleCard = (puzzle: dlcPuzzle, isSelected: bool): Tea_Vdom.t<msg> => {
-  let borderCls = if isSelected { "border-cyan-400" } else { "border-gray-700" }
+  let borderCls = if isSelected {
+    "border-cyan-400"
+  } else {
+    "border-gray-700"
+  }
   let diffCls = DlcWorkshopEngine.difficultyColour(puzzle.difficulty)
   let testCls = DlcWorkshopEngine.testStatusColour(puzzle.testStatus)
   div(
     list{
-      Attrs.class_(`p-3 bg-gray-800 rounded border ${borderCls} cursor-pointer hover:border-gray-500`),
+      Attrs.class_(
+        `p-3 bg-gray-800 rounded border ${borderCls} cursor-pointer hover:border-gray-500`,
+      ),
       Events.onClick(DlcWorkshop(SelectPuzzle(puzzle.id))),
     },
     list{
@@ -52,9 +56,18 @@ let renderPuzzleCard = (puzzle: dlcPuzzle, isSelected: bool): Tea_Vdom.t<msg> =>
       div(
         list{Attrs.class_("flex items-center gap-3 text-xs")},
         list{
-          span(list{Attrs.class_("text-gray-500")}, list{text(`${Int.toString(Array.length(puzzle.instructions))} instrs`)}),
-          span(list{Attrs.class_("text-gray-500")}, list{text(`${Int.toString(puzzle.optimalSteps)} optimal`)}),
-          span(list{Attrs.class_(testCls)}, list{text(DlcWorkshopEngine.testStatusLabel(puzzle.testStatus))}),
+          span(
+            list{Attrs.class_("text-gray-500")},
+            list{text(`${Int.toString(Array.length(puzzle.instructions))} instrs`)},
+          ),
+          span(
+            list{Attrs.class_("text-gray-500")},
+            list{text(`${Int.toString(puzzle.optimalSteps)} optimal`)},
+          ),
+          span(
+            list{Attrs.class_(testCls)},
+            list{text(DlcWorkshopEngine.testStatusLabel(puzzle.testStatus))},
+          ),
         },
       ),
     },
@@ -63,7 +76,11 @@ let renderPuzzleCard = (puzzle: dlcPuzzle, isSelected: bool): Tea_Vdom.t<msg> =>
 
 /// Render puzzles list view.
 let renderPuzzles = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
-  let filtered = DlcWorkshopEngine.filterPuzzles(state.puzzles, state.filterText, state.filterDifficulty)
+  let filtered = DlcWorkshopEngine.filterPuzzles(
+    state.puzzles,
+    state.filterText,
+    state.filterDifficulty,
+  )
   div(
     list{Attrs.class_("space-y-3")},
     list{
@@ -73,7 +90,9 @@ let renderPuzzles = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500"),
+              Attrs.class_(
+                "flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500",
+              ),
               Attrs.placeholder("Filter puzzles..."),
               Attrs.value(state.filterText),
               Events.onInput(text => DlcWorkshop(SetDlcFilter(text))),
@@ -115,7 +134,12 @@ let renderPuzzles = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("flex items-center gap-4 text-xs text-gray-400")},
         list{
           span(list{}, list{text(`${Int.toString(Array.length(filtered))} puzzles`)}),
-          span(list{}, list{text(`${Int.toString(DlcWorkshopEngine.passedTests(state.puzzles))} tests passed`)}),
+          span(
+            list{},
+            list{
+              text(`${Int.toString(DlcWorkshopEngine.passedTests(state.puzzles))} tests passed`),
+            },
+          ),
         },
       ),
       // Puzzle cards
@@ -159,14 +183,18 @@ let renderComposer = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
             list{
               button(
                 list{
-                  Attrs.class_("px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+                  ),
                   Events.onClick(DlcWorkshop(AddInstruction)),
                 },
                 list{text("Add Instruction")},
               ),
               button(
                 list{
-                  Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(DlcWorkshop(ClearComposer)),
                 },
                 list{text("Clear")},
@@ -178,7 +206,11 @@ let renderComposer = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
       // Instructions list
       if Array.length(state.composerInstructions) === 0 {
         div(
-          list{Attrs.class_("text-center text-gray-500 text-sm py-8 border border-dashed border-gray-700 rounded")},
+          list{
+            Attrs.class_(
+              "text-center text-gray-500 text-sm py-8 border border-dashed border-gray-700 rounded",
+            ),
+          },
           list{text("No instructions — click 'Add Instruction' to start composing a puzzle")},
         )
       } else {
@@ -189,10 +221,14 @@ let renderComposer = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-800 rounded")},
               list{
-                span(list{Attrs.class_("text-gray-500 w-6")}, list{text(Int.toString(instr.index))}),
+                span(
+                  list{Attrs.class_("text-gray-500 w-6")},
+                  list{text(Int.toString(instr.index))},
+                ),
                 span(list{Attrs.class_("text-cyan-400 w-16")}, list{text(instr.opcode)}),
                 switch instr.operand {
-                | Some(op) => span(list{Attrs.class_("text-amber-400 w-8")}, list{text(Int.toString(op))})
+                | Some(op) =>
+                  span(list{Attrs.class_("text-amber-400 w-8")}, list{text(Int.toString(op))})
                 | None => span(list{Attrs.class_("text-gray-600 w-8")}, list{text("-")})
                 },
                 if instr.comment !== "" {
@@ -227,14 +263,22 @@ let renderTesting = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+              ),
               Events.onClick(DlcWorkshop(RunAllTests)),
             },
             list{text("Run All Tests")},
           ),
           span(
             list{Attrs.class_("text-xs text-gray-400")},
-            list{text(`${Int.toString(DlcWorkshopEngine.passedTests(state.puzzles))}/${Int.toString(Array.length(state.puzzles))} passed`)},
+            list{
+              text(
+                `${Int.toString(DlcWorkshopEngine.passedTests(state.puzzles))}/${Int.toString(
+                    Array.length(state.puzzles),
+                  )} passed`,
+              ),
+            },
           ),
         },
       ),
@@ -248,10 +292,15 @@ let renderTesting = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
             list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-800 rounded text-xs")},
             list{
               span(list{Attrs.class_("text-gray-200 w-40 truncate")}, list{text(puzzle.name)}),
-              span(list{Attrs.class_(testCls)}, list{text(DlcWorkshopEngine.testStatusLabel(puzzle.testStatus))}),
+              span(
+                list{Attrs.class_(testCls)},
+                list{text(DlcWorkshopEngine.testStatusLabel(puzzle.testStatus))},
+              ),
               button(
                 list{
-                  Attrs.class_("ml-auto px-2 py-0.5 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "ml-auto px-2 py-0.5 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(DlcWorkshop(RunPuzzleTest(puzzle.id))),
                 },
                 list{text("Run")},
@@ -289,7 +338,10 @@ let renderAssets = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("p-2 bg-gray-800 rounded border border-gray-700")},
           list{
-            div(list{Attrs.class_("text-xs text-gray-100 font-medium truncate")}, list{text(asset.name)}),
+            div(
+              list{Attrs.class_("text-xs text-gray-100 font-medium truncate")},
+              list{text(asset.name)},
+            ),
             div(list{Attrs.class_("text-xs text-gray-500")}, list{text(asset.assetType)}),
             div(
               list{Attrs.class_("text-xs text-gray-600")},
@@ -313,7 +365,10 @@ let renderPackaging = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("p-4 bg-gray-800 rounded border border-gray-700")},
         list{
-          div(list{Attrs.class_("text-sm font-medium text-gray-200 mb-3")}, list{text("Pack Metadata")}),
+          div(
+            list{Attrs.class_("text-sm font-medium text-gray-200 mb-3")},
+            list{text("Pack Metadata")},
+          ),
           div(
             list{Attrs.class_("grid grid-cols-2 gap-3 text-xs")},
             list{
@@ -342,7 +397,10 @@ let renderPackaging = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
                 list{},
                 list{
                   div(list{Attrs.class_("text-gray-500")}, list{text("Puzzles")}),
-                  div(list{Attrs.class_("text-gray-200")}, list{text(Int.toString(Array.length(state.puzzles)))}),
+                  div(
+                    list{Attrs.class_("text-gray-200")},
+                    list{text(Int.toString(Array.length(state.puzzles)))},
+                  ),
                 },
               ),
             },
@@ -355,14 +413,22 @@ let renderPackaging = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("px-4 py-2 text-sm bg-purple-700 text-white rounded hover:bg-purple-600 cursor-pointer"),
+              Attrs.class_(
+                "px-4 py-2 text-sm bg-purple-700 text-white rounded hover:bg-purple-600 cursor-pointer",
+              ),
               Events.onClick(DlcWorkshop(PackageDlc)),
             },
             list{text("Package DLC")},
           ),
           span(
             list{Attrs.class_("text-xs text-gray-400")},
-            list{text(`${Int.toString(Array.length(state.puzzles))} puzzles, ${Int.toString(Array.length(state.assets))} assets`)},
+            list{
+              text(
+                `${Int.toString(Array.length(state.puzzles))} puzzles, ${Int.toString(
+                    Array.length(state.assets),
+                  )} assets`,
+              ),
+            },
           ),
         },
       ),
@@ -416,11 +482,11 @@ let view = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-lg font-semibold text-gray-100")}, list{text("DLC Workshop")}),
               span(
-                list{Attrs.class_("text-xs text-gray-500")},
-                list{text(state.packMeta.name)},
+                list{Attrs.class_("text-lg font-semibold text-gray-100")},
+                list{text("DLC Workshop")},
               ),
+              span(list{Attrs.class_("text-xs text-gray-500")}, list{text(state.packMeta.name)}),
             },
           ),
           div(
@@ -428,14 +494,18 @@ let view = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
             list{
               button(
                 list{
-                  Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(DlcWorkshop(ImportPuzzle)),
                 },
                 list{text("Import")},
               ),
               button(
                 list{
-                  Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(DlcWorkshop(ExportPuzzle)),
                 },
                 list{text("Export")},
@@ -459,7 +529,11 @@ let view = (state: dlcWorkshopState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300",
+            ),
+          },
           list{
             div(
               list{Attrs.class_("flex items-center justify-between")},

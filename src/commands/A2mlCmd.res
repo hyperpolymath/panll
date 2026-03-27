@@ -12,10 +12,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Load an A2ML manifest file from disk. Returns the raw file content
 /// as a JSON-wrapped string for client-side parsing by A2mlEngine.
-let loadManifest = (
-  path: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadManifest = (path: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("a2ml_load_manifest", {"path": path})
     ->Promise.then(result => {
@@ -34,10 +31,9 @@ let loadManifest = (
 /// basic structural checks (file exists, non-empty, valid encoding) and
 /// returns a JSON validation result. Deeper semantic validation is done
 /// client-side by A2mlEngine.validateManifest.
-let validateManifestFile = (
-  path: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let validateManifestFile = (path: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("a2ml_validate", {"path": path})
     ->Promise.then(result => {
@@ -54,9 +50,7 @@ let validateManifestFile = (
 
 /// List all .a2ml files found in the current repository. Returns a JSON
 /// array of file paths relative to the repo root.
-let listManifests = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listManifests = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("a2ml_list", {"_": true})
     ->Promise.then(result => {

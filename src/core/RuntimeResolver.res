@@ -67,19 +67,13 @@ let fetch = (uri: string, body: option<JSON.t>): promise<string> => {
     | Some(payload) => RuntimeBridge.invoke(command, payload)
     | None => RuntimeBridge.invoke(command, ())
     }
-  | None =>
-    Promise.reject(
-      JsError.throwWithMessage(`Cannot resolve URI: ${uri}`),
-    )
+  | None => Promise.reject(JsError.throwWithMessage(`Cannot resolve URI: ${uri}`))
   }
 }
 
 /// Perform a health check for a service.
 /// Uses the service's health_check.path from the manifest.
-let healthCheck = (
-  serviceId: string,
-  _healthPath: string,
-): promise<bool> => {
+let healthCheck = (serviceId: string, _healthPath: string): promise<bool> => {
   let command = serviceId ++ "_health"
   RuntimeBridge.invoke(command, ())
   ->Promise.then(_result => Promise.resolve(true))

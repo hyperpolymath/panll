@@ -53,10 +53,7 @@ let elasticityBar = (elasticity: float): Tea_Vdom.t<msg> => {
     "bg-green-500"
   }
   div(
-    list{
-      Attrs.class_("flex items-center gap-2"),
-      Attrs.ariaLabel("Elasticity: " ++ pct ++ "%"),
-    },
+    list{Attrs.class_("flex items-center gap-2"), Attrs.ariaLabel("Elasticity: " ++ pct ++ "%")},
     list{
       div(
         list{Attrs.class_("w-16 h-2 bg-gray-800 rounded-full overflow-hidden")},
@@ -100,14 +97,8 @@ let renderContractile = (c: contractile): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex-1")},
             list{
-              div(
-                list{Attrs.class_("text-sm font-medium text-gray-200")},
-                list{text(c.name)},
-              ),
-              div(
-                list{Attrs.class_("text-xs text-gray-500 mt-0.5")},
-                list{text(c.description)},
-              ),
+              div(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text(c.name)}),
+              div(list{Attrs.class_("text-xs text-gray-500 mt-0.5")}, list{text(c.description)}),
             },
           ),
           enforcementLabel(c.enforcement),
@@ -144,8 +135,7 @@ let vexationIndicator = (vexometer: vexometerState): Tea_Vdom.t<msg> => {
           div(
             list{
               Attrs.class_(
-                "h-full rounded-full transition-all " ++
-                if vexometer.index > 0.7 {
+                "h-full rounded-full transition-all " ++ if vexometer.index > 0.7 {
                   "bg-red-500"
                 } else if vexometer.index > 0.4 {
                   "bg-amber-500"
@@ -202,8 +192,7 @@ let view = (contractiles: array<contractile>, vexometer: vexometerState): Tea_Vd
                     Int.toString(satisfiedCount) ++
                     "/" ++
                     Int.toString(totalCount) ++
-                    " satisfied" ++
-                    if violatedCount > 0 {
+                    " satisfied" ++ if violatedCount > 0 {
                       ", " ++ Int.toString(violatedCount) ++ " violated"
                     } else {
                       ""

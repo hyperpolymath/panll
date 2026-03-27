@@ -26,7 +26,9 @@ let init = (): antiCrashState => {
 }
 
 /// Check if a token violates type constraints
-let checkTypeConstraints = (token: neuralToken, constraints: array<symbolicConstraint>): option<violationType> => {
+let checkTypeConstraints = (token: neuralToken, constraints: array<symbolicConstraint>): option<
+  violationType,
+> => {
   let activeConstraints = Array.filter(constraints, c => c.active)
 
   let violation = Array.find(activeConstraints, c => {
@@ -34,7 +36,8 @@ let checkTypeConstraints = (token: neuralToken, constraints: array<symbolicConst
 
     // Check forbidden patterns: !contains("pattern")
     if String.includes(expr, "!contains(") {
-      let pattern = expr
+      let pattern =
+        expr
         ->String.replaceAll("!contains(\"", "")
         ->String.replaceAll("\")", "")
         ->String.trim
@@ -44,8 +47,7 @@ let checkTypeConstraints = (token: neuralToken, constraints: array<symbolicConst
       } else {
         false
       }
-    }
-    // Check type declarations: type FooBar
+    } // Check type declarations: type FooBar
     else if String.startsWith(expr, "type ") {
       let parts = String.split(expr, " ")
       if Array.length(parts) >= 2 {
@@ -59,9 +61,9 @@ let checkTypeConstraints = (token: neuralToken, constraints: array<symbolicConst
       } else {
         false
       }
-    }
-    // Fallback: check for dangerous keywords
-    else {
+    } else {
+      // Fallback: check for dangerous keywords
+
       String.includes(token.content, "undefined") ||
       String.includes(token.content, "null") ||
       String.includes(token.content, "NaN")
@@ -79,18 +81,9 @@ let checkSecurityConstraints = (token: neuralToken): option<violationType> => {
   // panic-attack:allow dynamic-code-detection-string — these are detection
   // patterns for security scanning, not actual code execution. Each string
   // is matched against user input to detect dangerous patterns.
-  let dangerousPatterns = [
-    "eval(",
-    "exec(",
-    "rm -rf",
-    "DROP TABLE",
-    "DELETE FROM",
-    "<script>",
-  ]
+  let dangerousPatterns = ["eval(", "exec(", "rm -rf", "DROP TABLE", "DELETE FROM", "<script>"]
 
-  let found = Array.find(dangerousPatterns, pattern =>
-    String.includes(token.content, pattern)
-  )
+  let found = Array.find(dangerousPatterns, pattern => String.includes(token.content, pattern))
 
   switch found {
   | Some(pattern) => Some(SecurityViolation(pattern))
@@ -99,13 +92,17 @@ let checkSecurityConstraints = (token: neuralToken): option<violationType> => {
 }
 
 /// Check for logical contradictions
-let checkLogicConstraints = (token: neuralToken, constraints: array<symbolicConstraint>): option<violationType> => {
+let checkLogicConstraints = (token: neuralToken, constraints: array<symbolicConstraint>): option<
+  violationType,
+> => {
   let activeConstraints = Array.filter(constraints, c => c.active)
 
   // Check for obvious boolean contradictions
-  if String.includes(token.content, "true && false") ||
-     String.includes(token.content, "!true && true") ||
-     String.includes(token.content, "false || false && true") {
+  if (
+    String.includes(token.content, "true && false") ||
+    String.includes(token.content, "!true && true") ||
+    String.includes(token.content, "false || false && true")
+  ) {
     Some(LogicContradiction("Boolean contradiction detected"))
   } else {
     // Check if token contradicts any constraint expression

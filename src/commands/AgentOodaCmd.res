@@ -11,9 +11,7 @@ let invoke = RuntimeBridge.invoke
 
 /// List all active OODA sessions.
 /// Returns JSON array of session summary objects.
-let listSessions = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listSessions = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("agent_ooda_list_sessions", ())
     ->Promise.then(result => {
@@ -30,10 +28,9 @@ let listSessions = (
 
 /// Get detailed information for a specific OODA session.
 /// Returns JSON with full session detail including transition history.
-let sessionDetail = (
-  sessionId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let sessionDetail = (sessionId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("agent_ooda_session_detail", {"session_id": sessionId})
     ->Promise.then(result => {
@@ -50,10 +47,7 @@ let sessionDetail = (
 
 /// Manually advance an agent session to the next OODA state.
 /// Returns JSON with the updated session state.
-let advance = (
-  sessionId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let advance = (sessionId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("agent_ooda_advance", {"session_id": sessionId})
     ->Promise.then(result => {
@@ -70,11 +64,9 @@ let advance = (
 
 /// Halt an agent session immediately.
 /// Returns JSON confirming the halt.
-let halt = (
-  sessionId: string,
-  reason: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let halt = (sessionId: string, reason: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("agent_ooda_halt", {"session_id": sessionId, "reason": reason})
     ->Promise.then(result => {

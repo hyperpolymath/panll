@@ -49,9 +49,7 @@ let tabLabel = (tab: observatoryTab): string => {
 
 /// Complete list of tabs in display order. Used by the tab bar renderer
 /// to iterate all available views.
-let allTabs: array<observatoryTab> = [
-  TabOverview, TabServices, TabResources, TabActivity,
-]
+let allTabs: array<observatoryTab> = [TabOverview, TabServices, TabResources, TabActivity]
 
 /// Switch to a specific tab, returning an updated state.
 let switchTab = (state: observatoryState, tab: observatoryTab): observatoryState => {
@@ -254,10 +252,9 @@ let highestMemoryPanel = (snapshots: array<resourceSnapshot>): option<resourceSn
 
 /// Find all panels exceeding a memory threshold (in bytes).
 /// Useful for flagging panels that may have memory leaks.
-let panelsExceedingMemory = (
-  snapshots: array<resourceSnapshot>,
-  thresholdBytes: int,
-): array<resourceSnapshot> => {
+let panelsExceedingMemory = (snapshots: array<resourceSnapshot>, thresholdBytes: int): array<
+  resourceSnapshot,
+> => {
   snapshots->Array.filter(s => s.memoryBytes > thresholdBytes)
 }
 
@@ -278,15 +275,13 @@ let sortByHealthSeverity = (snapshots: array<resourceSnapshot>): array<resourceS
     let severityDiff = Float.fromInt(healthSeverity(b.health) - healthSeverity(a.health))
     if severityDiff !== 0.0 {
       severityDiff
+    } // Alphabetical tiebreaker for panels at the same severity.
+    else if a.name < b.name {
+      -1.0
+    } else if a.name > b.name {
+      1.0
     } else {
-      // Alphabetical tiebreaker for panels at the same severity.
-      if a.name < b.name {
-        -1.0
-      } else if a.name > b.name {
-        1.0
-      } else {
-        0.0
-      }
+      0.0
     }
   })
 }
@@ -310,10 +305,9 @@ let sortByHealth = (snapshots: array<resourceSnapshot>): array<resourceSnapshot>
 
 /// Filter snapshots to only those matching a specific health status.
 /// Uses structural equality on the serviceHealth variant.
-let panelsByHealth = (
-  snapshots: array<resourceSnapshot>,
-  health: serviceHealth,
-): array<resourceSnapshot> => {
+let panelsByHealth = (snapshots: array<resourceSnapshot>, health: serviceHealth): array<
+  resourceSnapshot,
+> => {
   snapshots->Array.filter(s => s.health == health)
 }
 
@@ -326,10 +320,9 @@ let sortByMemoryDesc = (snapshots: array<resourceSnapshot>): array<resourceSnaps
 }
 
 /// Find a snapshot by panel name. Returns None if not found.
-let findSnapshot = (
-  snapshots: array<resourceSnapshot>,
-  panelName: string,
-): option<resourceSnapshot> => {
+let findSnapshot = (snapshots: array<resourceSnapshot>, panelName: string): option<
+  resourceSnapshot,
+> => {
   snapshots->Array.find(s => s.name === panelName)
 }
 
@@ -340,14 +333,15 @@ let findSnapshot = (
 /// Upsert a resource snapshot — updates the entry for a panel if it exists,
 /// or appends it if it does not. This is the primary way panels report
 /// their status to the Observatory.
-let upsertSnapshot = (
-  state: observatoryState,
-  snapshot: resourceSnapshot,
-): observatoryState => {
+let upsertSnapshot = (state: observatoryState, snapshot: resourceSnapshot): observatoryState => {
   let exists = state.snapshots->Array.some(s => s.name === snapshot.name)
   let updatedSnapshots = if exists {
     state.snapshots->Array.map(s =>
-      if s.name === snapshot.name { snapshot } else { s }
+      if s.name === snapshot.name {
+        snapshot
+      } else {
+        s
+      }
     )
   } else {
     Array.concat(state.snapshots, [snapshot])
@@ -357,10 +351,7 @@ let upsertSnapshot = (
 
 /// Remove a snapshot by panel name. Used when a panel is unloaded or
 /// removed from the workspace.
-let removeSnapshot = (
-  state: observatoryState,
-  panelName: string,
-): observatoryState => {
+let removeSnapshot = (state: observatoryState, panelName: string): observatoryState => {
   {...state, snapshots: state.snapshots->Array.filter(s => s.name !== panelName)}
 }
 
@@ -490,14 +481,14 @@ let maxActivityEntries = 500
 
 /// Append an activity entry to the log. If the log exceeds the maximum
 /// size, the oldest entries are removed to make room.
-let addActivity = (
-  state: observatoryState,
-  entry: activityEntry,
-): observatoryState => {
+let addActivity = (state: observatoryState, entry: activityEntry): observatoryState => {
   let updated = Array.concat(state.activity, [entry])
   let trimmed = if updated->Array.length > maxActivityEntries {
     // Keep only the most recent entries by slicing from the end.
-    updated->Array.slice(~start=updated->Array.length - maxActivityEntries, ~end=updated->Array.length)
+    updated->Array.slice(
+      ~start=updated->Array.length - maxActivityEntries,
+      ~end=updated->Array.length,
+    )
   } else {
     updated
   }
@@ -540,10 +531,9 @@ let logActivity = (
 }
 
 /// Filter activity entries for a specific panel.
-let activityForPanel = (
-  activity: array<activityEntry>,
-  panelName: string,
-): array<activityEntry> => {
+let activityForPanel = (activity: array<activityEntry>, panelName: string): array<
+  activityEntry,
+> => {
   activity->Array.filter(a => a.panelName === panelName)
 }
 
@@ -571,13 +561,13 @@ let maxDebugLogEntries = 1000
 
 /// Append a structured debug log entry. Evicts oldest entries when
 /// the log exceeds the maximum size.
-let addDebugEntry = (
-  state: observatoryState,
-  entry: DebugLogger.logEntry,
-): observatoryState => {
+let addDebugEntry = (state: observatoryState, entry: DebugLogger.logEntry): observatoryState => {
   let updated = Array.concat(state.debugLog, [entry])
   let trimmed = if updated->Array.length > maxDebugLogEntries {
-    updated->Array.slice(~start=updated->Array.length - maxDebugLogEntries, ~end=updated->Array.length)
+    updated->Array.slice(
+      ~start=updated->Array.length - maxDebugLogEntries,
+      ~end=updated->Array.length,
+    )
   } else {
     updated
   }
@@ -595,18 +585,15 @@ let debugEntriesAtLevel = (
 }
 
 /// Filter debug log entries by source module name.
-let debugEntriesFromSource = (
-  entries: array<DebugLogger.logEntry>,
-  source: string,
-): array<DebugLogger.logEntry> => {
+let debugEntriesFromSource = (entries: array<DebugLogger.logEntry>, source: string): array<
+  DebugLogger.logEntry,
+> => {
   entries->Array.filter(e => e.source === source)
 }
 
 /// Count debug log entries by level. Returns a tuple of
 /// (debugCount, infoCount, warnCount, errorCount).
-let debugLogCounts = (
-  entries: array<DebugLogger.logEntry>,
-): (int, int, int, int) => {
+let debugLogCounts = (entries: array<DebugLogger.logEntry>): (int, int, int, int) => {
   entries->Array.reduce((0, 0, 0, 0), ((d, i, w, e), entry) => {
     switch entry.level {
     | Debug => (d + 1, i, w, e)
@@ -620,10 +607,9 @@ let debugLogCounts = (
 /// Return the most recent `count` debug log entries. Since entries are
 /// stored chronologically (oldest first), this returns the last `count`
 /// entries from the array. Returns the full array if `count` exceeds length.
-let recentDebugEntries = (
-  log: array<DebugLogger.logEntry>,
-  count: int,
-): array<DebugLogger.logEntry> => {
+let recentDebugEntries = (log: array<DebugLogger.logEntry>, count: int): array<
+  DebugLogger.logEntry,
+> => {
   let len = log->Array.length
   if count >= len {
     log
@@ -682,8 +668,16 @@ let hasAlerts = (state: observatoryState): bool => {
 /// Count the total number of active alerts (unhealthy panels + resource warnings + errors).
 let alertCount = (state: observatoryState): int => {
   let unhealthyPanels = countUnhealthy(state.snapshots)
-  let cpuAlert = if state.systemCpu > 90.0 { 1 } else { 0 }
-  let memAlert = if systemMemoryPercent(state) > 90.0 { 1 } else { 0 }
+  let cpuAlert = if state.systemCpu > 90.0 {
+    1
+  } else {
+    0
+  }
+  let memAlert = if systemMemoryPercent(state) > 90.0 {
+    1
+  } else {
+    0
+  }
   let errorAlert = switch state.error {
   | Some(_) => 1
   | None => 0

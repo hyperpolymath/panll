@@ -70,8 +70,7 @@ let countConflicted = (branches: array<managedBranch>): int =>
   branches->Array.filter(b => b.status === BrConflicted)->Array.length
 
 /// Number of entries in the merge queue.
-let queueLength = (queue: array<mergeQueueEntry>): int =>
-  Array.length(queue)
+let queueLength = (queue: array<mergeQueueEntry>): int => Array.length(queue)
 
 /// Count queue entries where all checks have passed.
 let readyToMerge = (queue: array<mergeQueueEntry>): int =>
@@ -82,8 +81,7 @@ let pendingChecks = (queue: array<mergeQueueEntry>): int =>
   queue->Array.filter(e => !e.checksPassed)->Array.length
 
 /// Whether a branch is diverged (both ahead and behind its base).
-let isDiverged = (branch: managedBranch): bool =>
-  branch.aheadBy > 0 && branch.behindBy > 0
+let isDiverged = (branch: managedBranch): bool => branch.aheadBy > 0 && branch.behindBy > 0
 
 /// Find branches that need rebasing (behind base by more than N commits).
 let needsRebase = (branches: array<managedBranch>, threshold: int): array<managedBranch> =>

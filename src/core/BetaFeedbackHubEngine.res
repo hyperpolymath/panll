@@ -165,7 +165,11 @@ let computeAnalytics = (entries: array<feedbackEntry>): feedbackAnalytics => {
     avgSentimentScore: {
       let pos = Float.fromInt(countBySentiment(entries, SentimentPositive))
       let neg = Float.fromInt(countBySentiment(entries, SentimentNegative))
-      if total == 0 { 0.0 } else { (pos -. neg) /. Float.fromInt(total) }
+      if total == 0 {
+        0.0
+      } else {
+        (pos -. neg) /. Float.fromInt(total)
+      }
     },
     triageCompletionRate: if total == 0 {
       0.0

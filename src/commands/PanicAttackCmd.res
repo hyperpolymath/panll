@@ -10,9 +10,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Check panic-attack capability (is the binary available? what mode?).
-let checkCapability = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkCapability = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("check_panic_attacker_capability", Dict.make())
     ->Promise.then(result => {
@@ -29,10 +27,7 @@ let checkCapability = (
 
 /// Run a static analysis scan (assail) on a target directory.
 /// Returns JSON with weak points, statistics, and recommendations.
-let assail = (
-  targetPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let assail = (targetPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("panic_attack_assail", {"target_path": targetPath})
     ->Promise.then(result => {
@@ -49,10 +44,7 @@ let assail = (
 
 /// Run a full assault (static analysis + stress testing) on a target.
 /// Returns JSON with combined assail + attack results.
-let assault = (
-  targetPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let assault = (targetPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("panic_attack_assault", {"target_path": targetPath})
     ->Promise.then(result => {
@@ -68,10 +60,7 @@ let assault = (
 }
 
 /// View a saved report by path.
-let viewReport = (
-  reportPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let viewReport = (reportPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("panic_attack_view_report", {"report_path": reportPath})
     ->Promise.then(result => {
@@ -107,9 +96,7 @@ let diffReports = (
 }
 
 /// List saved scan reports.
-let listReports = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listReports = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("panic_attack_list_reports", Dict.make())
     ->Promise.then(result => {
@@ -125,10 +112,7 @@ let listReports = (
 }
 
 /// Export a report as SARIF format for GitHub Security tab.
-let exportSarif = (
-  reportPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let exportSarif = (reportPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("panic_attack_export_sarif", {"report_path": reportPath})
     ->Promise.then(result => {
@@ -144,10 +128,9 @@ let exportSarif = (
 }
 
 /// Export a report as PanLL event-chain model.
-let exportEventChain = (
-  reportPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let exportEventChain = (reportPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("panic_attack_export_panll", {"report_path": reportPath})
     ->Promise.then(result => {

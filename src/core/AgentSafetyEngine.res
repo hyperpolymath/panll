@@ -91,10 +91,7 @@ let filterPending = (events: array<safetyEvent>): array<safetyEvent> => {
 }
 
 /// Filter events by agent identifier.
-let filterByAgent = (
-  events: array<safetyEvent>,
-  agentId: string,
-): array<safetyEvent> => {
+let filterByAgent = (events: array<safetyEvent>, agentId: string): array<safetyEvent> => {
   events->Array.filter(e => e.agentId == agentId)
 }
 
@@ -131,10 +128,7 @@ let outcomeLabel = (check: safetyCheck): string => {
 // ============================================================================
 
 /// Compute aggregate safety statistics from pending and history arrays.
-let computeStats = (
-  pending: array<safetyEvent>,
-  history: array<safetyEvent>,
-): safetyStats => {
+let computeStats = (pending: array<safetyEvent>, history: array<safetyEvent>): safetyStats => {
   let all = Array.concat(pending, history)
   let totalEvents = Array.length(all)
   let autoApproved = all->Array.filter(e => e.outcome == AutoApproved)->Array.length

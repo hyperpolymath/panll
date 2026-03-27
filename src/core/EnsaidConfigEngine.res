@@ -71,14 +71,11 @@ let approvalToString = (mode: approvalMode): string => {
 /// Render a trigger event to a TOML inline table.
 let triggerToToml = (trigger: triggerEvent): string => {
   switch trigger {
-  | FileChanged(pattern) =>
-    `{ event = "file-changed", pattern = "${pattern}" }`
+  | FileChanged(pattern) => `{ event = "file-changed", pattern = "${pattern}" }`
   | PanelMessage(panel, msg) =>
     `{ event = "panel-message", panel = "${panel}", message = "${msg}" }`
-  | Timer(seconds) =>
-    `{ event = "timer", seconds = ${Int.toString(seconds)} }`
-  | Manual =>
-    `{ event = "manual" }`
+  | Timer(seconds) => `{ event = "timer", seconds = ${Int.toString(seconds)} }`
+  | Manual => `{ event = "manual" }`
   | PanelStateChange(panel, field) =>
     `{ event = "panel-state-change", panel = "${panel}", field = "${field}" }`
   }
@@ -180,14 +177,12 @@ extensions = [${extList}]
 mode = "${modeStr}"
 protection = "${protStr}"
 execution = "${execStr}"
-` ++ langLock
+` ++
+  langLock
 }
 
 /// Generate the [preferences] section.
-let generatePreferencesSection = (
-  humidity: string,
-  arrangementId: option<string>,
-): string => {
+let generatePreferencesSection = (humidity: string, arrangementId: option<string>): string => {
   let arrStr = switch arrangementId {
   | Some(id) => id
   | None => "default-3-panel"
@@ -222,30 +217,33 @@ let generatePanelsSection = (configs: array<panelConfig>): string => {
   let enabledPanels = configs->Array.filter(c => c.enabled)
   let disabledPanels = configs->Array.filter(c => !c.enabled)
 
-  let enabledEntries = enabledPanels->Array.map(c => {
-    let isoStr = isolationToString(c.isolation)
-    let endpointLine = if c.endpoint !== "" {
-      `\nendpoint = "${c.endpoint}"`
-    } else {
-      ""
-    }
-    let autoLine = if !c.autoConnect {
-      "\nauto-connect = false"
-    } else {
-      "\nauto-connect = true"
-    }
-    let envLines = if c.envVars->Array.length > 0 {
-      let pairs = c.envVars->Array.map(((k, v)) => `${k} = "${v}"`)->Array.join(", ")
-      `\nenv = { ${pairs} }`
-    } else {
-      ""
-    }
-    `
+  let enabledEntries =
+    enabledPanels
+    ->Array.map(c => {
+      let isoStr = isolationToString(c.isolation)
+      let endpointLine = if c.endpoint !== "" {
+        `\nendpoint = "${c.endpoint}"`
+      } else {
+        ""
+      }
+      let autoLine = if !c.autoConnect {
+        "\nauto-connect = false"
+      } else {
+        "\nauto-connect = true"
+      }
+      let envLines = if c.envVars->Array.length > 0 {
+        let pairs = c.envVars->Array.map(((k, v)) => `${k} = "${v}"`)->Array.join(", ")
+        `\nenv = { ${pairs} }`
+      } else {
+        ""
+      }
+      `
 [[panels.enabled]]
 id = "${c.panelName}"
 isolation = "${isoStr}"${autoLine}${endpointLine}${envLines}
 `
-  })->Array.join("")
+    })
+    ->Array.join("")
 
   let disabledSection = if disabledPanels->Array.length > 0 {
     let ids = disabledPanels->Array.map(c => `"${c.panelName}"`)->Array.join(", ")
@@ -279,29 +277,46 @@ ids = [${ids}]
 # ─────────────────────────────────────────────────────────────────
 [panels]
 version = "1.0.0"
-` ++ enabledEntries ++ disabledSection
+` ++
+  enabledEntries ++
+  disabledSection
 }
 
 /// Generate the [workflows] section from Automation Router rules.
 let generateWorkflowsSection = (rules: array<automationRule>): string => {
   let ruleEntries = if rules->Array.length > 0 {
-    rules->Array.map(rule => {
+    rules
+    ->Array.map(rule => {
       let triggerStr = triggerToToml(rule.trigger)
       let approvalStr = approvalToString(rule.approval)
-      let enabledStr = if !rule.enabled { "\nenabled = false" } else { "" }
-      let condLines = rule.conditions->Array.map(cond => {
-        `condition = { panel = "${cond.panelId}", field = "${cond.field}", operator = "${cond.operator}", value = "${cond.value}" }`
-      })->Array.join("\n")
-      let condSection = if condLines !== "" { "\n" ++ condLines } else { "" }
-      let actionLines = rule.actions->Array.map(act => {
-        let argsStr = if act.args->Array.length > 0 {
-          let pairs = act.args->Array.map(((k, v)) => `${k} = "${v}"`)->Array.join(", ")
-          `, args = { ${pairs} }`
-        } else {
-          ""
-        }
-        `action = { panel = "${act.panelId}", message = "${act.message}"${argsStr} }`
-      })->Array.join("\n")
+      let enabledStr = if !rule.enabled {
+        "\nenabled = false"
+      } else {
+        ""
+      }
+      let condLines =
+        rule.conditions
+        ->Array.map(cond => {
+          `condition = { panel = "${cond.panelId}", field = "${cond.field}", operator = "${cond.operator}", value = "${cond.value}" }`
+        })
+        ->Array.join("\n")
+      let condSection = if condLines !== "" {
+        "\n" ++ condLines
+      } else {
+        ""
+      }
+      let actionLines =
+        rule.actions
+        ->Array.map(act => {
+          let argsStr = if act.args->Array.length > 0 {
+            let pairs = act.args->Array.map(((k, v)) => `${k} = "${v}"`)->Array.join(", ")
+            `, args = { ${pairs} }`
+          } else {
+            ""
+          }
+          `action = { panel = "${act.panelId}", message = "${act.message}"${argsStr} }`
+        })
+        ->Array.join("\n")
 
       `
 # ${rule.description}
@@ -311,7 +326,8 @@ trigger = ${triggerStr}${condSection}
 ${actionLines}
 approval = "${approvalStr}"${enabledStr}
 `
-    })->Array.join("")
+    })
+    ->Array.join("")
   } else {
     `
 # No automation rules defined yet. Here's an example to get started:
@@ -350,7 +366,8 @@ approval = "${approvalStr}"${enabledStr}
 # ─────────────────────────────────────────────────────────────────
 [workflows]
 version = "1.0.0"
-` ++ ruleEntries
+` ++
+  ruleEntries
 }
 
 /// Generate the [clades] section (placeholder — clade overrides are per-repo).
@@ -386,7 +403,8 @@ let generatePortfoliosSection = (portfolios: array<portfolio>): string => {
   let customPortfolios = portfolios->Array.filter(p => !p.builtIn)
 
   let portfolioEntries = if customPortfolios->Array.length > 0 {
-    customPortfolios->Array.map(p => {
+    customPortfolios
+    ->Array.map(p => {
       let panelList = p.panels->Array.map(id => `"${id}"`)->Array.join(", ")
       let isoStr = isolationToString(p.defaultIsolation)
       `
@@ -398,7 +416,8 @@ description = "${p.description}"
 panels = [${panelList}]
 default-isolation = "${isoStr}"
 `
-    })->Array.join("")
+    })
+    ->Array.join("")
   } else {
     `
 # No custom portfolios defined yet. Here's an example:
@@ -431,7 +450,8 @@ default-isolation = "${isoStr}"
 # ─────────────────────────────────────────────────────────────────
 [portfolios]
 version = "1.0.0"
-` ++ portfolioEntries
+` ++
+  portfolioEntries
 }
 
 // ============================================================================
@@ -472,12 +492,12 @@ let generate = (
 
   let arrangementId = ws.activeArrangementId
 
-  generateHeader(repoName)
-  ++ generateEnsaidSection()
-  ++ generateWorkspaceSection(ws)
-  ++ generatePreferencesSection(humidity, arrangementId)
-  ++ generatePanelsSection(panelConfigs)
-  ++ generateWorkflowsSection(automationRules)
-  ++ generateCladesSection()
-  ++ generatePortfoliosSection(portfolios)
+  generateHeader(repoName) ++
+  generateEnsaidSection() ++
+  generateWorkspaceSection(ws) ++
+  generatePreferencesSection(humidity, arrangementId) ++
+  generatePanelsSection(panelConfigs) ++
+  generateWorkflowsSection(automationRules) ++
+  generateCladesSection() ++
+  generatePortfoliosSection(portfolios)
 }

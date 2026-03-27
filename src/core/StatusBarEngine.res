@@ -141,9 +141,16 @@ let defaultWidgets: array<statusWidget> = [
 
 /// Toggle a widget's visibility.
 let toggleWidget = (state: statusBarState, widgetId: string): statusBarState => {
-  {...state, widgets: Array.map(state.widgets, w =>
-    if w.id === widgetId { {...w, visible: !w.visible} } else { w }
-  )}
+  {
+    ...state,
+    widgets: Array.map(state.widgets, w =>
+      if w.id === widgetId {
+        {...w, visible: !w.visible}
+      } else {
+        w
+      }
+    ),
+  }
 }
 
 /// Move a widget to a new position (Left, Center, Right).
@@ -152,20 +159,30 @@ let moveWidget = (
   widgetId: string,
   newPosition: widgetPosition,
 ): statusBarState => {
-  {...state, widgets: Array.map(state.widgets, w =>
-    if w.id === widgetId { {...w, position: newPosition} } else { w }
-  )}
+  {
+    ...state,
+    widgets: Array.map(state.widgets, w =>
+      if w.id === widgetId {
+        {...w, position: newPosition}
+      } else {
+        w
+      }
+    ),
+  }
 }
 
 /// Reorder a widget within its position group.
-let reorderWidget = (
-  state: statusBarState,
-  widgetId: string,
-  newOrder: int,
-): statusBarState => {
-  {...state, widgets: Array.map(state.widgets, w =>
-    if w.id === widgetId { {...w, order: newOrder} } else { w }
-  )}
+let reorderWidget = (state: statusBarState, widgetId: string, newOrder: int): statusBarState => {
+  {
+    ...state,
+    widgets: Array.map(state.widgets, w =>
+      if w.id === widgetId {
+        {...w, order: newOrder}
+      } else {
+        w
+      }
+    ),
+  }
 }
 
 /// Update the system info snapshot.
@@ -174,14 +191,11 @@ let updateSystemInfo = (state: statusBarState, info: systemInfo): statusBarState
 }
 
 /// Get widgets for a specific position, sorted by order.
-let widgetsForPosition = (
-  widgets: array<statusWidget>,
-  position: widgetPosition,
-): array<statusWidget> => {
+let widgetsForPosition = (widgets: array<statusWidget>, position: widgetPosition): array<
+  statusWidget,
+> => {
   let filtered = Array.filter(widgets, w => w.position === position && w.visible)
-  Array.toSorted(filtered, (a, b) =>
-    Float.fromInt(a.order) -. Float.fromInt(b.order)
-  )
+  Array.toSorted(filtered, (a, b) => Float.fromInt(a.order) -. Float.fromInt(b.order))
 }
 
 /// Format bytes as a human-readable string (KB, MB, GB).

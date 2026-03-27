@@ -32,32 +32,52 @@ let viewTypeCheckResult = (lastTypeCheck: option<string>): Tea_Vdom.t<msg> => {
     | Error(_) => noNode
     | Ok(result) =>
       let narrative = TypeLLEngine.generateNarrative(result)
-      let borderColour = if result.valid { "border-green-700 bg-green-900/20" } else { "border-red-700 bg-red-900/20" }
-      let labelColour = if result.valid { "text-green-400" } else { "text-red-400" }
-      let statusText = if result.valid { "Type-safe" } else { "Type issues detected" }
+      let borderColour = if result.valid {
+        "border-green-700 bg-green-900/20"
+      } else {
+        "border-red-700 bg-red-900/20"
+      }
+      let labelColour = if result.valid {
+        "text-green-400"
+      } else {
+        "text-red-400"
+      }
+      let statusText = if result.valid {
+        "Type-safe"
+      } else {
+        "Type issues detected"
+      }
       div(
         list{Attrs.class_("mt-4 p-3 rounded-lg border " ++ borderColour)},
         list{
           div(
             list{Attrs.class_("flex items-center gap-2 mb-2")},
             list{
-              span(list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)}, list{text("TypeLL")}),
+              span(
+                list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)},
+                list{text("TypeLL")},
+              ),
               span(list{Attrs.class_("text-xs text-gray-400")}, list{text(statusText)}),
             },
           ),
-          div(list{Attrs.class_("text-sm text-gray-300 font-mono mb-1")}, list{text(result.typeSignature)}),
+          div(
+            list{Attrs.class_("text-sm text-gray-300 font-mono mb-1")},
+            list{text(result.typeSignature)},
+          ),
           div(list{Attrs.class_("text-xs text-gray-400 mb-1")}, list{text(narrative.celebrate)}),
           if Array.length(result.proofObligations) > 0 {
-            div(list{Attrs.class_("text-xs text-yellow-400 mt-1")}, list{
-              text("Proof obligations: " ++ Array.join(result.proofObligations, ", ")),
-            })
+            div(
+              list{Attrs.class_("text-xs text-yellow-400 mt-1")},
+              list{text("Proof obligations: " ++ Array.join(result.proofObligations, ", "))},
+            )
           } else {
             noNode
           },
           if Array.length(result.linearityIssues) > 0 {
-            div(list{Attrs.class_("text-xs text-orange-400 mt-1")}, list{
-              text("Linearity: " ++ Array.join(result.linearityIssues, ", ")),
-            })
+            div(
+              list{Attrs.class_("text-xs text-orange-400 mt-1")},
+              list{text("Linearity: " ++ Array.join(result.linearityIssues, ", "))},
+            )
           } else {
             noNode
           },
@@ -100,20 +120,44 @@ let renderStat = (label: string, value: string, colour: string): Tea_Vdom.t<msg>
 }
 
 /// Render a module selector pill.
-let renderModulePill = (config: moduleConfig, selected: bool, connStatus: connectionStatus): Tea_Vdom.t<msg> => {
+let renderModulePill = (
+  config: moduleConfig,
+  selected: bool,
+  connStatus: connectionStatus,
+): Tea_Vdom.t<msg> => {
   let accent = moduleAccent(config.id)
-  let bg = if selected { "bg-gray-700" } else { "bg-transparent hover:bg-gray-800" }
-  let border = if selected { `border` } else { "border border-transparent" }
+  let bg = if selected {
+    "bg-gray-700"
+  } else {
+    "bg-transparent hover:bg-gray-800"
+  }
+  let border = if selected {
+    `border`
+  } else {
+    "border border-transparent"
+  }
   button(
     list{
-      Attrs.class_(`flex items-center gap-2 px-3 py-2 rounded-lg ${bg} ${border} transition-colors`),
-      Attrs.style("border-color", if selected { accent } else { "transparent" }),
+      Attrs.class_(
+        `flex items-center gap-2 px-3 py-2 rounded-lg ${bg} ${border} transition-colors`,
+      ),
+      Attrs.style(
+        "border-color",
+        if selected {
+          accent
+        } else {
+          "transparent"
+        },
+      ),
       Events.onClick(Databases(SelectModule(config.id))),
       Attrs.ariaLabel(`Select ${config.name} database`),
     },
     list{
       // Connection status dot
-      div(list{Attrs.class_(`w-2 h-2 rounded-full flex-shrink-0 ${connectionColour(connStatus)}`)}, list{}),
+      div(
+        list{Attrs.class_(`w-2 h-2 rounded-full flex-shrink-0 ${connectionColour(connStatus)}`)},
+        list{},
+      ),
       // Module icon
       span(
         list{
@@ -137,7 +181,11 @@ let renderModulePill = (config: moduleConfig, selected: bool, connStatus: connec
 
 /// Render capability badge.
 let renderCapabilityBadge = (cap: capability, supported: bool): Tea_Vdom.t<msg> => {
-  let colour = if supported { "text-emerald-400 bg-emerald-900/30 border-emerald-700" } else { "text-gray-600 bg-gray-900/30 border-gray-800" }
+  let colour = if supported {
+    "text-emerald-400 bg-emerald-900/30 border-emerald-700"
+  } else {
+    "text-gray-600 bg-gray-900/30 border-gray-800"
+  }
   span(
     list{Attrs.class_(`text-[10px] px-2 py-0.5 rounded-full border ${colour}`)},
     list{text(capabilityLabel(cap))},
@@ -146,7 +194,15 @@ let renderCapabilityBadge = (cap: capability, supported: bool): Tea_Vdom.t<msg> 
 
 /// Render the capability matrix row for a module.
 let renderModuleRow = (ms: moduleState): Tea_Vdom.t<msg> => {
-  let allCaps = [QueryExecution, DriftDetection, ProofGeneration, Normalisation, Federation, Telemetry, Playground]
+  let allCaps = [
+    QueryExecution,
+    DriftDetection,
+    ProofGeneration,
+    Normalisation,
+    Federation,
+    Telemetry,
+    Playground,
+  ]
   let accent = moduleAccent(ms.config.id)
   div(
     list{Attrs.class_("flex items-center gap-3 py-2 border-b border-gray-800")},
@@ -169,23 +225,31 @@ let renderModuleRow = (ms: moduleState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("w-28 flex-shrink-0 flex items-center gap-1.5")},
         list{
-          div(list{Attrs.class_(`w-2 h-2 rounded-full ${connectionColour(ms.connection)}`)}, list{}),
-          span(list{Attrs.class_("text-xs text-gray-400 truncate")}, list{
-            text(switch ms.connection {
-            | Disconnected => "Offline"
-            | Connecting => "Connecting"
-            | Connected(_) => "Online"
-            | Error(_) => "Error"
-            }),
-          }),
+          div(
+            list{Attrs.class_(`w-2 h-2 rounded-full ${connectionColour(ms.connection)}`)},
+            list{},
+          ),
+          span(
+            list{Attrs.class_("text-xs text-gray-400 truncate")},
+            list{
+              text(
+                switch ms.connection {
+                | Disconnected => "Offline"
+                | Connecting => "Connecting"
+                | Connected(_) => "Online"
+                | Error(_) => "Error"
+                },
+              ),
+            },
+          ),
         },
       ),
       // Capabilities
       div(
         list{Attrs.class_("flex flex-wrap gap-1")},
-        allCaps->Array.map(cap =>
-          renderCapabilityBadge(cap, hasCapability(ms.config, cap))
-        )->List.fromArray,
+        allCaps
+        ->Array.map(cap => renderCapabilityBadge(cap, hasCapability(ms.config, cap)))
+        ->List.fromArray,
       ),
     },
   )
@@ -206,7 +270,15 @@ let viewDashboard = (state: databasesState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("grid grid-cols-4 gap-4")},
         list{
           renderStat("Modules", Int.toString(total), "text-emerald-400"),
-          renderStat("Connected", `${Int.toString(connected)}/${Int.toString(total)}`, if connected == total { "text-emerald-400" } else { "text-amber-400" }),
+          renderStat(
+            "Connected",
+            `${Int.toString(connected)}/${Int.toString(total)}`,
+            if connected == total {
+              "text-emerald-400"
+            } else {
+              "text-amber-400"
+            },
+          ),
           renderStat("Capabilities", Int.toString(caps), "text-indigo-400"),
           renderStat("Queries Run", Int.toString(historyCount), "text-cyan-400"),
         },
@@ -231,7 +303,9 @@ let viewDashboard = (state: databasesState): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs rounded transition-colors"),
+              Attrs.class_(
+                "px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs rounded transition-colors",
+              ),
               Events.onClick(Databases(ConnectAll)),
               Attrs.ariaLabel("Connect to all database modules"),
             },
@@ -239,7 +313,9 @@ let viewDashboard = (state: databasesState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors"),
+              Attrs.class_(
+                "px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors",
+              ),
               Events.onClick(Databases(RefreshHealth)),
               Attrs.ariaLabel("Refresh database health"),
             },
@@ -257,7 +333,7 @@ let viewDashboard = (state: databasesState): Tea_Vdom.t<msg> => {
                       "w-8 h-4 rounded-full bg-emerald-600 relative transition-colors"
                     } else {
                       "w-8 h-4 rounded-full bg-gray-700 relative transition-colors"
-                    }
+                    },
                   ),
                   Events.onClick(Databases(ToggleBojRouting)),
                   Attrs.ariaLabel("Toggle BoJ cartridge routing"),
@@ -266,7 +342,13 @@ let viewDashboard = (state: databasesState): Tea_Vdom.t<msg> => {
                   div(
                     list{
                       Attrs.class_(
-                        `w-3 h-3 rounded-full bg-white absolute top-0.5 transition-transform ${if state.bojRouting { "translate-x-4" } else { "translate-x-0.5" }}`
+                        `w-3 h-3 rounded-full bg-white absolute top-0.5 transition-transform ${if (
+                            state.bojRouting
+                          ) {
+                            "translate-x-4"
+                          } else {
+                            "translate-x-0.5"
+                          }}`,
                       ),
                     },
                     list{},
@@ -283,16 +365,28 @@ let viewDashboard = (state: databasesState): Tea_Vdom.t<msg> => {
           list{Attrs.class_("bg-gray-900/50 border border-gray-800 rounded-lg p-4")},
           list{
             div(
-              list{Attrs.class_("text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3")},
+              list{
+                Attrs.class_("text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3"),
+              },
               list{text("Recent Queries")},
             ),
             div(
               list{Attrs.class_("space-y-1 max-h-48 overflow-y-auto")},
-              state.queryHistory->Array.slice(~start=0, ~end=10)->Array.map(entry => {
-                let statusColour = if entry.success { "text-emerald-400" } else { "text-red-400" }
+              state.queryHistory
+              ->Array.slice(~start=0, ~end=10)
+              ->Array.map(entry => {
+                let statusColour = if entry.success {
+                  "text-emerald-400"
+                } else {
+                  "text-red-400"
+                }
                 let moduleBadge = moduleAccent(entry.moduleId)
                 div(
-                  list{Attrs.class_("flex items-center gap-2 py-1.5 border-b border-gray-800/50 text-xs")},
+                  list{
+                    Attrs.class_(
+                      "flex items-center gap-2 py-1.5 border-b border-gray-800/50 text-xs",
+                    ),
+                  },
                   list{
                     span(
                       list{
@@ -302,13 +396,34 @@ let viewDashboard = (state: databasesState): Tea_Vdom.t<msg> => {
                       },
                       list{text(moduleIcon(entry.moduleId))},
                     ),
-                    span(list{Attrs.class_("text-gray-300 font-mono truncate flex-1")}, list{text(entry.query)}),
-                    span(list{Attrs.class_(statusColour)}, list{text(if entry.success { "OK" } else { "ERR" })}),
-                    span(list{Attrs.class_("text-gray-600")}, list{text(Float.toString(entry.durationMs) ++ "ms")}),
-                    span(list{Attrs.class_("text-gray-600")}, list{text(Int.toString(entry.rowCount) ++ " rows")}),
+                    span(
+                      list{Attrs.class_("text-gray-300 font-mono truncate flex-1")},
+                      list{text(entry.query)},
+                    ),
+                    span(
+                      list{Attrs.class_(statusColour)},
+                      list{
+                        text(
+                          if entry.success {
+                            "OK"
+                          } else {
+                            "ERR"
+                          },
+                        ),
+                      },
+                    ),
+                    span(
+                      list{Attrs.class_("text-gray-600")},
+                      list{text(Float.toString(entry.durationMs) ++ "ms")},
+                    ),
+                    span(
+                      list{Attrs.class_("text-gray-600")},
+                      list{text(Int.toString(entry.rowCount) ++ " rows")},
+                    ),
                   },
                 )
-              })->List.fromArray,
+              })
+              ->List.fromArray,
             ),
           },
         )
@@ -335,9 +450,11 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
       // Module selector ribbon
       div(
         list{Attrs.class_("flex items-center gap-2 border-b border-gray-800 pb-3")},
-        state.modules->Array.map(m =>
+        state.modules
+        ->Array.map(m =>
           renderModulePill(m.config, m.config.id == state.selectedModule, m.connection)
-        )->List.fromArray,
+        )
+        ->List.fromArray,
       ),
       // Query editor
       div(
@@ -346,16 +463,23 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-2 mb-2")},
             list{
-              span(list{Attrs.class_("text-xs font-semibold text-gray-400 uppercase tracking-wider")}, list{text(langName ++ " Editor")}),
+              span(
+                list{Attrs.class_("text-xs font-semibold text-gray-400 uppercase tracking-wider")},
+                list{text(langName ++ " Editor")},
+              ),
               // Example query buttons
               switch playground {
               | Some(pg) =>
                 div(
                   list{Attrs.class_("flex gap-1 ml-auto")},
-                  pg.exampleQueries->Array.slice(~start=0, ~end=4)->Array.map(eq =>
+                  pg.exampleQueries
+                  ->Array.slice(~start=0, ~end=4)
+                  ->Array.map(eq =>
                     button(
                       list{
-                        Attrs.class_("text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded transition-colors"),
+                        Attrs.class_(
+                          "text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded transition-colors",
+                        ),
                         Events.onClick(Databases(LoadExampleQuery(eq.query))),
                         Attrs.title(eq.query),
                       },
@@ -368,7 +492,8 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
                         },
                       },
                     )
-                  )->List.fromArray,
+                  )
+                  ->List.fromArray,
                 )
               | None => noNode
               },
@@ -377,7 +502,9 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
           // Textarea
           textarea(
             list{
-              Attrs.class_("w-full h-32 bg-gray-950 text-gray-200 text-sm font-mono p-3 rounded border border-gray-700 focus:border-emerald-600 focus:outline-none resize-y"),
+              Attrs.class_(
+                "w-full h-32 bg-gray-950 text-gray-200 text-sm font-mono p-3 rounded border border-gray-700 focus:border-emerald-600 focus:outline-none resize-y",
+              ),
               Attrs.value(state.queryInput),
               Attrs.placeholder(`Enter ${langName} query...`),
               Events.onInput(value => Databases(SetQueryInput(value))),
@@ -397,17 +524,27 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
                       "px-4 py-2 bg-gray-600 text-gray-400 text-xs rounded cursor-not-allowed"
                     } else {
                       "px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs rounded transition-colors"
-                    }
+                    },
                   ),
                   Events.onClick(Databases(ExecuteQuery)),
                   Attrs.disabled(state.queryLoading || state.queryInput == ""),
                   Attrs.ariaLabel("Execute query"),
                 },
-                list{text(if state.queryLoading { "Executing..." } else { "Execute" })},
+                list{
+                  text(
+                    if state.queryLoading {
+                      "Executing..."
+                    } else {
+                      "Execute"
+                    },
+                  ),
+                },
               ),
               button(
                 list{
-                  Attrs.class_("px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors"),
+                  Attrs.class_(
+                    "px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors",
+                  ),
                   Events.onClick(Databases(ClearQuery)),
                   Attrs.ariaLabel("Clear query"),
                 },
@@ -430,7 +567,10 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
                       noNode
                     },
                     if pg.hasDependentTypes {
-                      span(list{Attrs.class_("text-yellow-600")}, list{text(pg.languageName ++ "-DT")})
+                      span(
+                        list{Attrs.class_("text-yellow-600")},
+                        list{text(pg.languageName ++ "-DT")},
+                      )
                     } else {
                       noNode
                     },
@@ -453,11 +593,24 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("flex items-center gap-2 mb-3")},
                 list{
-                  span(list{Attrs.class_("text-xs font-semibold text-emerald-400")}, list{text("Result")}),
-                  span(list{Attrs.class_("text-xs text-gray-500")}, list{
-                    text(`${Int.toString(result.rowCount)} rows in ${Float.toString(result.timingMs)}ms`),
-                  }),
-                  span(list{Attrs.class_("text-[10px] text-gray-600 ml-auto")}, list{text(result.statementType)}),
+                  span(
+                    list{Attrs.class_("text-xs font-semibold text-emerald-400")},
+                    list{text("Result")},
+                  ),
+                  span(
+                    list{Attrs.class_("text-xs text-gray-500")},
+                    list{
+                      text(
+                        `${Int.toString(result.rowCount)} rows in ${Float.toString(
+                            result.timingMs,
+                          )}ms`,
+                      ),
+                    },
+                  ),
+                  span(
+                    list{Attrs.class_("text-[10px] text-gray-600 ml-auto")},
+                    list{text(result.statementType)},
+                  ),
                 },
               ),
               // Column headers
@@ -468,24 +621,45 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
                     table(
                       list{Attrs.class_("w-full text-xs"), Attrs.role("grid")},
                       list{
-                        thead(list{}, list{
-                          tr(
-                            list{Attrs.class_("border-b border-gray-700")},
-                            result.columns->Array.map(col =>
-                              th(list{Attrs.class_("text-left py-1.5 px-2 text-gray-400 font-semibold")}, list{text(col)})
-                            )->List.fromArray,
-                          ),
-                        }),
+                        thead(
+                          list{},
+                          list{
+                            tr(
+                              list{Attrs.class_("border-b border-gray-700")},
+                              result.columns
+                              ->Array.map(col =>
+                                th(
+                                  list{
+                                    Attrs.class_(
+                                      "text-left py-1.5 px-2 text-gray-400 font-semibold",
+                                    ),
+                                  },
+                                  list{text(col)},
+                                )
+                              )
+                              ->List.fromArray,
+                            ),
+                          },
+                        ),
                         tbody(
                           list{},
-                          result.rows->Array.map(row =>
+                          result.rows
+                          ->Array.map(row =>
                             tr(
-                              list{Attrs.class_("border-b border-gray-800/50 hover:bg-gray-800/30")},
-                              row->Array.map(cell =>
-                                td(list{Attrs.class_("py-1.5 px-2 text-gray-300 font-mono")}, list{text(cell)})
-                              )->List.fromArray,
+                              list{
+                                Attrs.class_("border-b border-gray-800/50 hover:bg-gray-800/30"),
+                              },
+                              row
+                              ->Array.map(cell =>
+                                td(
+                                  list{Attrs.class_("py-1.5 px-2 text-gray-300 font-mono")},
+                                  list{text(cell)},
+                                )
+                              )
+                              ->List.fromArray,
                             )
-                          )->List.fromArray,
+                          )
+                          ->List.fromArray,
                         ),
                       },
                     ),
@@ -505,7 +679,10 @@ let viewQuery = (state: databasesState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("bg-red-900/20 border border-red-700 rounded-lg p-4")},
               list{
-                div(list{Attrs.class_("text-xs font-semibold text-red-400 mb-1")}, list{text("Query Error")}),
+                div(
+                  list{Attrs.class_("text-xs font-semibold text-red-400 mb-1")},
+                  list{text("Query Error")},
+                ),
                 div(list{Attrs.class_("text-xs text-red-300 font-mono")}, list{text(err)}),
               },
             )
@@ -544,23 +721,40 @@ let viewEntityDetail = (state: databasesState): Tea_Vdom.t<msg> => {
             list{Attrs.class_("flex items-center gap-2 mb-3")},
             list{
               span(list{Attrs.class_("text-sm font-bold text-gray-200")}, list{text(e.name)}),
-              span(list{Attrs.class_("text-[10px] px-2 py-0.5 bg-gray-800 text-gray-500 rounded-full")}, list{text(e.kind)}),
-              span(list{Attrs.class_("text-xs text-gray-600 ml-auto")}, list{text(Int.toString(e.entryCount) ++ " entries")}),
+              span(
+                list{
+                  Attrs.class_("text-[10px] px-2 py-0.5 bg-gray-800 text-gray-500 rounded-full"),
+                },
+                list{text(e.kind)},
+              ),
+              span(
+                list{Attrs.class_("text-xs text-gray-600 ml-auto")},
+                list{text(Int.toString(e.entryCount) ++ " entries")},
+              ),
             },
           ),
           // Fields
           div(
             list{Attrs.class_("space-y-1")},
             list{
-              div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-1")}, list{text("Fields")}),
+              div(
+                list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-1")},
+                list{text("Fields")},
+              ),
               div(
                 list{Attrs.class_("flex flex-wrap gap-1")},
-                e.fields->Array.map(field =>
+                e.fields
+                ->Array.map(field =>
                   span(
-                    list{Attrs.class_("text-xs font-mono px-2 py-0.5 bg-gray-800 text-gray-300 rounded border border-gray-700")},
+                    list{
+                      Attrs.class_(
+                        "text-xs font-mono px-2 py-0.5 bg-gray-800 text-gray-300 rounded border border-gray-700",
+                      ),
+                    },
                     list{text(field)},
                   )
-                )->List.fromArray,
+                )
+                ->List.fromArray,
               ),
             },
           ),
@@ -570,8 +764,18 @@ let viewEntityDetail = (state: databasesState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("mt-3")},
               list{
-                div(list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-1")}, list{text("Detail")}),
-                pre(list{Attrs.class_("text-xs text-gray-300 font-mono bg-gray-950 p-3 rounded overflow-x-auto max-h-48 overflow-y-auto")}, list{text(detail)}),
+                div(
+                  list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-1")},
+                  list{text("Detail")},
+                ),
+                pre(
+                  list{
+                    Attrs.class_(
+                      "text-xs text-gray-300 font-mono bg-gray-950 p-3 rounded overflow-x-auto max-h-48 overflow-y-auto",
+                    ),
+                  },
+                  list{text(detail)},
+                ),
               },
             )
           | None => noNode
@@ -582,15 +786,21 @@ let viewEntityDetail = (state: databasesState): Tea_Vdom.t<msg> => {
             list{
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded transition-colors"),
+                  Attrs.class_(
+                    "px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded transition-colors",
+                  ),
                   Events.onClick(Databases(LoadEntityDetail(entityName))),
                 },
                 list{text("Load Detail")},
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded transition-colors"),
-                  Events.onClick(Databases(LoadExampleQuery("SELECT * FROM " ++ entityName ++ " LIMIT 10"))),
+                  Attrs.class_(
+                    "px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded transition-colors",
+                  ),
+                  Events.onClick(
+                    Databases(LoadExampleQuery("SELECT * FROM " ++ entityName ++ " LIMIT 10")),
+                  ),
                 },
                 list{text("Query This")},
               ),
@@ -612,9 +822,11 @@ let viewSchema = (state: databasesState): Tea_Vdom.t<msg> => {
       // Module selector
       div(
         list{Attrs.class_("flex items-center gap-2 border-b border-gray-800 pb-3")},
-        state.modules->Array.map(m =>
+        state.modules
+        ->Array.map(m =>
           renderModulePill(m.config, m.config.id == state.selectedModule, m.connection)
-        )->List.fromArray,
+        )
+        ->List.fromArray,
       ),
       // Filter
       div(
@@ -622,7 +834,9 @@ let viewSchema = (state: databasesState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 bg-gray-900 text-gray-200 text-sm px-3 py-2 rounded border border-gray-700 focus:border-emerald-600 focus:outline-none"),
+              Attrs.class_(
+                "flex-1 bg-gray-900 text-gray-200 text-sm px-3 py-2 rounded border border-gray-700 focus:border-emerald-600 focus:outline-none",
+              ),
               Attrs.placeholder("Filter entities..."),
               Attrs.value(state.filterText),
               Events.onInput(value => Databases(SetFilter(value))),
@@ -630,7 +844,10 @@ let viewSchema = (state: databasesState): Tea_Vdom.t<msg> => {
             },
             list{},
           ),
-          span(list{Attrs.class_("text-xs text-gray-600")}, list{text(`${Int.toString(Array.length(entities))} entities`)}),
+          span(
+            list{Attrs.class_("text-xs text-gray-600")},
+            list{text(`${Int.toString(Array.length(entities))} entities`)},
+          ),
         },
       ),
       // Two-column: entity list + detail
@@ -640,24 +857,46 @@ let viewSchema = (state: databasesState): Tea_Vdom.t<msg> => {
           // Entity list
           div(
             list{Attrs.class_("space-y-1 max-h-96 overflow-y-auto")},
-            entities->Array.map(entity => {
+            entities
+            ->Array.map(entity => {
               let isSelected = state.selectedEntity == Some(entity.name)
               button(
                 list{
                   Attrs.class_(
-                    `flex items-center gap-2 w-full px-3 py-2 rounded text-left transition-colors ${if isSelected { "bg-gray-700 text-white" } else { "hover:bg-gray-800 text-gray-300" }}`
+                    `flex items-center gap-2 w-full px-3 py-2 rounded text-left transition-colors ${if (
+                        isSelected
+                      ) {
+                        "bg-gray-700 text-white"
+                      } else {
+                        "hover:bg-gray-800 text-gray-300"
+                      }}`,
                   ),
                   Events.onClick(Databases(SelectEntity(entity.name))),
                   Attrs.ariaLabel(`Select entity ${entity.name}`),
                 },
                 list{
-                  span(list{Attrs.class_("text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-500 rounded")}, list{text(entity.kind)}),
-                  span(list{Attrs.class_("text-sm flex-1 truncate font-mono")}, list{text(entity.name)}),
-                  span(list{Attrs.class_("text-xs text-gray-600")}, list{text(Int.toString(entity.entryCount))}),
-                  span(list{Attrs.class_("text-xs text-gray-700")}, list{text(Int.toString(Array.length(entity.fields)) ++ " cols")}),
+                  span(
+                    list{
+                      Attrs.class_("text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-500 rounded"),
+                    },
+                    list{text(entity.kind)},
+                  ),
+                  span(
+                    list{Attrs.class_("text-sm flex-1 truncate font-mono")},
+                    list{text(entity.name)},
+                  ),
+                  span(
+                    list{Attrs.class_("text-xs text-gray-600")},
+                    list{text(Int.toString(entity.entryCount))},
+                  ),
+                  span(
+                    list{Attrs.class_("text-xs text-gray-700")},
+                    list{text(Int.toString(Array.length(entity.fields)) ++ " cols")},
+                  ),
                 },
               )
-            })->List.fromArray,
+            })
+            ->List.fromArray,
           ),
           // Entity detail panel
           viewEntityDetail(state),
@@ -692,7 +931,10 @@ let renderDriftBar = (dimension: string, score: float): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex items-center gap-3 py-1")},
     list{
-      span(list{Attrs.class_("text-xs text-gray-400 w-24 text-right capitalize")}, list{text(dimension)}),
+      span(
+        list{Attrs.class_("text-xs text-gray-400 w-24 text-right capitalize")},
+        list{text(dimension)},
+      ),
       div(
         list{Attrs.class_("flex-1 h-3 bg-gray-800 rounded-full overflow-hidden")},
         list{
@@ -705,9 +947,10 @@ let renderDriftBar = (dimension: string, score: float): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-      span(list{Attrs.class_(`text-xs font-mono w-12 text-right ${textColour}`)}, list{
-        text(Float.toFixed(score, ~digits=3)),
-      }),
+      span(
+        list{Attrs.class_(`text-xs font-mono w-12 text-right ${textColour}`)},
+        list{text(Float.toFixed(score, ~digits=3))},
+      ),
     },
   )
 }
@@ -715,7 +958,8 @@ let renderDriftBar = (dimension: string, score: float): Tea_Vdom.t<msg> => {
 /// Render the Drift Monitor tab.
 let viewDrift = (state: databasesState): Tea_Vdom.t<msg> => {
   let currentModule = selectedModuleState(state)
-  let hasDrift = currentModule->Option.map(m => hasCapability(m.config, DriftDetection))->Option.getOr(false)
+  let hasDrift =
+    currentModule->Option.map(m => hasCapability(m.config, DriftDetection))->Option.getOr(false)
 
   div(
     list{Attrs.class_("space-y-4")},
@@ -723,9 +967,11 @@ let viewDrift = (state: databasesState): Tea_Vdom.t<msg> => {
       // Module selector
       div(
         list{Attrs.class_("flex items-center gap-2 border-b border-gray-800 pb-3")},
-        state.modules->Array.map(m =>
+        state.modules
+        ->Array.map(m =>
           renderModulePill(m.config, m.config.id == state.selectedModule, m.connection)
-        )->List.fromArray,
+        )
+        ->List.fromArray,
       ),
       if hasDrift {
         switch currentModule {
@@ -740,10 +986,19 @@ let viewDrift = (state: databasesState): Tea_Vdom.t<msg> => {
                   div(
                     list{Attrs.class_("flex items-center gap-2 mb-4")},
                     list{
-                      span(list{Attrs.class_("text-xs font-semibold text-gray-400 uppercase tracking-wider")}, list{text("Cross-Modal Drift Heatmap")}),
+                      span(
+                        list{
+                          Attrs.class_(
+                            "text-xs font-semibold text-gray-400 uppercase tracking-wider",
+                          ),
+                        },
+                        list{text("Cross-Modal Drift Heatmap")},
+                      ),
                       button(
                         list{
-                          Attrs.class_("ml-auto px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded transition-colors"),
+                          Attrs.class_(
+                            "ml-auto px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-white rounded transition-colors",
+                          ),
                           Events.onClick(Databases(RefreshDrift)),
                           Attrs.ariaLabel("Refresh drift scores"),
                         },
@@ -755,9 +1010,9 @@ let viewDrift = (state: databasesState): Tea_Vdom.t<msg> => {
                   | Some(scores) =>
                     div(
                       list{Attrs.class_("space-y-1")},
-                      scores->Array.map(ds =>
-                        renderDriftBar(ds.dimension, ds.score)
-                      )->List.fromArray,
+                      scores
+                      ->Array.map(ds => renderDriftBar(ds.dimension, ds.score))
+                      ->List.fromArray,
                     )
                   | None =>
                     div(
@@ -772,25 +1027,47 @@ let viewDrift = (state: databasesState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("bg-gray-900/50 border border-gray-800 rounded-lg p-4")},
                   list{
-                    div(list{Attrs.class_("text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3")}, list{text("Proof Obligations")}),
+                    div(
+                      list{
+                        Attrs.class_(
+                          "text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3",
+                        ),
+                      },
+                      list{text("Proof Obligations")},
+                    ),
                     div(
                       list{Attrs.class_("space-y-2")},
-                      ms.proofObligations->Array.map(po => {
+                      ms.proofObligations
+                      ->Array.map(po => {
                         let statusColour = switch po.status {
                         | "verified" => "text-emerald-400"
                         | "failed" => "text-red-400"
                         | _ => "text-amber-400"
                         }
                         div(
-                          list{Attrs.class_("flex items-center gap-3 text-xs py-1 border-b border-gray-800/50")},
                           list{
-                            span(list{Attrs.class_(`font-semibold ${statusColour} w-16`)}, list{text(po.status)}),
+                            Attrs.class_(
+                              "flex items-center gap-3 text-xs py-1 border-b border-gray-800/50",
+                            ),
+                          },
+                          list{
+                            span(
+                              list{Attrs.class_(`font-semibold ${statusColour} w-16`)},
+                              list{text(po.status)},
+                            ),
                             span(list{Attrs.class_("text-gray-300")}, list{text(po.contractName)}),
-                            span(list{Attrs.class_("text-gray-600 ml-auto")}, list{text(po.proofType)}),
-                            span(list{Attrs.class_("text-gray-700 font-mono text-[10px]")}, list{text(po.proofHash)}),
+                            span(
+                              list{Attrs.class_("text-gray-600 ml-auto")},
+                              list{text(po.proofType)},
+                            ),
+                            span(
+                              list{Attrs.class_("text-gray-700 font-mono text-[10px]")},
+                              list{text(po.proofHash)},
+                            ),
                           },
                         )
-                      })->List.fromArray,
+                      })
+                      ->List.fromArray,
                     ),
                   },
                 )
@@ -800,7 +1077,9 @@ let viewDrift = (state: databasesState): Tea_Vdom.t<msg> => {
               // Normalise button
               button(
                 list{
-                  Attrs.class_("px-4 py-2 bg-indigo-700 hover:bg-indigo-600 text-white text-xs rounded transition-colors"),
+                  Attrs.class_(
+                    "px-4 py-2 bg-indigo-700 hover:bg-indigo-600 text-white text-xs rounded transition-colors",
+                  ),
                   Events.onClick(Databases(NormaliseAll)),
                   Attrs.ariaLabel("Normalise all drifted modalities"),
                 },
@@ -827,7 +1106,8 @@ let viewDrift = (state: databasesState): Tea_Vdom.t<msg> => {
 /// Render the Telemetry tab.
 let viewTelemetry = (state: databasesState): Tea_Vdom.t<msg> => {
   let currentModule = selectedModuleState(state)
-  let hasTelemetry = currentModule->Option.map(m => hasCapability(m.config, Telemetry))->Option.getOr(false)
+  let hasTelemetry =
+    currentModule->Option.map(m => hasCapability(m.config, Telemetry))->Option.getOr(false)
 
   div(
     list{Attrs.class_("space-y-4")},
@@ -835,9 +1115,11 @@ let viewTelemetry = (state: databasesState): Tea_Vdom.t<msg> => {
       // Module selector
       div(
         list{Attrs.class_("flex items-center gap-2 border-b border-gray-800 pb-3")},
-        state.modules->Array.map(m =>
+        state.modules
+        ->Array.map(m =>
           renderModulePill(m.config, m.config.id == state.selectedModule, m.connection)
-        )->List.fromArray,
+        )
+        ->List.fromArray,
       ),
       if hasTelemetry {
         switch currentModule {
@@ -852,19 +1134,39 @@ let viewTelemetry = (state: databasesState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("grid grid-cols-4 gap-4")},
                   list{
                     renderStat("Entities", Int.toString(t.entityCount), "text-emerald-400"),
-                    renderStat("Avg Query", Float.toFixed(t.avgQueryDurationMs, ~digits=1) ++ "ms", "text-cyan-400"),
-                    renderStat("Drift Events", Int.toString(t.driftDetectedCount), "text-amber-400"),
-                    renderStat("Normalise Rate", Float.toFixed(t.normaliseSuccessRate *. 100.0, ~digits=0) ++ "%", "text-indigo-400"),
+                    renderStat(
+                      "Avg Query",
+                      Float.toFixed(t.avgQueryDurationMs, ~digits=1) ++ "ms",
+                      "text-cyan-400",
+                    ),
+                    renderStat(
+                      "Drift Events",
+                      Int.toString(t.driftDetectedCount),
+                      "text-amber-400",
+                    ),
+                    renderStat(
+                      "Normalise Rate",
+                      Float.toFixed(t.normaliseSuccessRate *. 100.0, ~digits=0) ++ "%",
+                      "text-indigo-400",
+                    ),
                   },
                 ),
                 // Modality heatmap
                 div(
                   list{Attrs.class_("bg-gray-900/50 border border-gray-800 rounded-lg p-4")},
                   list{
-                    div(list{Attrs.class_("text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3")}, list{text("Modality Usage Heatmap")}),
+                    div(
+                      list{
+                        Attrs.class_(
+                          "text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3",
+                        ),
+                      },
+                      list{text("Modality Usage Heatmap")},
+                    ),
                     div(
                       list{Attrs.class_("flex gap-2 flex-wrap")},
-                      t.modalityHeatmap->Array.map(((name, intensity)) => {
+                      t.modalityHeatmap
+                      ->Array.map(((name, intensity)) => {
                         let opacity = Float.toFixed(Math.min(intensity, 1.0), ~digits=2)
                         div(
                           list{
@@ -873,10 +1175,14 @@ let viewTelemetry = (state: databasesState): Tea_Vdom.t<msg> => {
                           },
                           list{
                             div(list{}, list{text(name)}),
-                            div(list{Attrs.class_("text-[10px] opacity-80")}, list{text(Float.toFixed(intensity *. 100.0, ~digits=0) ++ "%")}),
+                            div(
+                              list{Attrs.class_("text-[10px] opacity-80")},
+                              list{text(Float.toFixed(intensity *. 100.0, ~digits=0) ++ "%")},
+                            ),
                           },
                         )
-                      })->List.fromArray,
+                      })
+                      ->List.fromArray,
                     ),
                   },
                 ),
@@ -885,18 +1191,30 @@ let viewTelemetry = (state: databasesState): Tea_Vdom.t<msg> => {
                   div(
                     list{Attrs.class_("bg-gray-900/50 border border-gray-800 rounded-lg p-4")},
                     list{
-                      div(list{Attrs.class_("text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3")}, list{text("Common Query Patterns")}),
+                      div(
+                        list{
+                          Attrs.class_(
+                            "text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3",
+                          ),
+                        },
+                        list{text("Common Query Patterns")},
+                      ),
                       div(
                         list{Attrs.class_("space-y-1")},
-                        t.queryPatterns->Array.map(((pattern, count)) =>
+                        t.queryPatterns
+                        ->Array.map(((pattern, count)) =>
                           div(
                             list{Attrs.class_("flex items-center gap-2 text-xs py-1")},
                             list{
                               span(list{Attrs.class_("text-gray-300 flex-1")}, list{text(pattern)}),
-                              span(list{Attrs.class_("text-gray-600 font-mono")}, list{text(Int.toString(count))}),
+                              span(
+                                list{Attrs.class_("text-gray-600 font-mono")},
+                                list{text(Int.toString(count))},
+                              ),
                             },
                           )
-                        )->List.fromArray,
+                        )
+                        ->List.fromArray,
                       ),
                     },
                   )
@@ -906,7 +1224,11 @@ let viewTelemetry = (state: databasesState): Tea_Vdom.t<msg> => {
                 // Privacy notice
                 div(
                   list{Attrs.class_("text-[10px] text-gray-700 text-center")},
-                  list{text("Telemetry is opt-in and aggregate-only. No query content, entity data, or PII.")},
+                  list{
+                    text(
+                      "Telemetry is opt-in and aggregate-only. No query content, entity data, or PII.",
+                    ),
+                  },
                 ),
                 // Timestamp
                 div(
@@ -919,10 +1241,15 @@ let viewTelemetry = (state: databasesState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("text-center py-12")},
               list{
-                div(list{Attrs.class_("text-xs text-gray-500 mb-3")}, list{text("No telemetry snapshot loaded")}),
+                div(
+                  list{Attrs.class_("text-xs text-gray-500 mb-3")},
+                  list{text("No telemetry snapshot loaded")},
+                ),
                 button(
                   list{
-                    Attrs.class_("px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors"),
+                    Attrs.class_(
+                      "px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded transition-colors",
+                    ),
                     Events.onClick(Databases(LoadTelemetry)),
                     Attrs.ariaLabel("Load telemetry snapshot"),
                   },
@@ -961,9 +1288,10 @@ let view = (state: databasesState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("flex items-center gap-3 mb-4")},
         list{
           h2(list{Attrs.class_("text-lg font-bold text-emerald-400")}, list{text("Databases")}),
-          span(list{Attrs.class_("text-xs text-gray-600")}, list{
-            text(`${Int.toString(Array.length(state.modules))} modules registered`),
-          }),
+          span(
+            list{Attrs.class_("text-xs text-gray-600")},
+            list{text(`${Int.toString(Array.length(state.modules))} modules registered`)},
+          ),
           // Error display
           switch state.error {
           | Some(err) =>
@@ -988,11 +1316,19 @@ let view = (state: databasesState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex gap-1 mb-4 border-b border-gray-800"), Attrs.role("tablist")},
         list{
-          renderTab("Dashboard", state.activeCategory == DbDashboard, Databases(SetCategory(DbDashboard))),
+          renderTab(
+            "Dashboard",
+            state.activeCategory == DbDashboard,
+            Databases(SetCategory(DbDashboard)),
+          ),
           renderTab("Query", state.activeCategory == DbQuery, Databases(SetCategory(DbQuery))),
           renderTab("Schema", state.activeCategory == DbSchema, Databases(SetCategory(DbSchema))),
           renderTab("Drift", state.activeCategory == DbDrift, Databases(SetCategory(DbDrift))),
-          renderTab("Telemetry", state.activeCategory == DbTelemetry, Databases(SetCategory(DbTelemetry))),
+          renderTab(
+            "Telemetry",
+            state.activeCategory == DbTelemetry,
+            Databases(SetCategory(DbTelemetry)),
+          ),
         },
       ),
       // Active tab content

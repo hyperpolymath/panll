@@ -17,74 +17,56 @@ let updateWatcher = (model: model, msg: watcherMsg): (model, Tea_Cmd.t<msg>) => 
       {...model, watcher: {...w, error: None}},
       WatcherCmd.start(paths, result => Watcher(WatcherResult(result))),
     )
-  | StopWatcher => (
-      model,
-      WatcherCmd.stop(result => Watcher(WatcherResult(result))),
-    )
-  | RequestStatus => (
-      model,
-      WatcherCmd.status(result => Watcher(StatusLoaded(result))),
-    )
+  | StopWatcher => (model, WatcherCmd.stop(result => Watcher(WatcherResult(result))))
+  | RequestStatus => (model, WatcherCmd.status(result => Watcher(StatusLoaded(result))))
   | WatcherResult(result) =>
     switch result {
-    | Ok(_json) => (
-        {...model, watcher: {...w, running: true, error: None}},
-        Tea_Cmd.none,
-      )
-    | Error(e) => (
-        {...model, watcher: {...w, error: Some(e)}},
-        Tea_Cmd.none,
-      )
+    | Ok(_json) => ({...model, watcher: {...w, running: true, error: None}}, Tea_Cmd.none)
+    | Error(e) => ({...model, watcher: {...w, error: Some(e)}}, Tea_Cmd.none)
     }
   | StatusLoaded(result) =>
     switch result {
-    | Ok(jsonStr) => {
-        // Parse the status JSON to update watcher state.
-        // The Rust side returns { running, watched_paths, event_count }.
-                switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
-        | Some(json) =>
-
-          switch JSON.Classify.classify(json) {
-          | JSON.Classify.Object(dict) => {
-              let running = switch dict->Dict.get("running") {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | JSON.Classify.Bool(b) => b
-                | _ => false
-                }
-              | None => false
+    | Ok(jsonStr) => // Parse the status JSON to update watcher state.
+      // The Rust side returns { running, watched_paths, event_count }.
+      switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        switch JSON.Classify.classify(json) {
+        | JSON.Classify.Object(dict) => {
+            let running = switch dict->Dict.get("running") {
+            | Some(v) =>
+              switch JSON.Classify.classify(v) {
+              | JSON.Classify.Bool(b) => b
+              | _ => false
               }
-              let eventCount = switch dict->Dict.get("event_count") {
-              | Some(v) =>
-                switch JSON.Classify.classify(v) {
-                | JSON.Classify.Number(n) => Float.toInt(n)
-                | _ => 0
-                }
-              | None => 0
-              }
-              (
-                {
-                  ...model,
-                  watcher: {
-                    ...w,
-                    running,
-                    eventCount,
-                    error: None,
-                  },
-                },
-                Tea_Cmd.none,
-              )
+            | None => false
             }
-          | _ => (model, Tea_Cmd.none)
+            let eventCount = switch dict->Dict.get("event_count") {
+            | Some(v) =>
+              switch JSON.Classify.classify(v) {
+              | JSON.Classify.Number(n) => Float.toInt(n)
+              | _ => 0
+              }
+            | None => 0
+            }
+            (
+              {
+                ...model,
+                watcher: {
+                  ...w,
+                  running,
+                  eventCount,
+                  error: None,
+                },
+              },
+              Tea_Cmd.none,
+            )
           }
-
-        | None => (model, Tea_Cmd.none)
+        | _ => (model, Tea_Cmd.none)
         }
+
+      | None => (model, Tea_Cmd.none)
       }
-    | Error(e) => (
-        {...model, watcher: {...w, error: Some(e)}},
-        Tea_Cmd.none,
-      )
+    | Error(e) => ({...model, watcher: {...w, error: Some(e)}}, Tea_Cmd.none)
     }
   | FileEvent(event) => {
       // Add to ring buffer (keep last 50 events).

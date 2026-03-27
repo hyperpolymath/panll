@@ -27,18 +27,15 @@ open Tea.Html
 
 /// Render a single option button within a control group.
 /// Active buttons get a highlighted ring + brighter text.
-let renderOption = (
-  label: string,
-  tooltip: string,
-  isActive: bool,
-  onClick: msg,
-): Tea_Vdom.t<msg> => {
+let renderOption = (label: string, tooltip: string, isActive: bool, onClick: msg): Tea_Vdom.t<
+  msg,
+> => {
   button(
     list{
       Attrs.class_(
         `px-3 py-1.5 text-xs rounded-md transition-all ${isActive
-          ? "bg-indigo-600 text-white ring-2 ring-indigo-400"
-          : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200"}`,
+            ? "bg-indigo-600 text-white ring-2 ring-indigo-400"
+            : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200"}`,
       ),
       Attrs.role("radio"),
       Attrs.ariaSelected(isActive),
@@ -56,7 +53,11 @@ let renderOption = (
 /// Render a section heading inside the accessibility panel.
 let renderSectionHeader = (title: string): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-3 first:mt-0")},
+    list{
+      Attrs.class_(
+        "text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-3 first:mt-0",
+      ),
+    },
     list{text(title)},
   )
 }
@@ -78,13 +79,11 @@ let renderThemeSection = (active: themeMode): Tea_Vdom.t<msg> => {
       renderSectionHeader("Theme"),
       div(
         list{Attrs.class_("flex flex-wrap gap-1.5")},
-        list{
-          ...modes
-          ->Array.map(((mode, label, tooltip)) =>
-            renderOption(label, tooltip, mode === active, AccessibilityCtrl(SetThemeMode(mode)))
-          )
-          ->List.fromArray,
-        },
+        modes
+        ->Array.map(((mode, label, tooltip)) =>
+          renderOption(label, tooltip, mode === active, AccessibilityCtrl(SetThemeMode(mode)))
+        )
+        ->List.fromArray,
       ),
     },
   )
@@ -104,13 +103,16 @@ let renderPaletteSection = (active: accessibilityPalette): Tea_Vdom.t<msg> => {
       renderSectionHeader("Colour Vision"),
       div(
         list{Attrs.class_("flex flex-wrap gap-1.5")},
-        list{
-          ...palettes
-          ->Array.map(((palette, label, tooltip)) =>
-            renderOption(label, tooltip, palette === active, AccessibilityCtrl(SetAccessibilityPalette(palette)))
+        palettes
+        ->Array.map(((palette, label, tooltip)) =>
+          renderOption(
+            label,
+            tooltip,
+            palette === active,
+            AccessibilityCtrl(SetAccessibilityPalette(palette)),
           )
-          ->List.fromArray,
-        },
+        )
+        ->List.fromArray,
       ),
     },
   )
@@ -129,13 +131,11 @@ let renderAnimationSection = (active: animationPreference): Tea_Vdom.t<msg> => {
       renderSectionHeader("Motion"),
       div(
         list{Attrs.class_("flex flex-wrap gap-1.5")},
-        list{
-          ...prefs
-          ->Array.map(((pref, label, tooltip)) =>
-            renderOption(label, tooltip, pref === active, AccessibilityCtrl(SetAnimations(pref)))
-          )
-          ->List.fromArray,
-        },
+        prefs
+        ->Array.map(((pref, label, tooltip)) =>
+          renderOption(label, tooltip, pref === active, AccessibilityCtrl(SetAnimations(pref)))
+        )
+        ->List.fromArray,
       ),
     },
   )
@@ -155,18 +155,16 @@ let renderFontSizeSection = (active: fontSizePreset): Tea_Vdom.t<msg> => {
       renderSectionHeader("Text Size"),
       div(
         list{Attrs.class_("flex flex-wrap gap-1.5")},
-        list{
-          ...sizes
-          ->Array.map(((preset, shortLabel)) =>
-            renderOption(
-              shortLabel,
-              AccessibilityEngine.fontSizeLabel(preset),
-              preset === active,
-              AccessibilityCtrl(SetFontSize(preset)),
-            )
+        sizes
+        ->Array.map(((preset, shortLabel)) =>
+          renderOption(
+            shortLabel,
+            AccessibilityEngine.fontSizeLabel(preset),
+            preset === active,
+            AccessibilityCtrl(SetFontSize(preset)),
           )
-          ->List.fromArray,
-        },
+        )
+        ->List.fromArray,
       ),
     },
   )
@@ -186,18 +184,16 @@ let renderFocusSection = (active: focusIndicatorStyle): Tea_Vdom.t<msg> => {
       renderSectionHeader("Focus Ring"),
       div(
         list{Attrs.class_("flex flex-wrap gap-1.5")},
-        list{
-          ...styles
-          ->Array.map(((style, shortLabel)) =>
-            renderOption(
-              shortLabel,
-              AccessibilityEngine.focusStyleLabel(style),
-              style === active,
-              AccessibilityCtrl(SetFocusStyle(style)),
-            )
+        styles
+        ->Array.map(((style, shortLabel)) =>
+          renderOption(
+            shortLabel,
+            AccessibilityEngine.focusStyleLabel(style),
+            style === active,
+            AccessibilityCtrl(SetFocusStyle(style)),
           )
-          ->List.fromArray,
-        },
+        )
+        ->List.fromArray,
       ),
     },
   )
@@ -290,16 +286,17 @@ let view = (state: accessibilityState): Tea_Vdom.t<msg> => {
           Attrs.class_(
             "w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/50 flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-gray-950",
           ),
-          Attrs.title(state.toolbarExpanded ? "Close accessibility settings" : "Open accessibility settings"),
-          Attrs.ariaLabel(state.toolbarExpanded ? "Close accessibility settings" : "Open accessibility settings"),
+          Attrs.title(
+            state.toolbarExpanded ? "Close accessibility settings" : "Open accessibility settings",
+          ),
+          Attrs.ariaLabel(
+            state.toolbarExpanded ? "Close accessibility settings" : "Open accessibility settings",
+          ),
           Events.onClick(AccessibilityCtrl(ToggleAccessibilityToolbar)),
         },
         list{
           // Accessibility icon (universal access symbol approximation using text)
-          span(
-            list{Attrs.class_("text-lg font-bold")},
-            list{text("A")},
-          ),
+          span(list{Attrs.class_("text-lg font-bold")}, list{text("A")}),
         },
       ),
     },

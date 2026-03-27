@@ -25,9 +25,7 @@ open Tea.Html
 
 /// Render a toggle switch for on/off settings.
 /// The toggle is a styled checkbox that looks like a sliding switch.
-let renderToggle = (
-  setting: cfSetting,
-): Tea_Vdom.t<msg> => {
+let renderToggle = (setting: cfSetting): Tea_Vdom.t<msg> => {
   let isOn = CloudGuardEngine.isSettingEnabled(setting.value)
   let bgClass = isOn ? "bg-indigo-600" : "bg-gray-600"
   let translateClass = isOn ? "translate-x-5" : "translate-x-0"
@@ -39,14 +37,8 @@ let renderToggle = (
       div(
         list{Attrs.class_("flex-1 mr-4")},
         list{
-          div(
-            list{Attrs.class_("text-sm text-gray-200 font-medium")},
-            list{text(setting.label)},
-          ),
-          div(
-            list{Attrs.class_("text-xs text-gray-500 mt-0.5")},
-            list{text(setting.description)},
-          ),
+          div(list{Attrs.class_("text-sm text-gray-200 font-medium")}, list{text(setting.label)}),
+          div(list{Attrs.class_("text-xs text-gray-500 mt-0.5")}, list{text(setting.description)}),
         },
       ),
       // Toggle switch
@@ -89,10 +81,7 @@ let renderToggle = (
 }
 
 /// Render a dropdown select for enum settings.
-let renderSelect = (
-  setting: cfSetting,
-  options: array<string>,
-): Tea_Vdom.t<msg> => {
+let renderSelect = (setting: cfSetting, options: array<string>): Tea_Vdom.t<msg> => {
   let currentValue = CloudGuardEngine.settingValueToString(setting.value)
 
   div(
@@ -102,14 +91,8 @@ let renderSelect = (
       div(
         list{Attrs.class_("flex-1 mr-4")},
         list{
-          div(
-            list{Attrs.class_("text-sm text-gray-200 font-medium")},
-            list{text(setting.label)},
-          ),
-          div(
-            list{Attrs.class_("text-xs text-gray-500 mt-0.5")},
-            list{text(setting.description)},
-          ),
+          div(list{Attrs.class_("text-sm text-gray-200 font-medium")}, list{text(setting.label)}),
+          div(list{Attrs.class_("text-xs text-gray-500 mt-0.5")}, list{text(setting.description)}),
         },
       ),
       // Select dropdown
@@ -155,9 +138,7 @@ let renderSelect = (
 }
 
 /// Render a number input for numeric settings.
-let renderNumberInput = (
-  setting: cfSetting,
-): Tea_Vdom.t<msg> => {
+let renderNumberInput = (setting: cfSetting): Tea_Vdom.t<msg> => {
   let currentValue = CloudGuardEngine.settingValueToString(setting.value)
 
   div(
@@ -166,14 +147,8 @@ let renderNumberInput = (
       div(
         list{Attrs.class_("flex-1 mr-4")},
         list{
-          div(
-            list{Attrs.class_("text-sm text-gray-200 font-medium")},
-            list{text(setting.label)},
-          ),
-          div(
-            list{Attrs.class_("text-xs text-gray-500 mt-0.5")},
-            list{text(setting.description)},
-          ),
+          div(list{Attrs.class_("text-sm text-gray-200 font-medium")}, list{text(setting.label)}),
+          div(list{Attrs.class_("text-xs text-gray-500 mt-0.5")}, list{text(setting.description)}),
         },
       ),
       input(
@@ -194,12 +169,12 @@ let renderNumberInput = (
 
 /// Render an exception indicator badge showing that this setting has a
 /// per-domain override. Displays the override reason on hover via title attr.
-let renderExceptionBadge = (
-  domainExc: domainException,
-): Tea_Vdom.t<msg> => {
+let renderExceptionBadge = (domainExc: domainException): Tea_Vdom.t<msg> => {
   span(
     list{
-      Attrs.class_("text-xs text-yellow-400 font-medium px-1.5 py-0.5 border border-yellow-500/30 rounded ml-2"),
+      Attrs.class_(
+        "text-xs text-yellow-400 font-medium px-1.5 py-0.5 border border-yellow-500/30 rounded ml-2",
+      ),
       Attrs.title(`Exception: ${domainExc.reason}`),
     },
     list{text("EXC")},
@@ -209,10 +184,9 @@ let renderExceptionBadge = (
 /// Render a single setting row, choosing the appropriate input type.
 /// Unavailable settings are rendered greyed-out with a plan badge.
 /// If an exception exists for the current domain, shows a yellow "EXC" badge.
-let renderSettingRow = (
-  setting: cfSetting,
-  domainExc: option<domainException>,
-): Tea_Vdom.t<msg> => {
+let renderSettingRow = (setting: cfSetting, domainExc: option<domainException>): Tea_Vdom.t<
+  msg,
+> => {
   // Check availability from catalog
   let catalogEntry = CloudGuardCatalog.findById(setting.id)
 
@@ -224,7 +198,9 @@ let renderSettingRow = (
     | Unavailable(tier) =>
       // Greyed-out setting with plan badge
       div(
-        list{Attrs.class_("flex items-center justify-between py-2 px-3 opacity-40 cursor-not-allowed")},
+        list{
+          Attrs.class_("flex items-center justify-between py-2 px-3 opacity-40 cursor-not-allowed"),
+        },
         list{
           div(
             list{Attrs.class_("flex-1 mr-4")},
@@ -240,7 +216,11 @@ let renderSettingRow = (
             },
           ),
           span(
-            list{Attrs.class_("text-xs text-amber-500/60 font-medium px-2 py-0.5 border border-amber-500/30 rounded")},
+            list{
+              Attrs.class_(
+                "text-xs text-amber-500/60 font-medium px-2 py-0.5 border border-amber-500/30 rounded",
+              ),
+            },
             list{text(`Requires ${CloudGuardCatalog.planLabel(tier)}`)},
           ),
         },
@@ -262,14 +242,7 @@ let renderSettingRow = (
   // Wrap with exception badge if this setting has a per-domain override
   switch domainExc {
   | None => rowContent
-  | Some(exc) =>
-    div(
-      list{Attrs.class_("relative")},
-      list{
-        rowContent,
-        renderExceptionBadge(exc),
-      },
-    )
+  | Some(exc) => div(list{Attrs.class_("relative")}, list{rowContent, renderExceptionBadge(exc)})
   }
 }
 
@@ -290,8 +263,8 @@ let view = (
   let filteredSettings = if String.length(settingFilter) > 0 {
     let lower = String.toLowerCase(settingFilter)
     categorySettings->Array.filter(s =>
-      String.includes(String.toLowerCase(s.label), lower)
-      || String.includes(String.toLowerCase(s.id), lower)
+      String.includes(String.toLowerCase(s.label), lower) ||
+      String.includes(String.toLowerCase(s.id), lower)
     )
   } else {
     categorySettings
@@ -316,8 +289,7 @@ let view = (
           ->Array.map(setting => {
             // Look up per-domain exception for this setting
             let domainExc = switch currentDomain {
-            | Some(domain) =>
-              CloudGuardEngine.findException(exceptions, domain, setting.id)
+            | Some(domain) => CloudGuardEngine.findException(exceptions, domain, setting.id)
             | None => None
             }
             renderSettingRow(setting, domainExc)

@@ -23,26 +23,19 @@
 type timelineState = {
   /// All loaded timeline snapshots (newest last, capped at 1000).
   snapshots: array<TimelineEngine.timelineSnapshot>,
-
   /// Currently selected snapshot index for the "time machine" scrubber.
   /// None means the view is showing the latest (live) state.
   scrubberPosition: option<int>,
-
   /// Whether the timeline dashboard panel is expanded.
   dashboardExpanded: bool,
-
   /// Pre-computed metrics for the dashboard (refreshed on snapshot changes).
   cachedMetrics: array<TimelineEngine.timelineMetric>,
-
   /// Path to the VeriSimDB database file (set when a repo is loaded).
   dbPath: option<string>,
-
   /// Whether a snapshot capture is currently in progress.
   capturing: bool,
-
   /// Last error from VeriSimDB I/O operations.
   error: option<string>,
-
   /// Whether the timeline is connected to a VeriSimDB instance.
   connected: bool,
 }

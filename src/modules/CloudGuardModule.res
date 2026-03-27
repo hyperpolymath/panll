@@ -19,24 +19,24 @@
 
 /// Capabilities that CloudGuard provides to the PanLL ecosystem.
 type cloudguardCapability =
-  | DomainInventory     // List and monitor all Cloudflare zones
-  | SecurityHardening   // Apply security settings (SSL, HSTS, headers)
-  | DnsManagement       // DNS record CRUD with security templates
-  | ComplianceAudit     // Evaluate settings against Trustfile policy
-  | OfflineConfig       // Download/upload config with three-way diff
-  | BulkOperations      // Apply settings across multiple domains at once
-  | PagesIntegration    // Cloudflare Pages / GitHub Pages setup
-  | DnssecManagement    // DNSSEC enable/verify/DS record management
+  | DomainInventory // List and monitor all Cloudflare zones
+  | SecurityHardening // Apply security settings (SSL, HSTS, headers)
+  | DnsManagement // DNS record CRUD with security templates
+  | ComplianceAudit // Evaluate settings against Trustfile policy
+  | OfflineConfig // Download/upload config with three-way diff
+  | BulkOperations // Apply settings across multiple domains at once
+  | PagesIntegration // Cloudflare Pages / GitHub Pages setup
+  | DnssecManagement // DNSSEC enable/verify/DS record management
 
 /// CloudGuard module configuration.
 type cloudguardModuleConfig = {
-  id: string,                          // Module identifier
-  name: string,                        // Display name
-  version: string,                     // Module version
-  description: string,                 // Module description
-  apiEndpoint: string,                 // Cloudflare API base URL
+  id: string, // Module identifier
+  name: string, // Display name
+  version: string, // Module version
+  description: string, // Module description
+  apiEndpoint: string, // Cloudflare API base URL
   capabilities: array<cloudguardCapability>, // What this module can do
-  icon: option<string>,                // Icon identifier for module switcher
+  icon: option<string>, // Icon identifier for module switcher
 }
 
 /// The CloudGuard module registration.

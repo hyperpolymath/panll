@@ -3,7 +3,10 @@ open Model
 open Msg
 
 /// Compute derived audit fields (distribution and bottlenecks) from results.
-let computeAuditDerived = (state: wiringInspectorState, results: array<panelVerification>): wiringInspectorState => {
+let computeAuditDerived = (
+  state: wiringInspectorState,
+  results: array<panelVerification>,
+): wiringInspectorState => {
   ...state,
   results,
   distribution: WiringInspectorEngine.computeDistribution(results),
@@ -16,7 +19,9 @@ let updateWiringInspector = (model: model, msg: wiringInspectorMsg): (model, Tea
   switch msg {
   | RunVerification =>
     let newState = {...state, loading: true, error: None}
-    let cmd = WiringInspectorCmd.runVerification(result => WiringInspector(VerificationResult(result)))
+    let cmd = WiringInspectorCmd.runVerification(result => WiringInspector(
+      VerificationResult(result),
+    ))
     ({...model, wiringInspector: newState}, cmd)
 
   | VerificationResult(Ok(json)) =>
@@ -40,7 +45,9 @@ let updateWiringInspector = (model: model, msg: wiringInspectorMsg): (model, Tea
 
   | RunSingleVerification(panelId) =>
     let newState = {...state, loading: true, error: None}
-    let cmd = WiringInspectorCmd.runSingleVerification(panelId, result => WiringInspector(SingleVerificationResult(result)))
+    let cmd = WiringInspectorCmd.runSingleVerification(panelId, result => WiringInspector(
+      SingleVerificationResult(result),
+    ))
     ({...model, wiringInspector: newState}, cmd)
 
   | SingleVerificationResult(Ok(json)) =>
@@ -62,17 +69,13 @@ let updateWiringInspector = (model: model, msg: wiringInspectorMsg): (model, Tea
     let newState = {...state, loading: false, error: Some(e)}
     ({...model, wiringInspector: newState}, Tea_Cmd.none)
 
-  | SelectPanel(p) =>
-    ({...model, wiringInspector: {...state, selectedPanel: p}}, Tea_Cmd.none)
+  | SelectPanel(p) => ({...model, wiringInspector: {...state, selectedPanel: p}}, Tea_Cmd.none)
 
-  | SetFilterStatus(s) =>
-    ({...model, wiringInspector: {...state, filterStatus: s}}, Tea_Cmd.none)
+  | SetFilterStatus(s) => ({...model, wiringInspector: {...state, filterStatus: s}}, Tea_Cmd.none)
 
-  | SetAuditTab(tab) =>
-    ({...model, wiringInspector: {...state, activeTab: tab}}, Tea_Cmd.none)
+  | SetAuditTab(tab) => ({...model, wiringInspector: {...state, activeTab: tab}}, Tea_Cmd.none)
 
-  | SetSortBy(field) =>
-    ({...model, wiringInspector: {...state, sortBy: field}}, Tea_Cmd.none)
+  | SetSortBy(field) => ({...model, wiringInspector: {...state, sortBy: field}}, Tea_Cmd.none)
 
   | ToggleStateSection(panelState) =>
     // Toggle panel selection to act as expand/collapse for state sections.

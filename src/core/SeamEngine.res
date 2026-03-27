@@ -420,8 +420,7 @@ let generateA2mlRegister = (register: seamRegister): string => {
     `# Last audit: ${register.lastAuditDate}\n\n` ++
     `[compliance-policy]\n` ++
     `compliance-seams-check = true\n` ++
-    `exception-register-required = true\n` ++
-    `compliance-focus = "seams/compromises/exception register"\n\n`
+    `exception-register-required = true\n` ++ `compliance-focus = "seams/compromises/exception register"\n\n`
 
   let seamSections =
     register.seams
@@ -493,17 +492,16 @@ let scanForDriftIndicators = (filePaths: array<string>): array<driftIndicator> =
       (p->String.includes("package.json") && !(p->String.includes("node_modules"))) ||
         (p->String.includes("npm") && !(p->String.includes("deno.json")))
     )
-  let npmIndicators =
-    npmFiles->Array.map(p => {
-      seamId: "SEAM-001",
-      filePath: p,
-      description: "npm reference found outside expected build scope",
-      crossesScope: !(
-        p->String.includes("rescript.json") ||
-          p->String.includes("package.json") ||
-          p->String.includes("tailwind")
-      ),
-    })
+  let npmIndicators = npmFiles->Array.map(p => {
+    seamId: "SEAM-001",
+    filePath: p,
+    description: "npm reference found outside expected build scope",
+    crossesScope: !(
+      p->String.includes("rescript.json") ||
+      p->String.includes("package.json") ||
+      p->String.includes("tailwind")
+    ),
+  })
 
   // SEAM-003: Check for new Markdown files outside community health set
   let knownMdFiles = [
@@ -522,8 +520,8 @@ let scanForDriftIndicators = (filePaths: array<string>): array<driftIndicator> =
   let mdFiles =
     filePaths->Array.filter(p =>
       p->String.endsWith(".md") &&
-        !(p->String.includes("node_modules")) &&
-        !(p->String.includes("docs/"))
+      !(p->String.includes("node_modules")) &&
+      !(p->String.includes("docs/"))
     )
   let mdIndicators =
     mdFiles
@@ -553,7 +551,9 @@ let scanForDriftIndicators = (filePaths: array<string>): array<driftIndicator> =
 }
 
 /// Generate remediation suggestions for seams that need attention.
-let generateRemediations = (register: seamRegister, currentDate: string): array<seamRemediation> => {
+let generateRemediations = (register: seamRegister, currentDate: string): array<
+  seamRemediation,
+> => {
   register.seams->Array.filterMap(seam => {
     if seam.driftDetected {
       Some({
@@ -611,8 +611,7 @@ let generatePersistentRegister = (register: seamRegister, currentDate: string): 
     `(seam-register\n` ++
     `  (version "1.0.0")\n` ++
     `  (audit-date "${currentDate}")\n` ++
-    `  (compliance-seams-check true)\n` ++
-    `  (exception-register-required true)\n\n`
+    `  (compliance-seams-check true)\n` ++ `  (exception-register-required true)\n\n`
 
   let entries =
     register.seams
@@ -647,7 +646,11 @@ let summariseRegister = (register: seamRegister, currentDate: string): string =>
     })
   let categoryCount = byCategory->Array.length
 
-  `Seam Register: ${Int.toString(audit.totalSeams)} seam(s) across ${Int.toString(categoryCount)} categories\n` ++
-  `Drift: ${Int.toString(audit.driftCount)} | Unacknowledged: ${Int.toString(audit.unacknowledgedCount)} | Overdue: ${Int.toString(audit.overdueCount)}\n` ++
+  `Seam Register: ${Int.toString(audit.totalSeams)} seam(s) across ${Int.toString(
+      categoryCount,
+    )} categories\n` ++
+  `Drift: ${Int.toString(audit.driftCount)} | Unacknowledged: ${Int.toString(
+      audit.unacknowledgedCount,
+    )} | Overdue: ${Int.toString(audit.overdueCount)}\n` ++
   audit.summary
 }

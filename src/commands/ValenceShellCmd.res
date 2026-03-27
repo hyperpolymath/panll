@@ -14,9 +14,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Check whether the Valence shell binary is available on PATH.
 /// Returns the version string on success, or an error if not found.
-let checkValenceAvailability = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkValenceAvailability = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("valence_shell_check", {"_": true})
     ->Promise.then(result => {
@@ -53,10 +51,7 @@ let spawnPty = (
 }
 
 /// Send input to the running PTY session.
-let sendInput = (
-  input: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let sendInput = (input: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("valence_shell_input", {"input": input})
     ->Promise.then(result => {
@@ -72,10 +67,7 @@ let sendInput = (
 }
 
 /// Start recording the terminal session to an asciinema .cast file.
-let startRecording = (
-  name: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let startRecording = (name: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("valence_shell_record_start", {"name": name})
     ->Promise.then(result => {
@@ -91,9 +83,7 @@ let startRecording = (
 }
 
 /// Stop the current recording and save the .cast file.
-let stopRecording = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let stopRecording = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("valence_shell_record_stop", {"_": true})
     ->Promise.then(result => {
@@ -109,9 +99,7 @@ let stopRecording = (
 }
 
 /// List all saved recordings.
-let listRecordings = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listRecordings = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("valence_shell_recordings_list", {"_": true})
     ->Promise.then(result => {
@@ -127,10 +115,7 @@ let listRecordings = (
 }
 
 /// Delete a recording by ID.
-let deleteRecording = (
-  id: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let deleteRecording = (id: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("valence_shell_recording_delete", {"id": id})
     ->Promise.then(result => {
@@ -146,10 +131,7 @@ let deleteRecording = (
 }
 
 /// Create a Valence filesystem checkpoint.
-let createCheckpoint = (
-  label: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let createCheckpoint = (label: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("valence_shell_checkpoint_create", {"label": label})
     ->Promise.then(result => {
@@ -165,10 +147,7 @@ let createCheckpoint = (
 }
 
 /// Restore a Valence filesystem checkpoint by ID.
-let restoreCheckpoint = (
-  id: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let restoreCheckpoint = (id: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("valence_shell_checkpoint_restore", {"id": id})
     ->Promise.then(result => {
@@ -184,9 +163,7 @@ let restoreCheckpoint = (
 }
 
 /// List all Valence filesystem checkpoints.
-let listCheckpoints = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listCheckpoints = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("valence_shell_checkpoints_list", {"_": true})
     ->Promise.then(result => {
@@ -202,9 +179,7 @@ let listCheckpoints = (
 }
 
 /// Take a screenshot of the terminal state and save to the Capture panel.
-let screenshotTerminal = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let screenshotTerminal = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("valence_shell_screenshot", {"_": true})
     ->Promise.then(result => {

@@ -86,7 +86,11 @@ let statCard = (value: string, label: string, colour: string): Tea_Vdom.t<msg> =
 /// Render a protocol badge.
 let protocolBadge = (proto: cladeProtocol): Tea_Vdom.t<msg> => {
   span(
-    list{Attrs.class_("inline-block px-1.5 py-0.5 text-xs rounded border border-sky-500/30 bg-sky-500/10 text-sky-400")},
+    list{
+      Attrs.class_(
+        "inline-block px-1.5 py-0.5 text-xs rounded border border-sky-500/30 bg-sky-500/10 text-sky-400",
+      ),
+    },
     list{text(protocolLabel(proto))},
   )
 }
@@ -94,7 +98,11 @@ let protocolBadge = (proto: cladeProtocol): Tea_Vdom.t<msg> => {
 /// Render a capability badge.
 let capBadge = (cap: cladeCapability): Tea_Vdom.t<msg> => {
   span(
-    list{Attrs.class_("inline-block px-1.5 py-0.5 text-xs rounded border border-amber-500/30 bg-amber-500/10 text-amber-400")},
+    list{
+      Attrs.class_(
+        "inline-block px-1.5 py-0.5 text-xs rounded border border-amber-500/30 bg-amber-500/10 text-amber-400",
+      ),
+    },
     list{text(capabilityLabel(cap))},
   )
 }
@@ -118,7 +126,9 @@ let cladeCard = (entry: cladeEntry, isSelected: bool): Tea_Vdom.t<msg> => {
   let borderCls = isSelected ? "border-cyan-500 bg-gray-800/80" : "border-gray-700 bg-gray-800/40"
   div(
     list{
-      Attrs.class_(`p-3 mb-2 rounded-lg border ${borderCls} cursor-pointer hover:border-gray-500 transition-colors`),
+      Attrs.class_(
+        `p-3 mb-2 rounded-lg border ${borderCls} cursor-pointer hover:border-gray-500 transition-colors`,
+      ),
       Events.onClick(CladeBrowser(SelectClade(Some(entry.id)))),
     },
     list{
@@ -204,18 +214,49 @@ let viewOverview = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("grid grid-cols-4 gap-3 mb-3")},
         list{
           statCard(Int.toString(total), "Total Clades", "text-cyan-400"),
-          statCard(Int.toString(countWithTrait(state.clades, t => t.hasBackend)), "With Backend", "text-green-400"),
-          statCard(Int.toString(countWithTrait(state.clades, t => t.hasRealTime)), "Real-Time", "text-amber-400"),
-          statCard(Int.toString(countWithTrait(state.clades, t => t.isAmbient)), "Ambient", "text-violet-400"),
+          statCard(
+            Int.toString(countWithTrait(state.clades, t => t.hasBackend)),
+            "With Backend",
+            "text-green-400",
+          ),
+          statCard(
+            Int.toString(countWithTrait(state.clades, t => t.hasRealTime)),
+            "Real-Time",
+            "text-amber-400",
+          ),
+          statCard(
+            Int.toString(countWithTrait(state.clades, t => t.isAmbient)),
+            "Ambient",
+            "text-violet-400",
+          ),
         },
       ),
       div(
         list{Attrs.class_("grid grid-cols-4 gap-3 mb-5")},
         list{
-          statCard(Int.toString(countWithProtocols(state.clades)), "With Protocols", "text-sky-400"),
-          statCard(Int.toString(countWithCapabilities(state.clades)), "With Capabilities", "text-amber-400"),
-          statCard(Int.toString(countByIsolation(state.clades, IsolationProcess) + countByIsolation(state.clades, IsolationContainer)), "Process/Container", "text-blue-400"),
-          statCard(Int.toString(countWithParent(state.clades)), "With Inheritance", "text-indigo-400"),
+          statCard(
+            Int.toString(countWithProtocols(state.clades)),
+            "With Protocols",
+            "text-sky-400",
+          ),
+          statCard(
+            Int.toString(countWithCapabilities(state.clades)),
+            "With Capabilities",
+            "text-amber-400",
+          ),
+          statCard(
+            Int.toString(
+              countByIsolation(state.clades, IsolationProcess) +
+              countByIsolation(state.clades, IsolationContainer),
+            ),
+            "Process/Container",
+            "text-blue-400",
+          ),
+          statCard(
+            Int.toString(countWithParent(state.clades)),
+            "With Inheritance",
+            "text-indigo-400",
+          ),
         },
       ),
       // Kind distribution
@@ -232,14 +273,15 @@ let viewOverview = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
               text(kindLabel(k) ++ " (" ++ Int.toString(count) ++ ")"),
             },
           )
-        })->List.fromArray,
+        })
+        ->List.fromArray,
       ),
       // Clade list
       div(
         list{},
-        filtered->Array.map(entry =>
-          cladeCard(entry, state.selectedClade === Some(entry.id))
-        )->List.fromArray,
+        filtered
+        ->Array.map(entry => cladeCard(entry, state.selectedClade === Some(entry.id)))
+        ->List.fromArray,
       ),
     },
   )
@@ -250,7 +292,8 @@ let viewByKind = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
   let kinds = allKinds->Array.filter(k => k !== KindAll)
   div(
     list{},
-    kinds->Array.map(kind => {
+    kinds
+    ->Array.map(kind => {
       let kindsClades = filterByKind(state.clades, kind)
       if kindsClades->Array.length > 0 {
         div(
@@ -260,23 +303,27 @@ let viewByKind = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
               list{Attrs.class_("flex items-center gap-2 mb-2")},
               list{
                 kindBadge(kindLabel(kind)->String.toLowerCase),
-                h3(list{Attrs.class_("text-sm font-semibold text-gray-200 m-0")}, list{
-                  text(kindLabel(kind) ++ " (" ++ Int.toString(kindsClades->Array.length) ++ ")"),
-                }),
+                h3(
+                  list{Attrs.class_("text-sm font-semibold text-gray-200 m-0")},
+                  list{
+                    text(kindLabel(kind) ++ " (" ++ Int.toString(kindsClades->Array.length) ++ ")"),
+                  },
+                ),
               },
             ),
             div(
               list{},
-              kindsClades->Array.map(entry =>
-                cladeCard(entry, state.selectedClade === Some(entry.id))
-              )->List.fromArray,
+              kindsClades
+              ->Array.map(entry => cladeCard(entry, state.selectedClade === Some(entry.id)))
+              ->List.fromArray,
             ),
           },
         )
       } else {
         noNode
       }
-    })->List.fromArray,
+    })
+    ->List.fromArray,
   )
 }
 
@@ -314,7 +361,8 @@ let viewTraits = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
       ),
       tbody(
         list{},
-        state.clades->Array.map(entry =>
+        state.clades
+        ->Array.map(entry =>
           tr(
             list{Attrs.class_("border-b border-gray-800 hover:bg-gray-800/50")},
             list{
@@ -328,15 +376,26 @@ let viewTraits = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
               td(list{Attrs.class_("p-2")}, list{isolationBadgeView(entry.isolation)}),
               td(
                 list{Attrs.class_("p-2")},
-                list{span(list{Attrs.class_("text-sky-400")}, list{text(Int.toString(entry.protocols->Array.length))})},
+                list{
+                  span(
+                    list{Attrs.class_("text-sky-400")},
+                    list{text(Int.toString(entry.protocols->Array.length))},
+                  ),
+                },
               ),
               td(
                 list{Attrs.class_("p-2")},
-                list{span(list{Attrs.class_("text-amber-400")}, list{text(Int.toString(entry.capabilities->Array.length))})},
+                list{
+                  span(
+                    list{Attrs.class_("text-amber-400")},
+                    list{text(Int.toString(entry.capabilities->Array.length))},
+                  ),
+                },
               ),
             },
           )
-        )->List.fromArray,
+        )
+        ->List.fromArray,
       ),
     },
   )
@@ -351,7 +410,11 @@ let viewPanelMap = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
     list{
       p(
         list{Attrs.class_("text-xs text-gray-400 mb-2")},
-        list{text("Panel-to-clade assignments. Each panel inherits traits from its clade and ancestors.")},
+        list{
+          text(
+            "Panel-to-clade assignments. Each panel inherits traits from its clade and ancestors.",
+          ),
+        },
       ),
       // Inheritance stats
       div(
@@ -383,12 +446,14 @@ let viewPanelMap = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
                   ),
                   div(
                     list{Attrs.class_("flex flex-wrap gap-1")},
-                    entry.panelIds->Array.map(pid =>
+                    entry.panelIds
+                    ->Array.map(pid =>
                       span(
                         list{Attrs.class_("bg-gray-700 px-2 py-0.5 rounded text-xs text-gray-200")},
                         list{text(pid)},
                       )
-                    )->List.fromArray,
+                    )
+                    ->List.fromArray,
                   ),
                 },
               ),
@@ -396,9 +461,7 @@ let viewPanelMap = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
               if chain != entry.id {
                 div(
                   list{Attrs.class_("mt-1 ml-[180px] flex items-center gap-2")},
-                  list{
-                    span(list{Attrs.class_("text-xs text-indigo-400")}, list{text(chain)}),
-                  },
+                  list{span(list{Attrs.class_("text-xs text-indigo-400")}, list{text(chain)})},
                 )
               } else {
                 noNode
@@ -462,26 +525,34 @@ let permissionBadge = (rules: array<cladePermissionRule>, cladeId: string): Tea_
   switch rule {
   | None =>
     span(
-      list{Attrs.class_("text-xs text-emerald-500 cursor-pointer"),
-        Events.onClick(CladeBrowser(SetCladePermission(cladeId, PermitNone)))},
+      list{
+        Attrs.class_("text-xs text-emerald-500 cursor-pointer"),
+        Events.onClick(CladeBrowser(SetCladePermission(cladeId, PermitNone))),
+      },
       list{text("open")},
     )
   | Some({permission: PermitAll}) =>
     span(
-      list{Attrs.class_("text-xs text-emerald-500 cursor-pointer"),
-        Events.onClick(CladeBrowser(SetCladePermission(cladeId, PermitNone)))},
+      list{
+        Attrs.class_("text-xs text-emerald-500 cursor-pointer"),
+        Events.onClick(CladeBrowser(SetCladePermission(cladeId, PermitNone))),
+      },
       list{text("open")},
     )
   | Some({permission: PermitNone}) =>
     span(
-      list{Attrs.class_("text-xs text-red-400 cursor-pointer"),
-        Events.onClick(CladeBrowser(RemoveCladePermission(cladeId)))},
+      list{
+        Attrs.class_("text-xs text-red-400 cursor-pointer"),
+        Events.onClick(CladeBrowser(RemoveCladePermission(cladeId))),
+      },
       list{text("locked")},
     )
   | Some({permission: PermitOnly(allowed)}) =>
     span(
-      list{Attrs.class_("text-xs text-amber-400 cursor-pointer"),
-        Events.onClick(CladeBrowser(RemoveCladePermission(cladeId)))},
+      list{
+        Attrs.class_("text-xs text-amber-400 cursor-pointer"),
+        Events.onClick(CladeBrowser(RemoveCladePermission(cladeId))),
+      },
       list{text(`restricted (${Int.toString(Array.length(allowed))})`)},
     )
   }
@@ -495,7 +566,10 @@ let viewPermissions = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between mb-2")},
         list{
-          h3(list{Attrs.class_("text-sm font-semibold text-gray-200 m-0")}, list{text("Cross-Clade Permissions")}),
+          h3(
+            list{Attrs.class_("text-sm font-semibold text-gray-200 m-0")},
+            list{text("Cross-Clade Permissions")},
+          ),
           span(
             list{Attrs.class_("text-xs text-gray-500")},
             list{text(`${Int.toString(Array.length(state.permissionRules))} rules active`)},
@@ -504,25 +578,38 @@ let viewPermissions = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
       ),
       p(
         list{Attrs.class_("text-xs text-gray-500 mb-3")},
-        list{text("Controls which clades may cross-reference each other via the Panel Bus. Click to toggle.")},
+        list{
+          text(
+            "Controls which clades may cross-reference each other via the Panel Bus. Click to toggle.",
+          ),
+        },
       ),
       div(
         list{Attrs.class_("space-y-1")},
-        state.clades->Array.map(entry =>
+        state.clades
+        ->Array.map(entry =>
           div(
-            list{Attrs.class_("flex items-center justify-between py-1 px-2 rounded hover:bg-gray-800/50")},
+            list{
+              Attrs.class_(
+                "flex items-center justify-between py-1 px-2 rounded hover:bg-gray-800/50",
+              ),
+            },
             list{
               div(
                 list{Attrs.class_("flex items-center gap-2")},
                 list{
-                  span(list{Attrs.class_("text-xs text-gray-300 font-mono w-36 truncate")}, list{text(entry.id)}),
+                  span(
+                    list{Attrs.class_("text-xs text-gray-300 font-mono w-36 truncate")},
+                    list{text(entry.id)},
+                  ),
                   kindBadge(entry.kind),
                 },
               ),
               permissionBadge(state.permissionRules, entry.id),
             },
           )
-        )->List.fromArray,
+        )
+        ->List.fromArray,
       ),
     },
   )
@@ -551,23 +638,16 @@ let view = (state: cladeBrowserState): Tea_Vdom.t<msg> => {
       // Tabs
       div(
         list{Attrs.class_("flex gap-1 mb-4 border-b border-gray-700 pb-2")},
-        allCategories->Array.map(cat =>
-          renderTab(categoryLabel(cat), state.category === cat, cat)
-        )->List.fromArray,
+        allCategories
+        ->Array.map(cat => renderTab(categoryLabel(cat), state.category === cat, cat))
+        ->List.fromArray,
       ),
       // Content
       switch state.category {
       | CategoryOverview => viewOverview(state)
       | CategoryByKind => viewByKind(state)
       | CategoryTraits => viewTraits(state)
-      | CategoryPanelMap =>
-        div(
-          list{},
-          list{
-            viewPanelMap(state),
-            viewPermissions(state),
-          },
-        )
+      | CategoryPanelMap => div(list{}, list{viewPanelMap(state), viewPermissions(state)})
       },
     },
   )

@@ -76,8 +76,7 @@ let map8 = (
 ): decoder<'i> => {
   json => {
     switch (d1(json), d2(json), d3(json), d4(json), d5(json), d6(json), d7(json), d8(json)) {
-    | (Ok(a), Ok(b), Ok(c), Ok(d), Ok(e), Ok(fv), Ok(g), Ok(h)) =>
-      Ok(f(a, b, c, d, e, fv, g, h))
+    | (Ok(a), Ok(b), Ok(c), Ok(d), Ok(e), Ok(fv), Ok(g), Ok(h)) => Ok(f(a, b, c, d, e, fv, g, h))
     | (Error(e), _, _, _, _, _, _, _) => Error(e)
     | (_, Error(e), _, _, _, _, _, _) => Error(e)
     | (_, _, Error(e), _, _, _, _, _) => Error(e)
@@ -373,20 +372,16 @@ let fieldWithDefault = (name: string, decoder: decoder<'a>, default: 'a): decode
 }
 
 /// Decode a string field, defaulting to "" if missing.
-let stringField = (name: string): decoder<string> =>
-  fieldWithDefault(name, string, "")
+let stringField = (name: string): decoder<string> => fieldWithDefault(name, string, "")
 
 /// Decode a float field, defaulting to 0.0 if missing.
-let floatField = (name: string): decoder<float> =>
-  fieldWithDefault(name, float, 0.0)
+let floatField = (name: string): decoder<float> => fieldWithDefault(name, float, 0.0)
 
 /// Decode an int field, defaulting to 0 if missing.
-let intField = (name: string): decoder<int> =>
-  fieldWithDefault(name, int, 0)
+let intField = (name: string): decoder<int> => fieldWithDefault(name, int, 0)
 
 /// Decode a bool field, defaulting to false if missing.
-let boolField = (name: string): decoder<bool> =>
-  fieldWithDefault(name, bool, false)
+let boolField = (name: string): decoder<bool> => fieldWithDefault(name, bool, false)
 
 /// Decode an array field, defaulting to empty array if missing.
 let arrayField = (name: string, itemDecoder: decoder<'a>): decoder<array<'a>> =>
@@ -419,16 +414,12 @@ let stringArrayField = (name: string): decoder<array<string>> =>
 
 /// Map a decoded value through a transformation function.
 /// Useful for variant mapping (e.g., int → trustLevel variant).
-let mapValue = (decoder: decoder<'a>, f: 'a => 'b): decoder<'b> =>
-  map(decoder, f)
+let mapValue = (decoder: decoder<'a>, f: 'a => 'b): decoder<'b> => map(decoder, f)
 
 /// Decode the "result" wrapper common in Cloudflare-style API responses.
 /// Handles both `[...]` and `{ "result": [...] }` shapes.
 let resultArrayOrDirect = (itemDecoder: decoder<'a>): decoder<array<'a>> => {
-  oneOf([
-    lenientArray(itemDecoder),
-    field("result", lenientArray(itemDecoder)),
-  ])
+  oneOf([lenientArray(itemDecoder), field("result", lenientArray(itemDecoder))])
 }
 
 /// Decode an optional field — returns Some(value) if present and decodable,

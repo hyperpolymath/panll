@@ -63,8 +63,8 @@ let violationCount = (antiCrash: antiCrashState): int => {
 /// Determine if operator frustration should loosen constraints.
 let shouldLoosenForVexation = (vex: vexometerState, antiCrash: antiCrashState): bool => {
   vex.index > vexationHighThreshold &&
-    violationCount(antiCrash) < violationSpikeThreshold &&
-    !vex.inertiaDetected
+  violationCount(antiCrash) < violationSpikeThreshold &&
+  !vex.inertiaDetected
 }
 
 /// Determine if low violations + stable orbit should tighten constraints.
@@ -74,8 +74,8 @@ let shouldTightenForStability = (
   vex: vexometerState,
 ): bool => {
   orbital.stability > stabilityHealthyThreshold &&
-    violationCount(antiCrash) > violationSpikeThreshold &&
-    vex.index < vexationLowThreshold
+  violationCount(antiCrash) > violationSpikeThreshold &&
+  vex.index < vexationLowThreshold
 }
 
 /// Determine the appropriate humidity level from current system state.
@@ -138,11 +138,13 @@ let evaluate = (model: model): array<governanceAdjustment> => {
 
   let adjustments = if model.orbital.divergenceLevel > divergenceHighThreshold {
     // L↔N divergence is high — emit a sync event and consider halting.
-    let syncAdj = [
-      EmitSyncEvent(CrossPaneLink("governance:divergence-high", "antiCrash")),
-    ]
+    let syncAdj = [EmitSyncEvent(CrossPaneLink("governance:divergence-high", "antiCrash"))]
     let haltAdj = if model.orbital.stability < stabilityDangerThreshold {
-      [HaltInference("Orbital stability critically low — L↔N divergence exceeds safe threshold")]
+      [
+        HaltInference(
+          "Orbital stability critically low — L↔N divergence exceeds safe threshold",
+        ),
+      ]
     } else {
       []
     }
@@ -155,8 +157,9 @@ let evaluate = (model: model): array<governanceAdjustment> => {
 
   let adjustments = if model.vexometer.inertiaDetected && !model.paneN.inferenceActive {
     // System has been idle too long — suggest resumption if conditions are met.
-    if model.orbital.stability > stabilityHealthyThreshold &&
-      violationCount(model.antiCrash) === 0 {
+    if (
+      model.orbital.stability > stabilityHealthyThreshold && violationCount(model.antiCrash) === 0
+    ) {
       Array.concat(adjustments, [ResumeInference])
     } else {
       adjustments
@@ -185,8 +188,7 @@ let evaluate = (model: model): array<governanceAdjustment> => {
     if avgConf < 0.5 && !model.antiCrash.strictMode {
       // Low neural confidence → tighten validation.
       Array.concat(adjustments, [TightenAntiCrash])
-    } else if avgConf > 0.8 && model.antiCrash.strictMode &&
-      violationCount(model.antiCrash) < 2 {
+    } else if avgConf > 0.8 && model.antiCrash.strictMode && violationCount(model.antiCrash) < 2 {
       // High neural confidence + few violations → can loosen.
       Array.concat(adjustments, [LoosenAntiCrash])
     } else {
@@ -320,12 +322,11 @@ let evaluateWithCmd = (model: model): (array<governanceAdjustment>, array<govern
   // defer the Anti-Crash decision to nesy-mcp instead of guessing.
 
   let vexInUncertainZone =
-    model.vexometer.index >= vexationLowThreshold &&
-    model.vexometer.index <= vexationHighThreshold
+    model.vexometer.index >= vexationLowThreshold && model.vexometer.index <= vexationHighThreshold
 
   let stabilityInBorderline =
     model.orbital.stability >= stabilityDangerThreshold &&
-    model.orbital.stability <= stabilityHealthyThreshold
+      model.orbital.stability <= stabilityHealthyThreshold
 
   // --- Anti-Crash ↔ Vexometer feedback (with nesy deferral) ---
 
@@ -334,7 +335,7 @@ let evaluateWithCmd = (model: model): (array<governanceAdjustment>, array<govern
     let q = NesyConfidenceQuery(
       `vexation=${Float.toString(model.vexometer.index)},` ++
       `stability=${Float.toString(model.orbital.stability)},` ++
-      `violations=${Int.toString(violationCount(model.antiCrash))}`
+      `violations=${Int.toString(violationCount(model.antiCrash))}`,
     )
     (adjustments, Array.concat(queries, [q]))
   } else if shouldLoosenForVexation(model.vexometer, model.antiCrash) {
@@ -370,9 +371,7 @@ let evaluateWithCmd = (model: model): (array<governanceAdjustment>, array<govern
   // --- OrbitalSync divergence → governance (with nesy validation on halt) ---
 
   let (adjustments, queries) = if model.orbital.divergenceLevel > divergenceHighThreshold {
-    let syncAdj = [
-      EmitSyncEvent(CrossPaneLink("governance:divergence-high", "antiCrash")),
-    ]
+    let syncAdj = [EmitSyncEvent(CrossPaneLink("governance:divergence-high", "antiCrash"))]
     let (haltAdj, haltQueries) = if model.orbital.stability < stabilityDangerThreshold {
       let haltReason = "Orbital stability critically low — L↔N divergence exceeds safe threshold"
       // Always validate a HaltInference through nesy-mcp first.
@@ -381,10 +380,7 @@ let evaluateWithCmd = (model: model): (array<governanceAdjustment>, array<govern
     } else {
       ([], [])
     }
-    (
-      Array.concat(adjustments, Array.concat(syncAdj, haltAdj)),
-      Array.concat(queries, haltQueries),
-    )
+    (Array.concat(adjustments, Array.concat(syncAdj, haltAdj)), Array.concat(queries, haltQueries))
   } else {
     (adjustments, queries)
   }
@@ -392,8 +388,9 @@ let evaluateWithCmd = (model: model): (array<governanceAdjustment>, array<govern
   // --- Inertia detection → inference resumption ---
 
   let adjustments = if model.vexometer.inertiaDetected && !model.paneN.inferenceActive {
-    if model.orbital.stability > stabilityHealthyThreshold &&
-      violationCount(model.antiCrash) === 0 {
+    if (
+      model.orbital.stability > stabilityHealthyThreshold && violationCount(model.antiCrash) === 0
+    ) {
       Array.concat(adjustments, [ResumeInference])
     } else {
       adjustments
@@ -419,8 +416,7 @@ let evaluateWithCmd = (model: model): (array<governanceAdjustment>, array<govern
     }
     if avgConf < 0.5 && !model.antiCrash.strictMode {
       Array.concat(adjustments, [TightenAntiCrash])
-    } else if avgConf > 0.8 && model.antiCrash.strictMode &&
-      violationCount(model.antiCrash) < 2 {
+    } else if avgConf > 0.8 && model.antiCrash.strictMode && violationCount(model.antiCrash) < 2 {
       Array.concat(adjustments, [LoosenAntiCrash])
     } else {
       adjustments
@@ -463,7 +459,10 @@ let govern = (model: model): model => {
 /// Nesy-aware governance pass: evaluate, apply immediate adjustments, and
 /// dispatch async nesy-mcp queries through GovernanceCmd. Returns updated
 /// model plus any Tea commands for nesy queries.
-let governWithCmd = (model: model, nesyTagger: result<string, string> => 'msg): (model, Tea_Cmd.t<'msg>) => {
+let governWithCmd = (model: model, nesyTagger: result<string, string> => 'msg): (
+  model,
+  Tea_Cmd.t<'msg>,
+) => {
   let (adjustments, queries) = evaluateWithCmd(model)
   let newModel = applyAll(model, adjustments)
 

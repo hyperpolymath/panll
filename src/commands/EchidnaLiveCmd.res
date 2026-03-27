@@ -16,7 +16,6 @@
 /// In browser-only mode (no desktop runtime), commands fall back to direct
 /// fetch() calls against the ECHIDNA server URL.
 
-
 let hasDesktopRuntime = RuntimeBridge.hasDesktopRuntime
 
 /// GET helper for ECHIDNA direct fetch (bypasses backend invoke).
@@ -78,15 +77,17 @@ let checkHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
 ///
 /// @param obligation — the proof obligation expression (Idris2/Lean/Coq syntax)
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
-let recommendTactics = (
-  obligation: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let recommendTactics = (obligation: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     let p = if hasDesktopRuntime() {
       RuntimeBridge.invoke("echidna_live_recommend_tactics", {"obligation": obligation})
     } else {
-      fetchPost("/tactics/recommend", `{"obligation":${JSON.stringifyAny(obligation)->Option.getOr("\"\"")}}`)
+      fetchPost(
+        "/tactics/recommend",
+        `{"obligation":${JSON.stringifyAny(obligation)->Option.getOr("\"\"")}}`,
+      )
     }
     p
     ->Promise.then(result => {
@@ -110,15 +111,17 @@ let recommendTactics = (
 ///
 /// @param obligation — the proof obligation expression (Idris2/Lean/Coq syntax)
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
-let submitObligation = (
-  obligation: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let submitObligation = (obligation: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     let p = if hasDesktopRuntime() {
       RuntimeBridge.invoke("echidna_live_submit_obligation", {"obligation": obligation})
     } else {
-      fetchPost("/obligations/submit", `{"obligation":${JSON.stringifyAny(obligation)->Option.getOr("\"\"")}}`)
+      fetchPost(
+        "/obligations/submit",
+        `{"obligation":${JSON.stringifyAny(obligation)->Option.getOr("\"\"")}}`,
+      )
     }
     p
     ->Promise.then(result => {
@@ -140,10 +143,7 @@ let submitObligation = (
 ///
 /// @param obligationId — the obligation ID returned by submitObligation
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
-let getResult = (
-  obligationId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getResult = (obligationId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let p = if hasDesktopRuntime() {
       RuntimeBridge.invoke("echidna_live_get_result", {"obligation_id": obligationId})

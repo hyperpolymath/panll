@@ -108,6 +108,7 @@ let standardProgram = (
             return JSON.stringify(e).slice(0,300);
           })()`)
           diagWrite("CRASH: " ++ errMsg)
+
           // Drain the queue to avoid replaying the crashing message
           state.messageQueue = []
         }
@@ -154,27 +155,23 @@ let standardProgram = (
     let vdom = config.view(state.model)
 
     switch (state.container, state.renderState) {
-    | (Some(container), Some(renderState)) => {
-        // Update existing render
-        Tea_Render.update(container, vdom, renderState)
-      }
+    | (Some(container), Some(renderState)) => // Update existing render
+      Tea_Render.update(container, vdom, renderState)
     | (Some(container), None) => {
         // Initial render - create render state
         let renderState = Tea_Render.createState(dispatch)
         Tea_Render.render(container, vdom, renderState)
         state.renderState = Some(renderState)
       }
-    | (None, _) => {
-        // No container - validate and mount to #app via SafeMount
-        switch SafeMount.validateAndFind("#app") {
-        | Error(reason) => Console.warn(reason)
-        | Ok(container) => {
-            let renderState = Tea_Render.createState(dispatch)
-            Tea_Render.render(container, vdom, renderState)
-            state.renderState = Some(renderState)
-            state.container = Some(container)
-            SafeMount.trace("tea-app-init", "mounted to #app")
-          }
+    | (None, _) => // No container - validate and mount to #app via SafeMount
+      switch SafeMount.validateAndFind("#app") {
+      | Error(reason) => Console.warn(reason)
+      | Ok(container) => {
+          let renderState = Tea_Render.createState(dispatch)
+          Tea_Render.render(container, vdom, renderState)
+          state.renderState = Some(renderState)
+          state.container = Some(container)
+          SafeMount.trace("tea-app-init", "mounted to #app")
         }
       }
     }
@@ -189,7 +186,7 @@ let standardProgram = (
 
     let changed =
       Array.length(oldKeys) !== Array.length(newKeys) ||
-      Array.some(oldKeys, key => !Array.includes(newKeys, key))
+        Array.some(oldKeys, key => !Array.includes(newKeys, key))
 
     if changed {
       // Clean up old subscriptions

@@ -22,20 +22,20 @@
 /// Capabilities that a database module may support. PanLL only renders UI
 /// for capabilities the module declares.
 type capability =
-  | QueryExecution        // Can run queries in a native language (VQL, KQL, GQL)
-  | DriftDetection        // Can detect cross-modal consistency drift
-  | ProofGeneration       // Can generate verifiable proof certificates
-  | Normalisation         // Can self-repair drifted modalities
-  | Federation            // Can federate queries across heterogeneous backends
-  | Telemetry             // Exposes operational metrics for product insights
-  | Playground            // Provides an interactive query editor/playground
+  | QueryExecution // Can run queries in a native language (VQL, KQL, GQL)
+  | DriftDetection // Can detect cross-modal consistency drift
+  | ProofGeneration // Can generate verifiable proof certificates
+  | Normalisation // Can self-repair drifted modalities
+  | Federation // Can federate queries across heterogeneous backends
+  | Telemetry // Exposes operational metrics for product insights
+  | Playground // Provides an interactive query editor/playground
 
 /// Connection status for a database backend.
 type connectionStatus =
   | Disconnected
   | Connecting
-  | Connected(string)   // endpoint URL
-  | Error(string)       // error message
+  | Connected(string) // endpoint URL
+  | Error(string) // error message
 
 /// A telemetry snapshot — aggregate product development metrics.
 /// No query content, entity data, or PII — only counters and rates.
@@ -64,14 +64,14 @@ type queryResult = {
 /// scores for other databases. The key is the modality/dimension name.
 type driftScore = {
   dimension: string,
-  score: float,    // 0.0 = no drift, 1.0 = maximum drift
+  score: float, // 0.0 = no drift, 1.0 = maximum drift
 }
 
 /// Proof obligation from a query with dependent types.
 type proofObligation = {
   proofType: string,
   contractName: string,
-  status: string,      // "verified" | "failed" | "pending"
+  status: string, // "verified" | "failed" | "pending"
   proofHash: string,
 }
 
@@ -84,26 +84,26 @@ type exampleQuery = {
 
 /// The query language configuration for the playground.
 type playgroundConfig = {
-  languageName: string,           // "VQL", "KQL", "GQL"
-  languageVersion: string,        // "1.0", "0.5-alpha"
-  fileExtension: string,          // ".vql", ".kql", ".gql"
-  keywords: array<string>,        // syntax keywords for highlighting
+  languageName: string, // "VQL", "KQL", "GQL"
+  languageVersion: string, // "1.0", "0.5-alpha"
+  fileExtension: string, // ".vql", ".kql", ".gql"
+  keywords: array<string>, // syntax keywords for highlighting
   exampleQueries: array<exampleQuery>,
-  hasDependentTypes: bool,        // supports a -DT variant
+  hasDependentTypes: bool, // supports a -DT variant
   linterAvailable: bool,
   formatterAvailable: bool,
 }
 
 /// Configuration for registering a database module with PanLL.
 type moduleConfig = {
-  id: string,                     // unique module identifier (e.g., "verisimdb")
-  name: string,                   // display name (e.g., "VeriSimDB")
-  version: string,                // module version
-  description: string,            // one-line description
-  endpoint: string,               // default connection endpoint
+  id: string, // unique module identifier (e.g., "verisimdb")
+  name: string, // display name (e.g., "VeriSimDB")
+  version: string, // module version
+  description: string, // one-line description
+  endpoint: string, // default connection endpoint
   capabilities: array<capability>,
   playground: option<playgroundConfig>,
-  icon: option<string>,           // CSS class or emoji for the module
+  icon: option<string>, // CSS class or emoji for the module
 }
 
 /// The runtime state for a connected database module in PanLL.

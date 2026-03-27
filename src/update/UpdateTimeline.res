@@ -64,18 +64,12 @@ let updateTimeline = (model: model, msg: timelineMsg): (model, Tea_Cmd.t<msg>) =
       {...model, codeMriTimeline: {...tl, capturing: false, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | LoadHistory => (
-      model,
-      TimelineCmd.loadHistory(".", result => Timeline(HistoryLoaded(result))),
-    )
+  | LoadHistory => (model, TimelineCmd.loadHistory(".", result => Timeline(HistoryLoaded(result))))
   | HistoryLoaded(Ok(_json)) => {
       // Parsing will be done properly when VeriSimDB backend is wired.
       // For now, refresh metrics from existing snapshots.
       let newMetrics = TimelineEngine.allMetrics(tl.snapshots)
-      (
-        {...model, codeMriTimeline: {...tl, cachedMetrics: newMetrics, error: None}},
-        Tea_Cmd.none,
-      )
+      ({...model, codeMriTimeline: {...tl, cachedMetrics: newMetrics, error: None}}, Tea_Cmd.none)
     }
   | HistoryLoaded(Error(err)) => (
       {...model, codeMriTimeline: {...tl, error: Some(err)}},
@@ -90,10 +84,7 @@ let updateTimeline = (model: model, msg: timelineMsg): (model, Tea_Cmd.t<msg>) =
       {...model, codeMriTimeline: {...tl, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | SeekScrubber(pos) => (
-      {...model, codeMriTimeline: {...tl, scrubberPosition: pos}},
-      Tea_Cmd.none,
-    )
+  | SeekScrubber(pos) => ({...model, codeMriTimeline: {...tl, scrubberPosition: pos}}, Tea_Cmd.none)
   | ToggleDashboard => (
       {...model, codeMriTimeline: {...tl, dashboardExpanded: !tl.dashboardExpanded}},
       Tea_Cmd.none,
@@ -107,9 +98,6 @@ let updateTimeline = (model: model, msg: timelineMsg): (model, Tea_Cmd.t<msg>) =
       {...model, codeMriTimeline: {...tl, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | DismissError => (
-      {...model, codeMriTimeline: {...tl, error: None}},
-      Tea_Cmd.none,
-    )
+  | DismissError => ({...model, codeMriTimeline: {...tl, error: None}}, Tea_Cmd.none)
   }
 }

@@ -152,12 +152,15 @@ let array = (decoder: decoder<'a>): decoder<array<'a>> => {
         let firstError = Array.find(results, r => Result.isError(r))
         switch firstError {
         | Some(Error(e)) => Error(e)
-        | _ => Ok(Array.filterMap(results, r => {
-            switch r {
-            | Ok(v) => Some(v)
-            | Error(_) => None
-            }
-          }))
+        | _ =>
+          Ok(
+            Array.filterMap(results, r => {
+              switch r {
+              | Ok(v) => Some(v)
+              | Error(_) => None
+              }
+            }),
+          )
         }
       }
     | _ => Error(Failure("Expected an array", json))
@@ -170,7 +173,7 @@ let index = (i: int, decoder: decoder<'a>): decoder<'a> => {
   json => {
     switch json {
     | Array(arr) =>
-      switch Array.get(arr, i) {
+      switch arr[i] {
       | Some(value) =>
         switch decoder(value) {
         | Ok(v) => Ok(v)
@@ -207,12 +210,9 @@ let map2 = (f: ('a, 'b) => 'c, d1: decoder<'a>, d2: decoder<'b>): decoder<'c> =>
 }
 
 /// Combine three decoders with a function.
-let map3 = (
-  f: ('a, 'b, 'c) => 'd,
-  d1: decoder<'a>,
-  d2: decoder<'b>,
-  d3: decoder<'c>,
-): decoder<'d> => {
+let map3 = (f: ('a, 'b, 'c) => 'd, d1: decoder<'a>, d2: decoder<'b>, d3: decoder<'c>): decoder<
+  'd,
+> => {
   json => {
     switch (d1(json), d2(json), d3(json)) {
     | (Ok(a), Ok(b), Ok(c)) => Ok(f(a, b, c))
@@ -351,14 +351,10 @@ let rec errorToString = (error: error): string => {
 and errorToStringHelp = (error: error, context: array<string>): string => {
   switch error {
   | Failure(msg, _json) =>
-    let path = Array.length(context) > 0
-      ? Array.join(context, ".") ++ ": "
-      : ""
+    let path = Array.length(context) > 0 ? Array.join(context, ".") ++ ": " : ""
     path ++ msg
-  | Field(name, inner) =>
-    errorToStringHelp(inner, Array.concat(context, [name]))
-  | Index(i, inner) =>
-    errorToStringHelp(inner, Array.concat(context, [`[${Int.toString(i)}]`]))
+  | Field(name, inner) => errorToStringHelp(inner, Array.concat(context, [name]))
+  | Index(i, inner) => errorToStringHelp(inner, Array.concat(context, [`[${Int.toString(i)}]`]))
   | OneOf(errors) =>
     let details = Array.map(errors, e => errorToStringHelp(e, context))
     `None of the decoders matched: ${Array.join(details, "; ")}`

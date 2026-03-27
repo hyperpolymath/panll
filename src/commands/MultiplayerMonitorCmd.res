@@ -7,10 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Connect to the Phoenix WebSocket sync server.
-let connectToServer = (
-  url: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let connectToServer = (url: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("multiplayer_connect", {"url": url})
     ->Promise.then(result => {
@@ -26,9 +23,7 @@ let connectToServer = (
 }
 
 /// Disconnect from the sync server.
-let disconnectFromServer = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let disconnectFromServer = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("multiplayer_disconnect", {"_": true})
     ->Promise.then(result => {
@@ -44,9 +39,7 @@ let disconnectFromServer = (
 }
 
 /// Read the current multiplayer state (players, channels, locks).
-let readMultiplayerState = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readMultiplayerState = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("multiplayer_read_state", {"_": true})
     ->Promise.then(result => {
@@ -62,9 +55,7 @@ let readMultiplayerState = (
 }
 
 /// Read state diffs between local and remote.
-let readStateDiffs = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readStateDiffs = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("multiplayer_read_diffs", {"_": true})
     ->Promise.then(result => {
@@ -80,9 +71,7 @@ let readStateDiffs = (
 }
 
 /// Read ETS cache entries for inspection.
-let readEtsCache = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readEtsCache = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("multiplayer_read_ets", {"_": true})
     ->Promise.then(result => {
@@ -98,9 +87,7 @@ let readEtsCache = (
 }
 
 /// Trigger a reconnection test.
-let reconnectionTest = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let reconnectionTest = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("multiplayer_reconnection_test", {"_": true})
     ->Promise.then(result => {

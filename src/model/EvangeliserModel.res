@@ -53,10 +53,10 @@ type evangeliserDifficulty =
 
 /// View layer selection for result rendering.
 type evangeliserViewLayer =
-  | ViewRaw        // Side-by-side JS/ReScript
-  | ViewFolded     // Grouped by category, collapsible
-  | ViewGlyphed    // With Makaton glyph annotations
-  | ViewWysiwyg    // Rich editor preview (future)
+  | ViewRaw // Side-by-side JS/ReScript
+  | ViewFolded // Grouped by category, collapsible
+  | ViewGlyphed // With Makaton glyph annotations
+  | ViewWysiwyg // Rich editor preview (future)
 
 /// Semantic category for glyphs.
 type evangeliserSemanticCategory =
@@ -85,10 +85,10 @@ type evangeliserGlyph = {
 
 /// A narrative encouraging the JS→ReScript transformation.
 type evangeliserNarrative = {
-  celebrate: string,    // What the JS code does well
-  minimize: string,     // Gently acknowledge limitations
-  better: string,       // How ReScript improves it
-  safety: string,       // Type-level guarantees gained
+  celebrate: string, // What the JS code does well
+  minimize: string, // Gently acknowledge limitations
+  better: string, // How ReScript improves it
+  safety: string, // Type-level guarantees gained
 }
 
 // ============================================================================
@@ -101,12 +101,12 @@ type evangeliserPattern = {
   name: string,
   category: evangeliserCategory,
   difficulty: evangeliserDifficulty,
-  jsPattern: string,           // Regex to detect in JS
-  confidence: float,           // Base confidence 0.0-1.0
-  jsExample: string,           // Example JS code
-  rescriptExample: string,     // Equivalent ReScript
+  jsPattern: string, // Regex to detect in JS
+  confidence: float, // Base confidence 0.0-1.0
+  jsExample: string, // Example JS code
+  rescriptExample: string, // Equivalent ReScript
   narrative: evangeliserNarrative,
-  glyphs: array<string>,       // Glyph keys to display
+  glyphs: array<string>, // Glyph keys to display
   tags: array<string>,
   relatedPatterns: array<string>,
   learningObjectives: array<string>,
@@ -117,7 +117,7 @@ type evangeliserMatch = {
   patternId: string,
   patternName: string,
   category: evangeliserCategory,
-  code: string,                 // Matched JS snippet
+  code: string, // Matched JS snippet
   startLine: int,
   endLine: int,
   confidence: float,
@@ -147,9 +147,9 @@ type evangeliserAnalysis = {
 /// Constraints controlling which patterns the scanner applies.
 type evangeliserConstraints = {
   enabledCategories: array<evangeliserCategory>,
-  minConfidence: float,           // 0.0-1.0, default 0.5
+  minConfidence: float, // 0.0-1.0, default 0.5
   difficultyFilter: option<evangeliserDifficulty>,
-  maxResults: int,                // Cap on matches shown
+  maxResults: int, // Cap on matches shown
 }
 
 // ============================================================================
@@ -158,10 +158,10 @@ type evangeliserConstraints = {
 
 /// Active tab in the evangeliser panel.
 type evangeliserTab =
-  | TabScan          // Input JS code and run scan
-  | TabPatterns      // Browse the pattern library
-  | TabResults       // View analysis results
-  | TabLegend        // Glyph legend
+  | TabScan // Input JS code and run scan
+  | TabPatterns // Browse the pattern library
+  | TabResults // View analysis results
+  | TabLegend // Glyph legend
 
 // ============================================================================
 // Evangeliser Panel State — the top-level state record
@@ -171,24 +171,20 @@ type evangeliserTab =
 type evangeliserState = {
   // Panel-L: Constraints
   constraints: evangeliserConstraints,
-
   // Panel-N: Code input and scanning
-  jsInput: string,                    // JS code to scan
-  scanning: bool,                     // Whether a scan is in progress
+  jsInput: string, // JS code to scan
+  scanning: bool, // Whether a scan is in progress
   scanError: option<string>,
-
   // Panel-W: Results
   analysis: option<evangeliserAnalysis>,
   viewLayer: evangeliserViewLayer,
-
   // Pattern library (populated at init)
   patterns: array<evangeliserPattern>,
   glyphs: array<evangeliserGlyph>,
-
   // UI state
   activeTab: evangeliserTab,
   filterText: string,
-  selectedMatchIndex: option<int>,    // Which match is selected in results
+  selectedMatchIndex: option<int>, // Which match is selected in results
   legendExpanded: bool,
   error: option<string>,
 }

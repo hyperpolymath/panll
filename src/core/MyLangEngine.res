@@ -63,14 +63,14 @@ let parseDialect = (s: string): myLangDialect =>
 let compilationDecoder: Tea_Json.decoder<compilationResult> = {
   open Decoders
   map6(
-    (success, output, diagnostics, errorCount, warningCount, compileTimeMs) => ({
+    (success, output, diagnostics, errorCount, warningCount, compileTimeMs): compilationResult => {
       success,
       output,
       diagnostics,
       errorCount,
       warningCount,
       compileTimeMs,
-    }: compilationResult),
+    },
     boolField("success"),
     stringField("output"),
     stringField("diagnostics"),

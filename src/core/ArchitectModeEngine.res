@@ -60,9 +60,7 @@ let toolLabel = (tool: architectEditorTool): string =>
   }
 
 /// Whether the undo stack has actions available.
-let canUndo = (state: architectModeState): bool =>
-  state.undoStack->Array.length > 0
+let canUndo = (state: architectModeState): bool => state.undoStack->Array.length > 0
 
 /// Whether the redo stack has actions available.
-let canRedo = (state: architectModeState): bool =>
-  state.redoStack->Array.length > 0
+let canRedo = (state: architectModeState): bool => state.redoStack->Array.length > 0

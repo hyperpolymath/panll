@@ -52,10 +52,12 @@ let platformLabel = (p: reportPlatform): string => {
 
 /// Count open reports (filed, acknowledged, or in progress).
 let openReportCount = (reports: array<feedbackReport>): int => {
-  reports->Array.filter(r =>
+  reports
+  ->Array.filter(r =>
     switch r.status {
     | ReportFiled | ReportAcknowledged | ReportInProgress => true
     | _ => false
     }
-  )->Array.length
+  )
+  ->Array.length
 }

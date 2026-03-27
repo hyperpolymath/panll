@@ -21,7 +21,10 @@ let updatePaneL = (model: model, msg: paneLMsg): (model, Tea_Cmd.t<msg>) => {
   let paneL = model.paneL
   switch msg {
   | AddConstraint(c) => {
-      let newModel = {...model, paneL: {...paneL, constraints: Array.concat(paneL.constraints, [c])}}
+      let newModel = {
+        ...model,
+        paneL: {...paneL, constraints: Array.concat(paneL.constraints, [c])},
+      }
       // When the new constraint is active, dispatch a proof obligation to ECHIDNA
       // via the Panel-N monologue so the neural layer can begin verification.
       let cmd = if c.active {
@@ -30,14 +33,17 @@ let updatePaneL = (model: model, msg: paneLMsg): (model, Tea_Cmd.t<msg>) => {
           | Some(p) => p
           | None => "default prover"
           }
-          callbacks.enqueue(PaneN(UpdateMonologue(
-            model.paneN.monologue ++
-            "\n\n[DISPATCH] New proof obligation: " ++
-            c.expression ++
-            " \u2192 dispatching to " ++
-            proverLabel ++
-            "..."
-          )))
+          callbacks.enqueue(
+            PaneN(
+              UpdateMonologue(
+                model.paneN.monologue ++
+                "\n\n[DISPATCH] New proof obligation: " ++
+                c.expression ++
+                " \u2192 dispatching to " ++
+                proverLabel ++ "...",
+              ),
+            ),
+          )
         })
       } else {
         Tea_Cmd.none
@@ -45,10 +51,13 @@ let updatePaneL = (model: model, msg: paneLMsg): (model, Tea_Cmd.t<msg>) => {
       (newModel, cmd)
     }
   | RemoveConstraint(id) => (
-      {...model, paneL: {
-        ...paneL,
-        constraints: Array.filter(paneL.constraints, c => c.id !== id),
-      }},
+      {
+        ...model,
+        paneL: {
+          ...paneL,
+          constraints: Array.filter(paneL.constraints, c => c.id !== id),
+        },
+      },
       Tea_Cmd.none,
     )
   | ToggleConstraint(id) => {
@@ -66,26 +75,32 @@ let updatePaneL = (model: model, msg: paneLMsg): (model, Tea_Cmd.t<msg>) => {
           | Some(p) => p
           | None => "default prover"
           }
-          callbacks.enqueue(PaneN(UpdateMonologue(
-            model.paneN.monologue ++
-            "\n\n[DISPATCH] Constraint reactivated: " ++
-            c.expression ++
-            " \u2192 dispatching to " ++
-            proverLabel ++
-            "..."
-          )))
+          callbacks.enqueue(
+            PaneN(
+              UpdateMonologue(
+                model.paneN.monologue ++
+                "\n\n[DISPATCH] Constraint reactivated: " ++
+                c.expression ++
+                " \u2192 dispatching to " ++
+                proverLabel ++ "...",
+              ),
+            ),
+          )
         })
       | _ => Tea_Cmd.none
       }
       (newModel, cmd)
     }
   | PinConstraint(id) => (
-      {...model, paneL: {
-        ...paneL,
-        constraints: Array.map(paneL.constraints, c =>
-          c.id === id ? {...c, pinned: !c.pinned} : c
-        ),
-      }},
+      {
+        ...model,
+        paneL: {
+          ...paneL,
+          constraints: Array.map(paneL.constraints, c =>
+            c.id === id ? {...c, pinned: !c.pinned} : c
+          ),
+        },
+      },
       Tea_Cmd.none,
     )
   | UpdateEditorContent(content) => {
@@ -98,17 +113,14 @@ let updatePaneL = (model: model, msg: paneLMsg): (model, Tea_Cmd.t<msg>) => {
       }
       ({...model, paneL: {...paneL, editorContent: content, lastInferredType: None}}, cmd)
     }
-  | SetActiveConstraint(id) => (
-      {...model, paneL: {...paneL, activeConstraintId: id}},
-      Tea_Cmd.none,
-    )
+  | SetActiveConstraint(id) => ({...model, paneL: {...paneL, activeConstraintId: id}}, Tea_Cmd.none)
   | ConstraintTypeInferred(Ok(json)) => {
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
       ({...model, paneL: {...paneL, lastInferredType: Some(json)}, typell: newTypell}, Tea_Cmd.none)
     }
   | ConstraintTypeInferred(Error(_)) => {
-    UpdateHelpers.logDegradedService("TypeLL", "constraint type inference failed")
-    (model, Tea_Cmd.none)
-  }
+      UpdateHelpers.logDegradedService("TypeLL", "constraint type inference failed")
+      (model, Tea_Cmd.none)
+    }
   }
 }

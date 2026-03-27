@@ -8,9 +8,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Fetch the current status of all 6 bots.
-let fetchBots = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let fetchBots = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("fleet_get_bots", ())
     ->Promise.then(result => {
@@ -26,9 +24,7 @@ let fetchBots = (
 }
 
 /// Fetch the findings queue.
-let fetchFindings = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let fetchFindings = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("fleet_get_findings", ())
     ->Promise.then(result => {

@@ -7,10 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Check whether the Vite dev server is running and responding.
-let checkDevServer = (
-  url: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkDevServer = (url: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("game_preview_check_server", {"url": url})
     ->Promise.then(result => {
@@ -26,10 +23,9 @@ let checkDevServer = (
 }
 
 /// Send a game loop control command (pause, resume, step).
-let controlGameLoop = (
-  command: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let controlGameLoop = (command: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("game_preview_control", {"command": command})
     ->Promise.then(result => {
@@ -45,10 +41,9 @@ let controlGameLoop = (
 }
 
 /// Start recording gameplay to WebM.
-let startGameRecording = (
-  name: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let startGameRecording = (name: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("game_preview_record_start", {"name": name})
     ->Promise.then(result => {
@@ -64,9 +59,7 @@ let startGameRecording = (
 }
 
 /// Stop gameplay recording.
-let stopGameRecording = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let stopGameRecording = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("game_preview_record_stop", {"_": true})
     ->Promise.then(result => {
@@ -82,9 +75,7 @@ let stopGameRecording = (
 }
 
 /// Take a screenshot of the current game frame.
-let screenshotGameFrame = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let screenshotGameFrame = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("game_preview_screenshot", {"_": true})
     ->Promise.then(result => {
@@ -100,9 +91,7 @@ let screenshotGameFrame = (
 }
 
 /// Fetch current render statistics from the game engine.
-let fetchRenderStats = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let fetchRenderStats = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("game_preview_stats", {"_": true})
     ->Promise.then(result => {
@@ -118,9 +107,7 @@ let fetchRenderStats = (
 }
 
 /// List saved gameplay clips.
-let listClips = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listClips = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("game_preview_clips_list", {"_": true})
     ->Promise.then(result => {
@@ -136,10 +123,7 @@ let listClips = (
 }
 
 /// Delete a gameplay clip by ID.
-let deleteClip = (
-  id: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let deleteClip = (id: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("game_preview_clip_delete", {"id": id})
     ->Promise.then(result => {

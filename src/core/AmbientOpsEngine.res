@@ -28,7 +28,11 @@ let tabLabel = (tab: ambientOpsTab): string => {
 
 /// All tabs for rendering.
 let allTabs: array<ambientOpsTab> = [
-  TabDashboard, TabClinician, TabNetwork, TabHardware, TabEmergency,
+  TabDashboard,
+  TabClinician,
+  TabNetwork,
+  TabHardware,
+  TabEmergency,
 ]
 
 /// Department label for display.
@@ -63,6 +67,8 @@ let countByDepartment = (findings: array<diagnosticFinding>, target: department)
 }
 
 /// Filter findings for a specific department.
-let findingsForDepartment = (findings: array<diagnosticFinding>, target: department): array<diagnosticFinding> => {
+let findingsForDepartment = (findings: array<diagnosticFinding>, target: department): array<
+  diagnosticFinding,
+> => {
   findings->Array.filter(f => f.department == target)
 }

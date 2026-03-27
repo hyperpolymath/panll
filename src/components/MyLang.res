@@ -33,7 +33,15 @@ let renderReplEntry = (entry: replEntry): Tea_Vdom.t<msg> => {
     list{
       div(list{Attrs.class_("text-cyan-400")}, list{text(`> ${entry.input}`)}),
       div(
-        list{Attrs.class_(if entry.isError { "text-red-400" } else { "text-gray-300" })},
+        list{
+          Attrs.class_(
+            if entry.isError {
+              "text-red-400"
+            } else {
+              "text-gray-300"
+            },
+          ),
+        },
         list{text(entry.output)},
       ),
     },
@@ -43,11 +51,9 @@ let renderReplEntry = (entry: replEntry): Tea_Vdom.t<msg> => {
 /// Render category tabs.
 let renderTabs = (active: myLangCategory): Tea_Vdom.t<msg> => {
   div(
-    list{
-      Attrs.class_("flex gap-1 border-b border-gray-800 mb-4"),
-      Attrs.role("tablist"),
-    },
-    MyLangEngine.allCategories->Array.map(tab => {
+    list{Attrs.class_("flex gap-1 border-b border-gray-800 mb-4"), Attrs.role("tablist")},
+    MyLangEngine.allCategories
+    ->Array.map(tab => {
       let isActive = tab === active
       button(
         list{
@@ -62,7 +68,8 @@ let renderTabs = (active: myLangCategory): Tea_Vdom.t<msg> => {
         },
         list{text(MyLangEngine.categoryLabel(tab))},
       )
-    })->List.fromArray,
+    })
+    ->List.fromArray,
   )
 }
 
@@ -77,32 +84,52 @@ let viewTypeCheckResult = (lastTypeCheck: option<string>): Tea_Vdom.t<msg> => {
     | Error(_) => noNode
     | Ok(result) =>
       let narrative = TypeLLEngine.generateNarrative(result)
-      let borderColour = if result.valid { "border-green-700 bg-green-900/20" } else { "border-red-700 bg-red-900/20" }
-      let labelColour = if result.valid { "text-green-400" } else { "text-red-400" }
-      let statusText = if result.valid { "Type-safe" } else { "Type issues detected" }
+      let borderColour = if result.valid {
+        "border-green-700 bg-green-900/20"
+      } else {
+        "border-red-700 bg-red-900/20"
+      }
+      let labelColour = if result.valid {
+        "text-green-400"
+      } else {
+        "text-red-400"
+      }
+      let statusText = if result.valid {
+        "Type-safe"
+      } else {
+        "Type issues detected"
+      }
       div(
         list{Attrs.class_("mt-4 p-3 rounded-lg border " ++ borderColour)},
         list{
           div(
             list{Attrs.class_("flex items-center gap-2 mb-2")},
             list{
-              span(list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)}, list{text("TypeLL")}),
+              span(
+                list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)},
+                list{text("TypeLL")},
+              ),
               span(list{Attrs.class_("text-xs text-gray-400")}, list{text(statusText)}),
             },
           ),
-          div(list{Attrs.class_("text-sm text-gray-300 font-mono mb-1")}, list{text(result.typeSignature)}),
+          div(
+            list{Attrs.class_("text-sm text-gray-300 font-mono mb-1")},
+            list{text(result.typeSignature)},
+          ),
           div(list{Attrs.class_("text-xs text-gray-400 mb-1")}, list{text(narrative.celebrate)}),
           if Array.length(result.proofObligations) > 0 {
-            div(list{Attrs.class_("text-xs text-yellow-400 mt-1")}, list{
-              text("Proof obligations: " ++ Array.join(result.proofObligations, ", ")),
-            })
+            div(
+              list{Attrs.class_("text-xs text-yellow-400 mt-1")},
+              list{text("Proof obligations: " ++ Array.join(result.proofObligations, ", "))},
+            )
           } else {
             noNode
           },
           if Array.length(result.linearityIssues) > 0 {
-            div(list{Attrs.class_("text-xs text-orange-400 mt-1")}, list{
-              text("Linearity: " ++ Array.join(result.linearityIssues, ", ")),
-            })
+            div(
+              list{Attrs.class_("text-xs text-orange-400 mt-1")},
+              list{text("Linearity: " ++ Array.join(result.linearityIssues, ", "))},
+            )
           } else {
             noNode
           },
@@ -129,7 +156,10 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
             list{Attrs.class_("flex items-center gap-3")},
             list{
               h2(list{Attrs.class_("text-lg font-medium text-gray-200")}, list{text("My-Lang")}),
-              span(list{Attrs.class_("text-xs text-gray-500")}, list{text("AI-native language workbench")}),
+              span(
+                list{Attrs.class_("text-xs text-gray-500")},
+                list{text("AI-native language workbench")},
+              ),
               if ml.cliAvailable {
                 span(list{Attrs.class_("text-xs text-emerald-500")}, list{text("CLI ready")})
               } else {
@@ -143,11 +173,15 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
               // Dialect selector
               div(
                 list{Attrs.class_("flex gap-1")},
-                MyLangEngine.allDialects->Array.map(d => renderDialectButton(d, ml.activeDialect))->List.fromArray,
+                MyLangEngine.allDialects
+                ->Array.map(d => renderDialectButton(d, ml.activeDialect))
+                ->List.fromArray,
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700"),
+                  Attrs.class_(
+                    "px-3 py-1 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700",
+                  ),
                   Events.onClick(PanelSwitcher(ClosePanels)),
                 },
                 list{text("Close")},
@@ -169,10 +203,17 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center justify-between")},
                   list{
-                    span(list{Attrs.class_("text-sm text-gray-400")}, list{text(`Editing in ${MyLangEngine.dialectLabel(ml.activeDialect)} dialect`)}),
+                    span(
+                      list{Attrs.class_("text-sm text-gray-400")},
+                      list{
+                        text(`Editing in ${MyLangEngine.dialectLabel(ml.activeDialect)} dialect`),
+                      },
+                    ),
                     button(
                       list{
-                        Attrs.class_("px-3 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-500"),
+                        Attrs.class_(
+                          "px-3 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-500",
+                        ),
                         Events.onClick(MyLang(Compile)),
                       },
                       list{text("Compile")},
@@ -181,7 +222,9 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
                 ),
                 textarea(
                   list{
-                    Attrs.class_("w-full h-96 bg-gray-900 border border-gray-700 rounded-lg p-4 font-mono text-sm text-gray-200 resize-none focus:border-cyan-500 focus:outline-none"),
+                    Attrs.class_(
+                      "w-full h-96 bg-gray-900 border border-gray-700 rounded-lg p-4 font-mono text-sm text-gray-200 resize-none focus:border-cyan-500 focus:outline-none",
+                    ),
                     Attrs.value(ml.editorContent),
                     Attrs.placeholder("Write your code here..."),
                     Events.onInput(v => MyLang(UpdateEditor(v))),
@@ -196,9 +239,24 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
               list{
                 // REPL history
                 div(
-                  list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4 h-80 overflow-y-auto space-y-2")},
+                  list{
+                    Attrs.class_(
+                      "bg-gray-900 border border-gray-700 rounded-lg p-4 h-80 overflow-y-auto space-y-2",
+                    ),
+                  },
                   if ml.replHistory->Array.length === 0 {
-                    list{div(list{Attrs.class_("text-gray-600 text-sm")}, list{text(`${MyLangEngine.dialectLabel(ml.activeDialect)} REPL — type an expression`)})}
+                    list{
+                      div(
+                        list{Attrs.class_("text-gray-600 text-sm")},
+                        list{
+                          text(
+                            `${MyLangEngine.dialectLabel(
+                                ml.activeDialect,
+                              )} REPL — type an expression`,
+                          ),
+                        },
+                      ),
+                    }
                   } else {
                     ml.replHistory->Array.map(e => renderReplEntry(e))->List.fromArray
                   },
@@ -207,10 +265,15 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex gap-2")},
                   list{
-                    span(list{Attrs.class_("text-cyan-400 font-mono text-sm pt-2")}, list{text(">")}),
+                    span(
+                      list{Attrs.class_("text-cyan-400 font-mono text-sm pt-2")},
+                      list{text(">")},
+                    ),
                     input(
                       list{
-                        Attrs.class_("flex-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-600"),
+                        Attrs.class_(
+                          "flex-1 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 font-mono placeholder-gray-600",
+                        ),
                         Attrs.placeholder("Enter expression..."),
                         Attrs.value(ml.replInput),
                         Events.onInput(v => MyLang(UpdateReplInput(v))),
@@ -226,7 +289,9 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
                     ),
                     button(
                       list{
-                        Attrs.class_("px-3 py-2 text-sm bg-cyan-600 text-white rounded hover:bg-cyan-500"),
+                        Attrs.class_(
+                          "px-3 py-2 text-sm bg-cyan-600 text-white rounded hover:bg-cyan-500",
+                        ),
                         Events.onClick(MyLang(EvalRepl)),
                       },
                       list{text("Eval")},
@@ -245,11 +310,39 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
                     list{Attrs.class_("flex items-center gap-3")},
                     list{
                       span(
-                        list{Attrs.class_(if result.success { "text-emerald-400 text-sm font-medium" } else { "text-red-400 text-sm font-medium" })},
-                        list{text(if result.success { "Compilation succeeded" } else { "Compilation failed" })},
+                        list{
+                          Attrs.class_(
+                            if result.success {
+                              "text-emerald-400 text-sm font-medium"
+                            } else {
+                              "text-red-400 text-sm font-medium"
+                            },
+                          ),
+                        },
+                        list{
+                          text(
+                            if result.success {
+                              "Compilation succeeded"
+                            } else {
+                              "Compilation failed"
+                            },
+                          ),
+                        },
                       ),
-                      span(list{Attrs.class_("text-xs text-gray-500")}, list{text(`${Int.toString(result.compileTimeMs)}ms`)}),
-                      span(list{Attrs.class_("text-xs text-gray-500")}, list{text(`${Int.toString(result.errorCount)} errors, ${Int.toString(result.warningCount)} warnings`)}),
+                      span(
+                        list{Attrs.class_("text-xs text-gray-500")},
+                        list{text(`${Int.toString(result.compileTimeMs)}ms`)},
+                      ),
+                      span(
+                        list{Attrs.class_("text-xs text-gray-500")},
+                        list{
+                          text(
+                            `${Int.toString(result.errorCount)} errors, ${Int.toString(
+                                result.warningCount,
+                              )} warnings`,
+                          ),
+                        },
+                      ),
                     },
                   ),
                   if result.output !== "" {
@@ -257,7 +350,10 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
                       list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4")},
                       list{
                         div(list{Attrs.class_("text-xs text-gray-500 mb-2")}, list{text("Output")}),
-                        pre(list{Attrs.class_("font-mono text-sm text-gray-300 whitespace-pre-wrap")}, list{text(result.output)}),
+                        pre(
+                          list{Attrs.class_("font-mono text-sm text-gray-300 whitespace-pre-wrap")},
+                          list{text(result.output)},
+                        ),
                       },
                     )
                   } else {
@@ -267,8 +363,14 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
                     div(
                       list{Attrs.class_("bg-gray-900 border border-red-700/50 rounded-lg p-4")},
                       list{
-                        div(list{Attrs.class_("text-xs text-red-400 mb-2")}, list{text("Diagnostics")}),
-                        pre(list{Attrs.class_("font-mono text-sm text-red-300 whitespace-pre-wrap")}, list{text(result.diagnostics)}),
+                        div(
+                          list{Attrs.class_("text-xs text-red-400 mb-2")},
+                          list{text("Diagnostics")},
+                        ),
+                        pre(
+                          list{Attrs.class_("font-mono text-sm text-red-300 whitespace-pre-wrap")},
+                          list{text(result.diagnostics)},
+                        ),
                       },
                     )
                   } else {
@@ -280,17 +382,23 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
             | None =>
               div(
                 list{Attrs.class_("text-center text-gray-500 mt-8")},
-                list{text("No compilation results. Write code in the Editor tab and click Compile.")},
+                list{
+                  text("No compilation results. Write code in the Editor tab and click Compile."),
+                },
               )
             }
           | MlDialects =>
             div(
               list{Attrs.class_("space-y-6 max-w-2xl")},
               list{
-                h3(list{Attrs.class_("text-base font-medium text-gray-200")}, list{text("My-Lang Dialects")}),
+                h3(
+                  list{Attrs.class_("text-base font-medium text-gray-200")},
+                  list{text("My-Lang Dialects")},
+                ),
                 div(
                   list{Attrs.class_("space-y-4")},
-                  MyLangEngine.allDialects->Array.map(d => {
+                  MyLangEngine.allDialects
+                  ->Array.map(d => {
                     let colour = MyLangEngine.dialectColour(d)
                     div(
                       list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg p-4")},
@@ -298,23 +406,45 @@ let view = (ml: myLangState): Tea_Vdom.t<msg> => {
                         div(
                           list{Attrs.class_("flex items-center gap-3 mb-2")},
                           list{
-                            span(list{Attrs.class_(`px-2 py-0.5 text-xs font-medium rounded ${colour}`)}, list{text(MyLangEngine.dialectLabel(d))}),
-                            span(list{Attrs.class_("text-sm text-gray-400")}, list{text(MyLangEngine.dialectDescription(d))}),
+                            span(
+                              list{
+                                Attrs.class_(`px-2 py-0.5 text-xs font-medium rounded ${colour}`),
+                              },
+                              list{text(MyLangEngine.dialectLabel(d))},
+                            ),
+                            span(
+                              list{Attrs.class_("text-sm text-gray-400")},
+                              list{text(MyLangEngine.dialectDescription(d))},
+                            ),
                           },
                         ),
                         pre(
-                          list{Attrs.class_("mt-2 font-mono text-xs text-gray-500 bg-gray-950 rounded p-3 whitespace-pre-wrap")},
+                          list{
+                            Attrs.class_(
+                              "mt-2 font-mono text-xs text-gray-500 bg-gray-950 rounded p-3 whitespace-pre-wrap",
+                            ),
+                          },
                           list{text(MyLangEngine.dialectExample(d))},
                         ),
                       },
                     )
-                  })->List.fromArray,
+                  })
+                  ->List.fromArray,
                 ),
               },
             )
           },
           switch ml.error {
-          | Some(e) => div(list{Attrs.class_("mt-4 p-3 bg-red-900/30 border border-red-700 rounded text-sm text-red-300"), Attrs.role("alert")}, list{text(e)})
+          | Some(e) =>
+            div(
+              list{
+                Attrs.class_(
+                  "mt-4 p-3 bg-red-900/30 border border-red-700 rounded text-sm text-red-300",
+                ),
+                Attrs.role("alert"),
+              },
+              list{text(e)},
+            )
           | None => noNode
           },
         },

@@ -87,10 +87,9 @@ let driftBorderColor = (isDrifting: bool): string => {
 // ============================================================================
 
 /// Filter alerts by urgency level. Returns all alerts if filter is None.
-let filterByUrgency = (
-  alerts: array<driftAlert>,
-  filter: option<driftUrgency>,
-): array<driftAlert> => {
+let filterByUrgency = (alerts: array<driftAlert>, filter: option<driftUrgency>): array<
+  driftAlert,
+> => {
   switch filter {
   | None => alerts
   | Some(urgency) => alerts->Array.filter(a => a.urgency == urgency)
@@ -98,10 +97,7 @@ let filterByUrgency = (
 }
 
 /// Filter alerts by model name.
-let filterByModel = (
-  alerts: array<driftAlert>,
-  modelName: string,
-): array<driftAlert> => {
+let filterByModel = (alerts: array<driftAlert>, modelName: string): array<driftAlert> => {
   alerts->Array.filter(a => a.modelName == modelName)
 }
 

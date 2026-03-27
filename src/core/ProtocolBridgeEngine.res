@@ -32,12 +32,14 @@ let allTabs: array<protocolBridgeTab> = [Channels, Messages, Latency, Rules]
 
 /// Count channels that are currently connected (Active, Idle, or Degraded).
 let countConnectedChannels = (channels: array<channel>): int =>
-  channels->Array.filter(ch =>
+  channels
+  ->Array.filter(ch =>
     switch ch.status {
     | ChannelActive | ChannelIdle | ChannelDegraded => true
     | ChannelDisconnected | ChannelError => false
     }
-  )->Array.length
+  )
+  ->Array.length
 
 /// Count channels matching a given status.
 let countChannelsByStatus = (channels: array<channel>, status: channelStatus): int =>

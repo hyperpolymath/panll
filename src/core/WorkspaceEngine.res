@@ -21,15 +21,20 @@ let createGroup = (
   name: string,
   panelIds: array<string>,
 ): array<panelGroup> => {
-  Array.concat(groups, [{
-    id,
-    name,
-    panelIds,
-    locked: false,
-    visible: true,
-    zIndex: Array.length(groups) + 1,
-    sharedWith: [],
-  }])
+  Array.concat(
+    groups,
+    [
+      {
+        id,
+        name,
+        panelIds,
+        locked: false,
+        visible: true,
+        zIndex: Array.length(groups) + 1,
+        sharedWith: [],
+      },
+    ],
+  )
 }
 
 /// Disband a group by ID (removes the group, panels remain independent).
@@ -40,82 +45,111 @@ let disbandGroup = (groups: array<panelGroup>, groupId: string): array<panelGrou
 /// Lock a group's arrangement (prevent rearrangement).
 let lockGroup = (groups: array<panelGroup>, groupId: string): array<panelGroup> => {
   Array.map(groups, g =>
-    if g.id === groupId { {...g, locked: true} } else { g }
+    if g.id === groupId {
+      {...g, locked: true}
+    } else {
+      g
+    }
   )
 }
 
 /// Unlock a group's arrangement.
 let unlockGroup = (groups: array<panelGroup>, groupId: string): array<panelGroup> => {
   Array.map(groups, g =>
-    if g.id === groupId { {...g, locked: false} } else { g }
+    if g.id === groupId {
+      {...g, locked: false}
+    } else {
+      g
+    }
   )
 }
 
 /// Toggle visibility for an entire group.
 let toggleGroupVisibility = (groups: array<panelGroup>, groupId: string): array<panelGroup> => {
   Array.map(groups, g =>
-    if g.id === groupId { {...g, visible: !g.visible} } else { g }
+    if g.id === groupId {
+      {...g, visible: !g.visible}
+    } else {
+      g
+    }
   )
 }
 
 /// Push a panel/group to back (lowest z-index).
 let pushToBack = (groups: array<panelGroup>, groupId: string): array<panelGroup> => {
   Array.map(groups, g =>
-    if g.id === groupId { {...g, zIndex: 0} }
-    else { {...g, zIndex: g.zIndex + 1} }
+    if g.id === groupId {
+      {...g, zIndex: 0}
+    } else {
+      {...g, zIndex: g.zIndex + 1}
+    }
   )
 }
 
 /// Pull a panel/group to front (highest z-index).
 let pullToFront = (groups: array<panelGroup>, groupId: string): array<panelGroup> => {
   let maxZ = Array.reduce(groups, 0, (max, g) =>
-    if g.zIndex > max { g.zIndex } else { max }
+    if g.zIndex > max {
+      g.zIndex
+    } else {
+      max
+    }
   )
   Array.map(groups, g =>
-    if g.id === groupId { {...g, zIndex: maxZ + 1} } else { g }
+    if g.id === groupId {
+      {...g, zIndex: maxZ + 1}
+    } else {
+      g
+    }
   )
 }
 
 /// Add a panel to an existing group.
-let addToGroup = (
-  groups: array<panelGroup>,
-  groupId: string,
-  panelId: string,
-): array<panelGroup> => {
+let addToGroup = (groups: array<panelGroup>, groupId: string, panelId: string): array<
+  panelGroup,
+> => {
   Array.map(groups, g =>
     if g.id === groupId {
       let alreadyIn = Array.some(g.panelIds, id => id === panelId)
-      if alreadyIn { g }
-      else { {...g, panelIds: Array.concat(g.panelIds, [panelId])} }
-    } else { g }
+      if alreadyIn {
+        g
+      } else {
+        {...g, panelIds: Array.concat(g.panelIds, [panelId])}
+      }
+    } else {
+      g
+    }
   )
 }
 
 /// Remove a panel from a group.
-let removeFromGroup = (
-  groups: array<panelGroup>,
-  groupId: string,
-  panelId: string,
-): array<panelGroup> => {
+let removeFromGroup = (groups: array<panelGroup>, groupId: string, panelId: string): array<
+  panelGroup,
+> => {
   Array.map(groups, g =>
     if g.id === groupId {
       {...g, panelIds: Array.filter(g.panelIds, id => id !== panelId)}
-    } else { g }
+    } else {
+      g
+    }
   )
 }
 
 /// Share a group with a user.
-let shareGroup = (
-  groups: array<panelGroup>,
-  groupId: string,
-  userId: string,
-): array<panelGroup> => {
+let shareGroup = (groups: array<panelGroup>, groupId: string, userId: string): array<
+  panelGroup,
+> => {
   Array.map(groups, g =>
     if g.id === groupId {
       let alreadyShared = Array.some(g.sharedWith, id => id === userId)
-      if alreadyShared { g }
-      else { {...g, sharedWith: Array.concat(g.sharedWith, [userId])} }
-    } else { g }
+      if alreadyShared {
+        g
+      } else {
+        {...g, sharedWith: Array.concat(g.sharedWith, [userId])}
+      }
+    } else {
+      g
+    }
   )
 }
 
@@ -138,17 +172,24 @@ let saveArrangement = (
     Array.map(arrangements, a =>
       if a.id === id {
         {...a, name, positions, groups, lastSaved: timestamp}
-      } else { a }
+      } else {
+        a
+      }
     )
   } else {
-    Array.concat(arrangements, [{
-      id,
-      name,
-      positions,
-      groups,
-      builtIn: false,
-      lastSaved: timestamp,
-    }])
+    Array.concat(
+      arrangements,
+      [
+        {
+          id,
+          name,
+          positions,
+          groups,
+          builtIn: false,
+          lastSaved: timestamp,
+        },
+      ],
+    )
   }
 }
 
@@ -163,9 +204,9 @@ let builtInArrangements: array<arrangement> = [
     id: "default-3-panel",
     name: "Default 3-Panel",
     positions: [
-      { panelId: "paneL", x: 0.0, y: 0.0, width: 33.3, height: 100.0, zIndex: 1, visible: true },
-      { panelId: "paneN", x: 33.3, y: 0.0, width: 33.3, height: 100.0, zIndex: 1, visible: true },
-      { panelId: "paneW", x: 66.6, y: 0.0, width: 33.4, height: 100.0, zIndex: 1, visible: true },
+      {panelId: "paneL", x: 0.0, y: 0.0, width: 33.3, height: 100.0, zIndex: 1, visible: true},
+      {panelId: "paneN", x: 33.3, y: 0.0, width: 33.3, height: 100.0, zIndex: 1, visible: true},
+      {panelId: "paneW", x: 66.6, y: 0.0, width: 33.4, height: 100.0, zIndex: 1, visible: true},
     ],
     groups: [],
     builtIn: true,
@@ -175,9 +216,9 @@ let builtInArrangements: array<arrangement> = [
     id: "ai-focus",
     name: "AI Focus",
     positions: [
-      { panelId: "paneL", x: 0.0, y: 0.0, width: 20.0, height: 100.0, zIndex: 1, visible: true },
-      { panelId: "paneN", x: 20.0, y: 0.0, width: 60.0, height: 100.0, zIndex: 2, visible: true },
-      { panelId: "paneW", x: 80.0, y: 0.0, width: 20.0, height: 100.0, zIndex: 1, visible: true },
+      {panelId: "paneL", x: 0.0, y: 0.0, width: 20.0, height: 100.0, zIndex: 1, visible: true},
+      {panelId: "paneN", x: 20.0, y: 0.0, width: 60.0, height: 100.0, zIndex: 2, visible: true},
+      {panelId: "paneW", x: 80.0, y: 0.0, width: 20.0, height: 100.0, zIndex: 1, visible: true},
     ],
     groups: [],
     builtIn: true,
@@ -187,9 +228,9 @@ let builtInArrangements: array<arrangement> = [
     id: "debug-layout",
     name: "Debug Layout",
     positions: [
-      { panelId: "paneL", x: 0.0, y: 0.0, width: 50.0, height: 50.0, zIndex: 1, visible: true },
-      { panelId: "paneN", x: 50.0, y: 0.0, width: 50.0, height: 50.0, zIndex: 1, visible: true },
-      { panelId: "paneW", x: 0.0, y: 50.0, width: 100.0, height: 50.0, zIndex: 2, visible: true },
+      {panelId: "paneL", x: 0.0, y: 0.0, width: 50.0, height: 50.0, zIndex: 1, visible: true},
+      {panelId: "paneN", x: 50.0, y: 0.0, width: 50.0, height: 50.0, zIndex: 1, visible: true},
+      {panelId: "paneW", x: 0.0, y: 50.0, width: 100.0, height: 50.0, zIndex: 2, visible: true},
     ],
     groups: [],
     builtIn: true,
@@ -199,9 +240,9 @@ let builtInArrangements: array<arrangement> = [
     id: "teaching-mode",
     name: "Teaching Mode",
     positions: [
-      { panelId: "paneL", x: 0.0, y: 0.0, width: 50.0, height: 100.0, zIndex: 1, visible: true },
-      { panelId: "paneN", x: 50.0, y: 0.0, width: 50.0, height: 50.0, zIndex: 1, visible: true },
-      { panelId: "paneW", x: 50.0, y: 50.0, width: 50.0, height: 50.0, zIndex: 1, visible: true },
+      {panelId: "paneL", x: 0.0, y: 0.0, width: 50.0, height: 100.0, zIndex: 1, visible: true},
+      {panelId: "paneN", x: 50.0, y: 0.0, width: 50.0, height: 50.0, zIndex: 1, visible: true},
+      {panelId: "paneW", x: 50.0, y: 50.0, width: 50.0, height: 50.0, zIndex: 1, visible: true},
     ],
     groups: [],
     builtIn: true,
@@ -221,19 +262,24 @@ let createSession = (
   repoPath: option<string>,
   timestamp: float,
 ): array<session> => {
-  Array.concat(sessions, [{
-    id,
-    name,
-    repoPath,
-    arrangementId: Some("default-3-panel"),
-    protection: Open,
-    executionMode: Live,
-    workspaceMode: EverythingMode,
-    checkpoints: [],
-    created: timestamp,
-    lastActive: timestamp,
-    forkedFrom: None,
-  }])
+  Array.concat(
+    sessions,
+    [
+      {
+        id,
+        name,
+        repoPath,
+        arrangementId: Some("default-3-panel"),
+        protection: Open,
+        executionMode: Live,
+        workspaceMode: EverythingMode,
+        checkpoints: [],
+        created: timestamp,
+        lastActive: timestamp,
+        forkedFrom: None,
+      },
+    ],
+  )
 }
 
 /// Fork a session — create an independent copy that starts from the current state.
@@ -247,14 +293,19 @@ let forkSession = (
   let source = Array.find(sessions, s => s.id === sourceId)
   switch source {
   | Some(s) =>
-    Array.concat(sessions, [{
-      ...s,
-      id: newId,
-      name: newName,
-      created: timestamp,
-      lastActive: timestamp,
-      forkedFrom: Some(sourceId),
-    }])
+    Array.concat(
+      sessions,
+      [
+        {
+          ...s,
+          id: newId,
+          name: newName,
+          created: timestamp,
+          lastActive: timestamp,
+          forkedFrom: Some(sourceId),
+        },
+      ],
+    )
   | None => sessions
   }
 }
@@ -270,13 +321,23 @@ let addCheckpoint = (
 ): array<session> => {
   Array.map(sessions, s =>
     if s.id === sessionId {
-      {...s, checkpoints: Array.concat(s.checkpoints, [{
-        id: checkpointId,
-        label,
-        timestamp,
-        automatic,
-      }])}
-    } else { s }
+      {
+        ...s,
+        checkpoints: Array.concat(
+          s.checkpoints,
+          [
+            {
+              id: checkpointId,
+              label,
+              timestamp,
+              automatic,
+            },
+          ],
+        ),
+      }
+    } else {
+      s
+    }
   )
 }
 
@@ -292,18 +353,24 @@ let setSessionProtection = (
   protection: sessionProtection,
 ): array<session> => {
   Array.map(sessions, s =>
-    if s.id === sessionId { {...s, protection} } else { s }
+    if s.id === sessionId {
+      {...s, protection}
+    } else {
+      s
+    }
   )
 }
 
 /// Update a session's execution mode.
-let setExecutionMode = (
-  sessions: array<session>,
-  sessionId: string,
-  mode: executionMode,
-): array<session> => {
+let setExecutionMode = (sessions: array<session>, sessionId: string, mode: executionMode): array<
+  session,
+> => {
   Array.map(sessions, s =>
-    if s.id === sessionId { {...s, executionMode: mode} } else { s }
+    if s.id === sessionId {
+      {...s, executionMode: mode}
+    } else {
+      s
+    }
   )
 }
 

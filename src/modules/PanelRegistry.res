@@ -1128,7 +1128,9 @@ let panelCladeId = (id: panelId): option<string> => {
 
 /// Get the effective traits for a panel by resolving clade inheritance.
 /// Returns None if the panel has no clade or the clade isn't found.
-let panelTraits = (id: panelId, clades: array<CladeBrowserModel.cladeEntry>): option<CladeBrowserModel.cladeTraits> => {
+let panelTraits = (id: panelId, clades: array<CladeBrowserModel.cladeEntry>): option<
+  CladeBrowserModel.cladeTraits,
+> => {
   switch panelCladeId(id) {
   | None => None
   | Some(cid) => CladeBrowserEngine.resolveTraits(clades, cid)

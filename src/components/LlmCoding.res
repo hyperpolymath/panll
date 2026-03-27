@@ -25,7 +25,9 @@ let systemBar = (state: llmCodingState): Tea_Vdom.t<msg> => {
   let memHealth = systemMemoryHealth(state.systemMemoryAvailableMb, state.systemMemoryTotalMb)
   let memColor = resourceHealthColor(memHealth)
   div(
-    list{Attrs.class_("flex items-center justify-between p-2 bg-gray-900 border-b border-gray-800")},
+    list{
+      Attrs.class_("flex items-center justify-between p-2 bg-gray-900 border-b border-gray-800"),
+    },
     list{
       // Left: daemon status
       div(
@@ -65,21 +67,19 @@ let systemBar = (state: llmCodingState): Tea_Vdom.t<msg> => {
             list{Attrs.class_(memColor)},
             list{
               text(
-                `RAM: ${Int.toString(state.systemMemoryAvailableMb)}/${Int.toString(state.systemMemoryTotalMb)}MB`,
+                `RAM: ${Int.toString(state.systemMemoryAvailableMb)}/${Int.toString(
+                    state.systemMemoryTotalMb,
+                  )}MB`,
               ),
             },
           ),
           span(
             list{Attrs.class_("text-gray-400")},
-            list{
-              text(`CPU: ${Float.toFixed(state.systemCpuPercent, ~digits=0)}%`),
-            },
+            list{text(`CPU: ${Float.toFixed(state.systemCpuPercent, ~digits=0)}%`)},
           ),
           span(
             list{Attrs.class_("text-gray-500")},
-            list{
-              text(`${Int.toString(Array.length(state.sessions))} sessions`),
-            },
+            list{text(`${Int.toString(Array.length(state.sessions))} sessions`)},
           ),
         },
       ),
@@ -178,10 +178,7 @@ let sessionCard = (session: llmSession, isSelected: bool): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between")},
         list{
-          span(
-            list{Attrs.class_("font-semibold text-sm text-gray-100")},
-            list{text(session.name)},
-          ),
+          span(list{Attrs.class_("font-semibold text-sm text-gray-100")}, list{text(session.name)}),
           span(
             list{Attrs.class_(`text-xs font-mono ${stateColor(session.state)}`)},
             list{text(stateLabel(session.state))},
@@ -244,9 +241,7 @@ let sessionCard = (session: llmSession, isSelected: bool): Tea_Vdom.t<msg> => {
             },
             button(
               list{
-                Attrs.class_(
-                  "px-2 py-0.5 text-xs rounded bg-red-800 hover:bg-red-700 text-white",
-                ),
+                Attrs.class_("px-2 py-0.5 text-xs rounded bg-red-800 hover:bg-red-700 text-white"),
               },
               list{text("Kill")},
             ),
@@ -277,15 +272,12 @@ let pendingActionView = (action: pendingAction): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center gap-2")},
         list{
-          span(list{Attrs.class_(`text-xs font-mono ${color}`)}, list{text(actionCategoryName(action.category))}),
           span(
-            list{Attrs.class_("text-xs text-gray-300")},
-            list{text(action.description)},
+            list{Attrs.class_(`text-xs font-mono ${color}`)},
+            list{text(actionCategoryName(action.category))},
           ),
-          span(
-            list{Attrs.class_("text-xs text-gray-600")},
-            list{text(`from ${action.sessionId}`)},
-          ),
+          span(list{Attrs.class_("text-xs text-gray-300")}, list{text(action.description)}),
+          span(list{Attrs.class_("text-xs text-gray-600")}, list{text(`from ${action.sessionId}`)}),
         },
       ),
       div(
@@ -301,9 +293,7 @@ let pendingActionView = (action: pendingAction): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_(
-                "px-2 py-0.5 text-xs rounded bg-red-800 hover:bg-red-700 text-white",
-              ),
+              Attrs.class_("px-2 py-0.5 text-xs rounded bg-red-800 hover:bg-red-700 text-white"),
             },
             list{text("Deny")},
           ),
@@ -322,14 +312,8 @@ let messageView = (msg_: sessionMessage): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex gap-2 text-xs py-1 border-b border-gray-800/50")},
     list{
-      span(
-        list{Attrs.class_("text-gray-600 font-mono shrink-0")},
-        list{text(msg_.sentAt)},
-      ),
-      span(
-        list{Attrs.class_("text-emerald-400 font-mono shrink-0")},
-        list{text(msg_.fromSession)},
-      ),
+      span(list{Attrs.class_("text-gray-600 font-mono shrink-0")}, list{text(msg_.sentAt)}),
+      span(list{Attrs.class_("text-emerald-400 font-mono shrink-0")}, list{text(msg_.fromSession)}),
       span(list{Attrs.class_("text-gray-300")}, list{text(msg_.content)}),
     },
   )
@@ -352,7 +336,9 @@ let view = (state: llmCodingState): Tea_Vdom.t<msg> => {
         list{
           // Left: session cards
           div(
-            list{Attrs.class_("w-80 border-r border-gray-800 overflow-y-auto p-2 flex flex-col gap-2")},
+            list{
+              Attrs.class_("w-80 border-r border-gray-800 overflow-y-auto p-2 flex flex-col gap-2"),
+            },
             if Array.length(state.sessions) == 0 {
               list{
                 div(
@@ -379,10 +365,7 @@ let view = (state: llmCodingState): Tea_Vdom.t<msg> => {
                     list{text("Cross-Session Messages")},
                   ),
                   if Array.length(state.messages) == 0 {
-                    div(
-                      list{Attrs.class_("text-xs text-gray-600")},
-                      list{text("No messages yet")},
-                    )
+                    div(list{Attrs.class_("text-xs text-gray-600")}, list{text("No messages yet")})
                   } else {
                     div(
                       list{Attrs.class_("flex flex-col")},
@@ -448,11 +431,7 @@ let view = (state: llmCodingState): Tea_Vdom.t<msg> => {
       // Bottom: pending actions
       if Array.length(state.pendingActions) > 0 {
         div(
-          list{
-            Attrs.class_(
-              "border-t border-amber-800 bg-amber-950/30 p-2 flex flex-col gap-1",
-            ),
-          },
+          list{Attrs.class_("border-t border-amber-800 bg-amber-950/30 p-2 flex flex-col gap-1")},
           list{
             h3(
               list{Attrs.class_("text-xs font-semibold text-amber-400 mb-1")},

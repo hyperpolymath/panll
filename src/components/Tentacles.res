@@ -35,9 +35,10 @@ let renderOodaIndicator = (currentPhase: oodaPhase): Tea_Vdom.t<msg> => {
     list{Attrs.class_("flex gap-1")},
     phases
     ->Array.map(((phase, letter)) => {
-      let cls = phase == currentPhase
-        ? "w-6 h-6 rounded-full bg-cyan-500 text-gray-950 flex items-center justify-center text-xs font-bold"
-        : "w-6 h-6 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center text-xs"
+      let cls =
+        phase == currentPhase
+          ? "w-6 h-6 rounded-full bg-cyan-500 text-gray-950 flex items-center justify-center text-xs font-bold"
+          : "w-6 h-6 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center text-xs"
       div(list{Attrs.class_(cls)}, list{text(letter)})
     })
     ->List.fromArray,
@@ -80,7 +81,10 @@ let renderReasoning = (r: reasoningEntry): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center gap-2")},
         list{
-          span(list{Attrs.class_(`text-xs font-mono ${phaseColour}`)}, list{text(oodaIcon(r.phase))}),
+          span(
+            list{Attrs.class_(`text-xs font-mono ${phaseColour}`)},
+            list{text(oodaIcon(r.phase))},
+          ),
           span(list{Attrs.class_("text-xs text-gray-300")}, list{text(r.summary)}),
         },
       ),
@@ -111,16 +115,15 @@ let renderResult = (r: validatedResult): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-      div(
-        list{Attrs.class_("text-xs text-gray-400 font-mono truncate")},
-        list{text(r.content)},
-      ),
+      div(list{Attrs.class_("text-xs text-gray-400 font-mono truncate")}, list{text(r.content)}),
     },
   )
 }
 
 /// Render a single agent card (used in both AgentView and Orchestra).
-let renderAgentCard = (agent: tentacleAgentState, isSelected: bool, compact: bool): Tea_Vdom.t<msg> => {
+let renderAgentCard = (agent: tentacleAgentState, isSelected: bool, compact: bool): Tea_Vdom.t<
+  msg,
+> => {
   let borderCls = tentacleBorderClass(agent.id)
   let bgCls = tentacleBgClass(agent.id)
   let textCls = tentacleTextClass(agent.id)
@@ -131,15 +134,27 @@ let renderAgentCard = (agent: tentacleAgentState, isSelected: bool, compact: boo
     // Compact mode: small coloured dot with status
     div(
       list{
-        Attrs.class_(`p-2 rounded-lg border ${selectedBorder} ${bgCls} cursor-pointer hover:brightness-110 transition-all`),
+        Attrs.class_(
+          `p-2 rounded-lg border ${selectedBorder} ${bgCls} cursor-pointer hover:brightness-110 transition-all`,
+        ),
         Events.onClick(Tentacles(SelectAgent(agent.id))),
       },
       list{
         div(
           list{Attrs.class_("flex items-center gap-2")},
           list{
-            div(list{Attrs.class_(`w-3 h-3 rounded-full ${tentacleBgClass(agent.id)} border ${borderCls}`)}, list{}),
-            span(list{Attrs.class_(`text-xs ${textCls} font-medium`)}, list{text(tentacleShortLabel(agent.id))}),
+            div(
+              list{
+                Attrs.class_(
+                  `w-3 h-3 rounded-full ${tentacleBgClass(agent.id)} border ${borderCls}`,
+                ),
+              },
+              list{},
+            ),
+            span(
+              list{Attrs.class_(`text-xs ${textCls} font-medium`)},
+              list{text(tentacleShortLabel(agent.id))},
+            ),
             if agent.busy {
               span(list{Attrs.class_("text-xs text-cyan-400 animate-pulse")}, list{text("...")})
             } else {
@@ -153,7 +168,9 @@ let renderAgentCard = (agent: tentacleAgentState, isSelected: bool, compact: boo
     // Full card: name, role, OODA, status
     div(
       list{
-        Attrs.class_(`p-3 rounded-lg border ${selectedBorder} ${bgCls} cursor-pointer hover:brightness-110 transition-all`),
+        Attrs.class_(
+          `p-3 rounded-lg border ${selectedBorder} ${bgCls} cursor-pointer hover:brightness-110 transition-all`,
+        ),
         Events.onClick(Tentacles(SelectAgent(agent.id))),
       },
       list{
@@ -176,10 +193,7 @@ let renderAgentCard = (agent: tentacleAgentState, isSelected: bool, compact: boo
           },
         ),
         // Role
-        div(
-          list{Attrs.class_("text-xs text-gray-400 mb-2")},
-          list{text(agent.compilerRole)},
-        ),
+        div(list{Attrs.class_("text-xs text-gray-400 mb-2")}, list{text(agent.compilerRole)}),
         // OODA indicator
         renderOodaIndicator(agent.currentPhase),
         // Catchphrase
@@ -191,7 +205,10 @@ let renderAgentCard = (agent: tentacleAgentState, isSelected: bool, compact: boo
         div(
           list{Attrs.class_("flex gap-3 mt-2 text-xs text-gray-500")},
           list{
-            span(list{}, list{text(Int.toString(Array.length(agent.constraints)) ++ " constraints")}),
+            span(
+              list{},
+              list{text(Int.toString(Array.length(agent.constraints)) ++ " constraints")},
+            ),
             span(list{}, list{text(Int.toString(Array.length(agent.results)) ++ " results")}),
           },
         ),
@@ -199,7 +216,11 @@ let renderAgentCard = (agent: tentacleAgentState, isSelected: bool, compact: boo
         switch agent.lastError {
         | Some(err) =>
           div(
-            list{Attrs.class_("mt-2 p-1.5 rounded bg-red-900/30 border border-red-700/50 text-xs text-red-400 truncate")},
+            list{
+              Attrs.class_(
+                "mt-2 p-1.5 rounded bg-red-900/30 border border-red-700/50 text-xs text-red-400 truncate",
+              ),
+            },
             list{text(err)},
           )
         | None => noNode
@@ -213,8 +234,7 @@ let renderAgentCard = (agent: tentacleAgentState, isSelected: bool, compact: boo
 let renderAgentView = (state: tentaclesState): Tea_Vdom.t<msg> => {
   let agent = findAgent(state.agents, state.selectedAgent)
   switch agent {
-  | None =>
-    div(list{Attrs.class_("p-4 text-gray-500 text-sm")}, list{text("No agent selected")})
+  | None => div(list{Attrs.class_("p-4 text-gray-500 text-sm")}, list{text("No agent selected")})
   | Some(a) => {
       let textCls = tentacleTextClass(a.id)
       let borderCls = tentacleBorderClass(a.id)
@@ -228,13 +248,12 @@ let renderAgentView = (state: tentaclesState): Tea_Vdom.t<msg> => {
             ->Array.map(id => {
               let isSelected = id == state.selectedAgent
               let cls = isSelected
-                ? `px-2 py-1 text-xs rounded cursor-pointer ${tentacleBgClass(id)} ${tentacleTextClass(id)} border ${tentacleBorderClass(id)}`
+                ? `px-2 py-1 text-xs rounded cursor-pointer ${tentacleBgClass(
+                      id,
+                    )} ${tentacleTextClass(id)} border ${tentacleBorderClass(id)}`
                 : "px-2 py-1 text-xs rounded cursor-pointer text-gray-500 hover:text-gray-300 border border-transparent"
               button(
-                list{
-                  Attrs.class_(cls),
-                  Events.onClick(Tentacles(SelectAgent(id))),
-                },
+                list{Attrs.class_(cls), Events.onClick(Tentacles(SelectAgent(id)))},
                 list{text(tentacleShortLabel(id))},
               )
             })
@@ -251,8 +270,14 @@ let renderAgentView = (state: tentaclesState): Tea_Vdom.t<msg> => {
                     list{Attrs.class_("flex items-center gap-3")},
                     list{
                       div(list{Attrs.class_(`w-4 h-4 rounded-full border-2 ${borderCls}`)}, list{}),
-                      span(list{Attrs.class_(`text-lg font-medium ${textCls}`)}, list{text(agentDisplayName(a))}),
-                      span(list{Attrs.class_("text-xs text-gray-500")}, list{text("(" ++ a.compilerRole ++ ")")}),
+                      span(
+                        list{Attrs.class_(`text-lg font-medium ${textCls}`)},
+                        list{text(agentDisplayName(a))},
+                      ),
+                      span(
+                        list{Attrs.class_("text-xs text-gray-500")},
+                        list{text("(" ++ a.compilerRole ++ ")")},
+                      ),
                     },
                   ),
                   renderOodaIndicator(a.currentPhase),
@@ -273,16 +298,20 @@ let renderAgentView = (state: tentaclesState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("flex-1 overflow-auto border-r border-gray-800 p-3")},
                 list{
                   div(
-                    list{Attrs.class_("text-xs text-gray-500 font-medium mb-2 uppercase tracking-wider")},
+                    list{
+                      Attrs.class_(
+                        "text-xs text-gray-500 font-medium mb-2 uppercase tracking-wider",
+                      ),
+                    },
                     list{text("Constraints (L)")},
                   ),
                   if Array.length(a.constraints) == 0 {
-                    div(list{Attrs.class_("text-xs text-gray-600 italic")}, list{text("No active constraints")})
-                  } else {
                     div(
-                      list{},
-                      a.constraints->Array.map(renderConstraint)->List.fromArray,
+                      list{Attrs.class_("text-xs text-gray-600 italic")},
+                      list{text("No active constraints")},
                     )
+                  } else {
+                    div(list{}, a.constraints->Array.map(renderConstraint)->List.fromArray)
                   },
                 },
               ),
@@ -291,16 +320,20 @@ let renderAgentView = (state: tentaclesState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("flex-1 overflow-auto border-r border-gray-800 p-3")},
                 list{
                   div(
-                    list{Attrs.class_("text-xs text-gray-500 font-medium mb-2 uppercase tracking-wider")},
+                    list{
+                      Attrs.class_(
+                        "text-xs text-gray-500 font-medium mb-2 uppercase tracking-wider",
+                      ),
+                    },
                     list{text("Reasoning (N)")},
                   ),
                   if Array.length(a.reasoning) == 0 {
-                    div(list{Attrs.class_("text-xs text-gray-600 italic")}, list{text("No reasoning entries")})
-                  } else {
                     div(
-                      list{},
-                      a.reasoning->Array.map(renderReasoning)->List.fromArray,
+                      list{Attrs.class_("text-xs text-gray-600 italic")},
+                      list{text("No reasoning entries")},
                     )
+                  } else {
+                    div(list{}, a.reasoning->Array.map(renderReasoning)->List.fromArray)
                   },
                 },
               ),
@@ -309,16 +342,20 @@ let renderAgentView = (state: tentaclesState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("flex-1 overflow-auto p-3")},
                 list{
                   div(
-                    list{Attrs.class_("text-xs text-gray-500 font-medium mb-2 uppercase tracking-wider")},
+                    list{
+                      Attrs.class_(
+                        "text-xs text-gray-500 font-medium mb-2 uppercase tracking-wider",
+                      ),
+                    },
                     list{text("Results (W)")},
                   ),
                   if Array.length(a.results) == 0 {
-                    div(list{Attrs.class_("text-xs text-gray-600 italic")}, list{text("No validated results")})
-                  } else {
                     div(
-                      list{},
-                      a.results->Array.map(renderResult)->List.fromArray,
+                      list{Attrs.class_("text-xs text-gray-600 italic")},
+                      list{text("No validated results")},
                     )
+                  } else {
+                    div(list{}, a.results->Array.map(renderResult)->List.fromArray)
                   },
                 },
               ),
@@ -395,7 +432,11 @@ let renderStageConfig = (state: tentaclesState): Tea_Vdom.t<msg> => {
       ),
       div(
         list{Attrs.class_("text-xs text-gray-500 mb-4")},
-        list{text("Set the global stage to control which compiler concepts are revealed to all agents.")},
+        list{
+          text(
+            "Set the global stage to control which compiler concepts are revealed to all agents.",
+          ),
+        },
       ),
       // Stage selector
       div(
@@ -407,16 +448,17 @@ let renderStageConfig = (state: tentaclesState): Tea_Vdom.t<msg> => {
             ? "p-3 rounded-lg border border-cyan-500 bg-cyan-900/20 cursor-pointer"
             : "p-3 rounded-lg border border-gray-700 bg-gray-800/40 cursor-pointer hover:border-gray-500"
           div(
-            list{
-              Attrs.class_(cls),
-              Events.onClick(Tentacles(SetGlobalStage(stage))),
-            },
+            list{Attrs.class_(cls), Events.onClick(Tentacles(SetGlobalStage(stage)))},
             list{
               div(
                 list{Attrs.class_("flex justify-between items-center")},
                 list{
                   span(
-                    list{Attrs.class_(isActive ? "text-sm text-cyan-300 font-medium" : "text-sm text-gray-300")},
+                    list{
+                      Attrs.class_(
+                        isActive ? "text-sm text-cyan-300 font-medium" : "text-sm text-gray-300",
+                      ),
+                    },
                     list{text(stageLabel(stage))},
                   ),
                   if isActive {
@@ -473,11 +515,11 @@ let renderProgress = (state: tentaclesState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("flex justify-between items-center mb-1")},
                 list{
-                  span(list{Attrs.class_(`text-sm font-medium ${textCls}`)}, list{text(agentDisplayName(a))}),
                   span(
-                    list{Attrs.class_("text-xs text-gray-500")},
-                    list{text(tentacleRole(a.id))},
+                    list{Attrs.class_(`text-sm font-medium ${textCls}`)},
+                    list{text(agentDisplayName(a))},
                   ),
+                  span(list{Attrs.class_("text-xs text-gray-500")}, list{text(tentacleRole(a.id))}),
                 },
               ),
               div(
@@ -510,11 +552,7 @@ let renderProgress = (state: tentaclesState): Tea_Vdom.t<msg> => {
             },
           ),
           switch state.ffiError {
-          | Some(err) =>
-            div(
-              list{Attrs.class_("mt-1 text-xs text-red-400")},
-              list{text(err)},
-            )
+          | Some(err) => div(list{Attrs.class_("mt-1 text-xs text-red-400")}, list{text(err)})
           | None => noNode
           },
           div(
@@ -547,8 +585,14 @@ let view = (state: tentaclesState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text("7-Tentacles")}),
-              span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Compiler Agent Orchestra")}),
+              span(
+                list{Attrs.class_("text-sm font-medium text-gray-200")},
+                list{text("7-Tentacles")},
+              ),
+              span(
+                list{Attrs.class_("text-xs text-gray-500")},
+                list{text("Compiler Agent Orchestra")},
+              ),
             },
           ),
           // Close button
@@ -565,9 +609,7 @@ let view = (state: tentaclesState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex gap-1 px-4 pt-2 border-b border-gray-800")},
         allCategories
-        ->Array.map(cat =>
-          renderTab(categoryLabel(cat), cat == state.activeCategory, cat)
-        )
+        ->Array.map(cat => renderTab(categoryLabel(cat), cat == state.activeCategory, cat))
         ->List.fromArray,
       ),
       // Content area

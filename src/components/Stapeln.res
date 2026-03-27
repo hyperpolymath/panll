@@ -22,9 +22,7 @@ open Tea.Html
 
 /// Render a single constraint row with label and value.
 let constraintRow = (label: string, value: string, ~highlight: bool=false): Tea_Vdom.t<msg> => {
-  let valueCls = highlight
-    ? "text-sm font-medium text-emerald-400"
-    : "text-sm text-gray-300"
+  let valueCls = highlight ? "text-sm font-medium text-emerald-400" : "text-sm text-gray-300"
   div(
     list{Attrs.class_("flex items-center justify-between py-1.5 border-b border-gray-800")},
     list{
@@ -50,9 +48,7 @@ let boolBadge = (label: string, enabled: bool): Tea_Vdom.t<msg> => {
 
 /// Render a registry constraint row.
 let registryRow = (rc: registryConstraint): Tea_Vdom.t<msg> => {
-  let (cls, icon) = rc.allowed
-    ? ("text-emerald-400", "ALLOW")
-    : ("text-red-400", "DENY")
+  let (cls, icon) = rc.allowed ? ("text-emerald-400", "ALLOW") : ("text-red-400", "DENY")
   div(
     list{Attrs.class_("flex items-center justify-between py-1 px-2 bg-gray-900 rounded mb-1")},
     list{
@@ -74,7 +70,6 @@ let viewConstraints = (model: model): Tea_Vdom.t<msg> => {
         list{Attrs.class_("text-lg font-semibold text-white mb-2")},
         list{text("Assembly Constraints")},
       ),
-
       // Security constraints section
       div(
         list{Attrs.class_("space-y-1")},
@@ -90,13 +85,14 @@ let viewConstraints = (model: model): Tea_Vdom.t<msg> => {
           boolBadge("Non-Root", c.requireNonRoot),
         },
       ),
-
       // Resource constraints section
       div(
         list{Attrs.class_("space-y-1")},
         list{
           div(
-            list{Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 mt-3")},
+            list{
+              Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 mt-3"),
+            },
             list{text("Resource Limits")},
           ),
           constraintRow("Max Image Size", Int.toString(c.maxImageSizeMb) ++ " MB"),
@@ -104,13 +100,14 @@ let viewConstraints = (model: model): Tea_Vdom.t<msg> => {
           constraintRow("CPU Limit", Float.toString(c.cpuLimit) ++ " cores"),
         },
       ),
-
       // Registry constraints
       div(
         list{Attrs.class_("space-y-1")},
         list{
           div(
-            list{Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 mt-3")},
+            list{
+              Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 mt-3"),
+            },
             list{text("Registry Policy")},
           ),
           div(
@@ -119,13 +116,14 @@ let viewConstraints = (model: model): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-
       // Denied images
       div(
         list{Attrs.class_("space-y-1")},
         list{
           div(
-            list{Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 mt-3")},
+            list{
+              Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 mt-3"),
+            },
             list{text("Denied Images")},
           ),
           div(
@@ -141,13 +139,14 @@ let viewConstraints = (model: model): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-
       // Network policy
       div(
         list{Attrs.class_("space-y-1")},
         list{
           div(
-            list{Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 mt-3")},
+            list{
+              Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 mt-3"),
+            },
             list{text("Network Policy")},
           ),
           div(
@@ -159,15 +158,22 @@ let viewConstraints = (model: model): Tea_Vdom.t<msg> => {
               | Udp => "UDP"
               | Sctp => "SCTP"
               }
-              let dirCls = rule.direction === "ingress"
-                ? "text-cyan-400"
-                : "text-amber-400"
+              let dirCls = rule.direction === "ingress" ? "text-cyan-400" : "text-amber-400"
               div(
                 list{Attrs.class_("flex items-center gap-2 px-2 py-1 bg-gray-900 rounded")},
                 list{
-                  span(list{Attrs.class_(`text-xs font-medium ${dirCls}`)}, list{text(rule.direction)}),
-                  span(list{Attrs.class_("text-xs text-gray-300 font-mono")}, list{text(protocolStr ++ ":" ++ Int.toString(rule.port))}),
-                  span(list{Attrs.class_("text-xs text-gray-500 ml-auto")}, list{text(rule.description)}),
+                  span(
+                    list{Attrs.class_(`text-xs font-medium ${dirCls}`)},
+                    list{text(rule.direction)},
+                  ),
+                  span(
+                    list{Attrs.class_("text-xs text-gray-300 font-mono")},
+                    list{text(protocolStr ++ ":" ++ Int.toString(rule.port))},
+                  ),
+                  span(
+                    list{Attrs.class_("text-xs text-gray-500 ml-auto")},
+                    list{text(rule.description)},
+                  ),
                 },
               )
             })
@@ -175,7 +181,6 @@ let viewConstraints = (model: model): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-
       // Connect / Disconnect button
       div(
         list{Attrs.class_("pt-3")},
@@ -191,7 +196,15 @@ let viewConstraints = (model: model): Tea_Vdom.t<msg> => {
               ),
               Events.onClick(Stapeln(Connect)),
             },
-            list{text(if st.connected { "Connected" } else { "Connect to Pipeline" })},
+            list{
+              text(
+                if st.connected {
+                  "Connected"
+                } else {
+                  "Connect to Pipeline"
+                },
+              ),
+            },
           ),
         },
       ),
@@ -233,12 +246,12 @@ let suggestionRow = (s: optimisationSuggestion): Tea_Vdom.t<msg> => {
         list{Attrs.class_("flex items-center gap-2")},
         list{
           span(list{Attrs.class_(`text-xs font-medium ${severityCls}`)}, list{text(s.severity)}),
-          span(list{Attrs.class_(`px-1.5 py-0.5 text-xs rounded ${categoryCls}`)}, list{text(s.category)}),
+          span(
+            list{Attrs.class_(`px-1.5 py-0.5 text-xs rounded ${categoryCls}`)},
+            list{text(s.category)},
+          ),
           if s.autoFixAvailable {
-            span(
-              list{Attrs.class_("text-xs text-emerald-500 ml-auto")},
-              list{text("auto-fix")},
-            )
+            span(list{Attrs.class_("text-xs text-emerald-500 ml-auto")}, list{text("auto-fix")})
           } else {
             text("")
           },
@@ -260,7 +273,6 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
         list{Attrs.class_("text-lg font-semibold text-white mb-2")},
         list{text("Assembly Reasoning")},
       ),
-
       // Connection status
       div(
         list{Attrs.class_("flex items-center gap-2 mb-3")},
@@ -279,7 +291,15 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
           ),
           span(
             list{Attrs.class_("text-xs text-gray-400")},
-            list{text(if st.connected { "Pipeline connected" } else { "Disconnected" })},
+            list{
+              text(
+                if st.connected {
+                  "Pipeline connected"
+                } else {
+                  "Disconnected"
+                },
+              ),
+            },
           ),
           span(
             list{Attrs.class_("text-xs text-gray-600 ml-auto font-mono")},
@@ -287,7 +307,6 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-
       // Pipeline stats (if available)
       switch st.pipelineStatus {
       | Some(status) =>
@@ -307,7 +326,6 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
                 ),
               },
             ),
-
             // Security posture
             div(
               list{Attrs.class_("p-3 bg-gray-800 rounded")},
@@ -315,7 +333,10 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center justify-between mb-2")},
                   list{
-                    span(list{Attrs.class_("text-xs font-medium text-gray-400 uppercase")}, list{text("Security Posture")}),
+                    span(
+                      list{Attrs.class_("text-xs font-medium text-gray-400 uppercase")},
+                      list{text("Security Posture")},
+                    ),
                     span(
                       list{
                         Attrs.class_(
@@ -341,13 +362,13 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
                     constraintRow(
                       "Vulnerabilities",
                       Int.toString(status.securityPosture.vulnerabilities) ++
-                        " (" ++ Int.toString(status.securityPosture.criticalVulns) ++ " critical)",
+                      " (" ++
+                      Int.toString(status.securityPosture.criticalVulns) ++ " critical)",
                     ),
                   },
                 ),
               },
             ),
-
             // Validation status
             div(
               list{Attrs.class_("flex items-center gap-2")},
@@ -362,25 +383,36 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
                       },
                     ),
                   },
-                  list{text(if status.validationPassing { "Validation Passing" } else { "Validation Failing" })},
+                  list{
+                    text(
+                      if status.validationPassing {
+                        "Validation Passing"
+                      } else {
+                        "Validation Failing"
+                      },
+                    ),
+                  },
                 ),
                 button(
                   list{
-                    Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer ml-auto"),
+                    Attrs.class_(
+                      "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer ml-auto",
+                    ),
                     Events.onClick(Stapeln(RefreshStatus)),
                   },
                   list{text("Refresh")},
                 ),
               },
             ),
-
             // Optimisation suggestions
             if Array.length(status.suggestions) > 0 {
               div(
                 list{Attrs.class_("space-y-2")},
                 list{
                   div(
-                    list{Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider")},
+                    list{
+                      Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider"),
+                    },
                     list{text(`Suggestions (${Int.toString(Array.length(status.suggestions))})`)},
                   ),
                   div(
@@ -390,7 +422,10 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
                 },
               )
             } else {
-              div(list{Attrs.class_("text-xs text-gray-500 italic")}, list{text("No optimisation suggestions")})
+              div(
+                list{Attrs.class_("text-xs text-gray-500 italic")},
+                list{text("No optimisation suggestions")},
+              )
             },
           },
         )
@@ -398,10 +433,15 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("p-6 text-center")},
           list{
-            div(list{Attrs.class_("text-gray-500 text-sm mb-3")}, list{text("No pipeline data available")}),
+            div(
+              list{Attrs.class_("text-gray-500 text-sm mb-3")},
+              list{text("No pipeline data available")},
+            ),
             button(
               list{
-                Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                Attrs.class_(
+                  "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                ),
                 Events.onClick(Stapeln(RefreshStatus)),
               },
               list{text("Refresh Status")},
@@ -418,10 +458,7 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
 // ============================================================================
 
 /// Render an artifact format tab button.
-let formatTab = (
-  fmt: artifactFormat,
-  active: artifactFormat,
-): Tea_Vdom.t<msg> => {
+let formatTab = (fmt: artifactFormat, active: artifactFormat): Tea_Vdom.t<msg> => {
   let isActive = fmt === active
   let cls = isActive
     ? "px-3 py-1.5 text-xs font-medium bg-gray-700 text-white rounded"
@@ -441,7 +478,10 @@ let findingRow = (f: validationFinding): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex items-start gap-2 py-1.5 border-b border-gray-800")},
     list{
-      span(list{Attrs.class_(`text-xs font-medium ${levelCls} uppercase w-14 shrink-0`)}, list{text(f.level)}),
+      span(
+        list{Attrs.class_(`text-xs font-medium ${levelCls} uppercase w-14 shrink-0`)},
+        list{text(f.level)},
+      ),
       span(list{Attrs.class_("text-xs text-gray-500 font-mono w-16 shrink-0")}, list{text(f.rule)}),
       div(
         list{Attrs.class_("flex-1")},
@@ -449,7 +489,10 @@ let findingRow = (f: validationFinding): Tea_Vdom.t<msg> => {
           span(list{Attrs.class_("text-xs text-gray-300")}, list{text(f.message)}),
           switch f.line {
           | Some(ln) =>
-            span(list{Attrs.class_("text-xs text-gray-600 ml-2")}, list{text("L" ++ Int.toString(ln))})
+            span(
+              list{Attrs.class_("text-xs text-gray-600 ml-2")},
+              list{text("L" ++ Int.toString(ln))},
+            )
           | None => text("")
           },
         },
@@ -474,7 +517,6 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
         list{Attrs.class_("text-lg font-semibold text-white mb-2")},
         list{text("Results & Artifacts")},
       ),
-
       // Format tabs
       div(
         list{Attrs.class_("flex items-center gap-2 mb-3")},
@@ -482,7 +524,6 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
         ->Array.map(fmt => formatTab(fmt, st.selectedFormat))
         ->List.fromArray,
       ),
-
       // Generated artifact preview
       div(
         list{Attrs.class_("space-y-2")},
@@ -494,18 +535,31 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
           switch st.generatedArtifact {
           | Some(content) =>
             pre(
-              list{Attrs.class_("p-3 bg-gray-900 rounded text-xs text-gray-300 font-mono overflow-auto max-h-64 border border-gray-800")},
+              list{
+                Attrs.class_(
+                  "p-3 bg-gray-900 rounded text-xs text-gray-300 font-mono overflow-auto max-h-64 border border-gray-800",
+                ),
+              },
               list{text(content)},
             )
           | None =>
             div(
               list{Attrs.class_("p-4 bg-gray-900 rounded text-center")},
               list{
-                div(list{Attrs.class_("text-gray-500 text-sm mb-2")}, list{text("No artifact generated yet")}),
+                div(
+                  list{Attrs.class_("text-gray-500 text-sm mb-2")},
+                  list{text("No artifact generated yet")},
+                ),
                 button(
                   list{
-                    Attrs.class_("px-3 py-1.5 text-xs bg-cyan-700 text-white rounded hover:bg-cyan-600 cursor-pointer"),
-                    Events.onClick(Stapeln(RequestGenerate(StapelnEngine.artifactFormatLabel(st.selectedFormat)))),
+                    Attrs.class_(
+                      "px-3 py-1.5 text-xs bg-cyan-700 text-white rounded hover:bg-cyan-600 cursor-pointer",
+                    ),
+                    Events.onClick(
+                      Stapeln(
+                        RequestGenerate(StapelnEngine.artifactFormatLabel(st.selectedFormat)),
+                      ),
+                    ),
                   },
                   list{text("Generate " ++ StapelnEngine.artifactFormatLabel(st.selectedFormat))},
                 ),
@@ -514,7 +568,6 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
           },
         },
       ),
-
       // Validation results
       switch st.lastValidation {
       | Some(validation) =>
@@ -539,15 +592,25 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
                       },
                     ),
                   },
-                  list{text(if validation.passed { "PASSED" } else { "FAILED" })},
+                  list{
+                    text(
+                      if validation.passed {
+                        "PASSED"
+                      } else {
+                        "FAILED"
+                      },
+                    ),
+                  },
                 ),
                 span(
                   list{Attrs.class_("text-xs text-gray-500 ml-auto")},
                   list{
                     text(
-                      Int.toString(validation.errorCount) ++ " errors, " ++
-                        Int.toString(validation.warningCount) ++ " warnings, " ++
-                        Int.toString(validation.infoCount) ++ " info",
+                      Int.toString(validation.errorCount) ++
+                      " errors, " ++
+                      Int.toString(validation.warningCount) ++
+                      " warnings, " ++
+                      Int.toString(validation.infoCount) ++ " info",
                     ),
                   },
                 ),
@@ -560,7 +623,10 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
                 validation.findings->Array.map(findingRow)->List.fromArray,
               )
             } else {
-              div(list{Attrs.class_("text-xs text-emerald-500 italic")}, list{text("No findings — clean scan")})
+              div(
+                list{Attrs.class_("text-xs text-emerald-500 italic")},
+                list{text("No findings — clean scan")},
+              )
             },
           },
         )
@@ -575,12 +641,17 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("text-xs font-medium text-gray-400 uppercase tracking-wider")},
                   list{text("Security Scan")},
                 ),
-                span(list{Attrs.class_("text-xs text-gray-500 italic")}, list{text("Not yet scanned")}),
+                span(
+                  list{Attrs.class_("text-xs text-gray-500 italic")},
+                  list{text("Not yet scanned")},
+                ),
               },
             ),
             button(
               list{
-                Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                Attrs.class_(
+                  "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                ),
                 Events.onClick(Stapeln(RequestValidation)),
               },
               list{text("Run Validation")},
@@ -588,7 +659,6 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
           },
         )
       },
-
       // Deploy readiness indicator
       div(
         list{Attrs.class_("pt-3 border-t border-gray-800")},
@@ -615,14 +685,21 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
                       },
                     ),
                   },
-                  list{text(if ready { "READY" } else { "NOT READY" })},
+                  list{
+                    text(
+                      if ready {
+                        "READY"
+                      } else {
+                        "NOT READY"
+                      },
+                    ),
+                  },
                 )
               },
             },
           ),
         },
       ),
-
       // Error display
       switch st.error {
       | Some(err) =>
@@ -663,7 +740,9 @@ let view = (model: model): Tea_Vdom.t<msg> => {
     list{
       // Tab bar
       div(
-        list{Attrs.class_("flex items-center gap-2 px-4 py-2 border-b border-gray-800 bg-gray-900")},
+        list{
+          Attrs.class_("flex items-center gap-2 px-4 py-2 border-b border-gray-800 bg-gray-900"),
+        },
         list{
           button(
             list{
@@ -715,7 +794,6 @@ let view = (model: model): Tea_Vdom.t<msg> => {
           },
         },
       ),
-
       // Panel content
       div(
         list{Attrs.class_("flex-1 overflow-auto")},

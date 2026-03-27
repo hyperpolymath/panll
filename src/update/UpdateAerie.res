@@ -17,7 +17,9 @@ let updateAerie = (model: model, msg: aerieMsg): (model, Tea_Cmd.t<msg>) => {
       } else {
         AerieCmd.fetchLatency(result => Aerie(LatencyLoaded(result)))
       }
-      let typellCmd = TypeLLService.checkConfigTypes("aerie-config", "aerie", result => Aerie(TypeCheckResult(result)))
+      let typellCmd = TypeLLService.checkConfigTypes("aerie-config", "aerie", result => Aerie(
+        TypeCheckResult(result),
+      ))
       (
         {...model, aerie: {...aer, loading: true, error: None}},
         Tea_Cmd.batch(list{fetchCmd, typellCmd}),
@@ -40,18 +42,25 @@ let updateAerie = (model: model, msg: aerieMsg): (model, Tea_Cmd.t<msg>) => {
     )
   | ToggleProbe(endpoint) => {
       let probes = aer.probes->Array.map(p =>
-        if p.endpoint === endpoint { {...p, active: !p.active} } else { p }
+        if p.endpoint === endpoint {
+          {...p, active: !p.active}
+        } else {
+          p
+        }
       )
       ({...model, aerie: {...aer, probes}}, Tea_Cmd.none)
     }
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "aerie", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
   }
 }

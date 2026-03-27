@@ -173,11 +173,7 @@ let lockConflicts = (
 }
 
 /// Check if a session holds a lock on the given path.
-let sessionHoldsLock = (
-  sessionId: string,
-  path: string,
-  locks: array<workspaceLock>,
-): bool => {
+let sessionHoldsLock = (sessionId: string, path: string, locks: array<workspaceLock>): bool => {
   locks->Array.some(lock => lock.heldBy == sessionId && lock.path == path)
 }
 
@@ -192,12 +188,14 @@ let completedCount = (tasks: array<sharedTask>): int => {
 
 /// Count remaining (non-completed) tasks.
 let remainingCount = (tasks: array<sharedTask>): int => {
-  tasks->Array.filter(t => {
+  tasks
+  ->Array.filter(t => {
     switch t.status {
     | Pending | InProgress | Blocked(_) => true
     | Done | Skipped => false
     }
-  })->Array.length
+  })
+  ->Array.length
 }
 
 /// Progress percentage (0-100).

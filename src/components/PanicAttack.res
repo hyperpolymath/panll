@@ -90,7 +90,9 @@ let summaryBar = (summary: option<scanSummary>): Tea_Vdom.t<msg> => {
           list{Attrs.class_("text-sm text-gray-400")},
           list{
             text(
-              `${Int.toString(s.totalFindings)} findings in ${Int.toString(s.filesScanned)} files (${s.language})`,
+              `${Int.toString(s.totalFindings)} findings in ${Int.toString(
+                  s.filesScanned,
+                )} files (${s.language})`,
             ),
           },
         ),
@@ -107,7 +109,9 @@ let summaryBar = (summary: option<scanSummary>): Tea_Vdom.t<msg> => {
             },
             if s.high > 0 {
               span(
-                list{Attrs.class_("px-2 py-0.5 text-xs rounded bg-orange-500 text-white font-mono")},
+                list{
+                  Attrs.class_("px-2 py-0.5 text-xs rounded bg-orange-500 text-white font-mono"),
+                },
                 list{text(`${Int.toString(s.high)} high`)},
               )
             } else {
@@ -150,7 +154,9 @@ let findingRow = (wp: weakPoint): Tea_Vdom.t<msg> => {
       span(
         list{
           Attrs.class_(
-            `px-1.5 py-0.5 text-xs rounded font-mono whitespace-nowrap ${severityClass(wp.severity)}`,
+            `px-1.5 py-0.5 text-xs rounded font-mono whitespace-nowrap ${severityClass(
+                wp.severity,
+              )}`,
           ),
         },
         list{text(severityLabel(wp.severity))},
@@ -162,10 +168,7 @@ let findingRow = (wp: weakPoint): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex-1 min-w-0")},
         list{
-          div(
-            list{Attrs.class_("text-sm text-gray-200 truncate")},
-            list{text(wp.description)},
-          ),
+          div(list{Attrs.class_("text-sm text-gray-200 truncate")}, list{text(wp.description)}),
           switch wp.file {
           | "" => noNode
           | file =>
@@ -230,10 +233,7 @@ let view = (state: panicAttackState): Tea_Vdom.t<msg> => {
               modeView(state.mode),
               switch state.version {
               | Some(v) =>
-                span(
-                  list{Attrs.class_("text-xs text-gray-500 font-mono")},
-                  list{text(`v${v}`)},
-                )
+                span(list{Attrs.class_("text-xs text-gray-500 font-mono")}, list{text(`v${v}`)})
               | None => noNode
               },
             },
@@ -276,15 +276,10 @@ let view = (state: panicAttackState): Tea_Vdom.t<msg> => {
       // Target path and filter bar
       div(
         list{
-          Attrs.class_(
-            "flex items-center gap-2 px-4 py-2 bg-gray-850 border-b border-gray-700",
-          ),
+          Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-850 border-b border-gray-700"),
         },
         list{
-          span(
-            list{Attrs.class_("text-xs text-gray-500")},
-            list{text("Target:")},
-          ),
+          span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Target:")}),
           input(
             list{
               Attrs.type_("text"),
@@ -312,18 +307,13 @@ let view = (state: panicAttackState): Tea_Vdom.t<msg> => {
         },
       ),
       // Summary bar
-      div(
-        list{Attrs.class_("px-4 border-b border-gray-700")},
-        list{summaryBar(state.summary)},
-      ),
+      div(list{Attrs.class_("px-4 border-b border-gray-700")}, list{summaryBar(state.summary)}),
       // Error display
       switch state.lastError {
       | Some(err) =>
         div(
           list{
-            Attrs.class_(
-              "px-4 py-2 bg-red-900/30 border-b border-red-700 text-red-300 text-sm",
-            ),
+            Attrs.class_("px-4 py-2 bg-red-900/30 border-b border-red-700 text-red-300 text-sm"),
           },
           list{text(err)},
         )
@@ -333,19 +323,11 @@ let view = (state: panicAttackState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex-1 overflow-y-auto")},
         {
-          let filtered = filterFindings(
-            state.findings,
-            state.activeCategory,
-            state.filterText,
-          )
+          let filtered = filterFindings(state.findings, state.activeCategory, state.filterText)
           if Array.length(filtered) == 0 && !state.scanning {
             list{
               div(
-                list{
-                  Attrs.class_(
-                    "flex items-center justify-center h-32 text-gray-500 text-sm",
-                  ),
-                },
+                list{Attrs.class_("flex items-center justify-center h-32 text-gray-500 text-sm")},
                 list{
                   text(
                     if Array.length(state.findings) == 0 {
@@ -370,14 +352,8 @@ let view = (state: panicAttackState): Tea_Vdom.t<msg> => {
           ),
         },
         list{
-          span(
-            list{},
-            list{text(`${Int.toString(Array.length(state.reports))} saved reports`)},
-          ),
-          span(
-            list{},
-            list{text("panic-attack 2.0.0 — 47 languages, 20 categories")},
-          ),
+          span(list{}, list{text(`${Int.toString(Array.length(state.reports))} saved reports`)}),
+          span(list{}, list{text("panic-attack 2.0.0 — 47 languages, 20 categories")}),
         },
       ),
     },

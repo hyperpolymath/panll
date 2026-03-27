@@ -108,7 +108,9 @@ let defaultState: HelpModel.helpState = {
 /// Searches help entries by matching a query string against each entry's
 /// title, body text, and keywords. Case-insensitive substring matching.
 /// An empty query returns all entries unchanged.
-let searchEntries = (query: string, entries: array<HelpModel.helpEntry>): array<HelpModel.helpEntry> => {
+let searchEntries = (query: string, entries: array<HelpModel.helpEntry>): array<
+  HelpModel.helpEntry,
+> => {
   let q = String.toLowerCase(query)
   if q === "" {
     entries
@@ -155,20 +157,18 @@ let findEntry = (id: string, entries: array<HelpModel.helpEntry>): option<HelpMo
 }
 
 /// Finds a glossary term by exact case-insensitive match on the term name.
-let findGlossaryTerm = (
-  term: string,
-  glossary: array<HelpModel.glossaryTerm>,
-): option<HelpModel.glossaryTerm> => {
+let findGlossaryTerm = (term: string, glossary: array<HelpModel.glossaryTerm>): option<
+  HelpModel.glossaryTerm,
+> => {
   let t = String.toLowerCase(term)
   glossary->Array.find(g => g.term->String.toLowerCase === t)
 }
 
 /// Searches the glossary by matching a query against both term names
 /// and their definitions. Case-insensitive. Empty query returns all terms.
-let searchGlossary = (
-  query: string,
-  glossary: array<HelpModel.glossaryTerm>,
-): array<HelpModel.glossaryTerm> => {
+let searchGlossary = (query: string, glossary: array<HelpModel.glossaryTerm>): array<
+  HelpModel.glossaryTerm,
+> => {
   let q = String.toLowerCase(query)
   if q === "" {
     glossary

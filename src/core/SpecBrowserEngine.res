@@ -54,7 +54,11 @@ let fileKindPath = (kind: specFileKind): string =>
 
 /// Colour for file presence indicator.
 let presenceColour = (exists: bool): string =>
-  if exists { "text-emerald-400" } else { "text-red-400" }
+  if exists {
+    "text-emerald-400"
+  } else {
+    "text-red-400"
+  }
 
 /// All standard file kinds in display order.
 let allFileKinds: array<specFileKind> = [
@@ -108,24 +112,34 @@ let computeTaxonomyCompleteness = (files: array<filePresence>): int => {
 
 /// Colour for taxonomy completeness percentage.
 let completenessColour = (pct: int): string =>
-  if pct >= 80 { "text-emerald-400" }
-  else if pct >= 50 { "text-amber-400" }
-  else if pct >= 25 { "text-orange-400" }
-  else { "text-red-400" }
+  if pct >= 80 {
+    "text-emerald-400"
+  } else if pct >= 50 {
+    "text-amber-400"
+  } else if pct >= 25 {
+    "text-orange-400"
+  } else {
+    "text-red-400"
+  }
 
 /// Badge class for taxonomy completeness.
 let completenessBadge = (pct: int): string =>
-  if pct >= 80 { "bg-emerald-900/30 text-emerald-300 border-emerald-700" }
-  else if pct >= 50 { "bg-amber-900/30 text-amber-300 border-amber-700" }
-  else if pct >= 25 { "bg-orange-900/30 text-orange-300 border-orange-700" }
-  else { "bg-red-900/30 text-red-300 border-red-700" }
+  if pct >= 80 {
+    "bg-emerald-900/30 text-emerald-300 border-emerald-700"
+  } else if pct >= 50 {
+    "bg-amber-900/30 text-amber-300 border-amber-700"
+  } else if pct >= 25 {
+    "bg-orange-900/30 text-orange-300 border-orange-700"
+  } else {
+    "bg-red-900/30 text-red-300 border-red-700"
+  }
 
 /// Progress bar string (10 chars wide using block characters).
 let progressBar = (pct: int): string => {
   let filled = pct / 10
   let empty = 10 - filled
   let filledStr = String.repeat(String.fromCharCode(9608), filled) // U+2588 FULL BLOCK
-  let emptyStr = String.repeat(String.fromCharCode(9617), empty)   // U+2591 LIGHT SHADE
+  let emptyStr = String.repeat(String.fromCharCode(9617), empty) // U+2591 LIGHT SHADE
   filledStr ++ emptyStr
 }
 
@@ -170,7 +184,7 @@ let sortByName = (langs: array<specLanguageEntry>): array<specLanguageEntry> => 
 
 /// Helper to build a file presence with default path.
 let mkFile = (kind: specFileKind, exists: bool, lines: int): filePresence => {
-  { kind, exists, lineCount: lines, path: fileKindPath(kind) }
+  {kind, exists, lineCount: lines, path: fileKindPath(kind)}
 }
 
 /// Default verification summary (no data).
@@ -204,7 +218,14 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { totalTests: 247, passingTests: 241, provedCount: 12, admittedCount: 0, hasFuzzing: false, conformancePassing: true },
+    verification: {
+      totalTests: 247,
+      passingTests: 241,
+      provedCount: 12,
+      admittedCount: 0,
+      hasFuzzing: false,
+      conformancePassing: true,
+    },
     taxonomyCompleteness: 75,
   },
   {
@@ -224,7 +245,14 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { totalTests: 89, passingTests: 67, provedCount: 22, admittedCount: 22, hasFuzzing: false, conformancePassing: false },
+    verification: {
+      totalTests: 89,
+      passingTests: 67,
+      provedCount: 22,
+      admittedCount: 22,
+      hasFuzzing: false,
+      conformancePassing: false,
+    },
     taxonomyCompleteness: 88,
   },
   {
@@ -244,7 +272,13 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { ...emptyVerification, totalTests: 56, passingTests: 48, hasFuzzing: false, conformancePassing: true },
+    verification: {
+      ...emptyVerification,
+      totalTests: 56,
+      passingTests: 48,
+      hasFuzzing: false,
+      conformancePassing: true,
+    },
     taxonomyCompleteness: 50,
   },
   {
@@ -264,7 +298,14 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { totalTests: 134, passingTests: 130, provedCount: 8, admittedCount: 0, hasFuzzing: false, conformancePassing: true },
+    verification: {
+      totalTests: 134,
+      passingTests: 130,
+      provedCount: 8,
+      admittedCount: 0,
+      hasFuzzing: false,
+      conformancePassing: true,
+    },
     taxonomyCompleteness: 75,
   },
   {
@@ -304,7 +345,12 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { ...emptyVerification, totalTests: 45, passingTests: 38, conformancePassing: false },
+    verification: {
+      ...emptyVerification,
+      totalTests: 45,
+      passingTests: 38,
+      conformancePassing: false,
+    },
     taxonomyCompleteness: 50,
   },
   {
@@ -324,7 +370,14 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { totalTests: 112, passingTests: 108, provedCount: 15, admittedCount: 0, hasFuzzing: true, conformancePassing: true },
+    verification: {
+      totalTests: 112,
+      passingTests: 108,
+      provedCount: 15,
+      admittedCount: 0,
+      hasFuzzing: true,
+      conformancePassing: true,
+    },
     taxonomyCompleteness: 100,
   },
   {
@@ -344,7 +397,12 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { ...emptyVerification, totalTests: 78, passingTests: 72, conformancePassing: true },
+    verification: {
+      ...emptyVerification,
+      totalTests: 78,
+      passingTests: 72,
+      conformancePassing: true,
+    },
     taxonomyCompleteness: 50,
   },
   {
@@ -364,7 +422,12 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { ...emptyVerification, totalTests: 34, passingTests: 30, conformancePassing: false },
+    verification: {
+      ...emptyVerification,
+      totalTests: 34,
+      passingTests: 30,
+      conformancePassing: false,
+    },
     taxonomyCompleteness: 38,
   },
   {
@@ -384,7 +447,14 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { ...emptyVerification, totalTests: 98, passingTests: 91, provedCount: 11, admittedCount: 2, conformancePassing: true },
+    verification: {
+      ...emptyVerification,
+      totalTests: 98,
+      passingTests: 91,
+      provedCount: 11,
+      admittedCount: 2,
+      conformancePassing: true,
+    },
     taxonomyCompleteness: 88,
   },
   {
@@ -424,7 +494,12 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { ...emptyVerification, totalTests: 23, passingTests: 19, conformancePassing: false },
+    verification: {
+      ...emptyVerification,
+      totalTests: 23,
+      passingTests: 19,
+      conformancePassing: false,
+    },
     taxonomyCompleteness: 25,
   },
   {
@@ -444,7 +519,12 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { ...emptyVerification, totalTests: 41, passingTests: 35, conformancePassing: false },
+    verification: {
+      ...emptyVerification,
+      totalTests: 41,
+      passingTests: 35,
+      conformancePassing: false,
+    },
     taxonomyCompleteness: 38,
   },
   {
@@ -464,7 +544,14 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { ...emptyVerification, totalTests: 76, passingTests: 68, provedCount: 18, admittedCount: 5, conformancePassing: true },
+    verification: {
+      ...emptyVerification,
+      totalTests: 76,
+      passingTests: 68,
+      provedCount: 18,
+      admittedCount: 5,
+      conformancePassing: true,
+    },
     taxonomyCompleteness: 88,
   },
   {
@@ -484,7 +571,12 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { ...emptyVerification, totalTests: 28, passingTests: 22, conformancePassing: false },
+    verification: {
+      ...emptyVerification,
+      totalTests: 28,
+      passingTests: 22,
+      conformancePassing: false,
+    },
     taxonomyCompleteness: 38,
   },
   {
@@ -504,7 +596,14 @@ let allLanguageSpecs: array<specLanguageEntry> = [
     grammarContent: None,
     specContent: None,
     typingRulesContent: None,
-    verification: { totalTests: 145, passingTests: 138, provedCount: 24, admittedCount: 3, hasFuzzing: true, conformancePassing: true },
+    verification: {
+      totalTests: 145,
+      passingTests: 138,
+      provedCount: 24,
+      admittedCount: 3,
+      hasFuzzing: true,
+      conformancePassing: true,
+    },
     taxonomyCompleteness: 100,
   },
 ]
@@ -521,9 +620,15 @@ let allLanguageNames: array<string> = allLanguageSpecs->Array.map(l => l.name)
 let portfolioSummary = (): portfolioStats => {
   let total = Array.length(allLanguageSpecs)
   let sumCompleteness = allLanguageSpecs->Array.reduce(0, (acc, l) => acc + l.taxonomyCompleteness)
-  let avgCompleteness = if total > 0 { sumCompleteness / total } else { 0 }
-  let fullySpecified = allLanguageSpecs->Array.filter(l => l.taxonomyCompleteness >= 100)->Array.length
+  let avgCompleteness = if total > 0 {
+    sumCompleteness / total
+  } else {
+    0
+  }
+  let fullySpecified =
+    allLanguageSpecs->Array.filter(l => l.taxonomyCompleteness >= 100)->Array.length
   let totalTests = allLanguageSpecs->Array.reduce(0, (acc, l) => acc + l.verification.totalTests)
-  let totalAdmitted = allLanguageSpecs->Array.reduce(0, (acc, l) => acc + l.verification.admittedCount)
-  { totalLanguages: total, avgCompleteness, fullySpecified, totalTests, totalAdmitted }
+  let totalAdmitted =
+    allLanguageSpecs->Array.reduce(0, (acc, l) => acc + l.verification.admittedCount)
+  {totalLanguages: total, avgCompleteness, fullySpecified, totalTests, totalAdmitted}
 }

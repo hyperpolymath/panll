@@ -48,10 +48,9 @@ let sendMessage = (
 }
 
 /// Check if a provider is reachable and properly authenticated.
-let checkProvider = (
-  providerId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkProvider = (providerId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("ai_check_provider", {"providerId": providerId})
     ->Promise.then(result => {
@@ -107,10 +106,9 @@ let setPriority = (
 }
 
 /// Enable or disable a provider (mute/unmute without losing the API key).
-let toggleProvider = (
-  providerId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let toggleProvider = (providerId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("ai_toggle_provider", {"providerId": providerId})
     ->Promise.then(result => {
@@ -126,9 +124,7 @@ let toggleProvider = (
 }
 
 /// Clear the conversation history.
-let clearHistory = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let clearHistory = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("ai_clear_history", ())
     ->Promise.then(result => {
@@ -144,10 +140,7 @@ let clearHistory = (
 }
 
 /// Build the system prompt context from a repository path.
-let buildContext = (
-  repoPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let buildContext = (repoPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("ai_build_context", {"repoPath": repoPath})
     ->Promise.then(result => {
@@ -211,9 +204,7 @@ let sendMessageStreaming = (
 }
 
 /// Load the current provider configuration state from disk.
-let getState = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getState = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("ai_get_state", ())
     ->Promise.then(result => {

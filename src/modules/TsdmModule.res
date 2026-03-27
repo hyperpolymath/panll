@@ -43,8 +43,7 @@ let config: tsdmModuleConfig = {
   ],
 }
 
-let hasCapability = (cap: tsdmCapability): bool =>
-  config.capabilities->Array.includes(cap)
+let hasCapability = (cap: tsdmCapability): bool => config.capabilities->Array.includes(cap)
 
 let capabilityLabel = (cap: tsdmCapability): string =>
   switch cap {

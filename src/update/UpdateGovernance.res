@@ -36,10 +36,7 @@ let updateVexometer = (model: model, msg: vexometerMsg): (model, Tea_Cmd.t<msg>)
       model,
       GossamerCmd.getVexationIndex(index => Vexometer(UpdateVexationIndex(index))),
     )
-  | UpdateVexationIndex(index) => (
-      {...model, vexometer: {...vex, index}},
-      Tea_Cmd.none,
-    )
+  | UpdateVexationIndex(index) => ({...model, vexometer: {...vex, index}}, Tea_Cmd.none)
   | ToggleAntiInflammatory(active) => (
       {...model, vexometer: {...vex, antiInflammatoryActive: active}},
       Tea_Cmd.none,
@@ -49,13 +46,16 @@ let updateVexometer = (model: model, msg: vexometerMsg): (model, Tea_Cmd.t<msg>)
       Tea_Cmd.none,
     )
   | ResetVexometer => (
-      {...model, vexometer: {
-        index: 0.0,
-        recentCancellations: 0,
-        recentCorrections: 0,
-        antiInflammatoryActive: false,
-        inertiaDetected: false,
-      }},
+      {
+        ...model,
+        vexometer: {
+          index: 0.0,
+          recentCancellations: 0,
+          recentCorrections: 0,
+          antiInflammatoryActive: false,
+          inertiaDetected: false,
+        },
+      },
       GossamerCmd.recordVexationEvent("reset", _result => NoOp),
     )
   }
@@ -69,7 +69,11 @@ let updateOrbital = (model: model, msg: orbitalMsg): (model, Tea_Cmd.t<msg>) => 
   switch msg {
   | UpdateStability(value) => {
       // Recalculate drift aura colour when stability changes.
-      let colour = if value >= 0.7 { "indigo" } else { "amber" }
+      let colour = if value >= 0.7 {
+        "indigo"
+      } else {
+        "amber"
+      }
       ({...model, orbital: {...orbital, stability: value, driftAuraColour: colour}}, Tea_Cmd.none)
     }
   | UpdateDivergence(value) => (
@@ -109,7 +113,11 @@ let updateView = (model: model, msg: viewMsg): (model, Tea_Cmd.t<msg>) => {
   | TogglePanelBar => ({...model, panelBarVisible: !model.panelBarVisible}, Tea_Cmd.none)
   | ToggleFullscreen => (
       // When entering fullscreen, hide the panel bar. When exiting, restore it.
-      {...model, fullscreenActive: !model.fullscreenActive, panelBarVisible: model.fullscreenActive},
+      {
+        ...model,
+        fullscreenActive: !model.fullscreenActive,
+        panelBarVisible: model.fullscreenActive,
+      },
       Tea_Cmd.none,
     )
   }
@@ -149,8 +157,7 @@ let updateFeedback = (model: model, msg: feedbackMsg): (model, Tea_Cmd.t<msg>) =
       | Some(text) => text
       | None => ""
       }
-      let reportJson =
-        `{"type":"${reportType}","text":"${feedbackText}","timestamp":"${Date.make()->Date.toISOString}"}`
+      let reportJson = `{"type":"${reportType}","text":"${feedbackText}","timestamp":"${Date.make()->Date.toISOString}"}`
       let cmd = FeedbackCmd.saveReport(reportJson, r => Feedback(FeedbackSubmissionResult(r)))
       ({...model, feedbackPending: None, feedbackError: None}, cmd)
     }
@@ -197,12 +204,13 @@ let updateAntiCrash = (model: model, msg: antiCrashMsg): (model, Tea_Cmd.t<msg>)
       | Some(_) => model.vexometer
       }
       // Fire TypeLL type-level validation asynchronously for the token content.
-      let constraintExprs = Array.map(
-        Array.filter(model.paneL.constraints, c => c.active),
-        c => c.expression,
+      let constraintExprs = Array.map(Array.filter(model.paneL.constraints, c => c.active), c =>
+        c.expression
       )
       let typellCmd = if Array.length(constraintExprs) > 0 {
-        TypeLLService.validateToken(token.content, constraintExprs, result => AntiCrash(TokenTypeCheckResult(result)))
+        TypeLLService.validateToken(token.content, constraintExprs, result => AntiCrash(
+          TokenTypeCheckResult(result),
+        ))
       } else {
         Tea_Cmd.none
       }
@@ -340,7 +348,10 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
   // Vexometer frustration → Governance → Anti-Crash strictness
   // Orbital divergence → Governance → inference halting / humidity
 
-  let (newModel, governanceCmd) = GovernanceEngine.governWithCmd(newModel, r => GovernanceNesyResult(r))
+  let (newModel, governanceCmd) = GovernanceEngine.governWithCmd(
+    newModel,
+    r => GovernanceNesyResult(r),
+  )
 
   // --- Phase 5: Panel Bus event emission (M5) ---
   // Emit cross-panel events based on state transitions detected by
@@ -352,27 +363,32 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
   // Emit confidence update if orbital stability changed significantly.
   let stabilityDiff = newModel.orbital.stability -. model.orbital.stability
   let busEvents = if stabilityDiff > 0.05 || stabilityDiff < -0.05 {
-    Array.concat(busEvents, [
-      PanelBus.RepoHealthChanged("panll-orbit", newModel.orbital.stability),
-    ])
+    Array.concat(busEvents, [PanelBus.RepoHealthChanged("panll-orbit", newModel.orbital.stability)])
   } else {
     busEvents
   }
 
   // Emit database connection change if VeriSimDB state changed.
   let busEvents = if newModel.verisimdb.connected !== model.verisimdb.connected {
-    Array.concat(busEvents, [
-      PanelBus.DatabaseConnectionChanged("verisimdb", newModel.verisimdb.connected),
-    ])
+    Array.concat(
+      busEvents,
+      [PanelBus.DatabaseConnectionChanged("verisimdb", newModel.verisimdb.connected)],
+    )
   } else {
     busEvents
   }
 
   // Emit inference activity change if Hypatia confidence shifted.
   let busEvents = if newModel.paneN.inferenceActive !== model.paneN.inferenceActive {
-    Array.concat(busEvents, [
-      PanelBus.HypatiaConfidenceUpdated("paneN-inference", newModel.paneN.inferenceActive ? 1.0 : 0.0),
-    ])
+    Array.concat(
+      busEvents,
+      [
+        PanelBus.HypatiaConfidenceUpdated(
+          "paneN-inference",
+          newModel.paneN.inferenceActive ? 1.0 : 0.0,
+        ),
+      ],
+    )
   } else {
     busEvents
   }
@@ -381,9 +397,7 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
   let busEvents = if newModel.echidna.lastProofResult !== model.echidna.lastProofResult {
     switch newModel.echidna.lastProofResult {
     | Some(_result) =>
-      Array.concat(busEvents, [
-        PanelBus.HypatiaConfidenceUpdated("echidna-proof", 0.95),
-      ])
+      Array.concat(busEvents, [PanelBus.HypatiaConfidenceUpdated("echidna-proof", 0.95)])
     | None => busEvents
     }
   } else {
@@ -392,9 +406,7 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
 
   // Emit fleet dispatch when fleet findings change.
   let busEvents = if Array.length(newModel.fleet.findings) !== Array.length(model.fleet.findings) {
-    Array.concat(busEvents, [
-      PanelBus.FarmRepoListUpdated(Array.length(newModel.fleet.findings)),
-    ])
+    Array.concat(busEvents, [PanelBus.FarmRepoListUpdated(Array.length(newModel.fleet.findings))])
   } else {
     busEvents
   }
@@ -418,9 +430,7 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
     } else {
       1.0
     }
-    Array.concat(busEvents, [
-      PanelBus.RsrComplianceChanged("contractiles", complianceScore),
-    ])
+    Array.concat(busEvents, [PanelBus.RsrComplianceChanged("contractiles", complianceScore)])
   } else {
     busEvents
   }
@@ -431,7 +441,7 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
     let (_envelope, updatedReg) = PanelBus.wrapEvent(reg, "governance", evt, nowMs)
     updatedReg
   })
-  let newModel = { ...newModel, busRegistry }
+  let newModel = {...newModel, busRegistry}
 
   // Dispatch follow-up messages for bus events. Each bus event maps to a
   // message that the consuming panel handles. This closes the cross-panel

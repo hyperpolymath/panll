@@ -70,7 +70,9 @@ let formatLatencyAsOtelSpan = (entry: BojModel.bojLatencyEntry): string => {
   // Build OTLP span JSON manually to keep this module dependency-free.
   `{"traceId":"${traceId}","spanId":"${spanId}","operationName":"${operationName}","startTimeUnixNano":"${startTimeNano}","endTimeUnixNano":"${timestampToNanoString(
       entry.timestamp +. entry.durationMs,
-    )}","durationNano":"${durationNano}","status":{"code":"STATUS_CODE_OK"},"attributes":[{"key":"boj.cartridge","value":{"stringValue":"${entry.cartridge}"}},{"key":"boj.tool","value":{"stringValue":"${entry.tool}"}},{"key":"boj.duration_ms","value":{"doubleValue":${Float.toString(entry.durationMs)}}}]}`
+    )}","durationNano":"${durationNano}","status":{"code":"STATUS_CODE_OK"},"attributes":[{"key":"boj.cartridge","value":{"stringValue":"${entry.cartridge}"}},{"key":"boj.tool","value":{"stringValue":"${entry.tool}"}},{"key":"boj.duration_ms","value":{"doubleValue":${Float.toString(
+      entry.durationMs,
+    )}}}]}`
 }
 
 /// Wrap an array of latency entries in OTLP JSON export format.
@@ -266,10 +268,8 @@ let latencySummary = (entries: array<BojModel.bojLatencyEntry>): string => {
           )},"p50Ms":${Float.toString(cP50)},"p99Ms":${Float.toString(cP99)}}`
       })
       ->Array.join(",")
-    `{"count":${Int.toString(count)},"meanMs":${Float.toString(
-        meanMs,
-      )},"p50Ms":${Float.toString(p50Ms)},"p99Ms":${Float.toString(
-        p99Ms,
-      )},"byCartridge":{${cartridgeEntries}}}`
+    `{"count":${Int.toString(count)},"meanMs":${Float.toString(meanMs)},"p50Ms":${Float.toString(
+        p50Ms,
+      )},"p99Ms":${Float.toString(p99Ms)},"byCartridge":{${cartridgeEntries}}}`
   }
 }

@@ -31,12 +31,14 @@ let allTabs: array<automationBridgeTab> = [Pipelines, Triggers, Status, History]
 
 /// Count pipelines that are currently active (queued or running).
 let countActivePipelines = (pipelines: array<pipeline>): int =>
-  pipelines->Array.filter(p =>
+  pipelines
+  ->Array.filter(p =>
     switch p.status {
     | PipelineQueued | PipelineRunning => true
     | _ => false
     }
-  )->Array.length
+  )
+  ->Array.length
 
 /// Count pipelines matching a given status.
 let countPipelinesByStatus = (pipelines: array<pipeline>, status: automationPipelineStatus): int =>

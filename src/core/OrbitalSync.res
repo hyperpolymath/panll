@@ -88,9 +88,7 @@ let calculateDivergence = (paneL: Model.paneLState, paneN: Model.paneNState): fl
       0.0
     } else {
       // Count intersection: tokens present in both sets.
-      let intersection = Array.filter(symTokens, t =>
-        Array.includes(neuTokens, t)
-      )->Array.length
+      let intersection = Array.filter(symTokens, t => Array.includes(neuTokens, t))->Array.length
 
       // Jaccard distance = 1 - |intersection| / |union|
       // |union| = |A| + |B| - |intersection|
@@ -131,7 +129,8 @@ let sync = (model: Model.model, state: syncState): (syncState, Model.orbitalStat
   let worldChange = detectWorldChanges(model.paneW, state)
 
   // Collect pending events
-  let newEvents = [symbolicChange, neuralChange, worldChange]
+  let newEvents =
+    [symbolicChange, neuralChange, worldChange]
     ->Array.filter(Option.isSome)
     ->Array.map(opt => Option.getExn(opt))
 
@@ -153,10 +152,12 @@ let sync = (model: Model.model, state: syncState): (syncState, Model.orbitalStat
   // constraint count.  Each active constraint adds mass equivalent to ~20 tokens,
   // reflecting the formal weight constraints carry in the symbolic–neural loop.
   // Normalise effective token count to 0.0–1.0 (cap at 500 tokens for max mass).
-  let symTokenCount = String.split(model.paneL.editorContent, " ")
+  let symTokenCount =
+    String.split(model.paneL.editorContent, " ")
     ->Array.filter(t => String.length(String.trim(t)) > 0)
     ->Array.length
-  let activeConstraintCount = model.paneL.constraints
+  let activeConstraintCount =
+    model.paneL.constraints
     ->Array.filter(c => c.active)
     ->Array.length
   let effectiveTokens = symTokenCount + activeConstraintCount * 20
@@ -164,7 +165,8 @@ let sync = (model: Model.model, state: syncState): (syncState, Model.orbitalStat
 
   // Neural stream: derived from monologue density.
   // Normalise to 0.0–1.0 (cap at 500 tokens).
-  let neuTokenCount = String.split(model.paneN.monologue, " ")
+  let neuTokenCount =
+    String.split(model.paneN.monologue, " ")
     ->Array.filter(t => String.length(String.trim(t)) > 0)
     ->Array.length
   let neuralStream = Math.min(1.0, Int.toFloat(neuTokenCount) /. 500.0)
@@ -180,7 +182,11 @@ let sync = (model: Model.model, state: syncState): (syncState, Model.orbitalStat
 
   // Sync health: composite of latency freshness and event throughput.
   let latencyHealth = Math.max(0.0, 1.0 -. state.syncLatency /. 2000.0)
-  let eventFreshness = if Array.length(newEvents) > 0 { 0.9 } else { 1.0 }
+  let eventFreshness = if Array.length(newEvents) > 0 {
+    0.9
+  } else {
+    1.0
+  }
   let syncHealth = latencyHealth *. eventFreshness
 
   let orbital: Model.orbitalState = {

@@ -100,7 +100,13 @@ let countActiveMembers = (members: array<teamMember>): int =>
 /// Count distinct panels currently in use across the team.
 let activePanels = (members: array<teamMember>): int => {
   let panels = members->Array.filterMap(m => m.currentPanel)
-  panels->Array.reduce([], (acc, p) =>
-    if acc->Array.some(x => x == p) { acc } else { Array.concat(acc, [p]) }
-  )->Array.length
+  panels
+  ->Array.reduce([], (acc, p) =>
+    if acc->Array.some(x => x == p) {
+      acc
+    } else {
+      Array.concat(acc, [p])
+    }
+  )
+  ->Array.length
 }

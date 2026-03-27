@@ -46,7 +46,9 @@ let renderStep0 = (form: minterForm): Tea_Vdom.t<msg> => {
           ),
           input(
             list{
-              Attrs.class_("w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-200 focus:border-indigo-500 focus:outline-none"),
+              Attrs.class_(
+                "w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-200 focus:border-indigo-500 focus:outline-none",
+              ),
               Attrs.value(form.panelName),
               Attrs.placeholder("e.g. Wharf, Statistease, Fleet"),
               Attrs.ariaLabel("Panel name in PascalCase"),
@@ -54,10 +56,7 @@ let renderStep0 = (form: minterForm): Tea_Vdom.t<msg> => {
             },
             list{},
           ),
-          div(
-            list{Attrs.class_(`text-xs mt-1 ${validationClass}`)},
-            list{text(validationText)},
-          ),
+          div(list{Attrs.class_(`text-xs mt-1 ${validationClass}`)}, list{text(validationText)}),
         },
       ),
       // Short name
@@ -70,7 +69,9 @@ let renderStep0 = (form: minterForm): Tea_Vdom.t<msg> => {
           ),
           input(
             list{
-              Attrs.class_("w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-200 focus:border-indigo-500 focus:outline-none"),
+              Attrs.class_(
+                "w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-200 focus:border-indigo-500 focus:outline-none",
+              ),
               Attrs.value(form.shortName),
               Attrs.placeholder("e.g. Wharf, Stats"),
               Attrs.ariaLabel("Short name for panel bar"),
@@ -84,13 +85,12 @@ let renderStep0 = (form: minterForm): Tea_Vdom.t<msg> => {
       div(
         list{},
         list{
-          label(
-            list{Attrs.class_("block text-sm text-gray-400 mb-1")},
-            list{text("Description")},
-          ),
+          label(list{Attrs.class_("block text-sm text-gray-400 mb-1")}, list{text("Description")}),
           input(
             list{
-              Attrs.class_("w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-200 focus:border-indigo-500 focus:outline-none"),
+              Attrs.class_(
+                "w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-200 focus:border-indigo-500 focus:outline-none",
+              ),
               Attrs.value(form.description),
               Attrs.placeholder("One-line description of what this panel does"),
               Attrs.ariaLabel("Panel description"),
@@ -110,7 +110,9 @@ let renderStep0 = (form: minterForm): Tea_Vdom.t<msg> => {
           ),
           input(
             list{
-              Attrs.class_("w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-200 focus:border-indigo-500 focus:outline-none"),
+              Attrs.class_(
+                "w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-200 focus:border-indigo-500 focus:outline-none",
+              ),
               Attrs.value(form.icon),
               Attrs.placeholder("e.g. shield, barn, database, globe"),
               Attrs.ariaLabel("Icon identifier"),
@@ -129,16 +131,15 @@ let renderStep0 = (form: minterForm): Tea_Vdom.t<msg> => {
 // ============================================================================
 
 /// Render a backend kind option as a selectable card.
-let renderBackendOption = (
-  kind: panelBackendKind,
-  isSelected: bool,
-): Tea_Vdom.t<msg> => {
+let renderBackendOption = (kind: panelBackendKind, isSelected: bool): Tea_Vdom.t<msg> => {
   let selectedClass = isSelected
     ? "border-indigo-500 bg-indigo-950/30"
     : "border-gray-700 hover:border-gray-600"
   button(
     list{
-      Attrs.class_(`w-full text-left p-3 rounded border ${selectedClass} cursor-pointer transition-colors`),
+      Attrs.class_(
+        `w-full text-left p-3 rounded border ${selectedClass} cursor-pointer transition-colors`,
+      ),
       Attrs.role("radio"),
       Attrs.ariaChecked(isSelected),
       Events.onClick(Minter(SetBackendKind(kind))),
@@ -165,10 +166,7 @@ let renderStep1 = (form: minterForm): Tea_Vdom.t<msg> => {
       div(
         list{},
         list{
-          div(
-            list{Attrs.class_("text-sm text-gray-400 mb-2")},
-            list{text("Backend Type")},
-          ),
+          div(list{Attrs.class_("text-sm text-gray-400 mb-2")}, list{text("Backend Type")}),
           div(
             list{
               Attrs.class_("space-y-2"),
@@ -185,21 +183,17 @@ let renderStep1 = (form: minterForm): Tea_Vdom.t<msg> => {
       div(
         list{},
         list{
-          div(
-            list{Attrs.class_("text-sm text-gray-400 mb-2")},
-            list{text("Accessibility Level")},
-          ),
+          div(list{Attrs.class_("text-sm text-gray-400 mb-2")}, list{text("Accessibility Level")}),
           div(
             list{Attrs.class_("space-y-2")},
             list{
               button(
                 list{
                   Attrs.class_(
-                    `w-full text-left p-3 rounded border cursor-pointer transition-colors ${
-                      form.accessibility === StandardAccessibility
+                    `w-full text-left p-3 rounded border cursor-pointer transition-colors ${form.accessibility ===
+                        StandardAccessibility
                         ? "border-indigo-500 bg-indigo-950/30"
-                        : "border-gray-700 hover:border-gray-600"
-                    }`,
+                        : "border-gray-700 hover:border-gray-600"}`,
                   ),
                   Events.onClick(Minter(SetAccessibility(StandardAccessibility))),
                 },
@@ -217,11 +211,10 @@ let renderStep1 = (form: minterForm): Tea_Vdom.t<msg> => {
               button(
                 list{
                   Attrs.class_(
-                    `w-full text-left p-3 rounded border cursor-pointer transition-colors ${
-                      form.accessibility === EnhancedAccessibility
+                    `w-full text-left p-3 rounded border cursor-pointer transition-colors ${form.accessibility ===
+                        EnhancedAccessibility
                         ? "border-indigo-500 bg-indigo-950/30"
-                        : "border-gray-700 hover:border-gray-600"
-                    }`,
+                        : "border-gray-700 hover:border-gray-600"}`,
                   ),
                   Events.onClick(Minter(SetAccessibility(EnhancedAccessibility))),
                 },
@@ -256,7 +249,9 @@ let renderStep1 = (form: minterForm): Tea_Vdom.t<msg> => {
             ),
             input(
               list{
-                Attrs.class_("w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-200 focus:border-indigo-500 focus:outline-none"),
+                Attrs.class_(
+                  "w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-gray-200 focus:border-indigo-500 focus:outline-none",
+                ),
                 Attrs.value(form.endpoint),
                 Attrs.placeholder("e.g. http://localhost:4000/api/v1"),
                 Attrs.ariaLabel("API endpoint URL"),
@@ -284,7 +279,11 @@ let renderStep2 = (form: minterForm): Tea_Vdom.t<msg> => {
     list{
       div(
         list{Attrs.class_("text-sm text-gray-400")},
-        list{text("Declare what your panel can do. Capabilities control which UI elements are rendered.")},
+        list{
+          text(
+            "Declare what your panel can do. Capabilities control which UI elements are rendered.",
+          ),
+        },
       ),
       // Existing capabilities
       div(
@@ -297,14 +296,8 @@ let renderStep2 = (form: minterForm): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("flex-1")},
                 list{
-                  div(
-                    list{Attrs.class_("text-sm text-gray-200 font-mono")},
-                    list{text(cap.id)},
-                  ),
-                  div(
-                    list{Attrs.class_("text-xs text-gray-500")},
-                    list{text(cap.label)},
-                  ),
+                  div(list{Attrs.class_("text-sm text-gray-200 font-mono")}, list{text(cap.id)}),
+                  div(list{Attrs.class_("text-xs text-gray-500")}, list{text(cap.label)}),
                 },
               ),
               button(
@@ -323,7 +316,9 @@ let renderStep2 = (form: minterForm): Tea_Vdom.t<msg> => {
       // Add capability button
       button(
         list{
-          Attrs.class_("px-3 py-2 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition-colors"),
+          Attrs.class_(
+            "px-3 py-2 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition-colors",
+          ),
           Attrs.ariaLabel("Add a new capability"),
           Events.onClick(Minter(AddCapability)),
         },
@@ -346,7 +341,9 @@ let renderStep2 = (form: minterForm): Tea_Vdom.t<msg> => {
 // ============================================================================
 
 /// Render the review and mint step.
-let renderStep3 = (form: minterForm, minting: bool, lastResult: option<mintResult>): Tea_Vdom.t<msg> => {
+let renderStep3 = (form: minterForm, minting: bool, lastResult: option<mintResult>): Tea_Vdom.t<
+  msg,
+> => {
   let files = MinterEngine.fileSummary(form)
 
   div(
@@ -360,19 +357,25 @@ let renderStep3 = (form: minterForm, minting: bool, lastResult: option<mintResul
             list{Attrs.class_("text-lg font-medium text-gray-200 mb-2")},
             list{text(form.panelName)},
           ),
-          div(
-            list{Attrs.class_("text-sm text-gray-400 mb-3")},
-            list{text(form.description)},
-          ),
+          div(list{Attrs.class_("text-sm text-gray-400 mb-3")}, list{text(form.description)}),
           div(
             list{Attrs.class_("grid grid-cols-2 gap-2 text-xs")},
             list{
               div(list{Attrs.class_("text-gray-500")}, list{text("Backend:")}),
-              div(list{Attrs.class_("text-gray-300")}, list{text(MinterEngine.backendKindLabel(form.backendKind))}),
+              div(
+                list{Attrs.class_("text-gray-300")},
+                list{text(MinterEngine.backendKindLabel(form.backendKind))},
+              ),
               div(list{Attrs.class_("text-gray-500")}, list{text("Accessibility:")}),
-              div(list{Attrs.class_("text-gray-300")}, list{text(MinterEngine.accessibilityLabel(form.accessibility))}),
+              div(
+                list{Attrs.class_("text-gray-300")},
+                list{text(MinterEngine.accessibilityLabel(form.accessibility))},
+              ),
               div(list{Attrs.class_("text-gray-500")}, list{text("Capabilities:")}),
-              div(list{Attrs.class_("text-gray-300")}, list{text(Int.toString(Array.length(form.capabilities)))}),
+              div(
+                list{Attrs.class_("text-gray-300")},
+                list{text(Int.toString(Array.length(form.capabilities)))},
+              ),
             },
           ),
         },
@@ -392,14 +395,8 @@ let renderStep3 = (form: minterForm, minting: bool, lastResult: option<mintResul
               div(
                 list{Attrs.class_("flex items-center gap-2 text-xs")},
                 list{
-                  span(
-                    list{Attrs.class_("text-indigo-400 font-mono flex-1")},
-                    list{text(path)},
-                  ),
-                  span(
-                    list{Attrs.class_("text-gray-600")},
-                    list{text(desc)},
-                  ),
+                  span(list{Attrs.class_("text-indigo-400 font-mono flex-1")}, list{text(path)}),
+                  span(list{Attrs.class_("text-gray-600")}, list{text(desc)}),
                 },
               )
             )
@@ -416,7 +413,9 @@ let renderStep3 = (form: minterForm, minting: bool, lastResult: option<mintResul
       } else {
         button(
           list{
-            Attrs.class_("w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors font-medium"),
+            Attrs.class_(
+              "w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors font-medium",
+            ),
             Attrs.ariaLabel(`Mint the ${form.panelName} panel`),
             Events.onClick(Minter(ExecuteMint)),
           },
@@ -429,7 +428,13 @@ let renderStep3 = (form: minterForm, minting: bool, lastResult: option<mintResul
       | Some(result) =>
         div(
           list{
-            Attrs.class_(if result.success { "p-3 bg-green-950/30 border border-green-800/50 rounded" } else { "p-3 bg-red-950/30 border border-red-800/50 rounded" }),
+            Attrs.class_(
+              if result.success {
+                "p-3 bg-green-950/30 border border-green-800/50 rounded"
+              } else {
+                "p-3 bg-red-950/30 border border-red-800/50 rounded"
+              },
+            ),
             Attrs.role("alert"),
           },
           list{
@@ -443,17 +448,29 @@ let renderStep3 = (form: minterForm, minting: bool, lastResult: option<mintResul
                   ),
                   div(
                     list{Attrs.class_("text-xs text-gray-500")},
-                    list{text(`${Int.toString(Array.length(result.filesCreated))} files created, ${Int.toString(Array.length(result.filesPatched))} files patched`)},
+                    list{
+                      text(
+                        `${Int.toString(
+                            Array.length(result.filesCreated),
+                          )} files created, ${Int.toString(
+                            Array.length(result.filesPatched),
+                          )} files patched`,
+                      ),
+                    },
                   ),
                 },
               )
             } else {
               div(
                 list{Attrs.class_("text-sm text-red-400")},
-                list{text(switch result.error {
-                | Some(err) => err
-                | None => "Unknown error"
-                })},
+                list{
+                  text(
+                    switch result.error {
+                    | Some(err) => err
+                    | None => "Unknown error"
+                    },
+                  ),
+                },
               )
             },
           },
@@ -488,18 +505,27 @@ let renderStepIndicators = (currentStep: int): Tea_Vdom.t<msg> => {
         list{Attrs.class_("flex items-center gap-2")},
         list{
           div(
-            list{Attrs.class_(`w-6 h-6 rounded-full flex items-center justify-center text-xs ${stepClass}`)},
+            list{
+              Attrs.class_(
+                `w-6 h-6 rounded-full flex items-center justify-center text-xs ${stepClass}`,
+              ),
+            },
             list{text(Int.toString(i + 1))},
           ),
           div(
-            list{Attrs.class_(if i === currentStep { "text-xs text-gray-300" } else { "text-xs text-gray-600" })},
+            list{
+              Attrs.class_(
+                if i === currentStep {
+                  "text-xs text-gray-300"
+                } else {
+                  "text-xs text-gray-600"
+                },
+              ),
+            },
             list{text(MinterEngine.stepLabel(i))},
           ),
           if i < MinterEngine.totalSteps - 1 {
-            div(
-              list{Attrs.class_("w-8 border-t border-gray-700")},
-              list{},
-            )
+            div(list{Attrs.class_("w-8 border-t border-gray-700")}, list{})
           } else {
             noNode
           },
@@ -519,7 +545,9 @@ let renderNavigation = (form: minterForm, step: int): Tea_Vdom.t<msg> => {
       if step > 0 {
         button(
           list{
-            Attrs.class_("px-4 py-2 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors"),
+            Attrs.class_(
+              "px-4 py-2 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors",
+            ),
             Attrs.ariaLabel("Go to previous step"),
             Events.onClick(Minter(PrevStep)),
           },
@@ -586,7 +614,9 @@ let view = (state: minterState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors"),
+              Attrs.class_(
+                "px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors",
+              ),
               Attrs.ariaLabel("Close Panel Minter"),
               Events.onClick(PanelSwitcher(ClosePanels)),
             },

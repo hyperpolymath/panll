@@ -6,10 +6,9 @@
 let invoke = RuntimeBridge.invoke
 
 /// Generate a changelog from git history.
-let generateChangelog = (
-  fromVersion: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let generateChangelog = (fromVersion: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("release_generate_changelog", {"fromVersion": fromVersion})
     ->Promise.then(result => {
@@ -65,9 +64,7 @@ let publishRelease = (
 }
 
 /// Read release history.
-let readReleases = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readReleases = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("release_read_history", {"_": true})
     ->Promise.then(result => {
@@ -83,10 +80,7 @@ let readReleases = (
 }
 
 /// Bump the version number.
-let bumpVersion = (
-  bumpType: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let bumpVersion = (bumpType: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("release_bump_version", {"bumpType": bumpType})
     ->Promise.then(result => {

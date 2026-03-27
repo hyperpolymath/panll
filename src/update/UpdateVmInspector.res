@@ -10,7 +10,10 @@ open Msg
 let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<msg>) => {
   let vm = model.vmInspector
   switch msg {
-  | SetInspectorCategory(cat) => ({...model, vmInspector: {...vm, activeCategory: cat}}, Tea_Cmd.none)
+  | SetInspectorCategory(cat) => (
+      {...model, vmInspector: {...vm, activeCategory: cat}},
+      Tea_Cmd.none,
+    )
   | ReadVmState => {
       let vmCmd = switch vm.connection {
       | VmFileConnection(path) =>
@@ -22,92 +25,119 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
         {...model, vmInspector: {...vm, loading: true}},
         Tea_Cmd.batch(list{
           vmCmd,
-          TypeLLService.checkGameDataTypes("vm-state", "vm-inspector", result => VmInspector(TypeCheckResult(result))),
+          TypeLLService.checkGameDataTypes("vm-state", "vm-inspector", result => VmInspector(
+            TypeCheckResult(result),
+          )),
         }),
       )
     }
   | VmStateReceived(Ok(jsonStr)) => {
-    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
-    | Some(json) =>
-
-      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
-      let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-      let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
-      let stack = stackArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
-      let memArr = obj->Dict.get("memory")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
-      let memory = memArr->Array.filterMap(m => {
-        let mObj = m->JSON.Decode.object->Option.getOr(Dict.make())
-        let address = mObj->Dict.get("address")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-        let value = mObj->Dict.get("value")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-        let recentRead = mObj->Dict.get("recentRead")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
-        let recentWrite = mObj->Dict.get("recentWrite")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
-        Some({
-          VmInspectorModel.address: Float.toInt(address),
-          value: Float.toInt(value),
-          recentRead: recentRead,
-          recentWrite: recentWrite,
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+        let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let stack = stackArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+        let memArr = obj->Dict.get("memory")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let memory = memArr->Array.filterMap(m => {
+          let mObj = m->JSON.Decode.object->Option.getOr(Dict.make())
+          let address =
+            mObj->Dict.get("address")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let value = mObj->Dict.get("value")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let recentRead =
+            mObj->Dict.get("recentRead")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+          let recentWrite =
+            mObj->Dict.get("recentWrite")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+          Some({
+            VmInspectorModel.address: Float.toInt(address),
+            value: Float.toInt(value),
+            recentRead,
+            recentWrite,
+          })
         })
-      })
-      let instrArr = obj->Dict.get("instructions")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
-      let instructions = instrArr->Array.filterMap(i => {
-        let iObj = i->JSON.Decode.object->Option.getOr(Dict.make())
-        let index = iObj->Dict.get("index")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-        let mnemonic = iObj->Dict.get("mnemonic")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-        let tierStr = iObj->Dict.get("tier")->Option.flatMap(JSON.Decode.string)->Option.getOr("arithmetic")
-        let tier = switch tierStr {
-        | "conditionals" => VmInspectorModel.TierConditionals
-        | "stack_memory" => TierStackMemory
-        | "subroutines" => TierSubroutines
-        | "io" => TierIO
-        | _ => TierArithmetic
-        }
-        let hasBreakpoint = iObj->Dict.get("hasBreakpoint")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
-        let executionCount = iObj->Dict.get("executionCount")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-        Some({
-          VmInspectorModel.index: Float.toInt(index),
-          mnemonic: mnemonic,
-          tier: tier,
-          hasBreakpoint: hasBreakpoint,
-          executionCount: Float.toInt(executionCount),
+        let instrArr =
+          obj->Dict.get("instructions")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let instructions = instrArr->Array.filterMap(i => {
+          let iObj = i->JSON.Decode.object->Option.getOr(Dict.make())
+          let index = iObj->Dict.get("index")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let mnemonic =
+            iObj->Dict.get("mnemonic")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          let tierStr =
+            iObj->Dict.get("tier")->Option.flatMap(JSON.Decode.string)->Option.getOr("arithmetic")
+          let tier = switch tierStr {
+          | "conditionals" => VmInspectorModel.TierConditionals
+          | "stack_memory" => TierStackMemory
+          | "subroutines" => TierSubroutines
+          | "io" => TierIO
+          | _ => TierArithmetic
+          }
+          let hasBreakpoint =
+            iObj->Dict.get("hasBreakpoint")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+          let executionCount =
+            iObj->Dict.get("executionCount")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          Some({
+            VmInspectorModel.index: Float.toInt(index),
+            mnemonic,
+            tier,
+            hasBreakpoint,
+            executionCount: Float.toInt(executionCount),
+          })
         })
-      })
-      let running = obj->Dict.get("running")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
-      let totalSteps = obj->Dict.get("totalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-      let tierCountsArr = obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
-      let tierCounts = tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
-      Some((Float.toInt(pc), stack, memory, instructions, running, Float.toInt(totalSteps), tierCounts))
+        let running =
+          obj->Dict.get("running")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let totalSteps =
+          obj->Dict.get("totalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let tierCountsArr =
+          obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let tierCounts =
+          tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+        Some((
+          Float.toInt(pc),
+          stack,
+          memory,
+          instructions,
+          running,
+          Float.toInt(totalSteps),
+          tierCounts,
+        ))
 
-    | None => None
-    }
-    switch parsed {
-    | Some((pc, stack, memory, instructions, running, totalSteps, tierCounts)) => (
-        {
-          ...model,
-          vmInspector: {
-            ...vm,
-            pc: pc,
-            stack: stack,
-            memory: memory,
-            instructions: instructions,
-            running: running,
-            totalSteps: totalSteps,
-            tierCounts: tierCounts,
-            loading: false,
-            error: None,
+      | None => None
+      }
+      switch parsed {
+      | Some((pc, stack, memory, instructions, running, totalSteps, tierCounts)) => (
+          {
+            ...model,
+            vmInspector: {
+              ...vm,
+              pc,
+              stack,
+              memory,
+              instructions,
+              running,
+              totalSteps,
+              tierCounts,
+              loading: false,
+              error: None,
+            },
           },
-        },
-        Tea_Cmd.none,
-      )
-    | None => ({...model, vmInspector: {...vm, loading: false, error: None}}, Tea_Cmd.none)
+          Tea_Cmd.none,
+        )
+      | None => ({...model, vmInspector: {...vm, loading: false, error: None}}, Tea_Cmd.none)
+      }
     }
-  }
   | VmStateReceived(Error(err)) => (
       {...model, vmInspector: {...vm, loading: false, error: Some(err)}},
       Tea_Cmd.none,
     )
   | StepForward => {
       let cmd = if vm.bojRouting {
-        BojCmd.invokeCartridgeWithLatency("dap-mcp", "step_forward", "", result => VmInspector(StepResult(result)), (c, t, e) => RecordBojLatency(c, t, e))
+        BojCmd.invokeCartridgeWithLatency(
+          "dap-mcp",
+          "step_forward",
+          "",
+          result => VmInspector(StepResult(result)),
+          (c, t, e) => RecordBojLatency(c, t, e),
+        )
       } else {
         VmInspectorCmd.stepForward(result => VmInspector(StepResult(result)))
       }
@@ -115,7 +145,13 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
     }
   | StepBackward => {
       let cmd = if vm.bojRouting {
-        BojCmd.invokeCartridgeWithLatency("dap-mcp", "step_backward", "", result => VmInspector(StepResult(result)), (c, t, e) => RecordBojLatency(c, t, e))
+        BojCmd.invokeCartridgeWithLatency(
+          "dap-mcp",
+          "step_backward",
+          "",
+          result => VmInspector(StepResult(result)),
+          (c, t, e) => RecordBojLatency(c, t, e),
+        )
       } else {
         VmInspectorCmd.stepBackward(result => VmInspector(StepResult(result)))
       }
@@ -124,7 +160,6 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
   | StepResult(Ok(jsonStr)) => {
       let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
       | Some(json) =>
-
         let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
         let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
         let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
@@ -132,23 +167,39 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
         let memArr = obj->Dict.get("memory")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
         let memory = memArr->Array.filterMap(m => {
           let mObj = m->JSON.Decode.object->Option.getOr(Dict.make())
-          let address = mObj->Dict.get("address")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let address =
+            mObj->Dict.get("address")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
           let value = mObj->Dict.get("value")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-          let recentRead = mObj->Dict.get("recentRead")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
-          let recentWrite = mObj->Dict.get("recentWrite")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+          let recentRead =
+            mObj->Dict.get("recentRead")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+          let recentWrite =
+            mObj->Dict.get("recentWrite")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
           Some({
             VmInspectorModel.address: Float.toInt(address),
             value: Float.toInt(value),
-            recentRead: recentRead,
-            recentWrite: recentWrite,
+            recentRead,
+            recentWrite,
           })
         })
-        let instrMnemonic = obj->Dict.get("instructionMnemonic")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-        let running = obj->Dict.get("running")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
-        let totalSteps = obj->Dict.get("totalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-        let tierCountsArr = obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
-        let tierCounts = tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
-        Some((Float.toInt(pc), stack, memory, instrMnemonic, running, Float.toInt(totalSteps), tierCounts))
+        let instrMnemonic =
+          obj->Dict.get("instructionMnemonic")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+        let running =
+          obj->Dict.get("running")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+        let totalSteps =
+          obj->Dict.get("totalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let tierCountsArr =
+          obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let tierCounts =
+          tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+        Some((
+          Float.toInt(pc),
+          stack,
+          memory,
+          instrMnemonic,
+          running,
+          Float.toInt(totalSteps),
+          tierCounts,
+        ))
 
       | None => None
       }
@@ -157,9 +208,9 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
           let newStep = totalSteps
           let snapshot: VmInspectorModel.vmSnapshot = {
             step: newStep,
-            pc: pc,
-            stack: stack,
-            memory: memory,
+            pc,
+            stack,
+            memory,
             instructionMnemonic: instrMnemonic,
           }
           let history = Array.concat(vm.history, [snapshot])
@@ -173,12 +224,12 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
               ...model,
               vmInspector: {
                 ...vm,
-                pc: pc,
-                stack: stack,
-                memory: memory,
-                running: running,
+                pc,
+                stack,
+                memory,
+                running,
                 totalSteps: newStep,
-                tierCounts: tierCounts,
+                tierCounts,
                 history: trimmed,
                 timelinePosition: Array.length(trimmed) - 1,
                 loading: false,
@@ -190,7 +241,10 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
         }
       | None => {
           let newStep = vm.totalSteps + 1
-          ({...model, vmInspector: {...vm, loading: false, totalSteps: newStep, error: None}}, Tea_Cmd.none)
+          (
+            {...model, vmInspector: {...vm, loading: false, totalSteps: newStep, error: None}},
+            Tea_Cmd.none,
+          )
         }
       }
     }
@@ -200,7 +254,13 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
     )
   | RunVm => {
       let cmd = if vm.bojRouting {
-        BojCmd.invokeCartridgeWithLatency("dap-mcp", "run", "", result => VmInspector(RunResult(result)), (c, t, e) => RecordBojLatency(c, t, e))
+        BojCmd.invokeCartridgeWithLatency(
+          "dap-mcp",
+          "run",
+          "",
+          result => VmInspector(RunResult(result)),
+          (c, t, e) => RecordBojLatency(c, t, e),
+        )
       } else {
         VmInspectorCmd.runToBreakpoint(result => VmInspector(RunResult(result)))
       }
@@ -208,54 +268,59 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
     }
   | PauseVm => ({...model, vmInspector: {...vm, running: false}}, Tea_Cmd.none)
   | RunResult(Ok(jsonStr)) => {
-    let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
-    | Some(json) =>
-
-      let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
-      let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-      let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
-      let stack = stackArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
-      let memArr = obj->Dict.get("memory")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
-      let memory = memArr->Array.filterMap(m => {
-        let mObj = m->JSON.Decode.object->Option.getOr(Dict.make())
-        let address = mObj->Dict.get("address")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-        let value = mObj->Dict.get("value")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-        let recentRead = mObj->Dict.get("recentRead")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
-        let recentWrite = mObj->Dict.get("recentWrite")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
-        Some({
-          VmInspectorModel.address: Float.toInt(address),
-          value: Float.toInt(value),
-          recentRead: recentRead,
-          recentWrite: recentWrite,
+      let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+      | Some(json) =>
+        let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
+        let pc = obj->Dict.get("pc")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let stackArr = obj->Dict.get("stack")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let stack = stackArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+        let memArr = obj->Dict.get("memory")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let memory = memArr->Array.filterMap(m => {
+          let mObj = m->JSON.Decode.object->Option.getOr(Dict.make())
+          let address =
+            mObj->Dict.get("address")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let value = mObj->Dict.get("value")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let recentRead =
+            mObj->Dict.get("recentRead")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+          let recentWrite =
+            mObj->Dict.get("recentWrite")->Option.flatMap(JSON.Decode.bool)->Option.getOr(false)
+          Some({
+            VmInspectorModel.address: Float.toInt(address),
+            value: Float.toInt(value),
+            recentRead,
+            recentWrite,
+          })
         })
-      })
-      let totalSteps = obj->Dict.get("totalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-      let tierCountsArr = obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
-      let tierCounts = tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
-      Some((Float.toInt(pc), stack, memory, Float.toInt(totalSteps), tierCounts))
+        let totalSteps =
+          obj->Dict.get("totalSteps")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let tierCountsArr =
+          obj->Dict.get("tierCounts")->Option.flatMap(JSON.Decode.array)->Option.getOr([])
+        let tierCounts =
+          tierCountsArr->Array.filterMap(v => v->JSON.Decode.float->Option.map(Float.toInt))
+        Some((Float.toInt(pc), stack, memory, Float.toInt(totalSteps), tierCounts))
 
-    | None => None
-    }
-    switch parsed {
-    | Some((pc, stack, memory, totalSteps, tierCounts)) => (
-        {
-          ...model,
-          vmInspector: {
-            ...vm,
-            pc: pc,
-            stack: stack,
-            memory: memory,
-            totalSteps: totalSteps,
-            tierCounts: tierCounts,
-            running: false,
-            error: None,
+      | None => None
+      }
+      switch parsed {
+      | Some((pc, stack, memory, totalSteps, tierCounts)) => (
+          {
+            ...model,
+            vmInspector: {
+              ...vm,
+              pc,
+              stack,
+              memory,
+              totalSteps,
+              tierCounts,
+              running: false,
+              error: None,
+            },
           },
-        },
-        Tea_Cmd.none,
-      )
-    | None => ({...model, vmInspector: {...vm, running: false, error: None}}, Tea_Cmd.none)
+          Tea_Cmd.none,
+        )
+      | None => ({...model, vmInspector: {...vm, running: false, error: None}}, Tea_Cmd.none)
+      }
     }
-  }
   | RunResult(Error(err)) => (
       {...model, vmInspector: {...vm, running: false, error: Some(err)}},
       Tea_Cmd.none,
@@ -308,7 +373,13 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
     }
   | SeekTimeline(pos) => {
       let maxPos = Array.length(vm.history) - 1
-      let clamped = if pos < 0 { 0 } else if pos > maxPos { maxPos } else { pos }
+      let clamped = if pos < 0 {
+        0
+      } else if pos > maxPos {
+        maxPos
+      } else {
+        pos
+      }
       ({...model, vmInspector: {...vm, timelinePosition: clamped}}, Tea_Cmd.none)
     }
   | ExportSnapshot => (
@@ -320,20 +391,23 @@ let updateVmInspector = (model: model, msg: vmInspectorMsg): (model, Tea_Cmd.t<m
       {...model, vmInspector: {...vm, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | ToggleMultiVm => (
-      {...model, vmInspector: {...vm, multiVmView: !vm.multiVmView}},
+  | ToggleMultiVm => ({...model, vmInspector: {...vm, multiVmView: !vm.multiVmView}}, Tea_Cmd.none)
+  | DismissVmError => ({...model, vmInspector: {...vm, error: None}}, Tea_Cmd.none)
+  | ToggleVmBojRouting => (
+      {...model, vmInspector: {...vm, bojRouting: !vm.bojRouting}},
       Tea_Cmd.none,
     )
-  | DismissVmError => ({...model, vmInspector: {...vm, error: None}}, Tea_Cmd.none)
-  | ToggleVmBojRouting => ({...model, vmInspector: {...vm, bojRouting: !vm.bojRouting}}, Tea_Cmd.none)
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "vminspector", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
   }
 }

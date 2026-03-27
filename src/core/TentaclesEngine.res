@@ -140,19 +140,13 @@ let categoryLabel = (c: tentaclesCategory): string => {
 }
 
 /// All tentacle IDs in spectrum order.
-let allTentacles: array<tentacleId> = [
-  Red, Orange, Yellow, Green, Blue, Indigo, Violet,
-]
+let allTentacles: array<tentacleId> = [Red, Orange, Yellow, Green, Blue, Indigo, Violet]
 
 /// All categories.
-let allCategories: array<tentaclesCategory> = [
-  AgentView, Orchestra, StageConfig, Progress,
-]
+let allCategories: array<tentaclesCategory> = [AgentView, Orchestra, StageConfig, Progress]
 
 /// All stages in order.
-let allStages: array<tentacleStage> = [
-  Cuttle, Squidlet, Duet, Octopus,
-]
+let allStages: array<tentacleStage> = [Cuttle, Squidlet, Duet, Octopus]
 
 /// Default personality for an agent.
 let defaultPersonality = (id: tentacleId): tentaclePersonality => {
@@ -212,13 +206,48 @@ let defaultPersonality = (id: tentacleId): tentaclePersonality => {
 /// Default stage-specific names for an agent.
 let defaultNames = (id: tentacleId): tentacleNames => {
   switch id {
-  | Red => {cuttle: "Ruby Cuttle", squidlet: "Scarlet Squidlet", duet: "Crimson Duet", octopus: "Red Octopus"}
-  | Orange => {cuttle: "Amber Cuttle", squidlet: "Tangerine Squidlet", duet: "Flame Duet", octopus: "Orange Octopus"}
-  | Yellow => {cuttle: "Sunny Cuttle", squidlet: "Gold Squidlet", duet: "Lemon Duet", octopus: "Yellow Octopus"}
-  | Green => {cuttle: "Jade Cuttle", squidlet: "Emerald Squidlet", duet: "Forest Duet", octopus: "Green Octopus"}
-  | Blue => {cuttle: "Sky Cuttle", squidlet: "Azure Squidlet", duet: "Sapphire Duet", octopus: "Blue Octopus"}
-  | Indigo => {cuttle: "Iris Cuttle", squidlet: "Mystic Squidlet", duet: "Indigo Duet", octopus: "Indigo Octopus"}
-  | Violet => {cuttle: "Plum Cuttle", squidlet: "Orchid Squidlet", duet: "Violet Duet", octopus: "Violet Octopus"}
+  | Red => {
+      cuttle: "Ruby Cuttle",
+      squidlet: "Scarlet Squidlet",
+      duet: "Crimson Duet",
+      octopus: "Red Octopus",
+    }
+  | Orange => {
+      cuttle: "Amber Cuttle",
+      squidlet: "Tangerine Squidlet",
+      duet: "Flame Duet",
+      octopus: "Orange Octopus",
+    }
+  | Yellow => {
+      cuttle: "Sunny Cuttle",
+      squidlet: "Gold Squidlet",
+      duet: "Lemon Duet",
+      octopus: "Yellow Octopus",
+    }
+  | Green => {
+      cuttle: "Jade Cuttle",
+      squidlet: "Emerald Squidlet",
+      duet: "Forest Duet",
+      octopus: "Green Octopus",
+    }
+  | Blue => {
+      cuttle: "Sky Cuttle",
+      squidlet: "Azure Squidlet",
+      duet: "Sapphire Duet",
+      octopus: "Blue Octopus",
+    }
+  | Indigo => {
+      cuttle: "Iris Cuttle",
+      squidlet: "Mystic Squidlet",
+      duet: "Indigo Duet",
+      octopus: "Indigo Octopus",
+    }
+  | Violet => {
+      cuttle: "Plum Cuttle",
+      squidlet: "Orchid Squidlet",
+      duet: "Violet Duet",
+      octopus: "Violet Octopus",
+    }
   }
 }
 

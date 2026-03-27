@@ -15,12 +15,14 @@ let init = (): (Model.model, Tea_Cmd.t<Msg.msg>) => {
   }
 
   // Register OS colour scheme change listener for System theme mode.
-  let colorSchemeCmd = AccessibilityEngine.listenColorSchemeChange(
-    prefersLight => {
-      let osTheme: AccessibilityModel.themeMode = if prefersLight { ThemeLight } else { ThemeDark }
-      Msg.AccessibilityCtrl(OsColorSchemeChanged(osTheme))
+  let colorSchemeCmd = AccessibilityEngine.listenColorSchemeChange(prefersLight => {
+    let osTheme: AccessibilityModel.themeMode = if prefersLight {
+      ThemeLight
+    } else {
+      ThemeDark
     }
-  )
+    Msg.AccessibilityCtrl(OsColorSchemeChanged(osTheme))
+  })
 
   // Apply saved font size on startup (sets <html> font-size for rem scaling).
   let fontSizeCmd = AccessibilityEngine.applyFontSizeCmd(model.accessibility.fontSize)

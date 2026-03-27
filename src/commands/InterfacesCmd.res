@@ -7,9 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Scan ABI/FFI definitions and binding coverage.
-let scanInterfaces = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let scanInterfaces = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("interfaces_scan", ())
     ->Promise.then(result => {

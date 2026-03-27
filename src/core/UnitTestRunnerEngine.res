@@ -35,31 +35,47 @@ let allTabs: array<unitTestTab> = [TabTestResults, TabCoverage, TabHistory, TabD
 
 /// Count passed tests.
 let countPassed = (results: array<testCaseResult>): int =>
-  results->Array.filter(r => switch r.status {
-  | TestPassed(_) => true
-  | _ => false
-  })->Array.length
+  results
+  ->Array.filter(r =>
+    switch r.status {
+    | TestPassed(_) => true
+    | _ => false
+    }
+  )
+  ->Array.length
 
 /// Count failed tests.
 let countFailed = (results: array<testCaseResult>): int =>
-  results->Array.filter(r => switch r.status {
-  | TestFailed(_, _) => true
-  | _ => false
-  })->Array.length
+  results
+  ->Array.filter(r =>
+    switch r.status {
+    | TestFailed(_, _) => true
+    | _ => false
+    }
+  )
+  ->Array.length
 
 /// Count skipped tests.
 let countSkipped = (results: array<testCaseResult>): int =>
-  results->Array.filter(r => switch r.status {
-  | TestSkipped(_) => true
-  | _ => false
-  })->Array.length
+  results
+  ->Array.filter(r =>
+    switch r.status {
+    | TestSkipped(_) => true
+    | _ => false
+    }
+  )
+  ->Array.length
 
 /// Count running tests.
 let countRunning = (results: array<testCaseResult>): int =>
-  results->Array.filter(r => switch r.status {
-  | TestRunning => true
-  | _ => false
-  })->Array.length
+  results
+  ->Array.filter(r =>
+    switch r.status {
+    | TestRunning => true
+    | _ => false
+    }
+  )
+  ->Array.length
 
 /// Calculate overall coverage percentage across all modules.
 let overallCoverage = (coverage: array<moduleCoverage>): float => {
@@ -87,11 +103,11 @@ let filterResults = (results: array<testCaseResult>, filter: string): array<test
 /// Sort results by the specified sort order.
 let sortResults = (results: array<testCaseResult>, sortBy: testSortBy): array<testCaseResult> => {
   let compare = switch sortBy {
-  | SortByName => (a: testCaseResult, b: testCaseResult) =>
-      String.compare(a.testName, b.testName)
-  | SortBySuite => (a: testCaseResult, b: testCaseResult) =>
-      String.compare(a.suiteName, b.suiteName)
-  | SortByStatus => (a: testCaseResult, b: testCaseResult) => {
+  | SortByName => (a: testCaseResult, b: testCaseResult) => String.compare(a.testName, b.testName)
+  | SortBySuite =>
+    (a: testCaseResult, b: testCaseResult) => String.compare(a.suiteName, b.suiteName)
+  | SortByStatus =>
+    (a: testCaseResult, b: testCaseResult) => {
       let statusRank = (s: testCaseStatus) =>
         switch s {
         | TestFailed(_, _) => 0
@@ -102,7 +118,8 @@ let sortResults = (results: array<testCaseResult>, sortBy: testSortBy): array<te
         }
       Int.compare(statusRank(a.status), statusRank(b.status))
     }
-  | SortByDuration => (a: testCaseResult, b: testCaseResult) => {
+  | SortByDuration =>
+    (a: testCaseResult, b: testCaseResult) => {
       let dur = (s: testCaseStatus) =>
         switch s {
         | TestPassed(d) | TestFailed(_, d) => d
@@ -145,5 +162,9 @@ let statusColor = (status: testCaseStatus): string =>
 /// Pass rate from a run summary as a percentage.
 let runPassRate = (summary: testRunSummary): float => {
   let run = summary.totalTests - summary.skipped
-  if run == 0 { 0.0 } else { Float.fromInt(summary.passed) /. Float.fromInt(run) *. 100.0 }
+  if run == 0 {
+    0.0
+  } else {
+    Float.fromInt(summary.passed) /. Float.fromInt(run) *. 100.0
+  }
 }

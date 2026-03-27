@@ -100,7 +100,9 @@ let filterDiagnostics = (
 }
 
 /// Filter symbols by text.
-let filterSymbols = (symbols: array<workspaceSymbol>, filterText: string): array<workspaceSymbol> => {
+let filterSymbols = (symbols: array<workspaceSymbol>, filterText: string): array<
+  workspaceSymbol,
+> => {
   if filterText === "" {
     symbols
   } else {

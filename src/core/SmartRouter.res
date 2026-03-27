@@ -163,7 +163,11 @@ let buildBackendHealth = (state: coprocessorsState): array<backendHealth> => {
   let axiomHealth: backendHealth = {
     name: "axiom_http",
     available: axiomAvailable,
-    avgLatencyMs: if axiomAvailable { 15.0 } else { 99999.0 },
+    avgLatencyMs: if axiomAvailable {
+      15.0
+    } else {
+      99999.0
+    },
     errorRate: 0.0,
     lastChecked: now,
   }
@@ -173,7 +177,11 @@ let buildBackendHealth = (state: coprocessorsState): array<backendHealth> => {
   let bojHealth: backendHealth = {
     name: "boj_cartridge",
     available: bojAvailable,
-    avgLatencyMs: if bojAvailable { 10.0 } else { 99999.0 },
+    avgLatencyMs: if bojAvailable {
+      10.0
+    } else {
+      99999.0
+    },
     errorRate: 0.0,
     lastChecked: now,
   }
@@ -250,7 +258,11 @@ let smartRoute = (
         if isAvailable(firstName) {
           (firstRoute, `${catLabel}: preferred ${firstName}`, latencyFor(firstName))
         } else if isAvailable(secondName) {
-          (secondRoute, `${catLabel}: fallback to ${secondName} (${firstName} unavailable)`, latencyFor(secondName))
+          (
+            secondRoute,
+            `${catLabel}: fallback to ${secondName} (${firstName} unavailable)`,
+            latencyFor(secondName),
+          )
         } else if isAvailable(thirdName) {
           (thirdRoute, `${catLabel}: last-resort ${thirdName}`, latencyFor(thirdName))
         } else {
@@ -284,7 +296,11 @@ let smartRoute = (
         if ffiOk && latencyFor("local_ffi") < 5.0 {
           (RouteLocal, `${catLabel}: local FFI (lowest latency)`, latencyFor("local_ffi"))
         } else if axiomOk {
-          (RouteRemote, `${catLabel}: Axiom.jl (local FFI busy or unavailable)`, latencyFor("axiom_http"))
+          (
+            RouteRemote,
+            `${catLabel}: Axiom.jl (local FFI busy or unavailable)`,
+            latencyFor("axiom_http"),
+          )
         } else if bojOk {
           (RouteBoj, `${catLabel}: BoJ cartridge fallback`, latencyFor("boj_cartridge"))
         } else {
@@ -307,10 +323,9 @@ let smartRoute = (
 let maxDecisions = 200
 
 /// Append a routing decision to the ring buffer, evicting oldest if full.
-let addDecision = (
-  decisions: array<routingDecision>,
-  decision: routingDecision,
-): array<routingDecision> => {
+let addDecision = (decisions: array<routingDecision>, decision: routingDecision): array<
+  routingDecision,
+> => {
   let next = Array.concat(decisions, [decision])
   if Array.length(next) > maxDecisions {
     next->Array.sliceToEnd(~start=Array.length(next) - maxDecisions)
@@ -341,7 +356,14 @@ let routeStats = (decisions: array<routingDecision>): array<(string, int, float)
 /// Category distribution — (category_label, count).
 let categoryStats = (decisions: array<routingDecision>): array<(string, int)> => {
   let categories: array<operationCategory> = [
-    MatMul, Activation, Normalization, Hashing, Validation, Query, Analysis, General,
+    MatMul,
+    Activation,
+    Normalization,
+    Hashing,
+    Validation,
+    Query,
+    Analysis,
+    General,
   ]
   categories->Array.filterMap(cat => {
     let catOps = decisions->Array.filter(d => classifyOperation(d.operation) === cat)

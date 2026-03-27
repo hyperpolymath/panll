@@ -28,7 +28,9 @@ let renderOodaPhase = (phase: oodaPhase): Tea_Vdom.t<msg> => {
 
       div(
         list{
-          Attrs.class_(`${bgClass} ${textClass} w-8 h-8 rounded flex items-center justify-center text-xs font-bold`),
+          Attrs.class_(
+            `${bgClass} ${textClass} w-8 h-8 rounded flex items-center justify-center text-xs font-bold`,
+          ),
           Attrs.title(label),
           Attrs.ariaCurrent(isActive ? "step" : "false"),
         },
@@ -47,18 +49,12 @@ let renderAgencyMonitor = (agency: agencyState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("mb-4 p-3 bg-gray-800/50 rounded")},
     list{
-      div(
-        list{Attrs.class_("text-xs text-gray-500 mb-2")},
-        list{text("THING-AGENCY MONITOR")},
-      ),
+      div(list{Attrs.class_("text-xs text-gray-500 mb-2")}, list{text("THING-AGENCY MONITOR")}),
       renderOodaPhase(agency.phase),
       div(
         list{Attrs.class_("flex items-center gap-2")},
         list{
-          div(
-            list{Attrs.class_("text-xs text-gray-400 w-20")},
-            list{text("Autonomy:")},
-          ),
+          div(list{Attrs.class_("text-xs text-gray-400 w-20")}, list{text("Autonomy:")}),
           div(
             list{
               Attrs.class_("flex-1 h-2 bg-gray-700 rounded overflow-hidden"),
@@ -89,35 +85,38 @@ let renderAgencyMonitor = (agency: agencyState): Tea_Vdom.t<msg> => {
 }
 
 /// Source badge colour and label for token provenance display.
-let sourceLabel = (source: tokenSource): (string, string) => switch source {
-| NeuralInference => ("N", "bg-emerald-800 text-emerald-300")
-| EchidnaProver => ("E", "bg-indigo-800 text-indigo-300")
-| TypeLLKernel => ("T", "bg-violet-800 text-violet-300")
-| VeriSimInference => ("V", "bg-cyan-800 text-cyan-300")
-| AntiCrashGate => ("!", "bg-red-800 text-red-300")
-| OperatorInput => ("H", "bg-amber-800 text-amber-300")
-| OrbitalSync => ("S", "bg-blue-800 text-blue-300")
-}
+let sourceLabel = (source: tokenSource): (string, string) =>
+  switch source {
+  | NeuralInference => ("N", "bg-emerald-800 text-emerald-300")
+  | EchidnaProver => ("E", "bg-indigo-800 text-indigo-300")
+  | TypeLLKernel => ("T", "bg-violet-800 text-violet-300")
+  | VeriSimInference => ("V", "bg-cyan-800 text-cyan-300")
+  | AntiCrashGate => ("!", "bg-red-800 text-red-300")
+  | OperatorInput => ("H", "bg-amber-800 text-amber-300")
+  | OrbitalSync => ("S", "bg-blue-800 text-blue-300")
+  }
 
 /// Category icon for semantic reasoning step display.
-let categoryIcon = (cat: tokenCategory): string => switch cat {
-| Observation => "?"
-| Hypothesis => "~"
-| Deduction => ">"
-| Abduction => "<"
-| ProofStep => "#"
-| Violation => "X"
-| Correction => "^"
-| Synthesis => "*"
-}
+let categoryIcon = (cat: tokenCategory): string =>
+  switch cat {
+  | Observation => "?"
+  | Hypothesis => "~"
+  | Deduction => ">"
+  | Abduction => "<"
+  | ProofStep => "#"
+  | Violation => "X"
+  | Correction => "^"
+  | Synthesis => "*"
+  }
 
 /// OODA phase short label for inline display.
-let phaseLabel = (phase: oodaPhase): string => switch phase {
-| Observe => "OBS"
-| Orient => "ORI"
-| Decide => "DEC"
-| Act => "ACT"
-}
+let phaseLabel = (phase: oodaPhase): string =>
+  switch phase {
+  | Observe => "OBS"
+  | Orient => "ORI"
+  | Decide => "DEC"
+  | Act => "ACT"
+  }
 
 /// Render a neural token with full provenance, category, and causal metadata.
 let renderToken = (token: neuralToken): Tea_Vdom.t<msg> => {
@@ -142,24 +141,25 @@ let renderToken = (token: neuralToken): Tea_Vdom.t<msg> => {
           // Source badge (single letter, colour-coded)
           span(
             list{
-              Attrs.class_(`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold shrink-0 ${srcColour}`),
-              Attrs.title(switch token.source {
-              | NeuralInference => "Neural Inference"
-              | EchidnaProver => "ECHIDNA Prover"
-              | TypeLLKernel => "TypeLL Kernel"
-              | VeriSimInference => "VeriSimDB Inference"
-              | AntiCrashGate => "Anti-Crash Gate"
-              | OperatorInput => "Operator Input"
-              | OrbitalSync => "OrbitalSync"
-              }),
+              Attrs.class_(
+                `w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold shrink-0 ${srcColour}`,
+              ),
+              Attrs.title(
+                switch token.source {
+                | NeuralInference => "Neural Inference"
+                | EchidnaProver => "ECHIDNA Prover"
+                | TypeLLKernel => "TypeLL Kernel"
+                | VeriSimInference => "VeriSimDB Inference"
+                | AntiCrashGate => "Anti-Crash Gate"
+                | OperatorInput => "Operator Input"
+                | OrbitalSync => "OrbitalSync"
+                },
+              ),
             },
             list{text(srcLetter)},
           ),
           // Token content
-          div(
-            list{Attrs.class_("text-sm text-gray-300 flex-1")},
-            list{text(token.content)},
-          ),
+          div(list{Attrs.class_("text-sm text-gray-300 flex-1")}, list{text(token.content)}),
         },
       ),
       // Bottom row: metadata chips
@@ -175,24 +175,23 @@ let renderToken = (token: neuralToken): Tea_Vdom.t<msg> => {
           span(
             list{
               Attrs.class_("text-[10px] text-gray-600 font-mono"),
-              Attrs.title(switch token.category {
-              | Observation => "Observation"
-              | Hypothesis => "Hypothesis"
-              | Deduction => "Deduction"
-              | Abduction => "Abduction"
-              | ProofStep => "Proof Step"
-              | Violation => "Violation"
-              | Correction => "Correction"
-              | Synthesis => "Synthesis"
-              }),
+              Attrs.title(
+                switch token.category {
+                | Observation => "Observation"
+                | Hypothesis => "Hypothesis"
+                | Deduction => "Deduction"
+                | Abduction => "Abduction"
+                | ProofStep => "Proof Step"
+                | Violation => "Violation"
+                | Correction => "Correction"
+                | Synthesis => "Synthesis"
+                },
+              ),
             },
             list{text(`[${catIcon}]`)},
           ),
           // OODA phase
-          span(
-            list{Attrs.class_("text-[10px] text-gray-600")},
-            list{text(phase)},
-          ),
+          span(list{Attrs.class_("text-[10px] text-gray-600")}, list{text(phase)}),
           // Causal chain indicator
           if hasCauses {
             span(
@@ -210,10 +209,12 @@ let renderToken = (token: neuralToken): Tea_Vdom.t<msg> => {
             span(
               list{
                 Attrs.class_("text-[10px] text-emerald-600 font-mono"),
-                Attrs.title(switch token.proofHash {
-                | Some(h) => h
-                | None => ""
-                }),
+                Attrs.title(
+                  switch token.proofHash {
+                  | Some(h) => h
+                  | None => ""
+                  },
+                ),
               },
               list{text("#")},
             )
@@ -227,12 +228,13 @@ let renderToken = (token: neuralToken): Tea_Vdom.t<msg> => {
 }
 
 /// OODA phase colour for timeline segments.
-let phaseColour = (phase: oodaPhase): string => switch phase {
-| Observe => "bg-cyan-600"
-| Orient => "bg-amber-600"
-| Decide => "bg-violet-600"
-| Act => "bg-emerald-600"
-}
+let phaseColour = (phase: oodaPhase): string =>
+  switch phase {
+  | Observe => "bg-cyan-600"
+  | Orient => "bg-amber-600"
+  | Decide => "bg-violet-600"
+  | Act => "bg-emerald-600"
+  }
 
 /// Render the OODA phase timeline — a horizontal bar showing the sequence of
 /// phases across the token stream, with segment widths proportional to token counts.
@@ -248,9 +250,9 @@ let renderOodaTimeline = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
       if len > 0 {
         let (lastPhase, lastCount) = segments->Array.getUnsafe(len - 1)
         if lastPhase === token.emittedDuring {
-          ignore(segments->Array.splice(~start=len - 1, ~remove=1, ~insert=[
-            (lastPhase, lastCount + 1),
-          ]))
+          ignore(
+            segments->Array.splice(~start=len - 1, ~remove=1, ~insert=[(lastPhase, lastCount + 1)]),
+          )
         } else {
           ignore(Array.push(segments, (token.emittedDuring, 1)))
         }
@@ -272,22 +274,34 @@ let renderOodaTimeline = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("flex gap-2 text-[9px] text-gray-600")},
               list{
-                span(list{Attrs.class_("flex items-center gap-1")}, list{
-                  span(list{Attrs.class_("w-2 h-2 rounded-sm bg-cyan-600")}, list{}),
-                  text("Observe"),
-                }),
-                span(list{Attrs.class_("flex items-center gap-1")}, list{
-                  span(list{Attrs.class_("w-2 h-2 rounded-sm bg-amber-600")}, list{}),
-                  text("Orient"),
-                }),
-                span(list{Attrs.class_("flex items-center gap-1")}, list{
-                  span(list{Attrs.class_("w-2 h-2 rounded-sm bg-violet-600")}, list{}),
-                  text("Decide"),
-                }),
-                span(list{Attrs.class_("flex items-center gap-1")}, list{
-                  span(list{Attrs.class_("w-2 h-2 rounded-sm bg-emerald-600")}, list{}),
-                  text("Act"),
-                }),
+                span(
+                  list{Attrs.class_("flex items-center gap-1")},
+                  list{
+                    span(list{Attrs.class_("w-2 h-2 rounded-sm bg-cyan-600")}, list{}),
+                    text("Observe"),
+                  },
+                ),
+                span(
+                  list{Attrs.class_("flex items-center gap-1")},
+                  list{
+                    span(list{Attrs.class_("w-2 h-2 rounded-sm bg-amber-600")}, list{}),
+                    text("Orient"),
+                  },
+                ),
+                span(
+                  list{Attrs.class_("flex items-center gap-1")},
+                  list{
+                    span(list{Attrs.class_("w-2 h-2 rounded-sm bg-violet-600")}, list{}),
+                    text("Decide"),
+                  },
+                ),
+                span(
+                  list{Attrs.class_("flex items-center gap-1")},
+                  list{
+                    span(list{Attrs.class_("w-2 h-2 rounded-sm bg-emerald-600")}, list{}),
+                    text("Act"),
+                  },
+                ),
               },
             ),
           },
@@ -390,10 +404,11 @@ let renderSourceDistribution = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => 
 /// tokens are causally linked. Each token shows its ID and arrows to parents.
 let renderCausalGraph = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
   // Only show tokens that have causal links (either cause or are caused by)
-  let linked = tokens->Array.filter(t =>
-    Array.length(t.causedBy) > 0 ||
-    tokens->Array.some(other => other.causedBy->Array.some(id => id === t.id))
-  )
+  let linked =
+    tokens->Array.filter(t =>
+      Array.length(t.causedBy) > 0 ||
+        tokens->Array.some(other => other.causedBy->Array.some(id => id === t.id))
+    )
   if Array.length(linked) === 0 {
     noNode
   } else {
@@ -427,15 +442,9 @@ let renderCausalGraph = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
               list{
                 // Causal arrow
                 if arrow !== "" {
-                  span(
-                    list{Attrs.class_("text-gray-600")},
-                    list{text(arrow)},
-                  )
+                  span(list{Attrs.class_("text-gray-600")}, list{text(arrow)})
                 } else {
-                  span(
-                    list{Attrs.class_("text-gray-700")},
-                    list{text("  root -> ")},
-                  )
+                  span(list{Attrs.class_("text-gray-700")}, list{text("  root -> ")})
                 },
                 // Token ID badge
                 span(
@@ -449,10 +458,7 @@ let renderCausalGraph = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
                 ),
                 // Proof indicator
                 if proofMark !== "" {
-                  span(
-                    list{Attrs.class_("text-emerald-500 font-bold")},
-                    list{text("#")},
-                  )
+                  span(list{Attrs.class_("text-emerald-500 font-bold")}, list{text("#")})
                 } else {
                   noNode
                 },
@@ -469,12 +475,14 @@ let renderCausalGraph = (tokens: array<neuralToken>): Tea_Vdom.t<msg> => {
 /// Apply filter state to a token array — returns only tokens matching all active filters.
 let applyFilters = (tokens: array<neuralToken>, filters: tokenFilters): array<neuralToken> => {
   tokens->Array.filter(token => {
-    let passSource = Array.length(filters.sources) === 0 ||
-      filters.sources->Array.some(s => s === token.source)
-    let passCategory = Array.length(filters.categories) === 0 ||
-      filters.categories->Array.some(c => c === token.category)
-    let passPhase = Array.length(filters.phases) === 0 ||
-      filters.phases->Array.some(p => p === token.emittedDuring)
+    let passSource =
+      Array.length(filters.sources) === 0 || filters.sources->Array.some(s => s === token.source)
+    let passCategory =
+      Array.length(filters.categories) === 0 ||
+        filters.categories->Array.some(c => c === token.category)
+    let passPhase =
+      Array.length(filters.phases) === 0 ||
+        filters.phases->Array.some(p => p === token.emittedDuring)
     let passConfidence = token.confidence >= filters.confidenceThreshold
     let passValidated = !filters.validatedOnly || token.validated
     let passProof = !filters.proofOnly || token.proofHash !== None
@@ -483,38 +491,53 @@ let applyFilters = (tokens: array<neuralToken>, filters: tokenFilters): array<ne
 }
 
 /// Source filter chip — name and colour for each source type.
-let sourceChipInfo = (source: tokenSource): (string, string, string) => switch source {
-| NeuralInference => ("Neural", "bg-emerald-800 text-emerald-300", "bg-emerald-600 text-white")
-| EchidnaProver => ("ECHIDNA", "bg-indigo-800 text-indigo-300", "bg-indigo-600 text-white")
-| TypeLLKernel => ("TypeLL", "bg-violet-800 text-violet-300", "bg-violet-600 text-white")
-| VeriSimInference => ("VeriSim", "bg-cyan-800 text-cyan-300", "bg-cyan-600 text-white")
-| AntiCrashGate => ("AntiCrash", "bg-red-800 text-red-300", "bg-red-600 text-white")
-| OperatorInput => ("Operator", "bg-amber-800 text-amber-300", "bg-amber-600 text-white")
-| OrbitalSync => ("Orbital", "bg-blue-800 text-blue-300", "bg-blue-600 text-white")
-}
+let sourceChipInfo = (source: tokenSource): (string, string, string) =>
+  switch source {
+  | NeuralInference => ("Neural", "bg-emerald-800 text-emerald-300", "bg-emerald-600 text-white")
+  | EchidnaProver => ("ECHIDNA", "bg-indigo-800 text-indigo-300", "bg-indigo-600 text-white")
+  | TypeLLKernel => ("TypeLL", "bg-violet-800 text-violet-300", "bg-violet-600 text-white")
+  | VeriSimInference => ("VeriSim", "bg-cyan-800 text-cyan-300", "bg-cyan-600 text-white")
+  | AntiCrashGate => ("AntiCrash", "bg-red-800 text-red-300", "bg-red-600 text-white")
+  | OperatorInput => ("Operator", "bg-amber-800 text-amber-300", "bg-amber-600 text-white")
+  | OrbitalSync => ("Orbital", "bg-blue-800 text-blue-300", "bg-blue-600 text-white")
+  }
 
 /// Category filter chip label.
-let categoryChipLabel = (cat: tokenCategory): string => switch cat {
-| Observation => "Obs"
-| Hypothesis => "Hyp"
-| Deduction => "Ded"
-| Abduction => "Abd"
-| ProofStep => "Proof"
-| Violation => "Viol"
-| Correction => "Corr"
-| Synthesis => "Synth"
-}
+let categoryChipLabel = (cat: tokenCategory): string =>
+  switch cat {
+  | Observation => "Obs"
+  | Hypothesis => "Hyp"
+  | Deduction => "Ded"
+  | Abduction => "Abd"
+  | ProofStep => "Proof"
+  | Violation => "Viol"
+  | Correction => "Corr"
+  | Synthesis => "Synth"
+  }
 
 /// Render the interactive filter bar — source chips, category chips, phase chips,
 /// confidence slider, validated/proof toggles.
-let renderFilterBar = (filters: tokenFilters, totalCount: int, filteredCount: int): Tea_Vdom.t<msg> => {
+let renderFilterBar = (filters: tokenFilters, totalCount: int, filteredCount: int): Tea_Vdom.t<
+  msg,
+> => {
   let allSources: array<tokenSource> = [
-    NeuralInference, EchidnaProver, TypeLLKernel, VeriSimInference,
-    AntiCrashGate, OperatorInput, OrbitalSync,
+    NeuralInference,
+    EchidnaProver,
+    TypeLLKernel,
+    VeriSimInference,
+    AntiCrashGate,
+    OperatorInput,
+    OrbitalSync,
   ]
   let allCategories: array<tokenCategory> = [
-    Observation, Hypothesis, Deduction, Abduction,
-    ProofStep, Violation, Correction, Synthesis,
+    Observation,
+    Hypothesis,
+    Deduction,
+    Abduction,
+    ProofStep,
+    Violation,
+    Correction,
+    Synthesis,
   ]
   let allPhases: array<oodaPhase> = [Observe, Orient, Decide, Act]
   let hasActiveFilters =
@@ -569,10 +592,16 @@ let renderFilterBar = (filters: tokenFilters, totalCount: int, filteredCount: in
         ->Array.map(source => {
           let (label, inactiveClass, activeClass) = sourceChipInfo(source)
           let isActive = filters.sources->Array.some(s => s === source)
-          let chipClass = if isActive { activeClass } else { inactiveClass ++ " opacity-50" }
+          let chipClass = if isActive {
+            activeClass
+          } else {
+            inactiveClass ++ " opacity-50"
+          }
           button(
             list{
-              Attrs.class_(`px-1.5 py-0.5 rounded text-[9px] font-medium cursor-pointer transition-opacity ${chipClass}`),
+              Attrs.class_(
+                `px-1.5 py-0.5 rounded text-[9px] font-medium cursor-pointer transition-opacity ${chipClass}`,
+              ),
               Events.onClick(PaneN(ToggleSourceFilter(source))),
               Attrs.ariaPressed(isActive),
               Attrs.ariaLabel("Filter by " ++ label),
@@ -596,7 +625,9 @@ let renderFilterBar = (filters: tokenFilters, totalCount: int, filteredCount: in
           }
           button(
             list{
-              Attrs.class_(`px-1.5 py-0.5 rounded text-[9px] font-medium cursor-pointer transition-opacity ${chipClass}`),
+              Attrs.class_(
+                `px-1.5 py-0.5 rounded text-[9px] font-medium cursor-pointer transition-opacity ${chipClass}`,
+              ),
               Events.onClick(PaneN(ToggleCategoryFilter(cat))),
               Attrs.ariaPressed(isActive),
               Attrs.ariaLabel("Filter by " ++ label),
@@ -618,14 +649,36 @@ let renderFilterBar = (filters: tokenFilters, totalCount: int, filteredCount: in
               let label = phaseLabel(phase)
               let isActive = filters.phases->Array.some(p => p === phase)
               let colour = switch phase {
-              | Observe => if isActive { "bg-cyan-600 text-white" } else { "bg-cyan-900 text-cyan-600 opacity-50" }
-              | Orient => if isActive { "bg-amber-600 text-white" } else { "bg-amber-900 text-amber-600 opacity-50" }
-              | Decide => if isActive { "bg-violet-600 text-white" } else { "bg-violet-900 text-violet-600 opacity-50" }
-              | Act => if isActive { "bg-emerald-600 text-white" } else { "bg-emerald-900 text-emerald-600 opacity-50" }
+              | Observe =>
+                if isActive {
+                  "bg-cyan-600 text-white"
+                } else {
+                  "bg-cyan-900 text-cyan-600 opacity-50"
+                }
+              | Orient =>
+                if isActive {
+                  "bg-amber-600 text-white"
+                } else {
+                  "bg-amber-900 text-amber-600 opacity-50"
+                }
+              | Decide =>
+                if isActive {
+                  "bg-violet-600 text-white"
+                } else {
+                  "bg-violet-900 text-violet-600 opacity-50"
+                }
+              | Act =>
+                if isActive {
+                  "bg-emerald-600 text-white"
+                } else {
+                  "bg-emerald-900 text-emerald-600 opacity-50"
+                }
               }
               button(
                 list{
-                  Attrs.class_(`px-1.5 py-0.5 rounded text-[9px] font-bold cursor-pointer transition-opacity ${colour}`),
+                  Attrs.class_(
+                    `px-1.5 py-0.5 rounded text-[9px] font-bold cursor-pointer transition-opacity ${colour}`,
+                  ),
                   Events.onClick(PaneN(TogglePhaseFilter(phase))),
                   Attrs.ariaPressed(isActive),
                 },
@@ -638,8 +691,11 @@ let renderFilterBar = (filters: tokenFilters, totalCount: int, filteredCount: in
           button(
             list{
               Attrs.class_(
-                "px-1.5 py-0.5 rounded text-[9px] cursor-pointer " ++
-                if filters.validatedOnly { "bg-emerald-700 text-emerald-200" } else { "bg-gray-800 text-gray-600 opacity-50" }
+                "px-1.5 py-0.5 rounded text-[9px] cursor-pointer " ++ if filters.validatedOnly {
+                  "bg-emerald-700 text-emerald-200"
+                } else {
+                  "bg-gray-800 text-gray-600 opacity-50"
+                },
               ),
               Events.onClick(PaneN(ToggleValidatedOnly)),
               Attrs.ariaPressed(filters.validatedOnly),
@@ -651,8 +707,11 @@ let renderFilterBar = (filters: tokenFilters, totalCount: int, filteredCount: in
           button(
             list{
               Attrs.class_(
-                "px-1.5 py-0.5 rounded text-[9px] cursor-pointer " ++
-                if filters.proofOnly { "bg-emerald-700 text-emerald-200" } else { "bg-gray-800 text-gray-600 opacity-50" }
+                "px-1.5 py-0.5 rounded text-[9px] cursor-pointer " ++ if filters.proofOnly {
+                  "bg-emerald-700 text-emerald-200"
+                } else {
+                  "bg-gray-800 text-gray-600 opacity-50"
+                },
               ),
               Events.onClick(PaneN(ToggleProofOnly)),
               Attrs.ariaPressed(filters.proofOnly),
@@ -668,7 +727,12 @@ let renderFilterBar = (filters: tokenFilters, totalCount: int, filteredCount: in
         list{
           span(
             list{Attrs.class_("text-[9px] text-gray-600 w-16")},
-            list{text("Conf >= " ++ Int.toString(Int.fromFloat(filters.confidenceThreshold *. 100.0)) ++ "%")},
+            list{
+              text(
+                "Conf >= " ++
+                Int.toString(Int.fromFloat(filters.confidenceThreshold *. 100.0)) ++ "%",
+              ),
+            },
           ),
           input(
             list{
@@ -723,10 +787,7 @@ let renderTokenStream = (tokens: array<neuralToken>, filters: tokenFilters): Tea
         noNode
       },
       if totalCount === 0 {
-        div(
-          list{Attrs.class_("text-gray-600 text-sm italic")},
-          list{text("No tokens received")},
-        )
+        div(list{Attrs.class_("text-gray-600 text-sm italic")}, list{text("No tokens received")})
       } else if filteredCount === 0 {
         div(
           list{Attrs.class_("text-amber-600/60 text-sm italic")},
@@ -769,12 +830,13 @@ let renderMonologue = (monologue: string, inferenceActive: bool): Tea_Vdom.t<msg
       div(
         list{Attrs.class_("flex items-center justify-between mb-2")},
         list{
+          div(list{Attrs.class_("text-xs text-gray-500")}, list{text("INFERENCE MANIFOLD")}),
           div(
-            list{Attrs.class_("text-xs text-gray-500")},
-            list{text("INFERENCE MANIFOLD")},
-          ),
-          div(
-            list{Attrs.class_(`text-xs ${statusClass}`), Attrs.role("status"), Attrs.ariaLive("polite")},
+            list{
+              Attrs.class_(`text-xs ${statusClass}`),
+              Attrs.role("status"),
+              Attrs.ariaLive("polite"),
+            },
             list{text(statusText)},
           ),
         },
@@ -810,13 +872,14 @@ let renderEchidnaConnectionIndicator = (echidna: echidnaState): Tea_Vdom.t<msg> 
     list{Attrs.class_("flex items-center gap-2 mb-3")},
     list{
       div(
-        list{Attrs.class_(`w-2 h-2 rounded-full ${dotClass}`), Attrs.role("status"), Attrs.ariaLabel(statusText)},
+        list{
+          Attrs.class_(`w-2 h-2 rounded-full ${dotClass}`),
+          Attrs.role("status"),
+          Attrs.ariaLabel(statusText),
+        },
         list{},
       ),
-      div(
-        list{Attrs.class_("text-xs text-gray-400 flex-1")},
-        list{text(statusText)},
-      ),
+      div(list{Attrs.class_("text-xs text-gray-400 flex-1")}, list{text(statusText)}),
       button(
         list{
           Attrs.class_("text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"),
@@ -840,13 +903,12 @@ let renderProverCatalog = (echidna: echidnaState): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("flex items-center justify-between mb-1")},
           list{
-            div(
-              list{Attrs.class_("text-xs text-gray-500")},
-              list{text("PROVERS")},
-            ),
+            div(list{Attrs.class_("text-xs text-gray-500")}, list{text("PROVERS")}),
             button(
               list{
-                Attrs.class_("text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"),
+                Attrs.class_(
+                  "text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded",
+                ),
                 Attrs.ariaLabel("List Provers"),
                 Events.onClick(Echidna(ListProvers)),
               },
@@ -854,10 +916,7 @@ let renderProverCatalog = (echidna: echidnaState): Tea_Vdom.t<msg> => {
             ),
           },
         ),
-        div(
-          list{Attrs.class_("text-gray-600 text-xs italic")},
-          list{text("No provers loaded")},
-        ),
+        div(list{Attrs.class_("text-gray-600 text-xs italic")}, list{text("No provers loaded")}),
       },
     )
   } else {
@@ -867,13 +926,12 @@ let renderProverCatalog = (echidna: echidnaState): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("flex items-center justify-between mb-1")},
           list{
-            div(
-              list{Attrs.class_("text-xs text-gray-500")},
-              list{text("PROVERS")},
-            ),
+            div(list{Attrs.class_("text-xs text-gray-500")}, list{text("PROVERS")}),
             button(
               list{
-                Attrs.class_("text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"),
+                Attrs.class_(
+                  "text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded",
+                ),
                 Events.onClick(Echidna(ListProvers)),
               },
               list{text("Refresh")},
@@ -881,32 +939,36 @@ let renderProverCatalog = (echidna: echidnaState): Tea_Vdom.t<msg> => {
           },
         ),
         div(
-          list{Attrs.class_("max-h-24 overflow-y-auto"), Attrs.role("list"), Attrs.ariaLabel("Prover Catalog")},
+          list{
+            Attrs.class_("max-h-24 overflow-y-auto"),
+            Attrs.role("list"),
+            Attrs.ariaLabel("Prover Catalog"),
+          },
           echidna.provers
           ->Array.map(prover => {
             let isSelected = echidna.selectedProver === Some(prover.name)
-            let bgClass = isSelected ? "bg-indigo-900/50 border-indigo-600" : "bg-gray-800/30 border-gray-700"
+            let bgClass = isSelected
+              ? "bg-indigo-900/50 border-indigo-600"
+              : "bg-gray-800/30 border-gray-700"
             div(
               list{
-                Attrs.class_(`flex items-center gap-2 p-1.5 border-l-2 ${bgClass} mb-0.5 cursor-pointer hover:bg-gray-700/50`),
+                Attrs.class_(
+                  `flex items-center gap-2 p-1.5 border-l-2 ${bgClass} mb-0.5 cursor-pointer hover:bg-gray-700/50`,
+                ),
                 Attrs.role("listitem"),
                 Attrs.tabIndex(0),
                 Events.onClick(Echidna(SelectProver(isSelected ? None : Some(prover.name)))),
-                KeyboardUtil.onEnterOrSpace(Echidna(SelectProver(isSelected ? None : Some(prover.name)))),
+                KeyboardUtil.onEnterOrSpace(
+                  Echidna(SelectProver(isSelected ? None : Some(prover.name))),
+                ),
               },
               list{
-                div(
-                  list{Attrs.class_("text-xs text-gray-300 flex-1")},
-                  list{text(prover.name)},
-                ),
+                div(list{Attrs.class_("text-xs text-gray-300 flex-1")}, list{text(prover.name)}),
                 div(
                   list{Attrs.class_("text-xs px-1 py-0.5 bg-gray-700 rounded text-gray-400")},
                   list{text(prover.tier)},
                 ),
-                div(
-                  list{Attrs.class_("text-xs text-gray-500")},
-                  list{text(prover.complexity)},
-                ),
+                div(list{Attrs.class_("text-xs text-gray-500")}, list{text(prover.complexity)}),
               },
             )
           })
@@ -923,10 +985,7 @@ let renderProofInput = (echidna: echidnaState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("mb-3")},
     list{
-      div(
-        list{Attrs.class_("text-xs text-gray-500 mb-1")},
-        list{text("PROOF INPUT")},
-      ),
+      div(list{Attrs.class_("text-xs text-gray-500 mb-1")}, list{text("PROOF INPUT")}),
       textarea(
         list{
           Attrs.class_(
@@ -981,10 +1040,7 @@ let renderTrustBadge = (trustLevel: echidnaTrustLevel): Tea_Vdom.t<msg> => {
   | TrustLevel5 => ("Trust 5", "bg-green-700 text-green-200")
   }
   span(
-    list{
-      Attrs.class_(`text-xs px-2 py-0.5 rounded font-bold ${colour}`),
-      Attrs.ariaLabel(label),
-    },
+    list{Attrs.class_(`text-xs px-2 py-0.5 rounded font-bold ${colour}`), Attrs.ariaLabel(label)},
     list{text(label)},
   )
 }
@@ -999,10 +1055,7 @@ let renderAxiomReport = (axioms: array<axiomUsage>): Tea_Vdom.t<msg> => {
     div(
       list{Attrs.class_("mt-2"), Attrs.role("region"), Attrs.ariaLabel("Axiom Report")},
       list{
-        div(
-          list{Attrs.class_("text-xs text-gray-500 mb-1")},
-          list{text("AXIOM REPORT")},
-        ),
+        div(list{Attrs.class_("text-xs text-gray-500 mb-1")}, list{text("AXIOM REPORT")}),
         div(
           list{Attrs.class_("max-h-16 overflow-y-auto")},
           axioms
@@ -1040,10 +1093,7 @@ let renderProofResult = (result: echidnaDispatchResult): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between mb-2")},
         list{
-          div(
-            list{Attrs.class_(`text-sm font-bold ${statusClass}`)},
-            list{text(statusText)},
-          ),
+          div(list{Attrs.class_(`text-sm font-bold ${statusClass}`)}, list{text(statusText)}),
           renderTrustBadge(result.trustLevel),
         },
       ),
@@ -1052,7 +1102,10 @@ let renderProofResult = (result: echidnaDispatchResult): Tea_Vdom.t<msg> => {
         list{Attrs.class_("grid grid-cols-2 gap-1 text-xs")},
         list{
           div(list{Attrs.class_("text-gray-500")}, list{text("Provers:")}),
-          div(list{Attrs.class_("text-gray-300")}, list{text(proversText === "" ? "none" : proversText)}),
+          div(
+            list{Attrs.class_("text-gray-300")},
+            list{text(proversText === "" ? "none" : proversText)},
+          ),
           div(list{Attrs.class_("text-gray-500")}, list{text("Time:")}),
           div(list{Attrs.class_("text-gray-300")}, list{text(timeText)}),
           div(list{Attrs.class_("text-gray-500")}, list{text("Goals left:")}),
@@ -1062,18 +1115,12 @@ let renderProofResult = (result: echidnaDispatchResult): Tea_Vdom.t<msg> => {
       // Certificate hash (if present)
       switch result.certificateHash {
       | Some(hash) =>
-        div(
-          list{Attrs.class_("text-xs text-gray-500 mt-1 truncate")},
-          list{text("cert: " ++ hash)},
-        )
+        div(list{Attrs.class_("text-xs text-gray-500 mt-1 truncate")}, list{text("cert: " ++ hash)})
       | None => noNode
       },
       // Message
       if result.message !== "" {
-        div(
-          list{Attrs.class_("text-xs text-gray-400 mt-1 italic")},
-          list{text(result.message)},
-        )
+        div(list{Attrs.class_("text-xs text-gray-400 mt-1 italic")}, list{text(result.message)})
       } else {
         noNode
       },
@@ -1085,7 +1132,9 @@ let renderProofResult = (result: echidnaDispatchResult): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 rounded"),
+              Attrs.class_(
+                "text-xs px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-gray-400 rounded",
+              ),
               Attrs.ariaLabel("Clear proof result"),
               Events.onClick(Echidna(ClearProofResult)),
             },
@@ -1114,15 +1163,11 @@ let renderSessionControls = (echidna: echidnaState): Tea_Vdom.t<msg> => {
             Attrs.class_(
               "text-xs px-3 py-1 bg-indigo-700 hover:bg-indigo-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed",
             ),
-            Attrs.disabled(
-              echidna.sessionLoading || echidna.proofInput === "",
-            ),
+            Attrs.disabled(echidna.sessionLoading || echidna.proofInput === ""),
             Attrs.ariaLabel("Start Proof Session"),
             Events.onClick(Echidna(CreateSession)),
           },
-          list{
-            text(echidna.sessionLoading ? "Creating..." : "Start Session"),
-          },
+          list{text(echidna.sessionLoading ? "Creating..." : "Start Session")},
         ),
       },
     )
@@ -1132,9 +1177,7 @@ let renderSessionControls = (echidna: echidnaState): Tea_Vdom.t<msg> => {
       list{
         button(
           list{
-            Attrs.class_(
-              "text-xs px-3 py-1 bg-red-700 hover:bg-red-600 text-white rounded",
-            ),
+            Attrs.class_("text-xs px-3 py-1 bg-red-700 hover:bg-red-600 text-white rounded"),
             Attrs.ariaLabel("Cancel Session"),
             Events.onClick(Echidna(CancelSession)),
           },
@@ -1142,9 +1185,7 @@ let renderSessionControls = (echidna: echidnaState): Tea_Vdom.t<msg> => {
         ),
         button(
           list{
-            Attrs.class_(
-              "text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded",
-            ),
+            Attrs.class_("text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"),
             Attrs.ariaLabel("Refresh Session State"),
             Events.onClick(Echidna(GetSessionState)),
           },
@@ -1184,10 +1225,7 @@ let renderSessionStatus = (session: echidnaSessionState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between mb-1")},
         list{
-          div(
-            list{Attrs.class_("text-xs text-gray-400")},
-            list{text("Session: " ++ truncatedId)},
-          ),
+          div(list{Attrs.class_("text-xs text-gray-400")}, list{text("Session: " ++ truncatedId)}),
           span(
             list{
               Attrs.class_(`text-xs px-2 py-0.5 rounded font-bold ${statusColour}`),
@@ -1205,11 +1243,7 @@ let renderSessionStatus = (session: echidnaSessionState): Tea_Vdom.t<msg> => {
         },
       ),
       switch session.errorMessage {
-      | Some(err) =>
-        div(
-          list{Attrs.class_("text-xs text-red-400 mt-1")},
-          list{text(err)},
-        )
+      | Some(err) => div(list{Attrs.class_("text-xs text-red-400 mt-1")}, list{text(err)})
       | None => noNode
       },
     },
@@ -1248,9 +1282,7 @@ let renderGoalList = (goals: array<string>): Tea_Vdom.t<msg> => {
                 Attrs.class_(`text-xs p-1.5 border-l-2 ${bgClass} mb-0.5 font-mono`),
                 Attrs.role("listitem"),
               },
-              list{
-                text(Int.toString(idx + 1) ++ ". " ++ goal),
-              },
+              list{text(Int.toString(idx + 1) ++ ". " ++ goal)},
             )
           })
           ->List.fromArray,
@@ -1271,10 +1303,7 @@ let renderTacticInput = (echidna: echidnaState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("mb-2")},
     list{
-      div(
-        list{Attrs.class_("text-xs text-gray-500 mb-1")},
-        list{text("TACTIC INPUT")},
-      ),
+      div(list{Attrs.class_("text-xs text-gray-500 mb-1")}, list{text("TACTIC INPUT")}),
       div(
         list{Attrs.class_("flex gap-1")},
         list{
@@ -1311,7 +1340,9 @@ let renderTacticInput = (echidna: echidnaState): Tea_Vdom.t<msg> => {
 /// Render the tactic suggestion ribbon — horizontal scrollable row of clickable chips
 /// sorted by confidence (descending). Each chip shows "tactic (confidence%)".
 /// Clicking a chip dispatches ApplyTactic with the tactic name and args.
-let renderTacticSuggestionRibbon = (suggestions: array<echidnaTacticSuggestion>): Tea_Vdom.t<msg> => {
+let renderTacticSuggestionRibbon = (suggestions: array<echidnaTacticSuggestion>): Tea_Vdom.t<
+  msg,
+> => {
   if Array.length(suggestions) === 0 {
     noNode
   } else {
@@ -1322,10 +1353,7 @@ let renderTacticSuggestionRibbon = (suggestions: array<echidnaTacticSuggestion>)
     div(
       list{Attrs.class_("mb-2")},
       list{
-        div(
-          list{Attrs.class_("text-xs text-gray-500 mb-1")},
-          list{text("SUGGESTED TACTICS")},
-        ),
+        div(list{Attrs.class_("text-xs text-gray-500 mb-1")}, list{text("SUGGESTED TACTICS")}),
         div(
           list{
             Attrs.class_("flex gap-1 overflow-x-auto pb-1"),
@@ -1364,10 +1392,7 @@ let renderProofScript = (script: array<string>): Tea_Vdom.t<msg> => {
     div(
       list{Attrs.class_("mb-2")},
       list{
-        div(
-          list{Attrs.class_("text-xs text-gray-500 mb-1")},
-          list{text("PROOF SCRIPT")},
-        ),
+        div(list{Attrs.class_("text-xs text-gray-500 mb-1")}, list{text("PROOF SCRIPT")}),
         div(
           list{
             Attrs.class_("max-h-20 overflow-y-auto bg-gray-800/30 rounded p-1.5"),
@@ -1403,32 +1428,52 @@ let viewProofObligations = (lastProofObligations: option<string>): Tea_Vdom.t<ms
     | Error(_) => noNode
     | Ok(result) =>
       let narrative = TypeLLEngine.generateNarrative(result)
-      let borderColour = if result.valid { "border-green-700 bg-green-900/20" } else { "border-red-700 bg-red-900/20" }
-      let labelColour = if result.valid { "text-green-400" } else { "text-red-400" }
-      let statusText = if result.valid { "Obligations generated" } else { "No obligations" }
+      let borderColour = if result.valid {
+        "border-green-700 bg-green-900/20"
+      } else {
+        "border-red-700 bg-red-900/20"
+      }
+      let labelColour = if result.valid {
+        "text-green-400"
+      } else {
+        "text-red-400"
+      }
+      let statusText = if result.valid {
+        "Obligations generated"
+      } else {
+        "No obligations"
+      }
       div(
         list{Attrs.class_("mt-4 p-3 rounded-lg border " ++ borderColour)},
         list{
           div(
             list{Attrs.class_("flex items-center gap-2 mb-2")},
             list{
-              span(list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)}, list{text("TypeLL Proof Obligations")}),
+              span(
+                list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)},
+                list{text("TypeLL Proof Obligations")},
+              ),
               span(list{Attrs.class_("text-xs text-gray-400")}, list{text(statusText)}),
             },
           ),
-          div(list{Attrs.class_("text-sm text-gray-300 font-mono mb-1")}, list{text(result.typeSignature)}),
+          div(
+            list{Attrs.class_("text-sm text-gray-300 font-mono mb-1")},
+            list{text(result.typeSignature)},
+          ),
           div(list{Attrs.class_("text-xs text-gray-400 mb-1")}, list{text(narrative.celebrate)}),
           if Array.length(result.proofObligations) > 0 {
-            div(list{Attrs.class_("text-xs text-yellow-400 mt-1")}, list{
-              text("Proof obligations: " ++ Array.join(result.proofObligations, ", ")),
-            })
+            div(
+              list{Attrs.class_("text-xs text-yellow-400 mt-1")},
+              list{text("Proof obligations: " ++ Array.join(result.proofObligations, ", "))},
+            )
           } else {
             noNode
           },
           if Array.length(result.linearityIssues) > 0 {
-            div(list{Attrs.class_("text-xs text-orange-400 mt-1")}, list{
-              text("Linearity: " ++ Array.join(result.linearityIssues, ", ")),
-            })
+            div(
+              list{Attrs.class_("text-xs text-orange-400 mt-1")},
+              list{text("Linearity: " ++ Array.join(result.linearityIssues, ", "))},
+            )
           } else {
             noNode
           },
@@ -1489,7 +1534,10 @@ let renderModelElement = (elem: modelElement): Tea_Vdom.t<msg> => {
     list{Attrs.class_("flex items-center gap-2 py-1.5 px-2 bg-gray-900/50 rounded text-[10px]")},
     list{
       span(list{Attrs.class_("text-gray-500 font-mono")}, list{text(mofLayerLabel(elem.layer))}),
-      span(list{Attrs.class_("text-indigo-300 font-medium truncate flex-1")}, list{text(elem.qualifiedName)}),
+      span(
+        list{Attrs.class_("text-indigo-300 font-medium truncate flex-1")},
+        list{text(elem.qualifiedName)},
+      ),
       span(list{Attrs.class_("text-gray-600")}, list{text(elem.metaclass)}),
       span(
         list{Attrs.class_("text-[9px] px-1 py-0.5 bg-gray-800 rounded text-gray-500")},
@@ -1500,14 +1548,16 @@ let renderModelElement = (elem: modelElement): Tea_Vdom.t<msg> => {
 }
 
 /// Render an OCL constraint row with check result.
-let renderOclConstraintRow = (c: oclConstraint, index: int, result: option<oclCheckResult>): Tea_Vdom.t<msg> => {
+let renderOclConstraintRow = (
+  c: oclConstraint,
+  index: int,
+  result: option<oclCheckResult>,
+): Tea_Vdom.t<msg> => {
   let statusIndicator = switch result {
   | Some(r) if r.satisfied =>
     span(list{Attrs.class_("text-emerald-400 font-mono text-[10px]")}, list{text("[OK]")})
-  | Some(_) =>
-    span(list{Attrs.class_("text-red-400 font-mono text-[10px]")}, list{text("[!!]")})
-  | None =>
-    span(list{Attrs.class_("text-gray-600 font-mono text-[10px]")}, list{text("[..]")})
+  | Some(_) => span(list{Attrs.class_("text-red-400 font-mono text-[10px]")}, list{text("[!!]")})
+  | None => span(list{Attrs.class_("text-gray-600 font-mono text-[10px]")}, list{text("[..]")})
   }
 
   div(
@@ -1565,27 +1615,41 @@ let renderEnterpriseModelTab = (echidna: echidnaState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center gap-3 text-[10px]")},
         list{
-          span(list{Attrs.class_("text-gray-500")}, list{text(`${Int.toString(elementCount)} elements`)}),
-          span(list{Attrs.class_("text-gray-500")}, list{text(`${Int.toString(constraintCount)} constraints`)}),
+          span(
+            list{Attrs.class_("text-gray-500")},
+            list{text(`${Int.toString(elementCount)} elements`)},
+          ),
+          span(
+            list{Attrs.class_("text-gray-500")},
+            list{text(`${Int.toString(constraintCount)} constraints`)},
+          ),
           if Array.length(em.checkResults) > 0 {
             span(
               list{Attrs.class_("text-emerald-400")},
               list{text(`${Int.toString(passedCount)} passed`)},
             )
-          } else { noNode },
+          } else {
+            noNode
+          },
           if failedCount > 0 {
-            span(list{Attrs.class_("text-red-400")}, list{text(`${Int.toString(failedCount)} failed`)})
-          } else { noNode },
+            span(
+              list{Attrs.class_("text-red-400")},
+              list{text(`${Int.toString(failedCount)} failed`)},
+            )
+          } else {
+            noNode
+          },
         },
       ),
-
       // ─── Import / Actions ───
       div(
         list{Attrs.class_("flex gap-2")},
         list{
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-indigo-900/50 hover:bg-indigo-800/50 border border-indigo-700/40 rounded text-indigo-300"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-indigo-900/50 hover:bg-indigo-800/50 border border-indigo-700/40 rounded text-indigo-300",
+              ),
               Events.onClick(Echidna(ImportXmiModel)),
             },
             list{text("Import XMI")},
@@ -1594,8 +1658,8 @@ let renderEnterpriseModelTab = (echidna: echidnaState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_(
                 `px-3 py-1.5 text-xs rounded font-medium ${em.checking
-                  ? "bg-amber-900/50 text-amber-300 border border-amber-700/40"
-                  : "bg-emerald-900/50 hover:bg-emerald-800/50 text-emerald-300 border border-emerald-700/40"}`,
+                    ? "bg-amber-900/50 text-amber-300 border border-amber-700/40"
+                    : "bg-emerald-900/50 hover:bg-emerald-800/50 text-emerald-300 border border-emerald-700/40"}`,
               ),
               Events.onClick(Echidna(RunOclCheck)),
             },
@@ -1603,14 +1667,15 @@ let renderEnterpriseModelTab = (echidna: echidnaState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-400"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-400",
+              ),
               Events.onClick(Echidna(ClearEnterpriseModel)),
             },
             list{text("Clear")},
           ),
         },
       ),
-
       // ─── Metamodel / Layer Filters ───
       div(
         list{Attrs.class_("flex items-center gap-2 flex-wrap")},
@@ -1623,8 +1688,8 @@ let renderEnterpriseModelTab = (echidna: echidnaState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_(
                   `px-2 py-0.5 text-[10px] rounded ${isActive
-                    ? "bg-indigo-700 text-white"
-                    : "bg-gray-800 text-gray-500 hover:text-gray-300"}`,
+                      ? "bg-indigo-700 text-white"
+                      : "bg-gray-800 text-gray-500 hover:text-gray-300"}`,
                 ),
                 Events.onClick(Echidna(SetMetamodelFilter(isActive ? None : Some(m)))),
               },
@@ -1634,14 +1699,17 @@ let renderEnterpriseModelTab = (echidna: echidnaState): Tea_Vdom.t<msg> => {
           ->List.fromArray,
         },
       ),
-
       // ─── Model Elements ───
       if elementCount > 0 {
         div(
           list{Attrs.class_("space-y-1")},
           list{
             div(
-              list{Attrs.class_("text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-1")},
+              list{
+                Attrs.class_(
+                  "text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-1",
+                ),
+              },
               list{text("Model Elements")},
             ),
             ...em.elements
@@ -1663,10 +1731,13 @@ let renderEnterpriseModelTab = (echidna: echidnaState): Tea_Vdom.t<msg> => {
       } else {
         div(
           list{Attrs.class_("text-xs text-gray-600 italic p-3 text-center")},
-          list{text("No model loaded. Import XMI from Visual Paradigm, Sparx EA, Archi, or other MOF-compliant tools.")},
+          list{
+            text(
+              "No model loaded. Import XMI from Visual Paradigm, Sparx EA, Archi, or other MOF-compliant tools.",
+            ),
+          },
         )
       },
-
       // ─── OCL Constraints ───
       div(
         list{Attrs.class_("space-y-1")},
@@ -1674,8 +1745,16 @@ let renderEnterpriseModelTab = (echidna: echidnaState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-2 mb-1")},
             list{
-              span(list{Attrs.class_("text-[10px] text-gray-500 font-semibold uppercase tracking-wider")}, list{text("OCL Constraints")}),
-              span(list{Attrs.class_("text-[9px] text-gray-600")}, list{text("(Object Constraint Language)")}),
+              span(
+                list{
+                  Attrs.class_("text-[10px] text-gray-500 font-semibold uppercase tracking-wider"),
+                },
+                list{text("OCL Constraints")},
+              ),
+              span(
+                list{Attrs.class_("text-[9px] text-gray-600")},
+                list{text("(Object Constraint Language)")},
+              ),
             },
           ),
           ...em.constraints
@@ -1687,22 +1766,35 @@ let renderEnterpriseModelTab = (echidna: echidnaState): Tea_Vdom.t<msg> => {
           if constraintCount === 0 {
             div(
               list{Attrs.class_("text-[10px] text-gray-600 italic")},
-              list{text("No constraints defined. Add OCL invariants, preconditions, or postconditions.")},
+              list{
+                text(
+                  "No constraints defined. Add OCL invariants, preconditions, or postconditions.",
+                ),
+              },
             )
           } else {
             noNode
           },
         },
       ),
-
       // ─── Standards Reference ───
       div(
-        list{Attrs.class_("p-2 bg-gray-900/30 rounded border border-gray-800 text-[10px] text-gray-600 space-y-1")},
+        list{
+          Attrs.class_(
+            "p-2 bg-gray-900/30 rounded border border-gray-800 text-[10px] text-gray-600 space-y-1",
+          ),
+        },
         list{
           div(list{Attrs.class_("font-semibold text-gray-500")}, list{text("Supported Standards")}),
-          div(list{}, list{text("OMG: MOF 2.5, UML 2.5, SysML 1.7, BPMN 2.0, OCL 2.4, XMI 2.5, QVT 1.3")}),
+          div(
+            list{},
+            list{text("OMG: MOF 2.5, UML 2.5, SysML 1.7, BPMN 2.0, OCL 2.4, XMI 2.5, QVT 1.3")},
+          ),
           div(list{}, list{text("The Open Group: ArchiMate 3.2, TOGAF 10 (via ArchiMate)")}),
-          div(list{}, list{text("Tools: Visual Paradigm, Sparx EA, Archi, Camunda, MagicDraw/Cameo")}),
+          div(
+            list{},
+            list{text("Tools: Visual Paradigm, Sparx EA, Archi, Camunda, MagicDraw/Cameo")},
+          ),
         },
       ),
     },
@@ -1718,7 +1810,11 @@ let renderEnterpriseModelTab = (echidna: echidnaState): Tea_Vdom.t<msg> => {
 /// checking (MOF/OCL/ArchiMate).
 let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("mt-4 border-t border-gray-700 pt-3"), Attrs.role("region"), Attrs.ariaLabel("ECHIDNA Theorem Prover")},
+    list{
+      Attrs.class_("mt-4 border-t border-gray-700 pt-3"),
+      Attrs.role("region"),
+      Attrs.ariaLabel("ECHIDNA Theorem Prover"),
+    },
     list{
       // Collapsible header
       button(
@@ -1754,8 +1850,8 @@ let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_(
                       `px-3 py-1 text-xs rounded-t ${echidna.activeTab === EchidnaProofTab
-                        ? "bg-gray-800 text-indigo-300 border-b-2 border-indigo-500"
-                        : "text-gray-500 hover:text-gray-300"}`,
+                          ? "bg-gray-800 text-indigo-300 border-b-2 border-indigo-500"
+                          : "text-gray-500 hover:text-gray-300"}`,
                     ),
                     Events.onClick(Echidna(SelectEchidnaTab(EchidnaProofTab))),
                   },
@@ -1765,8 +1861,8 @@ let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_(
                       `px-3 py-1 text-xs rounded-t ${echidna.activeTab === EchidnaEnterpriseTab
-                        ? "bg-gray-800 text-indigo-300 border-b-2 border-indigo-500"
-                        : "text-gray-500 hover:text-gray-300"}`,
+                          ? "bg-gray-800 text-indigo-300 border-b-2 border-indigo-500"
+                          : "text-gray-500 hover:text-gray-300"}`,
                     ),
                     Events.onClick(Echidna(SelectEchidnaTab(EchidnaEnterpriseTab))),
                   },
@@ -1786,7 +1882,11 @@ let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
                   switch echidna.session {
                   | Some(session) =>
                     div(
-                      list{Attrs.class_("mt-2"), Attrs.role("region"), Attrs.ariaLabel("Interactive Proof Session")},
+                      list{
+                        Attrs.class_("mt-2"),
+                        Attrs.role("region"),
+                        Attrs.ariaLabel("Interactive Proof Session"),
+                      },
                       list{
                         renderSessionStatus(session),
                         renderGoalList(session.goals),
@@ -1813,8 +1913,7 @@ let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
                   viewProofObligations(echidna.lastProofObligations),
                 },
               )
-            | EchidnaEnterpriseTab =>
-              renderEnterpriseModelTab(echidna)
+            | EchidnaEnterpriseTab => renderEnterpriseModelTab(echidna)
             },
           },
         )
@@ -1844,7 +1943,9 @@ let renderInferenceStream = (suggestions: array<string>): Tea_Vdom.t<msg> => {
             ),
             button(
               list{
-                Attrs.class_("px-2 py-0.5 text-[10px] bg-violet-800/40 hover:bg-violet-700/40 rounded text-violet-300"),
+                Attrs.class_(
+                  "px-2 py-0.5 text-[10px] bg-violet-800/40 hover:bg-violet-700/40 rounded text-violet-300",
+                ),
                 Events.onClick(VeriSimDB(ClearInferenceSuggestions)),
               },
               list{text("Clear")},
@@ -1853,49 +1954,52 @@ let renderInferenceStream = (suggestions: array<string>): Tea_Vdom.t<msg> => {
         ),
         div(
           list{Attrs.class_("space-y-1 max-h-32 overflow-y-auto")},
-          suggestions->Array.map(suggestion =>
+          suggestions
+          ->Array.map(suggestion =>
             div(
-              list{Attrs.class_("text-xs text-violet-300/80 font-mono pl-2 border-l-2 border-violet-500/30")},
+              list{
+                Attrs.class_(
+                  "text-xs text-violet-300/80 font-mono pl-2 border-l-2 border-violet-500/30",
+                ),
+              },
               list{text(suggestion)},
             )
-          )->List.fromArray,
+          )
+          ->List.fromArray,
         ),
       },
     )
   }
 }
 
-let view = (state: paneNState, echidna: echidnaState, ~inferenceStream: array<string>=[]): Tea_Vdom.t<msg> => {
+let view = (
+  state: paneNState,
+  echidna: echidnaState,
+  ~inferenceStream: array<string>=[],
+): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("h-full flex flex-col p-4 bg-gray-900"), Attrs.role("region"), Attrs.ariaLabel("Neural Stream Panel")},
+    list{
+      Attrs.class_("h-full flex flex-col p-4 bg-gray-900"),
+      Attrs.role("region"),
+      Attrs.ariaLabel("Neural Stream Panel"),
+    },
     list{
       // Header
       div(
         list{Attrs.class_("flex items-center justify-between mb-4")},
         list{
-          div(
-            list{Attrs.class_("text-emerald-400 font-semibold")},
-            list{text("Neural Stream")},
-          ),
-          div(
-            list{Attrs.class_("text-xs text-gray-600")},
-            list{text("Ctrl+Shift+N")},
-          ),
+          div(list{Attrs.class_("text-emerald-400 font-semibold")}, list{text("Neural Stream")}),
+          div(list{Attrs.class_("text-xs text-gray-600")}, list{text("Ctrl+Shift+N")}),
         },
       ),
-
       // Agency monitor
       renderAgencyMonitor(state.agency),
-
       // Token stream
       renderTokenStream(state.tokens, state.filters),
-
       // VQL Inference stream (from VeriSimDB)
       renderInferenceStream(inferenceStream),
-
       // Monologue
       renderMonologue(state.monologue, state.inferenceActive),
-
       // ECHIDNA Theorem Prover Panel
       renderEchidnaPanel(echidna),
     },

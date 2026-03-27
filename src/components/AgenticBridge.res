@@ -63,10 +63,19 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              h2(list{Attrs.class_("text-lg font-bold text-amber-300")}, list{text("Agentic Bridge")}),
+              h2(
+                list{Attrs.class_("text-lg font-bold text-amber-300")},
+                list{text("Agentic Bridge")},
+              ),
               span(
                 list{Attrs.class_("text-xs text-gray-400")},
-                list{text(Int.toString(totalAgents) ++ " agents, " ++ Int.toString(runningAgents) ++ " active")},
+                list{
+                  text(
+                    Int.toString(totalAgents) ++
+                    " agents, " ++
+                    Int.toString(runningAgents) ++ " active",
+                  ),
+                },
               ),
             },
           ),
@@ -75,7 +84,9 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
             list{
               button(
                 list{
-                  Attrs.class_("px-3 py-1 text-xs bg-amber-800 hover:bg-amber-700 text-white rounded"),
+                  Attrs.class_(
+                    "px-3 py-1 text-xs bg-amber-800 hover:bg-amber-700 text-white rounded",
+                  ),
                   Events.onClick(AgenticBridge(AbStarted)),
                 },
                 list{text("Launch All")},
@@ -91,8 +102,11 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Agents { "bg-amber-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Agents {
+                  "bg-amber-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AgenticBridge(SetAbTab(Agents))),
             },
@@ -101,8 +115,11 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Config { "bg-amber-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Config {
+                  "bg-amber-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AgenticBridge(SetAbTab(Config))),
             },
@@ -111,8 +128,11 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Execution { "bg-amber-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Execution {
+                  "bg-amber-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AgenticBridge(SetAbTab(Execution))),
             },
@@ -121,8 +141,11 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Results { "bg-amber-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Results {
+                  "bg-amber-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AgenticBridge(SetAbTab(Results))),
             },
@@ -134,11 +157,18 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center",
+            ),
+          },
           list{
             text(err),
             button(
-              list{Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"), Events.onClick(AgenticBridge(DismissAbError))},
+              list{
+                Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
+                Events.onClick(AgenticBridge(DismissAbError)),
+              },
               list{text("Dismiss")},
             ),
           },
@@ -161,7 +191,10 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
                     div(
                       list{Attrs.class_("flex items-center gap-3")},
                       list{
-                        span(list{Attrs.class_("text-sm font-bold text-gray-200")}, list{text(agent.name)}),
+                        span(
+                          list{Attrs.class_("text-sm font-bold text-gray-200")},
+                          list{text(agent.name)},
+                        ),
                         oodaPhaseBadge(agent.oodaPhase),
                         agentStatusBadge(agent.status),
                       },
@@ -169,8 +202,14 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
                     div(
                       list{Attrs.class_("flex gap-4 mt-1 text-xs text-gray-500")},
                       list{
-                        span(list{}, list{text(Int.toString(Array.length(agent.actions)) ++ " actions")}),
-                        span(list{}, list{text(Int.toString(Array.length(agent.findings)) ++ " findings")}),
+                        span(
+                          list{},
+                          list{text(Int.toString(Array.length(agent.actions)) ++ " actions")},
+                        ),
+                        span(
+                          list{},
+                          list{text(Int.toString(Array.length(agent.findings)) ++ " findings")},
+                        ),
                       },
                     ),
                   },
@@ -192,13 +231,27 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("px-3 py-2 bg-gray-900 border border-gray-800 rounded")},
                   list{
-                    div(list{Attrs.class_("text-sm text-gray-200 font-mono mb-1")}, list{text("Agent: " ++ cfg.agentId)}),
+                    div(
+                      list{Attrs.class_("text-sm text-gray-200 font-mono mb-1")},
+                      list{text("Agent: " ++ cfg.agentId)},
+                    ),
                     div(
                       list{Attrs.class_("grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-400")},
                       list{
-                        span(list{}, list{text("Speed: " ++ Float.toFixed(cfg.speed, ~digits=1) ++ "x")}),
+                        span(
+                          list{},
+                          list{text("Speed: " ++ Float.toFixed(cfg.speed, ~digits=1) ++ "x")},
+                        ),
                         span(list{}, list{text("Strategy: " ++ strategyLabel)}),
-                        span(list{}, list{text("Thoroughness: " ++ Float.toFixed(cfg.thoroughness *. 100.0, ~digits=0) ++ "%")}),
+                        span(
+                          list{},
+                          list{
+                            text(
+                              "Thoroughness: " ++
+                              Float.toFixed(cfg.thoroughness *. 100.0, ~digits=0) ++ "%",
+                            ),
+                          },
+                        ),
                         span(list{}, list{text("Max cycles: " ++ Int.toString(cfg.maxCycles))}),
                         span(list{}, list{text("Seed: " ++ Int.toString(cfg.randomSeed))}),
                       },
@@ -219,8 +272,14 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
                     list{Attrs.class_("flex items-center gap-3 py-1 border-b border-gray-800/30")},
                     list{
                       oodaPhaseBadge(act.phase),
-                      span(list{Attrs.class_("text-sm text-gray-300 flex-1")}, list{text(act.description)}),
-                      span(list{Attrs.class_("text-xs text-gray-500 font-mono")}, list{text(act.targetPath)}),
+                      span(
+                        list{Attrs.class_("text-sm text-gray-300 flex-1")},
+                        list{text(act.description)},
+                      ),
+                      span(
+                        list{Attrs.class_("text-xs text-gray-500 font-mono")},
+                        list{text(act.targetPath)},
+                      ),
                       span(
                         list{Attrs.class_("text-xs text-gray-600")},
                         list{text(Float.toFixed(act.timestampMs, ~digits=0) ++ "ms")},
@@ -237,24 +296,38 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
               list{
                 div(
                   list{Attrs.class_("text-xs text-gray-400 mb-2")},
-                  list{text(Int.toString(Array.length(allFindings)) ++ " total findings across all agents")},
+                  list{
+                    text(
+                      Int.toString(
+                        Array.length(allFindings),
+                      ) ++ " total findings across all agents",
+                    ),
+                  },
                 ),
                 div(
                   list{},
                   allFindings
                   ->Array.map(f =>
                     div(
-                      list{Attrs.class_("px-3 py-2 mb-2 bg-gray-900 border border-gray-800 rounded")},
+                      list{
+                        Attrs.class_("px-3 py-2 mb-2 bg-gray-900 border border-gray-800 rounded"),
+                      },
                       list{
                         div(
                           list{Attrs.class_("flex items-center gap-2")},
                           list{
                             findingSevBadge(f.severity),
-                            span(list{Attrs.class_("text-sm text-gray-200")}, list{text(f.summary)}),
+                            span(
+                              list{Attrs.class_("text-sm text-gray-200")},
+                              list{text(f.summary)},
+                            ),
                           },
                         ),
                         div(list{Attrs.class_("text-xs text-gray-400 mt-1")}, list{text(f.detail)}),
-                        div(list{Attrs.class_("text-xs text-gray-500 font-mono mt-1")}, list{text(f.location)}),
+                        div(
+                          list{Attrs.class_("text-xs text-gray-500 font-mono mt-1")},
+                          list{text(f.location)},
+                        ),
                       },
                     )
                   )

@@ -24,10 +24,7 @@ let subsystemIndicator = (label: string, isActive: bool): Tea_Vdom.t<msg> => {
   } else {
     "bg-gray-700 text-gray-500"
   }
-  span(
-    list{Attrs.class_(`px-2 py-0.5 text-xs rounded font-mono ${colorClass}`)},
-    list{text(label)},
-  )
+  span(list{Attrs.class_(`px-2 py-0.5 text-xs rounded font-mono ${colorClass}`)}, list{text(label)})
 }
 
 // ============================================================================
@@ -54,10 +51,7 @@ let modeCard = (info: modeInfo, isActive: bool): Tea_Vdom.t<msg> => {
             list{text(info.displayName)},
           ),
           if isActive {
-            span(
-              list{Attrs.class_("text-xs text-emerald-400 font-mono")},
-              list{text("ACTIVE")},
-            )
+            span(list{Attrs.class_("text-xs text-emerald-400 font-mono")}, list{text("ACTIVE")})
           } else {
             noNode
           },
@@ -119,7 +113,11 @@ let view = (state: nesyModesState): Tea_Vdom.t<msg> => {
       switch state.lastError {
       | Some(err) =>
         div(
-          list{Attrs.class_("p-2 mb-3 rounded bg-red-900/30 border border-red-500/40 text-xs text-red-400")},
+          list{
+            Attrs.class_(
+              "p-2 mb-3 rounded bg-red-900/30 border border-red-500/40 text-xs text-red-400",
+            ),
+          },
           list{text(err)},
         )
       | None => noNode

@@ -85,12 +85,15 @@ let categoryLabel = (cat: fleetCategory): string =>
 
 /// Compute aggregate health from bot states and findings.
 let computeHealth = (bots: array<botState>, findings: array<fleetFinding>): fleetHealth => {
-  let activeBots = bots->Array.filter(b =>
-    switch b.status {
-    | BotActive => true
-    | _ => false
-    }
-  )->Array.length
+  let activeBots =
+    bots
+    ->Array.filter(b =>
+      switch b.status {
+      | BotActive => true
+      | _ => false
+      }
+    )
+    ->Array.length
 
   let totalQueued = findings->Array.filter(f => !f.resolved)->Array.length
   let totalProcessed = findings->Array.filter(f => f.resolved)->Array.length
@@ -155,8 +158,14 @@ let botStateDecoder: Tea_Json.decoder<botState> = json => {
   open Decoders
   open Tea_Json
   let inner = map6(
-    (idStr, statusStr, queued, processed, confThresh, lastAct) =>
-      (idStr, statusStr, queued, processed, confThresh, lastAct),
+    (idStr, statusStr, queued, processed, confThresh, lastAct) => (
+      idStr,
+      statusStr,
+      queued,
+      processed,
+      confThresh,
+      lastAct,
+    ),
     stringField("id"),
     stringField("status"),
     intField("queued"),
@@ -168,14 +177,18 @@ let botStateDecoder: Tea_Json.decoder<botState> = json => {
   | Ok((idStr, statusStr, queued, processed, confThresh, lastAct)) =>
     switch parseBotId(idStr) {
     | Some(botId) =>
-      Ok({
-        id: botId,
-        status: parseBotStatus(statusStr),
-        queuedFindings: queued,
-        processedFindings: processed,
-        confidenceThreshold: confThresh,
-        lastActivity: lastAct,
-      }: botState)
+      Ok(
+        (
+          {
+            id: botId,
+            status: parseBotStatus(statusStr),
+            queuedFindings: queued,
+            processedFindings: processed,
+            confidenceThreshold: confThresh,
+            lastActivity: lastAct,
+          }: botState
+        ),
+      )
     | None => Error(Failure(`Unknown bot id: ${idStr}`, json))
     }
   | Error(e) => Error(e)
@@ -198,24 +211,23 @@ let parseSafetyTier = (s: string): safetyTier =>
 /// Tea_Json decoder for a single fleet finding.
 let findingDecoder: Tea_Json.decoder<fleetFinding> = {
   open Decoders
-  map7(
-    (id, repoName, summary, tierStr, confidence, assignedStr, resolved) => ({
-      id,
-      repoName,
-      summary,
-      tier: parseSafetyTier(tierStr),
-      confidence,
-      assignedBot: parseBotId(assignedStr),
-      resolved,
-    }: fleetFinding),
-    stringField("id"),
-    stringField("repo_name"),
-    stringField("summary"),
-    stringField("tier"),
-    floatField("confidence"),
-    stringField("assigned_bot"),
-    boolField("resolved"),
-  )
+  map7((id, repoName, summary, tierStr, confidence, assignedStr, resolved): fleetFinding => {
+    id,
+    repoName,
+    summary,
+    tier: parseSafetyTier(tierStr),
+    confidence,
+    assignedBot: parseBotId(assignedStr),
+    resolved,
+  }, stringField(
+    "id",
+  ), stringField(
+    "repo_name",
+  ), stringField(
+    "summary",
+  ), stringField(
+    "tier",
+  ), floatField("confidence"), stringField("assigned_bot"), boolField("resolved"))
 }
 
 /// Parse findings from the fleet API JSON response.

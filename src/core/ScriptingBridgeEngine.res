@@ -50,8 +50,7 @@ let tierLabel = (tier: instructionTier): string =>
   }
 
 /// Count the total number of saved scripts.
-let countSavedScripts = (state: scriptingBridgeState): int =>
-  Array.length(state.savedScripts)
+let countSavedScripts = (state: scriptingBridgeState): int => Array.length(state.savedScripts)
 
 /// Format a REPL entry as a human-readable string.
 /// Shows a success/failure prefix followed by the input and output.

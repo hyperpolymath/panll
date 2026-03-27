@@ -91,5 +91,4 @@ let totalDeletions = (diffs: array<fileDiffEntry>): int =>
   diffs->Array.reduce(0, (acc, d) => acc + d.deletions)
 
 /// Count open PRs (convenience).
-let openPrCount = (prs: array<pullRequest>): int =>
-  countByStatus(prs, PrOpen)
+let openPrCount = (prs: array<pullRequest>): int => countByStatus(prs, PrOpen)

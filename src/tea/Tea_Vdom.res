@@ -46,20 +46,16 @@ let nodeA = (tag: string, attrs: array<attribute<'msg>>, children: array<t<'msg>
 /// Create a keyed element node for efficient list diffing.
 /// Each child has a unique string key. When the list is reordered,
 /// the renderer moves DOM nodes instead of recreating them.
-let keyed = (
-  tag: string,
-  attrs: list<attribute<'msg>>,
-  children: list<(string, t<'msg>)>,
-): t<'msg> => {
+let keyed = (tag: string, attrs: list<attribute<'msg>>, children: list<(string, t<'msg>)>): t<
+  'msg,
+> => {
   KeyedElement(tag, List.toArray(attrs), List.toArray(children))
 }
 
 /// Create a keyed element from arrays (faster, avoids list→array conversion)
-let keyedA = (
-  tag: string,
-  attrs: array<attribute<'msg>>,
-  children: array<(string, t<'msg>)>,
-): t<'msg> => {
+let keyedA = (tag: string, attrs: array<attribute<'msg>>, children: array<(string, t<'msg>)>): t<
+  'msg,
+> => {
   KeyedElement(tag, attrs, children)
 }
 
@@ -208,7 +204,10 @@ let hidden = (b: bool): attribute<'msg> => Property("hidden", b ? "true" : "fals
 let draggable = (b: bool): attribute<'msg> => Property("draggable", b ? "true" : "false")
 
 /// Sets the contenteditable boolean attribute.
-let contentEditable = (b: bool): attribute<'msg> => Property("contenteditable", b ? "true" : "false")
+let contentEditable = (b: bool): attribute<'msg> => Property(
+  "contenteditable",
+  b ? "true" : "false",
+)
 
 /// Sets the spellcheck boolean attribute.
 let spellCheck = (b: bool): attribute<'msg> => Property("spellcheck", b ? "true" : "false")
@@ -382,13 +381,19 @@ let onBlur = (msg: 'msg): attribute<'msg> => Event("blur", () => msg)
 // Keyboard events
 
 /// Key down event handler. Handler receives the key string and returns `Some(msg)` to handle or `None` to ignore.
-let onKeyDown = (handler: string => option<'msg>): attribute<'msg> => EventWithKey("keydown", handler)
+let onKeyDown = (handler: string => option<'msg>): attribute<'msg> => EventWithKey(
+  "keydown",
+  handler,
+)
 
 /// Key up event handler. Handler receives the key string and returns `Some(msg)` to handle or `None` to ignore.
 let onKeyUp = (handler: string => option<'msg>): attribute<'msg> => EventWithKey("keyup", handler)
 
 /// Key press event handler (deprecated in browsers; prefer onKeyDown).
-let onKeyPress = (handler: string => option<'msg>): attribute<'msg> => EventWithKey("keypress", handler)
+let onKeyPress = (handler: string => option<'msg>): attribute<'msg> => EventWithKey(
+  "keypress",
+  handler,
+)
 
 // Drag and drop events
 
@@ -463,8 +468,7 @@ let rec map = (vdom: t<'a>, f: 'a => 'b): t<'b> => {
       Array.map(attrs, attr => mapAttr(attr, f)),
       Array.map(keyedChildren, ((key, child)) => (key, map(child, f))),
     )
-  | Fragment(children) =>
-    Fragment(Array.map(children, child => map(child, f)))
+  | Fragment(children) => Fragment(Array.map(children, child => map(child, f)))
   }
 }
 /// Map the message type of a single attribute
@@ -475,11 +479,13 @@ and mapAttr = (attr: attribute<'a>, f: 'a => 'b): attribute<'b> => {
   | Event(name, handler) => Event(name, () => f(handler()))
   | EventWithValue(name, handler) => EventWithValue(name, v => f(handler(v)))
   | EventWithKey(name, handler) =>
-    EventWithKey(name, key =>
-      switch handler(key) {
-      | Some(msg) => Some(f(msg))
-      | None => None
-      }
+    EventWithKey(
+      name,
+      key =>
+        switch handler(key) {
+        | Some(msg) => Some(f(msg))
+        | None => None
+        },
     )
   | EventPreventDefault(name, handler) => EventPreventDefault(name, () => f(handler()))
   | EventStopPropagation(name, handler) => EventStopPropagation(name, () => f(handler()))

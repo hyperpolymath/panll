@@ -13,11 +13,18 @@ type contractile = Model.contractile
 type evaluationResult = Model.evaluationResult
 
 /// Built-in contractile: Orbital Stability Bound
-let orbitalStabilityContract = (orbital: Model.orbitalState, threshold: float): Model.contractStatus => {
+let orbitalStabilityContract = (
+  orbital: Model.orbitalState,
+  threshold: float,
+): Model.contractStatus => {
   if orbital.stability >= threshold {
     Model.Satisfied
   } else {
-    Model.Violated(`Orbital stability ${Float.toString(orbital.stability)} below threshold ${Float.toString(threshold)}`)
+    Model.Violated(
+      `Orbital stability ${Float.toString(orbital.stability)} below threshold ${Float.toString(
+          threshold,
+        )}`,
+    )
   }
 }
 
@@ -26,7 +33,9 @@ let vexationCeilingContract = (vex: Model.vexometerState, ceiling: float): Model
   if vex.index <= ceiling {
     Model.Satisfied
   } else {
-    Model.Violated(`Vexation index ${Float.toString(vex.index)} exceeds ceiling ${Float.toString(ceiling)}`)
+    Model.Violated(
+      `Vexation index ${Float.toString(vex.index)} exceeds ceiling ${Float.toString(ceiling)}`,
+    )
   }
 }
 
@@ -35,16 +44,27 @@ let divergenceLimitContract = (orbital: Model.orbitalState, limit: float): Model
   if orbital.divergenceLevel <= limit {
     Model.Satisfied
   } else {
-    Model.Violated(`Divergence level ${Float.toString(orbital.divergenceLevel)} exceeds limit ${Float.toString(limit)}`)
+    Model.Violated(
+      `Divergence level ${Float.toString(orbital.divergenceLevel)} exceeds limit ${Float.toString(
+          limit,
+        )}`,
+    )
   }
 }
 
 /// Built-in contractile: Autonomy Bound
-let autonomyBoundContract = (agency: Model.agencyState, maxAutonomy: float): Model.contractStatus => {
+let autonomyBoundContract = (
+  agency: Model.agencyState,
+  maxAutonomy: float,
+): Model.contractStatus => {
   if agency.autonomyLevel <= maxAutonomy {
     Model.Satisfied
   } else {
-    Model.Violated(`Autonomy level ${Float.toString(agency.autonomyLevel)} exceeds bound ${Float.toString(maxAutonomy)}`)
+    Model.Violated(
+      `Autonomy level ${Float.toString(agency.autonomyLevel)} exceeds bound ${Float.toString(
+          maxAutonomy,
+        )}`,
+    )
   }
 }
 
@@ -62,11 +82,20 @@ let safeDomContract = (safetyInitialised: bool): Model.contractStatus => {
 /// Anti-Crash Gate contractile — circuit breaker between Panel-N and Panel-W.
 /// Validates that the anti-crash validation is enabled and the rejection rate
 /// is within bounds. High rejection = neural output is drifting from constraints.
-let antiCrashGateContract = (antiCrashEnabled: bool, rejectionRate: float, maxRejectionRate: float): contractStatus => {
+let antiCrashGateContract = (
+  antiCrashEnabled: bool,
+  rejectionRate: float,
+  maxRejectionRate: float,
+): contractStatus => {
   if !antiCrashEnabled {
     Violated("Anti-Crash Gate is disabled — neural tokens reaching workspace unchecked")
   } else if rejectionRate > maxRejectionRate {
-    Violated("Anti-Crash rejection rate " ++ Float.toString(rejectionRate) ++ " exceeds threshold " ++ Float.toString(maxRejectionRate))
+    Violated(
+      "Anti-Crash rejection rate " ++
+      Float.toString(rejectionRate) ++
+      " exceeds threshold " ++
+      Float.toString(maxRejectionRate),
+    )
   } else {
     Satisfied
   }
@@ -78,7 +107,12 @@ let informationHumidityContract = (humidityLevel: float, vexationIndex: float): 
   // Humidity should be inversely correlated with vexation
   // If vexation is high but humidity is also high, the UI isn't adapting
   if vexationIndex > 0.7 && humidityLevel > 0.6 {
-    Violated("High vexation (" ++ Float.toString(vexationIndex) ++ ") but UI density not reduced (humidity=" ++ Float.toString(humidityLevel) ++ ")")
+    Violated(
+      "High vexation (" ++
+      Float.toString(vexationIndex) ++
+      ") but UI density not reduced (humidity=" ++
+      Float.toString(humidityLevel) ++ ")",
+    )
   } else {
     Satisfied
   }
@@ -86,13 +120,22 @@ let informationHumidityContract = (humidityLevel: float, vexationIndex: float): 
 
 /// TypeLL Coverage contractile — validates that TypeLL checking is active.
 /// All panels should have TypeLL coverage for type-safe cross-panel communication.
-let typellCoverageContract = (activeChecks: int, totalPanels: int, minCoveragePercent: float): contractStatus => {
+let typellCoverageContract = (
+  activeChecks: int,
+  totalPanels: int,
+  minCoveragePercent: float,
+): contractStatus => {
   if totalPanels == 0 {
     Pending
   } else {
     let coverage = Int.toFloat(activeChecks) /. Int.toFloat(totalPanels) *. 100.0
     if coverage < minCoveragePercent {
-      Violated("TypeLL coverage at " ++ Float.toString(coverage) ++ "%, minimum is " ++ Float.toString(minCoveragePercent) ++ "%")
+      Violated(
+        "TypeLL coverage at " ++
+        Float.toString(coverage) ++
+        "%, minimum is " ++
+        Float.toString(minCoveragePercent) ++ "%",
+      )
     } else {
       Satisfied
     }
@@ -103,7 +146,12 @@ let typellCoverageContract = (activeChecks: int, totalPanels: int, minCoveragePe
 /// If median latency exceeds the bound, the system is degrading.
 let bojLatencyBoundContract = (medianLatencyMs: float, maxLatencyMs: float): contractStatus => {
   if medianLatencyMs > maxLatencyMs {
-    Violated("BoJ median latency " ++ Float.toString(medianLatencyMs) ++ "ms exceeds " ++ Float.toString(maxLatencyMs) ++ "ms bound")
+    Violated(
+      "BoJ median latency " ++
+      Float.toString(medianLatencyMs) ++
+      "ms exceeds " ++
+      Float.toString(maxLatencyMs) ++ "ms bound",
+    )
   } else {
     Satisfied
   }
@@ -116,7 +164,9 @@ let panelWiringIntegrityContract = (releasableCount: int, totalCount: int): cont
     Pending
   } else if releasableCount < totalCount {
     let missing = totalCount - releasableCount
-    Violated(Int.toString(missing) ++ " of " ++ Int.toString(totalCount) ++ " panels not Releasable")
+    Violated(
+      Int.toString(missing) ++ " of " ++ Int.toString(totalCount) ++ " panels not Releasable",
+    )
   } else {
     Satisfied
   }
@@ -129,7 +179,12 @@ let testHealthContract = (passing: int, total: int, minPassRate: float): contrac
   } else {
     let rate = Int.toFloat(passing) /. Int.toFloat(total) *. 100.0
     if rate < minPassRate {
-      Violated("Test pass rate " ++ Float.toString(rate) ++ "% below " ++ Float.toString(minPassRate) ++ "% threshold")
+      Violated(
+        "Test pass rate " ++
+        Float.toString(rate) ++
+        "% below " ++
+        Float.toString(minPassRate) ++ "% threshold",
+      )
     } else {
       Satisfied
     }
@@ -243,7 +298,10 @@ let defaultContractiles = (): array<contractile> => [
 /// Pattern-matches on the contractile id to call the appropriate check function
 /// with the correct model fields. New contractiles start in Pending and evaluate
 /// when their data becomes available through the model.
-let evaluateContractile = (contractile: Model.contractile, model: Model.model): Model.contractStatus => {
+let evaluateContractile = (
+  contractile: Model.contractile,
+  model: Model.model,
+): Model.contractStatus => {
   switch contractile.id {
   | "orbital-stability" => orbitalStabilityContract(model.orbital, 0.5)
   | "vexation-ceiling" => vexationCeilingContract(model.vexometer, 0.8)
@@ -280,7 +338,9 @@ let evaluateContractile = (contractile: Model.contractile, model: Model.model): 
 }
 
 /// Evaluate all contractiles against current model state
-let evaluateAll = (model: Model.model, contractiles: array<Model.contractile>): array<Model.evaluationResult> => {
+let evaluateAll = (model: Model.model, contractiles: array<Model.contractile>): array<
+  Model.evaluationResult,
+> => {
   Array.map(contractiles, c => {
     let status = evaluateContractile(c, model)
 
@@ -312,7 +372,7 @@ let evaluateAll = (model: Model.model, contractiles: array<Model.contractile>): 
 let adaptContract = (contractile: Model.contractile, model: Model.model): Model.contractile => {
   // Higher vexation = more elastic contracts
   let vexationFactor = model.vexometer.index
-  let adjustedElasticity = contractile.elasticity +. (vexationFactor *. 0.2)
+  let adjustedElasticity = contractile.elasticity +. vexationFactor *. 0.2
 
   // Clamp elasticity to [0.0, 1.0]
   let clampedElasticity = Math.min(1.0, Math.max(0.0, adjustedElasticity))

@@ -75,7 +75,9 @@ let renderExpandedView = (state: vexometerState): Tea_Vdom.t<msg> => {
 
   div(
     list{
-      Attrs.class_("fixed bottom-4 right-4 w-64 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl"),
+      Attrs.class_(
+        "fixed bottom-4 right-4 w-64 bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl",
+      ),
       Attrs.role("meter"),
       Attrs.ariaLabel("Vexation Index"),
       Attrs.ariaLive("polite"),
@@ -98,7 +100,6 @@ let renderExpandedView = (state: vexometerState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-
       // Progress bar
       div(
         list{Attrs.class_("h-3 bg-gray-800 rounded-full overflow-hidden mb-3")},
@@ -112,13 +113,8 @@ let renderExpandedView = (state: vexometerState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-
       // Status
-      div(
-        list{Attrs.class_(`text-xs ${textColour} mb-3`)},
-        list{text(statusText)},
-      ),
-
+      div(list{Attrs.class_(`text-xs ${textColour} mb-3`)}, list{text(statusText)}),
       // Metrics
       div(
         list{Attrs.class_("grid grid-cols-2 gap-2 text-xs")},
@@ -126,10 +122,7 @@ let renderExpandedView = (state: vexometerState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("bg-gray-800/50 p-2 rounded")},
             list{
-              div(
-                list{Attrs.class_("text-gray-500")},
-                list{text("Cancellations")},
-              ),
+              div(list{Attrs.class_("text-gray-500")}, list{text("Cancellations")}),
               div(
                 list{Attrs.class_("text-amber-300 font-mono")},
                 list{text(Int.toString(state.recentCancellations))},
@@ -139,10 +132,7 @@ let renderExpandedView = (state: vexometerState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("bg-gray-800/50 p-2 rounded")},
             list{
-              div(
-                list{Attrs.class_("text-gray-500")},
-                list{text("Corrections")},
-              ),
+              div(list{Attrs.class_("text-gray-500")}, list{text("Corrections")}),
               div(
                 list{Attrs.class_("text-amber-300 font-mono")},
                 list{text(Int.toString(state.recentCorrections))},
@@ -151,21 +141,27 @@ let renderExpandedView = (state: vexometerState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-
       // Anti-inflammatory indicator
       if state.antiInflammatoryActive {
         div(
-          list{Attrs.class_("mt-3 p-2 bg-indigo-900/30 border border-indigo-700/50 rounded text-xs text-indigo-300")},
+          list{
+            Attrs.class_(
+              "mt-3 p-2 bg-indigo-900/30 border border-indigo-700/50 rounded text-xs text-indigo-300",
+            ),
+          },
           list{text("Environment simplified to reduce friction")},
         )
       } else {
         noNode
       },
-
       // Inertia breaker prompt
       if state.inertiaDetected {
         div(
-          list{Attrs.class_("mt-3 p-2 bg-amber-900/30 border border-amber-700/50 rounded text-xs text-amber-300")},
+          list{
+            Attrs.class_(
+              "mt-3 p-2 bg-amber-900/30 border border-amber-700/50 rounded text-xs text-amber-300",
+            ),
+          },
           list{text("Stasis detected. Consider: What's the smallest next step?")},
         )
       } else {
@@ -195,10 +191,7 @@ let renderCompactView = (state: vexometerState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("text-xs text-gray-500 mb-1 flex items-center justify-between")},
         list{
           text("Vexation"),
-          div(
-            list{Attrs.class_("text-gray-400")},
-            list{text(indexPercent ++ "%")},
-          ),
+          div(list{Attrs.class_("text-gray-400")}, list{text(indexPercent ++ "%")}),
         },
       ),
       div(

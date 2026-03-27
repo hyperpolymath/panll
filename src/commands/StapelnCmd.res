@@ -7,10 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Connect to the stapeln backend and check availability.
-let connect = (
-  url: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let connect = (url: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("stapeln_health", {"url": url})
     ->Promise.then(result => {
@@ -26,10 +23,7 @@ let connect = (
 }
 
 /// Request validation of the current assembly from the backend.
-let requestValidation = (
-  url: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let requestValidation = (url: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("stapeln_validate", {"url": url})
     ->Promise.then(result => {
@@ -65,10 +59,7 @@ let requestGenerate = (
 }
 
 /// Refresh pipeline status from the backend.
-let refreshStatus = (
-  url: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let refreshStatus = (url: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("stapeln_status", {"url": url})
     ->Promise.then(result => {

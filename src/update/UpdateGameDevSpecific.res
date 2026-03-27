@@ -11,11 +11,17 @@ let updateGeneratorMode = (model: model, msg: generatorModeMsg): (model, Tea_Cmd
   let state = model.generatorMode
   switch msg {
   | SetGenCategory(cat) => ({...model, generatorMode: {...state, activeTab: cat}}, Tea_Cmd.none)
-  | GenStarted => ({...model, generatorMode: {...state, generating: true, error: None}}, Tea_Cmd.none)
+  | GenStarted => (
+      {...model, generatorMode: {...state, generating: true, error: None}},
+      Tea_Cmd.none,
+    )
   | GenCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, generatorMode: {...state, generating: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, generatorMode: {...state, generating: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, generatorMode: {...state, generating: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissGenError => ({...model, generatorMode: {...state, error: None}}, Tea_Cmd.none)
   }
@@ -26,7 +32,10 @@ let updateGeneratorMode = (model: model, msg: generatorModeMsg): (model, Tea_Cmd
 let updateArchitectMode = (model: model, msg: architectModeMsg): (model, Tea_Cmd.t<msg>) => {
   let state = model.architectMode
   switch msg {
-  | SetArchModeCategory(cat) => ({...model, architectMode: {...state, activeTab: cat}}, Tea_Cmd.none)
+  | SetArchModeCategory(cat) => (
+      {...model, architectMode: {...state, activeTab: cat}},
+      Tea_Cmd.none,
+    )
   | ArchModeStarted => (model, Tea_Cmd.none)
   | ArchModeCompleted(_) => (model, Tea_Cmd.none)
   | DismissArchModeError => ({...model, architectMode: {...state, error: None}}, Tea_Cmd.none)
@@ -42,22 +51,37 @@ let updateGuardAiTuner = (model: model, msg: guardAiTunerMsg): (model, Tea_Cmd.t
   | GatCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, guardAiTuner: {...state, editing: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, guardAiTuner: {...state, editing: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, guardAiTuner: {...state, editing: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissGatError => ({...model, guardAiTuner: {...state, error: None}}, Tea_Cmd.none)
   }
 }
 
 /// Handles all Device Network Designer messages — wire devices, security levels.
-let updateDeviceNetworkDesigner = (model: model, msg: deviceNetworkDesignerMsg): (model, Tea_Cmd.t<msg>) => {
+let updateDeviceNetworkDesigner = (model: model, msg: deviceNetworkDesignerMsg): (
+  model,
+  Tea_Cmd.t<msg>,
+) => {
   let state = model.deviceNetworkDesigner
   switch msg {
-  | SetDndCategory(cat) => ({...model, deviceNetworkDesigner: {...state, activeTab: cat}}, Tea_Cmd.none)
-  | DndStarted => ({...model, deviceNetworkDesigner: {...state, wiringMode: true, error: None}}, Tea_Cmd.none)
+  | SetDndCategory(cat) => (
+      {...model, deviceNetworkDesigner: {...state, activeTab: cat}},
+      Tea_Cmd.none,
+    )
+  | DndStarted => (
+      {...model, deviceNetworkDesigner: {...state, wiringMode: true, error: None}},
+      Tea_Cmd.none,
+    )
   | DndCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, deviceNetworkDesigner: {...state, wiringMode: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, deviceNetworkDesigner: {...state, wiringMode: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, deviceNetworkDesigner: {...state, wiringMode: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissDndError => ({...model, deviceNetworkDesigner: {...state, error: None}}, Tea_Cmd.none)
   }
@@ -72,7 +96,10 @@ let updateAssetManager = (model: model, msg: assetManagerMsg): (model, Tea_Cmd.t
   | AmCompleted(result) =>
     switch result {
     | Ok(_) => ({...model, assetManager: {...state, importing: false}}, Tea_Cmd.none)
-    | Error(err) => ({...model, assetManager: {...state, importing: false, error: Some(err)}}, Tea_Cmd.none)
+    | Error(err) => (
+        {...model, assetManager: {...state, importing: false, error: Some(err)}},
+        Tea_Cmd.none,
+      )
     }
   | DismissAmError => ({...model, assetManager: {...state, error: None}}, Tea_Cmd.none)
   }

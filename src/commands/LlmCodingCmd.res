@@ -14,9 +14,7 @@ let invoke = RuntimeBridge.invoke
 // ============================================================================
 
 /// Fetch all sessions with updated resource stats.
-let listSessions = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listSessions = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("llm_coding_list_sessions", ())
     ->Promise.then(result => {
@@ -40,12 +38,15 @@ let spawnSession = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("llm_coding_spawn", {
-      "name": name,
-      "work_dir": workDir,
-      "task_list": taskList,
-      "allowed_repos": allowedRepos,
-    })
+    invoke(
+      "llm_coding_spawn",
+      {
+        "name": name,
+        "work_dir": workDir,
+        "task_list": taskList,
+        "allowed_repos": allowedRepos,
+      },
+    )
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -59,10 +60,9 @@ let spawnSession = (
 }
 
 /// Freeze (SIGSTOP) a session.
-let freezeSession = (
-  sessionId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let freezeSession = (sessionId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("llm_coding_freeze", {"session_id": sessionId})
     ->Promise.then(result => {
@@ -78,10 +78,7 @@ let freezeSession = (
 }
 
 /// Thaw (SIGCONT) a session.
-let thawSession = (
-  sessionId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let thawSession = (sessionId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("llm_coding_thaw", {"session_id": sessionId})
     ->Promise.then(result => {
@@ -97,10 +94,7 @@ let thawSession = (
 }
 
 /// Kill (terminate) a session.
-let killSession = (
-  sessionId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let killSession = (sessionId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("llm_coding_kill", {"session_id": sessionId})
     ->Promise.then(result => {
@@ -120,9 +114,7 @@ let killSession = (
 // ============================================================================
 
 /// Fetch system resource snapshot.
-let systemResources = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let systemResources = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("llm_coding_system_resources", ())
     ->Promise.then(result => {
@@ -138,9 +130,7 @@ let systemResources = (
 }
 
 /// Fetch workspace locks.
-let listLocks = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listLocks = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("llm_coding_list_locks", ())
     ->Promise.then(result => {
@@ -156,9 +146,7 @@ let listLocks = (
 }
 
 /// Fetch cross-session messages.
-let listMessages = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listMessages = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("llm_coding_list_messages", ())
     ->Promise.then(result => {

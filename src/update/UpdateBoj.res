@@ -12,8 +12,14 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, boj: {...boj, loading: true}},
       BojCmd.health(result => Boj(HealthResult(result))),
     )
-  | HealthResult(Ok(_)) => ({...model, boj: {...boj, connected: true, loading: false, error: None}}, Tea_Cmd.none)
-  | HealthResult(Error(err)) => ({...model, boj: {...boj, connected: false, loading: false, error: Some(err)}}, Tea_Cmd.none)
+  | HealthResult(Ok(_)) => (
+      {...model, boj: {...boj, connected: true, loading: false, error: None}},
+      Tea_Cmd.none,
+    )
+  | HealthResult(Error(err)) => (
+      {...model, boj: {...boj, connected: false, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
   | RefreshCartridges => (
       {...model, boj: {...boj, loading: true}},
       BojCmd.listCartridges(result => Boj(CartridgesResult(result))),
@@ -32,17 +38,38 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
         | BojModel.GradeC => "C"
         | BojModel.GradeD => "D"
         }
-        Some(K9Engine.generateYardContract(
-          c.name, protoNames, c.restPort, c.grpcPort, c.graphqlPort, gradeStr,
-        ))
+        Some(
+          K9Engine.generateYardContract(
+            c.name,
+            protoNames,
+            c.restPort,
+            c.grpcPort,
+            c.graphqlPort,
+            gradeStr,
+          ),
+        )
       | None => model.k9YardContract
       }
-      ({...model, boj: {...boj, cartridges, loading: false, error: None}, k9YardContract: yardContract}, Tea_Cmd.none)
+      (
+        {
+          ...model,
+          boj: {...boj, cartridges, loading: false, error: None},
+          k9YardContract: yardContract,
+        },
+        Tea_Cmd.none,
+      )
     | Error(err) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
     }
-  | CartridgesResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
+  | CartridgesResult(Error(err)) => (
+      {...model, boj: {...boj, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
   | SelectCartridge(name) => {
-      let sel = if name === "" { None } else { Some(name) }
+      let sel = if name === "" {
+        None
+      } else {
+        Some(name)
+      }
       // Integration #4: Module Config → K9 Kennel Schema
       // Generate a Kennel schema for the selected cartridge's config shape.
       let kennelSchema = if name !== "" {
@@ -56,7 +83,10 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
       } else {
         model.k9KennelSchema
       }
-      ({...model, boj: {...boj, selectedCartridge: sel}, k9KennelSchema: kennelSchema}, Tea_Cmd.none)
+      (
+        {...model, boj: {...boj, selectedCartridge: sel}, k9KennelSchema: kennelSchema},
+        Tea_Cmd.none,
+      )
     }
   | LoadCartridge(name) => (
       {...model, boj: {...boj, loading: true}},
@@ -66,8 +96,7 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
       {...model, boj: {...boj, loading: true}},
       BojCmd.unloadCartridge(name, result => Boj(CartridgeActionResult(name, result))),
     )
-  | CartridgeActionResult(_name, Ok(_)) =>
-    // Refresh cartridge list after load/unload.
+  | CartridgeActionResult(_name, Ok(_)) => // Refresh cartridge list after load/unload.
     (
       {...model, boj: {...boj, loading: false, error: None}},
       BojCmd.listCartridges(result => Boj(CartridgesResult(result))),
@@ -87,7 +116,10 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
     | Ok(_diagram) => ({...model, boj: {...boj, loading: false, error: None}}, Tea_Cmd.none)
     | Error(err) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
     }
-  | TopologyResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
+  | TopologyResult(Error(err)) => (
+      {...model, boj: {...boj, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
   | RefreshUmoja => (
       {...model, boj: {...boj, loading: true}},
       BojCmd.umojaStatus(result => Boj(UmojaResult(result))),
@@ -97,7 +129,10 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
     | Ok(umoja) => ({...model, boj: {...boj, umoja, loading: false, error: None}}, Tea_Cmd.none)
     | Error(err) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
     }
-  | UmojaResult(Error(err)) => ({...model, boj: {...boj, loading: false, error: Some(err)}}, Tea_Cmd.none)
+  | UmojaResult(Error(err)) => (
+      {...model, boj: {...boj, loading: false, error: Some(err)}},
+      Tea_Cmd.none,
+    )
   | UmojaDisconnectPeer(peerId) =>
     let cmd = UmojaCmd.disconnectPeer(peerId, r => Boj(UmojaDisconnectPeerResult(r)))
     (model, cmd)
@@ -107,8 +142,7 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
   | UmojaPeerMetrics(peerId) =>
     let cmd = UmojaCmd.getPeerMetrics(peerId, r => Boj(UmojaPeerMetricsResult(r)))
     (model, cmd)
-  | UmojaAddPeerInput(value) =>
-    ({...model, boj: {...boj, umojaAddPeerInput: value}}, Tea_Cmd.none)
+  | UmojaAddPeerInput(value) => ({...model, boj: {...boj, umojaAddPeerInput: value}}, Tea_Cmd.none)
   | UmojaAddPeer(address) =>
     let cmd = UmojaCmd.addPeer(address, r => Boj(UmojaAddPeerResult(r)))
     ({...model, boj: {...boj, umojaAddPeerInput: ""}}, cmd)
@@ -117,8 +151,7 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
     (model, cmd)
   | SetInvokeCartridge(name) => ({...model, boj: {...boj, invokeCartridge: name}}, Tea_Cmd.none)
   | SetInvokeTool(tool) => ({...model, boj: {...boj, invokeTool: tool}}, Tea_Cmd.none)
-  | SetInvokeArgs(_argsJson) =>
-    // Store raw args JSON string — parsed on invocation.
+  | SetInvokeArgs(_argsJson) => // Store raw args JSON string — parsed on invocation.
     (model, Tea_Cmd.none)
   | ExecuteInvoke => {
       let abiSpec = `{"cartridge":"${boj.invokeCartridge}","tool":"${boj.invokeTool}"}`
@@ -138,11 +171,17 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
     }
   | InvokeResult(Ok(payload)) => {
       let result: BojModel.invokeResult = {success: true, payload, durationMs: 0}
-      ({...model, boj: {...boj, loading: false, invokeResult: Some(result), error: None}}, Tea_Cmd.none)
+      (
+        {...model, boj: {...boj, loading: false, invokeResult: Some(result), error: None}},
+        Tea_Cmd.none,
+      )
     }
   | InvokeResult(Error(err)) => {
       let result: BojModel.invokeResult = {success: false, payload: err, durationMs: 0}
-      ({...model, boj: {...boj, loading: false, invokeResult: Some(result), error: None}}, Tea_Cmd.none)
+      (
+        {...model, boj: {...boj, loading: false, invokeResult: Some(result), error: None}},
+        Tea_Cmd.none,
+      )
     }
   | SetBojFilter(text) => ({...model, boj: {...boj, filterText: text}}, Tea_Cmd.none)
   | DismissBojError => ({...model, boj: {...boj, error: None}}, Tea_Cmd.none)
@@ -150,32 +189,41 @@ let updateBoj = (model: model, msg: bojMsg): (model, Tea_Cmd.t<msg>) => {
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
       ({...model, boj: {...boj, lastTypeCheck: Some(json)}, typell: newTypell}, Tea_Cmd.none)
     }
-  | AbiTypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | AbiTypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
-  | UmojaAddPeerResult(Ok(_)) =>
-    // Peer added successfully — refresh Umoja status.
-    ({...model, boj: {...boj, umojaAddPeerInput: ""}}, BojCmd.umojaStatus(result => Boj(UmojaResult(result))))
-  | UmojaAddPeerResult(Error(err)) =>
-    ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
-  | UmojaDisconnectPeerResult(Ok(_)) =>
-    // Peer disconnected — refresh Umoja status.
+  | UmojaAddPeerResult(Ok(_)) => // Peer added successfully — refresh Umoja status.
+    (
+      {...model, boj: {...boj, umojaAddPeerInput: ""}},
+      BojCmd.umojaStatus(result => Boj(UmojaResult(result))),
+    )
+  | UmojaAddPeerResult(Error(err)) => ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
+  | UmojaDisconnectPeerResult(Ok(_)) => // Peer disconnected — refresh Umoja status.
     (model, BojCmd.umojaStatus(result => Boj(UmojaResult(result))))
-  | UmojaDisconnectPeerResult(Error(err)) =>
-    ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
-  | UmojaTriggerGossipResult(Ok(_)) =>
-    // Gossip triggered — refresh Umoja status.
+  | UmojaDisconnectPeerResult(Error(err)) => (
+      {...model, boj: {...boj, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | UmojaTriggerGossipResult(Ok(_)) => // Gossip triggered — refresh Umoja status.
     (model, BojCmd.umojaStatus(result => Boj(UmojaResult(result))))
-  | UmojaTriggerGossipResult(Error(err)) =>
-    ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
-  | UmojaSyncCatalogueResult(Ok(_)) =>
-    (model, BojCmd.umojaStatus(result => Boj(UmojaResult(result))))
-  | UmojaSyncCatalogueResult(Error(err)) =>
-    ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
-  | UmojaPeerMetricsResult(Ok(_json)) =>
-    // Peer metrics received — placeholder for future display.
+  | UmojaTriggerGossipResult(Error(err)) => (
+      {...model, boj: {...boj, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | UmojaSyncCatalogueResult(Ok(_)) => (
+      model,
+      BojCmd.umojaStatus(result => Boj(UmojaResult(result))),
+    )
+  | UmojaSyncCatalogueResult(Error(err)) => (
+      {...model, boj: {...boj, error: Some(err)}},
+      Tea_Cmd.none,
+    )
+  | UmojaPeerMetricsResult(Ok(
+      _json,
+    )) => // Peer metrics received — placeholder for future display.
     (model, Tea_Cmd.none)
-  | UmojaPeerMetricsResult(Error(err)) =>
-    ({...model, boj: {...boj, error: Some(err)}}, Tea_Cmd.none)
+  | UmojaPeerMetricsResult(Error(err)) => (
+      {...model, boj: {...boj, error: Some(err)}},
+      Tea_Cmd.none,
+    )
   }
 }

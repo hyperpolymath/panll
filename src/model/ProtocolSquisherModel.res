@@ -29,10 +29,10 @@ type schemaFormat =
   | ReScriptFormat
   | PythonFormat
   // Enterprise architecture model interchange formats
-  | XMI            // OMG XML Metadata Interchange (MOF/UML/SysML serialisation)
+  | XMI // OMG XML Metadata Interchange (MOF/UML/SysML serialisation)
   | ArchiMateExchange // The Open Group ArchiMate Model Exchange File Format
-  | BPMN_XML       // OMG BPMN 2.0 XML serialisation
-  | SBVR           // OMG Semantics of Business Vocabulary and Rules
+  | BPMN_XML // OMG BPMN 2.0 XML serialisation
+  | SBVR // OMG Semantics of Business Vocabulary and Rules
 
 /// Transport class — higher tier means more efficient wire representation.
 type transportClass =

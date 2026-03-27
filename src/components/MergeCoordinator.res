@@ -136,7 +136,9 @@ let renderConflictsTab = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
           list{Attrs.class_("text-sm text-gray-400 mb-1")},
           list{
             text(
-              `${Int.toString(Array.length(state.conflicts))} conflict(s), ${Int.toString(unresolvedCount)} unresolved`,
+              `${Int.toString(Array.length(state.conflicts))} conflict(s), ${Int.toString(
+                  unresolvedCount,
+                )} unresolved`,
             ),
           },
         ),
@@ -144,9 +146,7 @@ let renderConflictsTab = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
           list{Attrs.class_("flex flex-col gap-2 max-h-80 overflow-y-auto")},
           state.conflicts
           ->Array.map(conflict => {
-            let resolvedCls = conflict.resolved
-              ? "border-emerald-800 opacity-60"
-              : "border-red-800"
+            let resolvedCls = conflict.resolved ? "border-emerald-800 opacity-60" : "border-red-800"
             div(
               list{Attrs.class_(`bg-gray-800 rounded p-3 border ${resolvedCls}`)},
               list{
@@ -158,11 +158,19 @@ let renderConflictsTab = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("grid grid-cols-2 gap-2")},
                   list{
                     div(
-                      list{Attrs.class_("bg-gray-900 rounded p-2 text-xs font-mono text-emerald-400 max-h-24 overflow-auto")},
+                      list{
+                        Attrs.class_(
+                          "bg-gray-900 rounded p-2 text-xs font-mono text-emerald-400 max-h-24 overflow-auto",
+                        ),
+                      },
                       list{text(`ours: ${conflict.ours}`)},
                     ),
                     div(
-                      list{Attrs.class_("bg-gray-900 rounded p-2 text-xs font-mono text-blue-400 max-h-24 overflow-auto")},
+                      list{
+                        Attrs.class_(
+                          "bg-gray-900 rounded p-2 text-xs font-mono text-blue-400 max-h-24 overflow-auto",
+                        ),
+                      },
                       list{text(`theirs: ${conflict.theirs}`)},
                     ),
                   },
@@ -176,7 +184,9 @@ let renderConflictsTab = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
                           Attrs.class_(
                             "px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
                           ),
-                          Events.onClick(MergeCoordinator(ResolveConflict(conflict.filePath, "ours"))),
+                          Events.onClick(
+                            MergeCoordinator(ResolveConflict(conflict.filePath, "ours")),
+                          ),
                         },
                         list{text("Accept Ours")},
                       ),
@@ -185,17 +195,16 @@ let renderConflictsTab = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
                           Attrs.class_(
                             "px-2 py-1 text-xs bg-blue-700 text-white rounded hover:bg-blue-600 cursor-pointer",
                           ),
-                          Events.onClick(MergeCoordinator(ResolveConflict(conflict.filePath, "theirs"))),
+                          Events.onClick(
+                            MergeCoordinator(ResolveConflict(conflict.filePath, "theirs")),
+                          ),
                         },
                         list{text("Accept Theirs")},
                       ),
                     },
                   )
                 } else {
-                  div(
-                    list{Attrs.class_("text-xs text-emerald-500 mt-1")},
-                    list{text("Resolved")},
-                  )
+                  div(list{Attrs.class_("text-xs text-emerald-500 mt-1")}, list{text("Resolved")})
                 },
               },
             )
@@ -210,10 +219,7 @@ let renderConflictsTab = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
 /// Merge Queue tab: ordered list of branches awaiting merge.
 let renderMergeQueueTab = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
   if Array.length(state.mergeQueue) === 0 {
-    div(
-      list{Attrs.class_("p-4 text-gray-500 text-sm italic")},
-      list{text("Merge queue is empty.")},
-    )
+    div(list{Attrs.class_("p-4 text-gray-500 text-sm italic")}, list{text("Merge queue is empty.")})
   } else {
     div(
       list{Attrs.class_("flex flex-col gap-1 p-4 max-h-80 overflow-y-auto")},
@@ -231,10 +237,7 @@ let renderMergeQueueTab = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
               list{text(entry.branchName)},
             ),
             if entry.checksPassed {
-              span(
-                list{Attrs.class_("text-xs text-green-400")},
-                list{text("Checks passed")},
-              )
+              span(list{Attrs.class_("text-xs text-green-400")}, list{text("Checks passed")})
             } else {
               span(
                 list{Attrs.class_("text-xs text-yellow-400")},
@@ -305,7 +308,9 @@ let view = (state: mergeCoordinatorState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

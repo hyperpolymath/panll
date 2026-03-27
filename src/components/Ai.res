@@ -82,31 +82,28 @@ let renderSidebar = (ai: aiState): Tea_Vdom.t<msg> => {
           ),
           div(
             list{Attrs.class_("space-y-2")},
-            list{
-              ...ai.providers
-              ->AiEngine.sortByPriority
-              ->Array.map(p => {
-                let status = AiEngine.getProviderStatus(ai.providerStatuses, p.id)
-                div(
-                  list{Attrs.class_("flex items-center gap-2 text-sm")},
-                  list{
-                    div(
-                      list{Attrs.class_(`w-2 h-2 rounded-full ${AiEngine.statusDotClass(status)}`)},
-                      list{},
-                    ),
-                    div(
-                      list{Attrs.class_(p.enabled ? "text-gray-300" : "text-gray-600")},
-                      list{text(AiEngine.providerShortLabel(p.id))},
-                    ),
-                  },
-                )
-              })
-              ->List.fromArray
-            },
+            ai.providers
+            ->AiEngine.sortByPriority
+            ->Array.map(p => {
+              let status = AiEngine.getProviderStatus(ai.providerStatuses, p.id)
+              div(
+                list{Attrs.class_("flex items-center gap-2 text-sm")},
+                list{
+                  div(
+                    list{Attrs.class_(`w-2 h-2 rounded-full ${AiEngine.statusDotClass(status)}`)},
+                    list{},
+                  ),
+                  div(
+                    list{Attrs.class_(p.enabled ? "text-gray-300" : "text-gray-600")},
+                    list{text(AiEngine.providerShortLabel(p.id))},
+                  ),
+                },
+              )
+            })
+            ->List.fromArray,
           ),
         },
       ),
-      // Section: Auto context
       {
         if ai.autoContext !== "" {
           div(
@@ -165,11 +162,9 @@ let renderCategoryTab = (cat: aiCategory, isActive: bool): Tea_Vdom.t<msg> => {
 let renderCategoryTabBar = (activeCategory: aiCategory): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex border-b border-gray-800")},
-    list{
-      ...AiEngine.allCategories
-      ->Array.map(cat => renderCategoryTab(cat, cat === activeCategory))
-      ->List.fromArray
-    },
+    AiEngine.allCategories
+    ->Array.map(cat => renderCategoryTab(cat, cat === activeCategory))
+    ->List.fromArray,
   )
 }
 
@@ -193,7 +188,6 @@ let renderMessage = (msg: aiMessage): Tea_Vdom.t<Msg.msg> => {
       div(
         list{Attrs.class_(`max-w-3xl ${bgClass} border ${borderClass} rounded-lg px-4 py-3`)},
         list{
-          // Attribution header
           {
             if !isUser {
               div(
@@ -215,11 +209,7 @@ let renderMessage = (msg: aiMessage): Tea_Vdom.t<Msg.msg> => {
                   },
                   {
                     switch msg.model {
-                    | Some(m) =>
-                      span(
-                        list{Attrs.class_("text-xs text-gray-600")},
-                        list{text(m)},
-                      )
+                    | Some(m) => span(list{Attrs.class_("text-xs text-gray-600")}, list{text(m)})
                     | None => noNode
                     }
                   },
@@ -263,21 +253,14 @@ let renderConversation = (ai: aiState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("text-center text-gray-600")},
                 list{
-                  div(
-                    list{Attrs.class_("text-2xl mb-4")},
-                    list{text("Neural Interface")},
-                  ),
+                  div(list{Attrs.class_("text-2xl mb-4")}, list{text("Neural Interface")}),
                   div(
                     list{Attrs.class_("text-sm")},
-                    list{
-                      text("Start a conversation with your AI providers."),
-                    },
+                    list{text("Start a conversation with your AI providers.")},
                   ),
                   div(
                     list{Attrs.class_("text-sm mt-2")},
-                    list{
-                      text("Load a repo to give the AI full project context."),
-                    },
+                    list{text("Load a repo to give the AI full project context.")},
                   ),
                 },
               ),
@@ -286,11 +269,10 @@ let renderConversation = (ai: aiState): Tea_Vdom.t<msg> => {
         } else {
           div(
             list{Attrs.class_("space-y-1")},
-            list{...ai.messages->Array.map(renderMessage)->List.fromArray},
+            ai.messages->Array.map(renderMessage)->List.fromArray,
           )
         }
       },
-      // Loading indicator
       {
         if ai.loading {
           div(
@@ -311,12 +293,15 @@ let renderConversation = (ai: aiState): Tea_Vdom.t<msg> => {
           noNode
         }
       },
-      // Error display
       {
         switch ai.error {
         | Some(e) =>
           div(
-            list{Attrs.class_("mx-4 mb-2 px-3 py-2 bg-red-900/30 border border-red-700 rounded text-sm text-red-300")},
+            list{
+              Attrs.class_(
+                "mx-4 mb-2 px-3 py-2 bg-red-900/30 border border-red-700 rounded text-sm text-red-300",
+              ),
+            },
             list{text(e)},
           )
         | None => noNode
@@ -374,13 +359,22 @@ let renderInputArea = (ai: aiState): Tea_Vdom.t<msg> => {
               {
                 switch selectedProvider {
                 | Some(p) =>
-                  span(list{}, list{text(`${AiEngine.providerShortLabel(p.id)}: ${p.selectedModel}`)})
+                  span(
+                    list{},
+                    list{text(`${AiEngine.providerShortLabel(p.id)}: ${p.selectedModel}`)},
+                  )
                 | None => span(list{}, list{text("No provider")})
                 }
               },
               span(
                 list{},
-                list{text(`${AiEngine.formatTokens(ai.totalInputTokens)} in / ${AiEngine.formatTokens(ai.totalOutputTokens)} out`)},
+                list{
+                  text(
+                    `${AiEngine.formatTokens(ai.totalInputTokens)} in / ${AiEngine.formatTokens(
+                        ai.totalOutputTokens,
+                      )} out`,
+                  ),
+                },
               ),
             },
           ),
@@ -424,112 +418,99 @@ let renderProviders = (ai: aiState): Tea_Vdom.t<msg> => {
     list{
       div(
         list{Attrs.class_("space-y-4")},
-        list{
-          ...ai.providers
-          ->AiEngine.sortByPriority
-          ->Array.map(p => {
-            let status = AiEngine.getProviderStatus(ai.providerStatuses, p.id)
-            div(
-              list{
-                Attrs.class_(
-                  `border ${p.enabled ? "border-gray-700" : "border-gray-800"} rounded-lg p-4`,
-                ),
-              },
-              list{
-                // Provider header
-                div(
-                  list{Attrs.class_("flex items-center justify-between mb-3")},
-                  list{
-                    div(
-                      list{Attrs.class_("flex items-center gap-3")},
-                      list{
-                        div(
-                          list{
-                            Attrs.class_(
-                              `w-3 h-3 rounded-full ${AiEngine.statusDotClass(status)}`,
-                            ),
-                          },
-                          list{},
-                        ),
-                        div(
-                          list{Attrs.class_("text-lg font-medium text-gray-200")},
-                          list{text(AiEngine.providerLabel(p.id))},
-                        ),
-                        span(
-                          list{
-                            Attrs.class_(
-                              `text-xs px-2 py-0.5 rounded ${AiEngine.providerBgColour(p.id)}`,
-                            ),
-                          },
-                          list{text(`#${Int.toString(p.priority)}`)},
-                        ),
-                      },
-                    ),
-                    button(
-                      list{
-                        Attrs.class_(
-                          `px-3 py-1 rounded text-sm transition-colors ${p.enabled
-                              ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
-                              : "bg-gray-700 text-gray-400 hover:bg-gray-600"}`,
-                        ),
-                        Events.onClick(Ai(ToggleAiProvider(p.id))),
-                      },
-                      list{text(p.enabled ? "Enabled" : "Disabled")},
-                    ),
-                  },
-                ),
-                // Model selector
-                div(
-                  list{Attrs.class_("flex items-center gap-2 mb-2")},
-                  list{
-                    span(
-                      list{Attrs.class_("text-xs text-gray-500")},
-                      list{text("Model:")},
-                    ),
-                    div(
-                      list{Attrs.class_("flex gap-1 flex-wrap")},
-                      list{
-                        ...AiEngine.providerModels(p.id)
-                        ->Array.map(m => {
-                          button(
-                            list{
-                              Attrs.class_(
-                                `px-2 py-1 text-xs rounded transition-colors ${p.selectedModel === m
-                                    ? "bg-orange-500/20 text-orange-300"
-                                    : "text-gray-500 hover:text-gray-300 hover:bg-gray-800"}`,
-                              ),
-                              Events.onClick(Ai(SetAiModel(p.id, m))),
-                            },
-                            list{text(m)},
-                          )
-                        })
-                        ->List.fromArray
-                      },
-                    ),
-                  },
-                ),
-                // Status line
-                div(
-                  list{Attrs.class_("text-xs text-gray-600")},
-                  list{
-                    text(`Status: ${AiEngine.statusLabel(status)} | Env: ${p.envVar}`),
-                  },
-                ),
-                // Health check button
-                button(
-                  list{
-                    Attrs.class_(
-                      "mt-2 text-xs text-gray-500 hover:text-gray-300 transition-colors",
-                    ),
-                    Events.onClick(Ai(CheckProvider(p.id))),
-                  },
-                  list{text("Check health")},
-                ),
-              },
-            )
-          })
-          ->List.fromArray
-        },
+        ai.providers
+        ->AiEngine.sortByPriority
+        ->Array.map(p => {
+          let status = AiEngine.getProviderStatus(ai.providerStatuses, p.id)
+          div(
+            list{
+              Attrs.class_(
+                `border ${p.enabled ? "border-gray-700" : "border-gray-800"} rounded-lg p-4`,
+              ),
+            },
+            list{
+              // Provider header
+              div(
+                list{Attrs.class_("flex items-center justify-between mb-3")},
+                list{
+                  div(
+                    list{Attrs.class_("flex items-center gap-3")},
+                    list{
+                      div(
+                        list{
+                          Attrs.class_(`w-3 h-3 rounded-full ${AiEngine.statusDotClass(status)}`),
+                        },
+                        list{},
+                      ),
+                      div(
+                        list{Attrs.class_("text-lg font-medium text-gray-200")},
+                        list{text(AiEngine.providerLabel(p.id))},
+                      ),
+                      span(
+                        list{
+                          Attrs.class_(
+                            `text-xs px-2 py-0.5 rounded ${AiEngine.providerBgColour(p.id)}`,
+                          ),
+                        },
+                        list{text(`#${Int.toString(p.priority)}`)},
+                      ),
+                    },
+                  ),
+                  button(
+                    list{
+                      Attrs.class_(
+                        `px-3 py-1 rounded text-sm transition-colors ${p.enabled
+                            ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                            : "bg-gray-700 text-gray-400 hover:bg-gray-600"}`,
+                      ),
+                      Events.onClick(Ai(ToggleAiProvider(p.id))),
+                    },
+                    list{text(p.enabled ? "Enabled" : "Disabled")},
+                  ),
+                },
+              ),
+              // Model selector
+              div(
+                list{Attrs.class_("flex items-center gap-2 mb-2")},
+                list{
+                  span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Model:")}),
+                  div(
+                    list{Attrs.class_("flex gap-1 flex-wrap")},
+                    AiEngine.providerModels(p.id)
+                    ->Array.map(m => {
+                      button(
+                        list{
+                          Attrs.class_(
+                            `px-2 py-1 text-xs rounded transition-colors ${p.selectedModel === m
+                                ? "bg-orange-500/20 text-orange-300"
+                                : "text-gray-500 hover:text-gray-300 hover:bg-gray-800"}`,
+                          ),
+                          Events.onClick(Ai(SetAiModel(p.id, m))),
+                        },
+                        list{text(m)},
+                      )
+                    })
+                    ->List.fromArray,
+                  ),
+                },
+              ),
+              // Status line
+              div(
+                list{Attrs.class_("text-xs text-gray-600")},
+                list{text(`Status: ${AiEngine.statusLabel(status)} | Env: ${p.envVar}`)},
+              ),
+              // Health check button
+              button(
+                list{
+                  Attrs.class_("mt-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"),
+                  Events.onClick(Ai(CheckProvider(p.id))),
+                },
+                list{text("Check health")},
+              ),
+            },
+          )
+        })
+        ->List.fromArray,
       ),
     },
   )
@@ -629,11 +610,7 @@ let renderContext = (ai: aiState): Tea_Vdom.t<msg> => {
               ),
               div(
                 list{Attrs.class_("text-sm text-gray-300")},
-                list{
-                  text(
-                    `${Int.toString(String.length(ai.systemPrompt))} characters`,
-                  ),
-                },
+                list{text(`${Int.toString(String.length(ai.systemPrompt))} characters`)},
               ),
             },
           ),
@@ -665,7 +642,13 @@ let renderContext = (ai: aiState): Tea_Vdom.t<msg> => {
               ),
               div(
                 list{Attrs.class_("text-sm text-gray-300")},
-                list{text(ai.broadcastMode ? "Enabled — sending to multiple providers" : "Disabled — single provider")},
+                list{
+                  text(
+                    ai.broadcastMode
+                      ? "Enabled — sending to multiple providers"
+                      : "Disabled — single provider",
+                  ),
+                },
               ),
             },
           ),
@@ -682,9 +665,7 @@ let renderContext = (ai: aiState): Tea_Vdom.t<msg> => {
 /// Render the full AI panel overlay with three-region layout.
 let view = (ai: aiState): Tea_Vdom.t<msg> => {
   div(
-    list{
-      Attrs.class_("fixed inset-0 bg-gray-950/95 z-40 flex flex-col"),
-    },
+    list{Attrs.class_("fixed inset-0 bg-gray-950/95 z-40 flex flex-col")},
     list{
       // Header bar
       div(
@@ -693,10 +674,7 @@ let view = (ai: aiState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              div(
-                list{Attrs.class_("text-lg font-light text-gray-200")},
-                list{text("AI Panel")},
-              ),
+              div(list{Attrs.class_("text-lg font-light text-gray-200")}, list{text("AI Panel")}),
               {
                 let selected = AiEngine.selectProvider(ai.providers)
                 switch selected {
@@ -715,7 +693,9 @@ let view = (ai: aiState): Tea_Vdom.t<msg> => {
               {
                 if ai.broadcastMode {
                   span(
-                    list{Attrs.class_("text-xs px-2 py-0.5 rounded bg-orange-500/20 text-orange-300")},
+                    list{
+                      Attrs.class_("text-xs px-2 py-0.5 rounded bg-orange-500/20 text-orange-300"),
+                    },
                     list{text("Broadcast")},
                   )
                 } else {
@@ -755,7 +735,6 @@ let view = (ai: aiState): Tea_Vdom.t<msg> => {
                 | Context => renderContext(ai)
                 }
               },
-              // Input area (only in conversation mode)
               {
                 if ai.activeCategory === Conversation {
                   renderInputArea(ai)

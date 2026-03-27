@@ -42,10 +42,7 @@ let exportSarifViaObserveMcp = (
 /// The `batch` parameter should be an OTLP JSON string produced by
 /// `ObservabilityEngine.exportTraceBatch`.  The backend forwards this
 /// to the configured collector endpoint and returns an acceptance count.
-let exportOtelTraces = (
-  batch: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let exportOtelTraces = (batch: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("observe_export_traces", {"batch": batch})
     ->Promise.then(result => {
@@ -64,9 +61,7 @@ let exportOtelTraces = (
 ///
 /// Returns JSON with trace count, span count, active exporters, and
 /// collector health — used to populate the BoJ observability dashboard.
-let fetchObservabilitySummary = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let fetchObservabilitySummary = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("observe_summary", {"_": true})
     ->Promise.then(result => {

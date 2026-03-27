@@ -21,7 +21,10 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
         CloudGuardCmd.listZones(result => CloudGuard(ZonesLoaded(result))),
       )
     | Error(err) => (
-        {...model, cloudguard: {...cg, connection: ConnectionError(err), loading: false, error: Some(err)}},
+        {
+          ...model,
+          cloudguard: {...cg, connection: ConnectionError(err), loading: false, error: Some(err)},
+        },
         Tea_Cmd.none,
       )
     }
@@ -67,10 +70,7 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
       let allIds = cg.zones->Array.map(z => z.id)
       ({...model, cloudguard: {...cg, selectedZoneIds: allIds}}, Tea_Cmd.none)
     }
-  | DeselectAllZones => (
-      {...model, cloudguard: {...cg, selectedZoneIds: []}},
-      Tea_Cmd.none,
-    )
+  | DeselectAllZones => ({...model, cloudguard: {...cg, selectedZoneIds: []}}, Tea_Cmd.none)
 
   // -- Settings read/write --
   | FetchSettings(zoneId) => (
@@ -120,18 +120,20 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
         (model, Tea_Cmd.none)
       } else {
         // Get the first selected zone to push to
-        switch Array.get(cg.selectedZoneIds, 0) {
+        switch cg.selectedZoneIds[0] {
         | Some(zoneId) => {
             let settingsJson = CloudGuardEngine.serialiseModifiedSettings(cg.settings)
-            let typellCmd = TypeLLService.checkConfigTypes(settingsJson, "cloudguard", result => CloudGuard(TypeCheckResult(result)))
+            let typellCmd = TypeLLService.checkConfigTypes(
+              settingsJson,
+              "cloudguard",
+              result => CloudGuard(TypeCheckResult(result)),
+            )
             (
               {...model, cloudguard: {...cg, loading: true}},
               Tea_Cmd.batch(list{
-                CloudGuardCmd.updateSettingsBatch(
-                  zoneId,
-                  settingsJson,
-                  result => CloudGuard(ChangesPushed(result)),
-                ),
+                CloudGuardCmd.updateSettingsBatch(zoneId, settingsJson, result => CloudGuard(
+                  ChangesPushed(result),
+                )),
                 typellCmd,
               }),
             )
@@ -145,7 +147,10 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
     | Ok(_json) => {
         // Clear modified flags on all settings after successful push
         let clearedSettings = cg.settings->Array.map(s => {...s, modified: false})
-        ({...model, cloudguard: {...cg, settings: clearedSettings, loading: false, error: None}}, Tea_Cmd.none)
+        (
+          {...model, cloudguard: {...cg, settings: clearedSettings, loading: false, error: None}},
+          Tea_Cmd.none,
+        )
       }
     | Error(err) => (
         {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
@@ -162,7 +167,10 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
     switch result {
     | Ok(json) => {
         let records = CloudGuardEngine.parseDnsRecordsJson(json)
-        ({...model, cloudguard: {...cg, dnsRecords: records, loading: false, error: None}}, Tea_Cmd.none)
+        (
+          {...model, cloudguard: {...cg, dnsRecords: records, loading: false, error: None}},
+          Tea_Cmd.none,
+        )
       }
     | Error(err) => (
         {...model, cloudguard: {...cg, loading: false, error: Some(err)}},
@@ -171,13 +179,15 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
     }
   | DeleteDnsRecord(zoneId, recordId) => (
       {...model, cloudguard: {...cg, loading: true}},
-      CloudGuardCmd.deleteDnsRecord(zoneId, recordId, result => CloudGuard(DnsRecordDeleted(result))),
+      CloudGuardCmd.deleteDnsRecord(zoneId, recordId, result => CloudGuard(
+        DnsRecordDeleted(result),
+      )),
     )
   | DnsRecordDeleted(result) =>
     switch result {
     | Ok(_json) =>
       // Re-fetch DNS records for the first selected zone to update the list
-      let refetchCmd = switch Array.get(cg.selectedZoneIds, 0) {
+      let refetchCmd = switch cg.selectedZoneIds[0] {
       | Some(zoneId) =>
         CloudGuardCmd.listDnsRecords(zoneId, result => CloudGuard(DnsRecordsLoaded(result)))
       | None => Tea_Cmd.none
@@ -191,7 +201,14 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
   | CreateDnsRecord(zoneId, recordType, name, content, ttl, proxied, priority) => (
       {...model, cloudguard: {...cg, loading: true}},
       CloudGuardCmd.createDnsRecord(
-        zoneId, recordType, name, content, ttl, proxied, priority, None,
+        zoneId,
+        recordType,
+        name,
+        content,
+        ttl,
+        proxied,
+        priority,
+        None,
         result => CloudGuard(DnsRecordCreated(result)),
       ),
     )
@@ -199,7 +216,7 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
     switch result {
     | Ok(_json) =>
       // Re-fetch DNS records to show the newly created record
-      let refetchCmd = switch Array.get(cg.selectedZoneIds, 0) {
+      let refetchCmd = switch cg.selectedZoneIds[0] {
       | Some(zoneId) =>
         CloudGuardCmd.listDnsRecords(zoneId, result => CloudGuard(DnsRecordsLoaded(result)))
       | None => Tea_Cmd.none
@@ -214,60 +231,82 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
       {...model, cloudguard: {...cg, dnsEditingId: Some(recordId)}},
       Tea_Cmd.none,
     )
-  | CancelEditingDnsRecord => (
-      {...model, cloudguard: {...cg, dnsEditingId: None}},
-      Tea_Cmd.none,
-    )
-  | ApplySecurityTemplate(template) => {
-      // Apply a DNS security template (SPF, DMARC, DKIM revoke, CAA, TLSRPT)
-      // Requires a selected zone to know the domain name
-      switch Array.get(cg.selectedZoneIds, 0) {
-      | None => ({...model, cloudguard: {...cg, error: Some("No zone selected")}}, Tea_Cmd.none)
-      | Some(zoneId) =>
-        let zoneName = switch cg.zones->Array.find(z => z.id === zoneId) {
-        | Some(z) => z.name
-        | None => "example.com"
-        }
-        let cmd = switch template {
-        | "spf" =>
-          CloudGuardCmd.createDnsRecord(
-            zoneId, "TXT", zoneName,
-            "v=spf1 -all",
-            1, None, None, Some("CloudGuard: SPF deny-all (no mail)"),
-            result => CloudGuard(DnsRecordCreated(result)),
-          )
-        | "dmarc" =>
-          CloudGuardCmd.createDnsRecord(
-            zoneId, "TXT", `_dmarc.${zoneName}`,
-            "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s; pct=100; fo=1",
-            1, None, None, Some("CloudGuard: DMARC reject policy"),
-            result => CloudGuard(DnsRecordCreated(result)),
-          )
-        | "dkim_revoke" =>
-          CloudGuardCmd.createDnsRecord(
-            zoneId, "TXT", `*._domainkey.${zoneName}`,
-            "v=DKIM1; p=",
-            1, None, None, Some("CloudGuard: DKIM key revocation"),
-            result => CloudGuard(DnsRecordCreated(result)),
-          )
-        | "caa" =>
-          CloudGuardCmd.createDnsRecord(
-            zoneId, "CAA", zoneName,
-            "0 issue \"letsencrypt.org\"",
-            1, None, None, Some("CloudGuard: CAA restrict to Let's Encrypt"),
-            result => CloudGuard(DnsRecordCreated(result)),
-          )
-        | "tlsrpt" =>
-          CloudGuardCmd.createDnsRecord(
-            zoneId, "TXT", `_smtp._tls.${zoneName}`,
-            "v=TLSRPTv1; rua=mailto:tlsrpt@${zoneName}",
-            1, None, None, Some("CloudGuard: TLS-RPT reporting"),
-            result => CloudGuard(DnsRecordCreated(result)),
-          )
-        | _ => Tea_Cmd.none
-        }
-        ({...model, cloudguard: {...cg, loading: true}}, cmd)
+  | CancelEditingDnsRecord => ({...model, cloudguard: {...cg, dnsEditingId: None}}, Tea_Cmd.none)
+  | ApplySecurityTemplate(
+      template,
+    ) => // Apply a DNS security template (SPF, DMARC, DKIM revoke, CAA, TLSRPT)
+    // Requires a selected zone to know the domain name
+    switch cg.selectedZoneIds[0] {
+    | None => ({...model, cloudguard: {...cg, error: Some("No zone selected")}}, Tea_Cmd.none)
+    | Some(zoneId) =>
+      let zoneName = switch cg.zones->Array.find(z => z.id === zoneId) {
+      | Some(z) => z.name
+      | None => "example.com"
       }
+      let cmd = switch template {
+      | "spf" =>
+        CloudGuardCmd.createDnsRecord(
+          zoneId,
+          "TXT",
+          zoneName,
+          "v=spf1 -all",
+          1,
+          None,
+          None,
+          Some("CloudGuard: SPF deny-all (no mail)"),
+          result => CloudGuard(DnsRecordCreated(result)),
+        )
+      | "dmarc" =>
+        CloudGuardCmd.createDnsRecord(
+          zoneId,
+          "TXT",
+          `_dmarc.${zoneName}`,
+          "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s; pct=100; fo=1",
+          1,
+          None,
+          None,
+          Some("CloudGuard: DMARC reject policy"),
+          result => CloudGuard(DnsRecordCreated(result)),
+        )
+      | "dkim_revoke" =>
+        CloudGuardCmd.createDnsRecord(
+          zoneId,
+          "TXT",
+          `*._domainkey.${zoneName}`,
+          "v=DKIM1; p=",
+          1,
+          None,
+          None,
+          Some("CloudGuard: DKIM key revocation"),
+          result => CloudGuard(DnsRecordCreated(result)),
+        )
+      | "caa" =>
+        CloudGuardCmd.createDnsRecord(
+          zoneId,
+          "CAA",
+          zoneName,
+          "0 issue \"letsencrypt.org\"",
+          1,
+          None,
+          None,
+          Some("CloudGuard: CAA restrict to Let's Encrypt"),
+          result => CloudGuard(DnsRecordCreated(result)),
+        )
+      | "tlsrpt" =>
+        CloudGuardCmd.createDnsRecord(
+          zoneId,
+          "TXT",
+          `_smtp._tls.${zoneName}`,
+          "v=TLSRPTv1; rua=mailto:tlsrpt@${zoneName}",
+          1,
+          None,
+          None,
+          Some("CloudGuard: TLS-RPT reporting"),
+          result => CloudGuard(DnsRecordCreated(result)),
+        )
+      | _ => Tea_Cmd.none
+      }
+      ({...model, cloudguard: {...cg, loading: true}}, cmd)
     }
 
   // -- DNSSEC --
@@ -297,11 +336,12 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
     }
 
   // -- Hardening --
-  | HardenSelected => {
-      // Harden first selected zone; subsequent zones handled by ZoneHardened
-      switch Array.get(cg.selectedZoneIds, 0) {
-      | Some(firstZone) => (
-          {...model, cloudguard: {
+  | HardenSelected => // Harden first selected zone; subsequent zones handled by ZoneHardened
+    switch cg.selectedZoneIds[0] {
+    | Some(firstZone) => (
+        {
+          ...model,
+          cloudguard: {
             ...cg,
             loading: true,
             bulkProgress: Some({
@@ -312,15 +352,15 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
               startedAt: "",
               errors: [],
             }),
-          }},
-          CloudGuardCmd.hardenZone(firstZone, result => CloudGuard(ZoneHardened(result))),
-        )
-      | None => (model, Tea_Cmd.none)
-      }
+          },
+        },
+        CloudGuardCmd.hardenZone(firstZone, result => CloudGuard(ZoneHardened(result))),
+      )
+    | None => (model, Tea_Cmd.none)
     }
   | HardenSetting(_settingId) =>
     // Single setting fix — delegates to zone hardening for the first selected zone
-    switch Array.get(cg.selectedZoneIds, 0) {
+    switch cg.selectedZoneIds[0] {
     | Some(zoneId) => (
         {...model, cloudguard: {...cg, loading: true}},
         CloudGuardCmd.hardenZone(zoneId, result => CloudGuard(ZoneHardened(result))),
@@ -336,7 +376,8 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
       | Some(p) =>
         switch result {
         | Ok(_) => Some({...p, completed: p.completed + 1})
-        | Error(err) => Some({
+        | Error(err) =>
+          Some({
             ...p,
             completed: p.completed + 1,
             failed: p.failed + 1,
@@ -351,7 +392,7 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
       | None => 0
       }
       let cmd = if nextIndex < Array.length(cg.selectedZoneIds) {
-        switch Array.get(cg.selectedZoneIds, nextIndex) {
+        switch cg.selectedZoneIds[nextIndex] {
         | Some(nextZone) =>
           CloudGuardCmd.hardenZone(nextZone, result => CloudGuard(ZoneHardened(result)))
         | None => Tea_Cmd.none
@@ -360,17 +401,14 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
         Tea_Cmd.none // All done
       }
       let isDone = nextIndex >= Array.length(cg.selectedZoneIds)
-      (
-        {...model, cloudguard: {...cg, bulkProgress: progress, loading: !isDone}},
-        cmd,
-      )
+      ({...model, cloudguard: {...cg, bulkProgress: progress, loading: !isDone}}, cmd)
     }
 
   // -- Audit --
   | RunAudit => {
       // Run the audit locally against the loaded settings using CloudGuardPolicy.
       // The audit is pure computation — no API calls needed.
-      let currentDomain = switch Array.get(cg.selectedZoneIds, 0) {
+      let currentDomain = switch cg.selectedZoneIds[0] {
       | Some(zoneId) =>
         switch cg.zones->Array.find(z => z.id === zoneId) {
         | Some(zone) => zone.name
@@ -404,7 +442,7 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
   // -- Offline config --
   | DownloadConfig => {
       // Download offline config for the first selected zone
-      let cmd = switch Array.get(cg.selectedZoneIds, 0) {
+      let cmd = switch cg.selectedZoneIds[0] {
       | Some(zoneId) =>
         CloudGuardCmd.downloadConfig(zoneId, result => CloudGuard(ConfigDownloaded(result)))
       | None => Tea_Cmd.none
@@ -430,16 +468,14 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
         addedOn: Date.make()->Date.toISOString,
       }
       // Remove any existing exception for the same domain+setting, then add new
-      let filtered = cg.exceptions->Array.filter(e =>
-        !(e.domain === domain && e.settingId === settingId)
-      )
+      let filtered =
+        cg.exceptions->Array.filter(e => !(e.domain === domain && e.settingId === settingId))
       let exceptions = Array.concat(filtered, [newException])
       ({...model, cloudguard: {...cg, exceptions}}, Tea_Cmd.none)
     }
   | RemoveException(domain, settingId) => {
-      let exceptions = cg.exceptions->Array.filter(e =>
-        !(e.domain === domain && e.settingId === settingId)
-      )
+      let exceptions =
+        cg.exceptions->Array.filter(e => !(e.domain === domain && e.settingId === settingId))
       ({...model, cloudguard: {...cg, exceptions}}, Tea_Cmd.none)
     }
 
@@ -454,34 +490,22 @@ let updateCloudGuard = (model: model, msg: cloudguardMsg): (model, Tea_Cmd.t<msg
       }
       ({...model, cloudguard: {...cg, visible: newVisible}}, cmd)
     }
-  | SetCategory(cat) => (
-      {...model, cloudguard: {...cg, activeCategory: cat}},
-      Tea_Cmd.none,
-    )
-  | SetFilterText(text) => (
-      {...model, cloudguard: {...cg, filterText: text}},
-      Tea_Cmd.none,
-    )
-  | SetSettingFilter(text) => (
-      {...model, cloudguard: {...cg, settingFilter: text}},
-      Tea_Cmd.none,
-    )
-  | ToggleAuditPanel => (
-      {...model, cloudguard: {...cg, showAudit: !cg.showAudit}},
-      Tea_Cmd.none,
-    )
-  | ToggleDiffPanel => (
-      {...model, cloudguard: {...cg, showDiff: !cg.showDiff}},
-      Tea_Cmd.none,
-    )
+  | SetCategory(cat) => ({...model, cloudguard: {...cg, activeCategory: cat}}, Tea_Cmd.none)
+  | SetFilterText(text) => ({...model, cloudguard: {...cg, filterText: text}}, Tea_Cmd.none)
+  | SetSettingFilter(text) => ({...model, cloudguard: {...cg, settingFilter: text}}, Tea_Cmd.none)
+  | ToggleAuditPanel => ({...model, cloudguard: {...cg, showAudit: !cg.showAudit}}, Tea_Cmd.none)
+  | ToggleDiffPanel => ({...model, cloudguard: {...cg, showDiff: !cg.showDiff}}, Tea_Cmd.none)
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "cloudguard", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
   }
 }

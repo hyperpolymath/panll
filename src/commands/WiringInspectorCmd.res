@@ -14,9 +14,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Run PCC verification against all panel contracts.
 /// Returns JSON string with all panel verification results.
-let runVerification = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let runVerification = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("wiring_inspector_verify", Dict.make())
     ->Promise.then(result => {
@@ -33,10 +31,9 @@ let runVerification = (
 
 /// Run PCC verification against a single panel contract.
 /// Returns JSON string with one panel verification result.
-let runSingleVerification = (
-  panelId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let runSingleVerification = (panelId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("wiring_inspector_verify_panel", {"panelId": panelId})
     ->Promise.then(result => {

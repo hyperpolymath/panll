@@ -138,10 +138,7 @@ let renderStack = (stack: array<int>): Tea_Vdom.t<msg> => {
         list{text(`Stack (${Int.toString(Array.length(stack))})`)},
       ),
       if Array.length(stack) === 0 {
-        div(
-          list{Attrs.class_("text-gray-600 text-xs italic")},
-          list{text("(empty)")},
-        )
+        div(list{Attrs.class_("text-gray-600 text-xs italic")}, list{text("(empty)")})
       } else {
         div(
           list{Attrs.class_("space-y-0.5")},
@@ -191,10 +188,7 @@ let renderMemory = (memory: array<vmMemoryCell>): Tea_Vdom.t<msg> => {
         list{text(`Memory (${Int.toString(Array.length(memory))} cells)`)},
       ),
       if Array.length(memory) === 0 {
-        div(
-          list{Attrs.class_("text-gray-600 text-xs italic")},
-          list{text("No memory allocated")},
-        )
+        div(list{Attrs.class_("text-gray-600 text-xs italic")}, list{text("No memory allocated")})
       } else {
         div(
           list{Attrs.class_("grid grid-cols-8 gap-0.5")},
@@ -211,9 +205,7 @@ let renderMemory = (memory: array<vmMemoryCell>): Tea_Vdom.t<msg> => {
             }
             div(
               list{
-                Attrs.class_(
-                  `${bgClass} rounded px-1 py-0.5 text-center font-mono text-xs`,
-                ),
+                Attrs.class_(`${bgClass} rounded px-1 py-0.5 text-center font-mono text-xs`),
                 Attrs.title(
                   `Address: ${Int.toString(cell.address)}, Value: ${Int.toString(cell.value)}`,
                 ),
@@ -251,10 +243,7 @@ let renderInstructions = (instructions: array<vmInstruction>, pc: int): Tea_Vdom
         list{text(`Instructions (${Int.toString(Array.length(instructions))})`)},
       ),
       if Array.length(instructions) === 0 {
-        div(
-          list{Attrs.class_("text-gray-600 text-xs italic")},
-          list{text("No program loaded")},
-        )
+        div(list{Attrs.class_("text-gray-600 text-xs italic")}, list{text("No program loaded")})
       } else {
         div(
           list{Attrs.class_("space-y-0.5 max-h-64 overflow-auto")},
@@ -276,7 +265,9 @@ let renderInstructions = (instructions: array<vmInstruction>, pc: int): Tea_Vdom
                 div(
                   list{
                     Attrs.class_(
-                      `w-2 h-2 rounded-full ${instr.hasBreakpoint ? "bg-red-500" : "bg-transparent"}`,
+                      `w-2 h-2 rounded-full ${instr.hasBreakpoint
+                          ? "bg-red-500"
+                          : "bg-transparent"}`,
                     ),
                   },
                   list{},
@@ -394,10 +385,24 @@ let renderDebugger = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                       "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
                     },
                   ),
-                  Attrs.ariaLabel(if state.bojRouting { "Disable BoJ routing" } else { "Enable BoJ routing" }),
+                  Attrs.ariaLabel(
+                    if state.bojRouting {
+                      "Disable BoJ routing"
+                    } else {
+                      "Enable BoJ routing"
+                    },
+                  ),
                   Events.onClick(VmInspector(ToggleVmBojRouting)),
                 },
-                list{text(if state.bojRouting { "BoJ On" } else { "BoJ" })},
+                list{
+                  text(
+                    if state.bojRouting {
+                      "BoJ On"
+                    } else {
+                      "BoJ"
+                    },
+                  ),
+                },
               ),
             },
           ),
@@ -423,11 +428,7 @@ let renderTimeline = (state: vmInspectorState): Tea_Vdom.t<msg> => {
     list{
       h3(
         list{Attrs.class_("text-sm font-medium text-gray-300 mb-4")},
-        list{
-          text(
-            `Execution Timeline (${Int.toString(Array.length(state.history))} snapshots)`,
-          ),
-        },
+        list{text(`Execution Timeline (${Int.toString(Array.length(state.history))} snapshots)`)},
       ),
       if Array.length(state.history) === 0 {
         div(
@@ -443,7 +444,9 @@ let renderTimeline = (state: vmInspectorState): Tea_Vdom.t<msg> => {
               list{Attrs.class_("mb-4")},
               list{
                 div(
-                  list{Attrs.class_("flex items-center justify-between text-xs text-gray-500 mb-1")},
+                  list{
+                    Attrs.class_("flex items-center justify-between text-xs text-gray-500 mb-1"),
+                  },
                   list{
                     text("Step 0"),
                     text(`Step ${Int.toString(Array.length(state.history) - 1)}`),
@@ -460,7 +463,7 @@ let renderTimeline = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                           `${if Array.length(state.history) > 0 {
                               Float.toString(
                                 Int.toFloat(state.timelinePosition) /.
-                                  Int.toFloat(Array.length(state.history) - 1) *. 100.0,
+                                Int.toFloat(Array.length(state.history) - 1) *. 100.0,
                               )
                             } else {
                               "0"
@@ -485,10 +488,7 @@ let renderTimeline = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                       div(
                         list{},
                         list{
-                          div(
-                            list{Attrs.class_("text-gray-500 text-xs mb-1")},
-                            list{text("Step")},
-                          ),
+                          div(list{Attrs.class_("text-gray-500 text-xs mb-1")}, list{text("Step")}),
                           div(
                             list{Attrs.class_("font-mono text-gray-200")},
                             list{text(Int.toString(snapshot.step))},
@@ -564,9 +564,7 @@ let renderTimeline = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                     Attrs.class_(
                       "px-4 py-2 text-sm rounded bg-gray-800 text-gray-300 hover:bg-gray-700",
                     ),
-                    Events.onClick(
-                      VmInspector(SeekTimeline(state.timelinePosition + 1)),
-                    ),
+                    Events.onClick(VmInspector(SeekTimeline(state.timelinePosition + 1))),
                   },
                   list{text("Next")},
                 ),
@@ -575,9 +573,7 @@ let renderTimeline = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                     Attrs.class_(
                       "px-4 py-2 text-sm rounded bg-gray-800 text-gray-300 hover:bg-gray-700",
                     ),
-                    Events.onClick(
-                      VmInspector(SeekTimeline(Array.length(state.history) - 1)),
-                    ),
+                    Events.onClick(VmInspector(SeekTimeline(Array.length(state.history) - 1))),
                   },
                   list{text("End")},
                 ),
@@ -644,10 +640,7 @@ let renderPortIO = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("text-gray-500 w-12")},
                   list{text(`port ${Int.toString(entry.port)}`)},
                 ),
-                span(
-                  list{Attrs.class_("text-gray-300")},
-                  list{text(Int.toString(entry.value))},
-                ),
+                span(list{Attrs.class_("text-gray-300")}, list{text(Int.toString(entry.value))}),
               },
             )
           })
@@ -751,10 +744,7 @@ let view = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                   Attrs.class_("w-6 h-6 rounded bg-orange-900 flex items-center justify-center"),
                 },
                 list{
-                  span(
-                    list{Attrs.class_("text-orange-400 text-xs font-bold")},
-                    list{text("VM")},
-                  ),
+                  span(list{Attrs.class_("text-orange-400 text-xs font-bold")}, list{text("VM")}),
                 },
               ),
               div(
@@ -767,7 +757,9 @@ let view = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                   div(
                     list{Attrs.class_("text-xs text-gray-500")},
                     list{
-                      text("Reversible VM debugger — 23 instructions, 5 tiers, step forward and backward"),
+                      text(
+                        "Reversible VM debugger — 23 instructions, 5 tiers, step forward and backward",
+                      ),
                     },
                   ),
                 },

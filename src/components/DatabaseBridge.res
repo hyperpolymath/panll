@@ -45,7 +45,8 @@ let colTypeLabel = (dt: columnDataType): string => {
 
 /// Main view function for the Database Bridge panel.
 let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
-  let provenCount = state.proofObligations->Array.filter(o => o.status == ObligationProven)->Array.length
+  let provenCount =
+    state.proofObligations->Array.filter(o => o.status == ObligationProven)->Array.length
   let totalObligations = Array.length(state.proofObligations)
 
   div(
@@ -62,10 +63,29 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              h2(list{Attrs.class_("text-lg font-bold text-teal-300")}, list{text("Database Bridge")}),
+              h2(
+                list{Attrs.class_("text-lg font-bold text-teal-300")},
+                list{text("Database Bridge")},
+              ),
               span(
-                list{Attrs.class_("text-xs " ++ if state.connected { "text-green-400" } else { "text-red-400" })},
-                list{text(if state.connected { "Connected" } else { "Disconnected" })},
+                list{
+                  Attrs.class_(
+                    "text-xs " ++ if state.connected {
+                      "text-green-400"
+                    } else {
+                      "text-red-400"
+                    },
+                  ),
+                },
+                list{
+                  text(
+                    if state.connected {
+                      "Connected"
+                    } else {
+                      "Disconnected"
+                    },
+                  ),
+                },
               ),
               span(
                 list{Attrs.class_("text-xs text-gray-400")},
@@ -89,8 +109,11 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Schema { "bg-teal-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Schema {
+                  "bg-teal-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(DatabaseBridge(SetDbBTab(Schema))),
             },
@@ -99,8 +122,11 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Queries { "bg-teal-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Queries {
+                  "bg-teal-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(DatabaseBridge(SetDbBTab(Queries))),
             },
@@ -109,8 +135,11 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == GameState { "bg-teal-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == GameState {
+                  "bg-teal-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(DatabaseBridge(SetDbBTab(GameState))),
             },
@@ -119,12 +148,22 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == ProofObligations { "bg-teal-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == ProofObligations {
+                  "bg-teal-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(DatabaseBridge(SetDbBTab(ProofObligations))),
             },
-            list{text("Proofs (" ++ Int.toString(provenCount) ++ "/" ++ Int.toString(totalObligations) ++ ")")},
+            list{
+              text(
+                "Proofs (" ++
+                Int.toString(provenCount) ++
+                "/" ++
+                Int.toString(totalObligations) ++ ")",
+              ),
+            },
           ),
         },
       ),
@@ -132,11 +171,18 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center",
+            ),
+          },
           list{
             text(err),
             button(
-              list{Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"), Events.onClick(DatabaseBridge(DismissDbBError))},
+              list{
+                Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
+                Events.onClick(DatabaseBridge(DismissDbBError)),
+              },
               list{text("Dismiss")},
             ),
           },
@@ -156,8 +202,14 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("px-3 py-2 bg-gray-900 border border-gray-800 rounded")},
                   list{
-                    div(list{Attrs.class_("text-sm font-bold text-teal-300 mb-1")}, list{text(s.name)}),
-                    div(list{Attrs.class_("text-xs text-gray-500 mb-2")}, list{text(s.description)}),
+                    div(
+                      list{Attrs.class_("text-sm font-bold text-teal-300 mb-1")},
+                      list{text(s.name)},
+                    ),
+                    div(
+                      list{Attrs.class_("text-xs text-gray-500 mb-2")},
+                      list{text(s.description)},
+                    ),
                     div(
                       list{Attrs.class_("space-y-1")},
                       s.columns
@@ -167,16 +219,34 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
                           list{
                             span(
                               list{Attrs.class_("font-mono text-gray-300 w-32")},
-                              list{text(col.name ++ if col.primaryKey { " (PK)" } else { "" })},
+                              list{
+                                text(
+                                  col.name ++ if col.primaryKey {
+                                    " (PK)"
+                                  } else {
+                                    ""
+                                  },
+                                ),
+                              },
                             ),
-                            span(list{Attrs.class_("text-teal-400 w-16")}, list{text(colTypeLabel(col.dataType))}),
+                            span(
+                              list{Attrs.class_("text-teal-400 w-16")},
+                              list{text(colTypeLabel(col.dataType))},
+                            ),
                             span(
                               list{Attrs.class_("text-gray-600")},
-                              list{text(if col.nullable { "nullable" } else { "not null" })},
+                              list{
+                                text(
+                                  if col.nullable {
+                                    "nullable"
+                                  } else {
+                                    "not null"
+                                  },
+                                ),
+                              },
                             ),
                             switch col.constraint_ {
-                            | Some(c) =>
-                              span(list{Attrs.class_("text-yellow-400")}, list{text(c)})
+                            | Some(c) => span(list{Attrs.class_("text-yellow-400")}, list{text(c)})
                             | None => Tea_Html.noNode
                             },
                           },
@@ -189,7 +259,10 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
                         list{Attrs.class_("mt-2 pt-2 border-t border-gray-800")},
                         s.invariants
                         ->Array.map(inv =>
-                          div(list{Attrs.class_("text-xs text-yellow-400 font-mono")}, list{text("INV: " ++ inv)})
+                          div(
+                            list{Attrs.class_("text-xs text-yellow-400 font-mono")},
+                            list{text("INV: " ++ inv)},
+                          )
                         )
                         ->List.fromArray,
                       )
@@ -217,8 +290,14 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
                           list{Attrs.class_("text-sm font-mono text-gray-300 flex-1 truncate")},
                           list{text(q.queryText)},
                         ),
-                        span(list{Attrs.class_("text-xs text-gray-500")}, list{text(Int.toString(q.rowCount) ++ " rows")}),
-                        span(list{Attrs.class_("text-xs text-gray-600")}, list{text(Float.toFixed(q.durationMs, ~digits=1) ++ "ms")}),
+                        span(
+                          list{Attrs.class_("text-xs text-gray-500")},
+                          list{text(Int.toString(q.rowCount) ++ " rows")},
+                        ),
+                        span(
+                          list{Attrs.class_("text-xs text-gray-600")},
+                          list{text(Float.toFixed(q.durationMs, ~digits=1) ++ "ms")},
+                        ),
                       },
                     ),
                     if Array.length(q.optimisationHints) > 0 {
@@ -226,7 +305,14 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
                         list{Attrs.class_("flex flex-wrap gap-1 mt-1")},
                         q.optimisationHints
                         ->Array.map(h =>
-                          span(list{Attrs.class_("px-2 py-0.5 text-xs bg-teal-900/50 text-teal-300 rounded")}, list{text(h)})
+                          span(
+                            list{
+                              Attrs.class_(
+                                "px-2 py-0.5 text-xs bg-teal-900/50 text-teal-300 rounded",
+                              ),
+                            },
+                            list{text(h)},
+                          )
                         )
                         ->List.fromArray,
                       )
@@ -250,7 +336,10 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
                       span(list{}, list{text("Snapshot: " ++ snap.snapshotId)}),
                       span(list{}, list{text("Tables: " ++ Int.toString(snap.tableCount))}),
                       span(list{}, list{text("Total rows: " ++ Int.toString(snap.totalRows))}),
-                      span(list{}, list{text("Size: " ++ Int.toString(snap.sizeBytes / 1024) ++ " KB")}),
+                      span(
+                        list{},
+                        list{text("Size: " ++ Int.toString(snap.sizeBytes / 1024) ++ " KB")},
+                      ),
                     },
                   ),
                   div(
@@ -260,8 +349,14 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
                       div(
                         list{Attrs.class_("flex items-center gap-3 py-1")},
                         list{
-                          span(list{Attrs.class_("text-sm font-mono text-gray-300 w-40")}, list{text(tName)}),
-                          span(list{Attrs.class_("text-xs text-gray-500")}, list{text(Int.toString(rowCount) ++ " rows")}),
+                          span(
+                            list{Attrs.class_("text-sm font-mono text-gray-300 w-40")},
+                            list{text(tName)},
+                          ),
+                          span(
+                            list{Attrs.class_("text-xs text-gray-500")},
+                            list{text(Int.toString(rowCount) ++ " rows")},
+                          ),
                           // Simple bar
                           div(
                             list{Attrs.class_("flex-1 h-2 bg-gray-800 rounded overflow-hidden")},
@@ -272,7 +367,12 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
                                   Attrs.style(
                                     "width",
                                     Float.toFixed(
-                                      if snap.totalRows > 0 { Int.toFloat(rowCount) /. Int.toFloat(snap.totalRows) *. 100.0 } else { 0.0 },
+                                      if snap.totalRows > 0 {
+                                        Int.toFloat(rowCount) /.
+                                        Int.toFloat(snap.totalRows) *. 100.0
+                                      } else {
+                                        0.0
+                                      },
                                       ~digits=1,
                                     ) ++ "%",
                                   ),
@@ -291,7 +391,11 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
             | None =>
               div(
                 list{Attrs.class_("text-center text-gray-500 py-8")},
-                list{text("No game state snapshot available. Take a snapshot to inspect persisted data.")},
+                list{
+                  text(
+                    "No game state snapshot available. Take a snapshot to inspect persisted data.",
+                  ),
+                },
               )
             }
           | ProofObligations =>
@@ -306,13 +410,22 @@ let view = (state: databaseBridgeState): Tea_Vdom.t<msg> => {
                       list{Attrs.class_("flex items-center gap-3")},
                       list{
                         obligationBadge(o.status),
-                        span(list{Attrs.class_("text-sm text-gray-200")}, list{text(o.description)}),
+                        span(
+                          list{Attrs.class_("text-sm text-gray-200")},
+                          list{text(o.description)},
+                        ),
                       },
                     ),
-                    div(list{Attrs.class_("text-xs text-gray-500 font-mono mt-1")}, list{text(o.schemaName ++ ": " ++ o.statement)}),
+                    div(
+                      list{Attrs.class_("text-xs text-gray-500 font-mono mt-1")},
+                      list{text(o.schemaName ++ ": " ++ o.statement)},
+                    ),
                     switch o.counterexample {
                     | Some(ce) =>
-                      div(list{Attrs.class_("text-xs text-red-400 mt-1")}, list{text("Counterexample: " ++ ce)})
+                      div(
+                        list{Attrs.class_("text-xs text-red-400 mt-1")},
+                        list{text("Counterexample: " ++ ce)},
+                      )
                     | None => Tea_Html.noNode
                     },
                   },

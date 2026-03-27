@@ -132,10 +132,7 @@ let updateSettingsBatch = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke(
-      "cloudguard_update_settings_batch",
-      {"zone_id": zoneId, "settings_json": settingsJson},
-    )
+    invoke("cloudguard_update_settings_batch", {"zone_id": zoneId, "settings_json": settingsJson})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -154,10 +151,7 @@ let updateSettingsBatch = (
 
 /// List all DNS records for a zone.
 /// Returns JSON array of DNS record objects.
-let listDnsRecords = (
-  zoneId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listDnsRecords = (zoneId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("cloudguard_list_dns_records", {"zone_id": zoneId})
     ->Promise.then(result => {
@@ -228,10 +222,7 @@ let deleteDnsRecord = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke(
-      "cloudguard_delete_dns_record",
-      {"zone_id": zoneId, "record_id": recordId},
-    )
+    invoke("cloudguard_delete_dns_record", {"zone_id": zoneId, "record_id": recordId})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -250,10 +241,7 @@ let deleteDnsRecord = (
 
 /// Get DNSSEC status for a zone.
 /// Returns JSON with status, DS record info, algorithm, etc.
-let getDnssec = (
-  zoneId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getDnssec = (zoneId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("cloudguard_get_dnssec", {"zone_id": zoneId})
     ->Promise.then(result => {
@@ -270,10 +258,7 @@ let getDnssec = (
 
 /// Enable DNSSEC for a zone.
 /// Returns the updated DNSSEC status JSON.
-let enableDnssec = (
-  zoneId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let enableDnssec = (zoneId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("cloudguard_enable_dnssec", {"zone_id": zoneId})
     ->Promise.then(result => {
@@ -294,10 +279,7 @@ let enableDnssec = (
 
 /// Download the offline configuration for a zone (settings + DNS records).
 /// Saves to ~/.config/cloudguard/configs/{domain}.json and returns the path.
-let downloadConfig = (
-  zoneId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let downloadConfig = (zoneId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("cloudguard_download_config", {"zone_id": zoneId})
     ->Promise.then(result => {
@@ -342,10 +324,9 @@ let computeDiff = (
 
 /// List all saved configurations for a zone.
 /// Returns JSON array of saved config metadata (id, name, timestamp).
-let listSavedConfigs = (
-  zoneId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listSavedConfigs = (zoneId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("cloudguard_list_saved_configs", {"zone_id": zoneId})
     ->Promise.then(result => {
@@ -360,10 +341,7 @@ let listSavedConfigs = (
   })
 }
 
-let hardenZone = (
-  zoneId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let hardenZone = (zoneId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("cloudguard_harden_zone", {"zone_id": zoneId})
     ->Promise.then(result => {

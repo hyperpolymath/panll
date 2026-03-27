@@ -176,19 +176,52 @@ let levelSatisfies = (achieved: typeSafetyLevel, required: typeSafetyLevel): boo
 
 /// VQL keywords that must appear in specific clause positions.
 let vqlKeywords = [
-  "FIND", "FROM", "WHERE", "PROVE", "USING", "WITH",
-  "ORDER", "LIMIT", "OFFSET", "GROUP", "HAVING",
-  "JOIN", "ON", "AS", "IN", "NOT", "AND", "OR",
-  "EXISTS", "FORALL", "ACROSS", "FEDERATED", "TEMPORAL",
-  "LINEAR", "EFFECT", "SESSION", "OCTAD", "MODALITY",
+  "FIND",
+  "FROM",
+  "WHERE",
+  "PROVE",
+  "USING",
+  "WITH",
+  "ORDER",
+  "LIMIT",
+  "OFFSET",
+  "GROUP",
+  "HAVING",
+  "JOIN",
+  "ON",
+  "AS",
+  "IN",
+  "NOT",
+  "AND",
+  "OR",
+  "EXISTS",
+  "FORALL",
+  "ACROSS",
+  "FEDERATED",
+  "TEMPORAL",
+  "LINEAR",
+  "EFFECT",
+  "SESSION",
+  "OCTAD",
+  "MODALITY",
 ]
 
 /// VQL clause keywords — these start major sections.
-let clauseKeywords = ["FIND", "FROM", "WHERE", "PROVE", "USING", "WITH", "ORDER", "LIMIT", "GROUP", "HAVING"]
+let clauseKeywords = [
+  "FIND",
+  "FROM",
+  "WHERE",
+  "PROVE",
+  "USING",
+  "WITH",
+  "ORDER",
+  "LIMIT",
+  "GROUP",
+  "HAVING",
+]
 
 /// Check if a string looks like a VQL keyword.
-let isKeyword = (word: string): bool =>
-  vqlKeywords->Array.includes(String.toUpperCase(word))
+let isKeyword = (word: string): bool => vqlKeywords->Array.includes(String.toUpperCase(word))
 
 /// Check if a string looks like a clause keyword.
 let isClauseKeyword = (word: string): bool =>
@@ -204,7 +237,10 @@ let ruleEmptyQuery = (content: string): option<lintDiagnostic> => {
       ruleId: "VQL-S001",
       category: CatSyntax,
       severity: LintError,
-      line: 1, column: 1, endLine: 1, endColumn: 1,
+      line: 1,
+      column: 1,
+      endLine: 1,
+      endColumn: 1,
       message: "Query is empty. Write a VQL-UT query starting with FIND, PROVE, or another clause keyword.",
       suggestion: Some("FIND proof\nFROM proofs\nWHERE prover = 'Lean'"),
       relatedLevel: L1_Parsed,
@@ -230,7 +266,10 @@ let ruleStartsWithClause = (content: string): option<lintDiagnostic> => {
         ruleId: "VQL-S002",
         category: CatSyntax,
         severity: LintError,
-        line: 1, column: 1, endLine: 1, endColumn: String.length(firstWord),
+        line: 1,
+        column: 1,
+        endLine: 1,
+        endColumn: String.length(firstWord),
         message: `Query must start with a valid clause keyword (FIND, PROVE, FEDERATED, etc.), found: "${firstWord}"`,
         suggestion: Some(`FIND ${trimmed}`),
         relatedLevel: L1_Parsed,
@@ -250,7 +289,11 @@ let ruleKeywordCase = (content: string): array<lintDiagnostic> => {
     let _colOffset = ref(0)
     words->Array.forEach(word => {
       let trimWord = String.trim(word)
-      if String.length(trimWord) > 0 && isKeyword(trimWord) && trimWord !== String.toUpperCase(trimWord) {
+      if (
+        String.length(trimWord) > 0 &&
+        isKeyword(trimWord) &&
+        trimWord !== String.toUpperCase(trimWord)
+      ) {
         let _ = diagnostics->Array.push({
           ruleId: "VQL-S003",
           category: CatSyntax,
@@ -309,15 +352,22 @@ let ruleUnmatchedParens = (content: string): option<lintDiagnostic> => {
   let depth = ref(0)
   for i in 0 to String.length(content) - 1 {
     let ch = String.charAt(content, i)
-    if ch == "(" { depth := depth.contents + 1 }
-    if ch == ")" { depth := depth.contents - 1 }
+    if ch == "(" {
+      depth := depth.contents + 1
+    }
+    if ch == ")" {
+      depth := depth.contents - 1
+    }
   }
   if depth.contents > 0 {
     Some({
       ruleId: "VQL-S005",
       category: CatSyntax,
       severity: LintError,
-      line: 1, column: 1, endLine: 1, endColumn: 1,
+      line: 1,
+      column: 1,
+      endLine: 1,
+      endColumn: 1,
       message: `${Int.toString(depth.contents)} unclosed parenthesis(es).`,
       suggestion: None,
       relatedLevel: L1_Parsed,
@@ -327,7 +377,10 @@ let ruleUnmatchedParens = (content: string): option<lintDiagnostic> => {
       ruleId: "VQL-S005",
       category: CatSyntax,
       severity: LintError,
-      line: 1, column: 1, endLine: 1, endColumn: 1,
+      line: 1,
+      column: 1,
+      endLine: 1,
+      endColumn: 1,
       message: `${Int.toString(-depth.contents)} extra closing parenthesis(es).`,
       suggestion: None,
       relatedLevel: L1_Parsed,
@@ -348,39 +401,43 @@ let ruleStringIntComparison = (content: string): array<lintDiagnostic> => {
   lines->Array.forEachWithIndex((line, lineIdx) => {
     let trimLine = String.trim(line)
     let upper = String.toUpperCase(trimLine)
-    if String.includes(upper, "WHERE") { inWhere := true }
+    if String.includes(upper, "WHERE") {
+      inWhere := true
+    }
     if inWhere.contents {
       // Look for patterns like `name = 42` (string column compared to number)
       let commonStringCols = ["name", "title", "prover", "tactic", "theorem", "description", "goal"]
       commonStringCols->Array.forEach(col => {
         // Check for `col = <number>` pattern
         let patterns = [`${col} = `, `${col} != `, `${col} > `, `${col} < `]
-        patterns->Array.forEach(pat => {
-          let lowerLine = String.toLowerCase(trimLine)
-          if String.includes(lowerLine, pat) {
-            let idx = String.indexOf(lowerLine, pat)
-            let afterPat = if idx >= 0 {
-              String.sliceToEnd(trimLine, ~start=idx + String.length(pat))
-            } else {
-              ""
+        patterns->Array.forEach(
+          pat => {
+            let lowerLine = String.toLowerCase(trimLine)
+            if String.includes(lowerLine, pat) {
+              let idx = String.indexOf(lowerLine, pat)
+              let afterPat = if idx >= 0 {
+                String.sliceToEnd(trimLine, ~start=idx + String.length(pat))
+              } else {
+                ""
+              }
+              let firstChar = String.charAt(String.trim(afterPat), 0)
+              if firstChar >= "0" && firstChar <= "9" {
+                let _ = diagnostics->Array.push({
+                  ruleId: "VQL-T001",
+                  category: CatType,
+                  severity: LintWarning,
+                  line: lineIdx + 1,
+                  column: 1,
+                  endLine: lineIdx + 1,
+                  endColumn: String.length(trimLine),
+                  message: `Column "${col}" is likely a string but is compared to a numeric literal. Use string comparison: ${col} = '...'`,
+                  suggestion: None,
+                  relatedLevel: L3_TypeCompat,
+                })
+              }
             }
-            let firstChar = String.charAt(String.trim(afterPat), 0)
-            if firstChar >= "0" && firstChar <= "9" {
-              let _ = diagnostics->Array.push({
-                ruleId: "VQL-T001",
-                category: CatType,
-                severity: LintWarning,
-                line: lineIdx + 1,
-                column: 1,
-                endLine: lineIdx + 1,
-                endColumn: String.length(trimLine),
-                message: `Column "${col}" is likely a string but is compared to a numeric literal. Use string comparison: ${col} = '...'`,
-                suggestion: None,
-                relatedLevel: L3_TypeCompat,
-              })
-            }
-          }
-        })
+          },
+        )
       })
     }
   })
@@ -423,7 +480,10 @@ let ruleUnboundedScan = (content: string): option<lintDiagnostic> => {
       ruleId: "VQL-P001",
       category: CatPerformance,
       severity: LintWarning,
-      line: 1, column: 1, endLine: 1, endColumn: 1,
+      line: 1,
+      column: 1,
+      endLine: 1,
+      endColumn: 1,
       message: "Unbounded FIND * without LIMIT. This may scan the entire proof corpus. Add LIMIT to bound result size.",
       suggestion: Some("Add: LIMIT 100"),
       relatedLevel: L7_CardinalitySafe,
@@ -441,7 +501,10 @@ let ruleCrossJoin = (content: string): option<lintDiagnostic> => {
       ruleId: "VQL-P002",
       category: CatPerformance,
       severity: LintWarning,
-      line: 1, column: 1, endLine: 1, endColumn: 1,
+      line: 1,
+      column: 1,
+      endLine: 1,
+      endColumn: 1,
       message: "Cross join detected. This produces a cartesian product and may be very expensive. Consider adding join conditions.",
       suggestion: None,
       relatedLevel: L7_CardinalitySafe,
@@ -459,7 +522,10 @@ let ruleEffectWithoutUsing = (content: string): option<lintDiagnostic> => {
       ruleId: "VQL-C001",
       category: CatCorrectness,
       severity: LintWarning,
-      line: 1, column: 1, endLine: 1, endColumn: 1,
+      line: 1,
+      column: 1,
+      endLine: 1,
+      endColumn: 1,
       message: "EFFECT clause without USING. Specify which provers handle effect verification with USING <prover>.",
       suggestion: None,
       relatedLevel: L8_EffectTracked,
@@ -472,12 +538,23 @@ let ruleEffectWithoutUsing = (content: string): option<lintDiagnostic> => {
 /// VQL-C002: TEMPORAL query without time bounds.
 let ruleTemporalWithoutBounds = (content: string): option<lintDiagnostic> => {
   let upper = String.toUpperCase(content)
-  if String.includes(upper, "TEMPORAL") && !(String.includes(upper, "SINCE") || String.includes(upper, "UNTIL") || String.includes(upper, "AT") || String.includes(upper, "BETWEEN")) {
+  if (
+    String.includes(upper, "TEMPORAL") &&
+    !(
+      String.includes(upper, "SINCE") ||
+      String.includes(upper, "UNTIL") ||
+      String.includes(upper, "AT") ||
+      String.includes(upper, "BETWEEN")
+    )
+  ) {
     Some({
       ruleId: "VQL-C002",
       category: CatCorrectness,
       severity: LintWarning,
-      line: 1, column: 1, endLine: 1, endColumn: 1,
+      line: 1,
+      column: 1,
+      endLine: 1,
+      endColumn: 1,
       message: "TEMPORAL query without time bounds (SINCE, UNTIL, AT, BETWEEN). Unbounded temporal queries may return stale data.",
       suggestion: Some("Add: SINCE '2026-01-01'"),
       relatedLevel: L9_TemporalSafe,
@@ -490,12 +567,19 @@ let ruleTemporalWithoutBounds = (content: string): option<lintDiagnostic> => {
 /// VQL-C003: LINEAR without explicit consumption (resource leak risk).
 let ruleLinearWithoutConsume = (content: string): option<lintDiagnostic> => {
   let upper = String.toUpperCase(content)
-  if String.includes(upper, "LINEAR") && !String.includes(upper, "CONSUME") && !String.includes(upper, "RELEASE") {
+  if (
+    String.includes(upper, "LINEAR") &&
+    !String.includes(upper, "CONSUME") &&
+    !String.includes(upper, "RELEASE")
+  ) {
     Some({
       ruleId: "VQL-C003",
       category: CatCorrectness,
       severity: LintError,
-      line: 1, column: 1, endLine: 1, endColumn: 1,
+      line: 1,
+      column: 1,
+      endLine: 1,
+      endColumn: 1,
       message: "LINEAR query without CONSUME or RELEASE. Linear resources must be explicitly consumed to prevent resource leaks.",
       suggestion: None,
       relatedLevel: L10_LinearSafe,
@@ -518,8 +602,13 @@ let ruleDuplicateClauses = (content: string): array<lintDiagnostic> => {
         ruleId: "VQL-S006",
         category: CatSyntax,
         severity: LintWarning,
-        line: 1, column: 1, endLine: 1, endColumn: 1,
-        message: `Duplicate ${kw} clause (appears ${Int.toString(count)} times). Consider consolidating.`,
+        line: 1,
+        column: 1,
+        endLine: 1,
+        endColumn: 1,
+        message: `Duplicate ${kw} clause (appears ${Int.toString(
+            count,
+          )} times). Consider consolidating.`,
         suggestion: None,
         relatedLevel: L1_Parsed,
       })
@@ -533,7 +622,16 @@ let ruleUnknownModality = (content: string): array<lintDiagnostic> => {
   let diagnostics = []
   let upper = String.toUpperCase(content)
   if String.includes(upper, "OCTAD") || String.includes(upper, "MODALITY") {
-    let validModalities = ["SEMANTIC", "TEMPORAL", "PROVENANCE", "DOCUMENT", "GRAPH", "VECTOR", "TENSOR", "SPATIAL"]
+    let validModalities = [
+      "SEMANTIC",
+      "TEMPORAL",
+      "PROVENANCE",
+      "DOCUMENT",
+      "GRAPH",
+      "VECTOR",
+      "TENSOR",
+      "SPATIAL",
+    ]
     let lines = String.split(content, "\n")
     lines->Array.forEachWithIndex((line, lineIdx) => {
       let upperLine = String.toUpperCase(line)
@@ -548,7 +646,15 @@ let ruleUnknownModality = (content: string): array<lintDiagnostic> => {
         let words = String.split(String.trim(afterModality), " ")
         words->Array.forEach(word => {
           let w = String.toUpperCase(String.trim(word))
-          if String.length(w) > 0 && !(validModalities->Array.includes(w)) && w !== "=" && w !== "IN" && w !== "(" && w !== ")" && w !== "," {
+          if (
+            String.length(w) > 0 &&
+            !(validModalities->Array.includes(w)) &&
+            w !== "=" &&
+            w !== "IN" &&
+            w !== "(" &&
+            w !== ")" &&
+            w !== ","
+          ) {
             let _ = diagnostics->Array.push({
               ruleId: "VQL-SCH001",
               category: CatSchema,
@@ -557,7 +663,10 @@ let ruleUnknownModality = (content: string): array<lintDiagnostic> => {
               column: 1,
               endLine: lineIdx + 1,
               endColumn: String.length(line),
-              message: `Unknown octad modality: "${w}". Valid modalities: ${Array.join(validModalities, ", ")}`,
+              message: `Unknown octad modality: "${w}". Valid modalities: ${Array.join(
+                  validModalities,
+                  ", ",
+                )}`,
               suggestion: None,
               relatedLevel: L2_SchemaBound,
             })
@@ -579,7 +688,10 @@ let ruleMissingIndexHint = (content: string): option<lintDiagnostic> => {
       ruleId: "VQL-P003",
       category: CatPerformance,
       severity: LintInfo,
-      line: 1, column: 1, endLine: 1, endColumn: 1,
+      line: 1,
+      column: 1,
+      endLine: 1,
+      endColumn: 1,
       message: "Querying proof corpus without WHERE clause. The proof_states table can be very large (66,000+ rows). Add a filter.",
       suggestion: Some("Add: WHERE prover = 'Lean'"),
       relatedLevel: L7_CardinalitySafe,
@@ -594,11 +706,20 @@ let runLinter = (content: string, state: linterState): array<lintDiagnostic> => 
   let all: array<lintDiagnostic> = []
 
   // Syntax rules
-  switch ruleEmptyQuery(content) { | Some(d) => ignore(all->Array.push(d)) | None => () }
-  switch ruleStartsWithClause(content) { | Some(d) => ignore(all->Array.push(d)) | None => () }
+  switch ruleEmptyQuery(content) {
+  | Some(d) => ignore(all->Array.push(d))
+  | None => ()
+  }
+  switch ruleStartsWithClause(content) {
+  | Some(d) => ignore(all->Array.push(d))
+  | None => ()
+  }
   ruleKeywordCase(content)->Array.forEach(d => ignore(all->Array.push(d)))
   ruleUnclosedString(content)->Array.forEach(d => ignore(all->Array.push(d)))
-  switch ruleUnmatchedParens(content) { | Some(d) => ignore(all->Array.push(d)) | None => () }
+  switch ruleUnmatchedParens(content) {
+  | Some(d) => ignore(all->Array.push(d))
+  | None => ()
+  }
   ruleDuplicateClauses(content)->Array.forEach(d => ignore(all->Array.push(d)))
 
   // Schema rules
@@ -611,14 +732,32 @@ let runLinter = (content: string, state: linterState): array<lintDiagnostic> => 
   ruleInjectionRisk(content)->Array.forEach(d => ignore(all->Array.push(d)))
 
   // Performance rules
-  switch ruleUnboundedScan(content) { | Some(d) => ignore(all->Array.push(d)) | None => () }
-  switch ruleCrossJoin(content) { | Some(d) => ignore(all->Array.push(d)) | None => () }
-  switch ruleMissingIndexHint(content) { | Some(d) => ignore(all->Array.push(d)) | None => () }
+  switch ruleUnboundedScan(content) {
+  | Some(d) => ignore(all->Array.push(d))
+  | None => ()
+  }
+  switch ruleCrossJoin(content) {
+  | Some(d) => ignore(all->Array.push(d))
+  | None => ()
+  }
+  switch ruleMissingIndexHint(content) {
+  | Some(d) => ignore(all->Array.push(d))
+  | None => ()
+  }
 
   // Correctness rules
-  switch ruleEffectWithoutUsing(content) { | Some(d) => ignore(all->Array.push(d)) | None => () }
-  switch ruleTemporalWithoutBounds(content) { | Some(d) => ignore(all->Array.push(d)) | None => () }
-  switch ruleLinearWithoutConsume(content) { | Some(d) => ignore(all->Array.push(d)) | None => () }
+  switch ruleEffectWithoutUsing(content) {
+  | Some(d) => ignore(all->Array.push(d))
+  | None => ()
+  }
+  switch ruleTemporalWithoutBounds(content) {
+  | Some(d) => ignore(all->Array.push(d))
+  | None => ()
+  }
+  switch ruleLinearWithoutConsume(content) {
+  | Some(d) => ignore(all->Array.push(d))
+  | None => ()
+  }
 
   // Filter by profile
   let filtered = switch state.profile {
@@ -641,9 +780,7 @@ let runLinter = (content: string, state: linterState): array<lintDiagnostic> => 
   }
 
   // Filter by suppressions
-  let unsuppressed = filtered->Array.filter(d =>
-    !(state.suppressions->Array.includes(d.ruleId))
-  )
+  let unsuppressed = filtered->Array.filter(d => !(state.suppressions->Array.includes(d.ruleId)))
 
   // Elevate violations below minimum level to errors
   unsuppressed->Array.map(d => {
@@ -675,15 +812,15 @@ let formatQuery = (content: string, options: formatOptions): string => {
 
   switch options.style {
   | StyleCompact => {
-    // Single line, minimal whitespace
-    let words = String.split(String.trim(content), " ")
-      ->Array.filter(w => String.length(String.trim(w)) > 0)
-      ->Array.map(processWord)
-    result := Array.join(words, " ")
-  }
+      // Single line, minimal whitespace
+      let words =
+        String.split(String.trim(content), " ")
+        ->Array.filter(w => String.length(String.trim(w)) > 0)
+        ->Array.map(processWord)
+      result := Array.join(words, " ")
+    }
 
-  | StyleExpanded => {
-    // Each clause keyword on its own line, sub-expressions indented
+  | StyleExpanded => // Each clause keyword on its own line, sub-expressions indented
     lines->Array.forEach(line => {
       let trimLine = String.trim(line)
       if String.length(trimLine) > 0 {
@@ -696,7 +833,9 @@ let formatQuery = (content: string, options: formatOptions): string => {
         if isClauseKeyword(firstWord) {
           if String.length(result.contents) > 0 {
             result := result.contents ++ "\n"
-            if options.insertBlankLines { result := result.contents ++ "\n" }
+            if options.insertBlankLines {
+              result := result.contents ++ "\n"
+            }
           }
           result := result.contents ++ processed ++ "\n"
         } else {
@@ -704,10 +843,8 @@ let formatQuery = (content: string, options: formatOptions): string => {
         }
       }
     })
-  }
 
-  | StyleProof => {
-    // Like expanded, but with type annotations and level markers
+  | StyleProof => // Like expanded, but with type annotations and level markers
     lines->Array.forEach(line => {
       let trimLine = String.trim(line)
       if String.length(trimLine) > 0 {
@@ -736,52 +873,56 @@ let formatQuery = (content: string, options: formatOptions): string => {
         }
       }
     })
-  }
 
   | StyleStandard | StyleCustom => {
-    // Standard: keywords uppercase, 2-space indent, aligned clauses
-    let maxKeywordLen = ref(0)
-    if options.alignClauses {
+      // Standard: keywords uppercase, 2-space indent, aligned clauses
+      let maxKeywordLen = ref(0)
+      if options.alignClauses {
+        lines->Array.forEach(line => {
+          let trimLine = String.trim(line)
+          let words = String.split(trimLine, " ")
+          switch words->Array.get(0) {
+          | Some(w) =>
+            if isClauseKeyword(w) && String.length(w) > maxKeywordLen.contents {
+              maxKeywordLen := String.length(w)
+            }
+          | None => ()
+          }
+        })
+      }
+
       lines->Array.forEach(line => {
         let trimLine = String.trim(line)
-        let words = String.split(trimLine, " ")
-        switch words->Array.get(0) {
-        | Some(w) =>
-          if isClauseKeyword(w) && String.length(w) > maxKeywordLen.contents {
-            maxKeywordLen := String.length(w)
+        if String.length(trimLine) > 0 {
+          let words = String.split(trimLine, " ")
+          let firstWord = switch words->Array.get(0) {
+          | Some(w) => String.trim(w)
+          | None => ""
           }
-        | None => ()
+          if isClauseKeyword(firstWord) {
+            let kw = if options.uppercaseKeywords {
+              String.toUpperCase(firstWord)
+            } else {
+              firstWord
+            }
+            let padding = if options.alignClauses {
+              String.repeat(" ", maxKeywordLen.contents - String.length(kw))
+            } else {
+              ""
+            }
+            let rest =
+              words
+              ->Array.sliceToEnd(~start=1)
+              ->Array.map(processWord)
+              ->Array.join(" ")
+            result := result.contents ++ kw ++ padding ++ " " ++ rest ++ "\n"
+          } else {
+            let processed = words->Array.map(processWord)->Array.join(" ")
+            result := result.contents ++ indent ++ processed ++ "\n"
+          }
         }
       })
     }
-
-    lines->Array.forEach(line => {
-      let trimLine = String.trim(line)
-      if String.length(trimLine) > 0 {
-        let words = String.split(trimLine, " ")
-        let firstWord = switch words->Array.get(0) {
-        | Some(w) => String.trim(w)
-        | None => ""
-        }
-        if isClauseKeyword(firstWord) {
-          let kw = if options.uppercaseKeywords { String.toUpperCase(firstWord) } else { firstWord }
-          let padding = if options.alignClauses {
-            String.repeat(" ", maxKeywordLen.contents - String.length(kw))
-          } else {
-            ""
-          }
-          let rest = words
-            ->Array.sliceToEnd(~start=1)
-            ->Array.map(processWord)
-            ->Array.join(" ")
-          result := result.contents ++ kw ++ padding ++ " " ++ rest ++ "\n"
-        } else {
-          let processed = words->Array.map(processWord)->Array.join(" ")
-          result := result.contents ++ indent ++ processed ++ "\n"
-        }
-      }
-    })
-  }
   }
 
   String.trim(result.contents)
@@ -800,8 +941,20 @@ let builtinTemplates: array<queryTemplate> = [
     operation: OpFindProof,
     template: "FIND proof, theorem, goal\nFROM proof_states\nWHERE prover = '{{prover}}'\nORDER theorem\nLIMIT {{limit}}",
     parameters: [
-      { name: "prover", paramType: "prover", description: "Prover backend name", defaultValue: Some("Lean"), validation: None },
-      { name: "limit", paramType: "int", description: "Maximum results", defaultValue: Some("100"), validation: Some("^[0-9]+$") },
+      {
+        name: "prover",
+        paramType: "prover",
+        description: "Prover backend name",
+        defaultValue: Some("Lean"),
+        validation: None,
+      },
+      {
+        name: "limit",
+        paramType: "int",
+        description: "Maximum results",
+        defaultValue: Some("100"),
+        validation: Some("^[0-9]+$"),
+      },
     ],
     requiredLevel: L2_SchemaBound,
   },
@@ -812,8 +965,20 @@ let builtinTemplates: array<queryTemplate> = [
     operation: OpFindSimilar,
     template: "FIND proof, theorem, goal, similarity_score\nFROM proof_states\nUSING MODALITY VECTOR\nWHERE goal SIMILAR TO '{{goal_pattern}}'\nLIMIT {{limit}}",
     parameters: [
-      { name: "goal_pattern", paramType: "string", description: "Goal pattern to match", defaultValue: Some("forall n : nat, n + 0 = n"), validation: None },
-      { name: "limit", paramType: "int", description: "Maximum results", defaultValue: Some("20"), validation: Some("^[0-9]+$") },
+      {
+        name: "goal_pattern",
+        paramType: "string",
+        description: "Goal pattern to match",
+        defaultValue: Some("forall n : nat, n + 0 = n"),
+        validation: None,
+      },
+      {
+        name: "limit",
+        paramType: "int",
+        description: "Maximum results",
+        defaultValue: Some("20"),
+        validation: Some("^[0-9]+$"),
+      },
     ],
     requiredLevel: L6_ResultTyped,
   },
@@ -824,9 +989,27 @@ let builtinTemplates: array<queryTemplate> = [
     operation: OpCrossProverSearch,
     template: "FEDERATED FIND theorem, prover, proof_id\nFROM proof_states\nACROSS {{provers}}\nWHERE theorem LIKE '{{pattern}}'\nLIMIT {{limit}}",
     parameters: [
-      { name: "provers", paramType: "string", description: "Comma-separated prover list", defaultValue: Some("Lean, Coq, Isabelle"), validation: None },
-      { name: "pattern", paramType: "string", description: "Theorem name pattern", defaultValue: Some("%comm%"), validation: None },
-      { name: "limit", paramType: "int", description: "Maximum results per prover", defaultValue: Some("50"), validation: Some("^[0-9]+$") },
+      {
+        name: "provers",
+        paramType: "string",
+        description: "Comma-separated prover list",
+        defaultValue: Some("Lean, Coq, Isabelle"),
+        validation: None,
+      },
+      {
+        name: "pattern",
+        paramType: "string",
+        description: "Theorem name pattern",
+        defaultValue: Some("%comm%"),
+        validation: None,
+      },
+      {
+        name: "limit",
+        paramType: "int",
+        description: "Maximum results per prover",
+        defaultValue: Some("50"),
+        validation: Some("^[0-9]+$"),
+      },
     ],
     requiredLevel: L7_CardinalitySafe,
   },
@@ -837,7 +1020,13 @@ let builtinTemplates: array<queryTemplate> = [
     operation: OpProvenanceTrace,
     template: "FIND proof_id, version, author, timestamp, parent_id\nFROM proof_states\nUSING MODALITY PROVENANCE\nWHERE proof_id = '{{proof_id}}'\nORDER timestamp",
     parameters: [
-      { name: "proof_id", paramType: "string", description: "Proof identifier", defaultValue: None, validation: None },
+      {
+        name: "proof_id",
+        paramType: "string",
+        description: "Proof identifier",
+        defaultValue: None,
+        validation: None,
+      },
     ],
     requiredLevel: L9_TemporalSafe,
   },
@@ -848,8 +1037,20 @@ let builtinTemplates: array<queryTemplate> = [
     operation: OpTemporalHistory,
     template: "TEMPORAL FIND theorem, tactic, prover, version\nFROM proof_states\nWHERE theorem = '{{theorem}}'\nSINCE '{{since}}'\nORDER version",
     parameters: [
-      { name: "theorem", paramType: "string", description: "Theorem name", defaultValue: Some("comm_add"), validation: None },
-      { name: "since", paramType: "string", description: "Start date (ISO 8601)", defaultValue: Some("2026-01-01"), validation: Some("^\\d{4}-\\d{2}-\\d{2}$") },
+      {
+        name: "theorem",
+        paramType: "string",
+        description: "Theorem name",
+        defaultValue: Some("comm_add"),
+        validation: None,
+      },
+      {
+        name: "since",
+        paramType: "string",
+        description: "Start date (ISO 8601)",
+        defaultValue: Some("2026-01-01"),
+        validation: Some("^\\d{4}-\\d{2}-\\d{2}$"),
+      },
     ],
     requiredLevel: L9_TemporalSafe,
   },
@@ -860,8 +1061,20 @@ let builtinTemplates: array<queryTemplate> = [
     operation: OpDependencyGraph,
     template: "FIND theorem, depends_on, depth\nFROM proof_states\nUSING MODALITY GRAPH\nWHERE theorem = '{{theorem}}'\nLIMIT {{depth}}",
     parameters: [
-      { name: "theorem", paramType: "string", description: "Root theorem name", defaultValue: Some("fundamental_theorem"), validation: None },
-      { name: "depth", paramType: "int", description: "Maximum dependency depth", defaultValue: Some("5"), validation: Some("^[0-9]+$") },
+      {
+        name: "theorem",
+        paramType: "string",
+        description: "Root theorem name",
+        defaultValue: Some("fundamental_theorem"),
+        validation: None,
+      },
+      {
+        name: "depth",
+        paramType: "int",
+        description: "Maximum dependency depth",
+        defaultValue: Some("5"),
+        validation: Some("^[0-9]+$"),
+      },
     ],
     requiredLevel: L7_CardinalitySafe,
   },
@@ -872,8 +1085,20 @@ let builtinTemplates: array<queryTemplate> = [
     operation: OpTacticStats,
     template: "FIND tactic, count, success_rate, avg_depth\nFROM tactics\nWHERE prover = '{{prover}}'\nGROUP tactic\nORDER count DESC\nLIMIT {{limit}}",
     parameters: [
-      { name: "prover", paramType: "prover", description: "Prover backend", defaultValue: Some("Lean"), validation: None },
-      { name: "limit", paramType: "int", description: "Top N tactics", defaultValue: Some("25"), validation: Some("^[0-9]+$") },
+      {
+        name: "prover",
+        paramType: "prover",
+        description: "Prover backend",
+        defaultValue: Some("Lean"),
+        validation: None,
+      },
+      {
+        name: "limit",
+        paramType: "int",
+        description: "Top N tactics",
+        defaultValue: Some("25"),
+        validation: Some("^[0-9]+$"),
+      },
     ],
     requiredLevel: L6_ResultTyped,
   },
@@ -884,8 +1109,20 @@ let builtinTemplates: array<queryTemplate> = [
     operation: OpCustom,
     template: "LINEAR FIND proof\nFROM proof_states\nWHERE proof_id = '{{proof_id}}'\nEFFECT read_once\nUSING {{prover}}\nCONSUME",
     parameters: [
-      { name: "proof_id", paramType: "string", description: "Proof to consume", defaultValue: None, validation: None },
-      { name: "prover", paramType: "prover", description: "Verifying prover", defaultValue: Some("Idris2"), validation: None },
+      {
+        name: "proof_id",
+        paramType: "string",
+        description: "Proof to consume",
+        defaultValue: None,
+        validation: None,
+      },
+      {
+        name: "prover",
+        paramType: "prover",
+        description: "Verifying prover",
+        defaultValue: Some("Idris2"),
+        validation: None,
+      },
     ],
     requiredLevel: L10_LinearSafe,
   },
@@ -897,7 +1134,8 @@ let expandTemplate = (template: queryTemplate, values: array<(string, string)>):
   template.parameters->Array.forEach(param => {
     let value = switch values->Array.find(((k, _)) => k == param.name) {
     | Some((_, v)) => v
-    | None => switch param.defaultValue {
+    | None =>
+      switch param.defaultValue {
       | Some(d) => d
       | None => "{{" ++ param.name ++ "}}"
       }
@@ -912,7 +1150,11 @@ let expandTemplate = (template: queryTemplate, values: array<(string, string)>):
 // ============================================================
 
 /// Generate the 4-part evangeliser narrative for a type checking result.
-let generateNarrative = (achieved: typeSafetyLevel, requested: typeSafetyLevel, issues: array<lintDiagnostic>): typeNarrative => {
+let generateNarrative = (
+  achieved: typeSafetyLevel,
+  requested: typeSafetyLevel,
+  issues: array<lintDiagnostic>,
+): typeNarrative => {
   let achievedMeta = getLevelMeta(achieved)
   let requestedMeta = getLevelMeta(requested)
   let passed = levelSatisfies(achieved, requested)
@@ -921,7 +1163,7 @@ let generateNarrative = (achieved: typeSafetyLevel, requested: typeSafetyLevel, 
 
   let celebrate = if passed {
     `Your query achieved ${achievedMeta.name} (${achievedMeta.shortName}) safety! ` ++
-    (if levelToInt(achieved) >= 7 {
+    if levelToInt(achieved) >= 7 {
       "This means ECHIDNA provers have verified formal properties of your query. "
     } else if levelToInt(achieved) >= 5 {
       "Your query is injection-proof and fully typed. "
@@ -929,20 +1171,27 @@ let generateNarrative = (achieved: typeSafetyLevel, requested: typeSafetyLevel, 
       "All types are compatible and schema references resolve correctly. "
     } else {
       "The query parses correctly. "
-    }) ++
+    } ++
     `${achievedMeta.glyph} Well done.`
   } else {
     `Your query reached ${achievedMeta.name} (${achievedMeta.shortName}), which is ` ++
-    `${Int.toString(levelToInt(achieved))} of ${Int.toString(levelToInt(requested))} levels toward your target.`
+    `${Int.toString(levelToInt(achieved))} of ${Int.toString(
+        levelToInt(requested),
+      )} levels toward your target.`
   }
 
   let minimize = if errorCount == 0 && warnCount == 0 {
     "No issues detected. The query is clean."
   } else if errorCount == 0 {
-    `${Int.toString(warnCount)} warning(s) found, but none are blocking. The query can execute as-is.`
+    `${Int.toString(
+        warnCount,
+      )} warning(s) found, but none are blocking. The query can execute as-is.`
   } else {
-    `${Int.toString(errorCount)} error(s) need attention before execution. ` ++
-    (if warnCount > 0 { `There are also ${Int.toString(warnCount)} warning(s) to review.` } else { "" })
+    `${Int.toString(errorCount)} error(s) need attention before execution. ` ++ if warnCount > 0 {
+      `There are also ${Int.toString(warnCount)} warning(s) to review.`
+    } else {
+      ""
+    }
   }
 
   let showBetter = if passed && levelToInt(achieved) < 10 {
@@ -958,14 +1207,15 @@ let generateNarrative = (achieved: typeSafetyLevel, requested: typeSafetyLevel, 
       | L7_CardinalitySafe => L8_EffectTracked
       | L8_EffectTracked => L9_TemporalSafe
       | L9_TemporalSafe | L10_LinearSafe => L10_LinearSafe
-      }
+      },
     )
     `To reach the next level (${nextLevel.name}), ${nextLevel.description}`
   } else if passed {
     "You've achieved maximum type safety. This query has the strongest guarantees VQL-UT can provide."
   } else {
-    `To reach ${requestedMeta.name}: address the ${Int.toString(errorCount)} error(s) above. ` ++
-    `Each error maps to a specific level requirement.`
+    `To reach ${requestedMeta.name}: address the ${Int.toString(
+        errorCount,
+      )} error(s) above. ` ++ `Each error maps to a specific level requirement.`
   }
 
   let safety = if levelToInt(achieved) >= 10 {
@@ -982,7 +1232,7 @@ let generateNarrative = (achieved: typeSafetyLevel, requested: typeSafetyLevel, 
     "NO SAFETY: This query runs as raw text. Consider adding type safety by choosing a higher level."
   }
 
-  { celebrate, minimize, showBetter, safety }
+  {celebrate, minimize, showBetter, safety}
 }
 
 // ============================================================
@@ -1234,12 +1484,17 @@ let formatCell = (cell: resultCell): string =>
   | CellString(s) => s
   | CellInt(i) => Int.toString(i)
   | CellFloat(f) => Float.toString(f)
-  | CellBool(b) => if b { "true" } else { "false" }
+  | CellBool(b) =>
+    if b {
+      "true"
+    } else {
+      "false"
+    }
   | CellNull => "NULL"
   | CellProver(p) => p
   | CellProof(id) => id
   | CellTactic(t) => t
-  | CellLevel(l) => (getLevelMeta(l)).shortName
+  | CellLevel(l) => getLevelMeta(l).shortName
   | CellOctad(o) => o
   }
 

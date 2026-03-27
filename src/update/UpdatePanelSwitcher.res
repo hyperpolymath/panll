@@ -24,7 +24,9 @@ let updatePanelSwitcher = (model: model, msg: panelSwitcherMsg): (model, Tea_Cmd
         Tea_Cmd.none
       }
       // Auto-connect CloudGuard when opening.
-      let cgCmd = if newActive === Some(PanelCloudGuard) && model.cloudguard.connection === Disconnected {
+      let cgCmd = if (
+        newActive === Some(PanelCloudGuard) && model.cloudguard.connection === Disconnected
+      ) {
         CloudGuardCmd.verifyToken(result => CloudGuard(TokenVerified(result)))
       } else {
         Tea_Cmd.none
@@ -63,9 +65,8 @@ let updatePanelSwitcher = (model: model, msg: panelSwitcherMsg): (model, Tea_Cmd
       | Ok(_) => ServiceConnected
       | Error(e) => ServiceError(e)
       }
-      let newPanels = ps.panels->Array.map(p =>
-        p.id === panelId ? {...p, connectionStatus: newStatus} : p
-      )
+      let newPanels =
+        ps.panels->Array.map(p => p.id === panelId ? {...p, connectionStatus: newStatus} : p)
       ({...model, panelSwitcher: {...ps, panels: newPanels}}, Tea_Cmd.none)
     }
   }

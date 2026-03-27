@@ -16,19 +16,15 @@ let defaultConstraints: stapelnConstraints = {
   memoryLimitMb: 512,
   cpuLimit: 2.0,
   networkRules: [
-    { port: 443, protocol: Tcp, direction: "egress", description: "HTTPS outbound" },
-    { port: 80, protocol: Tcp, direction: "ingress", description: "HTTP inbound" },
+    {port: 443, protocol: Tcp, direction: "egress", description: "HTTPS outbound"},
+    {port: 80, protocol: Tcp, direction: "ingress", description: "HTTP inbound"},
   ],
   registryConstraints: [
-    { registry: "cgr.dev/chainguard", allowed: true },
-    { registry: "ghcr.io", allowed: true },
-    { registry: "docker.io", allowed: false },
+    {registry: "cgr.dev/chainguard", allowed: true},
+    {registry: "ghcr.io", allowed: true},
+    {registry: "docker.io", allowed: false},
   ],
-  deniedImages: [
-    "ubuntu:latest",
-    "alpine:latest",
-    "node:*",
-  ],
+  deniedImages: ["ubuntu:latest", "alpine:latest", "node:*"],
   requireHealthcheck: true,
   requireNonRoot: true,
 }
@@ -128,10 +124,4 @@ let allFormats: array<artifactFormat> = [
 ]
 
 /// All SLSA levels (for dropdown rendering).
-let allSlsaLevels: array<slsaLevel> = [
-  SlsaNone,
-  Slsa1,
-  Slsa2,
-  Slsa3,
-  Slsa4,
-]
+let allSlsaLevels: array<slsaLevel> = [SlsaNone, Slsa1, Slsa2, Slsa3, Slsa4]

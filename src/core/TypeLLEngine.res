@@ -89,10 +89,27 @@ let featureTier = (f: typeFeature): typeTier =>
   }
 
 /// All features grouped by tier.
-let coreFeatures: array<typeFeature> = [DependentTypes, LinearTypes, SessionTypes, ProofCarryingCode]
-let advancedFeatures: array<typeFeature> = [QuantitativeTypeTheory, EffectSystems, ModalTypes, AffineTypes]
-let researchFeatures: array<typeFeature> = [HomotopyTypeTheory, EqualitySaturation, CategoryTheoreticTypes]
-let allFeatures: array<typeFeature> = Array.concat(coreFeatures, Array.concat(advancedFeatures, researchFeatures))
+let coreFeatures: array<typeFeature> = [
+  DependentTypes,
+  LinearTypes,
+  SessionTypes,
+  ProofCarryingCode,
+]
+let advancedFeatures: array<typeFeature> = [
+  QuantitativeTypeTheory,
+  EffectSystems,
+  ModalTypes,
+  AffineTypes,
+]
+let researchFeatures: array<typeFeature> = [
+  HomotopyTypeTheory,
+  EqualitySaturation,
+  CategoryTheoreticTypes,
+]
+let allFeatures: array<typeFeature> = Array.concat(
+  coreFeatures,
+  Array.concat(advancedFeatures, researchFeatures),
+)
 
 /// Tier label.
 let tierLabel = (t: typeTier): string =>
@@ -118,17 +135,61 @@ let tierColour = (t: typeTier): string =>
 /// symbol system to cover the full type system spectrum.
 let featureGlyph = (f: typeFeature): typeGlyph =>
   switch f {
-  | DependentTypes => { symbol: "Pi", label: "Dependent", meaning: "Value-dependent types — types that compute from values" }
-  | LinearTypes => { symbol: "1", label: "Linear", meaning: "Used exactly once — no duplication, no discard" }
-  | SessionTypes => { symbol: "!", label: "Session", meaning: "Protocol safety — communication follows a contract" }
-  | ProofCarryingCode => { symbol: "QED", label: "Proved", meaning: "Cryptographic proof certificate attached" }
-  | QuantitativeTypeTheory => { symbol: "n", label: "Quantity", meaning: "Resource quantity tracked — 0, 1, or unlimited uses" }
-  | EffectSystems => { symbol: "IO", label: "Effect", meaning: "Side effects declared — reads, writes, allocations" }
-  | ModalTypes => { symbol: "BOX", label: "Modal", meaning: "Contextual access — valid only in certain modes" }
-  | AffineTypes => { symbol: "?1", label: "Affine", meaning: "Used at most once — may be discarded but not duplicated" }
-  | HomotopyTypeTheory => { symbol: "~", label: "HoTT", meaning: "Path equality — types related by continuous transformation" }
-  | EqualitySaturation => { symbol: "=", label: "EqSat", meaning: "Equivalence classes — all equal forms explored simultaneously" }
-  | CategoryTheoreticTypes => { symbol: "->", label: "Functor", meaning: "Structure-preserving maps between categories" }
+  | DependentTypes => {
+      symbol: "Pi",
+      label: "Dependent",
+      meaning: "Value-dependent types — types that compute from values",
+    }
+  | LinearTypes => {
+      symbol: "1",
+      label: "Linear",
+      meaning: "Used exactly once — no duplication, no discard",
+    }
+  | SessionTypes => {
+      symbol: "!",
+      label: "Session",
+      meaning: "Protocol safety — communication follows a contract",
+    }
+  | ProofCarryingCode => {
+      symbol: "QED",
+      label: "Proved",
+      meaning: "Cryptographic proof certificate attached",
+    }
+  | QuantitativeTypeTheory => {
+      symbol: "n",
+      label: "Quantity",
+      meaning: "Resource quantity tracked — 0, 1, or unlimited uses",
+    }
+  | EffectSystems => {
+      symbol: "IO",
+      label: "Effect",
+      meaning: "Side effects declared — reads, writes, allocations",
+    }
+  | ModalTypes => {
+      symbol: "BOX",
+      label: "Modal",
+      meaning: "Contextual access — valid only in certain modes",
+    }
+  | AffineTypes => {
+      symbol: "?1",
+      label: "Affine",
+      meaning: "Used at most once — may be discarded but not duplicated",
+    }
+  | HomotopyTypeTheory => {
+      symbol: "~",
+      label: "HoTT",
+      meaning: "Path equality — types related by continuous transformation",
+    }
+  | EqualitySaturation => {
+      symbol: "=",
+      label: "EqSat",
+      meaning: "Equivalence classes — all equal forms explored simultaneously",
+    }
+  | CategoryTheoreticTypes => {
+      symbol: "->",
+      label: "Functor",
+      meaning: "Structure-preserving maps between categories",
+    }
   }
 
 // ============================================================================
@@ -146,7 +207,13 @@ let categoryLabel = (cat: typellCategory): string =>
   }
 
 /// All category tabs.
-let allCategories: array<typellCategory> = [TlChecker, TlExplorer, TlRefinement, TlDiscipline, TlGuide]
+let allCategories: array<typellCategory> = [
+  TlChecker,
+  TlExplorer,
+  TlRefinement,
+  TlDiscipline,
+  TlGuide,
+]
 
 // ============================================================================
 // Evangeliser Narrative Generation
@@ -172,7 +239,9 @@ let generateNarrative = (result: typeCheckResult): typeNarrative => {
   } else if result.linearityIssues->Array.length > 0 {
     "There are linearity notes — resources might not be used optimally."
   } else if result.proofObligations->Array.length > 0 {
-    `There are ${Int.toString(Array.length(result.proofObligations))} proof obligations — the type system is asking you to justify your claims.`
+    `There are ${Int.toString(
+        Array.length(result.proofObligations),
+      )} proof obligations — the type system is asking you to justify your claims.`
   } else {
     ""
   }
@@ -191,12 +260,14 @@ let generateNarrative = (result: typeCheckResult): typeNarrative => {
   let safety = if result.valid && result.proofObligations->Array.length === 0 {
     "Fully verified — no proof obligations outstanding."
   } else if result.valid {
-    `Verified with ${Int.toString(Array.length(result.proofObligations))} proof obligations. Discharge these for full assurance.`
+    `Verified with ${Int.toString(
+        Array.length(result.proofObligations),
+      )} proof obligations. Discharge these for full assurance.`
   } else {
     "Fix the type errors to unlock safety guarantees."
   }
 
-  { celebrate, minimize, showBetter, safety }
+  {celebrate, minimize, showBetter, safety}
 }
 
 // ============================================================================
@@ -219,10 +290,13 @@ let formatSignature = (sig: string, viewLayer: viewLayer, features: array<typeFe
     tier ++ sig
   | Glyphed =>
     // Prepend glyphs for active features
-    let glyphStr = features->Array.map(f => {
-      let g = featureGlyph(f)
-      g.symbol
-    })->Array.join(" ")
+    let glyphStr =
+      features
+      ->Array.map(f => {
+        let g = featureGlyph(f)
+        g.symbol
+      })
+      ->Array.join(" ")
     if glyphStr !== "" {
       glyphStr ++ " | " ++ sig
     } else {
@@ -232,7 +306,9 @@ let formatSignature = (sig: string, viewLayer: viewLayer, features: array<typeFe
   }
 
 /// Filter signatures by tier.
-let filterByTier = (sigs: array<typeSignatureEntry>, tier: option<typeTier>): array<typeSignatureEntry> =>
+let filterByTier = (sigs: array<typeSignatureEntry>, tier: option<typeTier>): array<
+  typeSignatureEntry,
+> =>
   switch tier {
   | None => sigs
   | Some(t) => sigs->Array.filter(s => s.tier === t)
@@ -322,7 +398,11 @@ let disciplineImpliedFeatures = (d: typeDiscipline): array<typeFeature> =>
 
 /// All disciplines in order.
 let allDisciplines: array<typeDiscipline> = [
-  DisciplineAffine, DisciplineLinear, DisciplineDependent, DisciplineRefined, DisciplineUnrestricted,
+  DisciplineAffine,
+  DisciplineLinear,
+  DisciplineDependent,
+  DisciplineRefined,
+  DisciplineUnrestricted,
 ]
 
 /// Parse a feature code string (e.g., "dep", "lin", "aff") to a typeFeature.
@@ -346,9 +426,13 @@ let parseFeatureCode = (code: string): option<typeFeature> =>
 let computeMaxTier = (features: array<typeFeature>): typeTier => {
   let hasResearch = features->Array.some(f => featureTier(f) === TierResearch)
   let hasAdvanced = features->Array.some(f => featureTier(f) === TierAdvanced)
-  if hasResearch { TierResearch }
-  else if hasAdvanced { TierAdvanced }
-  else { TierCore }
+  if hasResearch {
+    TierResearch
+  } else if hasAdvanced {
+    TierAdvanced
+  } else {
+    TierCore
+  }
 }
 
 /// Parse a usage string to a quantifier.
@@ -392,17 +476,38 @@ let defaultUnifiedTypeExpr: unifiedTypeExpr = {
 /// Summarise a unified type analysis result as a single line.
 let unifiedAnalysisSummary = (analysis: unifiedTypeAnalysis): string => {
   let parts = []
-  let parts = if analysis.linearitySatisfied { parts } else { Array.concat(parts, ["linearity violated"]) }
-  let parts = if analysis.indicesWellFounded { parts } else { Array.concat(parts, ["indices not well-founded"]) }
-  let parts = if analysis.refinementsSatisfiable { parts } else { Array.concat(parts, ["refinements unsatisfiable"]) }
+  let parts = if analysis.linearitySatisfied {
+    parts
+  } else {
+    Array.concat(parts, ["linearity violated"])
+  }
+  let parts = if analysis.indicesWellFounded {
+    parts
+  } else {
+    Array.concat(parts, ["indices not well-founded"])
+  }
+  let parts = if analysis.refinementsSatisfiable {
+    parts
+  } else {
+    Array.concat(parts, ["refinements unsatisfiable"])
+  }
   let parts = if Array.length(analysis.usageViolations) > 0 {
-    Array.concat(parts, [Int.toString(Array.length(analysis.usageViolations)) ++ " usage violations"])
-  } else { parts }
+    Array.concat(
+      parts,
+      [Int.toString(Array.length(analysis.usageViolations)) ++ " usage violations"],
+    )
+  } else {
+    parts
+  }
   let parts = if Array.length(analysis.effectLeaks) > 0 {
     Array.concat(parts, [Int.toString(Array.length(analysis.effectLeaks)) ++ " effect leaks"])
-  } else { parts }
+  } else {
+    parts
+  }
   if Array.length(parts) === 0 {
-    disciplineLabel(analysis.typeExpr.discipline) ++ " | " ++ usageSymbol(analysis.typeExpr.usage) ++ " | OK"
+    disciplineLabel(analysis.typeExpr.discipline) ++
+    " | " ++
+    usageSymbol(analysis.typeExpr.usage) ++ " | OK"
   } else {
     disciplineLabel(analysis.typeExpr.discipline) ++ " | " ++ Array.join(parts, ", ")
   }
@@ -417,26 +522,38 @@ let unifiedAnalysisSummary = (analysis: unifiedTypeAnalysis): string => {
 let checkResultDecoder: Tea_Json.decoder<typeCheckResult> = {
   open Decoders
   map11(
-    (valid, typeSignature, explanation, proofObligations, effects,
-     linearityIssues, sessionNotes, featureCodes, usageStr,
-     disciplineStr, inferSrcStr) => {
+    (
+      valid,
+      typeSignature,
+      explanation,
+      proofObligations,
+      effects,
+      linearityIssues,
+      sessionNotes,
+      featureCodes,
+      usageStr,
+      disciplineStr,
+      inferSrcStr,
+    ) => {
       let activeFeatures = featureCodes->Array.filterMap(parseFeatureCode)
       let maxTier = computeMaxTier(activeFeatures)
-      ({
-        valid,
-        typeSignature,
-        explanation,
-        proofObligations,
-        effects,
-        linearityIssues,
-        sessionNotes,
-        activeFeatures,
-        maxTier,
-        usage: parseUsage(usageStr),
-        discipline: parseDiscipline(disciplineStr),
-        inferenceSource: parseInferenceSource(inferSrcStr),
-        unifiedAnalysis: None, // Parsed separately if the server provides it
-      }: typeCheckResult)
+      (
+        {
+          valid,
+          typeSignature,
+          explanation,
+          proofObligations,
+          effects,
+          linearityIssues,
+          sessionNotes,
+          activeFeatures,
+          maxTier,
+          usage: parseUsage(usageStr),
+          discipline: parseDiscipline(disciplineStr),
+          inferenceSource: parseInferenceSource(inferSrcStr),
+          unifiedAnalysis: None, // Parsed separately if the server provides it
+        }: typeCheckResult
+      )
     },
     boolField("valid"),
     stringField("type_signature"),
@@ -460,18 +577,16 @@ let parseCheckResult = (json: string): result<typeCheckResult, string> =>
 let refinementResultDecoder: Tea_Json.decoder<refinementResult> = {
   open Decoders
   open Tea_Json
-  map4(
-    (baseType, refinedType, _constraints, consistent) => ({
-      baseType,
-      refinedType,
-      constraints: [],
-      consistent,
-    }: refinementResult),
-    stringField("base_type"),
-    stringField("refined_type"),
-    fieldWithDefault("constraints", lenientArray(string), []),
-    boolField("consistent"),
-  )
+  map4((baseType, refinedType, _constraints, consistent): refinementResult => {
+    baseType,
+    refinedType,
+    constraints: [],
+    consistent,
+  }, stringField(
+    "base_type",
+  ), stringField(
+    "refined_type",
+  ), fieldWithDefault("constraints", lenientArray(string), []), boolField("consistent"))
 }
 
 /// Parse a refinement result from JSON.
@@ -548,7 +663,9 @@ type proofObligation = {
 
 /// Build the JSON body for a kernel type-check request.
 let buildCheckBody = (source: string, language: string): string => {
-  `{"source":${JSON.stringifyAny(source)->Option.getOr("\"\"")}, "language":${JSON.stringifyAny(language)->Option.getOr("\"\"")}, "mode":"check"}`
+  `{"source":${JSON.stringifyAny(source)->Option.getOr("\"\"")}, "language":${JSON.stringifyAny(
+      language,
+    )->Option.getOr("\"\"")}, "mode":"check"}`
 }
 
 /// Build the JSON body for a kernel usage inference request.
@@ -574,10 +691,10 @@ let buildGenerateProofObligationBody = (source: string): string => {
 /// Tea_Json decoder for a kernel type check result (parameterised by language).
 let kernelCheckResultDecoder = (language: string): Tea_Json.decoder<kernelTypeCheckResult> => {
   open Decoders
-  map6(
-    (valid, typeSignature, featureCodes, proofObligations, effects, linearityIssues) => {
-      let activeFeatures = featureCodes->Array.filterMap(parseFeatureCode)
-      ({
+  map6((valid, typeSignature, featureCodes, proofObligations, effects, linearityIssues) => {
+    let activeFeatures = featureCodes->Array.filterMap(parseFeatureCode)
+    (
+      {
         valid,
         typeSignature,
         activeFeatures,
@@ -585,34 +702,34 @@ let kernelCheckResultDecoder = (language: string): Tea_Json.decoder<kernelTypeCh
         effects,
         linearityIssues,
         language,
-      }: kernelTypeCheckResult)
-    },
-    boolField("valid"),
-    stringField("type_signature"),
-    stringArrayField("features"),
-    stringArrayField("proof_obligations"),
-    stringArrayField("effects"),
-    stringArrayField("linearity_issues"),
-  )
+      }: kernelTypeCheckResult
+    )
+  }, boolField(
+    "valid",
+  ), stringField(
+    "type_signature",
+  ), stringArrayField(
+    "features",
+  ), stringArrayField(
+    "proof_obligations",
+  ), stringArrayField("effects"), stringArrayField("linearity_issues"))
 }
 
 /// Parse a kernel type check result from JSON response.
-let parseKernelCheckResult = (json: string, language: string): result<kernelTypeCheckResult, string> =>
-  Decoders.decode(kernelCheckResultDecoder(language), json)
+let parseKernelCheckResult = (json: string, language: string): result<
+  kernelTypeCheckResult,
+  string,
+> => Decoders.decode(kernelCheckResultDecoder(language), json)
 
 /// Tea_Json decoder for a usage inference result.
 let usageInferenceResultDecoder: Tea_Json.decoder<usageInferenceResult> = {
   open Decoders
   open Tea_Json
-  map2(
-    (quantifierStr, explanation) => ({
-      quantifier: parseUsage(quantifierStr),
-      explanation,
-      bindings: [],
-    }: usageInferenceResult),
-    stringField("quantifier"),
-    stringField("explanation"),
-  )
+  map2((quantifierStr, explanation): usageInferenceResult => {
+    quantifier: parseUsage(quantifierStr),
+    explanation,
+    bindings: [],
+  }, stringField("quantifier"), stringField("explanation"))
 }
 
 /// Parse a usage inference result from JSON.
@@ -623,16 +740,11 @@ let parseUsageInferenceResult = (json: string): result<usageInferenceResult, str
 let effectInferenceResultDecoder: Tea_Json.decoder<effectInferenceResult> = {
   open Decoders
   open Tea_Json
-  map3(
-    (effects, pure, effectRow) => ({
-      effects,
-      pure,
-      effectRow,
-    }: effectInferenceResult),
-    stringArrayField("effects"),
-    boolField("pure"),
-    optionalFieldDecoder("effect_row", string),
-  )
+  map3((effects, pure, effectRow): effectInferenceResult => {
+    effects,
+    pure,
+    effectRow,
+  }, stringArrayField("effects"), boolField("pure"), optionalFieldDecoder("effect_row", string))
 }
 
 /// Parse an effect inference result from JSON.
@@ -643,18 +755,14 @@ let parseEffectInferenceResult = (json: string): result<effectInferenceResult, s
 let dimensionalResultDecoder: Tea_Json.decoder<dimensionalResult> = {
   open Decoders
   open Tea_Json
-  map4(
-    (consistent, dimensionalType, violations, coercions) => ({
-      consistent,
-      dimensionalType,
-      violations,
-      coercions,
-    }: dimensionalResult),
-    boolField("consistent"),
-    stringField("dimensional_type"),
-    stringArrayField("violations"),
-    stringArrayField("coercions"),
-  )
+  map4((consistent, dimensionalType, violations, coercions): dimensionalResult => {
+    consistent,
+    dimensionalType,
+    violations,
+    coercions,
+  }, boolField(
+    "consistent",
+  ), stringField("dimensional_type"), stringArrayField("violations"), stringArrayField("coercions"))
 }
 
 /// Parse a dimensional check result from JSON.
@@ -666,9 +774,22 @@ let kernelBaseUrl = "http://localhost:7800/api/v1"
 
 /// All supported nextgen-languages that the kernel can type-check.
 let supportedLanguages: array<string> = [
-  "affinescript", "eclexia", "anvomidav", "ephapax", "wokelang",
-  "betlang", "tangle", "my-lang", "crank", "delimit",
-  "sunyata", "hexsweep", "cascade", "polytope", "coda", "strata",
+  "affinescript",
+  "eclexia",
+  "anvomidav",
+  "ephapax",
+  "wokelang",
+  "betlang",
+  "tangle",
+  "my-lang",
+  "crank",
+  "delimit",
+  "sunyata",
+  "hexsweep",
+  "cascade",
+  "polytope",
+  "coda",
+  "strata",
 ]
 
 /// Check if a language name is supported by the kernel.

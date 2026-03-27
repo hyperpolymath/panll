@@ -19,49 +19,26 @@ open Tea.Html
 
 /// Render a single domain chip in the ribbon.
 /// Selected chips have an indigo border, deselected have a gray border.
-let renderDomainChip = (
-  zone: cfZone,
-  isSelected: bool,
-): Tea_Vdom.t<msg> => {
+let renderDomainChip = (zone: cfZone, isSelected: bool): Tea_Vdom.t<msg> => {
   let borderClass = isSelected
     ? "border-indigo-500 bg-indigo-950/30"
     : "border-gray-700 bg-gray-800/30"
 
   let statusDot = switch zone.status {
   | "active" =>
-    span(
-      list{Attrs.class_("w-2 h-2 rounded-full bg-green-400 inline-block mr-1.5")},
-      list{},
-    )
+    span(list{Attrs.class_("w-2 h-2 rounded-full bg-green-400 inline-block mr-1.5")}, list{})
   | "pending" =>
-    span(
-      list{Attrs.class_("w-2 h-2 rounded-full bg-yellow-400 inline-block mr-1.5")},
-      list{},
-    )
-  | _ =>
-    span(
-      list{Attrs.class_("w-2 h-2 rounded-full bg-gray-500 inline-block mr-1.5")},
-      list{},
-    )
+    span(list{Attrs.class_("w-2 h-2 rounded-full bg-yellow-400 inline-block mr-1.5")}, list{})
+  | _ => span(list{Attrs.class_("w-2 h-2 rounded-full bg-gray-500 inline-block mr-1.5")}, list{})
   }
 
   let planBadge = switch zone.plan {
   | Free => noNode
-  | Pro =>
-    span(
-      list{Attrs.class_("ml-1.5 text-xs text-orange-400 font-medium")},
-      list{text("PRO")},
-    )
+  | Pro => span(list{Attrs.class_("ml-1.5 text-xs text-orange-400 font-medium")}, list{text("PRO")})
   | Business =>
-    span(
-      list{Attrs.class_("ml-1.5 text-xs text-purple-400 font-medium")},
-      list{text("BIZ")},
-    )
+    span(list{Attrs.class_("ml-1.5 text-xs text-purple-400 font-medium")}, list{text("BIZ")})
   | Enterprise =>
-    span(
-      list{Attrs.class_("ml-1.5 text-xs text-blue-400 font-medium")},
-      list{text("ENT")},
-    )
+    span(list{Attrs.class_("ml-1.5 text-xs text-blue-400 font-medium")}, list{text("ENT")})
   }
 
   button(
@@ -73,11 +50,7 @@ let renderDomainChip = (
       Attrs.ariaLabel(`${isSelected ? "Deselect" : "Select"} ${zone.name}`),
       Events.onClick(CloudGuard(ToggleZoneSelection(zone.id))),
     },
-    list{
-      statusDot,
-      span(list{Attrs.class_("text-gray-200")}, list{text(zone.name)}),
-      planBadge,
-    },
+    list{statusDot, span(list{Attrs.class_("text-gray-200")}, list{text(zone.name)}), planBadge},
   )
 }
 
@@ -86,13 +59,12 @@ let renderFilterInput = (filterText: string): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex items-center gap-2")},
     list{
-      span(
-        list{Attrs.class_("text-xs text-gray-500")},
-        list{text("Filter:")},
-      ),
+      span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Filter:")}),
       input(
         list{
-          Attrs.class_("bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-300 w-40 focus:border-indigo-500 focus:outline-none"),
+          Attrs.class_(
+            "bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-300 w-40 focus:border-indigo-500 focus:outline-none",
+          ),
           Attrs.type_("text"),
           Attrs.value(filterText),
           Attrs.placeholder("domain name..."),
@@ -132,11 +104,9 @@ let renderSelectionControls = (): Tea_Vdom.t<msg> => {
 }
 
 /// Render the complete domain ribbon: controls bar + scrollable chip list.
-let view = (
-  zones: array<cfZone>,
-  selectedZoneIds: array<string>,
-  filterText: string,
-): Tea_Vdom.t<msg> => {
+let view = (zones: array<cfZone>, selectedZoneIds: array<string>, filterText: string): Tea_Vdom.t<
+  msg,
+> => {
   let filteredZones = CloudGuardEngine.filterZones(zones, filterText)
 
   div(
@@ -158,7 +128,9 @@ let view = (
                 list{Attrs.class_("text-xs text-gray-500")},
                 list{
                   text(
-                    `${Int.toString(Array.length(selectedZoneIds))}/${Int.toString(Array.length(zones))} selected`,
+                    `${Int.toString(Array.length(selectedZoneIds))}/${Int.toString(
+                        Array.length(zones),
+                      )} selected`,
                   ),
                 },
               ),

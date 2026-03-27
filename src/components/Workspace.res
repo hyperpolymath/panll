@@ -20,7 +20,9 @@ let renderModeBadge = (mode: workspaceMode): Tea_Vdom.t<msg> => {
   }
   button(
     list{
-      Attrs.class_(`px-3 py-1 rounded text-xs font-medium ${colour} text-white hover:opacity-80 transition-opacity`),
+      Attrs.class_(
+        `px-3 py-1 rounded text-xs font-medium ${colour} text-white hover:opacity-80 transition-opacity`,
+      ),
       Attrs.title("Click to cycle workspace mode: Rhodium > Everything > Code > Bespoke"),
       Events.onClick(Workspace(CycleWorkspaceMode)),
     },
@@ -58,14 +60,20 @@ let renderExecutionBadge = (mode: executionMode): Tea_Vdom.t<msg> => {
   div(
     list{
       Attrs.class_(`px-2 py-0.5 rounded text-xs ${colour} text-white`),
-      Attrs.title("Execution mode — Live applies changes, Dry Run previews them, Simulation uses mock data"),
+      Attrs.title(
+        "Execution mode — Live applies changes, Dry Run previews them, Simulation uses mock data",
+      ),
     },
     list{text(label)},
   )
 }
 
 /// Render a configurator section with title and items.
-let renderConfigSection = (title: string, tooltip: string, items: list<Tea_Vdom.t<msg>>): Tea_Vdom.t<msg> => {
+let renderConfigSection = (
+  title: string,
+  tooltip: string,
+  items: list<Tea_Vdom.t<msg>>,
+): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("mb-6")},
     list{
@@ -82,12 +90,9 @@ let renderConfigSection = (title: string, tooltip: string, items: list<Tea_Vdom.
 }
 
 /// Render a selectable option button — highlights when active.
-let renderOption = (
-  label: string,
-  description: string,
-  isActive: bool,
-  onClick: msg,
-): Tea_Vdom.t<msg> => {
+let renderOption = (label: string, description: string, isActive: bool, onClick: msg): Tea_Vdom.t<
+  msg,
+> => {
   let activeClass = if isActive {
     "border-indigo-500 bg-indigo-950/50 text-indigo-300"
   } else {
@@ -95,9 +100,7 @@ let renderOption = (
   }
   button(
     list{
-      Attrs.class_(
-        `w-full text-left p-3 rounded border ${activeClass} transition-colors`,
-      ),
+      Attrs.class_(`w-full text-left p-3 rounded border ${activeClass} transition-colors`),
       Attrs.title(description),
       Attrs.ariaLabel(`${label}: ${description}`),
       Events.onClick(onClick),
@@ -110,10 +113,7 @@ let renderOption = (
 }
 
 /// Render an arrangement card — shows name, active state, load/delete buttons.
-let renderArrangementCard = (
-  arr: arrangement,
-  isActive: bool,
-): Tea_Vdom.t<msg> => {
+let renderArrangementCard = (arr: arrangement, isActive: bool): Tea_Vdom.t<msg> => {
   let activeClass = if isActive {
     "border-indigo-500 bg-indigo-950/50"
   } else {
@@ -121,23 +121,21 @@ let renderArrangementCard = (
   }
   div(
     list{
-      Attrs.class_(`p-3 rounded border ${activeClass} transition-colors flex items-center justify-between`),
+      Attrs.class_(
+        `p-3 rounded border ${activeClass} transition-colors flex items-center justify-between`,
+      ),
       Attrs.ariaLabel(`Arrangement: ${arr.name}`),
     },
     list{
       div(
         list{Attrs.class_("flex-1")},
         list{
-          div(
-            list{Attrs.class_("text-xs font-medium text-gray-300")},
-            list{text(arr.name)},
-          ),
+          div(list{Attrs.class_("text-xs font-medium text-gray-300")}, list{text(arr.name)}),
           div(
             list{Attrs.class_("text-xs text-gray-600 mt-0.5")},
             list{
               text(
-                `${Int.toString(Array.length(arr.positions))} panels` ++
-                if arr.builtIn {
+                `${Int.toString(Array.length(arr.positions))} panels` ++ if arr.builtIn {
                   " (built-in)"
                 } else {
                   ""
@@ -153,7 +151,9 @@ let renderArrangementCard = (
           if !isActive {
             button(
               list{
-                Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-gray-400 rounded hover:bg-gray-700"),
+                Attrs.class_(
+                  "px-2 py-0.5 text-xs bg-gray-800 text-gray-400 rounded hover:bg-gray-700",
+                ),
                 Attrs.ariaLabel(`Load ${arr.name} arrangement`),
                 Events.onClick(Workspace(LoadArrangement(arr.id))),
               },
@@ -168,7 +168,9 @@ let renderArrangementCard = (
           if !arr.builtIn {
             button(
               list{
-                Attrs.class_("px-2 py-0.5 text-xs bg-red-900/50 text-red-400 rounded hover:bg-red-800/50"),
+                Attrs.class_(
+                  "px-2 py-0.5 text-xs bg-red-900/50 text-red-400 rounded hover:bg-red-800/50",
+                ),
                 Attrs.ariaLabel(`Delete ${arr.name} arrangement`),
                 Events.onClick(Workspace(DeleteArrangement(arr.id))),
               },
@@ -187,17 +189,16 @@ let renderArrangementCard = (
 let renderGroupCard = (group: panelGroup): Tea_Vdom.t<msg> => {
   div(
     list{
-      Attrs.class_("p-3 rounded border border-gray-800 bg-gray-900/50 flex items-center justify-between"),
+      Attrs.class_(
+        "p-3 rounded border border-gray-800 bg-gray-900/50 flex items-center justify-between",
+      ),
       Attrs.ariaLabel(`Group: ${group.name}`),
     },
     list{
       div(
         list{Attrs.class_("flex-1")},
         list{
-          div(
-            list{Attrs.class_("text-xs font-medium text-gray-300")},
-            list{text(group.name)},
-          ),
+          div(list{Attrs.class_("text-xs font-medium text-gray-300")}, list{text(group.name)}),
           div(
             list{Attrs.class_("text-xs text-gray-600 mt-0.5")},
             list{text(`${Int.toString(Array.length(group.panelIds))} panels`)},
@@ -216,10 +217,24 @@ let renderGroupCard = (group: panelGroup): Tea_Vdom.t<msg> => {
                     "bg-gray-800 text-gray-400 hover:bg-gray-700"
                   }}`,
               ),
-              Attrs.ariaLabel(if group.locked { "Unlock group" } else { "Lock group" }),
+              Attrs.ariaLabel(
+                if group.locked {
+                  "Unlock group"
+                } else {
+                  "Lock group"
+                },
+              ),
               Events.onClick(Workspace(ToggleGroupLock(group.id))),
             },
-            list{text(if group.locked { "Locked" } else { "Lock" })},
+            list{
+              text(
+                if group.locked {
+                  "Locked"
+                } else {
+                  "Lock"
+                },
+              ),
+            },
           ),
           button(
             list{
@@ -230,14 +245,30 @@ let renderGroupCard = (group: panelGroup): Tea_Vdom.t<msg> => {
                     "bg-gray-800 text-gray-600"
                   }}`,
               ),
-              Attrs.ariaLabel(if group.visible { "Hide group" } else { "Show group" }),
+              Attrs.ariaLabel(
+                if group.visible {
+                  "Hide group"
+                } else {
+                  "Show group"
+                },
+              ),
               Events.onClick(Workspace(ToggleGroupVisibility(group.id))),
             },
-            list{text(if group.visible { "Visible" } else { "Hidden" })},
+            list{
+              text(
+                if group.visible {
+                  "Visible"
+                } else {
+                  "Hidden"
+                },
+              ),
+            },
           ),
           button(
             list{
-              Attrs.class_("px-2 py-0.5 text-xs bg-red-900/50 text-red-400 rounded hover:bg-red-800/50"),
+              Attrs.class_(
+                "px-2 py-0.5 text-xs bg-red-900/50 text-red-400 rounded hover:bg-red-800/50",
+              ),
               Attrs.ariaLabel(`Disband ${group.name} group`),
               Events.onClick(Workspace(DisbandGroup(group.id))),
             },
@@ -250,7 +281,9 @@ let renderGroupCard = (group: panelGroup): Tea_Vdom.t<msg> => {
 }
 
 /// Render a metadata viewer link.
-let renderMetadataLink = (item: repoMetadataItem, label: string, description: string): Tea_Vdom.t<msg> => {
+let renderMetadataLink = (item: repoMetadataItem, label: string, description: string): Tea_Vdom.t<
+  msg,
+> => {
   button(
     list{
       Attrs.class_(
@@ -278,7 +311,11 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
     list{
       // Header
       div(
-        list{Attrs.class_("sticky top-0 bg-gray-950 border-b border-gray-800 p-4 flex items-center justify-between z-10")},
+        list{
+          Attrs.class_(
+            "sticky top-0 bg-gray-950 border-b border-gray-800 p-4 flex items-center justify-between z-10",
+          ),
+        },
         list{
           div(
             list{Attrs.class_("flex items-center gap-4")},
@@ -294,7 +331,9 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
             list{
               button(
                 list{
-                  Attrs.class_("px-3 py-1 bg-indigo-800 text-indigo-200 rounded hover:bg-indigo-700 transition-colors text-sm"),
+                  Attrs.class_(
+                    "px-3 py-1 bg-indigo-800 text-indigo-200 rounded hover:bg-indigo-700 transition-colors text-sm",
+                  ),
                   Attrs.ariaLabel("Export workspace configuration to ENSAID_CONFIG.a2ml"),
                   Events.onClick(Workspace(ExportWorkspaceConfig)),
                 },
@@ -302,7 +341,9 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1 bg-gray-800 text-gray-400 rounded hover:bg-gray-700 transition-colors text-sm"),
+                  Attrs.class_(
+                    "px-3 py-1 bg-gray-800 text-gray-400 rounded hover:bg-gray-700 transition-colors text-sm",
+                  ),
                   Events.onClick(PanelSwitcher(ClosePanels)),
                 },
                 list{text("Close")},
@@ -311,7 +352,6 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
           ),
         },
       ),
-
       // Body: two-column layout
       div(
         list{Attrs.class_("p-6 grid grid-cols-2 gap-8 max-w-6xl mx-auto")},
@@ -327,8 +367,7 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                   let cards =
                     workspace.arrangements
                     ->Array.map(arr => {
-                      let isActive =
-                        workspace.activeArrangementId == Some(arr.id)
+                      let isActive = workspace.activeArrangementId == Some(arr.id)
                       renderArrangementCard(arr, isActive)
                     })
                     ->List.fromArray
@@ -342,7 +381,12 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                           ),
                           Attrs.ariaLabel("Save the current panel layout as a new arrangement"),
                           Events.onClick(
-                            Workspace(SaveArrangement("custom-" ++ Float.toString(Date.now()), "Custom Layout")),
+                            Workspace(
+                              SaveArrangement(
+                                "custom-" ++ Float.toString(Date.now()),
+                                "Custom Layout",
+                              ),
+                            ),
                           ),
                         },
                         list{text("+ Save Current Layout")},
@@ -361,14 +405,15 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                   list{
                     div(
                       list{Attrs.class_("p-3 text-xs text-gray-600 italic")},
-                      list{text("No groups defined. Groups let you move and resize panels together.")},
+                      list{
+                        text("No groups defined. Groups let you move and resize panels together."),
+                      },
                     ),
                   }
                 },
               ),
             },
           ),
-
           // Right column: Sessions, Protection, Modes, Metadata
           div(
             list{Attrs.class_("space-y-6")},
@@ -388,7 +433,9 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                       }
                       div(
                         list{
-                          Attrs.class_(`p-3 rounded border ${activeClass} transition-colors flex items-center justify-between`),
+                          Attrs.class_(
+                            `p-3 rounded border ${activeClass} transition-colors flex items-center justify-between`,
+                          ),
                           Attrs.ariaLabel(`Session: ${session.name}`),
                         },
                         list{
@@ -401,7 +448,13 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                               ),
                               div(
                                 list{Attrs.class_("text-xs text-gray-600 mt-0.5")},
-                                list{text(`${Int.toString(Array.length(session.checkpoints))} checkpoints`)},
+                                list{
+                                  text(
+                                    `${Int.toString(
+                                        Array.length(session.checkpoints),
+                                      )} checkpoints`,
+                                  ),
+                                },
                               ),
                             },
                           ),
@@ -411,20 +464,28 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                               if !isActive {
                                 button(
                                   list{
-                                    Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-gray-400 rounded hover:bg-gray-700"),
+                                    Attrs.class_(
+                                      "px-2 py-0.5 text-xs bg-gray-800 text-gray-400 rounded hover:bg-gray-700",
+                                    ),
                                     Events.onClick(Workspace(SwitchSession(session.id))),
                                   },
                                   list{text("Switch")},
                                 )
                               } else {
                                 div(
-                                  list{Attrs.class_("px-2 py-0.5 text-xs bg-indigo-800 text-indigo-300 rounded")},
+                                  list{
+                                    Attrs.class_(
+                                      "px-2 py-0.5 text-xs bg-indigo-800 text-indigo-300 rounded",
+                                    ),
+                                  },
                                   list{text("Active")},
                                 )
                               },
                               button(
                                 list{
-                                  Attrs.class_("px-2 py-0.5 text-xs bg-teal-900/50 text-teal-400 rounded hover:bg-teal-800/50"),
+                                  Attrs.class_(
+                                    "px-2 py-0.5 text-xs bg-teal-900/50 text-teal-400 rounded hover:bg-teal-800/50",
+                                  ),
                                   Events.onClick(
                                     Workspace(
                                       ForkSession(
@@ -438,7 +499,9 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                               ),
                               button(
                                 list{
-                                  Attrs.class_("px-2 py-0.5 text-xs bg-red-900/50 text-red-400 rounded hover:bg-red-800/50"),
+                                  Attrs.class_(
+                                    "px-2 py-0.5 text-xs bg-red-900/50 text-red-400 rounded hover:bg-red-800/50",
+                                  ),
                                   Events.onClick(Workspace(DeleteSession(session.id))),
                                 },
                                 list{text("Del")},
@@ -453,7 +516,11 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                     list{
                       div(
                         list{Attrs.class_("p-3 text-xs text-gray-600 italic")},
-                        list{text("No sessions saved. Sessions capture your workspace state for later recall.")},
+                        list{
+                          text(
+                            "No sessions saved. Sessions capture your workspace state for later recall.",
+                          ),
+                        },
                       ),
                     }
                   }
@@ -467,7 +534,12 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                           ),
                           Attrs.ariaLabel("Create a new session from current state"),
                           Events.onClick(
-                            Workspace(CreateSession("session-" ++ Float.toString(Date.now()), "New Session")),
+                            Workspace(
+                              CreateSession(
+                                "session-" ++ Float.toString(Date.now()),
+                                "New Session",
+                              ),
+                            ),
                           ),
                         },
                         list{text("+ New Session")},
@@ -590,7 +662,13 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                     list{
                       div(
                         list{Attrs.class_("text-xs text-gray-400")},
-                        list{text(`${Int.toString(Array.length(keybindings.bindings))} bindings configured`)},
+                        list{
+                          text(
+                            `${Int.toString(
+                                Array.length(keybindings.bindings),
+                              )} bindings configured`,
+                          ),
+                        },
                       ),
                       div(
                         list{Attrs.class_("mt-2 max-h-40 overflow-auto space-y-1")},
@@ -637,7 +715,11 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                             list{
                               span(list{Attrs.class_("text-gray-500")}, list{text(actionStr)}),
                               span(
-                                list{Attrs.class_("text-gray-400 font-mono bg-gray-800 px-1.5 py-0.5 rounded")},
+                                list{
+                                  Attrs.class_(
+                                    "text-gray-400 font-mono bg-gray-800 px-1.5 py-0.5 rounded",
+                                  ),
+                                },
                                 list{text(chordStr)},
                               ),
                             },
@@ -653,20 +735,47 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
                 "Repo Metadata",
                 "Quick access to SCM files, contractiles, AI manifests, directory structure",
                 list{
-                  renderMetadataLink(MetaStateSCM, "STATE.scm", "Current project state — tasks, progress, blockers"),
-                  renderMetadataLink(MetaMetaSCM, "META.scm", "Architecture decisions, governance, principles"),
-                  renderMetadataLink(MetaEcosystemSCM, "ECOSYSTEM.scm", "Project ecosystem position, dependencies"),
-                  renderMetadataLink(MetaContractiles, "Contractiles", "Elastic state contracts — orbital stability, vexation ceiling"),
-                  renderMetadataLink(MetaAIManifest, "AI Manifest", "0-AI-MANIFEST.a2ml — entry point for AI agents"),
-                  renderMetadataLink(MetaTrustfile, "Trustfile", "Security policy from Trustfile.a2ml"),
-                  renderMetadataLink(MetaDirectoryTree, "Directory Tree", "Repository file structure overview"),
+                  renderMetadataLink(
+                    MetaStateSCM,
+                    "STATE.scm",
+                    "Current project state — tasks, progress, blockers",
+                  ),
+                  renderMetadataLink(
+                    MetaMetaSCM,
+                    "META.scm",
+                    "Architecture decisions, governance, principles",
+                  ),
+                  renderMetadataLink(
+                    MetaEcosystemSCM,
+                    "ECOSYSTEM.scm",
+                    "Project ecosystem position, dependencies",
+                  ),
+                  renderMetadataLink(
+                    MetaContractiles,
+                    "Contractiles",
+                    "Elastic state contracts — orbital stability, vexation ceiling",
+                  ),
+                  renderMetadataLink(
+                    MetaAIManifest,
+                    "AI Manifest",
+                    "0-AI-MANIFEST.a2ml — entry point for AI agents",
+                  ),
+                  renderMetadataLink(
+                    MetaTrustfile,
+                    "Trustfile",
+                    "Security policy from Trustfile.a2ml",
+                  ),
+                  renderMetadataLink(
+                    MetaDirectoryTree,
+                    "Directory Tree",
+                    "Repository file structure overview",
+                  ),
                 },
               ),
             },
           ),
         },
       ),
-
       // Metadata viewer overlay
       switch workspace.viewingMetadata {
       | Some(_item) =>
@@ -674,15 +783,26 @@ let view = (workspace: workspaceState, keybindings: keybindingsState): Tea_Vdom.
           list{Attrs.class_("fixed inset-0 bg-black/60 z-50 flex items-center justify-center")},
           list{
             div(
-              list{Attrs.class_("bg-gray-950 border border-gray-700 rounded-lg w-[600px] max-h-[80vh] flex flex-col")},
+              list{
+                Attrs.class_(
+                  "bg-gray-950 border border-gray-700 rounded-lg w-[600px] max-h-[80vh] flex flex-col",
+                ),
+              },
               list{
                 div(
-                  list{Attrs.class_("p-4 border-b border-gray-800 flex items-center justify-between")},
                   list{
-                    div(list{Attrs.class_("text-sm font-medium text-gray-300")}, list{text("Metadata Viewer")}),
+                    Attrs.class_("p-4 border-b border-gray-800 flex items-center justify-between"),
+                  },
+                  list{
+                    div(
+                      list{Attrs.class_("text-sm font-medium text-gray-300")},
+                      list{text("Metadata Viewer")},
+                    ),
                     button(
                       list{
-                        Attrs.class_("px-2 py-1 text-xs bg-gray-800 text-gray-400 rounded hover:bg-gray-700"),
+                        Attrs.class_(
+                          "px-2 py-1 text-xs bg-gray-800 text-gray-400 rounded hover:bg-gray-700",
+                        ),
                         Events.onClick(Workspace(CloseMetadata)),
                       },
                       list{text("Close")},

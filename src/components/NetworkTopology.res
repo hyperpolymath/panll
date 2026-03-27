@@ -36,7 +36,9 @@ let renderDeviceCard = (device: networkDevice, isSelected: bool): Tea_Vdom.t<msg
   let zoneCls = NetworkTopologyEngine.zoneColour(device.zone)
   div(
     list{
-      Attrs.class_(`p-3 bg-gray-800 rounded border ${borderCls} cursor-pointer hover:border-gray-400`),
+      Attrs.class_(
+        `p-3 bg-gray-800 rounded border ${borderCls} cursor-pointer hover:border-gray-400`,
+      ),
       Events.onClick(NetworkTopology(SelectDevice(device.id))),
     },
     list{
@@ -70,7 +72,9 @@ let renderDeviceCard = (device: networkDevice, isSelected: bool): Tea_Vdom.t<msg
           device.defenceFlags
           ->Array.map(flag =>
             span(
-              list{Attrs.class_("px-1.5 py-0.5 text-xs bg-emerald-900/50 text-emerald-300 rounded")},
+              list{
+                Attrs.class_("px-1.5 py-0.5 text-xs bg-emerald-900/50 text-emerald-300 rounded"),
+              },
               list{text(flag)},
             )
           )
@@ -120,7 +124,11 @@ let renderZones = (state: networkTopologyState): Tea_Vdom.t<msg> => {
               devices
               ->Array.map(d =>
                 div(
-                  list{Attrs.class_("flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white")},
+                  list{
+                    Attrs.class_(
+                      "flex items-center gap-2 text-xs text-gray-300 cursor-pointer hover:text-white",
+                    ),
+                  },
                   list{
                     span(list{}, list{text(d.name)}),
                     span(list{Attrs.class_("text-gray-500")}, list{text(d.deviceType)}),
@@ -152,10 +160,16 @@ let renderDns = (state: networkTopologyState): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-800 rounded text-xs")},
           list{
-            span(list{Attrs.class_("text-cyan-400 font-mono w-40 truncate")}, list{text(entry.hostname)}),
+            span(
+              list{Attrs.class_("text-cyan-400 font-mono w-40 truncate")},
+              list{text(entry.hostname)},
+            ),
             span(list{Attrs.class_("text-gray-500")}, list{text(entry.recordType)}),
             span(list{Attrs.class_("text-gray-300 font-mono")}, list{text(entry.resolvedIp)}),
-            span(list{Attrs.class_("text-gray-500")}, list{text(`TTL: ${Int.toString(entry.ttl)}`)}),
+            span(
+              list{Attrs.class_("text-gray-500")},
+              list{text(`TTL: ${Int.toString(entry.ttl)}`)},
+            ),
           },
         )
       )
@@ -184,7 +198,15 @@ let renderPacketFlow = (state: networkTopologyState): Tea_Vdom.t<msg> => {
               ),
               Events.onClick(NetworkTopology(TogglePacketAnimation)),
             },
-            list{text(if state.animatePackets { "Animating..." } else { "Start Animation" })},
+            list{
+              text(
+                if state.animatePackets {
+                  "Animating..."
+                } else {
+                  "Start Animation"
+                },
+              ),
+            },
           ),
           span(
             list{Attrs.class_("text-xs text-gray-400")},
@@ -251,7 +273,10 @@ let view = (state: networkTopologyState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-lg font-semibold text-gray-100")}, list{text("Network Topology")}),
+              span(
+                list{Attrs.class_("text-lg font-semibold text-gray-100")},
+                list{text("Network Topology")},
+              ),
               span(
                 list{Attrs.class_("text-xs text-gray-500")},
                 list{text(`${Int.toString(Array.length(state.devices))} devices`)},
@@ -292,7 +317,9 @@ let view = (state: networkTopologyState): Tea_Vdom.t<msg> => {
               // Refresh
               button(
                 list{
-                  Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(NetworkTopology(RefreshTopology)),
                 },
                 list{text("Refresh")},
@@ -315,7 +342,11 @@ let view = (state: networkTopologyState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300",
+            ),
+          },
           list{
             div(
               list{Attrs.class_("flex items-center justify-between")},

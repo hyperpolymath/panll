@@ -5,16 +5,21 @@ open Msg
 let updateStapeln = (model: model, msg: stapelnMsg): (model, Tea_Cmd.t<msg>) => {
   let st = model.stapeln
   switch msg {
-  | SetPipelineUrl(url) => (
-      {...model, stapeln: {...st, pipelineUrl: url}},
-      Tea_Cmd.none,
-    )
+  | SetPipelineUrl(url) => ({...model, stapeln: {...st, pipelineUrl: url}}, Tea_Cmd.none)
   | Connect => (
       {...model, stapeln: {...st, loading: true, error: None}},
       StapelnCmd.connect(st.pipelineUrl, r => Stapeln(Connected(Result.isOk(r)))),
     )
   | Connected(ok) => (
-      {...model, stapeln: {...st, connected: ok, loading: false, error: ok ? None : Some("Connection failed")}},
+      {
+        ...model,
+        stapeln: {
+          ...st,
+          connected: ok,
+          loading: false,
+          error: ok ? None : Some("Connection failed"),
+        },
+      },
       Tea_Cmd.none,
     )
   | UpdateConstraint(key, value) => {
@@ -22,16 +27,17 @@ let updateStapeln = (model: model, msg: stapelnMsg): (model, Tea_Cmd.t<msg>) => 
       // lives in stapeln's own frontend; PanLL provides high-level overrides.
       let c = st.constraints
       let newConstraints = switch key {
-      | "maxImageSizeMb" =>
-        {...c, maxImageSizeMb: Int.fromString(value)->Option.getOr(c.maxImageSizeMb)}
-      | "memoryLimitMb" =>
-        {...c, memoryLimitMb: Int.fromString(value)->Option.getOr(c.memoryLimitMb)}
-      | "cpuLimit" =>
-        {...c, cpuLimit: Float.fromString(value)->Option.getOr(c.cpuLimit)}
-      | "requireHealthcheck" =>
-        {...c, requireHealthcheck: value === "true"}
-      | "requireNonRoot" =>
-        {...c, requireNonRoot: value === "true"}
+      | "maxImageSizeMb" => {
+          ...c,
+          maxImageSizeMb: Int.fromString(value)->Option.getOr(c.maxImageSizeMb),
+        }
+      | "memoryLimitMb" => {
+          ...c,
+          memoryLimitMb: Int.fromString(value)->Option.getOr(c.memoryLimitMb),
+        }
+      | "cpuLimit" => {...c, cpuLimit: Float.fromString(value)->Option.getOr(c.cpuLimit)}
+      | "requireHealthcheck" => {...c, requireHealthcheck: value === "true"}
+      | "requireNonRoot" => {...c, requireNonRoot: value === "true"}
       | _ => c
       }
       ({...model, stapeln: {...st, constraints: newConstraints}}, Tea_Cmd.none)
@@ -61,14 +67,16 @@ let updateStapeln = (model: model, msg: stapelnMsg): (model, Tea_Cmd.t<msg>) => 
               errorCount: 1,
               warningCount: 0,
               infoCount: 0,
-              findings: [{
-                id: "conn-err",
-                level: "error",
-                rule: "CONN",
-                message: "Could not reach validation endpoint",
-                line: None,
-                autoFixAvailable: false,
-              }],
+              findings: [
+                {
+                  id: "conn-err",
+                  level: "error",
+                  rule: "CONN",
+                  message: "Could not reach validation endpoint",
+                  line: None,
+                  autoFixAvailable: false,
+                },
+              ],
               scanTimestamp: Date.now(),
             })
           }
@@ -100,7 +108,29 @@ let updateStapeln = (model: model, msg: stapelnMsg): (model, Tea_Cmd.t<msg>) => 
             // Parse pipeline status from JSON response.
             // Minimal stub — full parsing comes with backend integration.
             ignore(json)
-            Stapeln(StatusReceived({
+            Stapeln(
+              StatusReceived({
+                health: PipelineUnknown,
+                nodeCount: 0,
+                connectionCount: 0,
+                validationPassing: false,
+                suggestions: [],
+                securityPosture: {
+                  score: 0.0,
+                  slsaCompliant: false,
+                  sbomPresent: false,
+                  signatureValid: false,
+                  vulnerabilities: 0,
+                  criticalVulns: 0,
+                },
+                dependencies: [],
+                lastUpdated: Date.now(),
+              }),
+            )
+          }
+        | Error(_) =>
+          Stapeln(
+            StatusReceived({
               health: PipelineUnknown,
               nodeCount: 0,
               connectionCount: 0,
@@ -116,25 +146,8 @@ let updateStapeln = (model: model, msg: stapelnMsg): (model, Tea_Cmd.t<msg>) => 
               },
               dependencies: [],
               lastUpdated: Date.now(),
-            }))
-          }
-        | Error(_) => Stapeln(StatusReceived({
-            health: PipelineUnknown,
-            nodeCount: 0,
-            connectionCount: 0,
-            validationPassing: false,
-            suggestions: [],
-            securityPosture: {
-              score: 0.0,
-              slsaCompliant: false,
-              sbomPresent: false,
-              signatureValid: false,
-              vulnerabilities: 0,
-              criticalVulns: 0,
-            },
-            dependencies: [],
-            lastUpdated: Date.now(),
-          }))
+            }),
+          )
         }
       ),
     )
@@ -142,13 +155,7 @@ let updateStapeln = (model: model, msg: stapelnMsg): (model, Tea_Cmd.t<msg>) => 
       {...model, stapeln: {...st, pipelineStatus: Some(status), loading: false}},
       Tea_Cmd.none,
     )
-  | SetActiveTab(tab) => (
-      {...model, stapeln: {...st, activeTab: tab}},
-      Tea_Cmd.none,
-    )
-  | DismissError => (
-      {...model, stapeln: {...st, error: None}},
-      Tea_Cmd.none,
-    )
+  | SetActiveTab(tab) => ({...model, stapeln: {...st, activeTab: tab}}, Tea_Cmd.none)
+  | DismissError => ({...model, stapeln: {...st, error: None}}, Tea_Cmd.none)
   }
 }

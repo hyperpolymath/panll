@@ -54,7 +54,9 @@ let trim = (s: string): string => {
 /// Check if a line starts a new section in key-value format: `[section-name]`
 let isSectionHeader = (line: string): bool => {
   let trimmed = trim(line)
-  String.startsWith(trimmed, "[") && String.endsWith(trimmed, "]") && !String.startsWith(trimmed, "[[")
+  String.startsWith(trimmed, "[") &&
+  String.endsWith(trimmed, "]") &&
+  !String.startsWith(trimmed, "[[")
 }
 
 /// Extract the section name from a `[section-name]` header line.
@@ -95,6 +97,7 @@ let extractSexprName = (line: string): string => {
   // Take up to the first space or closing paren
   let parts = String.split(afterParen, " ")
   let first = parts->Array.get(0)->Option.getOr("")
+
   // Remove trailing paren if present
   if String.endsWith(first, ")") {
     String.slice(first, ~start=0, ~end=String.length(first) - 1)
@@ -106,6 +109,7 @@ let extractSexprName = (line: string): string => {
 /// Parse a `key = value` or `key = "value"` line into a section child.
 let parseKeyValue = (line: string): option<a2mlSection> => {
   let trimmed = trim(line)
+
   // Skip comments and empty lines
   if trimmed == "" || String.startsWith(trimmed, "#") || String.startsWith(trimmed, ";") {
     None
@@ -115,9 +119,7 @@ let parseKeyValue = (line: string): option<a2mlSection> => {
       let key = String.slice(trimmed, ~start=0, ~end=eqIdx)->trim
       let rawValue = String.sliceToEnd(trimmed, ~start=eqIdx + 3)->trim
       // Strip surrounding quotes if present
-      let value = if (
-        String.startsWith(rawValue, "\"") && String.endsWith(rawValue, "\"")
-      ) {
+      let value = if String.startsWith(rawValue, "\"") && String.endsWith(rawValue, "\"") {
         String.slice(rawValue, ~start=1, ~end=String.length(rawValue) - 1)
       } else {
         rawValue
@@ -129,9 +131,7 @@ let parseKeyValue = (line: string): option<a2mlSection> => {
       if colonIdx >= 0 {
         let key = String.slice(trimmed, ~start=0, ~end=colonIdx)->trim
         let rawValue = String.sliceToEnd(trimmed, ~start=colonIdx + 2)->trim
-        let value = if (
-          String.startsWith(rawValue, "\"") && String.endsWith(rawValue, "\"")
-        ) {
+        let value = if String.startsWith(rawValue, "\"") && String.endsWith(rawValue, "\"") {
           String.slice(rawValue, ~start=1, ~end=String.length(rawValue) - 1)
         } else {
           rawValue
@@ -195,19 +195,19 @@ let parseSexprContent = (content: string, path: string): a2mlManifest => {
     } else {
       // Try to extract key-value pairs from S-expression body
       // Lines like `(name "PanLL")` or `(state ".machine_readable/STATE.scm")`
-      let cleaned = trimmed
+      let cleaned =
+        trimmed
         ->String.replaceAll("(", "")
         ->String.replaceAll(")", "")
         ->trim
       let parts = String.split(cleaned, " ")
       if Array.length(parts) >= 2 {
         let key = parts->Array.get(0)->Option.getOr("")
-        let rawVal = parts
+        let rawVal =
+          parts
           ->Array.sliceToEnd(~start=1)
           ->Array.join(" ")
-        let value = if (
-          String.startsWith(rawVal, "\"") && String.endsWith(rawVal, "\"")
-        ) {
+        let value = if String.startsWith(rawVal, "\"") && String.endsWith(rawVal, "\"") {
           String.slice(rawVal, ~start=1, ~end=String.length(rawVal) - 1)
         } else {
           rawVal
@@ -457,7 +457,8 @@ let validateManifest = (manifest: a2mlManifest): a2mlValidationResult => {
   manifest.sections->Array.forEach(section => {
     section.children->Array.forEach(child => {
       if child.value == "" && Array.length(child.children) == 0 {
-        let _ = warnings->Array.push(`Key "${child.key}" in section "${section.key}" has empty value`)
+        let _ =
+          warnings->Array.push(`Key "${child.key}" in section "${section.key}" has empty value`)
       }
     })
   })
@@ -477,12 +478,9 @@ let validateManifest = (manifest: a2mlManifest): a2mlValidationResult => {
 /// children like `(state ".machine_readable/STATE.scm")`) and sectioned
 /// key-value files (where `[canonical-locations]` has `key = "path"` entries).
 let extractCanonicalLocations = (manifest: a2mlManifest): array<(string, string)> => {
-  let locSection = manifest.sections->Array.find(s =>
-    s.key == "canonical-locations"
-  )
+  let locSection = manifest.sections->Array.find(s => s.key == "canonical-locations")
   switch locSection {
-  | Some(section) =>
-    section.children->Array.map(child => (child.key, child.value))
+  | Some(section) => section.children->Array.map(child => (child.key, child.value))
   | None => []
   }
 }
@@ -490,9 +488,7 @@ let extractCanonicalLocations = (manifest: a2mlManifest): array<(string, string)
 /// Extract lifecycle hooks (on-enter and on-exit steps) from a manifest.
 /// Returns an array of step description strings.
 let extractLifecycleHooks = (manifest: a2mlManifest): array<string> => {
-  let lifecycleSection = manifest.sections->Array.find(s =>
-    s.key == "lifecycle"
-  )
+  let lifecycleSection = manifest.sections->Array.find(s => s.key == "lifecycle")
   switch lifecycleSection {
   | Some(section) =>
     section.children->Array.map(child => {
@@ -547,9 +543,7 @@ let extractTestCoveragePolicy = (manifest: a2mlManifest): (int, array<string>, s
     }
     let coverage = Int.fromString(coverageStr)->Option.getOr(0)
 
-    let testTypes = switch section.children->Array.find(c =>
-      c.key == "test-types"
-    ) {
+    let testTypes = switch section.children->Array.find(c => c.key == "test-types") {
     | Some(child) =>
       child.value->String.split("|")->Array.map(s => String.trim(s))->Array.filter(s => s != "")
     | None => []
@@ -590,9 +584,7 @@ ${notesLine}`
 let summariseManifest = (manifest: a2mlManifest): string => {
   let sectionCount = Array.length(manifest.sections)
   let sectionNames = manifest.sections->Array.map(s => s.key)->Array.join(", ")
-  let totalKeys = manifest.sections->Array.reduce(0, (acc, s) =>
-    acc + Array.length(s.children)
-  )
+  let totalKeys = manifest.sections->Array.reduce(0, (acc, s) => acc + Array.length(s.children))
 
   let statusLine = if manifest.isValid {
     "Status: Valid"

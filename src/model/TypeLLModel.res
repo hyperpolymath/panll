@@ -327,7 +327,6 @@ type typellState = {
   activeCategory: typellCategory,
   /// Active view layer (progressive disclosure level).
   activeViewLayer: viewLayer,
-
   // Checker state
   /// Expression input for type checking.
   checkerInput: string,
@@ -337,7 +336,6 @@ type typellState = {
   lastCheckResult: option<typeCheckResult>,
   /// Evangeliser narrative for last result.
   lastNarrative: option<typeNarrative>,
-
   // Explorer state
   /// Available type signatures from server.
   signatures: array<typeSignatureEntry>,
@@ -347,7 +345,6 @@ type typellState = {
   signatureFilter: string,
   /// Which tier to filter by (None = all).
   tierFilter: option<typeTier>,
-
   // Refinement state
   /// Base type specification for refinement.
   refinementSpec: string,
@@ -355,7 +352,6 @@ type typellState = {
   refinementConstraints: string,
   /// Most recent refinement result.
   lastRefinement: option<refinementResult>,
-
   // Discipline state
   /// Active type discipline declarations for known modules.
   disciplineDeclarations: array<disciplineDeclaration>,
@@ -363,7 +359,6 @@ type typellState = {
   defaultDiscipline: typeDiscipline,
   /// Most recent unified type analysis result.
   lastUnifiedAnalysis: option<unifiedTypeAnalysis>,
-
   // Cross-panel state
   /// Whether TypeLL is providing type intelligence to other panels.
   serviceActive: bool,

@@ -57,7 +57,9 @@ let renderTimeTravelTab = (state: debuggingWorkbenchState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                `px-3 py-1.5 text-xs rounded font-medium ${if DebuggingWorkbenchEngine.canGoBack(tt) {
+                `px-3 py-1.5 text-xs rounded font-medium ${if (
+                    DebuggingWorkbenchEngine.canGoBack(tt)
+                  ) {
                     "bg-cyan-700 text-white hover:bg-cyan-600 cursor-pointer"
                   } else {
                     "bg-gray-700 text-gray-500 cursor-not-allowed"
@@ -83,7 +85,9 @@ let renderTimeTravelTab = (state: debuggingWorkbenchState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                `px-3 py-1.5 text-xs rounded font-medium ${if DebuggingWorkbenchEngine.canGoForward(tt) {
+                `px-3 py-1.5 text-xs rounded font-medium ${if (
+                    DebuggingWorkbenchEngine.canGoForward(tt)
+                  ) {
                     "bg-cyan-700 text-white hover:bg-cyan-600 cursor-pointer"
                   } else {
                     "bg-gray-700 text-gray-500 cursor-not-allowed"
@@ -99,10 +103,17 @@ let renderTimeTravelTab = (state: debuggingWorkbenchState): Tea_Vdom.t<msg> => {
       // Time-travelling indicator
       if tt.isTimeTravelling {
         div(
-          list{Attrs.class_("flex items-center gap-2 bg-amber-900/30 border border-amber-700 rounded p-2")},
+          list{
+            Attrs.class_(
+              "flex items-center gap-2 bg-amber-900/30 border border-amber-700 rounded p-2",
+            ),
+          },
           list{
             div(list{Attrs.class_("w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse")}, list{}),
-            span(list{Attrs.class_("text-xs text-amber-300")}, list{text("Time-travelling — state is read-only")}),
+            span(
+              list{Attrs.class_("text-xs text-amber-300")},
+              list{text("Time-travelling — state is read-only")},
+            ),
           },
         )
       } else {
@@ -118,7 +129,9 @@ let renderTimeTravelTab = (state: debuggingWorkbenchState): Tea_Vdom.t<msg> => {
             let bgCls = isCurrent ? "bg-cyan-900/30 border-cyan-700" : "bg-gray-800 border-gray-700"
             div(
               list{
-                Attrs.class_(`flex items-center gap-2 p-2 rounded border cursor-pointer hover:bg-gray-750 ${bgCls}`),
+                Attrs.class_(
+                  `flex items-center gap-2 p-2 rounded border cursor-pointer hover:bg-gray-750 ${bgCls}`,
+                ),
                 Events.onClick(DebuggingWorkbench(DwGoToSnapshot(idx))),
               },
               list{
@@ -126,10 +139,7 @@ let renderTimeTravelTab = (state: debuggingWorkbenchState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("text-xs text-gray-500 w-8 text-right")},
                   list{text(`#${Int.toString(idx + 1)}`)},
                 ),
-                span(
-                  list{Attrs.class_("text-sm text-gray-300 flex-1")},
-                  list{text(snap.label)},
-                ),
+                span(list{Attrs.class_("text-sm text-gray-300 flex-1")}, list{text(snap.label)}),
                 span(
                   list{Attrs.class_("text-xs text-gray-600 font-mono")},
                   list{text(Float.toFixed(snap.timestamp, ~digits=1))},
@@ -331,7 +341,9 @@ let view = (state: debuggingWorkbenchState): Tea_Vdom.t<msg> => {
             list{Attrs.class_("text-xs text-gray-500")},
             list{
               text(
-                `${Int.toString(DebuggingWorkbenchEngine.snapshotCount(state.timeTravel))} snapshots`,
+                `${Int.toString(
+                    DebuggingWorkbenchEngine.snapshotCount(state.timeTravel),
+                  )} snapshots`,
               ),
             },
           ),
@@ -341,7 +353,9 @@ let view = (state: debuggingWorkbenchState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

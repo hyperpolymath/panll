@@ -44,5 +44,9 @@ let sortByFriction = (tools: array<toolFrictionProfile>): array<toolFrictionProf
 let averageFriction = (tools: array<toolFrictionProfile>): float => {
   let total = tools->Array.reduce(0.0, (acc, t) => acc +. t.overallScore)
   let count = tools->Array.length->Int.toFloat
-  if count > 0.0 {total /. count} else {0.0}
+  if count > 0.0 {
+    total /. count
+  } else {
+    0.0
+  }
 }

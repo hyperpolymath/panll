@@ -14,7 +14,9 @@ let updateFleet = (model: model, msg: fleetMsg): (model, Tea_Cmd.t<msg>) => {
       Tea_Cmd.batch(list{
         FleetCmd.fetchBots(result => Fleet(BotsLoaded(result))),
         FleetCmd.fetchFindings(result => Fleet(FindingsLoaded(result))),
-        TypeLLService.checkConfigTypes("fleet-dispatch", "fleet", result => Fleet(TypeCheckResult(result))),
+        TypeLLService.checkConfigTypes("fleet-dispatch", "fleet", result => Fleet(
+          TypeCheckResult(result),
+        )),
       }),
     )
   | BotsLoaded(result) =>
@@ -38,15 +40,9 @@ let updateFleet = (model: model, msg: fleetMsg): (model, Tea_Cmd.t<msg>) => {
             Tea_Cmd.none,
           )
         }
-      | Error(e) => (
-          {...model, fleet: {...fleet, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
+      | Error(e) => ({...model, fleet: {...fleet, loading: false, error: Some(e)}}, Tea_Cmd.none)
       }
-    | Error(e) => (
-        {...model, fleet: {...fleet, loading: false, error: Some(e)}},
-        Tea_Cmd.none,
-      )
+    | Error(e) => ({...model, fleet: {...fleet, loading: false, error: Some(e)}}, Tea_Cmd.none)
     }
   | FindingsLoaded(result) =>
     switch result {
@@ -68,32 +64,23 @@ let updateFleet = (model: model, msg: fleetMsg): (model, Tea_Cmd.t<msg>) => {
             Tea_Cmd.none,
           )
         }
-      | Error(e) => (
-          {...model, fleet: {...fleet, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
+      | Error(e) => ({...model, fleet: {...fleet, loading: false, error: Some(e)}}, Tea_Cmd.none)
       }
-    | Error(e) => (
-        {...model, fleet: {...fleet, loading: false, error: Some(e)}},
-        Tea_Cmd.none,
-      )
+    | Error(e) => ({...model, fleet: {...fleet, loading: false, error: Some(e)}}, Tea_Cmd.none)
     }
-  | SetFleetCategory(cat) => (
-      {...model, fleet: {...fleet, activeCategory: cat}},
-      Tea_Cmd.none,
-    )
-  | SetFleetFilter(text) => (
-      {...model, fleet: {...fleet, filterText: text}},
-      Tea_Cmd.none,
-    )
+  | SetFleetCategory(cat) => ({...model, fleet: {...fleet, activeCategory: cat}}, Tea_Cmd.none)
+  | SetFleetFilter(text) => ({...model, fleet: {...fleet, filterText: text}}, Tea_Cmd.none)
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "fleet", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
   }
 }

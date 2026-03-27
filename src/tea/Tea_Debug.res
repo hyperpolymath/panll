@@ -53,7 +53,11 @@ let program = (
       let (newModel, cmd) = update(model, msg)
 
       if debugState.currentIndex < Array.length(debugState.history) - 1 {
-        debugState.history = Array.slice(debugState.history, ~start=0, ~end=debugState.currentIndex + 1)
+        debugState.history = Array.slice(
+          debugState.history,
+          ~start=0,
+          ~end=debugState.currentIndex + 1,
+        )
       }
 
       let entry: historyEntry<'model, 'msg> = {

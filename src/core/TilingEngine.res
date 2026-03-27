@@ -76,8 +76,7 @@ let presetLabel = (preset: TilingModel.tilingPreset): string => {
   | TripleColumn => "Triple Column (33/33/33)"
   | QuadGrid => "Quad Grid (2x2)"
   | FocusAndSidebar => "Focus + Sidebar (75/25)"
-  | Custom(mappings) =>
-    "Custom (" ++ Int.toString(Array.length(mappings)) ++ " panels)"
+  | Custom(mappings) => "Custom (" ++ Int.toString(Array.length(mappings)) ++ " panels)"
   }
 }
 
@@ -86,10 +85,7 @@ let presetLabel = (preset: TilingModel.tilingPreset): string => {
 /// Looks up the panel ID in the detachedPanels array. A panel is considered
 /// detached even if its window is marked dead (alive: false) — the entry
 /// persists until explicitly removed.
-let isDetached = (
-  panelId: PanelSwitcherModel.panelId,
-  state: TilingModel.tilingState,
-): bool => {
+let isDetached = (panelId: PanelSwitcherModel.panelId, state: TilingModel.tilingState): bool => {
   state.detachedPanels->Array.some(dp => dp.panelId === panelId)
 }
 

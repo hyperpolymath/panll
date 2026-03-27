@@ -47,7 +47,11 @@ let renderHealthBadge = (dist: stateDistribution): Tea_Vdom.t<msg> => {
 let repairBadge = (r: WiringInspectorModel.repairability): Tea_Vdom.t<msg> =>
   span(
     list{
-      Attrs.class_(`text-xs px-1.5 py-0.5 rounded ${WiringInspectorEngine.repairabilityColor(r)} bg-gray-800 border border-gray-700`),
+      Attrs.class_(
+        `text-xs px-1.5 py-0.5 rounded ${WiringInspectorEngine.repairabilityColor(
+            r,
+          )} bg-gray-800 border border-gray-700`,
+      ),
     },
     list{text(WiringInspectorEngine.repairabilityLabel(r))},
   )
@@ -80,10 +84,7 @@ let renderHeader = (state: wiringInspectorState): Tea_Vdom.t<msg> =>
           // Last run timestamp
           switch state.lastRunAt {
           | Some(ts) =>
-            span(
-              list{Attrs.class_("text-xs text-gray-500")},
-              list{text(`Last run: ${ts}`)},
-            )
+            span(list{Attrs.class_("text-xs text-gray-500")}, list{text(`Last run: ${ts}`)})
           | None => noNode
           },
         },
@@ -101,12 +102,22 @@ let renderHeader = (state: wiringInspectorState): Tea_Vdom.t<msg> =>
               Attrs.disabled(state.loading),
               Attrs.ariaLabel("Run PCC audit against all panel contracts"),
             },
-            list{text(if state.loading { "Auditing..." } else { "Run Audit" })},
+            list{
+              text(
+                if state.loading {
+                  "Auditing..."
+                } else {
+                  "Run Audit"
+                },
+              ),
+            },
           ),
           // Close button
           button(
             list{
-              Attrs.class_("px-3 py-2 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition-colors text-sm"),
+              Attrs.class_(
+                "px-3 py-2 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition-colors text-sm",
+              ),
               Events.onClick(PanelSwitcher(ClosePanels)),
               Attrs.ariaLabel("Close Constraint Audit Dashboard"),
             },
@@ -174,7 +185,9 @@ let renderSegment = (
     let widthStr = Float.toString(pct)
     div(
       list{
-        Attrs.class_(`${bgClass} flex items-center justify-center py-2 text-xs font-medium ${colorClass} overflow-hidden`),
+        Attrs.class_(
+          `${bgClass} flex items-center justify-center py-2 text-xs font-medium ${colorClass} overflow-hidden`,
+        ),
         Attrs.style("width", `${widthStr}%`),
         Attrs.ariaLabel(`${label}: ${Int.toString(count)} panels`),
       },
@@ -206,7 +219,13 @@ let renderDistributionBar = (dist: stateDistribution): Tea_Vdom.t<msg> =>
       div(
         list{Attrs.class_("flex rounded overflow-hidden border border-gray-700")},
         list{
-          renderSegment("Releasable", dist.releasable, dist.total, "text-green-300", "bg-green-800/60"),
+          renderSegment(
+            "Releasable",
+            dist.releasable,
+            dist.total,
+            "text-green-300",
+            "bg-green-800/60",
+          ),
           renderSegment("Viable", dist.viable, dist.total, "text-cyan-300", "bg-cyan-800/60"),
           renderSegment("Wired", dist.wired, dist.total, "text-blue-300", "bg-blue-800/60"),
           renderSegment("Draft", dist.draft, dist.total, "text-yellow-300", "bg-yellow-800/60"),
@@ -217,26 +236,53 @@ let renderDistributionBar = (dist: stateDistribution): Tea_Vdom.t<msg> =>
       div(
         list{Attrs.class_("flex gap-4 mt-3 text-xs text-gray-500 flex-wrap")},
         list{
-          span(list{}, list{
-            span(list{Attrs.class_("inline-block w-2 h-2 rounded-full bg-green-500 mr-1")}, list{}),
-            text(`Releasable (${Int.toString(dist.releasable)})`),
-          }),
-          span(list{}, list{
-            span(list{Attrs.class_("inline-block w-2 h-2 rounded-full bg-cyan-500 mr-1")}, list{}),
-            text(`Viable (${Int.toString(dist.viable)})`),
-          }),
-          span(list{}, list{
-            span(list{Attrs.class_("inline-block w-2 h-2 rounded-full bg-blue-500 mr-1")}, list{}),
-            text(`Wired (${Int.toString(dist.wired)})`),
-          }),
-          span(list{}, list{
-            span(list{Attrs.class_("inline-block w-2 h-2 rounded-full bg-yellow-500 mr-1")}, list{}),
-            text(`Draft (${Int.toString(dist.draft)})`),
-          }),
-          span(list{}, list{
-            span(list{Attrs.class_("inline-block w-2 h-2 rounded-full bg-red-500 mr-1")}, list{}),
-            text(`Broken (${Int.toString(dist.broken)})`),
-          }),
+          span(
+            list{},
+            list{
+              span(
+                list{Attrs.class_("inline-block w-2 h-2 rounded-full bg-green-500 mr-1")},
+                list{},
+              ),
+              text(`Releasable (${Int.toString(dist.releasable)})`),
+            },
+          ),
+          span(
+            list{},
+            list{
+              span(
+                list{Attrs.class_("inline-block w-2 h-2 rounded-full bg-cyan-500 mr-1")},
+                list{},
+              ),
+              text(`Viable (${Int.toString(dist.viable)})`),
+            },
+          ),
+          span(
+            list{},
+            list{
+              span(
+                list{Attrs.class_("inline-block w-2 h-2 rounded-full bg-blue-500 mr-1")},
+                list{},
+              ),
+              text(`Wired (${Int.toString(dist.wired)})`),
+            },
+          ),
+          span(
+            list{},
+            list{
+              span(
+                list{Attrs.class_("inline-block w-2 h-2 rounded-full bg-yellow-500 mr-1")},
+                list{},
+              ),
+              text(`Draft (${Int.toString(dist.draft)})`),
+            },
+          ),
+          span(
+            list{},
+            list{
+              span(list{Attrs.class_("inline-block w-2 h-2 rounded-full bg-red-500 mr-1")}, list{}),
+              text(`Broken (${Int.toString(dist.broken)})`),
+            },
+          ),
         },
       ),
     },
@@ -259,10 +305,7 @@ let statCard = (label: string, count: int, colorClass: string): Tea_Vdom.t<msg> 
         list{Attrs.class_("text-xs text-gray-500 uppercase tracking-wider mb-1")},
         list{text(label)},
       ),
-      div(
-        list{Attrs.class_(`text-2xl font-light ${colorClass}`)},
-        list{text(Int.toString(count))},
-      ),
+      div(list{Attrs.class_(`text-2xl font-light ${colorClass}`)}, list{text(Int.toString(count))}),
     },
   )
 
@@ -286,19 +329,15 @@ let renderQuickStats = (dist: stateDistribution): Tea_Vdom.t<msg> =>
 let renderBottleneckRow = (bn: bottleneck): Tea_Vdom.t<msg> =>
   div(
     list{
-      Attrs.class_("flex items-center gap-3 py-2 px-3 rounded hover:bg-gray-800/40 text-sm border-b border-gray-800/50"),
+      Attrs.class_(
+        "flex items-center gap-3 py-2 px-3 rounded hover:bg-gray-800/40 text-sm border-b border-gray-800/50",
+      ),
     },
     list{
       // Panel name
-      span(
-        list{Attrs.class_("text-gray-300 font-medium w-32 shrink-0")},
-        list{text(bn.panelId)},
-      ),
+      span(list{Attrs.class_("text-gray-300 font-medium w-32 shrink-0")}, list{text(bn.panelId)}),
       // Obligation kind
-      span(
-        list{Attrs.class_("text-xs text-gray-600 w-20 shrink-0")},
-        list{text(`[${bn.kind}]`)},
-      ),
+      span(list{Attrs.class_("text-xs text-gray-600 w-20 shrink-0")}, list{text(`[${bn.kind}]`)}),
       // Blocked count
       span(
         list{Attrs.class_("text-red-400 font-mono text-xs w-20 shrink-0")},
@@ -307,17 +346,11 @@ let renderBottleneckRow = (bn: bottleneck): Tea_Vdom.t<msg> =>
       // Repairability badge
       repairBadge(bn.repairability),
       // Message
-      span(
-        list{Attrs.class_("text-gray-400 text-xs flex-1 truncate")},
-        list{text(bn.message)},
-      ),
+      span(list{Attrs.class_("text-gray-400 text-xs flex-1 truncate")}, list{text(bn.message)}),
       // File
       switch bn.file {
       | Some(f) =>
-        span(
-          list{Attrs.class_("text-gray-500 text-xs font-mono truncate max-w-48")},
-          list{text(f)},
-        )
+        span(list{Attrs.class_("text-gray-500 text-xs font-mono truncate max-w-48")}, list{text(f)})
       | None => noNode
       },
     },
@@ -341,10 +374,7 @@ let renderTopBottlenecks = (bottlenecks: array<bottleneck>): Tea_Vdom.t<msg> => 
         list{text("Top 5 Bottlenecks")},
       ),
       if Array.length(top5) > 0 {
-        div(
-          list{},
-          top5->Array.map(renderBottleneckRow)->List.fromArray,
-        )
+        div(list{}, top5->Array.map(renderBottleneckRow)->List.fromArray)
       } else {
         div(
           list{Attrs.class_("text-gray-600 text-sm py-4 text-center")},
@@ -398,15 +428,10 @@ let renderOverviewTab = (state: wiringInspectorState): Tea_Vdom.t<msg> => {
 /// Render a single panel row within a state section.
 let renderStatePanelRow = (v: panelVerification): Tea_Vdom.t<msg> =>
   div(
-    list{
-      Attrs.class_("flex items-center gap-3 py-2 px-3 text-sm hover:bg-gray-800/40 rounded"),
-    },
+    list{Attrs.class_("flex items-center gap-3 py-2 px-3 text-sm hover:bg-gray-800/40 rounded")},
     list{
       // Panel name
-      span(
-        list{Attrs.class_("text-gray-200 font-medium w-40 shrink-0")},
-        list{text(v.panelId)},
-      ),
+      span(list{Attrs.class_("text-gray-200 font-medium w-40 shrink-0")}, list{text(v.panelId)}),
       // Obligation summary
       span(
         list{Attrs.class_("text-gray-500 text-xs w-24 shrink-0")},
@@ -415,19 +440,13 @@ let renderStatePanelRow = (v: panelVerification): Tea_Vdom.t<msg> =>
       // Primary bottleneck
       switch v.primaryBottleneck {
       | Some(bn) =>
-        span(
-          list{Attrs.class_("text-red-400 text-xs")},
-          list{text(`Bottleneck: ${bn}`)},
-        )
+        span(list{Attrs.class_("text-red-400 text-xs")}, list{text(`Bottleneck: ${bn}`)})
       | None => noNode
       },
       // Next requirement
       switch v.policy.nextRequirement {
       | Some(req) =>
-        span(
-          list{Attrs.class_("text-amber-400 text-xs ml-auto")},
-          list{text(`Next: ${req}`)},
-        )
+        span(list{Attrs.class_("text-amber-400 text-xs ml-auto")}, list{text(`Next: ${req}`)})
       | None => noNode
       },
     },
@@ -450,7 +469,9 @@ let renderStateSection = (
       // Section header — clickable to expand/collapse
       button(
         list{
-          Attrs.class_(`w-full text-left px-4 py-3 flex items-center justify-between ${bgClass} hover:opacity-90 transition-opacity`),
+          Attrs.class_(
+            `w-full text-left px-4 py-3 flex items-center justify-between ${bgClass} hover:opacity-90 transition-opacity`,
+          ),
           Events.onClick(WiringInspector(ToggleStateSection(state))),
           Attrs.ariaExpanded(isExpanded),
           Attrs.ariaLabel(`${label} section, ${Int.toString(count)} panels`),
@@ -460,19 +481,26 @@ let renderStateSection = (
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
+              span(list{Attrs.class_(`font-medium ${colorClass}`)}, list{text(label)}),
               span(
-                list{Attrs.class_(`font-medium ${colorClass}`)},
-                list{text(label)},
-              ),
-              span(
-                list{Attrs.class_(`text-xs px-2 py-0.5 rounded border ${borderClass} ${colorClass}`)},
+                list{
+                  Attrs.class_(`text-xs px-2 py-0.5 rounded border ${borderClass} ${colorClass}`),
+                },
                 list{text(Int.toString(count))},
               ),
             },
           ),
           span(
             list{Attrs.class_("text-gray-500 text-sm")},
-            list{text(if isExpanded { "[-]" } else { "[+]" })},
+            list{
+              text(
+                if isExpanded {
+                  "[-]"
+                } else {
+                  "[+]"
+                },
+              ),
+            },
           ),
         },
       ),
@@ -519,7 +547,9 @@ let renderByStateTab = (state: wiringInspectorState): Tea_Vdom.t<msg> => {
 let renderBottleneckHeader = (): Tea_Vdom.t<msg> =>
   div(
     list{
-      Attrs.class_("flex items-center gap-3 py-2 px-3 text-xs text-gray-500 uppercase tracking-wider border-b border-gray-700 font-medium"),
+      Attrs.class_(
+        "flex items-center gap-3 py-2 px-3 text-xs text-gray-500 uppercase tracking-wider border-b border-gray-700 font-medium",
+      ),
       Attrs.role("row"),
     },
     list{
@@ -537,42 +567,31 @@ let renderBottleneckHeader = (): Tea_Vdom.t<msg> =>
 let renderFullBottleneckRow = (bn: bottleneck): Tea_Vdom.t<msg> =>
   div(
     list{
-      Attrs.class_("flex items-center gap-3 py-2 px-3 text-sm hover:bg-gray-800/40 border-b border-gray-800/50"),
+      Attrs.class_(
+        "flex items-center gap-3 py-2 px-3 text-sm hover:bg-gray-800/40 border-b border-gray-800/50",
+      ),
       Attrs.role("row"),
     },
     list{
-      span(
-        list{Attrs.class_("text-gray-300 font-medium w-32 shrink-0")},
-        list{text(bn.panelId)},
-      ),
+      span(list{Attrs.class_("text-gray-300 font-medium w-32 shrink-0")}, list{text(bn.panelId)}),
       span(
         list{Attrs.class_("text-gray-200 font-mono text-xs w-40 shrink-0 truncate")},
         list{text(bn.obligationId)},
       ),
-      span(
-        list{Attrs.class_("text-gray-600 text-xs w-20 shrink-0")},
-        list{text(bn.kind)},
-      ),
+      span(list{Attrs.class_("text-gray-600 text-xs w-20 shrink-0")}, list{text(bn.kind)}),
       span(
         list{Attrs.class_("text-red-400 font-mono text-xs w-20 shrink-0")},
         list{text(Int.toString(bn.blockedCount))},
       ),
-      span(
-        list{Attrs.class_("w-16 shrink-0")},
-        list{repairBadge(bn.repairability)},
-      ),
-      span(
-        list{Attrs.class_("text-gray-400 text-xs flex-1 truncate")},
-        list{text(bn.message)},
-      ),
+      span(list{Attrs.class_("w-16 shrink-0")}, list{repairBadge(bn.repairability)}),
+      span(list{Attrs.class_("text-gray-400 text-xs flex-1 truncate")}, list{text(bn.message)}),
       switch bn.file {
       | Some(f) =>
         span(
           list{Attrs.class_("text-gray-500 text-xs font-mono w-48 shrink-0 truncate")},
           list{text(f)},
         )
-      | None =>
-        span(list{Attrs.class_("w-48 shrink-0")}, list{})
+      | None => span(list{Attrs.class_("w-48 shrink-0")}, list{})
       },
     },
   )
@@ -613,10 +632,9 @@ let renderBottleneckFilterBar = (state: wiringInspectorState): Tea_Vdom.t<msg> =
 }
 
 /// Apply bottleneck filters to the full list.
-let filterBottlenecks = (
-  bottlenecks: array<bottleneck>,
-  filterStatus: option<string>,
-): array<bottleneck> =>
+let filterBottlenecks = (bottlenecks: array<bottleneck>, filterStatus: option<string>): array<
+  bottleneck,
+> =>
   switch filterStatus {
   | None => bottlenecks
   | Some("safe") => bottlenecks->Array.filter(bn => bn.repairability == Safe)
@@ -655,7 +673,13 @@ let renderBottlenecksTab = (state: wiringInspectorState): Tea_Vdom.t<msg> => {
       ),
       div(
         list{Attrs.class_("text-xs text-gray-600 mt-2 text-right")},
-        list{text(`${Int.toString(Array.length(filtered))} of ${Int.toString(Array.length(state.bottlenecks))} bottlenecks shown`)},
+        list{
+          text(
+            `${Int.toString(Array.length(filtered))} of ${Int.toString(
+                Array.length(state.bottlenecks),
+              )} bottlenecks shown`,
+          ),
+        },
       ),
     },
   )
@@ -674,10 +698,7 @@ let renderHistoryTab = (): Tea_Vdom.t<msg> =>
       Attrs.ariaLabel("History tab content"),
     },
     list{
-      div(
-        list{Attrs.class_("text-gray-500 text-lg mb-2")},
-        list{text("Coming soon")},
-      ),
+      div(list{Attrs.class_("text-gray-500 text-lg mb-2")}, list{text("Coming soon")}),
       div(
         list{Attrs.class_("text-gray-600 text-sm")},
         list{text("Audit history tracking will show how panel health evolves over time.")},
@@ -711,18 +732,14 @@ let view = (state: wiringInspectorState): Tea_Vdom.t<msg> =>
           | Some(err) =>
             div(
               list{
-                Attrs.class_("bg-red-900/30 border border-red-800 text-red-300 rounded-lg p-4 mb-4"),
+                Attrs.class_(
+                  "bg-red-900/30 border border-red-800 text-red-300 rounded-lg p-4 mb-4",
+                ),
                 Attrs.role("alert"),
               },
               list{
-                div(
-                  list{Attrs.class_("font-medium mb-1")},
-                  list{text("Audit Error")},
-                ),
-                div(
-                  list{Attrs.class_("text-sm")},
-                  list{text(err)},
-                ),
+                div(list{Attrs.class_("font-medium mb-1")}, list{text("Audit Error")}),
+                div(list{Attrs.class_("text-sm")}, list{text(err)}),
               },
             )
           | None => noNode
@@ -737,10 +754,17 @@ let view = (state: wiringInspectorState): Tea_Vdom.t<msg> =>
               },
               list{
                 div(
-                  list{Attrs.class_("animate-spin w-8 h-8 border-2 border-gray-700 border-t-indigo-500 rounded-full")},
+                  list{
+                    Attrs.class_(
+                      "animate-spin w-8 h-8 border-2 border-gray-700 border-t-indigo-500 rounded-full",
+                    ),
+                  },
                   list{},
                 ),
-                span(list{Attrs.class_("ml-3 text-gray-400")}, list{text("Running constraint audit...")}),
+                span(
+                  list{Attrs.class_("ml-3 text-gray-400")},
+                  list{text("Running constraint audit...")},
+                ),
               },
             )
           } else if Array.length(state.results) == 0 {

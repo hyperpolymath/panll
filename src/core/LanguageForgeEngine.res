@@ -55,12 +55,7 @@ let categoryLabel = (cat: forgeCategory): string => {
 }
 
 /// All category tabs in display order.
-let allCategories: array<forgeCategory> = [
-  AllLanguages,
-  ProductionReady,
-  InProgress,
-  NeedsWork,
-]
+let allCategories: array<forgeCategory> = [AllLanguages, ProductionReady, InProgress, NeedsWork]
 
 /// Human-readable label for a sort criterion.
 let sortLabel = (s: forgeSortBy): string => {
@@ -92,17 +87,9 @@ let filterLanguages = (
   let byCat = switch category {
   | AllLanguages => languages
   | ProductionReady =>
-    languages->Array.filter(l =>
-      l.phase === Production || l.phase === NearProduction
-    )
-  | InProgress =>
-    languages->Array.filter(l =>
-      l.phase === Alpha || l.phase === DesignOnly
-    )
-  | NeedsWork =>
-    languages->Array.filter(l =>
-      l.phase === Concept || l.phase === Vaporware
-    )
+    languages->Array.filter(l => l.phase === Production || l.phase === NearProduction)
+  | InProgress => languages->Array.filter(l => l.phase === Alpha || l.phase === DesignOnly)
+  | NeedsWork => languages->Array.filter(l => l.phase === Concept || l.phase === Vaporware)
   }
   if filterText === "" {
     byCat
@@ -116,7 +103,9 @@ let filterLanguages = (
 }
 
 /// Sort languages by the given criterion.
-let sortLanguages = (languages: array<languageEntry>, sortBy: forgeSortBy): array<languageEntry> => {
+let sortLanguages = (languages: array<languageEntry>, sortBy: forgeSortBy): array<
+  languageEntry,
+> => {
   let sorted = Array.copy(languages)
   sorted->Array.sort((a, b) => {
     switch sortBy {

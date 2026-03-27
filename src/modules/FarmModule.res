@@ -45,13 +45,7 @@ let config: farmModuleConfig = {
   version: "0.1.0",
   description: "Repository admin registry and maintenance hub for ~265 repos across 6 forges",
   manifestPath: "~/.git-private-farm/farm-manifest.json",
-  capabilities: [
-    RepoInventory,
-    EnrollmentDashboard,
-    HealthDashboard,
-    GroupAnalysis,
-    ForgeCoverage,
-  ],
+  capabilities: [RepoInventory, EnrollmentDashboard, HealthDashboard, GroupAnalysis, ForgeCoverage],
   icon: Some("barn"),
 }
 

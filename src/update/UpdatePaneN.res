@@ -54,21 +54,26 @@ let updatePaneN = (model: model, msg: paneNMsg): model => {
       }
       {...paneN, filters: {...paneN.filters, phases: newPhases}}
     }
-  | SetConfidenceThreshold(threshold) =>
-      {...paneN, filters: {...paneN.filters, confidenceThreshold: threshold}}
-  | ToggleValidatedOnly =>
-      {...paneN, filters: {...paneN.filters, validatedOnly: !paneN.filters.validatedOnly}}
-  | ToggleProofOnly =>
-      {...paneN, filters: {...paneN.filters, proofOnly: !paneN.filters.proofOnly}}
-  | ClearFilters =>
-      {...paneN, filters: {
+  | SetConfidenceThreshold(threshold) => {
+      ...paneN,
+      filters: {...paneN.filters, confidenceThreshold: threshold},
+    }
+  | ToggleValidatedOnly => {
+      ...paneN,
+      filters: {...paneN.filters, validatedOnly: !paneN.filters.validatedOnly},
+    }
+  | ToggleProofOnly => {...paneN, filters: {...paneN.filters, proofOnly: !paneN.filters.proofOnly}}
+  | ClearFilters => {
+      ...paneN,
+      filters: {
         sources: [],
         categories: [],
         phases: [],
         confidenceThreshold: 0.0,
         validatedOnly: false,
         proofOnly: false,
-      }}
+      },
+    }
   }
   {...model, paneN: newPaneN}
 }

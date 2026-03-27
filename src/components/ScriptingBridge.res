@@ -49,13 +49,25 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              h2(list{Attrs.class_("text-lg font-bold text-rose-300")}, list{text("Scripting Bridge")}),
+              h2(
+                list{Attrs.class_("text-lg font-bold text-rose-300")},
+                list{text("Scripting Bridge")},
+              ),
               span(
                 list{Attrs.class_("text-xs text-gray-400")},
-                list{text(Int.toString(scriptCount) ++ " scripts, " ++ Int.toString(historyCount) ++ " entries")},
+                list{
+                  text(
+                    Int.toString(scriptCount) ++
+                    " scripts, " ++
+                    Int.toString(historyCount) ++ " entries",
+                  ),
+                },
               ),
               if state.executing {
-                span(list{Attrs.class_("text-xs text-yellow-400 animate-pulse")}, list{text("Executing...")})
+                span(
+                  list{Attrs.class_("text-xs text-yellow-400 animate-pulse")},
+                  list{text("Executing...")},
+                )
               } else {
                 Tea_Html.noNode
               },
@@ -77,8 +89,11 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Repl { "bg-rose-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Repl {
+                  "bg-rose-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ScriptingBridge(SetScBTab(Repl))),
             },
@@ -87,8 +102,11 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Instructions { "bg-rose-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Instructions {
+                  "bg-rose-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ScriptingBridge(SetScBTab(Instructions))),
             },
@@ -97,8 +115,11 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Scripts { "bg-rose-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Scripts {
+                  "bg-rose-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ScriptingBridge(SetScBTab(Scripts))),
             },
@@ -107,8 +128,11 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Analysis { "bg-rose-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Analysis {
+                  "bg-rose-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ScriptingBridge(SetScBTab(Analysis))),
             },
@@ -120,11 +144,18 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center",
+            ),
+          },
           list{
             text(err),
             button(
-              list{Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"), Events.onClick(ScriptingBridge(DismissScBError))},
+              list{
+                Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
+                Events.onClick(ScriptingBridge(DismissScBError)),
+              },
               list{text("Dismiss")},
             ),
           },
@@ -158,8 +189,11 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
                         div(
                           list{
                             Attrs.class_(
-                              "pl-4 " ++
-                              if entry.success { "text-gray-400" } else { "text-red-400" },
+                              "pl-4 " ++ if entry.success {
+                                "text-gray-400"
+                              } else {
+                                "text-red-400"
+                              },
                             ),
                           },
                           list{text(entry.output)},
@@ -176,7 +210,9 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
                     span(list{Attrs.class_("text-rose-400 font-mono")}, list{text("> ")}),
                     input(
                       list{
-                        Attrs.class_("flex-1 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm font-mono text-gray-200"),
+                        Attrs.class_(
+                          "flex-1 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm font-mono text-gray-200",
+                        ),
                         Attrs.value(state.replInput),
                         Attrs.placeholder("Enter VM script..."),
                       },
@@ -192,7 +228,11 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
               list{
                 // Table header
                 div(
-                  list{Attrs.class_("flex gap-2 text-xs text-gray-500 font-mono border-b border-gray-800 pb-1 mb-2")},
+                  list{
+                    Attrs.class_(
+                      "flex gap-2 text-xs text-gray-500 font-mono border-b border-gray-800 pb-1 mb-2",
+                    ),
+                  },
                   list{
                     span(list{Attrs.class_("w-12")}, list{text("Op")}),
                     span(list{Attrs.class_("w-28")}, list{text("Mnemonic")}),
@@ -206,16 +246,37 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
                   state.instructions
                   ->Array.map(instr =>
                     div(
-                      list{Attrs.class_("flex gap-2 text-xs py-1 border-b border-gray-800/30 items-center")},
                       list{
-                        span(list{Attrs.class_("w-12 font-mono text-gray-500")}, list{text(Int.toString(instr.opcode))}),
+                        Attrs.class_(
+                          "flex gap-2 text-xs py-1 border-b border-gray-800/30 items-center",
+                        ),
+                      },
+                      list{
                         span(
-                          list{Attrs.class_("w-28 font-mono " ++ if instr.allowed { "text-gray-200" } else { "text-gray-600 line-through" })},
+                          list{Attrs.class_("w-12 font-mono text-gray-500")},
+                          list{text(Int.toString(instr.opcode))},
+                        ),
+                        span(
+                          list{
+                            Attrs.class_(
+                              "w-28 font-mono " ++ if instr.allowed {
+                                "text-gray-200"
+                              } else {
+                                "text-gray-600 line-through"
+                              },
+                            ),
+                          },
                           list{text(instr.name)},
                         ),
                         span(list{Attrs.class_("w-20")}, list{tierBadge(instr.tier)}),
-                        span(list{Attrs.class_("w-24 font-mono text-gray-500")}, list{text(instr.stackEffect)}),
-                        span(list{Attrs.class_("flex-1 text-gray-400")}, list{text(instr.description)}),
+                        span(
+                          list{Attrs.class_("w-24 font-mono text-gray-500")},
+                          list{text(instr.stackEffect)},
+                        ),
+                        span(
+                          list{Attrs.class_("flex-1 text-gray-400")},
+                          list{text(instr.description)},
+                        ),
                       },
                     )
                   )
@@ -232,16 +293,25 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
                 div(
                   list{
                     Attrs.class_(
-                      "px-3 py-2 border rounded cursor-pointer " ++
-                      if isSelected { "bg-rose-900/30 border-rose-700" } else { "bg-gray-900 border-gray-800 hover:border-gray-700" },
+                      "px-3 py-2 border rounded cursor-pointer " ++ if isSelected {
+                        "bg-rose-900/30 border-rose-700"
+                      } else {
+                        "bg-gray-900 border-gray-800 hover:border-gray-700"
+                      },
                     ),
                   },
                   list{
                     div(
                       list{Attrs.class_("flex items-center justify-between")},
                       list{
-                        span(list{Attrs.class_("text-sm font-bold text-gray-200")}, list{text(s.name)}),
-                        span(list{Attrs.class_("text-xs text-gray-500")}, list{text(s.description)}),
+                        span(
+                          list{Attrs.class_("text-sm font-bold text-gray-200")},
+                          list{text(s.name)},
+                        ),
+                        span(
+                          list{Attrs.class_("text-xs text-gray-500")},
+                          list{text(s.description)},
+                        ),
                       },
                     ),
                     div(
@@ -272,8 +342,14 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
                           list{Attrs.class_("flex items-center gap-2")},
                           list{
                             analysisSevBadge(f.severity),
-                            span(list{Attrs.class_("text-sm text-gray-200")}, list{text(f.summary)}),
-                            span(list{Attrs.class_("text-xs text-gray-500")}, list{text("L" ++ Int.toString(f.line))}),
+                            span(
+                              list{Attrs.class_("text-sm text-gray-200")},
+                              list{text(f.summary)},
+                            ),
+                            span(
+                              list{Attrs.class_("text-xs text-gray-500")},
+                              list{text("L" ++ Int.toString(f.line))},
+                            ),
                           },
                         ),
                         div(list{Attrs.class_("text-xs text-gray-400 mt-1")}, list{text(f.detail)}),

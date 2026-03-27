@@ -40,8 +40,14 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("flex items-center gap-2")},
                 list{
-                  span(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text(EditorBridgeEngine.editorLabel(state.editorKind))}),
-                  span(list{Attrs.class_(`text-xs ${connCls}`)}, list{text(EditorBridgeEngine.connectionLabel(state.connection))}),
+                  span(
+                    list{Attrs.class_("text-sm font-medium text-gray-200")},
+                    list{text(EditorBridgeEngine.editorLabel(state.editorKind))},
+                  ),
+                  span(
+                    list{Attrs.class_(`text-xs ${connCls}`)},
+                    list{text(EditorBridgeEngine.connectionLabel(state.connection))},
+                  ),
                 },
               ),
               div(
@@ -49,14 +55,18 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                 list{
                   button(
                     list{
-                      Attrs.class_("px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+                      Attrs.class_(
+                        "px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+                      ),
                       Events.onClick(EditorBridge(DetectEditor)),
                     },
                     list{text("Detect")},
                   ),
                   button(
                     list{
-                      Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                      Attrs.class_(
+                        "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                      ),
                       Events.onClick(EditorBridge(ConnectLsp)),
                     },
                     list{text("Connect LSP")},
@@ -67,7 +77,15 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
           ),
           div(
             list{Attrs.class_("text-xs text-gray-500")},
-            list{text(`LSP port: ${Int.toString(state.lspPort)} | Auto-sync: ${if state.autoSync { "on" } else { "off" }}`)},
+            list{
+              text(
+                `LSP port: ${Int.toString(state.lspPort)} | Auto-sync: ${if state.autoSync {
+                    "on"
+                  } else {
+                    "off"
+                  }}`,
+              ),
+            },
           ),
         },
       ),
@@ -78,7 +96,10 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("p-3 bg-gray-800 rounded text-center")},
             list{
-              div(list{Attrs.class_("text-2xl font-light text-gray-100")}, list{text(Int.toString(Array.length(state.openFiles)))}),
+              div(
+                list{Attrs.class_("text-2xl font-light text-gray-100")},
+                list{text(Int.toString(Array.length(state.openFiles)))},
+              ),
               div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Open Files")}),
             },
           ),
@@ -87,7 +108,11 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
             list{
               div(
                 list{Attrs.class_("text-2xl font-light text-red-400")},
-                list{text(Int.toString(EditorBridgeEngine.countBySeverity(state.diagnostics, "error")))},
+                list{
+                  text(
+                    Int.toString(EditorBridgeEngine.countBySeverity(state.diagnostics, "error")),
+                  ),
+                },
               ),
               div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Errors")}),
             },
@@ -97,7 +122,11 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
             list{
               div(
                 list{Attrs.class_("text-2xl font-light text-amber-400")},
-                list{text(Int.toString(EditorBridgeEngine.countBySeverity(state.diagnostics, "warning")))},
+                list{
+                  text(
+                    Int.toString(EditorBridgeEngine.countBySeverity(state.diagnostics, "warning")),
+                  ),
+                },
               ),
               div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Warnings")}),
             },
@@ -105,7 +134,10 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("p-3 bg-gray-800 rounded text-center")},
             list{
-              div(list{Attrs.class_("text-2xl font-light text-gray-100")}, list{text(Int.toString(Array.length(state.symbols)))}),
+              div(
+                list{Attrs.class_("text-2xl font-light text-gray-100")},
+                list{text(Int.toString(Array.length(state.symbols)))},
+              ),
               div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Symbols")}),
             },
           ),
@@ -121,17 +153,41 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
             ->Array.map(file =>
               div(
                 list{
-                  Attrs.class_("flex items-center gap-3 p-2 bg-gray-800/50 rounded cursor-pointer hover:bg-gray-700/50"),
+                  Attrs.class_(
+                    "flex items-center gap-3 p-2 bg-gray-800/50 rounded cursor-pointer hover:bg-gray-700/50",
+                  ),
                   Events.onClick(EditorBridge(OpenFileInEditor(file.path, file.cursorLine))),
                 },
                 list{
                   span(
-                    list{Attrs.class_(if file.modified { "text-amber-400 text-xs" } else { "text-gray-400 text-xs" })},
-                    list{text(if file.modified { "*" } else { " " })},
+                    list{
+                      Attrs.class_(
+                        if file.modified {
+                          "text-amber-400 text-xs"
+                        } else {
+                          "text-gray-400 text-xs"
+                        },
+                      ),
+                    },
+                    list{
+                      text(
+                        if file.modified {
+                          "*"
+                        } else {
+                          " "
+                        },
+                      ),
+                    },
                   ),
-                  span(list{Attrs.class_("text-sm text-gray-200 flex-1 truncate font-mono")}, list{text(file.path)}),
+                  span(
+                    list{Attrs.class_("text-sm text-gray-200 flex-1 truncate font-mono")},
+                    list{text(file.path)},
+                  ),
                   span(list{Attrs.class_("text-xs text-gray-500")}, list{text(file.language)}),
-                  span(list{Attrs.class_("text-xs text-gray-600 font-mono")}, list{text(`L${Int.toString(file.cursorLine)}`)}),
+                  span(
+                    list{Attrs.class_("text-xs text-gray-600 font-mono")},
+                    list{text(`L${Int.toString(file.cursorLine)}`)},
+                  ),
                 },
               )
             )
@@ -151,7 +207,11 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
 /// Render diagnostics list.
 let renderDiagnostics = (state: editorBridgeState): Tea_Vdom.t<msg> => {
   let filtered = EditorBridgeEngine.filterDiagnostics(
-    state.diagnostics, state.showErrors, state.showWarnings, state.showInfo, state.diagnosticFilter,
+    state.diagnostics,
+    state.showErrors,
+    state.showWarnings,
+    state.showInfo,
+    state.diagnosticFilter,
   )
   div(
     list{Attrs.class_("space-y-3")},
@@ -162,7 +222,9 @@ let renderDiagnostics = (state: editorBridgeState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500"),
+              Attrs.class_(
+                "flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500",
+              ),
               Attrs.placeholder("Filter diagnostics..."),
               Attrs.value(state.diagnosticFilter),
               Events.onInput(text => EditorBridge(SetDiagnosticFilter(text))),
@@ -171,21 +233,39 @@ let renderDiagnostics = (state: editorBridgeState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_(if state.showErrors { "px-2 py-1 text-xs bg-red-800 text-red-200 rounded" } else { "px-2 py-1 text-xs bg-gray-700 text-gray-400 rounded cursor-pointer" }),
+              Attrs.class_(
+                if state.showErrors {
+                  "px-2 py-1 text-xs bg-red-800 text-red-200 rounded"
+                } else {
+                  "px-2 py-1 text-xs bg-gray-700 text-gray-400 rounded cursor-pointer"
+                },
+              ),
               Events.onClick(EditorBridge(ToggleShowErrors)),
             },
             list{text("Errors")},
           ),
           button(
             list{
-              Attrs.class_(if state.showWarnings { "px-2 py-1 text-xs bg-amber-800 text-amber-200 rounded" } else { "px-2 py-1 text-xs bg-gray-700 text-gray-400 rounded cursor-pointer" }),
+              Attrs.class_(
+                if state.showWarnings {
+                  "px-2 py-1 text-xs bg-amber-800 text-amber-200 rounded"
+                } else {
+                  "px-2 py-1 text-xs bg-gray-700 text-gray-400 rounded cursor-pointer"
+                },
+              ),
               Events.onClick(EditorBridge(ToggleShowWarnings)),
             },
             list{text("Warnings")},
           ),
           button(
             list{
-              Attrs.class_(if state.showInfo { "px-2 py-1 text-xs bg-blue-800 text-blue-200 rounded" } else { "px-2 py-1 text-xs bg-gray-700 text-gray-400 rounded cursor-pointer" }),
+              Attrs.class_(
+                if state.showInfo {
+                  "px-2 py-1 text-xs bg-blue-800 text-blue-200 rounded"
+                } else {
+                  "px-2 py-1 text-xs bg-gray-700 text-gray-400 rounded cursor-pointer"
+                },
+              ),
               Events.onClick(EditorBridge(ToggleShowInfo)),
             },
             list{text("Info")},
@@ -213,10 +293,19 @@ let renderDiagnostics = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center gap-2 mb-1")},
                   list{
-                    span(list{Attrs.class_(`text-xs font-bold ${sevCls} uppercase`)}, list{text(diag.severity)}),
-                    span(list{Attrs.class_("text-xs text-gray-400 font-mono")}, list{text(`${diag.filePath}:${Int.toString(diag.line)}`)}),
+                    span(
+                      list{Attrs.class_(`text-xs font-bold ${sevCls} uppercase`)},
+                      list{text(diag.severity)},
+                    ),
+                    span(
+                      list{Attrs.class_("text-xs text-gray-400 font-mono")},
+                      list{text(`${diag.filePath}:${Int.toString(diag.line)}`)},
+                    ),
                     if diag.source !== "" {
-                      span(list{Attrs.class_("text-xs text-gray-600")}, list{text(`[${diag.source}]`)})
+                      span(
+                        list{Attrs.class_("text-xs text-gray-600")},
+                        list{text(`[${diag.source}]`)},
+                      )
                     } else {
                       noNode
                     },
@@ -241,7 +330,9 @@ let renderSymbols = (state: editorBridgeState): Tea_Vdom.t<msg> => {
     list{
       input(
         list{
-          Attrs.class_("w-full px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500"),
+          Attrs.class_(
+            "w-full px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-sm text-gray-200 placeholder-gray-500",
+          ),
           Attrs.placeholder("Search symbols..."),
           Attrs.value(state.symbolFilter),
           Events.onInput(text => EditorBridge(SetSymbolFilter(text))),
@@ -260,14 +351,19 @@ let renderSymbols = (state: editorBridgeState): Tea_Vdom.t<msg> => {
           ->Array.map(sym =>
             div(
               list{
-                Attrs.class_("flex items-center gap-3 p-2 bg-gray-800 rounded cursor-pointer hover:bg-gray-700"),
+                Attrs.class_(
+                  "flex items-center gap-3 p-2 bg-gray-800 rounded cursor-pointer hover:bg-gray-700",
+                ),
                 Events.onClick(EditorBridge(OpenFileInEditor(sym.filePath, sym.line))),
               },
               list{
                 span(list{Attrs.class_("text-xs text-gray-500 w-16")}, list{text(sym.kind)}),
                 span(list{Attrs.class_("text-sm text-cyan-400 font-mono")}, list{text(sym.name)}),
                 if sym.containerName !== "" {
-                  span(list{Attrs.class_("text-xs text-gray-500")}, list{text(`in ${sym.containerName}`)})
+                  span(
+                    list{Attrs.class_("text-xs text-gray-500")},
+                    list{text(`in ${sym.containerName}`)},
+                  )
                 } else {
                   noNode
                 },
@@ -300,7 +396,10 @@ let renderActivity = (state: editorBridgeState): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-800/50 rounded text-xs")},
           list{
-            span(list{Attrs.class_("text-gray-500 font-mono w-16")}, list{text(Float.toString(act.timestamp))}),
+            span(
+              list{Attrs.class_("text-gray-500 font-mono w-16")},
+              list{text(Float.toString(act.timestamp))},
+            ),
             span(list{Attrs.class_("text-gray-300")}, list{text(act.action)}),
             span(list{Attrs.class_("text-gray-400 font-mono truncate")}, list{text(act.filePath)}),
           },
@@ -360,7 +459,15 @@ let renderSettings = (state: editorBridgeState): Tea_Vdom.t<msg> => {
               ),
               Events.onClick(EditorBridge(ToggleAutoSync)),
             },
-            list{text(if state.autoSync { "Enabled" } else { "Disabled" })},
+            list{
+              text(
+                if state.autoSync {
+                  "Enabled"
+                } else {
+                  "Disabled"
+                },
+              ),
+            },
           ),
         },
       ),
@@ -384,9 +491,14 @@ let view = (state: editorBridgeState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-lg font-semibold text-gray-100")}, list{text("Editor Bridge")}),
               span(
-                list{Attrs.class_(`text-xs ${EditorBridgeEngine.connectionColour(state.connection)}`)},
+                list{Attrs.class_("text-lg font-semibold text-gray-100")},
+                list{text("Editor Bridge")},
+              ),
+              span(
+                list{
+                  Attrs.class_(`text-xs ${EditorBridgeEngine.connectionColour(state.connection)}`),
+                },
                 list{text(EditorBridgeEngine.connectionLabel(state.connection))},
               ),
             },
@@ -403,14 +515,30 @@ let view = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                       "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
                     },
                   ),
-                  Attrs.ariaLabel(if state.bojRouting { "Disable BoJ routing" } else { "Enable BoJ routing" }),
+                  Attrs.ariaLabel(
+                    if state.bojRouting {
+                      "Disable BoJ routing"
+                    } else {
+                      "Enable BoJ routing"
+                    },
+                  ),
                   Events.onClick(EditorBridge(ToggleBojRouting)),
                 },
-                list{text(if state.bojRouting { "BoJ On" } else { "BoJ" })},
+                list{
+                  text(
+                    if state.bojRouting {
+                      "BoJ On"
+                    } else {
+                      "BoJ"
+                    },
+                  ),
+                },
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(EditorBridge(RefreshBridge)),
                 },
                 list{text("Refresh")},
@@ -434,7 +562,11 @@ let view = (state: editorBridgeState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300",
+            ),
+          },
           list{
             div(
               list{Attrs.class_("flex items-center justify-between")},

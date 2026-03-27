@@ -54,13 +54,9 @@ let renderTabs = (active: unitTestTab): Tea_Vdom.t<msg> => {
 /// Status icon for a single test case result.
 let statusIcon = (status: testCaseStatus): Tea_Vdom.t<msg> =>
   switch status {
-  | TestPending =>
-    span(list{Attrs.class_("text-gray-500 text-xs font-mono")}, list{text("--")})
+  | TestPending => span(list{Attrs.class_("text-gray-500 text-xs font-mono")}, list{text("--")})
   | TestRunning =>
-    span(
-      list{Attrs.class_("text-amber-400 text-xs font-mono animate-pulse")},
-      list{text("...")},
-    )
+    span(list{Attrs.class_("text-amber-400 text-xs font-mono animate-pulse")}, list{text("...")})
   | TestPassed(_) =>
     span(list{Attrs.class_("text-emerald-400 text-xs font-mono")}, list{text("OK")})
   | TestFailed(_, _) =>
@@ -93,18 +89,24 @@ let durationDisplay = (status: testCaseStatus): Tea_Vdom.t<msg> =>
 /// suite grouping, test name, and duration.
 let renderResultsTab = (state: unitTestRunnerState): Tea_Vdom.t<msg> => {
   let count = Array.length(state.results)
-  let passed = state.results->Array.filter(r =>
-    switch r.status {
-    | TestPassed(_) => true
-    | _ => false
-    }
-  )->Array.length
-  let failed = state.results->Array.filter(r =>
-    switch r.status {
-    | TestFailed(_, _) => true
-    | _ => false
-    }
-  )->Array.length
+  let passed =
+    state.results
+    ->Array.filter(r =>
+      switch r.status {
+      | TestPassed(_) => true
+      | _ => false
+      }
+    )
+    ->Array.length
+  let failed =
+    state.results
+    ->Array.filter(r =>
+      switch r.status {
+      | TestFailed(_, _) => true
+      | _ => false
+      }
+    )
+    ->Array.length
 
   div(
     list{Attrs.class_("flex flex-col gap-3 p-4")},
@@ -179,15 +181,14 @@ let renderCoverageTab = (state: unitTestRunnerState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("flex justify-between text-xs mb-1")},
                 list{
-                  span(
-                    list{Attrs.class_("text-gray-300 font-mono")},
-                    list{text(mod.moduleName)},
-                  ),
+                  span(list{Attrs.class_("text-gray-300 font-mono")}, list{text(mod.moduleName)}),
                   span(
                     list{Attrs.class_("text-gray-500")},
                     list{
                       text(
-                        `${Int.toString(mod.testedFunctions)}/${Int.toString(mod.totalFunctions)} (${pctStr}%)`,
+                        `${Int.toString(mod.testedFunctions)}/${Int.toString(
+                            mod.totalFunctions,
+                          )} (${pctStr}%)`,
                       ),
                     },
                   ),
@@ -220,10 +221,7 @@ let renderHistoryTab = (state: unitTestRunnerState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex flex-col gap-2 p-4")},
     list{
-      h3(
-        list{Attrs.class_("text-sm font-medium text-gray-300 mb-1")},
-        list{text("Run History")},
-      ),
+      h3(list{Attrs.class_("text-sm font-medium text-gray-300 mb-1")}, list{text("Run History")}),
       div(
         list{Attrs.class_("flex flex-col gap-2 max-h-96 overflow-y-auto")},
         state.history
@@ -294,9 +292,7 @@ let renderDiffAwareTab = (state: unitTestRunnerState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("text-sm text-gray-400")},
         list{
-          text(
-            `${Int.toString(Array.length(state.results))} test(s) matched by diff-aware filter`,
-          ),
+          text(`${Int.toString(Array.length(state.results))} test(s) matched by diff-aware filter`),
         },
       ),
     },
@@ -377,7 +373,9 @@ let view = (state: unitTestRunnerState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

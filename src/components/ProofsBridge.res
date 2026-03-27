@@ -33,7 +33,8 @@ let verificationKindBadge = (kind: verificationResultKind): Tea_Vdom.t<msg> => {
 /// Main view function for the Proofs Bridge panel.
 let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
   let totalModules = Array.length(state.provenModules)
-  let fullyProvenCount = state.provenModules->Array.filter(m => m.status == FullyProven)->Array.length
+  let fullyProvenCount =
+    state.provenModules->Array.filter(m => m.status == FullyProven)->Array.length
 
   div(
     list{
@@ -49,23 +50,40 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              h2(list{Attrs.class_("text-lg font-bold text-lime-300")}, list{text("Proofs Bridge")}),
+              h2(
+                list{Attrs.class_("text-lg font-bold text-lime-300")},
+                list{text("Proofs Bridge")},
+              ),
               span(
                 list{Attrs.class_("text-xs text-gray-400")},
-                list{text(Int.toString(fullyProvenCount) ++ "/" ++ Int.toString(totalModules) ++ " fully proven")},
+                list{
+                  text(
+                    Int.toString(fullyProvenCount) ++
+                    "/" ++
+                    Int.toString(totalModules) ++ " fully proven",
+                  ),
+                },
               ),
               // Overall coverage percentage
               span(
                 list{
                   Attrs.class_(
-                    "text-xs font-bold " ++
-                    if state.coveragePercent >= 80.0 { "text-green-400" } else if state.coveragePercent >= 50.0 { "text-yellow-400" } else { "text-red-400" },
+                    "text-xs font-bold " ++ if state.coveragePercent >= 80.0 {
+                      "text-green-400"
+                    } else if state.coveragePercent >= 50.0 {
+                      "text-yellow-400"
+                    } else {
+                      "text-red-400"
+                    },
                   ),
                 },
                 list{text(Float.toFixed(state.coveragePercent, ~digits=1) ++ "% coverage")},
               ),
               if state.verifying {
-                span(list{Attrs.class_("text-xs text-yellow-400 animate-pulse")}, list{text("Verifying...")})
+                span(
+                  list{Attrs.class_("text-xs text-yellow-400 animate-pulse")},
+                  list{text("Verifying...")},
+                )
               } else {
                 Tea_Html.noNode
               },
@@ -87,8 +105,11 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Modules { "bg-lime-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Modules {
+                  "bg-lime-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ProofsBridge(SetPrBTab(Modules))),
             },
@@ -97,8 +118,11 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Proofs { "bg-lime-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Proofs {
+                  "bg-lime-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ProofsBridge(SetPrBTab(Proofs))),
             },
@@ -107,8 +131,11 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Coverage { "bg-lime-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Coverage {
+                  "bg-lime-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ProofsBridge(SetPrBTab(Coverage))),
             },
@@ -117,8 +144,11 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Verification { "bg-lime-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Verification {
+                  "bg-lime-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ProofsBridge(SetPrBTab(Verification))),
             },
@@ -130,11 +160,18 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center",
+            ),
+          },
           list{
             text(err),
             button(
-              list{Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"), Events.onClick(ProofsBridge(DismissPrBError))},
+              list{
+                Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
+                Events.onClick(ProofsBridge(DismissPrBError)),
+              },
               list{text("Dismiss")},
             ),
           },
@@ -165,17 +202,29 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
                         div(
                           list{Attrs.class_("flex items-center gap-2")},
                           list{
-                            span(list{Attrs.class_("text-sm font-bold text-lime-300")}, list{text(m.name)}),
+                            span(
+                              list{Attrs.class_("text-sm font-bold text-lime-300")},
+                              list{text(m.name)},
+                            ),
                             moduleStatusBadge(m.status),
                           },
                         ),
                         span(
                           list{Attrs.class_("text-xs text-gray-400")},
-                          list{text(Int.toString(m.provedCount) ++ "/" ++ Int.toString(m.functionCount) ++ " proved")},
+                          list{
+                            text(
+                              Int.toString(m.provedCount) ++
+                              "/" ++
+                              Int.toString(m.functionCount) ++ " proved",
+                            ),
+                          },
                         ),
                       },
                     ),
-                    div(list{Attrs.class_("text-xs text-gray-500 mb-2")}, list{text(m.description)}),
+                    div(
+                      list{Attrs.class_("text-xs text-gray-500 mb-2")},
+                      list{text(m.description)},
+                    ),
                     // Proof coverage bar (green fill)
                     div(
                       list{Attrs.class_("w-full h-2 bg-gray-800 rounded overflow-hidden")},
@@ -206,20 +255,35 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
                       list{Attrs.class_("flex items-center gap-3")},
                       list{
                         verificationKindBadge(r.kind),
-                        span(list{Attrs.class_("text-sm text-gray-200 font-mono")}, list{text(r.moduleName ++ "." ++ r.functionName)}),
+                        span(
+                          list{Attrs.class_("text-sm text-gray-200 font-mono")},
+                          list{text(r.moduleName ++ "." ++ r.functionName)},
+                        ),
                         span(list{Attrs.class_("text-xs text-gray-500")}, list{text(r.proverUsed)}),
-                        span(list{Attrs.class_("text-xs text-gray-600")}, list{text(Float.toFixed(r.durationMs, ~digits=0) ++ "ms")}),
+                        span(
+                          list{Attrs.class_("text-xs text-gray-600")},
+                          list{text(Float.toFixed(r.durationMs, ~digits=0) ++ "ms")},
+                        ),
                       },
                     ),
-                    div(list{Attrs.class_("text-xs text-gray-400 font-mono mt-1")}, list{text(r.specification)}),
+                    div(
+                      list{Attrs.class_("text-xs text-gray-400 font-mono mt-1")},
+                      list{text(r.specification)},
+                    ),
                     switch r.counterexample {
                     | Some(ce) =>
-                      div(list{Attrs.class_("text-xs text-red-400 mt-1")}, list{text("Counterexample: " ++ ce)})
+                      div(
+                        list{Attrs.class_("text-xs text-red-400 mt-1")},
+                        list{text("Counterexample: " ++ ce)},
+                      )
                     | None => Tea_Html.noNode
                     },
                     switch r.errorMessage {
                     | Some(e) =>
-                      div(list{Attrs.class_("text-xs text-red-400 mt-1")}, list{text("Error: " ++ e)})
+                      div(
+                        list{Attrs.class_("text-xs text-red-400 mt-1")},
+                        list{text("Error: " ++ e)},
+                      )
                     | None => Tea_Html.noNode
                     },
                   },
@@ -238,13 +302,21 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
                     div(
                       list{
                         Attrs.class_(
-                          "text-4xl font-bold " ++
-                          if state.coveragePercent >= 80.0 { "text-green-400" } else if state.coveragePercent >= 50.0 { "text-yellow-400" } else { "text-red-400" },
+                          "text-4xl font-bold " ++ if state.coveragePercent >= 80.0 {
+                            "text-green-400"
+                          } else if state.coveragePercent >= 50.0 {
+                            "text-yellow-400"
+                          } else {
+                            "text-red-400"
+                          },
                         ),
                       },
                       list{text(Float.toFixed(state.coveragePercent, ~digits=1) ++ "%")},
                     ),
-                    div(list{Attrs.class_("text-xs text-gray-500 mt-1")}, list{text("Overall proof coverage")}),
+                    div(
+                      list{Attrs.class_("text-xs text-gray-500 mt-1")},
+                      list{text("Overall proof coverage")},
+                    ),
                   },
                 ),
                 // Per-module coverage bars
@@ -260,7 +332,10 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
                     div(
                       list{Attrs.class_("flex items-center gap-3")},
                       list{
-                        span(list{Attrs.class_("text-xs text-gray-300 w-24 truncate")}, list{text(m.name)}),
+                        span(
+                          list{Attrs.class_("text-xs text-gray-300 w-24 truncate")},
+                          list{text(m.name)},
+                        ),
                         div(
                           list{Attrs.class_("flex-1 h-3 bg-gray-800 rounded overflow-hidden")},
                           list{
@@ -273,7 +348,10 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
                             ),
                           },
                         ),
-                        span(list{Attrs.class_("text-xs text-gray-500 w-12 text-right")}, list{text(Float.toFixed(pct, ~digits=0) ++ "%")}),
+                        span(
+                          list{Attrs.class_("text-xs text-gray-500 w-12 text-right")},
+                          list{text(Float.toFixed(pct, ~digits=0) ++ "%")},
+                        ),
                       },
                     )
                   })
@@ -287,7 +365,13 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
               list{
                 div(
                   list{Attrs.class_("text-xs text-gray-400 mb-2")},
-                  list{text(Int.toString(Array.length(state.verificationResults)) ++ " verification results")},
+                  list{
+                    text(
+                      Int.toString(
+                        Array.length(state.verificationResults),
+                      ) ++ " verification results",
+                    ),
+                  },
                 ),
                 div(
                   list{Attrs.class_("space-y-1")},
@@ -301,10 +385,16 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
                           list{Attrs.class_("flex items-center gap-2")},
                           list{
                             verificationKindBadge(r.kind),
-                            span(list{Attrs.class_("text-sm text-gray-200 font-mono")}, list{text(r.moduleName ++ "." ++ r.functionName)}),
+                            span(
+                              list{Attrs.class_("text-sm text-gray-200 font-mono")},
+                              list{text(r.moduleName ++ "." ++ r.functionName)},
+                            ),
                           },
                         ),
-                        div(list{Attrs.class_("text-xs text-gray-500 mt-1")}, list{text(r.specification)}),
+                        div(
+                          list{Attrs.class_("text-xs text-gray-500 mt-1")},
+                          list{text(r.specification)},
+                        ),
                       },
                     )
                   )

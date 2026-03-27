@@ -40,17 +40,17 @@ type groupDef = {
 }
 
 let groups: array<groupDef> = [
-  { kind: "ai", label: "AI", colour: "#a78bfa", icon: "ai" },
-  { kind: "bridge", label: "Bridge", colour: "#60a5fa", icon: "link" },
-  { kind: "builder", label: "Build", colour: "#f59e0b", icon: "hammer" },
-  { kind: "database", label: "Data", colour: "#34d399", icon: "db" },
-  { kind: "directive", label: "Direct", colour: "#f87171", icon: "flag" },
-  { kind: "loader", label: "Load", colour: "#818cf8", icon: "folder" },
-  { kind: "meta", label: "Meta", colour: "#9ca3af", icon: "cog" },
-  { kind: "network", label: "Net", colour: "#2dd4bf", icon: "wifi" },
-  { kind: "scanner", label: "Scan", colour: "#fb923c", icon: "shield" },
-  { kind: "terminal", label: "Term", colour: "#a3e635", icon: "term" },
-  { kind: "viewer", label: "View", colour: "#c084fc", icon: "eye" },
+  {kind: "ai", label: "AI", colour: "#a78bfa", icon: "ai"},
+  {kind: "bridge", label: "Bridge", colour: "#60a5fa", icon: "link"},
+  {kind: "builder", label: "Build", colour: "#f59e0b", icon: "hammer"},
+  {kind: "database", label: "Data", colour: "#34d399", icon: "db"},
+  {kind: "directive", label: "Direct", colour: "#f87171", icon: "flag"},
+  {kind: "loader", label: "Load", colour: "#818cf8", icon: "folder"},
+  {kind: "meta", label: "Meta", colour: "#9ca3af", icon: "cog"},
+  {kind: "network", label: "Net", colour: "#2dd4bf", icon: "wifi"},
+  {kind: "scanner", label: "Scan", colour: "#fb923c", icon: "shield"},
+  {kind: "terminal", label: "Term", colour: "#a3e635", icon: "term"},
+  {kind: "viewer", label: "View", colour: "#c084fc", icon: "eye"},
 ]
 
 /// Render the connection status indicator dot.
@@ -61,10 +61,7 @@ let renderStatusDot = (status: connectionStatus): Tea_Vdom.t<msg> => {
   | ServiceChecking => "bg-amber-400 animate-pulse"
   | ServiceError(_) => "bg-red-400"
   }
-  div(
-    list{Attrs.class_(`w-2 h-2 rounded-full ${colour} flex-shrink-0`)},
-    list{},
-  )
+  div(list{Attrs.class_(`w-2 h-2 rounded-full ${colour} flex-shrink-0`)}, list{})
 }
 
 /// Render a single panel entry in the expanded group.
@@ -82,7 +79,9 @@ let renderPanelEntry = (panel: panelMeta, isActive: bool): Tea_Vdom.t<msg> => {
       // Main panel button (opens/closes panel)
       button(
         list{
-          Attrs.class_(`flex items-center gap-2 flex-1 px-1.5 py-1 rounded text-left ${activeText} transition-colors`),
+          Attrs.class_(
+            `flex items-center gap-2 flex-1 px-1.5 py-1 rounded text-left ${activeText} transition-colors`,
+          ),
           Attrs.title(panel.description),
           Attrs.ariaLabel(`Open ${panel.name} panel`),
           Events.onClick(PanelSwitcher(TogglePanel(panel.id))),
@@ -95,10 +94,7 @@ let renderPanelEntry = (panel: panelMeta, isActive: bool): Tea_Vdom.t<msg> => {
             noNode
           },
           // Panel name
-          span(
-            list{Attrs.class_("text-sm truncate flex-1")},
-            list{text(panel.name)},
-          ),
+          span(list{Attrs.class_("text-sm truncate flex-1")}, list{text(panel.name)}),
           // Short name badge
           span(
             list{Attrs.class_("text-xs text-gray-500 font-mono opacity-60")},
@@ -109,7 +105,9 @@ let renderPanelEntry = (panel: panelMeta, isActive: bool): Tea_Vdom.t<msg> => {
       // Detach button (pop-out into separate window)
       button(
         list{
-          Attrs.class_("px-1 py-1 text-gray-600 hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity rounded hover:bg-gray-600/50"),
+          Attrs.class_(
+            "px-1 py-1 text-gray-600 hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity rounded hover:bg-gray-600/50",
+          ),
           Attrs.title(`Detach ${panel.name} into separate window`),
           Attrs.ariaLabel(`Detach ${panel.name}`),
           Events.onClick(Tiling(DetachPanel(panel.id))),
@@ -142,10 +140,7 @@ let renderGroupPanels = (
       div(
         list{Attrs.class_("px-2 py-1 text-xs font-semibold tracking-wider uppercase mb-1")},
         list{
-          span(
-            list{Attrs.style("color", group.colour)},
-            list{text(group.label)},
-          ),
+          span(list{Attrs.style("color", group.colour)}, list{text(group.label)}),
           span(
             list{Attrs.class_("text-gray-600 ml-1")},
             list{text(`(${Int.toString(Array.length(panels))})`)},
@@ -155,10 +150,12 @@ let renderGroupPanels = (
       // Panel entries
       div(
         list{Attrs.class_("flex flex-col gap-0.5 max-h-80 overflow-y-auto")},
-        panels->Array.map(panel => {
+        panels
+        ->Array.map(panel => {
           let isActive = activePanel === Some(panel.id)
           renderPanelEntry(panel, isActive)
-        })->List.fromArray,
+        })
+        ->List.fromArray,
       ),
     },
   )
@@ -202,7 +199,14 @@ let renderGroupButton = (
       span(
         list{
           Attrs.class_("text-[10px] font-medium leading-tight select-none"),
-          Attrs.style("color", if isExpanded { group.colour } else { "#9ca3af" }),
+          Attrs.style(
+            "color",
+            if isExpanded {
+              group.colour
+            } else {
+              "#9ca3af"
+            },
+          ),
         },
         list{text(group.label)},
       ),
@@ -248,7 +252,8 @@ let view = (switcher: panelSwitcherState): Tea_Vdom.t<msg> => {
       // Group buttons with optional slide-out
       div(
         list{Attrs.class_("flex flex-col gap-0.5 w-full px-0.5")},
-        panelsByKind->Array.map(((group, panels)) => {
+        panelsByKind
+        ->Array.map(((group, panels)) => {
           let isExpanded = switcher.expandedGroup === Some(group.kind)
           let hasActivePanel = panels->Array.some(p => switcher.activePanel === Some(p.id))
           let panelCount = Array.length(panels)
@@ -270,7 +275,8 @@ let view = (switcher: panelSwitcherState): Tea_Vdom.t<msg> => {
               },
             )
           }
-        })->List.fromArray,
+        })
+        ->List.fromArray,
       ),
     },
   )

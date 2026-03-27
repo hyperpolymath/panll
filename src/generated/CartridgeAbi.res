@@ -103,8 +103,17 @@ let cartridgeTier = (c: cartridgeId): tier =>
 
 /// Agent OODA loop tools.
 type agentTool =
-  | NewSession | EndSession | GetSession | Transition | Advance
-  | Halt | Validate | Reset | ToolCallInfo | SafetyCheckInfo | CoordinationInfo
+  | NewSession
+  | EndSession
+  | GetSession
+  | Transition
+  | Advance
+  | Halt
+  | Validate
+  | Reset
+  | ToolCallInfo
+  | SafetyCheckInfo
+  | CoordinationInfo
 
 let agentToolToString = (t: agentTool): string =>
   switch t {
@@ -123,8 +132,16 @@ let agentToolToString = (t: agentTool): string =>
 
 /// BSP build server tools.
 type bspTool =
-  | CreateSession | Initialize | Ready | Build | BuildDone
-  | Shutdown | Exit | GetState | AddTarget | RegisterCapability
+  | CreateSession
+  | Initialize
+  | Ready
+  | Build
+  | BuildDone
+  | Shutdown
+  | Exit
+  | GetState
+  | AddTarget
+  | RegisterCapability
 
 let bspToolToString = (t: bspTool): string =>
   switch t {
@@ -141,8 +158,7 @@ let bspToolToString = (t: bspTool): string =>
   }
 
 /// Cloud provider tools.
-type cloudTool =
-  | Authenticate | Logout | GetState | BeginOperation | EndOperation | Reset
+type cloudTool = Authenticate | Logout | GetState | BeginOperation | EndOperation | Reset
 
 let cloudToolToString = (t: cloudTool): string =>
   switch t {
@@ -155,8 +171,7 @@ let cloudToolToString = (t: cloudTool): string =>
   }
 
 /// Communications tools (Gmail, Calendar).
-type commsTool =
-  | Authenticate | Logout | GetState | BeginOperation | EndOperation | Reset
+type commsTool = Authenticate | Logout | GetState | BeginOperation | EndOperation | Reset
 
 let commsToolToString = (t: commsTool): string =>
   switch t {
@@ -169,8 +184,7 @@ let commsToolToString = (t: commsTool): string =>
   }
 
 /// Container management tools.
-type containerTool =
-  | BuildImage | Create | Start | Stop | Remove | GetState | Reset
+type containerTool = BuildImage | Create | Start | Stop | Remove | GetState | Reset
 
 let containerToolToString = (t: containerTool): string =>
   switch t {
@@ -185,8 +199,15 @@ let containerToolToString = (t: containerTool): string =>
 
 /// DAP debug adapter tools.
 type dapTool =
-  | CreateSession | Launch | Configure | Continue | Stopped
-  | Terminate | Disconnect | GetState | AddBreakpoint
+  | CreateSession
+  | Launch
+  | Configure
+  | Continue
+  | Stopped
+  | Terminate
+  | Disconnect
+  | GetState
+  | AddBreakpoint
 
 let dapToolToString = (t: dapTool): string =>
   switch t {
@@ -203,8 +224,14 @@ let dapToolToString = (t: dapTool): string =>
 
 /// Database tools (SQLite, VeriSimDB, PostgreSQL).
 type databaseTool =
-  | Connect | ConnectSqlite | ConnectVerisimdb | Disconnect
-  | ExecuteSql | ExecuteVql | GetState | Reset
+  | Connect
+  | ConnectSqlite
+  | ConnectVerisimdb
+  | Disconnect
+  | ExecuteSql
+  | ExecuteVql
+  | GetState
+  | Reset
 
 let databaseToolToString = (t: databaseTool): string =>
   switch t {
@@ -219,8 +246,7 @@ let databaseToolToString = (t: databaseTool): string =>
   }
 
 /// Feedback collection tools.
-type feedbackTool =
-  | RegisterChannel | SubmitFeedback | GetSentiment | Deregister | Reset
+type feedbackTool = RegisterChannel | SubmitFeedback | GetSentiment | Deregister | Reset
 
 let feedbackToolToString = (t: feedbackTool): string =>
   switch t {
@@ -243,8 +269,13 @@ let fleetToolToString = (t: fleetTool): string =>
 
 /// Git/VCS tools.
 type gitTool =
-  | Authenticate | SelectRepo | BeginOperation | EndOperation
-  | Logout | GetState | Reset
+  | Authenticate
+  | SelectRepo
+  | BeginOperation
+  | EndOperation
+  | Logout
+  | GetState
+  | Reset
 
 let gitToolToString = (t: gitTool): string =>
   switch t {
@@ -258,8 +289,7 @@ let gitToolToString = (t: gitTool): string =>
   }
 
 /// Infrastructure as Code tools.
-type iacTool =
-  | InitWorkspace | Plan | Apply | Destroy | GetState | Reset
+type iacTool = InitWorkspace | Plan | Apply | Destroy | GetState | Reset
 
 let iacToolToString = (t: iacTool): string =>
   switch t {
@@ -273,8 +303,13 @@ let iacToolToString = (t: iacTool): string =>
 
 /// Kubernetes tools.
 type k8sTool =
-  | Connect | SelectNamespace | BeginOperation | EndOperation
-  | Disconnect | GetState | Reset
+  | Connect
+  | SelectNamespace
+  | BeginOperation
+  | EndOperation
+  | Disconnect
+  | GetState
+  | Reset
 
 let k8sToolToString = (t: k8sTool): string =>
   switch t {
@@ -289,8 +324,13 @@ let k8sToolToString = (t: k8sTool): string =>
 
 /// LSP language server tools.
 type lspTool =
-  | CreateSession | Initialize | Initialized | Shutdown
-  | Exit | GetState | RegisterCapability
+  | CreateSession
+  | Initialize
+  | Initialized
+  | Shutdown
+  | Exit
+  | GetState
+  | RegisterCapability
 
 let lspToolToString = (t: lspTool): string =>
   switch t {
@@ -304,8 +344,7 @@ let lspToolToString = (t: lspTool): string =>
   }
 
 /// ML/AI tools (HuggingFace).
-type mlTool =
-  | Authenticate | Logout | GetState | BeginOperation | EndOperation | Reset
+type mlTool = Authenticate | Logout | GetState | BeginOperation | EndOperation | Reset
 
 let mlToolToString = (t: mlTool): string =>
   switch t {
@@ -328,8 +367,7 @@ let nesyToolToString = (t: nesyTool): string =>
   }
 
 /// Observability tools (Prometheus, Grafana, Loki, Jaeger).
-type observeTool =
-  | RegisterSource | BeginQuery | EndQuery | Unregister | GetState | Reset
+type observeTool = RegisterSource | BeginQuery | EndQuery | Unregister | GetState | Reset
 
 let observeToolToString = (t: observeTool): string =>
   switch t {
@@ -343,8 +381,13 @@ let observeToolToString = (t: observeTool): string =>
 
 /// Proof assistant tools (Z3, CVC5, Lean, Coq, Agda, Isabelle, Idris2).
 type proofTool =
-  | InitSession | LoadObligation | Verify | GetResult
-  | GetState | ResetSession | ResetAll
+  | InitSession
+  | LoadObligation
+  | Verify
+  | GetResult
+  | GetState
+  | ResetSession
+  | ResetAll
 
 let proofToolToString = (t: proofTool): string =>
   switch t {
@@ -359,8 +402,15 @@ let proofToolToString = (t: proofTool): string =>
 
 /// Message queue tools (NATS, RabbitMQ, RedisStream).
 type queuesTool =
-  | Connect | Subscribe | BeginConsume | Ack | Publish
-  | Unsubscribe | Disconnect | GetState | Reset
+  | Connect
+  | Subscribe
+  | BeginConsume
+  | Ack
+  | Publish
+  | Unsubscribe
+  | Disconnect
+  | GetState
+  | Reset
 
 let queuesToolToString = (t: queuesTool): string =>
   switch t {
@@ -376,8 +426,7 @@ let queuesToolToString = (t: queuesTool): string =>
   }
 
 /// Academic research tools (Semantic Scholar, OpenAlex).
-type researchTool =
-  | Authenticate | Logout | GetState | BeginOperation | EndOperation | Reset
+type researchTool = Authenticate | Logout | GetState | BeginOperation | EndOperation | Reset
 
 let researchToolToString = (t: researchTool): string =>
   switch t {
@@ -390,8 +439,7 @@ let researchToolToString = (t: researchTool): string =>
   }
 
 /// Secret management tools (Vault, SOPS, EnvVault).
-type secretsTool =
-  | Unseal | Authenticate | BeginAccess | EndAccess | Seal | GetState | Reset
+type secretsTool = Unseal | Authenticate | BeginAccess | EndAccess | Seal | GetState | Reset
 
 let secretsToolToString = (t: secretsTool): string =>
   switch t {
@@ -405,8 +453,7 @@ let secretsToolToString = (t: secretsTool): string =>
   }
 
 /// Static site generation tools (Hugo, Zola, Astro, Casket).
-type ssgTool =
-  | LoadContent | BuildSite | Preview | ReadyDeploy | Deploy | Clean | GetState | Reset
+type ssgTool = LoadContent | BuildSite | Preview | ReadyDeploy | Deploy | Clean | GetState | Reset
 
 let ssgToolToString = (t: ssgTool): string =>
   switch t {

@@ -21,12 +21,7 @@ let categoryLabel = (cat: repoLoaderCategory): string => {
 }
 
 /// All category tabs in display order.
-let allCategories: array<repoLoaderCategory> = [
-  Browse,
-  Configure,
-  Recent,
-  FarmSearch,
-]
+let allCategories: array<repoLoaderCategory> = [Browse, Configure, Recent, FarmSearch]
 
 /// CSS class for suggestion priority badge.
 let priorityColour = (priority: string): string => {
@@ -170,18 +165,14 @@ let repoInfoDecoder: Tea_Json.decoder<repoInfo> = json => {
 let suggestionDecoder: Tea_Json.decoder<panelSuggestion> = {
   open Decoders
   open Tea_Json
-  map4(
-    (panelName, reason, priority, enabled) => ({
-      panelName,
-      reason,
-      priority,
-      enabled,
-    }: panelSuggestion),
-    stringField("panel_name"),
-    stringField("reason"),
-    stringField("priority"),
-    boolField("enabled"),
-  )
+  map4((panelName, reason, priority, enabled): panelSuggestion => {
+    panelName,
+    reason,
+    priority,
+    enabled,
+  }, stringField(
+    "panel_name",
+  ), stringField("reason"), stringField("priority"), boolField("enabled"))
 }
 
 /// Tea_Json decoder for the full scan result.
@@ -199,16 +190,14 @@ let parseScanResult = (jsonStr: string): result<(repoInfo, array<panelSuggestion
   Decoders.decode(scanResultDecoder, jsonStr)
 
 /// Tea_Json decoder for extracting a path string from a repo object.
-let repoPathDecoder: Tea_Json.decoder<string> =
-  Tea_Json.field("path", Tea_Json.string)
+let repoPathDecoder: Tea_Json.decoder<string> = Tea_Json.field("path", Tea_Json.string)
 
 /// Tea_Json decoder for recent repo paths — extracts "repos" array, then "path" from each.
-let recentPathsDecoder: Tea_Json.decoder<array<string>> =
-  Decoders.fieldWithDefault(
-    "repos",
-    Decoders.lenientArray(repoPathDecoder),
-    [],
-  )
+let recentPathsDecoder: Tea_Json.decoder<array<string>> = Decoders.fieldWithDefault(
+  "repos",
+  Decoders.lenientArray(repoPathDecoder),
+  [],
+)
 
 /// Parse recent repos from JSON response.
 let parseRecentPaths = (jsonStr: string): array<string> =>

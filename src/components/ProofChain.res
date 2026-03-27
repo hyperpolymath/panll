@@ -26,17 +26,17 @@ open Tea.Html
 
 /// The status of a node in the proof pipeline.
 type nodeStatus =
-  | Discharged   // Goal solved — all green
-  | Active       // Currently being worked on
-  | Pending      // Exists but no tactic applied yet
-  | Failed       // Tactic failed or goal stuck
-  | Gap          // Missing step detected
+  | Discharged // Goal solved — all green
+  | Active // Currently being worked on
+  | Pending // Exists but no tactic applied yet
+  | Failed // Tactic failed or goal stuck
+  | Gap // Missing step detected
 
 /// The type of a node in the proof pipeline.
 type nodeType =
-  | GoalNode      // A proof obligation / goal
-  | TacticNode    // A tactic application
-  | QedNode       // Final QED / proof complete marker
+  | GoalNode // A proof obligation / goal
+  | TacticNode // A tactic application
+  | QedNode // Final QED / proof complete marker
 
 /// A single node in the proof pipeline graph.
 type pipelineNode = {
@@ -45,7 +45,7 @@ type pipelineNode = {
   detail: string,
   status: nodeStatus,
   nodeType: nodeType,
-  children: array<string>,  // IDs of child nodes
+  children: array<string>, // IDs of child nodes
 }
 
 /// The full pipeline graph.
@@ -94,7 +94,7 @@ let buildGraph = (session: echidnaSessionState): pipelineGraph => {
 
     // Determine tactic status
     let tacticStatus = if session.complete || idx < Array.length(session.proofScript) - 1 {
-      Discharged  // Past tactics are resolved
+      Discharged // Past tactics are resolved
     } else {
       // Last tactic — check session status
       switch session.status {
@@ -130,7 +130,11 @@ let buildGraph = (session: echidnaSessionState): pipelineGraph => {
   // Add remaining goals as pending subgoals off the last tactic
   session.goals->Array.forEachWithIndex((goal, idx) => {
     let goalId = "subgoal-" ++ Int.toString(idx)
-    let goalStatus = if idx === 0 { Active } else { Pending }
+    let goalStatus = if idx === 0 {
+      Active
+    } else {
+      Pending
+    }
 
     let goalNode = {
       id: goalId,
@@ -218,10 +222,10 @@ let statusClasses = (status: nodeStatus): (string, string, string) => {
 /// Status icon character.
 let statusIcon = (status: nodeStatus): string => {
   switch status {
-  | Discharged => {`\u2713`}  // ✓
-  | Active => {`\u25D0`}      // ◐
-  | Pending => {`\u25CB`}     // ○
-  | Failed => {`\u2717`}      // ✗
+  | Discharged => `\u2713` // ✓
+  | Active => `\u25D0` // ◐
+  | Pending => `\u25CB` // ○
+  | Failed => `\u2717` // ✗
   | Gap => "?"
   }
 }
@@ -240,9 +244,9 @@ let statusLabel = (status: nodeStatus): string => {
 /// Node type icon.
 let nodeTypeIcon = (nt: nodeType): string => {
   switch nt {
-  | GoalNode => {`\u25A0`}   // ■
-  | TacticNode => {`\u25B6`}  // ▶
-  | QedNode => {`\u2605`}     // ★
+  | GoalNode => `\u25A0` // ■
+  | TacticNode => `\u25B6` // ▶
+  | QedNode => `\u2605` // ★
   }
 }
 
@@ -256,17 +260,8 @@ let renderConnector = (status: nodeStatus): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex justify-center py-0")},
     list{
-      div(
-        list{
-          Attrs.class_(`h-4 w-0 ml-4 ${lineStyle}`),
-          Attrs.ariaHidden(true),
-        },
-        list{},
-      ),
-      div(
-        list{Attrs.class_(`text-[8px] ${textColour} ml-1 self-center`)},
-        list{text({`\u25BC`})},  // ▼
-      ),
+      div(list{Attrs.class_(`h-4 w-0 ml-4 ${lineStyle}`), Attrs.ariaHidden(true)}, list{}),
+      div(list{Attrs.class_(`text-[8px] ${textColour} ml-1 self-center`)}, list{text({`\u25BC`})}), // ▼
     },
   )
 }
@@ -297,16 +292,14 @@ let renderNode = (node: pipelineNode): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-1.5")},
             list{
+              span(list{Attrs.class_(`text-[10px] ${textClass}`)}, list{text(typeIcon)}),
+              span(list{Attrs.class_(`text-xs font-bold ${textClass}`)}, list{text(node.label)}),
               span(
-                list{Attrs.class_(`text-[10px] ${textClass}`)},
-                list{text(typeIcon)},
-              ),
-              span(
-                list{Attrs.class_(`text-xs font-bold ${textClass}`)},
-                list{text(node.label)},
-              ),
-              span(
-                list{Attrs.class_(`text-[10px] px-1.5 py-0 rounded ${bgClass} ${textClass} border ${borderClass} ml-auto`)},
+                list{
+                  Attrs.class_(
+                    `text-[10px] px-1.5 py-0 rounded ${bgClass} ${textClass} border ${borderClass} ml-auto`,
+                  ),
+                },
                 list{text(statusLabel(node.status))},
               ),
             },
@@ -347,13 +340,7 @@ let rec renderBranch = (graph: pipelineGraph, nodeId: string, depth: int): Tea_V
           | Some(cn) => cn.status
           | None => Pending
           }
-          div(
-            list{},
-            list{
-              renderConnector(childStatus),
-              renderBranch(graph, childId, depth + 1),
-            },
-          )
+          div(list{}, list{renderConnector(childStatus), renderBranch(graph, childId, depth + 1)})
         } else {
           // Multiple children — branching pipeline
           div(
@@ -437,20 +424,33 @@ let renderSummaryStats = (graph: pipelineGraph): Tea_Vdom.t<msg> => {
       span(list{Attrs.class_("text-gray-400")}, list{text(progressPct ++ "%")}),
       // Status counts
       if discharged > 0 {
-        span(list{Attrs.class_("text-green-400")}, list{text({`\u2713`} ++ Int.toString(discharged))})
-      } else { noNode },
+        span(
+          list{Attrs.class_("text-green-400")},
+          list{text({`\u2713`} ++ Int.toString(discharged))},
+        )
+      } else {
+        noNode
+      },
       if active > 0 {
         span(list{Attrs.class_("text-blue-400")}, list{text({`\u25D0`} ++ Int.toString(active))})
-      } else { noNode },
+      } else {
+        noNode
+      },
       if pending > 0 {
         span(list{Attrs.class_("text-amber-400")}, list{text({`\u25CB`} ++ Int.toString(pending))})
-      } else { noNode },
+      } else {
+        noNode
+      },
       if failed > 0 {
         span(list{Attrs.class_("text-red-400")}, list{text({`\u2717`} ++ Int.toString(failed))})
-      } else { noNode },
+      } else {
+        noNode
+      },
       if gaps > 0 {
         span(list{Attrs.class_("text-gray-500")}, list{text("?" ++ Int.toString(gaps))})
-      } else { noNode },
+      } else {
+        noNode
+      },
     },
   )
 }
@@ -539,13 +539,7 @@ let viewCompact = (session: echidnaSessionState): Tea_Vdom.t<msg> => {
           Attrs.ariaLabel("Proof progress"),
         },
         list{
-          div(
-            list{
-              Attrs.class_("h-full bg-green-500"),
-              Attrs.style("width", pct ++ "%"),
-            },
-            list{},
-          ),
+          div(list{Attrs.class_("h-full bg-green-500"), Attrs.style("width", pct ++ "%")}, list{}),
         },
       ),
       span(

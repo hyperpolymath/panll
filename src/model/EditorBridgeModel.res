@@ -19,11 +19,11 @@ type editorKind =
   | EditorEmacs
   | EditorKakoune
   // Enterprise architecture & modeling tools (XMI/model exchange)
-  | EditorVisualParadigm   // Visual Paradigm Enterprise (UML, ArchiMate, BPMN, SysML)
-  | EditorSparxEA          // Sparx Enterprise Architect (UML, SysML, ArchiMate)
-  | EditorArchi            // Archi (open-source ArchiMate modeling tool)
-  | EditorCamundaModeler   // Camunda Modeler (BPMN/DMN process modeling)
-  | EditorMagicDraw        // Dassault MagicDraw / Cameo (UML/SysML)
+  | EditorVisualParadigm // Visual Paradigm Enterprise (UML, ArchiMate, BPMN, SysML)
+  | EditorSparxEA // Sparx Enterprise Architect (UML, SysML, ArchiMate)
+  | EditorArchi // Archi (open-source ArchiMate modeling tool)
+  | EditorCamundaModeler // Camunda Modeler (BPMN/DMN process modeling)
+  | EditorMagicDraw // Dassault MagicDraw / Cameo (UML/SysML)
   // Custom
   | EditorCustom(string)
 

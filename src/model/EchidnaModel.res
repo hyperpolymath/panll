@@ -22,18 +22,18 @@ type echidnaTrustLevel =
 /// Axiom danger classification — used by the axiom report to flag risky
 /// assumptions in proof obligations (e.g., believe_me, Admitted, sorry).
 type axiomDangerLevel =
-  | Safe    // No concerns
-  | Noted   // Informational (e.g., standard library axioms)
+  | Safe // No concerns
+  | Noted // Informational (e.g., standard library axioms)
   | Warning // Potentially unsound (e.g., functional extensionality)
-  | Reject  // Proof-breaking (e.g., believe_me, Admitted)
+  | Reject // Proof-breaking (e.g., believe_me, Admitted)
 
 /// Portfolio confidence — aggregate confidence across multiple provers.
 /// Cross-checked means multiple independent solvers agree on the result.
 type portfolioConfidence =
-  | CrossChecked   // Multiple solvers independently agree
-  | SingleSolver   // Only one solver produced a result
-  | Inconclusive   // Solvers disagree or partial results
-  | AllTimedOut     // Every solver timed out
+  | CrossChecked // Multiple solvers independently agree
+  | SingleSolver // Only one solver produced a result
+  | Inconclusive // Solvers disagree or partial results
+  | AllTimedOut // Every solver timed out
 
 /// A prover registered in the ECHIDNA prover catalog.
 /// Tier indicates the solver family (e.g., SMT, ATP, ITP, tactic engine).
@@ -100,12 +100,12 @@ type echidnaTacticSuggestion = {
 /// ECHIDNA proof session status — maps to the ProofResponse status field
 /// from the ECHIDNA REST API (/api/v1/proofs).
 type echidnaProofStatus =
-  | Pending       // Session created, awaiting first tactic
-  | InProgress    // Tactics being applied, goals remaining
-  | ProofSuccess  // All goals discharged
-  | ProofFailed   // Proof attempt failed
-  | ProofTimeout  // Solver timed out
-  | ProofError    // Internal error during proof
+  | Pending // Session created, awaiting first tactic
+  | InProgress // Tactics being applied, goals remaining
+  | ProofSuccess // All goals discharged
+  | ProofFailed // Proof attempt failed
+  | ProofTimeout // Solver timed out
+  | ProofError // Internal error during proof
 
 /// Interactive proof session state — mirrors ECHIDNA's ProofResponse.
 /// Tracks session identity, prover, goals, applied tactics, and timing.
@@ -140,31 +140,31 @@ type echidnaSessionState = {
 /// M3 is MOF itself, M2 is a metamodel (UML, ArchiMate), M1 is a user model,
 /// M0 is the runtime instance.
 type mofLayer =
-  | M3_MetaMetaModel  // MOF itself — defines how metamodels are structured
-  | M2_Metamodel      // UML, ArchiMate, SysML, BPMN — defines modeling languages
-  | M2_Profile        // UML/SysML profiles — domain-specific extensions
-  | M1_Model          // User's model — instances of the metamodel
-  | M0_Instance       // Runtime objects — instances of the model
+  | M3_MetaMetaModel // MOF itself — defines how metamodels are structured
+  | M2_Metamodel // UML, ArchiMate, SysML, BPMN — defines modeling languages
+  | M2_Profile // UML/SysML profiles — domain-specific extensions
+  | M1_Model // User's model — instances of the metamodel
+  | M0_Instance // Runtime objects — instances of the model
 
 /// Supported metamodel standards at the M2 layer.
 type metamodelStandard =
-  | UML            // OMG Unified Modeling Language (class, sequence, state, etc.)
-  | SysML          // OMG Systems Modeling Language (requirements, blocks, parametrics)
-  | ArchiMate      // The Open Group ArchiMate (enterprise architecture)
-  | BPMN           // OMG Business Process Model and Notation
-  | DMN            // OMG Decision Model and Notation
-  | CMMN           // OMG Case Management Model and Notation
-  | ODM            // OMG Ontology Definition Metamodel
-  | CustomProfile  // User-defined UML/SysML profile
+  | UML // OMG Unified Modeling Language (class, sequence, state, etc.)
+  | SysML // OMG Systems Modeling Language (requirements, blocks, parametrics)
+  | ArchiMate // The Open Group ArchiMate (enterprise architecture)
+  | BPMN // OMG Business Process Model and Notation
+  | DMN // OMG Decision Model and Notation
+  | CMMN // OMG Case Management Model and Notation
+  | ODM // OMG Ontology Definition Metamodel
+  | CustomProfile // User-defined UML/SysML profile
 
 /// OCL constraint severity — maps to how strictly the constraint is enforced.
 type oclSeverity =
-  | OclInvariant     // Must always hold (inv:)
-  | OclPrecondition  // Must hold before operation (pre:)
+  | OclInvariant // Must always hold (inv:)
+  | OclPrecondition // Must hold before operation (pre:)
   | OclPostcondition // Must hold after operation (post:)
-  | OclDerive        // Derived value specification (derive:)
-  | OclInit          // Initial value specification (init:)
-  | OclBody          // Body of a query operation (body:)
+  | OclDerive // Derived value specification (derive:)
+  | OclInit // Initial value specification (init:)
+  | OclBody // Body of a query operation (body:)
 
 /// A single OCL constraint to be verified by ECHIDNA.
 type oclConstraint = {
@@ -232,8 +232,8 @@ type enterpriseModelState = {
 
 /// ECHIDNA panel tabs — selects between proof workbench and enterprise model checking.
 type echidnaTab =
-  | EchidnaProofTab       // Traditional theorem prover workbench
-  | EchidnaEnterpriseTab  // MOF/OCL/ArchiMate enterprise model checking
+  | EchidnaProofTab // Traditional theorem prover workbench
+  | EchidnaEnterpriseTab // MOF/OCL/ArchiMate enterprise model checking
 
 /// ECHIDNA backend state — tracks connection, prover catalog, proof lifecycle,
 /// interactive session, tactic suggestions, and enterprise model checking.

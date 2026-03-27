@@ -36,7 +36,9 @@ let connectionColour = (ws: wsConnectionState): string =>
   }
 
 /// Filter players — optionally exclude spectators.
-let filterPlayers = (players: array<connectedPlayer>, showSpectators: bool): array<connectedPlayer> =>
+let filterPlayers = (players: array<connectedPlayer>, showSpectators: bool): array<
+  connectedPlayer,
+> =>
   if showSpectators {
     players
   } else {

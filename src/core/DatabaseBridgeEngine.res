@@ -31,16 +31,14 @@ let tabLabel = (tab: databaseBridgeTab): string =>
 let allTabs: array<databaseBridgeTab> = [Schema, Queries, GameState, ProofObligations]
 
 /// Count the total number of registered schemas.
-let countSchemas = (state: databaseBridgeState): int =>
-  Array.length(state.schemas)
+let countSchemas = (state: databaseBridgeState): int => Array.length(state.schemas)
 
 /// Count the total number of columns across all schemas.
 let countTotalColumns = (schemas: array<schema>): int =>
   schemas->Array.reduce(0, (acc, s) => acc + Array.length(s.columns))
 
 /// Count query history entries.
-let countQueries = (state: databaseBridgeState): int =>
-  Array.length(state.queries)
+let countQueries = (state: databaseBridgeState): int => Array.length(state.queries)
 
 /// Count queries by execution status.
 let countQueriesByStatus = (queries: array<dbQueryHistoryEntry>, status: queryStatus): int =>
@@ -59,8 +57,7 @@ let formatObligationStatus = (status: proofObligationStatus): string =>
 let countObligationsByStatus = (
   obligations: array<dbProofObligation>,
   status: proofObligationStatus,
-): int =>
-  obligations->Array.filter(o => o.status === status)->Array.length
+): int => obligations->Array.filter(o => o.status === status)->Array.length
 
 /// Compute the percentage of proven obligations (0.0 to 100.0).
 /// Returns 100.0 when there are no obligations.
@@ -80,5 +77,7 @@ let formatSnapshotSummary = (snapshot: option<gameStateSnapshot>): string =>
   switch snapshot {
   | None => "No snapshot"
   | Some(s) =>
-    `${Int.toString(s.tableCount)} tables, ${Int.toString(s.totalRows)} rows, ${Int.toString(s.sizeBytes)} bytes`
+    `${Int.toString(s.tableCount)} tables, ${Int.toString(s.totalRows)} rows, ${Int.toString(
+        s.sizeBytes,
+      )} bytes`
   }

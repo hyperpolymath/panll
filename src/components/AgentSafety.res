@@ -22,10 +22,7 @@ let statCounter = (label: string, count: int, colorClass: string): Tea_Vdom.t<ms
   div(
     list{Attrs.class_("flex items-center justify-between py-1")},
     list{
-      span(
-        list{Attrs.class_("text-xs text-gray-400")},
-        list{text(label)},
-      ),
+      span(list{Attrs.class_("text-xs text-gray-400")}, list{text(label)}),
       span(
         list{Attrs.class_(`text-sm font-mono font-bold ${colorClass}`)},
         list{text(Int.toString(count))},
@@ -51,9 +48,7 @@ let statsSidebar = (stats: safetyStats): Tea_Vdom.t<msg> => {
       statCounter("Policy Blocked", stats.policyBlocked, "text-red-400"),
       div(
         list{Attrs.class_("border-t border-gray-700 mt-2 pt-2")},
-        list{
-          statCounter("Pending", stats.pendingCount, "text-amber-400"),
-        },
+        list{statCounter("Pending", stats.pendingCount, "text-amber-400")},
       ),
     },
   )
@@ -77,17 +72,11 @@ let pendingCard = (event: safetyEvent): Tea_Vdom.t<msg> => {
             list{Attrs.class_("text-sm font-semibold text-gray-100")},
             list{text(toolCallLabel(event.toolCall))},
           ),
-          span(
-            list{Attrs.class_("text-xs text-gray-500 font-mono")},
-            list{text(event.agentId)},
-          ),
+          span(list{Attrs.class_("text-xs text-gray-500 font-mono")}, list{text(event.agentId)}),
         },
       ),
       // Description
-      p(
-        list{Attrs.class_("text-xs text-gray-300 mb-1")},
-        list{text(event.description)},
-      ),
+      p(list{Attrs.class_("text-xs text-gray-300 mb-1")}, list{text(event.description)}),
       // Resource
       div(
         list{Attrs.class_("text-xs text-gray-500 font-mono mb-3 truncate")},
@@ -125,10 +114,7 @@ let pendingCard = (event: safetyEvent): Tea_Vdom.t<msg> => {
         },
       ),
       // Timestamp
-      span(
-        list{Attrs.class_("text-xs text-gray-600 mt-2")},
-        list{text(event.timestamp)},
-      ),
+      span(list{Attrs.class_("text-xs text-gray-600 mt-2")}, list{text(event.timestamp)}),
     },
   )
 }
@@ -193,10 +179,7 @@ let view = (state: agentSafetyState): Tea_Vdom.t<msg> => {
         list{Attrs.class_("flex-1 flex flex-col overflow-hidden")},
         list{
           // Panel header
-          h2(
-            list{Attrs.class_("text-lg font-semibold mb-3")},
-            list{text("Agent Safety Gate")},
-          ),
+          h2(list{Attrs.class_("text-lg font-semibold mb-3")}, list{text("Agent Safety Gate")}),
           // Pending approvals section
           if Array.length(state.pendingEvents) > 0 {
             div(
@@ -205,9 +188,7 @@ let view = (state: agentSafetyState): Tea_Vdom.t<msg> => {
                 h3(
                   list{Attrs.class_("text-sm font-semibold text-amber-400 mb-2")},
                   list{
-                    text(
-                      `Pending Approvals (${Int.toString(Array.length(state.pendingEvents))})`,
-                    ),
+                    text(`Pending Approvals (${Int.toString(Array.length(state.pendingEvents))})`),
                   },
                 ),
                 div(
@@ -218,7 +199,11 @@ let view = (state: agentSafetyState): Tea_Vdom.t<msg> => {
             )
           } else {
             div(
-              list{Attrs.class_("p-3 mb-4 rounded bg-emerald-900/20 border border-emerald-500/30 text-xs text-emerald-400")},
+              list{
+                Attrs.class_(
+                  "p-3 mb-4 rounded bg-emerald-900/20 border border-emerald-500/30 text-xs text-emerald-400",
+                ),
+              },
               list{text("No pending approvals")},
             )
           },

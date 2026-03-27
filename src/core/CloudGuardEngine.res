@@ -165,8 +165,7 @@ let zoneDecoder: Tea_Json.decoder<cfZone> = json => {
 }
 
 /// Tea_Json decoder for a zones response — handles both `[...]` and `{ "result": [...] }`.
-let zonesDecoder: Tea_Json.decoder<array<cfZone>> =
-  Decoders.resultArrayOrDirect(zoneDecoder)
+let zonesDecoder: Tea_Json.decoder<array<cfZone>> = Decoders.resultArrayOrDirect(zoneDecoder)
 
 /// Parse a JSON string (array of zone objects) into cfZone records.
 /// Handles both the raw result array and the full CF API envelope.
@@ -196,13 +195,44 @@ let settingIdToCategory = (settingId: string): settingCategory => {
   | Some(entry) => entry.category
   | None =>
     // Heuristic fallback for settings not yet in the catalog
-    if String.includes(settingId, "ssl") || String.includes(settingId, "tls") || settingId === "always_use_https" || settingId === "automatic_https_rewrites" || settingId === "opportunistic_encryption" {
+    if (
+      String.includes(settingId, "ssl") ||
+      String.includes(settingId, "tls") ||
+      settingId === "always_use_https" ||
+      settingId === "automatic_https_rewrites" ||
+      settingId === "opportunistic_encryption"
+    ) {
       SslTls
-    } else if String.includes(settingId, "security") || String.includes(settingId, "waf") || String.includes(settingId, "browser_check") || String.includes(settingId, "challenge") || String.includes(settingId, "hotlink") || String.includes(settingId, "email_obfuscation") || String.includes(settingId, "server_side") {
+    } else if (
+      String.includes(settingId, "security") ||
+      String.includes(settingId, "waf") ||
+      String.includes(settingId, "browser_check") ||
+      String.includes(settingId, "challenge") ||
+      String.includes(settingId, "hotlink") ||
+      String.includes(settingId, "email_obfuscation") ||
+      String.includes(settingId, "server_side")
+    ) {
       Waf
-    } else if String.includes(settingId, "cache") || String.includes(settingId, "minify") || String.includes(settingId, "polish") || String.includes(settingId, "mirage") || String.includes(settingId, "brotli") || String.includes(settingId, "early_hints") || String.includes(settingId, "http3") || String.includes(settingId, "0rtt") || String.includes(settingId, "h2") {
+    } else if (
+      String.includes(settingId, "cache") ||
+      String.includes(settingId, "minify") ||
+      String.includes(settingId, "polish") ||
+      String.includes(settingId, "mirage") ||
+      String.includes(settingId, "brotli") ||
+      String.includes(settingId, "early_hints") ||
+      String.includes(settingId, "http3") ||
+      String.includes(settingId, "0rtt") ||
+      String.includes(settingId, "h2")
+    ) {
       Performance
-    } else if String.includes(settingId, "ip_geo") || String.includes(settingId, "websocket") || String.includes(settingId, "pseudo") || String.includes(settingId, "onion") || String.includes(settingId, "max_upload") || String.includes(settingId, "grpc") {
+    } else if (
+      String.includes(settingId, "ip_geo") ||
+      String.includes(settingId, "websocket") ||
+      String.includes(settingId, "pseudo") ||
+      String.includes(settingId, "onion") ||
+      String.includes(settingId, "max_upload") ||
+      String.includes(settingId, "grpc")
+    ) {
       Network
     } else {
       SslTls // Default fallback
@@ -268,8 +298,9 @@ let settingDecoder: Tea_Json.decoder<cfSetting> = json => {
 }
 
 /// Tea_Json decoder for a settings response — handles both `[...]` and `{ "result": [...] }`.
-let settingsDecoder: Tea_Json.decoder<array<cfSetting>> =
-  Decoders.resultArrayOrDirect(settingDecoder)
+let settingsDecoder: Tea_Json.decoder<array<cfSetting>> = Decoders.resultArrayOrDirect(
+  settingDecoder,
+)
 
 /// Parse a JSON string (array of setting objects) into cfSetting records.
 let parseSettingsJson = (jsonString: string): array<cfSetting> =>
@@ -303,7 +334,12 @@ let parseDnsRecord = (json: JSON.t): option<cfDnsRecord> => {
             let comment = switch Dict.get(obj, "comment") {
             | Some(v) =>
               switch JSON.Classify.classify(v) {
-              | String(s) => if String.length(s) > 0 { Some(s) } else { None }
+              | String(s) =>
+                if String.length(s) > 0 {
+                  Some(s)
+                } else {
+                  None
+                }
               | _ => None
               }
             | None => None
@@ -348,8 +384,9 @@ let dnsRecordDecoder: Tea_Json.decoder<cfDnsRecord> = json => {
 }
 
 /// Tea_Json decoder for a DNS records response — handles both `[...]` and `{ "result": [...] }`.
-let dnsRecordsDecoder: Tea_Json.decoder<array<cfDnsRecord>> =
-  Decoders.resultArrayOrDirect(dnsRecordDecoder)
+let dnsRecordsDecoder: Tea_Json.decoder<array<cfDnsRecord>> = Decoders.resultArrayOrDirect(
+  dnsRecordDecoder,
+)
 
 /// Parse a JSON string (array of DNS record objects) into cfDnsRecord records.
 let parseDnsRecordsJson = (jsonString: string): array<cfDnsRecord> =>
@@ -365,7 +402,12 @@ let serialiseModifiedSettings = (settings: array<cfSetting>): string => {
   let modified = settings->Array.filter(s => s.modified)
   let items = modified->Array.map(s => {
     let valueJson = switch s.value {
-    | BoolValue(b) => if b { "\"on\"" } else { "\"off\"" }
+    | BoolValue(b) =>
+      if b {
+        "\"on\""
+      } else {
+        "\"off\""
+      }
     | StringValue(str) => `"${str}"`
     | IntValue(n) => Int.toString(n)
     | ObjectValue(json) => json
@@ -405,11 +447,9 @@ let isSettingEnabled = (v: settingValue): bool => {
 
 /// Evaluate a single setting against its policy constraint.
 /// Returns Some(finding) if the setting violates the constraint, None if it passes.
-let evaluateSetting = (
-  domain: string,
-  setting: cfSetting,
-  rule: policyConstraint,
-): option<auditFinding> => {
+let evaluateSetting = (domain: string, setting: cfSetting, rule: policyConstraint): option<
+  auditFinding,
+> => {
   let currentStr = settingValueToString(setting.value)
   let expectedStr = settingValueToString(setting.defaultValue)
 
@@ -439,10 +479,11 @@ let evaluateSetting = (
 
 /// Compute the overall compliance score for a set of settings against constraints.
 /// Returns (passed_count, failed_count, score_0_to_1).
-let computeComplianceScore = (
-  settings: array<cfSetting>,
-  constraints: array<policyConstraint>,
-): (int, int, float) => {
+let computeComplianceScore = (settings: array<cfSetting>, constraints: array<policyConstraint>): (
+  int,
+  int,
+  float,
+) => {
   let passed = ref(0)
   let failed = ref(0)
 
@@ -463,7 +504,11 @@ let computeComplianceScore = (
   })
 
   let total = Int.toFloat(passed.contents + failed.contents)
-  let score = if total > 0.0 { Int.toFloat(passed.contents) /. total } else { 0.0 }
+  let score = if total > 0.0 {
+    Int.toFloat(passed.contents) /. total
+  } else {
+    0.0
+  }
   (passed.contents, failed.contents, score)
 }
 
@@ -527,7 +572,8 @@ let checkEmailSecurityRecords = (records: array<cfDnsRecord>): array<string> => 
     }
   })
   if !hasCaa {
-    missing := Array.concat(missing.contents, ["CAA: No Certificate Authority Authorization record"])
+    missing :=
+      Array.concat(missing.contents, ["CAA: No Certificate Authority Authorization record"])
   }
 
   missing.contents
@@ -580,11 +626,9 @@ let severityColour = (sev: auditSeverity): string => {
 // ============================================================================
 
 /// Find the exception for a specific domain + setting, if any.
-let findException = (
-  exceptions: array<domainException>,
-  domain: string,
-  settingId: string,
-): option<domainException> => {
+let findException = (exceptions: array<domainException>, domain: string, settingId: string): option<
+  domainException,
+> => {
   exceptions->Array.find(e => e.domain === domain && e.settingId === settingId)
 }
 
@@ -598,18 +642,16 @@ let hasException = (
 }
 
 /// Get all exceptions for a specific domain.
-let exceptionsForDomain = (
-  exceptions: array<domainException>,
-  domain: string,
-): array<domainException> => {
+let exceptionsForDomain = (exceptions: array<domainException>, domain: string): array<
+  domainException,
+> => {
   exceptions->Array.filter(e => e.domain === domain)
 }
 
 /// Get all exceptions for a specific setting across all domains.
-let exceptionsForSetting = (
-  exceptions: array<domainException>,
-  settingId: string,
-): array<domainException> => {
+let exceptionsForSetting = (exceptions: array<domainException>, settingId: string): array<
+  domainException,
+> => {
   exceptions->Array.filter(e => e.settingId === settingId)
 }
 

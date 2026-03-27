@@ -448,10 +448,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     )
 
   // --- Prover catalog ---
-  | ListProvers => (
-      model,
-      GossamerCmd.listEchidnaProvers(result => Echidna(ProversLoaded(result))),
-    )
+  | ListProvers => (model, GossamerCmd.listEchidnaProvers(result => Echidna(ProversLoaded(result))))
   | ProversLoaded(result) =>
     switch result {
     | Ok(json) =>
@@ -471,17 +468,26 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
           (cart, tool, elapsed) => RecordBojLatency(cart, tool, elapsed),
         )
       } else {
-        GossamerCmd.echidnaProve(ec.proofInput, ec.selectedProver, result =>
-          Echidna(ProofResult(result))
-        )
+        GossamerCmd.echidnaProve(ec.proofInput, ec.selectedProver, result => Echidna(
+          ProofResult(result),
+        ))
       }
       (
-        {...model, echidna: {...ec, proofLoading: true, proofError: None, lastProofResult: None, lastProofObligations: None}},
+        {
+          ...model,
+          echidna: {
+            ...ec,
+            proofLoading: true,
+            proofError: None,
+            lastProofResult: None,
+            lastProofObligations: None,
+          },
+        },
         Tea_Cmd.batch(list{
           proveCmd,
-          TypeLLService.generateProofObligations(ec.proofInput, result =>
-            Echidna(ProofObligationsGenerated(result))
-          ),
+          TypeLLService.generateProofObligations(ec.proofInput, result => Echidna(
+            ProofObligationsGenerated(result),
+          )),
         }),
       )
     }
@@ -506,11 +512,18 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
       }
       let newPaneN = {...model.paneN, agency: newAgency}
       (
-        {...model, echidna: {...ec, lastProofResult: parsed, proofLoading: false, proofError: None}, paneN: newPaneN},
+        {
+          ...model,
+          echidna: {...ec, lastProofResult: parsed, proofLoading: false, proofError: None},
+          paneN: newPaneN,
+        },
         Tea_Cmd.none,
       )
     | Error(err) => (
-        {...model, echidna: {...ec, proofLoading: false, proofError: Some(err), lastProofResult: None}},
+        {
+          ...model,
+          echidna: {...ec, proofLoading: false, proofError: Some(err), lastProofResult: None},
+        },
         Tea_Cmd.none,
       )
     }
@@ -525,11 +538,17 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     | Ok(json) =>
       let parsed = parseEchidnaDispatchResult(json)
       (
-        {...model, echidna: {...ec, lastProofResult: parsed, proofLoading: false, proofError: None}},
+        {
+          ...model,
+          echidna: {...ec, lastProofResult: parsed, proofLoading: false, proofError: None},
+        },
         Tea_Cmd.none,
       )
     | Error(err) => (
-        {...model, echidna: {...ec, proofLoading: false, proofError: Some(err), lastProofResult: None}},
+        {
+          ...model,
+          echidna: {...ec, proofLoading: false, proofError: Some(err), lastProofResult: None},
+        },
         Tea_Cmd.none,
       )
     }
@@ -539,8 +558,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
       model,
       GossamerCmd.echidnaSearchTheorems(query, result => Echidna(SearchResult(result))),
     )
-  | SearchResult(_result) =>
-    // Search results display is Phase 2 — for now just clear errors.
+  | SearchResult(_result) => // Search results display is Phase 2 — for now just clear errors.
     ({...model, echidna: {...ec, proofError: None}}, Tea_Cmd.none)
 
   // --- Interactive sessions ---
@@ -551,9 +569,9 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
       }
       (
         {...model, echidna: {...ec, sessionLoading: true, proofError: None}},
-        GossamerCmd.createEchidnaSession(ec.proofInput, prover, result =>
-          Echidna(SessionCreated(result))
-        ),
+        GossamerCmd.createEchidnaSession(ec.proofInput, prover, result => Echidna(
+          SessionCreated(result),
+        )),
       )
     }
   | SessionCreated(result) =>
@@ -564,12 +582,19 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
       | Some(s) => (
           {...model, echidna: {...ec, session: Some(s), sessionLoading: false, proofError: None}},
           // Auto-request tactic suggestions after session creation
-          GossamerCmd.suggestEchidnaTactics(s.sessionId, 5, result =>
-            Echidna(TacticSuggestionsLoaded(result))
-          ),
+          GossamerCmd.suggestEchidnaTactics(s.sessionId, 5, result => Echidna(
+            TacticSuggestionsLoaded(result),
+          )),
         )
       | None => (
-          {...model, echidna: {...ec, sessionLoading: false, proofError: Some("Failed to parse session response")}},
+          {
+            ...model,
+            echidna: {
+              ...ec,
+              sessionLoading: false,
+              proofError: Some("Failed to parse session response"),
+            },
+          },
           Tea_Cmd.none,
         )
       }
@@ -582,9 +607,9 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     switch ec.session {
     | Some(s) => (
         model,
-        GossamerCmd.applyEchidnaTactic(s.sessionId, name, args, result =>
-          Echidna(TacticApplied(result))
-        ),
+        GossamerCmd.applyEchidnaTactic(s.sessionId, name, args, result => Echidna(
+          TacticApplied(result),
+        )),
       )
     | None => (model, Tea_Cmd.none)
     }
@@ -596,19 +621,23 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
           // S4: Tactic applied → advance OODA from Orient to Decide.
           // Each tactic application represents a decision step in the proof search.
           let newPhase = switch model.paneN.agency.phase {
-          | Observe => Orient  // Observed → now orienting with tactic
-          | Orient => Decide   // Oriented → decided on tactic
-          | Decide => Act      // Decided → acting (tactic applied)
-          | Act => Observe     // Cycle complete → observe result
+          | Observe => Orient // Observed → now orienting with tactic
+          | Orient => Decide // Oriented → decided on tactic
+          | Decide => Act // Decided → acting (tactic applied)
+          | Act => Observe // Cycle complete → observe result
           }
           let newAgency = {...model.paneN.agency, phase: newPhase}
           let newPaneN = {...model.paneN, agency: newAgency}
           (
-            {...model, echidna: {...ec, session: Some(updatedSession), proofError: None}, paneN: newPaneN},
+            {
+              ...model,
+              echidna: {...ec, session: Some(updatedSession), proofError: None},
+              paneN: newPaneN,
+            },
             // Auto-request fresh suggestions after tactic application
-            GossamerCmd.suggestEchidnaTactics(updatedSession.sessionId, 5, result =>
-              Echidna(TacticSuggestionsLoaded(result))
-            ),
+            GossamerCmd.suggestEchidnaTactics(updatedSession.sessionId, 5, result => Echidna(
+              TacticSuggestionsLoaded(result),
+            )),
           )
         }
       | None => (
@@ -616,18 +645,13 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
           Tea_Cmd.none,
         )
       }
-    | Error(err) => (
-        {...model, echidna: {...ec, proofError: Some(err)}},
-        Tea_Cmd.none,
-      )
+    | Error(err) => ({...model, echidna: {...ec, proofError: Some(err)}}, Tea_Cmd.none)
     }
   | GetSessionState =>
     switch ec.session {
     | Some(s) => (
         model,
-        GossamerCmd.getEchidnaSession(s.sessionId, result =>
-          Echidna(SessionStateLoaded(result))
-        ),
+        GossamerCmd.getEchidnaSession(s.sessionId, result => Echidna(SessionStateLoaded(result))),
       )
     | None => (model, Tea_Cmd.none)
     }
@@ -637,27 +661,37 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
       let session = parseEchidnaSession(json)
       switch session {
       | Some(s) => ({...model, echidna: {...ec, session: Some(s), proofError: None}}, Tea_Cmd.none)
-      | None => ({...model, echidna: {...ec, proofError: Some("Failed to parse session state")}}, Tea_Cmd.none)
+      | None => (
+          {...model, echidna: {...ec, proofError: Some("Failed to parse session state")}},
+          Tea_Cmd.none,
+        )
       }
     | Error(err) => ({...model, echidna: {...ec, proofError: Some(err)}}, Tea_Cmd.none)
     }
   | CancelSession => (
-      {...model, echidna: {...ec, session: None, tacticSuggestions: [], sessionLoading: false, tacticInput: "", proofError: None}},
+      {
+        ...model,
+        echidna: {
+          ...ec,
+          session: None,
+          tacticSuggestions: [],
+          sessionLoading: false,
+          tacticInput: "",
+          proofError: None,
+        },
+      },
       Tea_Cmd.none,
     )
-  | UpdateTacticInput(text) => (
-      {...model, echidna: {...ec, tacticInput: text}},
-      Tea_Cmd.none,
-    )
+  | UpdateTacticInput(text) => ({...model, echidna: {...ec, tacticInput: text}}, Tea_Cmd.none)
 
   // --- Tactic suggestions ---
   | RequestTacticSuggestions =>
     switch ec.session {
     | Some(s) => (
         model,
-        GossamerCmd.suggestEchidnaTactics(s.sessionId, 5, result =>
-          Echidna(TacticSuggestionsLoaded(result))
-        ),
+        GossamerCmd.suggestEchidnaTactics(s.sessionId, 5, result => Echidna(
+          TacticSuggestionsLoaded(result),
+        )),
       )
     | None => (model, Tea_Cmd.none)
     }
@@ -666,59 +700,53 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     | Ok(json) =>
       let suggestions = parseTacticSuggestions(json)
       ({...model, echidna: {...ec, tacticSuggestions: suggestions}}, Tea_Cmd.none)
-    | Error(_err) => (
-        {...model, echidna: {...ec, tacticSuggestions: []}},
-        Tea_Cmd.none,
-      )
+    | Error(_err) => ({...model, echidna: {...ec, tacticSuggestions: []}}, Tea_Cmd.none)
     }
 
   // --- UI state ---
-  | ToggleMenu => (
-      {...model, echidna: {...ec, menuExpanded: !ec.menuExpanded}},
-      Tea_Cmd.none,
-    )
-  | UpdateProofInput(text) => (
-      {...model, echidna: {...ec, proofInput: text}},
-      Tea_Cmd.none,
-    )
-  | SelectProver(prover) => (
-      {...model, echidna: {...ec, selectedProver: prover}},
-      Tea_Cmd.none,
-    )
+  | ToggleMenu => ({...model, echidna: {...ec, menuExpanded: !ec.menuExpanded}}, Tea_Cmd.none)
+  | UpdateProofInput(text) => ({...model, echidna: {...ec, proofInput: text}}, Tea_Cmd.none)
+  | SelectProver(prover) => ({...model, echidna: {...ec, selectedProver: prover}}, Tea_Cmd.none)
   | ClearProofResult => (
-      {...model, echidna: {...ec, lastProofResult: None, proofError: None, lastProofObligations: None}},
+      {
+        ...model,
+        echidna: {...ec, lastProofResult: None, proofError: None, lastProofObligations: None},
+      },
       Tea_Cmd.none,
     )
   | ProofObligationsGenerated(Ok(json)) => {
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
-      ({...model, echidna: {...ec, lastProofObligations: Some(json)}, typell: newTypell}, Tea_Cmd.none)
+      (
+        {...model, echidna: {...ec, lastProofObligations: Some(json)}, typell: newTypell},
+        Tea_Cmd.none,
+      )
     }
   | ProofObligationsGenerated(Error(_)) => {
-    UpdateHelpers.logDegradedService("TypeLL", "proof obligation generation failed")
-    (model, Tea_Cmd.none)
-  }
+      UpdateHelpers.logDegradedService("TypeLL", "proof obligation generation failed")
+      (model, Tea_Cmd.none)
+    }
   | ToggleEchidnaBojRouting => (
       {...model, echidna: {...ec, bojRouting: !ec.bojRouting}},
       Tea_Cmd.none,
     )
 
   // --- Tab switching ---
-  | SelectEchidnaTab(tab) => (
-      {...model, echidna: {...ec, activeTab: tab}},
-      Tea_Cmd.none,
-    )
+  | SelectEchidnaTab(tab) => ({...model, echidna: {...ec, activeTab: tab}}, Tea_Cmd.none)
 
   // --- Enterprise model checking (MOF/OCL) ---
   | ImportXmiModel => (model, Tea_Cmd.none) // Tauri file dialog → parse XMI → XmiModelLoaded
   | XmiModelLoaded(Ok(json)) => {
       // Parse XMI JSON into model elements (simplified — real parser needed)
       let em = ec.enterpriseModel
-      ({...model, echidna: {...ec, enterpriseModel: {...em, lastXmiImport: Some(json)}}}, Tea_Cmd.none)
+      (
+        {...model, echidna: {...ec, enterpriseModel: {...em, lastXmiImport: Some(json)}}},
+        Tea_Cmd.none,
+      )
     }
   | XmiModelLoaded(Error(_)) => {
-    UpdateHelpers.logDegradedService("ECHIDNA", "XMI model import failed")
-    (model, Tea_Cmd.none)
-  }
+      UpdateHelpers.logDegradedService("ECHIDNA", "XMI model import failed")
+      (model, Tea_Cmd.none)
+    }
   | AddOclConstraint(context, name, expression) => {
       let em = ec.enterpriseModel
       let newConstraint: oclConstraint = {
@@ -729,7 +757,16 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
         layer: M1_Model,
         metamodel: UML,
       }
-      ({...model, echidna: {...ec, enterpriseModel: {...em, constraints: Array.concat(em.constraints, [newConstraint])}}}, Tea_Cmd.none)
+      (
+        {
+          ...model,
+          echidna: {
+            ...ec,
+            enterpriseModel: {...em, constraints: Array.concat(em.constraints, [newConstraint])},
+          },
+        },
+        Tea_Cmd.none,
+      )
     }
   | RemoveOclConstraint(index) => {
       let em = ec.enterpriseModel
@@ -752,22 +789,31 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
     }
   | SetMetamodelFilter(filter) => {
       let em = ec.enterpriseModel
-      ({...model, echidna: {...ec, enterpriseModel: {...em, activeMetamodel: filter}}}, Tea_Cmd.none)
+      (
+        {...model, echidna: {...ec, enterpriseModel: {...em, activeMetamodel: filter}}},
+        Tea_Cmd.none,
+      )
     }
   | SetMofLayerFilter(filter) => {
       let em = ec.enterpriseModel
       ({...model, echidna: {...ec, enterpriseModel: {...em, activeLayer: filter}}}, Tea_Cmd.none)
     }
   | ClearEnterpriseModel => (
-      {...model, echidna: {...ec, enterpriseModel: {
-        elements: [],
-        constraints: [],
-        checkResults: [],
-        checking: false,
-        activeMetamodel: None,
-        activeLayer: None,
-        lastXmiImport: None,
-      }}},
+      {
+        ...model,
+        echidna: {
+          ...ec,
+          enterpriseModel: {
+            elements: [],
+            constraints: [],
+            checkResults: [],
+            checking: false,
+            activeMetamodel: None,
+            activeLayer: None,
+            lastXmiImport: None,
+          },
+        },
+      },
       Tea_Cmd.none,
     )
   }

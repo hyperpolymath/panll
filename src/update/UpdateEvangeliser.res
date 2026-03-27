@@ -5,22 +5,31 @@ open Msg
 let updateEvangeliser = (model: model, msg: evangeliserMsg): (model, Tea_Cmd.t<msg>) => {
   let ev = model.evangeliser
   switch msg {
-  | SetJsInput(code) => (
-      {...model, evangeliser: {...ev, jsInput: code}},
-      Tea_Cmd.none,
-    )
+  | SetJsInput(code) => ({...model, evangeliser: {...ev, jsInput: code}}, Tea_Cmd.none)
   | RunScan => {
       // Run the scan synchronously (pure computation, no side effects)
       let analysis = EvangeliserEngine.scanCode(ev.jsInput, ev.patterns, ev.constraints)
       (
-        {...model, evangeliser: {...ev, analysis: Some(analysis), scanning: false, scanError: None, activeTab: TabResults}},
+        {
+          ...model,
+          evangeliser: {
+            ...ev,
+            analysis: Some(analysis),
+            scanning: false,
+            scanError: None,
+            activeTab: TabResults,
+          },
+        },
         Tea_Cmd.none,
       )
     }
   | ScanComplete(result) =>
     switch result {
     | Ok(analysis) => (
-        {...model, evangeliser: {...ev, analysis: Some(analysis), scanning: false, scanError: None}},
+        {
+          ...model,
+          evangeliser: {...ev, analysis: Some(analysis), scanning: false, scanError: None},
+        },
         Tea_Cmd.none,
       )
     | Error(err) => (
@@ -28,14 +37,8 @@ let updateEvangeliser = (model: model, msg: evangeliserMsg): (model, Tea_Cmd.t<m
         Tea_Cmd.none,
       )
     }
-  | SetTab(tab) => (
-      {...model, evangeliser: {...ev, activeTab: tab}},
-      Tea_Cmd.none,
-    )
-  | SetViewLayer(vl) => (
-      {...model, evangeliser: {...ev, viewLayer: vl}},
-      Tea_Cmd.none,
-    )
+  | SetTab(tab) => ({...model, evangeliser: {...ev, activeTab: tab}}, Tea_Cmd.none)
+  | SetViewLayer(vl) => ({...model, evangeliser: {...ev, viewLayer: vl}}, Tea_Cmd.none)
   | SetMinConfidence(conf) => (
       {...model, evangeliser: {...ev, constraints: {...ev.constraints, minConfidence: conf}}},
       Tea_Cmd.none,
@@ -52,21 +55,15 @@ let updateEvangeliser = (model: model, msg: evangeliserMsg): (model, Tea_Cmd.t<m
         Array.concat(cats, [cat])
       }
       (
-        {...model, evangeliser: {...ev, constraints: {...ev.constraints, enabledCategories: newCats}}},
+        {
+          ...model,
+          evangeliser: {...ev, constraints: {...ev.constraints, enabledCategories: newCats}},
+        },
         Tea_Cmd.none,
       )
     }
-  | SelectMatch(idx) => (
-      {...model, evangeliser: {...ev, selectedMatchIndex: idx}},
-      Tea_Cmd.none,
-    )
-  | SetFilterText(text) => (
-      {...model, evangeliser: {...ev, filterText: text}},
-      Tea_Cmd.none,
-    )
-  | DismissError => (
-      {...model, evangeliser: {...ev, error: None, scanError: None}},
-      Tea_Cmd.none,
-    )
+  | SelectMatch(idx) => ({...model, evangeliser: {...ev, selectedMatchIndex: idx}}, Tea_Cmd.none)
+  | SetFilterText(text) => ({...model, evangeliser: {...ev, filterText: text}}, Tea_Cmd.none)
+  | DismissError => ({...model, evangeliser: {...ev, error: None, scanError: None}}, Tea_Cmd.none)
   }
 }

@@ -14,10 +14,7 @@ let invoke = RuntimeBridge.invoke
 ///
 /// `endpoint` — full URL to health check (e.g. "http://localhost:8080/health")
 /// `tagger` — function to wrap result<string, string> into the panel's msg type
-let checkEndpoint = (
-  endpoint: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkEndpoint = (endpoint: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("health_check", {"endpoint": endpoint})
     ->Promise.then(result => {

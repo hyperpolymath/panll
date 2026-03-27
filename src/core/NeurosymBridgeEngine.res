@@ -31,25 +31,25 @@ let tabLabel = (tab: neurosymBridgeTab): string =>
 let allTabs: array<neurosymBridgeTab> = [Rules, BehaviourTree, Simulation, Analysis]
 
 /// Count the total number of guard behaviour rules.
-let countRules = (state: neurosymBridgeState): int =>
-  Array.length(state.guardRules)
+let countRules = (state: neurosymBridgeState): int => Array.length(state.guardRules)
 
 /// Count rules by verification status.
 let countRulesByStatus = (rules: array<guardRule>, status: ruleStatus): int =>
   rules->Array.filter(r => r.status === status)->Array.length
 
 /// Count the total number of behaviour tree nodes.
-let countBehaviourNodes = (state: neurosymBridgeState): int =>
-  Array.length(state.behaviourNodes)
+let countBehaviourNodes = (state: neurosymBridgeState): int => Array.length(state.behaviourNodes)
 
 /// Count behaviour tree leaf nodes (actions and conditions).
 let countLeafNodes = (nodes: array<behaviourNode>): int =>
-  nodes->Array.filter(n =>
+  nodes
+  ->Array.filter(n =>
     switch n.nodeType {
     | NodeAction | NodeCondition => true
     | _ => false
     }
-  )->Array.length
+  )
+  ->Array.length
 
 /// Human-readable label for a rule status.
 let ruleStatusLabel = (status: ruleStatus): string =>
@@ -83,7 +83,10 @@ let simulationStatus = (state: neurosymBridgeState): string =>
       } else {
         0.0
       }
-      `Completed: ${Int.toString(result.totalSteps)} steps, ${Float.toFixed(devRate, ~digits=1)}% deviation`
+      `Completed: ${Int.toString(result.totalSteps)} steps, ${Float.toFixed(
+          devRate,
+          ~digits=1,
+        )}% deviation`
     } else {
       `Incomplete: ${Int.toString(result.totalSteps)} steps (deadlock or timeout)`
     }

@@ -48,14 +48,13 @@ let updateTiling = (model: model, msg: tilingMsg): (model, Tea_Cmd.t<msg>) => {
       | None => (model, Tea_Cmd.none)
       }
     }
-  | SetSnapZone(_panelId, _zone) =>
-    (model, Tea_Cmd.none)
-  | ApplyTilingPreset(preset) =>
-    ({...model, tiling: {...t, activePreset: Some(preset)}}, Tea_Cmd.none)
-  | ClearTilingPreset =>
-    ({...model, tiling: {...t, activePreset: None}}, Tea_Cmd.none)
-  | SetSnapPreview(zone) =>
-    ({...model, tiling: {...t, snapPreview: zone}}, Tea_Cmd.none)
+  | SetSnapZone(_panelId, _zone) => (model, Tea_Cmd.none)
+  | ApplyTilingPreset(preset) => (
+      {...model, tiling: {...t, activePreset: Some(preset)}},
+      Tea_Cmd.none,
+    )
+  | ClearTilingPreset => ({...model, tiling: {...t, activePreset: None}}, Tea_Cmd.none)
+  | SetSnapPreview(zone) => ({...model, tiling: {...t, snapPreview: zone}}, Tea_Cmd.none)
   | DetachedPanelClosed(windowName) =>
     let state = TilingEngine.markDetachedDead(windowName, t)
     ({...model, tiling: state}, Tea_Cmd.none)
@@ -63,14 +62,18 @@ let updateTiling = (model: model, msg: tilingMsg): (model, Tea_Cmd.t<msg>) => {
       // Send model state sync to a specific detached window
       let cmd = Tea_Cmd.call(_callbacks => {
         let channel = WindowBridge.createChannel(windowName)
-        WindowBridge.postMessage(channel, `{"action":"sync","timestamp":${Float.toString(Date.now())}}`)
+        WindowBridge.postMessage(
+          channel,
+          `{"action":"sync","timestamp":${Float.toString(Date.now())}}`,
+        )
         WindowBridge.closeChannel(channel)
       })
       (model, cmd)
     }
-  | ToggleTilingControls =>
-    ({...model, tiling: {...t, controlsVisible: !t.controlsVisible}}, Tea_Cmd.none)
-  | SetTilingEnabled(enabled) =>
-    ({...model, tiling: {...t, tilingEnabled: enabled}}, Tea_Cmd.none)
+  | ToggleTilingControls => (
+      {...model, tiling: {...t, controlsVisible: !t.controlsVisible}},
+      Tea_Cmd.none,
+    )
+  | SetTilingEnabled(enabled) => ({...model, tiling: {...t, tilingEnabled: enabled}}, Tea_Cmd.none)
   }
 }

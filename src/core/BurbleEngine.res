@@ -110,12 +110,10 @@ let update = (state: burbleState, msg: burbleMsg): burbleState => {
 // ============================================================================
 
 /// Whether the user is connected to the Burble server.
-let isConnected = (state: burbleState): bool =>
-  state.connection == Connected
+let isConnected = (state: burbleState): bool => state.connection == Connected
 
 /// Whether the user is currently in a huddle.
-let isInHuddle = (state: burbleState): bool =>
-  Option.isSome(state.currentHuddle)
+let isInHuddle = (state: burbleState): bool => Option.isSome(state.currentHuddle)
 
 /// Get the list of participants in the current huddle.
 let getParticipants = (state: burbleState): array<participant> =>
@@ -160,5 +158,4 @@ let localVoiceLabel = (state: burbleState): string =>
   }
 
 /// Whether the Burble state has an active error to display.
-let hasError = (state: burbleState): bool =>
-  Option.isSome(state.error)
+let hasError = (state: burbleState): bool => Option.isSome(state.error)

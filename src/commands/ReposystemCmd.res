@@ -7,9 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Scan all repos for RSR compliance.
-let scanAll = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let scanAll = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("reposystem_scan_all", ())
     ->Promise.then(result => {

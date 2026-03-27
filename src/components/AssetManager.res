@@ -64,13 +64,25 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              h2(list{Attrs.class_("text-lg font-bold text-pink-300")}, list{text("Asset Manager")}),
+              h2(
+                list{Attrs.class_("text-lg font-bold text-pink-300")},
+                list{text("Asset Manager")},
+              ),
               span(
                 list{Attrs.class_("text-xs text-gray-400")},
-                list{text(Int.toString(totalAssets) ++ " assets, " ++ Int.toString(collectionCount) ++ " collections")},
+                list{
+                  text(
+                    Int.toString(totalAssets) ++
+                    " assets, " ++
+                    Int.toString(collectionCount) ++ " collections",
+                  ),
+                },
               ),
               if state.importing {
-                span(list{Attrs.class_("text-xs text-yellow-400 animate-pulse")}, list{text("Importing...")})
+                span(
+                  list{Attrs.class_("text-xs text-yellow-400 animate-pulse")},
+                  list{text("Importing...")},
+                )
               } else {
                 Tea_Html.noNode
               },
@@ -92,8 +104,11 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Browse { "bg-pink-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Browse {
+                  "bg-pink-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AssetManager(SetAmCategory(Browse))),
             },
@@ -102,8 +117,11 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Import { "bg-pink-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Import {
+                  "bg-pink-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AssetManager(SetAmCategory(Import))),
             },
@@ -112,8 +130,11 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Collections { "bg-pink-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Collections {
+                  "bg-pink-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AssetManager(SetAmCategory(Collections))),
             },
@@ -122,8 +143,11 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Usage { "bg-pink-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Usage {
+                  "bg-pink-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AssetManager(SetAmCategory(Usage))),
             },
@@ -137,7 +161,9 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"),
+              Attrs.class_(
+                "flex-1 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200",
+              ),
               Attrs.value(state.filter),
               Attrs.placeholder("Search assets..."),
             },
@@ -151,8 +177,7 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
               list{Attrs.class_("px-2 py-0.5 text-xs bg-pink-900/50 text-pink-300 rounded")},
               list{text(assetKindLabel(k))},
             )
-          | None =>
-            span(list{Attrs.class_("text-xs text-gray-500")}, list{text("All")})
+          | None => span(list{Attrs.class_("text-xs text-gray-500")}, list{text("All")})
           },
         },
       ),
@@ -160,11 +185,18 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center",
+            ),
+          },
           list{
             text(err),
             button(
-              list{Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"), Events.onClick(AssetManager(DismissAmError))},
+              list{
+                Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
+                Events.onClick(AssetManager(DismissAmError)),
+              },
               list{text("Dismiss")},
             ),
           },
@@ -186,14 +218,21 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
                 div(
                   list{
                     Attrs.class_(
-                      "px-2 py-2 border rounded cursor-pointer " ++
-                      if isSelected { "bg-pink-900/20 border-pink-700" } else { "bg-gray-900 border-gray-800 hover:border-gray-700" },
+                      "px-2 py-2 border rounded cursor-pointer " ++ if isSelected {
+                        "bg-pink-900/20 border-pink-700"
+                      } else {
+                        "bg-gray-900 border-gray-800 hover:border-gray-700"
+                      },
                     ),
                   },
                   list{
                     // Thumbnail placeholder
                     div(
-                      list{Attrs.class_("w-full h-16 bg-gray-800 rounded flex items-center justify-center mb-1")},
+                      list{
+                        Attrs.class_(
+                          "w-full h-16 bg-gray-800 rounded flex items-center justify-center mb-1",
+                        ),
+                      },
                       list{
                         span(
                           list{Attrs.class_("text-xs font-mono " ++ assetKindColor(a.kind))},
@@ -202,13 +241,19 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
                       },
                     ),
                     div(list{Attrs.class_("text-xs text-gray-200 truncate")}, list{text(a.name)}),
-                    div(list{Attrs.class_("text-xs text-gray-500")}, list{text(formatSize(a.sizeBytes))}),
+                    div(
+                      list{Attrs.class_("text-xs text-gray-500")},
+                      list{text(formatSize(a.sizeBytes))},
+                    ),
                     if Array.length(a.tags) > 0 {
                       div(
                         list{Attrs.class_("flex flex-wrap gap-1 mt-1")},
                         a.tags
                         ->Array.map(t =>
-                          span(list{Attrs.class_("px-1 text-xs bg-gray-800 text-gray-500 rounded")}, list{text(t)})
+                          span(
+                            list{Attrs.class_("px-1 text-xs bg-gray-800 text-gray-500 rounded")},
+                            list{text(t)},
+                          )
                         )
                         ->List.fromArray,
                       )
@@ -225,9 +270,16 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
               list{Attrs.class_("text-center py-8 space-y-4")},
               list{
                 div(
-                  list{Attrs.class_("w-full h-32 border-2 border-dashed border-gray-700 rounded flex items-center justify-center")},
                   list{
-                    span(list{Attrs.class_("text-gray-500 text-sm")}, list{text("Drop files here or click Import to select")}),
+                    Attrs.class_(
+                      "w-full h-32 border-2 border-dashed border-gray-700 rounded flex items-center justify-center",
+                    ),
+                  },
+                  list{
+                    span(
+                      list{Attrs.class_("text-gray-500 text-sm")},
+                      list{text("Drop files here or click Import to select")},
+                    ),
                   },
                 ),
                 div(
@@ -247,8 +299,14 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
                     div(
                       list{Attrs.class_("flex items-center justify-between mb-1")},
                       list{
-                        span(list{Attrs.class_("text-sm font-bold text-pink-300")}, list{text(c.name)}),
-                        span(list{Attrs.class_("text-xs text-gray-500")}, list{text(Int.toString(Array.length(c.assets)) ++ " assets")}),
+                        span(
+                          list{Attrs.class_("text-sm font-bold text-pink-300")},
+                          list{text(c.name)},
+                        ),
+                        span(
+                          list{Attrs.class_("text-xs text-gray-500")},
+                          list{text(Int.toString(Array.length(c.assets)) ++ " assets")},
+                        ),
                       },
                     ),
                     div(list{Attrs.class_("text-xs text-gray-500")}, list{text(c.description)}),
@@ -266,11 +324,16 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center gap-3 py-1 border-b border-gray-800/50")},
                   list{
-                    span(list{Attrs.class_("text-xs " ++ assetKindColor(a.kind))}, list{text(assetKindLabel(a.kind))}),
+                    span(
+                      list{Attrs.class_("text-xs " ++ assetKindColor(a.kind))},
+                      list{text(assetKindLabel(a.kind))},
+                    ),
                     span(list{Attrs.class_("text-sm text-gray-200 flex-1")}, list{text(a.name)}),
                     span(
                       list{Attrs.class_("text-xs text-gray-400")},
-                      list{text("Used in " ++ Int.toString(Array.length(a.usedInLevels)) ++ " levels")},
+                      list{
+                        text("Used in " ++ Int.toString(Array.length(a.usedInLevels)) ++ " levels"),
+                      },
                     ),
                   },
                 )

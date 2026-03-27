@@ -11,10 +11,10 @@
 
 /// AmbientOps department — mirrors the hospital model.
 type department =
-  | Clinician         // AI-assisted sysadmin (Rust)
-  | NetworkAmbulance  // Network diagnostics and repair (Ada/SPARK + bash)
+  | Clinician // AI-assisted sysadmin (Rust)
+  | NetworkAmbulance // Network diagnostics and repair (Ada/SPARK + bash)
   | HardwareCrashTeam // Hardware diagnostics (Rust)
-  | EmergencyRoom     // Panic-safe intake (V)
+  | EmergencyRoom // Panic-safe intake (V)
   | AmbientObservatory // System weather and metrics (Elixir)
 
 /// Diagnostic severity from the Evidence Envelope.
@@ -42,11 +42,11 @@ type diagnosticFinding = {
 
 /// AmbientOps panel tabs.
 type ambientOpsTab =
-  | TabDashboard   // Overview of all departments
-  | TabClinician   // AI-assisted diagnostics
-  | TabNetwork     // Network ambulance
-  | TabHardware    // Hardware crash team
-  | TabEmergency   // Emergency room intake
+  | TabDashboard // Overview of all departments
+  | TabClinician // AI-assisted diagnostics
+  | TabNetwork // Network ambulance
+  | TabHardware // Hardware crash team
+  | TabEmergency // Emergency room intake
 
 /// Root state for the AmbientOps panel.
 type ambientOpsState = {

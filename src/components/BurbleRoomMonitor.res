@@ -55,16 +55,24 @@ let rec renderCurrentRoom = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> =>
               list{Attrs.class_("flex items-center gap-3")},
               list{
                 // Active indicator
-                div(list{Attrs.class_("w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse")}, list{}),
+                div(
+                  list{Attrs.class_("w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse")},
+                  list{},
+                ),
                 div(
                   list{},
                   list{
-                    div(list{Attrs.class_("text-sm text-gray-200 font-medium")}, list{text(huddleId)}),
+                    div(
+                      list{Attrs.class_("text-sm text-gray-200 font-medium")},
+                      list{text(huddleId)},
+                    ),
                     div(
                       list{Attrs.class_("text-xs text-gray-500")},
                       list{
                         text(
-                          `${Int.toString(Array.length(participants))} participants, ${Int.toString(speakingCount)} speaking`,
+                          `${Int.toString(Array.length(participants))} participants, ${Int.toString(
+                              speakingCount,
+                            )} speaking`,
                         ),
                       },
                     ),
@@ -75,7 +83,9 @@ let rec renderCurrentRoom = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> =>
             // Leave button
             button(
               list{
-                Attrs.class_("px-3 py-1 text-xs bg-red-900/50 text-red-300 rounded hover:bg-red-800/50 border border-red-700 transition-colors"),
+                Attrs.class_(
+                  "px-3 py-1 text-xs bg-red-900/50 text-red-300 rounded hover:bg-red-800/50 border border-red-700 transition-colors",
+                ),
                 Events.onClick(Burble(BurbleModel.LeftHuddle)),
                 Attrs.title("Leave room"),
               },
@@ -85,7 +95,11 @@ let rec renderCurrentRoom = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> =>
         ),
         // Recording status
         div(
-          list{Attrs.class_("flex items-center gap-2 px-4 py-2 border-t border-gray-800/50 bg-gray-900/30")},
+          list{
+            Attrs.class_(
+              "flex items-center gap-2 px-4 py-2 border-t border-gray-800/50 bg-gray-900/30",
+            ),
+          },
           list{
             div(list{Attrs.class_("w-2 h-2 rounded-full bg-gray-600")}, list{}),
             span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Recording: Off")}),
@@ -131,7 +145,9 @@ and renderParticipantRow = (participant: BurbleModel.participant): Tea_Vdom.t<ms
       div(
         list{
           Attrs.class_(
-            `w-2 h-2 rounded-full transition-colors ${participant.isSpeaking ? "bg-emerald-400" : "bg-gray-700"}`,
+            `w-2 h-2 rounded-full transition-colors ${participant.isSpeaking
+                ? "bg-emerald-400"
+                : "bg-gray-700"}`,
           ),
         },
         list{},
@@ -139,10 +155,7 @@ and renderParticipantRow = (participant: BurbleModel.participant): Tea_Vdom.t<ms
       // Name
       span(list{Attrs.class_("text-sm text-gray-300 flex-1")}, list{text(participant.displayName)}),
       // Voice state badge
-      span(
-        list{Attrs.class_(`text-xs ${voiceColour}`)},
-        list{text(voiceLabel)},
-      ),
+      span(list{Attrs.class_(`text-xs ${voiceColour}`)}, list{text(voiceLabel)}),
       // Volume level (small bar)
       div(
         list{Attrs.class_("w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden")},
@@ -150,7 +163,9 @@ and renderParticipantRow = (participant: BurbleModel.participant): Tea_Vdom.t<ms
           div(
             list{
               Attrs.class_(
-                `h-full rounded-full ${participant.isSpeaking ? "bg-emerald-500" : "bg-gray-600"} transition-all duration-100`,
+                `h-full rounded-full ${participant.isSpeaking
+                    ? "bg-emerald-500"
+                    : "bg-gray-600"} transition-all duration-100`,
               ),
               Attrs.style("width", `${Float.toFixed(participant.volume *. 100.0, ~digits=0)}%`),
             },
@@ -176,13 +191,18 @@ let renderRoomActions = (inHuddle: bool): Tea_Vdom.t<msg> => {
       list{
         button(
           list{
-            Attrs.class_("px-3 py-1.5 text-xs bg-emerald-900/50 text-emerald-300 rounded hover:bg-emerald-800/50 border border-emerald-700 transition-colors"),
+            Attrs.class_(
+              "px-3 py-1.5 text-xs bg-emerald-900/50 text-emerald-300 rounded hover:bg-emerald-800/50 border border-emerald-700 transition-colors",
+            ),
             Events.onClick(Burble(BurbleModel.ConnectionChanged(BurbleModel.Connecting))),
             Attrs.title("Connect to Burble server"),
           },
           list{text("Connect")},
         ),
-        span(list{Attrs.class_("text-xs text-gray-600")}, list{text("Connect to see available rooms")}),
+        span(
+          list{Attrs.class_("text-xs text-gray-600")},
+          list{text("Connect to see available rooms")},
+        ),
       },
     )
   }
@@ -203,10 +223,15 @@ let renderDiscoveredRooms = (_state: BurbleModel.burbleState): Tea_Vdom.t<msg> =
       div(
         list{Attrs.class_("flex items-center justify-between px-4 py-2 border-b border-gray-800")},
         list{
-          span(list{Attrs.class_("text-sm text-gray-300 font-medium")}, list{text("Discovered Rooms")}),
+          span(
+            list{Attrs.class_("text-sm text-gray-300 font-medium")},
+            list{text("Discovered Rooms")},
+          ),
           button(
             list{
-              Attrs.class_("px-2 py-1 text-xs bg-gray-800 text-gray-400 rounded hover:bg-gray-700 border border-gray-700 transition-colors"),
+              Attrs.class_(
+                "px-2 py-1 text-xs bg-gray-800 text-gray-400 rounded hover:bg-gray-700 border border-gray-700 transition-colors",
+              ),
               Events.onClick(Burble(BurbleModel.ConnectionChanged(BurbleModel.Connecting))),
               Attrs.title("Refresh room list from groove endpoint"),
             },
@@ -238,7 +263,9 @@ let renderVoiceControls = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
     noNode
   } else {
     div(
-      list{Attrs.class_("flex items-center gap-3 px-4 py-2 border-t border-gray-800 bg-gray-900/30")},
+      list{
+        Attrs.class_("flex items-center gap-3 px-4 py-2 border-t border-gray-800 bg-gray-900/30"),
+      },
       list{
         // Mute toggle
         button(
@@ -303,7 +330,10 @@ let view = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              div(list{Attrs.class_("text-lg font-medium text-gray-200")}, list{text("Room Monitor")}),
+              div(
+                list{Attrs.class_("text-lg font-medium text-gray-200")},
+                list{text("Room Monitor")},
+              ),
               span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Burble")}),
               if inHuddle {
                 span(list{Attrs.class_("text-xs text-emerald-400")}, list{text("LIVE")})
@@ -314,7 +344,9 @@ let view = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors"),
+              Attrs.class_(
+                "px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors",
+              ),
               Events.onClick(PanelSwitcher(ClosePanels)),
             },
             list{text("Close")},
@@ -325,7 +357,9 @@ let view = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 border-b border-red-800 text-xs text-red-400")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 border-b border-red-800 text-xs text-red-400"),
+          },
           list{text(err)},
         )
       | None => noNode

@@ -52,16 +52,27 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              h2(list{Attrs.class_("text-lg font-bold text-emerald-300")}, list{text("Automation Bridge")}),
+              h2(
+                list{Attrs.class_("text-lg font-bold text-emerald-300")},
+                list{text("Automation Bridge")},
+              ),
               span(
                 list{Attrs.class_("text-xs text-gray-400")},
-                list{text(Int.toString(totalPipelines) ++ " pipelines, " ++ Int.toString(runningCount) ++ " running")},
+                list{
+                  text(
+                    Int.toString(totalPipelines) ++
+                    " pipelines, " ++
+                    Int.toString(runningCount) ++ " running",
+                  ),
+                },
               ),
             },
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1 text-xs bg-emerald-800 hover:bg-emerald-700 text-white rounded"),
+              Attrs.class_(
+                "px-3 py-1 text-xs bg-emerald-800 hover:bg-emerald-700 text-white rounded",
+              ),
               Events.onClick(AutomationBridge(AutoBStarted)),
             },
             list{text("Trigger Build")},
@@ -75,8 +86,11 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Pipelines { "bg-emerald-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Pipelines {
+                  "bg-emerald-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AutomationBridge(SetAutoBTab(Pipelines))),
             },
@@ -85,8 +99,11 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Triggers { "bg-emerald-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Triggers {
+                  "bg-emerald-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AutomationBridge(SetAutoBTab(Triggers))),
             },
@@ -95,8 +112,11 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Status { "bg-emerald-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Status {
+                  "bg-emerald-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AutomationBridge(SetAutoBTab(Status))),
             },
@@ -105,8 +125,11 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == History { "bg-emerald-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == History {
+                  "bg-emerald-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(AutomationBridge(SetAutoBTab(History))),
             },
@@ -118,11 +141,18 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center",
+            ),
+          },
           list{
             text(err),
             button(
-              list{Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"), Events.onClick(AutomationBridge(DismissAutoBError))},
+              list{
+                Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
+                Events.onClick(AutomationBridge(DismissAutoBError)),
+              },
               list{text("Dismiss")},
             ),
           },
@@ -145,7 +175,10 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
                     div(
                       list{Attrs.class_("flex items-center justify-between mb-2")},
                       list{
-                        span(list{Attrs.class_("text-sm font-bold text-gray-200")}, list{text(pipe.name)}),
+                        span(
+                          list{Attrs.class_("text-sm font-bold text-gray-200")},
+                          list{text(pipe.name)},
+                        ),
                         pipelineStatusBadge(pipe.status),
                       },
                     ),
@@ -171,10 +204,16 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
                               },
                               list{},
                             ),
-                            span(list{Attrs.class_("text-xs text-gray-400 flex-1")}, list{text(step.name)}),
+                            span(
+                              list{Attrs.class_("text-xs text-gray-400 flex-1")},
+                              list{text(step.name)},
+                            ),
                             switch step.durationMs {
                             | Some(d) =>
-                              span(list{Attrs.class_("text-xs text-gray-600")}, list{text(Float.toFixed(d, ~digits=0) ++ "ms")})
+                              span(
+                                list{Attrs.class_("text-xs text-gray-600")},
+                                list{text(Float.toFixed(d, ~digits=0) ++ "ms")},
+                              )
                             | None => Tea_Html.noNode
                             },
                           },
@@ -196,7 +235,15 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("flex items-center gap-3 py-2 border-b border-gray-800/50")},
                   list{
                     span(
-                      list{Attrs.class_("w-2 h-2 rounded-full " ++ if t.enabled { "bg-green-500" } else { "bg-gray-600" })},
+                      list{
+                        Attrs.class_(
+                          "w-2 h-2 rounded-full " ++ if t.enabled {
+                            "bg-green-500"
+                          } else {
+                            "bg-gray-600"
+                          },
+                        ),
+                      },
                       list{},
                     ),
                     div(
@@ -224,7 +271,8 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
               state.pipelines
               ->Array.filter(p => p.status == PipelineRunning || p.status == PipelineQueued)
               ->Array.map(pipe => {
-                let completedSteps = pipe.steps->Array.filter(s => s.status == PipelineSucceeded)->Array.length
+                let completedSteps =
+                  pipe.steps->Array.filter(s => s.status == PipelineSucceeded)->Array.length
                 let totalSteps = Array.length(pipe.steps)
                 div(
                   list{Attrs.class_("px-3 py-2 bg-gray-900 border border-gray-800 rounded")},
@@ -235,7 +283,13 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
                         span(list{Attrs.class_("text-sm text-gray-200")}, list{text(pipe.name)}),
                         span(
                           list{Attrs.class_("text-xs text-gray-400")},
-                          list{text(Int.toString(completedSteps) ++ "/" ++ Int.toString(totalSteps) ++ " steps")},
+                          list{
+                            text(
+                              Int.toString(completedSteps) ++
+                              "/" ++
+                              Int.toString(totalSteps) ++ " steps",
+                            ),
+                          },
                         ),
                       },
                     ),
@@ -249,7 +303,11 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
                             Attrs.style(
                               "width",
                               Float.toFixed(
-                                if totalSteps > 0 { Int.toFloat(completedSteps) /. Int.toFloat(totalSteps) *. 100.0 } else { 0.0 },
+                                if totalSteps > 0 {
+                                  Int.toFloat(completedSteps) /. Int.toFloat(totalSteps) *. 100.0
+                                } else {
+                                  0.0
+                                },
                                 ~digits=1,
                               ) ++ "%",
                             ),
@@ -269,7 +327,11 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
               list{
                 // History table header
                 div(
-                  list{Attrs.class_("flex gap-2 text-xs text-gray-500 font-mono border-b border-gray-800 pb-1 mb-2")},
+                  list{
+                    Attrs.class_(
+                      "flex gap-2 text-xs text-gray-500 font-mono border-b border-gray-800 pb-1 mb-2",
+                    ),
+                  },
                   list{
                     span(list{Attrs.class_("w-24")}, list{text("Build")}),
                     span(list{Attrs.class_("flex-1")}, list{text("Pipeline")}),
@@ -285,10 +347,22 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
                     div(
                       list{Attrs.class_("flex gap-2 text-xs py-1 border-b border-gray-800/30")},
                       list{
-                        span(list{Attrs.class_("w-24 font-mono text-gray-500 truncate")}, list{text(entry.commitSha->String.slice(~start=0, ~end=7))}),
-                        span(list{Attrs.class_("flex-1 text-gray-300")}, list{text(entry.pipelineName)}),
-                        span(list{Attrs.class_("w-16 text-gray-500")}, list{text(triggerEventLabel(entry.triggeredBy))}),
-                        span(list{Attrs.class_("w-20 text-gray-500")}, list{text(Float.toFixed(entry.durationMs /. 1000.0, ~digits=1) ++ "s")}),
+                        span(
+                          list{Attrs.class_("w-24 font-mono text-gray-500 truncate")},
+                          list{text(entry.commitSha->String.slice(~start=0, ~end=7))},
+                        ),
+                        span(
+                          list{Attrs.class_("flex-1 text-gray-300")},
+                          list{text(entry.pipelineName)},
+                        ),
+                        span(
+                          list{Attrs.class_("w-16 text-gray-500")},
+                          list{text(triggerEventLabel(entry.triggeredBy))},
+                        ),
+                        span(
+                          list{Attrs.class_("w-20 text-gray-500")},
+                          list{text(Float.toFixed(entry.durationMs /. 1000.0, ~digits=1) ++ "s")},
+                        ),
                         span(list{Attrs.class_("w-20")}, list{pipelineStatusBadge(entry.status)}),
                       },
                     )

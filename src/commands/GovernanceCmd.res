@@ -13,10 +13,9 @@ let invoke = RuntimeBridge.invoke
 /// Query nesy-mcp for a confidence assessment on a borderline governance
 /// decision. Returns JSON with confidence score, recommended action, and
 /// reasoning from the neural subsystem.
-let queryNesyConfidence = (
-  query: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let queryNesyConfidence = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("governance_nesy_query", {"query": query})
     ->Promise.then(result => {
@@ -34,10 +33,7 @@ let queryNesyConfidence = (
 /// Ask nesy-mcp to validate a governance adjustment before it is applied.
 /// Used primarily for HaltInference decisions — the neural subsystem can
 /// approve or reject the halt with reasoning.
-let validateAdjustment = (
-  adj: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let validateAdjustment = (adj: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("governance_nesy_validate", {"adjustment": adj})
     ->Promise.then(result => {
@@ -55,9 +51,7 @@ let validateAdjustment = (
 /// Probe nesy-mcp for overall stability metrics from the neural subsystem.
 /// Returns JSON with neural coherence, drift magnitude, and recommendation.
 /// Emitted automatically when any governance query is generated.
-let probeStability = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let probeStability = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("governance_nesy_probe", {"_": true})
     ->Promise.then(result => {

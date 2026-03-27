@@ -79,9 +79,10 @@ let pixiBootstrapScript = (devServerUrl: string): string => {
   "const app = new PIXI.Application();" ++
   "await app.init({ width: 800, height: 600, backgroundColor: 0x1a1a2e });" ++
   "document.getElementById('game-root').appendChild(app.canvas);" ++
-  "const ws = new WebSocket('" ++ devServerUrl ++ "/ws');" ++
-  "ws.onmessage = (e) => { if (e.data === 'reload') { location.reload(); } };" ++
-  "app.ticker.add(() => { /* game loop placeholder */ });"
+  "const ws = new WebSocket('" ++
+  devServerUrl ++
+  "/ws');" ++
+  "ws.onmessage = (e) => { if (e.data === 'reload') { location.reload(); } };" ++ "app.ticker.add(() => { /* game loop placeholder */ });"
 }
 
 /// Generate a srcdoc HTML string for the game preview iframe.
@@ -93,8 +94,9 @@ let iframeSrcDoc = (devServerUrl: string): string => {
   "<style>body{margin:0;overflow:hidden;background:#1a1a2e}</style>" ++
   "</head><body>" ++
   "<div id='game-root'></div>" ++
-  "<script type='module'>" ++ pixiBootstrapScript(devServerUrl) ++ "</script>" ++
-  "</body></html>"
+  "<script type='module'>" ++
+  pixiBootstrapScript(devServerUrl) ++
+  "</script>" ++ "</body></html>"
 }
 
 /// Default render stats for the performance tab.
@@ -107,7 +109,9 @@ let defaultRenderStats: renderStats = {
 
 /// Format render stats as a human-readable summary line.
 let renderStatsLabel = (stats: renderStats): string => {
-  Float.toFixed(stats.fps, ~digits=1) ++ " FPS | " ++
-  Int.toString(stats.drawCalls) ++ " draws | " ++
+  Float.toFixed(stats.fps, ~digits=1) ++
+  " FPS | " ++
+  Int.toString(stats.drawCalls) ++
+  " draws | " ++
   Int.toString(stats.spriteCount) ++ " sprites"
 }

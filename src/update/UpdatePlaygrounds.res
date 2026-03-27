@@ -16,7 +16,11 @@ let updatePlaygrounds = (model: model, msg: playgroundsMsg): (model, Tea_Cmd.t<m
           pg.editorContent,
           result => Playgrounds(ExecuteResult(result)),
         ),
-        TypeLLService.checkCodeTypes(pg.editorContent, PlaygroundsEngine.languageLabel(pg.activeLanguage), result => Playgrounds(TypeCheckResult(result))),
+        TypeLLService.checkCodeTypes(
+          pg.editorContent,
+          PlaygroundsEngine.languageLabel(pg.activeLanguage),
+          result => Playgrounds(TypeCheckResult(result)),
+        ),
       }),
     )
   | ExecuteResult(result) =>
@@ -27,7 +31,13 @@ let updatePlaygrounds = (model: model, msg: playgroundsMsg): (model, Tea_Cmd.t<m
           playgrounds: {
             ...pg,
             executing: false,
-            lastResult: Some({success: true, data: Some(_jsonStr), error: None, durationMs: 0.0, rowCount: 0}),
+            lastResult: Some({
+              success: true,
+              data: Some(_jsonStr),
+              error: None,
+              durationMs: 0.0,
+              rowCount: 0,
+            }),
           },
         },
         Tea_Cmd.none,
@@ -38,7 +48,13 @@ let updatePlaygrounds = (model: model, msg: playgroundsMsg): (model, Tea_Cmd.t<m
           playgrounds: {
             ...pg,
             executing: false,
-            lastResult: Some({success: false, data: None, error: Some(e), durationMs: 0.0, rowCount: 0}),
+            lastResult: Some({
+              success: false,
+              data: None,
+              error: Some(e),
+              durationMs: 0.0,
+              rowCount: 0,
+            }),
           },
         },
         Tea_Cmd.none,
@@ -47,14 +63,21 @@ let updatePlaygrounds = (model: model, msg: playgroundsMsg): (model, Tea_Cmd.t<m
   | LoadSnippet(snippetId) => {
       let snippet = pg.snippets->Array.find(s => s.id === snippetId)
       switch snippet {
-      | Some(s) => ({...model, playgrounds: {...pg, editorContent: s.code, activeLanguage: s.language}}, Tea_Cmd.none)
+      | Some(s) => (
+          {...model, playgrounds: {...pg, editorContent: s.code, activeLanguage: s.language}},
+          Tea_Cmd.none,
+        )
       | None => (model, Tea_Cmd.none)
       }
     }
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "playgrounds", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
   | SetNqcInput(text) => ({...model, playgrounds: {...pg, nqcInput: text}}, Tea_Cmd.none)
@@ -74,11 +97,16 @@ let updatePlaygrounds = (model: model, msg: playgroundsMsg): (model, Tea_Cmd.t<m
       }
       let entry = (pg.nqcInput, pg.nqcLanguage, Some(qr))
       let history = [entry]->Array.concat(pg.nqcHistory)
-      ({...model, playgrounds: {...pg, executing: false, nqcHistory: history, lastResult: Some(qr)}}, Tea_Cmd.none)
+      (
+        {
+          ...model,
+          playgrounds: {...pg, executing: false, nqcHistory: history, lastResult: Some(qr)},
+        },
+        Tea_Cmd.none,
+      )
     }
   | ClearNqcHistory => ({...model, playgrounds: {...pg, nqcHistory: []}}, Tea_Cmd.none)
-  | TypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
   }
 }

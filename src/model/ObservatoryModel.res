@@ -31,10 +31,10 @@ type resourceSnapshot = {
 
 /// Observatory dashboard tabs.
 type observatoryTab =
-  | TabOverview    // Summary grid of all panels + services
-  | TabServices    // Service endpoint health checks
-  | TabResources   // Memory, CPU, process budgets
-  | TabActivity    // Recent panel activity log
+  | TabOverview // Summary grid of all panels + services
+  | TabServices // Service endpoint health checks
+  | TabResources // Memory, CPU, process budgets
+  | TabActivity // Recent panel activity log
 
 /// Activity log entry.
 type activityEntry = {

@@ -150,24 +150,22 @@ let computeDistribution = (results: array<panelVerification>): stateDistribution
 /// Extract all root-failure obligations with blockedDownstreamCount > 0
 /// across all panels, sorted by blocked count descending.
 let extractBottlenecks = (results: array<panelVerification>): array<bottleneck> => {
-  let all =
-    results
-    ->Array.flatMap(v =>
-      v.obligations
-      ->Array.filter(o => o.failureClass == Root && o.blockedDownstreamCount > 0)
-      ->Array.map(o => {
-        let bn: bottleneck = {
-          panelId: v.panelId,
-          obligationId: o.id,
-          kind: o.kind,
-          blockedCount: o.blockedDownstreamCount,
-          repairability: o.repairability,
-          message: o.message,
-          file: o.file,
-        }
-        bn
-      })
-    )
+  let all = results->Array.flatMap(v =>
+    v.obligations
+    ->Array.filter(o => o.failureClass == Root && o.blockedDownstreamCount > 0)
+    ->Array.map(o => {
+      let bn: bottleneck = {
+        panelId: v.panelId,
+        obligationId: o.id,
+        kind: o.kind,
+        blockedCount: o.blockedDownstreamCount,
+        repairability: o.repairability,
+        message: o.message,
+        file: o.file,
+      }
+      bn
+    })
+  )
   let copy = Array.copy(all)
   copy->Array.sort((a, b) => Int.compare(b.blockedCount, a.blockedCount))
   copy
@@ -178,8 +176,9 @@ let topBottlenecks = (bottlenecks: array<bottleneck>, n: int): array<bottleneck>
   bottlenecks->Array.slice(~start=0, ~end=n)
 
 /// Filter verification results to only those with the given lifecycle state.
-let panelsByState = (results: array<panelVerification>, state: panelState): array<panelVerification> =>
-  results->Array.filter(v => v.policy.state == state)
+let panelsByState = (results: array<panelVerification>, state: panelState): array<
+  panelVerification,
+> => results->Array.filter(v => v.policy.state == state)
 
 /// Health score: percentage of panels at Viable or above (Viable + Releasable).
 /// Returns 0 when there are no panels.
@@ -224,12 +223,15 @@ let healthScoreBgColor = (score: int): string =>
 // ════════════════════════════════════════════════════════════════════════
 
 /// Whether all obligations for a panel are satisfied.
-let isComplete = (v: panelVerification): bool =>
-  v.unsatisfied == 0 && v.blocked == 0
+let isComplete = (v: panelVerification): bool => v.unsatisfied == 0 && v.blocked == 0
 
 /// Summary label: "COMPLETE (6/6)" or "INCOMPLETE (4/6)".
 let summaryLabel = (v: panelVerification): string => {
-  let tag = if isComplete(v) { "COMPLETE" } else { "INCOMPLETE" }
+  let tag = if isComplete(v) {
+    "COMPLETE"
+  } else {
+    "INCOMPLETE"
+  }
   `${tag} (${Int.toString(v.satisfied)}/${Int.toString(v.total)})`
 }
 
@@ -257,8 +259,7 @@ let sortByBottleneck = (obligations: array<obligation>): array<obligation> => {
 // ════════════════════════════════════════════════════════════════════════
 
 /// Total number of panels in the results.
-let totalPanels = (results: array<panelVerification>): int =>
-  Array.length(results)
+let totalPanels = (results: array<panelVerification>): int => Array.length(results)
 
 /// Number of panels where all obligations are satisfied.
 let completePanels = (results: array<panelVerification>): int =>
@@ -269,14 +270,18 @@ let incompletePanels = (results: array<panelVerification>): int =>
   results->Array.filter(v => !isComplete(v))->Array.length
 
 /// Filter results to a specific panel (by panelId string).
-let filterByPanel = (results: array<panelVerification>, selectedPanel: option<string>): array<panelVerification> =>
+let filterByPanel = (results: array<panelVerification>, selectedPanel: option<string>): array<
+  panelVerification,
+> =>
   switch selectedPanel {
   | None => results
   | Some(pid) => results->Array.filter(v => v.panelId == pid)
   }
 
 /// Filter results by completion status string ("Complete" or "Incomplete").
-let filterByStatus = (results: array<panelVerification>, filterStatus: option<string>): array<panelVerification> =>
+let filterByStatus = (results: array<panelVerification>, filterStatus: option<string>): array<
+  panelVerification,
+> =>
   switch filterStatus {
   | None => results
   | Some("Complete") => results->Array.filter(isComplete)
@@ -341,7 +346,7 @@ let typedObligation = (raw: obligation): obligation => {
     | Root => Some("root")
     | Derived => Some("derived")
     | NotFailed => None
-    }
+    },
   ),
   repairability: parseRepairability(repairabilityLabel(raw.repairability)),
 }

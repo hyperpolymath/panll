@@ -15,10 +15,9 @@ let invoke = RuntimeBridge.invoke
 
 /// Save TSDM directive preferences to persistent storage.
 /// Accepts JSON-serialised TsdmState.
-let saveDirective = (
-  directiveJson: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let saveDirective = (directiveJson: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("tsdm_save_directive", {"directive": directiveJson})
     ->Promise.then(result => {
@@ -35,9 +34,7 @@ let saveDirective = (
 
 /// Load TSDM directive preferences from persistent storage.
 /// Returns JSON-serialised TsdmState or empty string if none saved.
-let loadDirective = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadDirective = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("tsdm_load_directive", Dict.make())
     ->Promise.then(result => {
@@ -54,9 +51,7 @@ let loadDirective = (
 
 /// Collect work items from all consumer panels.
 /// Returns JSON array of classified work items.
-let collectWorkItems = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let collectWorkItems = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("tsdm_collect_work_items", Dict.make())
     ->Promise.then(result => {

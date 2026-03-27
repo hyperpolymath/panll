@@ -6,9 +6,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Detect which editor is running and attempt to connect.
-let detectEditor = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let detectEditor = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("editor_bridge_detect", {"_": true})
     ->Promise.then(result => {
@@ -24,10 +22,7 @@ let detectEditor = (
 }
 
 /// Connect to an editor via LSP on a given port.
-let connectLsp = (
-  port: int,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let connectLsp = (port: int, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("editor_bridge_connect_lsp", {"port": port})
     ->Promise.then(result => {
@@ -43,9 +38,7 @@ let connectLsp = (
 }
 
 /// Read diagnostics from the connected editor.
-let readDiagnostics = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readDiagnostics = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("editor_bridge_diagnostics", {"_": true})
     ->Promise.then(result => {
@@ -61,9 +54,7 @@ let readDiagnostics = (
 }
 
 /// Read open files from the connected editor.
-let readOpenFiles = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readOpenFiles = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("editor_bridge_open_files", {"_": true})
     ->Promise.then(result => {
@@ -79,10 +70,7 @@ let readOpenFiles = (
 }
 
 /// Read workspace symbols.
-let readSymbols = (
-  query: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readSymbols = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("editor_bridge_symbols", {"query": query})
     ->Promise.then(result => {

@@ -82,16 +82,14 @@ let applyFilters = (
   filterMode: repoFilterMode,
   searchText: string,
   sortMode: repoSortMode,
-): array<repoResult> =>
-  repos->filterRepos(filterMode)->searchRepos(searchText)->sortRepos(sortMode)
+): array<repoResult> => repos->filterRepos(filterMode)->searchRepos(searchText)->sortRepos(sortMode)
 
 // =========================================================================
 // Selection helpers
 // =========================================================================
 
 /// Check whether a given index is in the selected set.
-let isSelected = (selected: array<int>, idx: int): bool =>
-  selected->Array.some(i => i == idx)
+let isSelected = (selected: array<int>, idx: int): bool => selected->Array.some(i => i == idx)
 
 /// Toggle a repo index in/out of the selected set.
 let toggleSelection = (selected: array<int>, idx: int): array<int> =>
@@ -102,8 +100,7 @@ let toggleSelection = (selected: array<int>, idx: int): array<int> =>
   }
 
 /// Select all repo indices (0..n-1).
-let selectAllIndices = (count: int): array<int> =>
-  Array.fromInitializer(~length=count, i => i)
+let selectAllIndices = (count: int): array<int> => Array.fromInitializer(~length=count, i => i)
 
 // =========================================================================
 // Aggregate statistics
@@ -111,12 +108,14 @@ let selectAllIndices = (count: int): array<int> =>
 
 /// Count repos that completed scanning (not queued, not failed).
 let completedCount = (repos: array<repoResult>): int =>
-  repos->Array.filter(r =>
+  repos
+  ->Array.filter(r =>
     switch r.status {
     | Complete | Skipped => true
     | _ => false
     }
-  )->Array.length
+  )
+  ->Array.length
 
 /// Count repos with at least one critical finding.
 let criticalRepoCount = (repos: array<repoResult>): int =>
@@ -174,8 +173,7 @@ let improvedCount = (deltas: array<deltaEntry>): int =>
 // =========================================================================
 
 /// Format a health score as a percentage string (e.g. "87.3%").
-let healthLabel = (score: float): string =>
-  Float.toFixed(score *. 100.0, ~digits=1) ++ "%"
+let healthLabel = (score: float): string => Float.toFixed(score *. 100.0, ~digits=1) ++ "%"
 
 /// CSS colour class for a health score (green→yellow→red gradient).
 let healthColour = (score: float): string =>

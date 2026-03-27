@@ -67,7 +67,11 @@ let sessionStatusBadge = (status: soakSessionStatus): Tea_Vdom.t<msg> =>
   switch status {
   | SoakRunning =>
     span(
-      list{Attrs.class_("px-1.5 py-0.5 text-xs rounded bg-emerald-600 text-white font-mono animate-pulse")},
+      list{
+        Attrs.class_(
+          "px-1.5 py-0.5 text-xs rounded bg-emerald-600 text-white font-mono animate-pulse",
+        ),
+      },
       list{text("RUNNING")},
     )
   | SoakCompleted =>
@@ -148,11 +152,7 @@ let renderLiveMonitorTab = (state: soakMonitorState): Tea_Vdom.t<msg> => {
                 list{
                   div(
                     list{Attrs.class_("text-2xl font-light text-gray-300")},
-                    list{
-                      text(
-                        `${Float.toFixed(session.gcFrequencyPerMinute, ~digits=1)}/min`,
-                      ),
-                    },
+                    list{text(`${Float.toFixed(session.gcFrequencyPerMinute, ~digits=1)}/min`)},
                   ),
                   div(list{Attrs.class_("text-xs text-gray-500")}, list{text("GC Frequency")}),
                 },
@@ -191,7 +191,9 @@ let renderLiveMonitorTab = (state: soakMonitorState): Tea_Vdom.t<msg> => {
                     list{
                       text("Heap"),
                       text(
-                        `${formatBytes(point.heapUsedBytes)} / ${formatBytes(point.heapTotalBytes)}`,
+                        `${formatBytes(point.heapUsedBytes)} / ${formatBytes(
+                            point.heapTotalBytes,
+                          )}`,
                       ),
                     },
                   ),
@@ -241,10 +243,18 @@ let renderTrendsTab = (state: soakMonitorState): Tea_Vdom.t<msg> => {
         ->Array.sliceToEnd(~start=max(0, pointCount - 15))
         ->Array.map(point => {
           div(
-            list{Attrs.class_("flex justify-between text-xs font-mono px-2 py-1 bg-gray-800 rounded")},
             list{
-              span(list{Attrs.class_("text-gray-500")}, list{text(formatBytes(point.heapUsedBytes))}),
-              span(list{Attrs.class_("text-gray-600")}, list{text(`GC: ${Int.toString(point.gcCount)}`)}),
+              Attrs.class_("flex justify-between text-xs font-mono px-2 py-1 bg-gray-800 rounded"),
+            },
+            list{
+              span(
+                list{Attrs.class_("text-gray-500")},
+                list{text(formatBytes(point.heapUsedBytes))},
+              ),
+              span(
+                list{Attrs.class_("text-gray-600")},
+                list{text(`GC: ${Int.toString(point.gcCount)}`)},
+              ),
               span(
                 list{Attrs.class_("text-gray-600")},
                 list{text(`Pause: ${Float.toFixed(point.gcPauseMs, ~digits=1)}ms`)},
@@ -325,10 +335,7 @@ let renderHistoryTab = (state: soakMonitorState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center justify-between mb-1")},
             list{
-              span(
-                list{Attrs.class_("text-sm text-gray-300 font-mono")},
-                list{text(session.id)},
-              ),
+              span(list{Attrs.class_("text-sm text-gray-300 font-mono")}, list{text(session.id)}),
               sessionStatusBadge(session.status),
             },
           ),
@@ -368,10 +375,7 @@ let view = (state: soakMonitorState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between px-4 py-3 border-b border-gray-800")},
         list{
-          h2(
-            list{Attrs.class_("text-lg font-semibold text-cyan-300")},
-            list{text("Soak Monitor")},
-          ),
+          h2(list{Attrs.class_("text-lg font-semibold text-cyan-300")}, list{text("Soak Monitor")}),
           div(
             list{Attrs.class_("flex gap-2")},
             list{
@@ -400,7 +404,9 @@ let view = (state: soakMonitorState): Tea_Vdom.t<msg> => {
       // Monitoring indicator
       if state.monitoring {
         div(
-          list{Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700")},
+          list{
+            Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700"),
+          },
           list{
             div(list{Attrs.class_("w-3 h-3 bg-emerald-400 rounded-full animate-pulse")}, list{}),
             span(
@@ -416,7 +422,9 @@ let view = (state: soakMonitorState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

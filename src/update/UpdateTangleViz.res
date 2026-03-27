@@ -6,23 +6,30 @@ open Msg
 let updateTangleViz = (model: model, msg: tangleVizMsg): (model, Tea_Cmd.t<msg>) => {
   let tv = model.tangleViz
   switch msg {
-  | SetViewMode(mode) => (
-      {...model, tangleViz: {...tv, viewMode: mode}},
-      Tea_Cmd.none,
-    )
-  | SetInputText(text) => (
-      {...model, tangleViz: {...tv, inputText: text}},
-      Tea_Cmd.none,
-    )
+  | SetViewMode(mode) => ({...model, tangleViz: {...tv, viewMode: mode}}, Tea_Cmd.none)
+  | SetInputText(text) => ({...model, tangleViz: {...tv, inputText: text}}, Tea_Cmd.none)
   | ParseInput => {
       // Parse braid word notation: space/comma-separated tokens like
       // "s1", "s2^-1", "s1 s2^-1 s1", "sigma1", "s3inv", etc.
       let input = String.trim(tv.inputText)
       if input === "" {
-        ({...model, tangleViz: {...tv, braidWord: [], strandCount: 2, parsedProgram: Some(ParsedOk), error: None}}, Tea_Cmd.none)
+        (
+          {
+            ...model,
+            tangleViz: {
+              ...tv,
+              braidWord: [],
+              strandCount: 2,
+              parsedProgram: Some(ParsedOk),
+              error: None,
+            },
+          },
+          Tea_Cmd.none,
+        )
       } else {
-        let tokens = input
-          ->String.replaceRegExp(%re("/[,;\\s]+/g"), " ")
+        let tokens =
+          input
+          ->String.replaceRegExp(/[,;\\s]+/g, " ")
           ->String.trim
           ->String.split(" ")
         let generators: array<braidGenerator> = []
@@ -30,8 +37,9 @@ let updateTangleViz = (model: model, msg: tangleVizMsg): (model, Tea_Cmd.t<msg>)
         tokens->Array.forEach(token => {
           let t = String.trim(String.toLowerCase(token))
           if t !== "" && parseError.contents === None {
-            let hasInverse = String.includes(t, "^-1") || String.includes(t, "inv") || String.includes(t, "-1")
-            let numStr = String.replaceRegExp(t, %re("/[^0-9]/g"), "")
+            let hasInverse =
+              String.includes(t, "^-1") || String.includes(t, "inv") || String.includes(t, "-1")
+            let numStr = String.replaceRegExp(t, /[^0-9]/g, "")
             switch Int.fromString(numStr) {
             | Some(idx) if idx >= 1 => {
                 let _ = generators->Array.push({
@@ -68,10 +76,7 @@ let updateTangleViz = (model: model, msg: tangleVizMsg): (model, Tea_Cmd.t<msg>)
         }
       }
     }
-  | ClearAll => (
-      {...model, tangleViz: TangleVizEngine.defaultState},
-      Tea_Cmd.none,
-    )
+  | ClearAll => ({...model, tangleViz: TangleVizEngine.defaultState}, Tea_Cmd.none)
   | LoadExample(generators) =>
     let strandCount = TangleVizEngine.strandCountFromWord(generators)
     (
@@ -80,7 +85,7 @@ let updateTangleViz = (model: model, msg: tangleVizMsg): (model, Tea_Cmd.t<msg>)
         tangleViz: {
           ...tv,
           braidWord: generators,
-          strandCount: strandCount,
+          strandCount,
           inputText: TangleVizEngine.braidWordToString(generators),
           parsedProgram: Some(ParsedOk),
           invariantResult: None,
@@ -100,9 +105,6 @@ let updateTangleViz = (model: model, msg: tangleVizMsg): (model, Tea_Cmd.t<msg>)
       let result = TangleVizEngine.computeInvariant(inv, tv.braidWord)
       ({...model, tangleViz: {...tv, invariantResult: Some(result)}}, Tea_Cmd.none)
     }
-  | DismissError => (
-      {...model, tangleViz: {...tv, error: None}},
-      Tea_Cmd.none,
-    )
+  | DismissError => ({...model, tangleViz: {...tv, error: None}}, Tea_Cmd.none)
   }
 }

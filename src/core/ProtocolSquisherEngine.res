@@ -31,9 +31,23 @@ let formatLabel = (fmt: schemaFormat): string =>
 
 /// All supported formats.
 let allFormats: array<schemaFormat> = [
-  Protobuf, Avro, FlatBuffers, CapnProto, Thrift, MessagePack,
-  Bebop, JsonSchema, GraphQL, Toml, RustFormat, ReScriptFormat, PythonFormat,
-  XMI, ArchiMateExchange, BPMN_XML, SBVR,
+  Protobuf,
+  Avro,
+  FlatBuffers,
+  CapnProto,
+  Thrift,
+  MessagePack,
+  Bebop,
+  JsonSchema,
+  GraphQL,
+  Toml,
+  RustFormat,
+  ReScriptFormat,
+  PythonFormat,
+  XMI,
+  ArchiMateExchange,
+  BPMN_XML,
+  SBVR,
 ]
 
 /// Human-readable label for a transport class.
@@ -103,7 +117,15 @@ let parseTransportClass = (s: string): transportClass =>
 let analysisDecoder: Tea_Json.decoder<analysisResult> = {
   open Decoders
   map7(
-    (filePath, formatStr, transportStr, summary, overheadRatio, fieldCount, hasRecursion) => ({
+    (
+      filePath,
+      formatStr,
+      transportStr,
+      summary,
+      overheadRatio,
+      fieldCount,
+      hasRecursion,
+    ): analysisResult => {
       filePath,
       format: parseFormat(formatStr),
       transportClass: parseTransportClass(transportStr),
@@ -111,7 +133,7 @@ let analysisDecoder: Tea_Json.decoder<analysisResult> = {
       overheadRatio,
       fieldCount,
       hasRecursion,
-    }: analysisResult),
+    },
     stringField("file_path"),
     stringField("format"),
     stringField("transport_class"),
@@ -130,7 +152,15 @@ let parseAnalysis = (json: string): result<analysisResult, string> =>
 let comparisonDecoder: Tea_Json.decoder<schemaCompatibilityResult> = {
   open Decoders
   map7(
-    (leftPath, rightPath, leftFmt, rightFmt, compatible, adapterCost, notes) => ({
+    (
+      leftPath,
+      rightPath,
+      leftFmt,
+      rightFmt,
+      compatible,
+      adapterCost,
+      notes,
+    ): schemaCompatibilityResult => {
       leftPath,
       rightPath,
       leftFormat: parseFormat(leftFmt),
@@ -138,7 +168,7 @@ let comparisonDecoder: Tea_Json.decoder<schemaCompatibilityResult> = {
       compatible,
       adapterCost,
       notes,
-    }: schemaCompatibilityResult),
+    },
     stringField("left_path"),
     stringField("right_path"),
     stringField("left_format"),
@@ -159,30 +189,35 @@ let extractIrConstraints = (result: analysisResult): array<string> => {
   let constraints = []
   // Transport class constraint.
   let classLabel = transportClassLabel(result.transportClass)
-  let constraints = Array.concat(constraints, [
-    `transport_class(${result.filePath}) = ${classLabel}`,
-  ])
+  let constraints = Array.concat(
+    constraints,
+    [`transport_class(${result.filePath}) = ${classLabel}`],
+  )
   // Overhead ratio constraint.
   let constraints = if result.overheadRatio > 1.5 {
-    Array.concat(constraints, [
-      `overhead_bound(${result.filePath}) <= 1.5 // current: ${Float.toString(result.overheadRatio)}`,
-    ])
+    Array.concat(
+      constraints,
+      [
+        `overhead_bound(${result.filePath}) <= 1.5 // current: ${Float.toString(
+            result.overheadRatio,
+          )}`,
+      ],
+    )
   } else {
     constraints
   }
   // Recursion constraint.
   let constraints = if result.hasRecursion {
-    Array.concat(constraints, [
-      `recursion_depth(${result.filePath}) is bounded`,
-    ])
+    Array.concat(constraints, [`recursion_depth(${result.filePath}) is bounded`])
   } else {
     constraints
   }
   // Field count constraint.
   let constraints = if result.fieldCount > 50 {
-    Array.concat(constraints, [
-      `field_count(${result.filePath}) <= 50 // current: ${Int.toString(result.fieldCount)}`,
-    ])
+    Array.concat(
+      constraints,
+      [`field_count(${result.filePath}) <= 50 // current: ${Int.toString(result.fieldCount)}`],
+    )
   } else {
     constraints
   }

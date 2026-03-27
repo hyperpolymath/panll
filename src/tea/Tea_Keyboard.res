@@ -84,7 +84,9 @@ let onShortcut = (
   key: string,
   msg: 'msg,
 ): Tea_Sub.t<'msg> => {
-  let id = `keyboard-shortcut-${ctrl ? "c" : ""}${alt ? "a" : ""}${shift ? "s" : ""}${meta ? "m" : ""}-${key}`
+  let id = `keyboard-shortcut-${ctrl ? "c" : ""}${alt ? "a" : ""}${shift ? "s" : ""}${meta
+      ? "m"
+      : ""}-${key}`
   Tea_Sub.registration(id, dispatch => {
     let _ctrl = ctrl
     let _alt = alt

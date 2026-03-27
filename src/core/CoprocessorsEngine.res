@@ -93,8 +93,9 @@ let allBackends: array<coprocessorBackend> = [
 ]
 
 /// Filter call log by backend.
-let filterByBackend = (log: array<coprocCallEntry>, backend: coprocessorBackend): array<coprocCallEntry> =>
-  log->Array.filter(entry => entry.backend === backend)
+let filterByBackend = (log: array<coprocCallEntry>, backend: coprocessorBackend): array<
+  coprocCallEntry,
+> => log->Array.filter(entry => entry.backend === backend)
 
 /// Human-readable label for a compute engine.
 let engineLabel = (engine: computeEngine): string =>
@@ -116,42 +117,36 @@ let parseEngineId = (s: string): computeEngine =>
 let computeResultDecoder = (engine: computeEngine): Tea_Json.decoder<computeQueryResult> => {
   open Decoders
   open Tea_Json
-  map4(
-    (operation, result, durationMs, success) => ({
-      engineId: engine,
-      operation,
-      result,
-      durationMs,
-      success,
-    }: computeQueryResult),
-    stringField("operation"),
-    stringField("result"),
-    floatField("duration_ms"),
-    boolField("success"),
-  )
+  map4((operation, result, durationMs, success): computeQueryResult => {
+    engineId: engine,
+    operation,
+    result,
+    durationMs,
+    success,
+  }, stringField(
+    "operation",
+  ), stringField("result"), floatField("duration_ms"), boolField("success"))
 }
 
 /// Parse a compute engine query result from JSON.
-let parseComputeResult = (json: string, engine: computeEngine): result<computeQueryResult, string> =>
-  Decoders.decode(computeResultDecoder(engine), json)
+let parseComputeResult = (json: string, engine: computeEngine): result<
+  computeQueryResult,
+  string,
+> => Decoders.decode(computeResultDecoder(engine), json)
 
 /// Tea_Json decoder for a single compute device.
 let deviceDecoder: Tea_Json.decoder<computeDevice> = {
   open Decoders
   open Tea_Json
-  map4(
-    (engineStr, deviceName, deviceType, available) => ({
-      engineId: parseEngineId(engineStr),
-      deviceName,
-      deviceType,
-      available,
-      capabilities: [],
-    }: computeDevice),
-    stringField("engine"),
-    stringField("device_name"),
-    stringField("device_type"),
-    boolField("available"),
-  )
+  map4((engineStr, deviceName, deviceType, available): computeDevice => {
+    engineId: parseEngineId(engineStr),
+    deviceName,
+    deviceType,
+    available,
+    capabilities: [],
+  }, stringField(
+    "engine",
+  ), stringField("device_name"), stringField("device_type"), boolField("available"))
 }
 
 /// Parse discovered devices from JSON array.
@@ -214,8 +209,7 @@ let rec estimateLatency = (state: coprocessorsState, route: routingStrategy): fl
     }
   | RouteBoj =>
     // BoJ cartridge via HTTP on localhost.
-    let hasBoj =
-      state.discoveredDevices->Array.some(d => d.engineId === EngineBoJ && d.available)
+    let hasBoj = state.discoveredDevices->Array.some(d => d.engineId === EngineBoJ && d.available)
     if hasBoj {
       3.0
     } else {
@@ -240,13 +234,11 @@ let selectRoute = (state: coprocessorsState, operation: string): routingDecision
   | RouteAutomatic => {
       // Smart routing: check local first, then remote, then BoJ fallback.
       let localOk =
-        canHandleLocally(state.localDispatch, operation) &&
-        state.localDispatch.cpuUtilisation < 0.8
+        canHandleLocally(state.localDispatch, operation) && state.localDispatch.cpuUtilisation < 0.8
       let isNeural = op->String.includes("neural") || op->String.includes("quantum")
       let hasRemote =
         state.discoveredDevices->Array.some(d => d.engineId === EngineAxiom && d.available)
-      let hasBoj =
-        state.discoveredDevices->Array.some(d => d.engineId === EngineBoJ && d.available)
+      let hasBoj = state.discoveredDevices->Array.some(d => d.engineId === EngineBoJ && d.available)
 
       if localOk {
         (RouteLocal, "FFI loaded, math/vector op, CPU utilisation below threshold")
@@ -306,24 +298,25 @@ let defaultLocalDispatch: localDispatchState = {
 let localDispatchDecoder: Tea_Json.decoder<localDispatchState> = {
   open Decoders
   open Tea_Json
-  map5(
-    (ffiLoaded, ffiLibPath, cpuUtilisation, gpuMemoryMb, cpuCores) => ({
-      ffiLoaded,
-      ffiPath: defaultLocalDispatch.ffiPath,
-      ffiLibPath: if ffiLibPath === "" { None } else { Some(ffiLibPath) },
-      localDevices: [],
-      cpuUtilisation,
-      gpuMemoryMb,
-      pendingDispatches: 0,
-      cpuCores,
-      availableBackends: [],
-    }: localDispatchState),
-    boolField("ffi_loaded"),
-    stringField("ffi_lib_path"),
-    floatField("cpu_utilisation"),
-    intField("gpu_memory_mb"),
-    intField("cpu_cores"),
-  )
+  map5((ffiLoaded, ffiLibPath, cpuUtilisation, gpuMemoryMb, cpuCores): localDispatchState => {
+    ffiLoaded,
+    ffiPath: defaultLocalDispatch.ffiPath,
+    ffiLibPath: if ffiLibPath === "" {
+      None
+    } else {
+      Some(ffiLibPath)
+    },
+    localDevices: [],
+    cpuUtilisation,
+    gpuMemoryMb,
+    pendingDispatches: 0,
+    cpuCores,
+    availableBackends: [],
+  }, boolField(
+    "ffi_loaded",
+  ), stringField(
+    "ffi_lib_path",
+  ), floatField("cpu_utilisation"), intField("gpu_memory_mb"), intField("cpu_cores"))
 }
 
 /// Parse local dispatch state from JSON.
@@ -353,10 +346,10 @@ let defaultState: coprocessorsState = {
 
 /// Smart-route an operation using the SmartRouter module.
 /// Builds backend health from current state, routes, and appends to history.
-let smartRouteAndRecord = (
-  state: coprocessorsState,
-  operation: string,
-): (routingDecision, array<routingDecision>) => {
+let smartRouteAndRecord = (state: coprocessorsState, operation: string): (
+  routingDecision,
+  array<routingDecision>,
+) => {
   let backends = SmartRouter.buildBackendHealth(state)
   let decision = SmartRouter.smartRoute(operation, backends, state.routingStrategy)
   let updatedHistory = SmartRouter.addDecision(state.routingHistory, decision)
@@ -364,8 +357,7 @@ let smartRouteAndRecord = (
 }
 
 /// Human-readable label for the chosen route in a routing decision.
-let routeDecisionLabel = (decision: routingDecision): string =>
-  routingLabel(decision.chosenRoute)
+let routeDecisionLabel = (decision: routingDecision): string => routingLabel(decision.chosenRoute)
 
 /// Route distribution from the current history.
 let currentRouteStats = (state: coprocessorsState): array<(string, int, float)> =>

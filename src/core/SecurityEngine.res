@@ -98,16 +98,21 @@ let addPattern = (state: securityState, pattern: redactionPattern): securityStat
 
 /// Remove a custom pattern by ID. Built-in patterns can be disabled but not removed.
 let removePattern = (state: securityState, patternId: string): securityState => {
-  {...state, patterns: Array.filter(state.patterns, p =>
-    p.id !== patternId || p.builtIn
-  )}
+  {...state, patterns: Array.filter(state.patterns, p => p.id !== patternId || p.builtIn)}
 }
 
 /// Toggle a pattern's enabled state.
 let togglePattern = (state: securityState, patternId: string): securityState => {
-  {...state, patterns: Array.map(state.patterns, p =>
-    if p.id === patternId { {...p, enabled: !p.enabled} } else { p }
-  )}
+  {
+    ...state,
+    patterns: Array.map(state.patterns, p =>
+      if p.id === patternId {
+        {...p, enabled: !p.enabled}
+      } else {
+        p
+      }
+    ),
+  }
 }
 
 /// Set the active redaction mode.
@@ -127,13 +132,14 @@ let redactText = (text: string, patterns: array<redactionPattern>): string => {
     } else {
       // Use the pattern label as the replacement placeholder.
       let placeholder = "[REDACTED:" ++ pattern.label ++ "]"
+
       // For the frontend, we do a simple string check (full regex is in Rust).
       // This catches the most obvious cases for shoulder-safe mode.
       if String.includes(acc, "sk-ant-") || String.includes(acc, "sk-") {
         // Quick redaction for API keys visible in the UI.
         acc
-        ->String.replaceRegExp(%re("/sk-ant-[a-zA-Z0-9_-]{20,}/g"), placeholder)
-        ->String.replaceRegExp(%re("/sk-[a-zA-Z0-9]{20,}/g"), placeholder)
+        ->String.replaceRegExp(/sk-ant-[a-zA-Z0-9_-]{20,}/g, placeholder)
+        ->String.replaceRegExp(/sk-[a-zA-Z0-9]{20,}/g, placeholder)
       } else {
         acc
       }
@@ -149,9 +155,7 @@ let redactText = (text: string, patterns: array<redactionPattern>): string => {
 let requires2FA = (state: securityState, operation: string): bool => {
   switch state.trustfile {
   | Some(policy) =>
-    Array.some(policy.twoFactorRequirements, req =>
-      req.operation === operation && req.required
-    )
+    Array.some(policy.twoFactorRequirements, req => req.operation === operation && req.required)
   | None => false
   }
 }
@@ -166,11 +170,7 @@ let is2FAValid = (state: securityState, currentTime: float): bool => {
 
 /// Check if an operation is allowed given the current security state.
 /// Returns true if the operation can proceed, false if blocked.
-let isOperationAllowed = (
-  state: securityState,
-  operation: string,
-  currentTime: float,
-): bool => {
+let isOperationAllowed = (state: securityState, operation: string, currentTime: float): bool => {
   if requires2FA(state, operation) {
     is2FAValid(state, currentTime)
   } else {
@@ -185,11 +185,7 @@ let isOperationAllowed = (
 /// Apply a loaded Trustfile policy to the security state.
 let applyTrustfile = (state: securityState, policy: trustfilePolicy): securityState => {
   let mergedPatterns = Array.concat(state.patterns, policy.customPatterns)
-  {...state,
-    trustfile: Some(policy),
-    patterns: mergedPatterns,
-    redactionMode: policy.redactionMode,
-  }
+  {...state, trustfile: Some(policy), patterns: mergedPatterns, redactionMode: policy.redactionMode}
 }
 
 // ============================================================================

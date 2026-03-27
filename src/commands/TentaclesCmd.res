@@ -9,9 +9,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Check ECHIDNA FFI bridge health.
-let checkFfiBridge = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkFfiBridge = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("tentacles_ffi_health", {"_": true})
     ->Promise.then(result => {
@@ -47,9 +45,7 @@ let sendAgentTask = (
 }
 
 /// Poll for events from the ECHIDNA FFI event stream.
-let pollEvents = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let pollEvents = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("tentacles_poll_events", {"_": true})
     ->Promise.then(result => {

@@ -31,10 +31,7 @@ let writeConfig = (
 
 /// Read ENSAID_CONFIG.a2ml from a repo's .machine_readable/ directory.
 /// Returns the file content as a string, or an error if not found.
-let readConfig = (
-  repoPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readConfig = (repoPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("ensaid_config_read", {"repoPath": repoPath})
     ->Promise.then(result => {

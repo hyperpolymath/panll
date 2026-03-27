@@ -85,8 +85,7 @@ let validateInference = (
 /// Open a timeline specification file for Security Ambush runs
 let openSecurityTimelineFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let options: JSON.t =
-      %raw(`({
+    let options: JSON.t = %raw(`({
         multiple: false,
         filters: [
           { name: "PanLL Timeline (JSON/YAML)", extensions: ["json", "yaml", "yml"] }
@@ -169,8 +168,7 @@ let submitFeedback = (
 /// Open and read a PanLL event-chain JSON file
 let openEventChainFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let options: JSON.t =
-      %raw(`({
+    let options: JSON.t = %raw(`({
         multiple: false,
         filters: [{ name: "PanLL Event Chain", extensions: ["json"] }]
       })`)
@@ -185,14 +183,18 @@ let openEventChainFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'ms
         switch decodeDialogPath(value) {
         | Some(path) =>
           Fs.readTextFile(path)
-          ->Promise.then(contents => {
-            callbacks.enqueue(tagger(Ok(contents)))
-            Promise.resolve()
-          })
-          ->Promise.catch(_err => {
-            callbacks.enqueue(tagger(Error("Failed to read file")))
-            Promise.resolve()
-          })
+          ->Promise.then(
+            contents => {
+              callbacks.enqueue(tagger(Ok(contents)))
+              Promise.resolve()
+            },
+          )
+          ->Promise.catch(
+            _err => {
+              callbacks.enqueue(tagger(Error("Failed to read file")))
+              Promise.resolve()
+            },
+          )
         | None => {
             callbacks.enqueue(tagger(Error("Unsupported dialog response")))
             Promise.resolve()
@@ -211,8 +213,7 @@ let openEventChainFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'ms
 /// Open a panic-attacker assault report JSON file and return the chosen path.
 let openPanicAttackerReportFile = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    let options: JSON.t =
-      %raw(`({
+    let options: JSON.t = %raw(`({
         multiple: false,
         filters: [{ name: "panic-attacker Assault Report", extensions: ["json"] }]
       })`)
@@ -333,10 +334,9 @@ let getPanicAttackerCapability = (tagger: result<string, string> => 'msg): Tea_C
 }
 
 /// Record a vexation event in the backend.
-let recordVexationEvent = (
-  eventType: string,
-  tagger: result<unit, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let recordVexationEvent = (eventType: string, tagger: result<unit, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("record_vexation_event", {"event_type": eventType})
     ->Promise.then(_result => {
@@ -388,11 +388,9 @@ let queryVeriSimDB = (query: string, tagger: result<string, string> => 'msg): Te
 }
 
 /// List octad entities from VeriSimDB with pagination.
-let listOctads = (
-  limit: int,
-  offset: int,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listOctads = (limit: int, offset: int, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("verisimdb_list_octads", {"limit": limit, "offset": offset})
     ->Promise.then(result => {
@@ -424,10 +422,9 @@ let getDrift = (entityId: string, tagger: result<string, string> => 'msg): Tea_C
 }
 
 /// Trigger normalisation for a drifted entity.
-let triggerNormalise = (
-  entityId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let triggerNormalise = (entityId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("verisimdb_normalise", {"entity_id": entityId})
     ->Promise.then(result => {
@@ -443,10 +440,9 @@ let triggerNormalise = (
 }
 
 /// Load full entity detail for a specific octad.
-let getEntityDetail = (
-  entityId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getEntityDetail = (entityId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("verisimdb_get_entity", {"entity_id": entityId})
     ->Promise.then(result => {
@@ -512,7 +508,9 @@ let checkEchidnaHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'ms
       Promise.resolve()
     })
     ->Promise.catch(_err => {
-      callbacks.enqueue(tagger(Error("ECHIDNA health check failed — server not running on localhost:9000")))
+      callbacks.enqueue(
+        tagger(Error("ECHIDNA health check failed — server not running on localhost:9000")),
+      )
       Promise.resolve()
     })
     ->ignore
@@ -533,7 +531,9 @@ let listEchidnaProvers = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'ms
       Promise.resolve()
     })
     ->Promise.catch(_err => {
-      callbacks.enqueue(tagger(Error("ECHIDNA prover listing failed — server not running on localhost:9000")))
+      callbacks.enqueue(
+        tagger(Error("ECHIDNA prover listing failed — server not running on localhost:9000")),
+      )
       Promise.resolve()
     })
     ->ignore
@@ -558,7 +558,10 @@ let echidnaProve = (
       | Some(pv) => JSON.stringifyAny(pv)->Option.getOr("null")
       | None => "null"
       }
-      echidnaPost("/prove", `{"content":${JSON.stringifyAny(content)->Option.getOr("\"\"")}, "prover":${proverJson}}`)
+      echidnaPost(
+        "/prove",
+        `{"content":${JSON.stringifyAny(content)->Option.getOr("\"\"")}, "prover":${proverJson}}`,
+      )
     }
     p
     ->Promise.then(result => {
@@ -574,10 +577,7 @@ let echidnaProve = (
 }
 
 /// Submit content for verification to ECHIDNA.
-let echidnaVerify = (
-  content: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let echidnaVerify = (content: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let p = if isGossamerRuntime() {
       invoke("echidna_verify", {"content": content})
@@ -598,10 +598,9 @@ let echidnaVerify = (
 }
 
 /// Search the ECHIDNA theorem library.
-let echidnaSearchTheorems = (
-  query: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let echidnaSearchTheorems = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     let encoded = query->String.replaceAll(" ", "%20")
     let p = if isGossamerRuntime() {
@@ -636,7 +635,12 @@ let createEchidnaSession = (
     let p = if isGossamerRuntime() {
       invoke("echidna_create_session", {"goal": goal, "prover": prover})
     } else {
-      echidnaPost("/proofs", `{"goal":${JSON.stringifyAny(goal)->Option.getOr("\"\"")}, "prover":${JSON.stringifyAny(prover)->Option.getOr("\"\"")}}`)
+      echidnaPost(
+        "/proofs",
+        `{"goal":${JSON.stringifyAny(goal)->Option.getOr("\"\"")}, "prover":${JSON.stringifyAny(
+            prover,
+          )->Option.getOr("\"\"")}}`,
+      )
     }
     p
     ->Promise.then(result => {
@@ -652,10 +656,9 @@ let createEchidnaSession = (
 }
 
 /// Retrieve the current state of a proof session.
-let getEchidnaSession = (
-  sessionId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getEchidnaSession = (sessionId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     let p = if isGossamerRuntime() {
       invoke("echidna_get_session", {"session_id": sessionId})
@@ -692,7 +695,10 @@ let applyEchidnaTactic = (
       invoke("echidna_apply_tactic", JSON.Encode.object(payload))
     } else {
       let argsJson = JSON.stringifyAny(args)->Option.getOr("[]")
-      echidnaPost(`/proofs/${sessionId}/tactics`, `{"name":${JSON.stringifyAny(name)->Option.getOr("\"\"")}, "args":${argsJson}}`)
+      echidnaPost(
+        `/proofs/${sessionId}/tactics`,
+        `{"name":${JSON.stringifyAny(name)->Option.getOr("\"\"")}, "args":${argsJson}}`,
+      )
     }
     p
     ->Promise.then(result => {

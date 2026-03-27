@@ -50,7 +50,11 @@ let allCategories: array<helpCategory> = [
 /// @returns A virtual DOM node representing the header bar
 let renderHeader = (state: helpState): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-gray-950 shrink-0")},
+    list{
+      Attrs.class_(
+        "flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-gray-950 shrink-0",
+      ),
+    },
     list{
       // Title
       h2(
@@ -67,14 +71,18 @@ let renderHeader = (state: helpState): Tea_Vdom.t<msg> => {
             list{
               span(
                 list{
-                  Attrs.class_("absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none"),
+                  Attrs.class_(
+                    "absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none",
+                  ),
                   Attrs.prop("aria-hidden", "true"),
                 },
                 list{text("search")},
               ),
               input(
                 list{
-                  Attrs.class_("w-72 bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"),
+                  Attrs.class_(
+                    "w-72 bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/30",
+                  ),
                   Attrs.type_("text"),
                   Attrs.placeholder("Search help topics..."),
                   Attrs.value(state.searchQuery),
@@ -88,7 +96,9 @@ let renderHeader = (state: helpState): Tea_Vdom.t<msg> => {
           // Close button
           button(
             list{
-              Attrs.class_("p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"),
+              Attrs.class_(
+                "p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50",
+              ),
               Attrs.ariaLabel("Close help panel"),
               Events.onClick(Help(CloseHelp)),
             },
@@ -137,7 +147,9 @@ let renderCategoryTabs = (active: helpCategory): Tea_Vdom.t<msg> => {
 
   div(
     list{
-      Attrs.class_("flex items-center gap-1 px-6 py-3 border-b border-gray-800 bg-gray-950/80 overflow-x-auto shrink-0"),
+      Attrs.class_(
+        "flex items-center gap-1 px-6 py-3 border-b border-gray-800 bg-gray-950/80 overflow-x-auto shrink-0",
+      ),
       Attrs.role("tablist"),
       Attrs.ariaLabel("Help category tabs"),
     },
@@ -165,19 +177,27 @@ let renderEntryCard = (entry: helpEntry): Tea_Vdom.t<msg> => {
 
   button(
     list{
-      Attrs.class_("w-full text-left bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-indigo-500/50 hover:bg-gray-900/80 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 group"),
+      Attrs.class_(
+        "w-full text-left bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-indigo-500/50 hover:bg-gray-900/80 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 group",
+      ),
       Attrs.ariaLabel(`Read: ${entry.title}`),
       Events.onClick(Help(SelectEntry(entry.id))),
     },
     list{
       // Title
       h3(
-        list{Attrs.class_("text-sm font-medium text-gray-200 group-hover:text-indigo-400 transition-colors mb-1")},
+        list{
+          Attrs.class_(
+            "text-sm font-medium text-gray-200 group-hover:text-indigo-400 transition-colors mb-1",
+          ),
+        },
         list{text(entry.title)},
       ),
       // Category badge
       span(
-        list{Attrs.class_("inline-block text-xs text-gray-500 bg-gray-800 rounded px-2 py-0.5 mb-2")},
+        list{
+          Attrs.class_("inline-block text-xs text-gray-500 bg-gray-800 rounded px-2 py-0.5 mb-2"),
+        },
         list{text(HelpEngine.categoryLabel(entry.category))},
       ),
       // Truncated body preview
@@ -214,15 +234,14 @@ let renderEntryCard = (entry: helpEntry): Tea_Vdom.t<msg> => {
 /// @param entries The filtered array of help entries to display
 /// @param _activeEntry The currently selected entry ID (unused here but kept for signature consistency)
 /// @returns A virtual DOM node for the entry list grid
-let renderEntryList = (entries: array<helpEntry>, _activeEntry: option<string>): Tea_Vdom.t<msg> => {
+let renderEntryList = (entries: array<helpEntry>, _activeEntry: option<string>): Tea_Vdom.t<
+  msg,
+> => {
   if Array.length(entries) === 0 {
     div(
       list{Attrs.class_("flex flex-col items-center justify-center py-16 text-center")},
       list{
-        div(
-          list{Attrs.class_("text-4xl mb-4 text-gray-600")},
-          list{text("?")},
-        ),
+        div(list{Attrs.class_("text-4xl mb-4 text-gray-600")}, list{text("?")}),
         p(
           list{Attrs.class_("text-gray-400 text-sm")},
           list{text("No help entries found matching your search.")},
@@ -241,12 +260,7 @@ let renderEntryList = (entries: array<helpEntry>, _activeEntry: option<string>):
         Attrs.ariaLabel("Help entries"),
       },
       entries
-      ->Array.map(entry =>
-        div(
-          list{Attrs.role("listitem")},
-          list{renderEntryCard(entry)},
-        )
-      )
+      ->Array.map(entry => div(list{Attrs.role("listitem")}, list{renderEntryCard(entry)}))
       ->List.fromArray,
     )
   }
@@ -276,7 +290,9 @@ let renderEntryDetail = (entry: helpEntry): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("flex items-center gap-2 text-sm text-gray-400 hover:text-indigo-400 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-2 py-1"),
+              Attrs.class_(
+                "flex items-center gap-2 text-sm text-gray-400 hover:text-indigo-400 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-2 py-1",
+              ),
               Attrs.ariaLabel("Back to entry list"),
               Events.onClick(Help(SelectEntry(""))),
             },
@@ -298,7 +314,11 @@ let renderEntryDetail = (entry: helpEntry): Tea_Vdom.t<msg> => {
           ),
           // Category badge
           span(
-            list{Attrs.class_("inline-block text-xs text-indigo-400 bg-indigo-900/30 border border-indigo-800/50 rounded px-2 py-0.5 mb-6")},
+            list{
+              Attrs.class_(
+                "inline-block text-xs text-indigo-400 bg-indigo-900/30 border border-indigo-800/50 rounded px-2 py-0.5 mb-6",
+              ),
+            },
             list{text(HelpEngine.categoryLabel(entry.category))},
           ),
           // Body text — rendered as paragraphs split on double newlines
@@ -307,10 +327,7 @@ let renderEntryDetail = (entry: helpEntry): Tea_Vdom.t<msg> => {
             entry.body
             ->String.split("\n\n")
             ->Array.map(paragraph =>
-              p(
-                list{Attrs.class_("text-sm text-gray-300 leading-relaxed")},
-                list{text(paragraph)},
-              )
+              p(list{Attrs.class_("text-sm text-gray-300 leading-relaxed")}, list{text(paragraph)})
             )
             ->List.fromArray,
           ),
@@ -322,7 +339,11 @@ let renderEntryDetail = (entry: helpEntry): Tea_Vdom.t<msg> => {
               list{
                 span(
                   list{Attrs.class_("text-xs text-gray-500")},
-                  list{text("This entry is associated with a specific panel. Use the Panel Switcher to navigate there.")},
+                  list{
+                    text(
+                      "This entry is associated with a specific panel. Use the Panel Switcher to navigate there.",
+                    ),
+                  },
                 ),
               },
             )
@@ -343,7 +364,9 @@ let renderEntryDetail = (entry: helpEntry): Tea_Vdom.t<msg> => {
                   entry.keywords
                   ->Array.map(kw =>
                     span(
-                      list{Attrs.class_("text-xs text-gray-400 bg-gray-800 rounded-full px-3 py-1")},
+                      list{
+                        Attrs.class_("text-xs text-gray-400 bg-gray-800 rounded-full px-3 py-1"),
+                      },
                       list{text(kw)},
                     )
                   )
@@ -379,10 +402,7 @@ let renderGlossaryTerm = (term: glossaryTerm): Tea_Vdom.t<msg> => {
     },
     list{
       // Term heading
-      h3(
-        list{Attrs.class_("text-sm font-semibold text-indigo-400 mb-2")},
-        list{text(term.term)},
-      ),
+      h3(list{Attrs.class_("text-sm font-semibold text-indigo-400 mb-2")}, list{text(term.term)}),
       // Definition
       p(
         list{Attrs.class_("text-sm text-gray-300 leading-relaxed mb-3")},
@@ -391,10 +411,7 @@ let renderGlossaryTerm = (term: glossaryTerm): Tea_Vdom.t<msg> => {
       // Extended description (if available)
       switch term.extendedDescription {
       | Some(ext) =>
-        p(
-          list{Attrs.class_("text-xs text-gray-400 leading-relaxed mb-3 italic")},
-          list{text(ext)},
-        )
+        p(list{Attrs.class_("text-xs text-gray-400 leading-relaxed mb-3 italic")}, list{text(ext)})
       | None => noNode
       },
       // Related terms
@@ -412,7 +429,9 @@ let renderGlossaryTerm = (term: glossaryTerm): Tea_Vdom.t<msg> => {
             term.relatedTerms->Array.map(rt =>
               button(
                 list{
-                  Attrs.class_("text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-900/20 hover:bg-indigo-900/40 rounded px-2 py-0.5 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500/50"),
+                  Attrs.class_(
+                    "text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-900/20 hover:bg-indigo-900/40 rounded px-2 py-0.5 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500/50",
+                  ),
                   Attrs.ariaLabel(`Look up related term: ${rt}`),
                   Events.onClick(Help(SearchGlossary(rt))),
                 },
@@ -456,10 +475,7 @@ let renderGlossary = (glossary: array<glossaryTerm>, searchQuery: string): Tea_V
     div(
       list{Attrs.class_("flex flex-col items-center justify-center py-16 text-center")},
       list{
-        div(
-          list{Attrs.class_("text-4xl mb-4 text-gray-600")},
-          list{text("A-Z")},
-        ),
+        div(list{Attrs.class_("text-4xl mb-4 text-gray-600")}, list{text("A-Z")}),
         p(
           list{Attrs.class_("text-gray-400 text-sm")},
           list{text("No glossary terms match your search.")},
@@ -473,7 +489,11 @@ let renderGlossary = (glossary: array<glossaryTerm>, searchQuery: string): Tea_V
         // Term count
         div(
           list{Attrs.class_("text-xs text-gray-500 mb-4")},
-          list{text(`${Int.toString(Array.length(sorted))} term${Array.length(sorted) === 1 ? "" : "s"}`)},
+          list{
+            text(
+              `${Int.toString(Array.length(sorted))} term${Array.length(sorted) === 1 ? "" : "s"}`,
+            ),
+          },
         ),
         // Term list
         div(
@@ -483,12 +503,7 @@ let renderGlossary = (glossary: array<glossaryTerm>, searchQuery: string): Tea_V
             Attrs.ariaLabel("Glossary terms"),
           },
           sorted
-          ->Array.map(term =>
-            div(
-              list{Attrs.role("listitem")},
-              list{renderGlossaryTerm(term)},
-            )
-          )
+          ->Array.map(term => div(list{Attrs.role("listitem")}, list{renderGlossaryTerm(term)}))
           ->List.fromArray,
         ),
       },
@@ -528,14 +543,20 @@ let renderOnboarding = (state: onboardingState): Tea_Vdom.t<msg> => {
     | Some(step) =>
       div(
         list{
-          Attrs.class_("fixed inset-0 z-50 flex items-center justify-center bg-gray-950/80 backdrop-blur-sm"),
+          Attrs.class_(
+            "fixed inset-0 z-50 flex items-center justify-center bg-gray-950/80 backdrop-blur-sm",
+          ),
           Attrs.role("dialog"),
           Attrs.ariaLabel("Onboarding walkthrough"),
         },
         list{
           // Walkthrough card
           div(
-            list{Attrs.class_("w-full max-w-lg bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden")},
+            list{
+              Attrs.class_(
+                "w-full max-w-lg bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden",
+              ),
+            },
             list{
               // Progress bar
               div(
@@ -546,7 +567,10 @@ let renderOnboarding = (state: onboardingState): Tea_Vdom.t<msg> => {
                       Attrs.class_("h-full bg-indigo-500 transition-all duration-300"),
                       Attrs.style(
                         "width",
-                        `${Float.toFixed(Int.toFloat(currentIdx + 1) /. Int.toFloat(totalSteps) *. 100.0, ~digits=0)}%`,
+                        `${Float.toFixed(
+                            Int.toFloat(currentIdx + 1) /. Int.toFloat(totalSteps) *. 100.0,
+                            ~digits=0,
+                          )}%`,
                       ),
                     },
                     list{},
@@ -560,7 +584,9 @@ let renderOnboarding = (state: onboardingState): Tea_Vdom.t<msg> => {
                   // Step counter
                   div(
                     list{Attrs.class_("text-xs text-gray-500 mb-4")},
-                    list{text(`Step ${Int.toString(currentIdx + 1)} of ${Int.toString(totalSteps)}`)},
+                    list{
+                      text(`Step ${Int.toString(currentIdx + 1)} of ${Int.toString(totalSteps)}`),
+                    },
                   ),
                   // Title
                   h3(
@@ -576,12 +602,18 @@ let renderOnboarding = (state: onboardingState): Tea_Vdom.t<msg> => {
               ),
               // Navigation footer
               div(
-                list{Attrs.class_("flex items-center justify-between px-8 py-4 border-t border-gray-800 bg-gray-950/50")},
+                list{
+                  Attrs.class_(
+                    "flex items-center justify-between px-8 py-4 border-t border-gray-800 bg-gray-950/50",
+                  ),
+                },
                 list{
                   // Skip button
                   button(
                     list{
-                      Attrs.class_("text-xs text-gray-500 hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-2 py-1"),
+                      Attrs.class_(
+                        "text-xs text-gray-500 hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 rounded px-2 py-1",
+                      ),
                       Attrs.ariaLabel("Skip onboarding walkthrough"),
                       Events.onClick(Help(SkipOnboarding)),
                     },
@@ -597,7 +629,9 @@ let renderOnboarding = (state: onboardingState): Tea_Vdom.t<msg> => {
                       } else {
                         button(
                           list{
-                            Attrs.class_("px-4 py-2 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"),
+                            Attrs.class_(
+                              "px-4 py-2 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50",
+                            ),
                             Attrs.ariaLabel("Previous onboarding step"),
                             Events.onClick(Help(PrevOnboardingStep)),
                           },
@@ -607,7 +641,9 @@ let renderOnboarding = (state: onboardingState): Tea_Vdom.t<msg> => {
                       // Next / Finish
                       button(
                         list{
-                          Attrs.class_("px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"),
+                          Attrs.class_(
+                            "px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50",
+                          ),
                           Attrs.ariaLabel(isLast ? "Finish onboarding" : "Next onboarding step"),
                           Events.onClick(
                             isLast ? Help(CompleteOnboarding) : Help(NextOnboardingStep),
@@ -687,7 +723,9 @@ let view = (state: helpState): Tea_Vdom.t<msg> => {
                   ),
                   button(
                     list{
-                      Attrs.class_("mt-4 px-4 py-2 text-sm text-indigo-400 hover:text-indigo-300 bg-gray-900 border border-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"),
+                      Attrs.class_(
+                        "mt-4 px-4 py-2 text-sm text-indigo-400 hover:text-indigo-300 bg-gray-900 border border-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50",
+                      ),
                       Events.onClick(Help(SelectEntry(""))),
                     },
                     list{text("Back to entries")},
@@ -719,7 +757,9 @@ let view = (state: helpState): Tea_Vdom.t<msg> => {
                 ),
                 button(
                   list{
-                    Attrs.class_("text-xs text-indigo-400 hover:text-indigo-300 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500/50 rounded px-1"),
+                    Attrs.class_(
+                      "text-xs text-indigo-400 hover:text-indigo-300 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500/50 rounded px-1",
+                    ),
                     Attrs.ariaLabel("Show all help entries, clear panel filter"),
                     Events.onClick(Help(OpenContextHelp(None))),
                   },

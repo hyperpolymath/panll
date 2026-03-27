@@ -11,9 +11,20 @@ open Tea_Vdom
 /// Void elements that must not have closing tags
 let isVoidElement = (tag: string): bool => {
   switch tag {
-  | "area" | "base" | "br" | "col" | "embed" | "hr" | "img" | "input"
-  | "link" | "meta" | "param" | "source" | "track" | "wbr" =>
-    true
+  | "area"
+  | "base"
+  | "br"
+  | "col"
+  | "embed"
+  | "hr"
+  | "img"
+  | "input"
+  | "link"
+  | "meta"
+  | "param"
+  | "source"
+  | "track"
+  | "wbr" => true
   | _ => false
   }
 }
@@ -43,16 +54,31 @@ let renderAttr = (attr: attribute<'msg>): string => {
   | Property(key, value) =>
     if key === "" {
       ""
-    } else if key === "checked" || key === "disabled" || key === "readonly"
-      || key === "required" || key === "autofocus" || key === "multiple"
-      || key === "selected" || key === "hidden" || key === "novalidate" {
-      if value === "true" { ` ${key}` } else { "" }
+    } else if (
+      key === "checked" ||
+      key === "disabled" ||
+      key === "readonly" ||
+      key === "required" ||
+      key === "autofocus" ||
+      key === "multiple" ||
+      key === "selected" ||
+      key === "hidden" ||
+      key === "novalidate"
+    ) {
+      if value === "true" {
+        ` ${key}`
+      } else {
+        ""
+      }
     } else {
       ` ${key}="${escapeAttr(value)}"`
     }
   | Style(_, _) => "" // Handled in renderAttrs
-  | Event(_, _) | EventWithValue(_, _) | EventWithKey(_, _)
-  | EventPreventDefault(_, _) | EventStopPropagation(_, _) => ""
+  | Event(_, _)
+  | EventWithValue(_, _)
+  | EventWithKey(_, _)
+  | EventPreventDefault(_, _)
+  | EventStopPropagation(_, _) => ""
   }
 }
 
@@ -68,8 +94,7 @@ let renderAttrs = (attrs: array<attribute<'msg>>): string => {
         styles := styles.contents ++ "; "
       }
       styles := styles.contents ++ prop ++ ": " ++ value
-    | _ =>
-      propAttrs := propAttrs.contents ++ renderAttr(attr)
+    | _ => propAttrs := propAttrs.contents ++ renderAttr(attr)
     }
   })
 
@@ -100,8 +125,7 @@ let rec toString = (vdom: t<'msg>): string => {
       let childrenStr = Array.map(keyedChildren, ((_key, child)) => toString(child))->Array.join("")
       `<${tag}${attrStr}>${childrenStr}</${tag}>`
     }
-  | Fragment(children) =>
-    Array.map(children, toString)->Array.join("")
+  | Fragment(children) => Array.map(children, toString)->Array.join("")
   }
 }
 
@@ -136,11 +160,11 @@ let toStringPretty = (vdom: t<'msg>, ~indent: int=2): string => {
       if Array.length(keyedChildren) === 0 {
         `${pad}<${tag}${attrStr}></${tag}>`
       } else {
-        let childrenStr = Array.map(keyedChildren, ((_key, c)) => go(c, level + 1))->Array.join("\n")
+        let childrenStr =
+          Array.map(keyedChildren, ((_key, c)) => go(c, level + 1))->Array.join("\n")
         `${pad}<${tag}${attrStr}>\n${childrenStr}\n${pad}</${tag}>`
       }
-    | Fragment(children) =>
-      Array.map(children, c => go(c, level))->Array.join("\n")
+    | Fragment(children) => Array.map(children, c => go(c, level))->Array.join("\n")
     }
   }
 

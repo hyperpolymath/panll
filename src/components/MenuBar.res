@@ -144,13 +144,13 @@ let renderMenuItem = (item: menuItem): Tea_Vdom.t<msg> => {
       list{
         span(list{}, list{text(label)}),
         switch shortcut {
-        | Some(sc) => span(list{Attrs.class_("text-gray-600 text-[10px] font-mono")}, list{text(sc)})
+        | Some(sc) =>
+          span(list{Attrs.class_("text-gray-600 text-[10px] font-mono")}, list{text(sc)})
         | None => noNode
         },
       },
     )
-  | Separator =>
-    div(list{Attrs.class_("border-t border-gray-700 my-1")}, list{})
+  | Separator => div(list{Attrs.class_("border-t border-gray-700 my-1")}, list{})
   | SubMenu(label, _children) =>
     // Sub-menus rendered as expandable items (simplified — flat for now)
     div(
@@ -189,8 +189,8 @@ let renderMenuButton = (
         list{
           Attrs.class_(
             `px-3 py-1 text-xs transition-colors ${isOpen
-              ? "bg-gray-700 text-white"
-              : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"}`,
+                ? "bg-gray-700 text-white"
+                : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"}`,
           ),
           Events.onClick(
             if isOpen {
@@ -215,7 +215,9 @@ let renderMenuButton = (
 let view = (state: menuBarState): Tea_Vdom.t<msg> => {
   div(
     list{
-      Attrs.class_("flex items-center bg-gray-900/90 border-b border-gray-800 h-7 px-1 z-30 relative"),
+      Attrs.class_(
+        "flex items-center bg-gray-900/90 border-b border-gray-800 h-7 px-1 z-30 relative",
+      ),
       Attrs.role("menubar"),
       Attrs.ariaLabel("Application menu"),
     },

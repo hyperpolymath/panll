@@ -14,7 +14,9 @@ let updateHypatia = (model: model, msg: hypatiaMsg): (model, Tea_Cmd.t<msg>) => 
       Tea_Cmd.batch(list{
         HypatiaCmd.fetchNetworks(result => Hypatia(NetworksLoaded(result))),
         HypatiaCmd.fetchScans(result => Hypatia(ScansLoaded(result))),
-        TypeLLService.checkConfigTypes("hypatia-scan-config", "hypatia", result => Hypatia(TypeCheckResult(result))),
+        TypeLLService.checkConfigTypes("hypatia-scan-config", "hypatia", result => Hypatia(
+          TypeCheckResult(result),
+        )),
       }),
     )
   | NetworksLoaded(result) =>
@@ -56,15 +58,9 @@ let updateHypatia = (model: model, msg: hypatiaMsg): (model, Tea_Cmd.t<msg>) => 
             Tea_Cmd.none,
           )
         }
-      | Error(e) => (
-          {...model, hypatia: {...hyp, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
+      | Error(e) => ({...model, hypatia: {...hyp, loading: false, error: Some(e)}}, Tea_Cmd.none)
       }
-    | Error(e) => (
-        {...model, hypatia: {...hyp, loading: false, error: Some(e)}},
-        Tea_Cmd.none,
-      )
+    | Error(e) => ({...model, hypatia: {...hyp, loading: false, error: Some(e)}}, Tea_Cmd.none)
     }
   | ScansLoaded(result) =>
     switch result {
@@ -87,40 +83,25 @@ let updateHypatia = (model: model, msg: hypatiaMsg): (model, Tea_Cmd.t<msg>) => 
             Tea_Cmd.none,
           )
         }
-      | Error(e) => (
-          {...model, hypatia: {...hyp, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
+      | Error(e) => ({...model, hypatia: {...hyp, loading: false, error: Some(e)}}, Tea_Cmd.none)
       }
-    | Error(e) => (
-        {...model, hypatia: {...hyp, loading: false, error: Some(e)}},
-        Tea_Cmd.none,
-      )
+    | Error(e) => ({...model, hypatia: {...hyp, loading: false, error: Some(e)}}, Tea_Cmd.none)
     }
-  | SetHypatiaCategory(cat) => (
-      {...model, hypatia: {...hyp, activeCategory: cat}},
-      Tea_Cmd.none,
-    )
-  | SetHypatiaFilter(text) => (
-      {...model, hypatia: {...hyp, filterText: text}},
-      Tea_Cmd.none,
-    )
+  | SetHypatiaCategory(cat) => ({...model, hypatia: {...hyp, activeCategory: cat}}, Tea_Cmd.none)
+  | SetHypatiaFilter(text) => ({...model, hypatia: {...hyp, filterText: text}}, Tea_Cmd.none)
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "hypatia", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
-  | SelectRecipe(id) => (
-      {...model, hypatia: {...hyp, selectedRecipe: id}},
-      Tea_Cmd.none,
-    )
-  | SetRecipeFilter(text) => (
-      {...model, hypatia: {...hyp, recipeFilter: text}},
-      Tea_Cmd.none,
-    )
+  | SelectRecipe(id) => ({...model, hypatia: {...hyp, selectedRecipe: id}}, Tea_Cmd.none)
+  | SetRecipeFilter(text) => ({...model, hypatia: {...hyp, recipeFilter: text}}, Tea_Cmd.none)
   }
 }

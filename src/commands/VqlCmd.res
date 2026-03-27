@@ -37,12 +37,15 @@ let executeQuery = (
   | TargetDryRun => "http://localhost:8200/api/v1/explain"
   }
   let levelInt = VqlEngine.levelToInt(level)
-  let body = `{"query": ${JSON.stringify(JSON.Encode.string(query))}, "level": ${Int.toString(levelInt)}}`
+  let body = `{"query": ${JSON.stringify(JSON.Encode.string(query))}, "level": ${Int.toString(
+      levelInt,
+    )}}`
   invoke("http_post", {"url": endpoint, "body": body})
   ->Promise.then(response => Promise.resolve(Ok(response)))
   ->Promise.catch(err => {
     let msg = switch err {
-    | Exn.Error(e) => switch Exn.message(e) {
+    | JsExn(e) =>
+      switch JsExn.message(e) {
       | Some(m) => m
       | None => "Unknown error"
       }
@@ -58,7 +61,11 @@ let fetchSchema = (): promise<result<string, string>> => {
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
-    | Exn.Error(e) => switch Exn.message(e) { | Some(m) => m | None => "Schema fetch failed" }
+    | JsExn(e) =>
+      switch JsExn.message(e) {
+      | Some(m) => m
+      | None => "Schema fetch failed"
+      }
     | _ => "Schema fetch failed"
     }
     Promise.resolve(Error(msg))
@@ -71,7 +78,11 @@ let checkConnection = (): promise<result<string, string>> => {
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
-    | Exn.Error(e) => switch Exn.message(e) { | Some(m) => m | None => "Connection failed" }
+    | JsExn(e) =>
+      switch JsExn.message(e) {
+      | Some(m) => m
+      | None => "Connection failed"
+      }
     | _ => "Connection failed"
     }
     Promise.resolve(Error(msg))
@@ -85,12 +96,18 @@ let checkConnection = (): promise<result<string, string>> => {
 /// Send a VQL-UT query to TypeLL for type checking.
 let typeCheckQuery = (query: string, level: typeSafetyLevel): promise<result<string, string>> => {
   let levelInt = VqlEngine.levelToInt(level)
-  let body = `{"query": ${JSON.stringify(JSON.Encode.string(query))}, "level": ${Int.toString(levelInt)}, "mode": "vql-ut"}`
+  let body = `{"query": ${JSON.stringify(JSON.Encode.string(query))}, "level": ${Int.toString(
+      levelInt,
+    )}, "mode": "vql-ut"}`
   invoke("http_post", {"url": "http://localhost:7800/api/v1/vql-ut/check", "body": body})
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
-    | Exn.Error(e) => switch Exn.message(e) { | Some(m) => m | None => "TypeLL check failed" }
+    | JsExn(e) =>
+      switch JsExn.message(e) {
+      | Some(m) => m
+      | None => "TypeLL check failed"
+      }
     | _ => "TypeLL check failed"
     }
     Promise.resolve(Error(msg))
@@ -107,7 +124,11 @@ let fetchProverStatus = (): promise<result<string, string>> => {
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
-    | Exn.Error(e) => switch Exn.message(e) { | Some(m) => m | None => "Prover fetch failed" }
+    | JsExn(e) =>
+      switch JsExn.message(e) {
+      | Some(m) => m
+      | None => "Prover fetch failed"
+      }
     | _ => "Prover fetch failed"
     }
     Promise.resolve(Error(msg))
@@ -121,7 +142,11 @@ let explainQuery = (query: string): promise<result<string, string>> => {
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
-    | Exn.Error(e) => switch Exn.message(e) { | Some(m) => m | None => "Explain failed" }
+    | JsExn(e) =>
+      switch JsExn.message(e) {
+      | Some(m) => m
+      | None => "Explain failed"
+      }
     | _ => "Explain failed"
     }
     Promise.resolve(Error(msg))
@@ -138,7 +163,11 @@ let exportResults = (data: string, format: string): promise<result<string, strin
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
-    | Exn.Error(e) => switch Exn.message(e) { | Some(m) => m | None => "Export failed" }
+    | JsExn(e) =>
+      switch JsExn.message(e) {
+      | Some(m) => m
+      | None => "Export failed"
+      }
     | _ => "Export failed"
     }
     Promise.resolve(Error(msg))
@@ -151,7 +180,11 @@ let copyToClipboard = (text: string): promise<result<string, string>> => {
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
-    | Exn.Error(e) => switch Exn.message(e) { | Some(m) => m | None => "Clipboard failed" }
+    | JsExn(e) =>
+      switch JsExn.message(e) {
+      | Some(m) => m
+      | None => "Clipboard failed"
+      }
     | _ => "Clipboard failed"
     }
     Promise.resolve(Error(msg))
@@ -169,7 +202,11 @@ let saveHistory = (history: array<historyEntry>): promise<result<string, string>
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
-    | Exn.Error(e) => switch Exn.message(e) { | Some(m) => m | None => "Save failed" }
+    | JsExn(e) =>
+      switch JsExn.message(e) {
+      | Some(m) => m
+      | None => "Save failed"
+      }
     | _ => "Save failed"
     }
     Promise.resolve(Error(msg))
@@ -182,7 +219,11 @@ let loadHistory = (): promise<result<string, string>> => {
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
-    | Exn.Error(e) => switch Exn.message(e) { | Some(m) => m | None => "Load failed" }
+    | JsExn(e) =>
+      switch JsExn.message(e) {
+      | Some(m) => m
+      | None => "Load failed"
+      }
     | _ => "Load failed"
     }
     Promise.resolve(Error(msg))

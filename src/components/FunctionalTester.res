@@ -59,10 +59,7 @@ let workflowStatusBadge = (status: workflowStatus): Tea_Vdom.t<msg> => {
   | WorkflowPassed(ms) => ("bg-emerald-600 text-white", `PASS ${Float.toFixed(ms, ~digits=0)}ms`)
   | WorkflowFailed(_, _) => ("bg-red-600 text-white", "FAIL")
   }
-  span(
-    list{Attrs.class_(`px-2 py-0.5 text-xs rounded font-mono ${colour}`)},
-    list{text(lbl)},
-  )
+  span(list{Attrs.class_(`px-2 py-0.5 text-xs rounded font-mono ${colour}`)}, list{text(lbl)})
 }
 
 /// Progress bar for a workflow based on completed steps vs total.
@@ -77,9 +74,7 @@ let workflowProgress = (workflow: testWorkflow): Tea_Vdom.t<msg> => {
       list{Attrs.class_("w-full h-1.5 bg-gray-700 rounded overflow-hidden mt-1")},
       list{
         div(
-          list{
-            Attrs.class_(`h-full bg-cyan-500 transition-all duration-300 w-[${pct}%]`),
-          },
+          list{Attrs.class_(`h-full bg-cyan-500 transition-all duration-300 w-[${pct}%]`)},
           list{},
         ),
       },
@@ -172,10 +167,7 @@ let renderEditorTab = (state: functionalTesterState): Tea_Vdom.t<msg> => {
                       list{Attrs.class_("text-xs text-gray-500 font-mono")},
                       list{text(`#${Int.toString(idx + 1)}`)},
                     ),
-                    span(
-                      list{Attrs.class_("text-sm text-gray-200")},
-                      list{text(step.action)},
-                    ),
+                    span(list{Attrs.class_("text-sm text-gray-200")}, list{text(step.action)}),
                   },
                 ),
                 div(

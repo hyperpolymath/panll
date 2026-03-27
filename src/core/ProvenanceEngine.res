@@ -151,11 +151,11 @@ let trustAriaLabel = (level: trustLevel): string => {
 /// Used as CSS class suffixes for icon rendering.
 let trustShape = (level: trustLevel): string => {
   switch level {
-  | Verified => "shield-check"   // Shield with checkmark
+  | Verified => "shield-check" // Shield with checkmark
   | HumanReviewed => "user-check" // Person with checkmark
-  | AiAssisted => "cpu"           // Circuit/chip icon
+  | AiAssisted => "cpu" // Circuit/chip icon
   | UnreviewedAi => "alert-triangle" // Warning triangle
-  | Unknown => "help-circle"      // Question mark circle
+  | Unknown => "help-circle" // Question mark circle
   }
 }
 
@@ -163,10 +163,7 @@ let trustShape = (level: trustLevel): string => {
 ///
 /// Returns (bgClass, textClass, borderClass) triple. The semantic POSITION
 /// is fixed; only the specific hues change per palette.
-let trustColours = (
-  level: trustLevel,
-  palette: accessibilityPalette,
-): (string, string, string) => {
+let trustColours = (level: trustLevel, palette: accessibilityPalette): (string, string, string) => {
   switch (level, palette) {
   // Standard palette
   | (Verified, StandardPalette) => ("bg-green-900/30", "text-green-400", "border-green-600")
@@ -178,15 +175,27 @@ let trustColours = (
   // Deuteranopia-safe palette (green → teal, red → magenta)
   | (Verified, DeuteranopiaPalette) => ("bg-teal-900/30", "text-teal-400", "border-teal-600")
   | (HumanReviewed, DeuteranopiaPalette) => ("bg-blue-900/30", "text-blue-400", "border-blue-600")
-  | (AiAssisted, DeuteranopiaPalette) => ("bg-yellow-900/30", "text-yellow-400", "border-yellow-600")
-  | (UnreviewedAi, DeuteranopiaPalette) => ("bg-fuchsia-900/30", "text-fuchsia-400", "border-fuchsia-600")
+  | (AiAssisted, DeuteranopiaPalette) => (
+      "bg-yellow-900/30",
+      "text-yellow-400",
+      "border-yellow-600",
+    )
+  | (UnreviewedAi, DeuteranopiaPalette) => (
+      "bg-fuchsia-900/30",
+      "text-fuchsia-400",
+      "border-fuchsia-600",
+    )
   | (Unknown, DeuteranopiaPalette) => ("bg-gray-900/30", "text-gray-400", "border-gray-600")
 
   // Protanopia-safe palette (green → cyan, red → magenta)
   | (Verified, ProtanopiaPalette) => ("bg-cyan-900/30", "text-cyan-400", "border-cyan-600")
   | (HumanReviewed, ProtanopiaPalette) => ("bg-blue-900/30", "text-blue-400", "border-blue-600")
   | (AiAssisted, ProtanopiaPalette) => ("bg-orange-900/30", "text-orange-400", "border-orange-600")
-  | (UnreviewedAi, ProtanopiaPalette) => ("bg-fuchsia-900/30", "text-fuchsia-400", "border-fuchsia-600")
+  | (UnreviewedAi, ProtanopiaPalette) => (
+      "bg-fuchsia-900/30",
+      "text-fuchsia-400",
+      "border-fuchsia-600",
+    )
   | (Unknown, ProtanopiaPalette) => ("bg-gray-900/30", "text-gray-400", "border-gray-600")
 
   // High-contrast palette
@@ -448,6 +457,7 @@ let verifyChain = (entries: array<provenanceChainEntry>): bool => {
       if recomputed !== entry.hash {
         valid := false
       }
+
       // Verify parent linkage (skip index 0 — genesis entry)
       if i > 0 {
         let prev = entries->Array.getUnsafe(i - 1)
@@ -493,13 +503,24 @@ let chainToJson = (entries: array<provenanceChainEntry>): string => {
   }
   let items = entries->Array.map(entry => {
     "{" ++
-    "\"hash\":\"" ++ escapeJson(entry.hash) ++ "\"," ++
-    "\"parentHash\":\"" ++ escapeJson(entry.parentHash) ++ "\"," ++
-    "\"content\":\"" ++ escapeJson(entry.content) ++ "\"," ++
-    "\"author\":\"" ++ escapeJson(entry.author) ++ "\"," ++
-    "\"timestamp\":\"" ++ escapeJson(entry.timestamp) ++ "\"," ++
-    "\"attribution\":\"" ++ escapeJson(entry.attribution) ++ "\"" ++
-    "}"
+    "\"hash\":\"" ++
+    escapeJson(entry.hash) ++
+    "\"," ++
+    "\"parentHash\":\"" ++
+    escapeJson(entry.parentHash) ++
+    "\"," ++
+    "\"content\":\"" ++
+    escapeJson(entry.content) ++
+    "\"," ++
+    "\"author\":\"" ++
+    escapeJson(entry.author) ++
+    "\"," ++
+    "\"timestamp\":\"" ++
+    escapeJson(entry.timestamp) ++
+    "\"," ++
+    "\"attribution\":\"" ++
+    escapeJson(entry.attribution) ++
+    "\"" ++ "}"
   })
   "[" ++ Array.join(items, ",") ++ "]"
 }

@@ -57,7 +57,13 @@ let renderOverview = (state: buildDashboardState): Tea_Vdom.t<msg> => {
             list{
               div(
                 list{Attrs.class_("text-2xl font-light text-emerald-400")},
-                list{text(`${Int.toString(BuildDashboardEngine.passedTestCount(state.testResults))}/${Int.toString(Array.length(state.testResults))}`)},
+                list{
+                  text(
+                    `${Int.toString(
+                        BuildDashboardEngine.passedTestCount(state.testResults),
+                      )}/${Int.toString(Array.length(state.testResults))}`,
+                  ),
+                },
               ),
               div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Tests Passed")}),
             },
@@ -77,8 +83,14 @@ let renderOverview = (state: buildDashboardState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("flex items-center justify-between mb-2")},
                 list{
-                  span(list{Attrs.class_(`text-sm font-medium ${colourCls}`)}, list{text(BuildDashboardEngine.targetLabel(target))}),
-                  span(list{Attrs.class_(`text-xs ${statusCls}`)}, list{text(BuildDashboardEngine.statusLabel(status))}),
+                  span(
+                    list{Attrs.class_(`text-sm font-medium ${colourCls}`)},
+                    list{text(BuildDashboardEngine.targetLabel(target))},
+                  ),
+                  span(
+                    list{Attrs.class_(`text-xs ${statusCls}`)},
+                    list{text(BuildDashboardEngine.statusLabel(status))},
+                  ),
                 },
               ),
               div(
@@ -86,14 +98,18 @@ let renderOverview = (state: buildDashboardState): Tea_Vdom.t<msg> => {
                 list{
                   button(
                     list{
-                      Attrs.class_("px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+                      Attrs.class_(
+                        "px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+                      ),
                       Events.onClick(BuildDashboard(TriggerBuild(target))),
                     },
                     list{text("Build")},
                   ),
                   button(
                     list{
-                      Attrs.class_("px-2 py-1 text-xs bg-cyan-700 text-white rounded hover:bg-cyan-600 cursor-pointer"),
+                      Attrs.class_(
+                        "px-2 py-1 text-xs bg-cyan-700 text-white rounded hover:bg-cyan-600 cursor-pointer",
+                      ),
                       Events.onClick(BuildDashboard(RunTests(target))),
                     },
                     list{text("Test")},
@@ -120,7 +136,15 @@ let renderOverview = (state: buildDashboardState): Tea_Vdom.t<msg> => {
               ),
               Events.onClick(BuildDashboard(ToggleWatchMode)),
             },
-            list{text(if state.watchMode { "Watch Mode On" } else { "Watch Mode" })},
+            list{
+              text(
+                if state.watchMode {
+                  "Watch Mode On"
+                } else {
+                  "Watch Mode"
+                },
+              ),
+            },
           ),
           button(
             list{
@@ -133,7 +157,15 @@ let renderOverview = (state: buildDashboardState): Tea_Vdom.t<msg> => {
               ),
               Events.onClick(BuildDashboard(ToggleAutoRebuild)),
             },
-            list{text(if state.autoRebuild { "Auto-Rebuild On" } else { "Auto-Rebuild" })},
+            list{
+              text(
+                if state.autoRebuild {
+                  "Auto-Rebuild On"
+                } else {
+                  "Auto-Rebuild"
+                },
+              ),
+            },
           ),
           button(
             list{
@@ -144,10 +176,24 @@ let renderOverview = (state: buildDashboardState): Tea_Vdom.t<msg> => {
                   "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
                 },
               ),
-              Attrs.ariaLabel(if state.bojRouting { "Disable BoJ routing" } else { "Enable BoJ routing" }),
+              Attrs.ariaLabel(
+                if state.bojRouting {
+                  "Disable BoJ routing"
+                } else {
+                  "Enable BoJ routing"
+                },
+              ),
               Events.onClick(BuildDashboard(ToggleBuildBojRouting)),
             },
-            list{text(if state.bojRouting { "BoJ On" } else { "BoJ" })},
+            list{
+              text(
+                if state.bojRouting {
+                  "BoJ On"
+                } else {
+                  "BoJ"
+                },
+              ),
+            },
           ),
         },
       ),
@@ -182,8 +228,14 @@ let renderErrors = (state: buildDashboardState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("flex items-center gap-2 mb-1 text-xs")},
               list{
-                span(list{Attrs.class_(`font-bold ${targetCls}`)}, list{text(BuildDashboardEngine.targetLabel(m.target))}),
-                span(list{Attrs.class_("text-gray-400 font-mono")}, list{text(`${m.filePath}:${Int.toString(m.line)}:${Int.toString(m.col)}`)}),
+                span(
+                  list{Attrs.class_(`font-bold ${targetCls}`)},
+                  list{text(BuildDashboardEngine.targetLabel(m.target))},
+                ),
+                span(
+                  list{Attrs.class_("text-gray-400 font-mono")},
+                  list{text(`${m.filePath}:${Int.toString(m.line)}:${Int.toString(m.col)}`)},
+                ),
               },
             ),
             div(list{Attrs.class_("text-xs text-gray-300")}, list{text(m.message)}),
@@ -225,7 +277,11 @@ let renderTests = (state: buildDashboardState): Tea_Vdom.t<msg> => {
             list{Attrs.class_("text-xs text-gray-400")},
             list{
               text(
-                `${Int.toString(BuildDashboardEngine.passedTestCount(state.testResults))} passed, ${Int.toString(BuildDashboardEngine.failedTestCount(state.testResults))} failed`,
+                `${Int.toString(
+                    BuildDashboardEngine.passedTestCount(state.testResults),
+                  )} passed, ${Int.toString(
+                    BuildDashboardEngine.failedTestCount(state.testResults),
+                  )} failed`,
               ),
             },
           ),
@@ -253,12 +309,31 @@ let renderTests = (state: buildDashboardState): Tea_Vdom.t<msg> => {
               },
               list{
                 span(
-                  list{Attrs.class_(if r.passed { "text-emerald-400" } else { "text-red-400" })},
-                  list{text(if r.passed { "PASS" } else { "FAIL" })},
+                  list{
+                    Attrs.class_(
+                      if r.passed {
+                        "text-emerald-400"
+                      } else {
+                        "text-red-400"
+                      },
+                    ),
+                  },
+                  list{
+                    text(
+                      if r.passed {
+                        "PASS"
+                      } else {
+                        "FAIL"
+                      },
+                    ),
+                  },
                 ),
                 span(list{Attrs.class_("text-gray-200 flex-1")}, list{text(r.name)}),
                 span(list{Attrs.class_("text-gray-500")}, list{text(r.suite)}),
-                span(list{Attrs.class_("text-gray-400 font-mono")}, list{text(`${Float.toString(r.durationMs)}ms`)}),
+                span(
+                  list{Attrs.class_("text-gray-400 font-mono")},
+                  list{text(`${Float.toString(r.durationMs)}ms`)},
+                ),
               },
             )
           )
@@ -286,9 +361,18 @@ let renderHistory = (state: buildDashboardState): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-800 rounded text-xs")},
           list{
-            span(list{Attrs.class_(`w-20 ${targetCls}`)}, list{text(BuildDashboardEngine.targetLabel(entry.target))}),
-            span(list{Attrs.class_(statusCls)}, list{text(BuildDashboardEngine.statusLabel(entry.status))}),
-            span(list{Attrs.class_("text-gray-400 font-mono")}, list{text(`${Float.toString(entry.durationMs)}ms`)}),
+            span(
+              list{Attrs.class_(`w-20 ${targetCls}`)},
+              list{text(BuildDashboardEngine.targetLabel(entry.target))},
+            ),
+            span(
+              list{Attrs.class_(statusCls)},
+              list{text(BuildDashboardEngine.statusLabel(entry.status))},
+            ),
+            span(
+              list{Attrs.class_("text-gray-400 font-mono")},
+              list{text(`${Float.toString(entry.durationMs)}ms`)},
+            ),
             span(
               list{Attrs.class_("text-gray-500")},
               list{text(`${Int.toString(entry.errorCount)}E ${Int.toString(entry.warningCount)}W`)},
@@ -313,10 +397,15 @@ let view = (state: buildDashboardState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between px-4 py-3 border-b border-gray-800")},
         list{
-          span(list{Attrs.class_("text-lg font-semibold text-gray-100")}, list{text("Build Dashboard")}),
+          span(
+            list{Attrs.class_("text-lg font-semibold text-gray-100")},
+            list{text("Build Dashboard")},
+          ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+              ),
               Events.onClick(BuildDashboard(RefreshBuildStatus)),
             },
             list{text("Refresh")},
@@ -335,7 +424,11 @@ let view = (state: buildDashboardState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300",
+            ),
+          },
           list{text(err)},
         )
       | None => noNode

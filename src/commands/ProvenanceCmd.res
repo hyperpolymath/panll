@@ -38,10 +38,9 @@ let analyseFile = (
 ///
 /// Returns a JSON object with counts per marker type. Used to validate that
 /// regions marked as Verified actually contain no proof-undermining patterns.
-let scanUnsoundMarkers = (
-  filePath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let scanUnsoundMarkers = (filePath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("provenance_scan_unsound", {"filePath": filePath})
     ->Promise.then(result => {

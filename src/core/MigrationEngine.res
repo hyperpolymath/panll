@@ -110,7 +110,9 @@ let healthPercent = (score: float): string => {
 }
 
 /// Filter repos by text search.
-let filterRepos = (repos: array<migrationRepoSummary>, query: string): array<migrationRepoSummary> => {
+let filterRepos = (repos: array<migrationRepoSummary>, query: string): array<
+  migrationRepoSummary,
+> => {
   if query === "" {
     repos
   } else {
@@ -137,8 +139,7 @@ let sortByDeprecated = (repos: array<migrationRepoSummary>): array<migrationRepo
 let computeAvgHealth = (repos: array<migrationRepoSummary>): float => {
   let len = Array.length(repos)
   if len > 0 {
-    repos->Array.map(r => r.healthScore)->Array.reduce(0.0, (a, b) => a +. b) /.
-      Int.toFloat(len)
+    repos->Array.map(r => r.healthScore)->Array.reduce(0.0, (a, b) => a +. b) /. Int.toFloat(len)
   } else {
     0.0
   }
@@ -153,9 +154,10 @@ let countBlocked = (repos: array<migrationRepoSummary>): int =>
   repos->Array.filter(r => r.blocked)->Array.length
 
 /// Group repos by version bracket.
-let groupByVersion = (
-  repos: array<migrationRepoSummary>,
-): array<(migrationVersionBracket, array<migrationRepoSummary>)> => {
+let groupByVersion = (repos: array<migrationRepoSummary>): array<(
+  migrationVersionBracket,
+  array<migrationRepoSummary>,
+)> => {
   let groups: array<(migrationVersionBracket, array<migrationRepoSummary>)> = [
     (BuckleScript, repos->Array.filter(r => r.versionBracket == BuckleScript)),
     (V11, repos->Array.filter(r => r.versionBracket == V11)),

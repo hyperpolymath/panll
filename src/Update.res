@@ -236,26 +236,77 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   // SpecBrowser — language specification browsing
   | SpecBrowser(subMsg) =>
     switch subMsg {
-    | SetSpecCategory(cat) => ({...model, specBrowser: {...model.specBrowser, activeCategory: cat}}, Tea_Cmd.none)
-    | SelectSpecLanguage(name) => ({...model, specBrowser: {...model.specBrowser, selectedLanguage: name}}, Tea_Cmd.none)
+    | SetSpecCategory(cat) => (
+        {...model, specBrowser: {...model.specBrowser, activeCategory: cat}},
+        Tea_Cmd.none,
+      )
+    | SelectSpecLanguage(name) => (
+        {...model, specBrowser: {...model.specBrowser, selectedLanguage: name}},
+        Tea_Cmd.none,
+      )
     | SetComparisonSide(side, name) =>
       switch side {
-      | LeftSide => ({...model, specBrowser: {...model.specBrowser, comparisonLeft: Some(name)}}, Tea_Cmd.none)
-      | RightSide => ({...model, specBrowser: {...model.specBrowser, comparisonRight: Some(name)}}, Tea_Cmd.none)
+      | LeftSide => (
+          {...model, specBrowser: {...model.specBrowser, comparisonLeft: Some(name)}},
+          Tea_Cmd.none,
+        )
+      | RightSide => (
+          {...model, specBrowser: {...model.specBrowser, comparisonRight: Some(name)}},
+          Tea_Cmd.none,
+        )
       }
-    | SetSpecFilter(txt) => ({...model, specBrowser: {...model.specBrowser, filterText: txt}}, Tea_Cmd.none)
-    | ToggleIncompleteOnly => ({...model, specBrowser: {...model.specBrowser, showIncompleteOnly: !model.specBrowser.showIncompleteOnly}}, Tea_Cmd.none)
-    | DismissSpecError => ({...model, specBrowser: {...model.specBrowser, error: None}}, Tea_Cmd.none)
+    | SetSpecFilter(txt) => (
+        {...model, specBrowser: {...model.specBrowser, filterText: txt}},
+        Tea_Cmd.none,
+      )
+    | ToggleIncompleteOnly => (
+        {
+          ...model,
+          specBrowser: {
+            ...model.specBrowser,
+            showIncompleteOnly: !model.specBrowser.showIncompleteOnly,
+          },
+        },
+        Tea_Cmd.none,
+      )
+    | DismissSpecError => (
+        {...model, specBrowser: {...model.specBrowser, error: None}},
+        Tea_Cmd.none,
+      )
     }
   // VerificationDashboard — proof/test/benchmark status
   | VerificationDashboard(subMsg) =>
     switch subMsg {
-    | SetVdCategory(cat) => ({...model, verificationDashboard: {...model.verificationDashboard, activeCategory: cat}}, Tea_Cmd.none)
-    | SelectVdLanguage(name) => ({...model, verificationDashboard: {...model.verificationDashboard, selectedLanguage: name}}, Tea_Cmd.none)
-    | SetVdFilter(txt) => ({...model, verificationDashboard: {...model.verificationDashboard, filterText: txt}}, Tea_Cmd.none)
-    | SetVdSort(sortBy) => ({...model, verificationDashboard: {...model.verificationDashboard, sortBy}}, Tea_Cmd.none)
-    | ToggleDebtOnly => ({...model, verificationDashboard: {...model.verificationDashboard, showDebtOnly: !model.verificationDashboard.showDebtOnly}}, Tea_Cmd.none)
-    | DismissVdError => ({...model, verificationDashboard: {...model.verificationDashboard, error: None}}, Tea_Cmd.none)
+    | SetVdCategory(cat) => (
+        {...model, verificationDashboard: {...model.verificationDashboard, activeCategory: cat}},
+        Tea_Cmd.none,
+      )
+    | SelectVdLanguage(name) => (
+        {...model, verificationDashboard: {...model.verificationDashboard, selectedLanguage: name}},
+        Tea_Cmd.none,
+      )
+    | SetVdFilter(txt) => (
+        {...model, verificationDashboard: {...model.verificationDashboard, filterText: txt}},
+        Tea_Cmd.none,
+      )
+    | SetVdSort(sortBy) => (
+        {...model, verificationDashboard: {...model.verificationDashboard, sortBy}},
+        Tea_Cmd.none,
+      )
+    | ToggleDebtOnly => (
+        {
+          ...model,
+          verificationDashboard: {
+            ...model.verificationDashboard,
+            showDebtOnly: !model.verificationDashboard.showDebtOnly,
+          },
+        },
+        Tea_Cmd.none,
+      )
+    | DismissVdError => (
+        {...model, verificationDashboard: {...model.verificationDashboard, error: None}},
+        Tea_Cmd.none,
+      )
     }
   // Panel Bus — cross-panel messaging
   | Bus(busMsg) =>
@@ -281,7 +332,11 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
         let currentSnapshot = snapshotToJson(model)
         let newRedo = Array.concat(model.redoStack, [currentSnapshot])
         let trimmedRedo = if Array.length(newRedo) > undoStackLimit {
-          Array.slice(newRedo, ~start=Array.length(newRedo) - undoStackLimit, ~end=Array.length(newRedo))
+          Array.slice(
+            newRedo,
+            ~start=Array.length(newRedo) - undoStackLimit,
+            ~end=Array.length(newRedo),
+          )
         } else {
           newRedo
         }
@@ -304,7 +359,11 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
         let currentSnapshot = snapshotToJson(model)
         let newUndo = Array.concat(model.undoStack, [currentSnapshot])
         let trimmedUndo = if Array.length(newUndo) > undoStackLimit {
-          Array.slice(newUndo, ~start=Array.length(newUndo) - undoStackLimit, ~end=Array.length(newUndo))
+          Array.slice(
+            newUndo,
+            ~start=Array.length(newUndo) - undoStackLimit,
+            ~end=Array.length(newUndo),
+          )
         } else {
           newUndo
         }
@@ -334,240 +393,238 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
       ({...model, boj: {...model.boj, latencyLog: log}}, Tea_Cmd.none)
     }
   // Governance NeSy results
-  | GovernanceNesyResult(result) => {
-      switch result {
-      | Ok(jsonStr) => {
-          let newModel = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
-          | Some(json) =>
-
-            let o = json->JSON.Decode.object->Option.getOr(Dict.make())
-            let confidence =
-              o->Dict.get("confidence")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.5)
-            let approved =
-              o->Dict.get("approved")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
-            if !approved {
-              {...model, antiCrash: {...model.antiCrash, strictMode: false}}
-            } else if confidence > 0.8 {
-              {...model, antiCrash: {...model.antiCrash, strictMode: true}}
-            } else if confidence < 0.3 {
-              {...model, antiCrash: {...model.antiCrash, strictMode: false}}
-            } else {
-              model
-            }
-
-          | None => model
+  | GovernanceNesyResult(result) => switch result {
+    | Ok(jsonStr) => {
+        let newModel = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          let o = json->JSON.Decode.object->Option.getOr(Dict.make())
+          let confidence =
+            o->Dict.get("confidence")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.5)
+          let approved =
+            o->Dict.get("approved")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
+          if !approved {
+            {...model, antiCrash: {...model.antiCrash, strictMode: false}}
+          } else if confidence > 0.8 {
+            {...model, antiCrash: {...model.antiCrash, strictMode: true}}
+          } else if confidence < 0.3 {
+            {...model, antiCrash: {...model.antiCrash, strictMode: false}}
+          } else {
+            model
           }
-          (newModel, Tea_Cmd.none)
+
+        | None => model
         }
-      | Error(_) => (model, Tea_Cmd.none)
+        (newModel, Tea_Cmd.none)
       }
+    | Error(_) => (model, Tea_Cmd.none)
     }
-  | GovernanceNesyValidateResult(result) => {
-      switch result {
-      | Ok(jsonStr) => {
-          let newModel = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
-          | Some(json) =>
-
-            let o = json->JSON.Decode.object->Option.getOr(Dict.make())
-            let approved =
-              o->Dict.get("approved")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
-            let reasoning =
-              o->Dict.get("reasoning")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-            if !approved {
-              ignore(reasoning)
-              {...model, antiCrash: {...model.antiCrash, strictMode: false}}
-            } else {
-              model
-            }
-
-          | None => model
+  | GovernanceNesyValidateResult(result) => switch result {
+    | Ok(jsonStr) => {
+        let newModel = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          let o = json->JSON.Decode.object->Option.getOr(Dict.make())
+          let approved =
+            o->Dict.get("approved")->Option.flatMap(JSON.Decode.bool)->Option.getOr(true)
+          let reasoning =
+            o->Dict.get("reasoning")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
+          if !approved {
+            ignore(reasoning)
+            {...model, antiCrash: {...model.antiCrash, strictMode: false}}
+          } else {
+            model
           }
-          (newModel, Tea_Cmd.none)
+
+        | None => model
         }
-      | Error(_) => (model, Tea_Cmd.none)
+        (newModel, Tea_Cmd.none)
       }
+    | Error(_) => (model, Tea_Cmd.none)
     }
-  | GovernanceNesyProbeResult(result) => {
-      switch result {
-      | Ok(jsonStr) => {
-          let newModel = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
-          | Some(json) =>
-
-            let o = json->JSON.Decode.object->Option.getOr(Dict.make())
-            let neuralCoherence =
-              o->Dict.get("neural_coherence")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.5)
-            let driftMagnitude =
-              o->Dict.get("drift_magnitude")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-            {
-              ...model,
-              orbital: {
-                ...model.orbital,
-                stability: neuralCoherence,
-                divergenceLevel: driftMagnitude,
-              },
-            }
-
-          | None => model
+  | GovernanceNesyProbeResult(result) => switch result {
+    | Ok(jsonStr) => {
+        let newModel = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(json) =>
+          let o = json->JSON.Decode.object->Option.getOr(Dict.make())
+          let neuralCoherence =
+            o->Dict.get("neural_coherence")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.5)
+          let driftMagnitude =
+            o->Dict.get("drift_magnitude")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          {
+            ...model,
+            orbital: {
+              ...model.orbital,
+              stability: neuralCoherence,
+              divergenceLevel: driftMagnitude,
+            },
           }
-          (newModel, Tea_Cmd.none)
+
+        | None => model
         }
-      | Error(_) => (model, Tea_Cmd.none)
+        (newModel, Tea_Cmd.none)
       }
+    | Error(_) => (model, Tea_Cmd.none)
     }
   // Observability
-  | Observability(obsMsg) => {
-      switch obsMsg {
-      | ExportSarifViaObserveMcp(reportId) =>
-        let cmd = ObservabilityCmd.exportSarifViaObserveMcp(
-          reportId,
-          r => Observability(SarifExportResult(r)),
-        )
-        (model, cmd)
-      | SarifExportResult(result) =>
-        switch result {
-        | Ok(_) => (model, Tea_Cmd.none)
-        | Error(_) => (model, Tea_Cmd.none)
-        }
-      | ExportOtelTraces =>
-        let batch = ObservabilityEngine.exportTraceBatch(model.boj.latencyLog)
-        let cmd = ObservabilityCmd.exportOtelTraces(
-          batch,
-          r => Observability(OtelExportResult(r)),
-        )
-        (model, cmd)
-      | OtelExportResult(result) =>
-        switch result {
-        | Ok(_) => (model, Tea_Cmd.none)
-        | Error(_) => (model, Tea_Cmd.none)
-        }
-      | FetchObservabilitySummary =>
-        let cmd = ObservabilityCmd.fetchObservabilitySummary(
-          r => Observability(ObservabilitySummaryResult(r)),
-        )
-        (model, cmd)
-      | ObservabilitySummaryResult(result) =>
-        switch result {
-        | Ok(_) => (model, Tea_Cmd.none)
-        | Error(_) => (model, Tea_Cmd.none)
-        }
-      | TypeCheckResult(Ok(json)) => {
-          let checks = model.typell.panelTypeChecks
-          Dict.set(checks, "observability", json)
-          let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
-          ({...model, typell: newTypell}, Tea_Cmd.none)
-        }
-      | TypeCheckResult(Error(_)) =>
-        (model, Tea_Cmd.none)
+  | Observability(obsMsg) => switch obsMsg {
+    | ExportSarifViaObserveMcp(reportId) =>
+      let cmd = ObservabilityCmd.exportSarifViaObserveMcp(reportId, r => Observability(
+        SarifExportResult(r),
+      ))
+      (model, cmd)
+    | SarifExportResult(result) =>
+      switch result {
+      | Ok(_) => (model, Tea_Cmd.none)
+      | Error(_) => (model, Tea_Cmd.none)
       }
+    | ExportOtelTraces =>
+      let batch = ObservabilityEngine.exportTraceBatch(model.boj.latencyLog)
+      let cmd = ObservabilityCmd.exportOtelTraces(batch, r => Observability(OtelExportResult(r)))
+      (model, cmd)
+    | OtelExportResult(result) =>
+      switch result {
+      | Ok(_) => (model, Tea_Cmd.none)
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    | FetchObservabilitySummary =>
+      let cmd = ObservabilityCmd.fetchObservabilitySummary(r => Observability(
+        ObservabilitySummaryResult(r),
+      ))
+      (model, cmd)
+    | ObservabilitySummaryResult(result) =>
+      switch result {
+      | Ok(_) => (model, Tea_Cmd.none)
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    | TypeCheckResult(Ok(json)) => {
+        let checks = model.typell.panelTypeChecks
+        Dict.set(checks, "observability", json)
+        let newTypell = {
+          ...model.typell,
+          queriesServed: model.typell.queriesServed + 1,
+          panelTypeChecks: checks,
+        }
+        ({...model, typell: newTypell}, Tea_Cmd.none)
+      }
+    | TypeCheckResult(Error(_)) => (model, Tea_Cmd.none)
     }
   // A2ML manifest management
-  | A2ml(a2mlMsg) => {
-      switch a2mlMsg {
-      | LoadManifest(path) =>
-        let cmd = A2mlCmd.loadManifest(path, r => A2ml(ManifestLoaded(r)))
-        (model, cmd)
-      | ManifestLoaded(result) =>
-        switch result {
-        | Ok(jsonStr) =>
-          let manifest = A2mlEngine.parseA2mlContent(jsonStr)
-          let validation = A2mlEngine.validateManifest(manifest)
-          let (_coverage, _testTypes, _notes) = A2mlEngine.extractTestCoveragePolicy(manifest)
-          ({...model, lastA2mlManifest: Some(manifest), lastA2mlValidation: Some(validation)}, Tea_Cmd.none)
-        | Error(_) => (model, Tea_Cmd.none)
-        }
-      | ValidateManifest(path) =>
-        let cmd = A2mlCmd.validateManifestFile(path, r => A2ml(ManifestValidated(r)))
-        (model, cmd)
-      | ManifestValidated(result) =>
-        switch result {
-        | Ok(jsonStr) =>
-          let manifest = A2mlEngine.parseA2mlContent(jsonStr)
-          let validation = A2mlEngine.validateManifest(manifest)
-          ({...model, lastA2mlManifest: Some(manifest), lastA2mlValidation: Some(validation)}, Tea_Cmd.none)
-        | Error(_) => (model, Tea_Cmd.none)
-        }
-      | ListManifests =>
-        let cmd = A2mlCmd.listManifests(r => A2ml(ManifestsListed(r)))
-        (model, cmd)
-      | ManifestsListed(result) =>
-        switch result {
-        | Ok(jsonStr) =>
-          let paths = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
-          | Some(parsed) =>
-
-            switch JSON.Classify.classify(parsed) {
-            | Array(arr) =>
-              arr->Array.filterMap(item =>
-                switch JSON.Classify.classify(item) {
-                | String(s) => Some(s)
-                | _ => None
-                }
-              )
-            | _ => []
-            }
-
-          | None => []
-          }
-          ({...model, a2mlManifestPaths: paths}, Tea_Cmd.none)
-        | Error(_) => (model, Tea_Cmd.none)
-        }
-      | TypeCheckResult(Ok(json)) => {
-          let checks = model.typell.panelTypeChecks
-          Dict.set(checks, "a2ml", json)
-          let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
-          ({...model, typell: newTypell}, Tea_Cmd.none)
-        }
-      | TypeCheckResult(Error(_)) =>
-        (model, Tea_Cmd.none)
+  | A2ml(a2mlMsg) => switch a2mlMsg {
+    | LoadManifest(path) =>
+      let cmd = A2mlCmd.loadManifest(path, r => A2ml(ManifestLoaded(r)))
+      (model, cmd)
+    | ManifestLoaded(result) =>
+      switch result {
+      | Ok(jsonStr) =>
+        let manifest = A2mlEngine.parseA2mlContent(jsonStr)
+        let validation = A2mlEngine.validateManifest(manifest)
+        let (_coverage, _testTypes, _notes) = A2mlEngine.extractTestCoveragePolicy(manifest)
+        (
+          {...model, lastA2mlManifest: Some(manifest), lastA2mlValidation: Some(validation)},
+          Tea_Cmd.none,
+        )
+      | Error(_) => (model, Tea_Cmd.none)
       }
+    | ValidateManifest(path) =>
+      let cmd = A2mlCmd.validateManifestFile(path, r => A2ml(ManifestValidated(r)))
+      (model, cmd)
+    | ManifestValidated(result) =>
+      switch result {
+      | Ok(jsonStr) =>
+        let manifest = A2mlEngine.parseA2mlContent(jsonStr)
+        let validation = A2mlEngine.validateManifest(manifest)
+        (
+          {...model, lastA2mlManifest: Some(manifest), lastA2mlValidation: Some(validation)},
+          Tea_Cmd.none,
+        )
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    | ListManifests =>
+      let cmd = A2mlCmd.listManifests(r => A2ml(ManifestsListed(r)))
+      (model, cmd)
+    | ManifestsListed(result) =>
+      switch result {
+      | Ok(jsonStr) =>
+        let paths = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
+        | Some(parsed) =>
+          switch JSON.Classify.classify(parsed) {
+          | Array(arr) =>
+            arr->Array.filterMap(item =>
+              switch JSON.Classify.classify(item) {
+              | String(s) => Some(s)
+              | _ => None
+              }
+            )
+          | _ => []
+          }
+
+        | None => []
+        }
+        ({...model, a2mlManifestPaths: paths}, Tea_Cmd.none)
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    | TypeCheckResult(Ok(json)) => {
+        let checks = model.typell.panelTypeChecks
+        Dict.set(checks, "a2ml", json)
+        let newTypell = {
+          ...model.typell,
+          queriesServed: model.typell.queriesServed + 1,
+          panelTypeChecks: checks,
+        }
+        ({...model, typell: newTypell}, Tea_Cmd.none)
+      }
+    | TypeCheckResult(Error(_)) => (model, Tea_Cmd.none)
     }
   // K9 contractile management
-  | K9(k9Msg) => {
-      switch k9Msg {
-      | LoadContractile(path) =>
-        let cmd = K9Cmd.loadContractile(path, r => K9(ContractileLoaded(r)))
-        (model, cmd)
-      | ContractileLoaded(result) =>
-        switch result {
-        | Ok(jsonStr) =>
-          let contractile = K9Engine.validateContractile(jsonStr, ~path="loaded")
-          let kennelSchema = if contractile.securityLevel == K9Engine.Kennel {
-            Some(jsonStr)
-          } else {
-            model.k9KennelSchema
-          }
-          ({...model, lastK9Contractile: Some(contractile), k9KennelSchema: kennelSchema}, Tea_Cmd.none)
-        | Error(_) => (model, Tea_Cmd.none)
+  | K9(k9Msg) => switch k9Msg {
+    | LoadContractile(path) =>
+      let cmd = K9Cmd.loadContractile(path, r => K9(ContractileLoaded(r)))
+      (model, cmd)
+    | ContractileLoaded(result) =>
+      switch result {
+      | Ok(jsonStr) =>
+        let contractile = K9Engine.validateContractile(jsonStr, ~path="loaded")
+        let kennelSchema = if contractile.securityLevel == K9Engine.Kennel {
+          Some(jsonStr)
+        } else {
+          model.k9KennelSchema
         }
-      | ValidateContractile(path) =>
-        let cmd = K9Cmd.validateContractileFile(path, r => K9(ContractileValidated(r)))
-        (model, cmd)
-      | ContractileValidated(result) =>
-        switch result {
-        | Ok(jsonStr) =>
-          let contractile = K9Engine.validateContractile(jsonStr, ~path="validated")
-          ({...model, lastK9Contractile: Some(contractile)}, Tea_Cmd.none)
-        | Error(_) => (model, Tea_Cmd.none)
-        }
-      | ApplyLayout(name) =>
-        let cmd = K9Cmd.applyLayout(name, r => K9(LayoutApplied(r)))
-        (model, cmd)
-      | LayoutApplied(result) =>
-        switch result {
-        | Ok(jsonStr) =>
-          let layout = K9Engine.parseLayoutPanels(jsonStr)
-          ({...model, lastK9Layout: Some(layout)}, Tea_Cmd.none)
-        | Error(_) => (model, Tea_Cmd.none)
-        }
-      | TypeCheckResult(Ok(json)) => {
-          let checks = model.typell.panelTypeChecks
-          Dict.set(checks, "k9", json)
-          let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
-          ({...model, typell: newTypell}, Tea_Cmd.none)
-        }
-      | TypeCheckResult(Error(_)) =>
-        (model, Tea_Cmd.none)
+        (
+          {...model, lastK9Contractile: Some(contractile), k9KennelSchema: kennelSchema},
+          Tea_Cmd.none,
+        )
+      | Error(_) => (model, Tea_Cmd.none)
       }
+    | ValidateContractile(path) =>
+      let cmd = K9Cmd.validateContractileFile(path, r => K9(ContractileValidated(r)))
+      (model, cmd)
+    | ContractileValidated(result) =>
+      switch result {
+      | Ok(jsonStr) =>
+        let contractile = K9Engine.validateContractile(jsonStr, ~path="validated")
+        ({...model, lastK9Contractile: Some(contractile)}, Tea_Cmd.none)
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    | ApplyLayout(name) =>
+      let cmd = K9Cmd.applyLayout(name, r => K9(LayoutApplied(r)))
+      (model, cmd)
+    | LayoutApplied(result) =>
+      switch result {
+      | Ok(jsonStr) =>
+        let layout = K9Engine.parseLayoutPanels(jsonStr)
+        ({...model, lastK9Layout: Some(layout)}, Tea_Cmd.none)
+      | Error(_) => (model, Tea_Cmd.none)
+      }
+    | TypeCheckResult(Ok(json)) => {
+        let checks = model.typell.panelTypeChecks
+        Dict.set(checks, "k9", json)
+        let newTypell = {
+          ...model.typell,
+          queriesServed: model.typell.queriesServed + 1,
+          panelTypeChecks: checks,
+        }
+        ({...model, typell: newTypell}, Tea_Cmd.none)
+      }
+    | TypeCheckResult(Error(_)) => (model, Tea_Cmd.none)
     }
   // Seam auditing
   | AuditSeams => {
@@ -579,24 +636,51 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   // Observatory — integrative dashboard
   | Observatory(subMsg) =>
     switch subMsg {
-    | SetObsTab(tab) => ({...model, observatory: {...model.observatory, activeTab: tab}}, Tea_Cmd.none)
-    | RunHealthCheck => ({...model, observatory: {...model.observatory, checking: true}}, Tea_Cmd.none)
+    | SetObsTab(tab) => (
+        {...model, observatory: {...model.observatory, activeTab: tab}},
+        Tea_Cmd.none,
+      )
+    | RunHealthCheck => (
+        {...model, observatory: {...model.observatory, checking: true}},
+        Tea_Cmd.none,
+      )
     | HealthCheckComplete(result) =>
       switch result {
-      | Ok(snapshots) => ({...model, observatory: {...model.observatory, snapshots, checking: false, error: None}}, Tea_Cmd.none)
-      | Error(err) => ({...model, observatory: {...model.observatory, checking: false, error: Some(err)}}, Tea_Cmd.none)
+      | Ok(snapshots) => (
+          {...model, observatory: {...model.observatory, snapshots, checking: false, error: None}},
+          Tea_Cmd.none,
+        )
+      | Error(err) => (
+          {...model, observatory: {...model.observatory, checking: false, error: Some(err)}},
+          Tea_Cmd.none,
+        )
       }
-    | DismissObsError => ({...model, observatory: {...model.observatory, error: None}}, Tea_Cmd.none)
+    | DismissObsError => (
+        {...model, observatory: {...model.observatory, error: None}},
+        Tea_Cmd.none,
+      )
     }
   // AmbientOps — hospital-model sysadmin
   | AmbientOps(subMsg) =>
     switch subMsg {
-    | SetOpsTab(tab) => ({...model, ambientOps: {...model.ambientOps, activeTab: tab}}, Tea_Cmd.none)
-    | RunDiagnostics => ({...model, ambientOps: {...model.ambientOps, scanning: true}}, Tea_Cmd.none)
+    | SetOpsTab(tab) => (
+        {...model, ambientOps: {...model.ambientOps, activeTab: tab}},
+        Tea_Cmd.none,
+      )
+    | RunDiagnostics => (
+        {...model, ambientOps: {...model.ambientOps, scanning: true}},
+        Tea_Cmd.none,
+      )
     | DiagnosticsComplete(result) =>
       switch result {
-      | Ok(findings) => ({...model, ambientOps: {...model.ambientOps, findings, scanning: false, error: None}}, Tea_Cmd.none)
-      | Error(err) => ({...model, ambientOps: {...model.ambientOps, scanning: false, error: Some(err)}}, Tea_Cmd.none)
+      | Ok(findings) => (
+          {...model, ambientOps: {...model.ambientOps, findings, scanning: false, error: None}},
+          Tea_Cmd.none,
+        )
+      | Error(err) => (
+          {...model, ambientOps: {...model.ambientOps, scanning: false, error: Some(err)}},
+          Tea_Cmd.none,
+        )
       }
     | DismissOpsError => ({...model, ambientOps: {...model.ambientOps, error: None}}, Tea_Cmd.none)
     }

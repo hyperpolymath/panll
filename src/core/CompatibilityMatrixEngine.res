@@ -46,17 +46,25 @@ let countPassing = (cells: array<matrixCell>): int =>
 
 /// Count failing cells in the matrix.
 let countFailing = (cells: array<matrixCell>): int =>
-  cells->Array.filter(c => switch c.result {
-  | CompatFailing(_) => true
-  | _ => false
-  })->Array.length
+  cells
+  ->Array.filter(c =>
+    switch c.result {
+    | CompatFailing(_) => true
+    | _ => false
+    }
+  )
+  ->Array.length
 
 /// Count warning cells.
 let countWarnings = (cells: array<matrixCell>): int =>
-  cells->Array.filter(c => switch c.result {
-  | CompatWarning(_) => true
-  | _ => false
-  })->Array.length
+  cells
+  ->Array.filter(c =>
+    switch c.result {
+    | CompatWarning(_) => true
+    | _ => false
+    }
+  )
+  ->Array.length
 
 /// Count untested cells in the matrix.
 let countUntested = (cells: array<matrixCell>): int =>
@@ -64,10 +72,14 @@ let countUntested = (cells: array<matrixCell>): int =>
 
 /// Count skipped cells.
 let countSkipped = (cells: array<matrixCell>): int =>
-  cells->Array.filter(c => switch c.result {
-  | CompatSkipped(_) => true
-  | _ => false
-  })->Array.length
+  cells
+  ->Array.filter(c =>
+    switch c.result {
+    | CompatSkipped(_) => true
+    | _ => false
+    }
+  )
+  ->Array.length
 
 /// Human-readable result label for display.
 let resultLabel = (result: compatResult): string =>
@@ -121,13 +133,19 @@ let computeSummary = (cells: array<matrixCell>): matrixSummary => {
     warnings,
     untested,
     skipped,
-    passRate: if tested == 0 { 0.0 } else { Float.fromInt(passing) /. Float.fromInt(tested) *. 100.0 },
+    passRate: if tested == 0 {
+      0.0
+    } else {
+      Float.fromInt(passing) /. Float.fromInt(tested) *. 100.0
+    },
   }
 }
 
 /// Filter cells to only show failures.
 let failingCells = (cells: array<matrixCell>): array<matrixCell> =>
-  cells->Array.filter(c => switch c.result {
-  | CompatFailing(_) => true
-  | _ => false
-  })
+  cells->Array.filter(c =>
+    switch c.result {
+    | CompatFailing(_) => true
+    | _ => false
+    }
+  )

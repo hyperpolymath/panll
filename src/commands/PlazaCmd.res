@@ -10,10 +10,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Scan a single repository for PMPL compliance indicators.
 /// Returns JSON with license detection, SPDX header counts, exhibit status.
-let scanRepo = (
-  repoName: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let scanRepo = (repoName: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("plaza_scan_repo", {"repo_name": repoName})
     ->Promise.then(result => {
@@ -30,9 +27,7 @@ let scanRepo = (
 
 /// Compute adoption statistics across the entire ecosystem.
 /// Scans all repos under the canonical path and returns aggregate counts.
-let adoptionStats = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let adoptionStats = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("plaza_adoption_stats", ())
     ->Promise.then(result => {
@@ -49,10 +44,9 @@ let adoptionStats = (
 
 /// Check PMPL compatibility with another license.
 /// Returns JSON with compatible (bool) and notes.
-let checkCompatibility = (
-  license: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkCompatibility = (license: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("plaza_check_compatibility", {"license": license})
     ->Promise.then(result => {

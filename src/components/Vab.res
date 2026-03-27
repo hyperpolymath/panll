@@ -39,10 +39,7 @@ open Tea.Html
 
 /// Render a single category icon button in the KSP-green sidebar.
 /// Active tab uses the bright green gradient; inactive uses darker green.
-let renderCategoryButton = (
-  cat: vabCategory,
-  isActive: bool,
-): Tea_Vdom.t<msg> => {
+let renderCategoryButton = (cat: vabCategory, isActive: bool): Tea_Vdom.t<msg> => {
   let activeClass = isActive ? "vab-sidebar-btn-active" : "vab-sidebar-btn"
 
   button(
@@ -210,11 +207,9 @@ let renderTopBar = (server: assembledServer): Tea_Vdom.t<msg> => {
 /// Render a single part card in the KSP-style component grid.
 /// Shows part name, port badges, verified indicator, rack unit size,
 /// and dependency count — mimicking KSP's part tooltip.
-let renderComponentCard = (
-  comp: vabComponent,
-  isAssembled: bool,
-  isHovered: bool,
-): Tea_Vdom.t<msg> => {
+let renderComponentCard = (comp: vabComponent, isAssembled: bool, isHovered: bool): Tea_Vdom.t<
+  msg,
+> => {
   let cardClass = if isAssembled {
     "vab-part vab-part-installed"
   } else if isHovered {
@@ -259,15 +254,19 @@ let renderComponentCard = (
           span(
             list{
               Attrs.class_("text-xs font-bold truncate"),
-              Attrs.style("color", if isAssembled { "#6ab35e" } else { "#ddd" }),
+              Attrs.style(
+                "color",
+                if isAssembled {
+                  "#6ab35e"
+                } else {
+                  "#ddd"
+                },
+              ),
             },
             list{text(comp.shortName)},
           ),
           // Green verified tick (KSP science-unlock style)
-          span(
-            list{Attrs.class_("vab-verified text-xs font-bold")},
-            list{text("V")},
-          ),
+          span(list{Attrs.class_("vab-verified text-xs font-bold")}, list{text("V")}),
         },
       ),
       // Port badges (orange-tinted)
@@ -299,26 +298,17 @@ let renderComponentCard = (
             list{Attrs.class_("flex items-center gap-2")},
             list{
               span(
-                list{
-                  Attrs.class_("text-[9px] font-mono"),
-                  Attrs.style("color", "#888"),
-                },
+                list{Attrs.class_("text-[9px] font-mono"), Attrs.style("color", "#888")},
                 list{text(`${Int.toString(comp.rackUnits)}U`)},
               ),
               if Array.length(comp.dependencies) > 0 {
                 span(
-                  list{
-                    Attrs.class_("text-[9px] font-mono"),
-                    Attrs.style("color", "#e8721c"),
-                  },
+                  list{Attrs.class_("text-[9px] font-mono"), Attrs.style("color", "#e8721c")},
                   list{text(`${Int.toString(Array.length(comp.dependencies))} deps`)},
                 )
               } else {
                 span(
-                  list{
-                    Attrs.class_("text-[9px] font-mono"),
-                    Attrs.style("color", "#555"),
-                  },
+                  list{Attrs.class_("text-[9px] font-mono"), Attrs.style("color", "#555")},
                   list{text("no deps")},
                 )
               },
@@ -327,18 +317,12 @@ let renderComponentCard = (
           // Installed indicator or +add
           if isAssembled {
             span(
-              list{
-                Attrs.class_("text-[9px] font-bold"),
-                Attrs.style("color", "#5a9e50"),
-              },
+              list{Attrs.class_("text-[9px] font-bold"), Attrs.style("color", "#5a9e50")},
               list{text("INSTALLED")},
             )
           } else {
             span(
-              list{
-                Attrs.class_("text-[9px] font-bold"),
-                Attrs.style("color", "#888"),
-              },
+              list{Attrs.class_("text-[9px] font-bold"), Attrs.style("color", "#888")},
               list{text("+ADD")},
             )
           },
@@ -376,9 +360,7 @@ let renderComponentGrid = (
   // Apply sort
   let sorted = switch sortBy {
   | SortByName =>
-    Array.toSorted(filtered, (a, b) =>
-      a.name < b.name ? -1.0 : a.name > b.name ? 1.0 : 0.0
-    )
+    Array.toSorted(filtered, (a, b) => a.name < b.name ? -1.0 : a.name > b.name ? 1.0 : 0.0)
   | SortByPorts =>
     Array.toSorted(filtered, (a, b) =>
       Float.fromInt(Array.length(a.ports)) -. Float.fromInt(Array.length(b.ports))
@@ -394,15 +376,32 @@ let renderComponentGrid = (
     let isActive = sortBy === sortVal
     button(
       list{
-        Attrs.class_("px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors"),
+        Attrs.class_(
+          "px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors",
+        ),
         Attrs.style(
           "background-color",
-          if isActive { "rgba(232,114,28,0.8)" } else { "rgba(255,255,255,0.05)" },
+          if isActive {
+            "rgba(232,114,28,0.8)"
+          } else {
+            "rgba(255,255,255,0.05)"
+          },
         ),
-        Attrs.style("color", if isActive { "white" } else { "#888" }),
+        Attrs.style(
+          "color",
+          if isActive {
+            "white"
+          } else {
+            "#888"
+          },
+        ),
         Attrs.style(
           "border",
-          if isActive { "1px solid #e8721c" } else { "1px solid rgba(255,255,255,0.08)" },
+          if isActive {
+            "1px solid #e8721c"
+          } else {
+            "1px solid rgba(255,255,255,0.08)"
+          },
         ),
         Events.onClick(Vab(SetSortBy(sortVal))),
       },
@@ -457,13 +456,8 @@ let renderComponentGrid = (
             list{text(VabCatalog.categoryName(selectedCategory))},
           ),
           span(
-            list{
-              Attrs.class_("text-[10px] font-mono"),
-              Attrs.style("color", "#555"),
-            },
-            list{
-              text(`${Int.toString(Array.length(sorted))} parts`),
-            },
+            list{Attrs.class_("text-[10px] font-mono"), Attrs.style("color", "#555")},
+            list{text(`${Int.toString(Array.length(sorted))} parts`)},
           ),
         },
       ),
@@ -526,43 +520,39 @@ let renderRackUnit = (
       // Mounting bolt (left)
       div(list{Attrs.class_("vab-bolt flex-shrink-0")}, list{}),
       // Staging number (KSP orange)
-      div(
-        list{Attrs.class_("vab-stage flex-shrink-0")},
-        list{text(Int.toString(index + 1))},
-      ),
+      div(list{Attrs.class_("vab-stage flex-shrink-0")}, list{text(Int.toString(index + 1))}),
       // LED indicator (green=ok, red=missing deps)
       div(
-        list{Attrs.class_(hasCritical ? "vab-led-red flex-shrink-0" : "vab-led-green flex-shrink-0")},
+        list{
+          Attrs.class_(hasCritical ? "vab-led-red flex-shrink-0" : "vab-led-green flex-shrink-0"),
+        },
         list{},
       ),
       // Component name
       span(
         list{
           Attrs.class_("flex-1 text-xs font-mono font-bold"),
-          Attrs.style("color", if hasCritical { "#cc6666" } else { "#ddd" }),
+          Attrs.style(
+            "color",
+            if hasCritical {
+              "#cc6666"
+            } else {
+              "#ddd"
+            },
+          ),
         },
         list{text(comp.shortName)},
       ),
       // Rack unit size
       span(
-        list{
-          Attrs.class_("text-[9px] font-mono"),
-          Attrs.style("color", "#666"),
-        },
+        list{Attrs.class_("text-[9px] font-mono"), Attrs.style("color", "#666")},
         list{text(`${Int.toString(comp.rackUnits)}U`)},
       ),
       // Port display (orange-tinted)
       if Array.length(comp.ports) > 0 {
         span(
-          list{
-            Attrs.class_("text-[10px] font-mono font-bold"),
-            Attrs.style("color", "#e8a050"),
-          },
-          list{
-            text(
-              comp.ports->Array.map(p => Int.toString(p))->Array.join(","),
-            ),
-          },
+          list{Attrs.class_("text-[10px] font-mono font-bold"), Attrs.style("color", "#e8a050")},
+          list{text(comp.ports->Array.map(p => Int.toString(p))->Array.join(","))},
         )
       } else {
         noNode
@@ -588,21 +578,14 @@ let renderRackUnit = (
 /// Render an empty rack slot with mounting hole pattern.
 let renderEmptySlot = (_index: int): Tea_Vdom.t<msg> => {
   div(
-    list{
-      Attrs.class_("vab-rack-empty flex items-center gap-2 px-2 py-2 rounded-sm opacity-40"),
-    },
+    list{Attrs.class_("vab-rack-empty flex items-center gap-2 px-2 py-2 rounded-sm opacity-40")},
     list{
       div(list{Attrs.class_("vab-bolt flex-shrink-0")}, list{}),
       div(
-        list{
-          Attrs.class_("flex-1 text-center"),
-        },
+        list{Attrs.class_("flex-1 text-center")},
         list{
           span(
-            list{
-              Attrs.class_("text-[10px] font-mono"),
-              Attrs.style("color", "#333"),
-            },
+            list{Attrs.class_("text-[10px] font-mono"), Attrs.style("color", "#333")},
             list{text("--- empty slot ---")},
           ),
         },
@@ -629,7 +612,11 @@ let renderAssemblyRack = (
   let totalRU = Array.reduce(assembledComponents, 0, (acc, comp) => acc + comp.rackUnits)
 
   // Calculate empty slots (minimum 6 visible rack slots)
-  let totalSlots = if componentCount < 6 { 6 } else { componentCount + 2 }
+  let totalSlots = if componentCount < 6 {
+    6
+  } else {
+    componentCount + 2
+  }
   let emptySlots = totalSlots - componentCount
 
   div(
@@ -670,17 +657,13 @@ let renderAssemblyRack = (
                 list{text(`${Int.toString(componentCount)} parts`)},
               ),
               span(
-                list{
-                  Attrs.class_("text-[10px] font-mono"),
-                  Attrs.style("color", "#666"),
-                },
+                list{Attrs.class_("text-[10px] font-mono"), Attrs.style("color", "#666")},
                 list{text(`${Int.toString(totalRU)} RU`)},
               ),
             },
           ),
         },
       ),
-
       // Rack body (with rail mounts and grid background)
       div(
         list{
@@ -694,21 +677,16 @@ let renderAssemblyRack = (
             List.concat(
               // Assembled components (with staging numbers)
               assembledComponents
-              ->Array.mapWithIndex((comp, i) =>
-                renderRackUnit(comp, i, warnings, catalog)
-              )
+              ->Array.mapWithIndex((comp, i) => renderRackUnit(comp, i, warnings, catalog))
               ->List.fromArray,
               // Empty slots
               Array.make(~length=emptySlots, 0)
-              ->Array.mapWithIndex((_, i) =>
-                renderEmptySlot(componentCount + i)
-              )
+              ->Array.mapWithIndex((_, i) => renderEmptySlot(componentCount + i))
               ->List.fromArray,
             ),
           ),
         },
       ),
-
       // Warning list below rack (KSP-style klaxon warnings)
       if Array.length(warnings) > 0 {
         div(
@@ -746,7 +724,10 @@ let renderAssemblyRack = (
                   list{Attrs.class_(`flex items-start gap-1.5 text-[10px] ${colourClass}`)},
                   list{
                     span(list{Attrs.class_("font-bold font-mono")}, list{text(iconText)}),
-                    span(list{Attrs.class_("font-mono")}, list{text(VabEngine.warningLabel(w, catalog))}),
+                    span(
+                      list{Attrs.class_("font-mono")},
+                      list{text(VabEngine.warningLabel(w, catalog))},
+                    ),
                   },
                 )
               })
@@ -773,16 +754,10 @@ let renderAssemblyRack = (
         )
       } else {
         div(
-          list{
-            Attrs.class_("px-3 py-2"),
-            Attrs.style("border-top", "1px solid #2a2a2a"),
-          },
+          list{Attrs.class_("px-3 py-2"), Attrs.style("border-top", "1px solid #2a2a2a")},
           list{
             div(
-              list{
-                Attrs.class_("text-[10px] font-mono"),
-                Attrs.style("color", "#555"),
-              },
+              list{Attrs.class_("text-[10px] font-mono"), Attrs.style("color", "#555")},
               list{text("Click parts to add to rack")},
             ),
           },
@@ -830,9 +805,7 @@ let renderStatusBar = (
             ),
             if reqCount > 0 {
               span(
-                list{
-                  Attrs.class_("text-[10px] font-mono font-bold vab-warning-error"),
-                },
+                list{Attrs.class_("text-[10px] font-mono font-bold vab-warning-error")},
                 list{text(`${Int.toString(reqCount)} critical`)},
               )
             } else {
@@ -840,9 +813,7 @@ let renderStatusBar = (
             },
             if secCount > 0 {
               span(
-                list{
-                  Attrs.class_("text-[10px] font-mono font-bold vab-warning-caution"),
-                },
+                list{Attrs.class_("text-[10px] font-mono font-bold vab-warning-caution")},
                 list{text(`${Int.toString(secCount)} security`)},
               )
             } else {
@@ -850,9 +821,7 @@ let renderStatusBar = (
             },
             if recCount > 0 {
               span(
-                list{
-                  Attrs.class_("text-[10px] font-mono vab-warning-info"),
-                },
+                list{Attrs.class_("text-[10px] font-mono vab-warning-info")},
                 list{text(`${Int.toString(recCount)} advisory`)},
               )
             } else {
@@ -894,10 +863,7 @@ let renderStatusBar = (
               ),
               Attrs.title(label),
             },
-            list{
-              span(list{}, list{text(icon)}),
-              span(list{}, list{text(label)}),
-            },
+            list{span(list{}, list{text(icon)}), span(list{}, list{text(label)})},
           )
         })
         ->List.fromArray,
@@ -925,14 +891,12 @@ let view = (vab: vabState): Tea_Vdom.t<msg> => {
     list{
       // Top toolbar — KSP green gradient
       renderTopBar(vab.server),
-
       // Main content — sidebar + grid + rack
       div(
         list{Attrs.class_("flex-1 flex overflow-hidden")},
         list{
           // Left: KSP-green category sidebar
           renderCategorySidebar(vab.selectedCategory),
-
           // Centre: component grid (part picker)
           renderComponentGrid(
             vab.catalog,
@@ -942,12 +906,10 @@ let view = (vab: vabState): Tea_Vdom.t<msg> => {
             vab.server.components,
             vab.hoveredComponent,
           ),
-
           // Right: industrial server rack
           renderAssemblyRack(vab.server, vab.catalog, vab.warnings),
         },
       ),
-
       // Bottom: capability instrument panel
       renderStatusBar(vab.capabilities, vab.warnings),
     },

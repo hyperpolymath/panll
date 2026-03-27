@@ -37,22 +37,29 @@ let renderTrustIndicator = (
 
   div(
     list{
-      Attrs.class_(`flex items-center gap-1 px-2 py-1 border rounded text-xs ${textClass} ${borderClass}`),
+      Attrs.class_(
+        `flex items-center gap-1 px-2 py-1 border rounded text-xs ${textClass} ${borderClass}`,
+      ),
       Attrs.ariaLabel(ariaLabel),
       Attrs.role("status"),
     },
     list{
       // Shape indicator (redundant channel beyond colour)
       // Using text labels instead of emoji for ReScript compatibility.
-      span(list{Attrs.class_("text-xs font-mono"), Attrs.ariaHidden(true)}, list{
-        text(switch shape {
-        | "shield-check" => "[V]"
-        | "user-check" => "[H]"
-        | "cpu" => "[A]"
-        | "alert-triangle" => "[!]"
-        | _ => "[?]"
-        }),
-      }),
+      span(
+        list{Attrs.class_("text-xs font-mono"), Attrs.ariaHidden(true)},
+        list{
+          text(
+            switch shape {
+            | "shield-check" => "[V]"
+            | "user-check" => "[H]"
+            | "cpu" => "[A]"
+            | "alert-triangle" => "[!]"
+            | _ => "[?]"
+            },
+          ),
+        },
+      ),
       span(list{}, list{text(`${label}: ${pct}%`)}),
       span(list{Attrs.class_("text-gray-600")}, list{text(`(${Int.toString(lineCount)})`)}),
     },
@@ -62,10 +69,9 @@ let renderTrustIndicator = (
 /// Render the compact trust summary bar.
 /// Shows the trust distribution as a horizontal bar with colour segments
 /// and individual indicators for each trust level.
-let renderSummaryBar = (
-  summary: provenanceSummary,
-  palette: accessibilityPalette,
-): Tea_Vdom.t<msg> => {
+let renderSummaryBar = (summary: provenanceSummary, palette: accessibilityPalette): Tea_Vdom.t<
+  msg,
+> => {
   let total = summary.totalLines
   let trustPct = ProvenanceEngine.trustPercentage(summary)
 
@@ -78,45 +84,51 @@ let renderSummaryBar = (
     list{
       // Title
       span(list{Attrs.class_("text-xs text-gray-500 font-medium mr-2")}, list{text("Provenance")}),
-
       // Segmented progress bar showing trust distribution
-      div(list{Attrs.class_("flex-1 h-2 bg-gray-800 rounded-full overflow-hidden flex")}, list{
-        if total > 0 {
-          let segment = (lines, colour) => {
-            let width = Float.toFixed(Float.fromInt(lines) /. Float.fromInt(total) *. 100.0, ~digits=1)
-            div(list{Attrs.class_(`h-full ${colour}`), Attrs.style("width", `${width}%`)}, list{})
-          }
-          let (vBg, _, _) = ProvenanceEngine.trustColours(Verified, palette)
-          let (hBg, _, _) = ProvenanceEngine.trustColours(HumanReviewed, palette)
-          let (aBg, _, _) = ProvenanceEngine.trustColours(AiAssisted, palette)
-          let (rBg, _, _) = ProvenanceEngine.trustColours(UnreviewedAi, palette)
-          let (gBg, _, _) = ProvenanceEngine.trustColours(Unknown, palette)
-          div(list{Attrs.class_("flex w-full h-full")}, list{
-            segment(summary.verifiedLines, vBg),
-            segment(summary.humanReviewedLines, hBg),
-            segment(summary.aiAssistedLines, aBg),
-            segment(summary.unreviewedAiLines, rBg),
-            segment(summary.unknownLines, gBg),
-          })
-        } else {
-          div(list{Attrs.class_("h-full w-full bg-gray-700")}, list{})
+      div(
+        list{Attrs.class_("flex-1 h-2 bg-gray-800 rounded-full overflow-hidden flex")},
+        list{
+          if total > 0 {
+            let segment = (lines, colour) => {
+              let width = Float.toFixed(
+                Float.fromInt(lines) /. Float.fromInt(total) *. 100.0,
+                ~digits=1,
+              )
+              div(list{Attrs.class_(`h-full ${colour}`), Attrs.style("width", `${width}%`)}, list{})
+            }
+            let (vBg, _, _) = ProvenanceEngine.trustColours(Verified, palette)
+            let (hBg, _, _) = ProvenanceEngine.trustColours(HumanReviewed, palette)
+            let (aBg, _, _) = ProvenanceEngine.trustColours(AiAssisted, palette)
+            let (rBg, _, _) = ProvenanceEngine.trustColours(UnreviewedAi, palette)
+            let (gBg, _, _) = ProvenanceEngine.trustColours(Unknown, palette)
+            div(
+              list{Attrs.class_("flex w-full h-full")},
+              list{
+                segment(summary.verifiedLines, vBg),
+                segment(summary.humanReviewedLines, hBg),
+                segment(summary.aiAssistedLines, aBg),
+                segment(summary.unreviewedAiLines, rBg),
+                segment(summary.unknownLines, gBg),
+              },
+            )
+          } else {
+            div(list{Attrs.class_("h-full w-full bg-gray-700")}, list{})
+          },
         },
-      }),
-
+      ),
       // Trust score
       span(
         list{
           Attrs.class_(
             `text-xs font-mono ml-2 ${trustPct > 80.0
-              ? "text-green-400"
-              : trustPct > 50.0
+                ? "text-green-400"
+                : trustPct > 50.0
                 ? "text-amber-400"
                 : "text-red-400"}`,
           ),
         },
         list{text(`${Float.toFixed(trustPct, ~digits=0)}%`)},
       ),
-
       // Violation warning
       if summary.hasViolations {
         span(
@@ -149,9 +161,16 @@ let renderDetailedBreakdown = (
       renderTrustIndicator(UnreviewedAi, summary.unreviewedAiLines, summary.totalLines, palette),
       renderTrustIndicator(Unknown, summary.unknownLines, summary.totalLines, palette),
       // Author and co-author counts
-      span(list{Attrs.class_("text-xs text-gray-500 ml-auto")}, list{
-        text(`${Int.toString(summary.authorCount)} authors, ${Int.toString(summary.coAuthorCount)} AI co-authors`),
-      }),
+      span(
+        list{Attrs.class_("text-xs text-gray-500 ml-auto")},
+        list{
+          text(
+            `${Int.toString(summary.authorCount)} authors, ${Int.toString(
+                summary.coAuthorCount,
+              )} AI co-authors`,
+          ),
+        },
+      ),
     },
   )
 }
@@ -177,8 +196,8 @@ let renderPaletteSelector = (active: accessibilityPalette): Tea_Vdom.t<msg> => {
         list{
           Attrs.class_(
             `px-2 py-0.5 text-xs rounded ${isActive
-              ? "bg-gray-700 text-gray-200"
-              : "text-gray-500 hover:text-gray-300"}`,
+                ? "bg-gray-700 text-gray-200"
+                : "text-gray-500 hover:text-gray-300"}`,
           ),
           Attrs.role("radio"),
           Attrs.ariaSelected(isActive),
@@ -200,8 +219,8 @@ let renderHostileUxToggle = (suppressed: bool): Tea_Vdom.t<msg> => {
     list{
       Attrs.class_(
         `px-2 py-1 text-xs rounded ${suppressed
-          ? "bg-red-900/50 text-red-300 border border-red-700"
-          : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`,
+            ? "bg-red-900/50 text-red-300 border border-red-700"
+            : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`,
       ),
       Events.onClick(Provenance(ToggleHostileUx)),
       Attrs.ariaLabel(
@@ -210,13 +229,7 @@ let renderHostileUxToggle = (suppressed: bool): Tea_Vdom.t<msg> => {
           : "Click to suppress hostile UX warnings",
       ),
     },
-    list{
-      text(
-        suppressed
-          ? "[!] Warnings Suppressed"
-          : "Suppress Warnings",
-      ),
-    },
+    list{text(suppressed ? "[!] Warnings Suppressed" : "Suppress Warnings")},
   )
 }
 
@@ -235,16 +248,26 @@ let view = (prov: provenanceState): Tea_Vdom.t<msg> => {
       list{
         switch prov.activeFile {
         | Some(file) =>
-          div(list{}, list{
-            renderSummaryBar(file.summary, prov.palette),
-            renderDetailedBreakdown(file.summary, prov.palette),
-          })
+          div(
+            list{},
+            list{
+              renderSummaryBar(file.summary, prov.palette),
+              renderDetailedBreakdown(file.summary, prov.palette),
+            },
+          )
         | None =>
           // No file active — show minimal indicator
           div(
-            list{Attrs.class_("px-3 py-1 bg-gray-900/60 border-b border-gray-800 flex items-center gap-2")},
             list{
-              span(list{Attrs.class_("text-xs text-gray-600")}, list{text("Provenance: no file selected")}),
+              Attrs.class_(
+                "px-3 py-1 bg-gray-900/60 border-b border-gray-800 flex items-center gap-2",
+              ),
+            },
+            list{
+              span(
+                list{Attrs.class_("text-xs text-gray-600")},
+                list{text("Provenance: no file selected")},
+              ),
               renderHostileUxToggle(prov.hostileUxSuppressed),
             },
           )

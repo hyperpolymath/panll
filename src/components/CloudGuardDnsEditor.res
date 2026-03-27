@@ -73,10 +73,10 @@ let recordTypeBadgeClass = (rt: dnsRecordType): string => {
 let isSecurityRecord = (record: cfDnsRecord): bool => {
   switch record.recordType {
   | TXT =>
-    String.includes(record.content, "v=spf1")
-    || (String.includes(record.name, "_dmarc") && String.includes(record.content, "v=DMARC1"))
-    || (String.includes(record.name, "_domainkey") && String.includes(record.content, "v=DKIM1"))
-    || (String.includes(record.name, "_smtp._tls") && String.includes(record.content, "v=TLSRPTv1"))
+    String.includes(record.content, "v=spf1") ||
+    String.includes(record.name, "_dmarc") && String.includes(record.content, "v=DMARC1") ||
+    String.includes(record.name, "_domainkey") && String.includes(record.content, "v=DKIM1") ||
+    (String.includes(record.name, "_smtp._tls") && String.includes(record.content, "v=TLSRPTv1"))
   | CAA => true
   | _ => false
   }
@@ -133,10 +133,7 @@ let renderTableHeader = (): Tea_Vdom.t<msg> => {
 // ============================================================================
 
 /// Render a single DNS record row in the table.
-let renderRecordRow = (
-  record: cfDnsRecord,
-  isEditing: bool,
-): Tea_Vdom.t<msg> => {
+let renderRecordRow = (record: cfDnsRecord, isEditing: bool): Tea_Vdom.t<msg> => {
   let editingClass = isEditing ? " bg-gray-800/80 ring-1 ring-indigo-500/50" : ""
   let secLabel = securityLabel(record)
 
@@ -153,7 +150,9 @@ let renderRecordRow = (
           span(
             list{
               Attrs.class_(
-                `text-xs font-mono px-1.5 py-0.5 rounded border ${recordTypeBadgeClass(record.recordType)}`,
+                `text-xs font-mono px-1.5 py-0.5 rounded border ${recordTypeBadgeClass(
+                    record.recordType,
+                  )}`,
               ),
             },
             list{text(recordTypeLabel(record.recordType))},
@@ -175,7 +174,11 @@ let renderRecordRow = (
               switch secLabel {
               | Some(label) =>
                 span(
-                  list{Attrs.class_("text-xs text-green-400 font-medium px-1 py-0.5 bg-green-900/30 rounded")},
+                  list{
+                    Attrs.class_(
+                      "text-xs text-green-400 font-medium px-1 py-0.5 bg-green-900/30 rounded",
+                    ),
+                  },
                   list{text(label)},
                 )
               | None => noNode
@@ -200,7 +203,15 @@ let renderRecordRow = (
       // TTL
       div(
         list{Attrs.class_("py-1.5 px-2 w-16 text-xs text-gray-500")},
-        list{text(if record.ttl === 1 { "Auto" } else { Int.toString(record.ttl) })},
+        list{
+          text(
+            if record.ttl === 1 {
+              "Auto"
+            } else {
+              Int.toString(record.ttl)
+            },
+          ),
+        },
       ),
       // Proxied status
       div(
@@ -218,13 +229,17 @@ let renderRecordRow = (
                   },
                 ),
               },
-              list{text(if record.proxied { "ON" } else { "OFF" })},
+              list{
+                text(
+                  if record.proxied {
+                    "ON"
+                  } else {
+                    "OFF"
+                  },
+                ),
+              },
             )
-          | _ =>
-            span(
-              list{Attrs.class_("text-xs text-gray-600")},
-              list{text("--")},
-            )
+          | _ => span(list{Attrs.class_("text-xs text-gray-600")}, list{text("--")})
           },
         },
       ),
@@ -259,10 +274,7 @@ let renderRecordRow = (
                   list{text("Del")},
                 )
               } else {
-                span(
-                  list{Attrs.class_("text-xs text-gray-600 italic")},
-                  list{text("Locked")},
-                )
+                span(list{Attrs.class_("text-xs text-gray-600 italic")}, list{text("Locked")})
               },
             },
           ),
@@ -278,10 +290,9 @@ let renderRecordRow = (
 
 /// Render the security record template buttons.
 /// These provide one-click creation of SPF, DMARC, DKIM revocation, CAA, TLS-RPT records.
-let renderSecurityTemplates = (
-  records: array<cfDnsRecord>,
-  hasSelectedZone: bool,
-): Tea_Vdom.t<msg> => {
+let renderSecurityTemplates = (records: array<cfDnsRecord>, hasSelectedZone: bool): Tea_Vdom.t<
+  msg,
+> => {
   // Check which security records already exist
   let hasSpf = records->Array.some(r =>
     switch r.recordType {
@@ -319,7 +330,10 @@ let renderSecurityTemplates = (
     let (bgClass, labelSuffix) = if exists {
       ("bg-green-900/30 text-green-400 border-green-700/40 cursor-default", " OK")
     } else {
-      ("bg-amber-900/30 text-amber-400 border-amber-700/40 hover:bg-amber-900/50 cursor-pointer", "")
+      (
+        "bg-amber-900/30 text-amber-400 border-amber-700/40 hover:bg-amber-900/50 cursor-pointer",
+        "",
+      )
     }
 
     button(
@@ -345,10 +359,7 @@ let renderSecurityTemplates = (
   div(
     list{Attrs.class_("flex items-center gap-2 flex-wrap")},
     list{
-      span(
-        list{Attrs.class_("text-xs text-gray-500 mr-1")},
-        list{text("Security:")},
-      ),
+      span(list{Attrs.class_("text-xs text-gray-500 mr-1")}, list{text("Security:")}),
       templateButton("SPF", "spf", hasSpf),
       templateButton("DMARC", "dmarc", hasDmarc),
       templateButton("DKIM", "dkim_revoke", hasDkim),
@@ -400,7 +411,9 @@ let view = (
     list{
       // Header with record count and security templates
       div(
-        list{Attrs.class_("flex items-center justify-between px-3 py-2 border-b border-gray-800/50")},
+        list{
+          Attrs.class_("flex items-center justify-between px-3 py-2 border-b border-gray-800/50"),
+        },
         list{
           div(
             list{Attrs.class_("flex items-center gap-3")},
@@ -415,7 +428,6 @@ let view = (
           renderSecurityTemplates(records, hasSelectedZone),
         },
       ),
-
       // Loading indicator
       if loading {
         div(
@@ -425,7 +437,6 @@ let view = (
       } else {
         noNode
       },
-
       // Records table
       if Array.length(records) > 0 {
         div(
@@ -459,8 +470,6 @@ let view = (
       } else {
         noNode
       },
-
-      // Missing security records warning
       {
         let missing = CloudGuardEngine.checkEmailSecurityRecords(records)
         if Array.length(missing) > 0 && Array.length(records) > 0 {
@@ -475,10 +484,7 @@ let view = (
                 list{Attrs.class_("space-y-0.5")},
                 missing
                 ->Array.map(msg =>
-                  div(
-                    list{Attrs.class_("text-xs text-gray-500")},
-                    list{text(`- ${msg}`)},
-                  )
+                  div(list{Attrs.class_("text-xs text-gray-500")}, list{text(`- ${msg}`)})
                 )
                 ->List.fromArray,
               ),

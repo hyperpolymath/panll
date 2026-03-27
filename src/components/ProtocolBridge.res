@@ -60,14 +60,39 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              h2(list{Attrs.class_("text-lg font-bold text-sky-300")}, list{text("Protocol Bridge")}),
+              h2(
+                list{Attrs.class_("text-lg font-bold text-sky-300")},
+                list{text("Protocol Bridge")},
+              ),
               span(
-                list{Attrs.class_("text-xs " ++ if state.connected { "text-green-400" } else { "text-red-400" })},
-                list{text(if state.connected { "Monitor active" } else { "Disconnected" })},
+                list{
+                  Attrs.class_(
+                    "text-xs " ++ if state.connected {
+                      "text-green-400"
+                    } else {
+                      "text-red-400"
+                    },
+                  ),
+                },
+                list{
+                  text(
+                    if state.connected {
+                      "Monitor active"
+                    } else {
+                      "Disconnected"
+                    },
+                  ),
+                },
               ),
               span(
                 list{Attrs.class_("text-xs text-gray-400")},
-                list{text(Int.toString(activeChannels) ++ "/" ++ Int.toString(totalChannels) ++ " channels active")},
+                list{
+                  text(
+                    Int.toString(activeChannels) ++
+                    "/" ++
+                    Int.toString(totalChannels) ++ " channels active",
+                  ),
+                },
               ),
             },
           ),
@@ -87,8 +112,11 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Channels { "bg-sky-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Channels {
+                  "bg-sky-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ProtocolBridge(SetPbTab(Channels))),
             },
@@ -97,8 +125,11 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Messages { "bg-sky-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Messages {
+                  "bg-sky-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ProtocolBridge(SetPbTab(Messages))),
             },
@@ -107,8 +138,11 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Latency { "bg-sky-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Latency {
+                  "bg-sky-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ProtocolBridge(SetPbTab(Latency))),
             },
@@ -117,8 +151,11 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Rules { "bg-sky-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Rules {
+                  "bg-sky-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(ProtocolBridge(SetPbTab(Rules))),
             },
@@ -130,11 +167,18 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center",
+            ),
+          },
           list{
             text(err),
             button(
-              list{Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"), Events.onClick(ProtocolBridge(DismissPbError))},
+              list{
+                Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
+                Events.onClick(ProtocolBridge(DismissPbError)),
+              },
               list{text("Dismiss")},
             ),
           },
@@ -152,7 +196,11 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
               state.channels
               ->Array.map(ch =>
                 div(
-                  list{Attrs.class_("flex items-center gap-3 px-3 py-2 bg-gray-900 border border-gray-800 rounded")},
+                  list{
+                    Attrs.class_(
+                      "flex items-center gap-3 px-3 py-2 bg-gray-900 border border-gray-800 rounded",
+                    ),
+                  },
                   list{
                     channelStatusDot(ch.status),
                     div(
@@ -161,16 +209,30 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
                         div(list{Attrs.class_("text-sm text-gray-200")}, list{text(ch.name)}),
                         div(
                           list{Attrs.class_("text-xs text-gray-500")},
-                          list{text(ch.protocol ++ " | " ++ Int.toString(ch.subscribers) ++ " subscribers")},
+                          list{
+                            text(
+                              ch.protocol ++
+                              " | " ++
+                              Int.toString(ch.subscribers) ++ " subscribers",
+                            ),
+                          },
                         ),
                       },
                     ),
-                    span(list{Attrs.class_("text-xs text-gray-400")}, list{text(channelStatusLabel(ch.status))}),
+                    span(
+                      list{Attrs.class_("text-xs text-gray-400")},
+                      list{text(channelStatusLabel(ch.status))},
+                    ),
                     span(
                       list{
                         Attrs.class_(
-                          "text-xs font-mono " ++
-                          if ch.latencyMs > 100.0 { "text-red-400" } else if ch.latencyMs > 50.0 { "text-yellow-400" } else { "text-green-400" },
+                          "text-xs font-mono " ++ if ch.latencyMs > 100.0 {
+                            "text-red-400"
+                          } else if ch.latencyMs > 50.0 {
+                            "text-yellow-400"
+                          } else {
+                            "text-green-400"
+                          },
                         ),
                       },
                       list{text(Float.toFixed(ch.latencyMs, ~digits=1) ++ "ms")},
@@ -194,11 +256,18 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
                 | MessageOutbound => "text-green-400"
                 }
                 div(
-                  list{Attrs.class_("flex items-center gap-2 py-1 border-b border-gray-800/30 text-xs")},
+                  list{
+                    Attrs.class_(
+                      "flex items-center gap-2 py-1 border-b border-gray-800/30 text-xs",
+                    ),
+                  },
                   list{
                     span(list{Attrs.class_("font-mono w-8 " ++ dirColor)}, list{text(dirLabel)}),
                     span(list{Attrs.class_("text-gray-300 flex-1")}, list{text(m.messageType)}),
-                    span(list{Attrs.class_("text-gray-500 font-mono")}, list{text(Int.toString(m.payloadBytes) ++ "B")}),
+                    span(
+                      list{Attrs.class_("text-gray-500 font-mono")},
+                      list{text(Int.toString(m.payloadBytes) ++ "B")},
+                    ),
                     if !m.valid {
                       span(list{Attrs.class_("text-red-400")}, list{text("INVALID")})
                     } else {
@@ -215,16 +284,27 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
               list{
                 div(
                   list{Attrs.class_("text-xs text-gray-400 mb-3")},
-                  list{text(Int.toString(Array.length(state.latencySamples)) ++ " latency samples recorded")},
+                  list{
+                    text(
+                      Int.toString(
+                        Array.length(state.latencySamples),
+                      ) ++ " latency samples recorded",
+                    ),
+                  },
                 ),
                 div(
                   list{},
                   state.latencySamples
                   ->Array.map(sample =>
                     div(
-                      list{Attrs.class_("flex items-center gap-3 py-1 border-b border-gray-800/30")},
                       list{
-                        span(list{Attrs.class_("text-xs text-gray-500 font-mono w-24")}, list{text(sample.channelId)}),
+                        Attrs.class_("flex items-center gap-3 py-1 border-b border-gray-800/30"),
+                      },
+                      list{
+                        span(
+                          list{Attrs.class_("text-xs text-gray-500 font-mono w-24")},
+                          list{text(sample.channelId)},
+                        ),
                         // Latency bar
                         div(
                           list{Attrs.class_("flex-1 h-2 bg-gray-800 rounded overflow-hidden")},
@@ -232,10 +312,19 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
                             div(
                               list{
                                 Attrs.class_(
-                                  "h-full " ++
-                                  if sample.exceededThreshold { "bg-red-500" } else { "bg-sky-500" },
+                                  "h-full " ++ if sample.exceededThreshold {
+                                    "bg-red-500"
+                                  } else {
+                                    "bg-sky-500"
+                                  },
                                 ),
-                                Attrs.style("width", Float.toFixed(Math.min(sample.latencyMs /. 2.0, 100.0), ~digits=1) ++ "%"),
+                                Attrs.style(
+                                  "width",
+                                  Float.toFixed(
+                                    Math.min(sample.latencyMs /. 2.0, 100.0),
+                                    ~digits=1,
+                                  ) ++ "%",
+                                ),
                               },
                               list{},
                             ),
@@ -244,8 +333,11 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
                         span(
                           list{
                             Attrs.class_(
-                              "text-xs font-mono w-16 text-right " ++
-                              if sample.exceededThreshold { "text-red-400" } else { "text-gray-400" },
+                              "text-xs font-mono w-16 text-right " ++ if sample.exceededThreshold {
+                                "text-red-400"
+                              } else {
+                                "text-gray-400"
+                              },
                             ),
                           },
                           list{text(Float.toFixed(sample.latencyMs, ~digits=1) ++ "ms")},
@@ -273,7 +365,10 @@ let view = (state: protocolBridgeState): Tea_Vdom.t<msg> => {
                         div(list{Attrs.class_("text-xs text-gray-500")}, list{text(r.description)}),
                       },
                     ),
-                    span(list{Attrs.class_("text-xs text-sky-400 font-mono")}, list{text(r.expression)}),
+                    span(
+                      list{Attrs.class_("text-xs text-sky-400 font-mono")},
+                      list{text(r.expression)},
+                    ),
                   },
                 )
               )

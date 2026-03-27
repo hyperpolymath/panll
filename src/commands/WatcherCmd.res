@@ -29,22 +29,20 @@ let parseEventKind = (kind: string): watchEventKind => {
 /// Tea_Json decoder for a single watch event.
 let watchEventDecoder: Tea_Json.decoder<watchEvent> = {
   open Decoders
-  map6(
-    (path, kindStr, isDir, timestamp, extension, filename) => ({
-      path,
-      kind: parseEventKind(kindStr),
-      isDir,
-      timestamp,
-      extension,
-      filename,
-    }: watchEvent),
-    stringField("path"),
-    stringField("kind"),
-    boolField("is_dir"),
-    floatField("timestamp"),
-    stringField("extension"),
-    stringField("filename"),
-  )
+  map6((path, kindStr, isDir, timestamp, extension, filename): watchEvent => {
+    path,
+    kind: parseEventKind(kindStr),
+    isDir,
+    timestamp,
+    extension,
+    filename,
+  }, stringField(
+    "path",
+  ), stringField(
+    "kind",
+  ), boolField(
+    "is_dir",
+  ), floatField("timestamp"), stringField("extension"), stringField("filename"))
 }
 
 /// Parse a raw JSON string into a `watchEvent`.
@@ -58,10 +56,7 @@ let parseEvent = (jsonStr: string): option<watchEvent> =>
 ///
 /// The watcher runs in a background Rust thread and emits events via the
 /// backend event bus. Paths are watched recursively with 500ms debounce.
-let start = (
-  paths: array<string>,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let start = (paths: array<string>, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("watcher_start", {"paths": paths})
     ->Promise.then(result => {
@@ -109,10 +104,7 @@ let status = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
 }
 
 /// Add a path to the running watcher dynamically.
-let addPath = (
-  path: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let addPath = (path: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("watcher_add_path", {"path": path})
     ->Promise.then(result => {
@@ -128,10 +120,7 @@ let addPath = (
 }
 
 /// Remove a path from the running watcher.
-let removePath = (
-  path: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let removePath = (path: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("watcher_remove_path", {"path": path})
     ->Promise.then(result => {

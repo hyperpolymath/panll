@@ -42,12 +42,9 @@ let qualityColour = (rating: qualityRating): string => {
 }
 
 /// Render a single metric card with value and quality indicator.
-let metricCard = (
-  label: string,
-  value: string,
-  unit: string,
-  rating: qualityRating,
-): Tea_Vdom.t<msg> => {
+let metricCard = (label: string, value: string, unit: string, rating: qualityRating): Tea_Vdom.t<
+  msg,
+> => {
   div(
     list{Attrs.class_("bg-gray-900/60 border border-gray-800 rounded-lg p-3")},
     list{
@@ -55,10 +52,7 @@ let metricCard = (
       div(
         list{Attrs.class_("flex items-baseline gap-1")},
         list{
-          span(
-            list{Attrs.class_(`text-xl font-bold ${qualityColour(rating)}`)},
-            list{text(value)},
-          ),
+          span(list{Attrs.class_(`text-xl font-bold ${qualityColour(rating)}`)}, list{text(value)}),
           span(list{Attrs.class_("text-xs text-gray-600")}, list{text(unit)}),
         },
       ),
@@ -81,10 +75,26 @@ let renderMetrics = (connected: bool): Tea_Vdom.t<msg> => {
   } else {
     ("--", "--", "--", "--")
   }
-  let latencyRating = if connected { Good } else { Poor }
-  let jitterRating = if connected { Good } else { Poor }
-  let lossRating = if connected { Good } else { Poor }
-  let bitrateRating = if connected { Good } else { Poor }
+  let latencyRating = if connected {
+    Good
+  } else {
+    Poor
+  }
+  let jitterRating = if connected {
+    Good
+  } else {
+    Poor
+  }
+  let lossRating = if connected {
+    Good
+  } else {
+    Poor
+  }
+  let bitrateRating = if connected {
+    Good
+  } else {
+    Poor
+  }
 
   div(
     list{Attrs.class_("grid grid-cols-4 gap-3 px-4 py-3 border-b border-gray-800")},
@@ -105,9 +115,7 @@ let renderMetrics = (connected: bool): Tea_Vdom.t<msg> => {
 let renderParticipantLevel = (participant: BurbleModel.participant): Tea_Vdom.t<msg> => {
   let volumePercent = Float.toFixed(participant.volume *. 100.0, ~digits=0)
   let barWidth = `${volumePercent}%`
-  let speakingClass = participant.isSpeaking
-    ? "border-emerald-600"
-    : "border-gray-800"
+  let speakingClass = participant.isSpeaking ? "border-emerald-600" : "border-gray-800"
   let stateLabel = switch participant.voiceState {
   | BurbleModel.Connected => "Active"
   | BurbleModel.Muted => "Muted"
@@ -129,7 +137,9 @@ let renderParticipantLevel = (participant: BurbleModel.participant): Tea_Vdom.t<
       div(
         list{
           Attrs.class_(
-            `w-2 h-2 rounded-full ${participant.isSpeaking ? "bg-emerald-400 animate-pulse" : "bg-gray-700"}`,
+            `w-2 h-2 rounded-full ${participant.isSpeaking
+                ? "bg-emerald-400 animate-pulse"
+                : "bg-gray-700"}`,
           ),
         },
         list{},
@@ -138,7 +148,10 @@ let renderParticipantLevel = (participant: BurbleModel.participant): Tea_Vdom.t<
       div(
         list{Attrs.class_("w-32")},
         list{
-          div(list{Attrs.class_("text-sm text-gray-300 truncate")}, list{text(participant.displayName)}),
+          div(
+            list{Attrs.class_("text-sm text-gray-300 truncate")},
+            list{text(participant.displayName)},
+          ),
           div(list{Attrs.class_(`text-xs ${stateColour}`)}, list{text(stateLabel)}),
         },
       ),
@@ -149,7 +162,9 @@ let renderParticipantLevel = (participant: BurbleModel.participant): Tea_Vdom.t<
           div(
             list{
               Attrs.class_(
-                `h-full rounded-full transition-all duration-150 ${participant.isSpeaking ? "bg-emerald-500" : "bg-gray-600"}`,
+                `h-full rounded-full transition-all duration-150 ${participant.isSpeaking
+                    ? "bg-emerald-500"
+                    : "bg-gray-600"}`,
               ),
               Attrs.style("width", barWidth),
             },
@@ -176,7 +191,10 @@ let renderParticipants = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between px-4 py-2 border-b border-gray-800")},
         list{
-          span(list{Attrs.class_("text-sm text-gray-300 font-medium")}, list{text("Participant Audio Levels")}),
+          span(
+            list{Attrs.class_("text-sm text-gray-300 font-medium")},
+            list{text("Participant Audio Levels")},
+          ),
           span(
             list{Attrs.class_("text-xs text-gray-600")},
             list{text(`${Int.toString(Array.length(participants))} participants`)},
@@ -245,10 +263,7 @@ let renderCodecInfo = (connected: bool): Tea_Vdom.t<msg> => {
             list{Attrs.class_("flex items-center gap-1")},
             list{
               span(list{Attrs.class_("text-gray-600")}, list{text("Spatial:")}),
-              span(
-                list{Attrs.class_("text-gray-400")},
-                list{text("Off (Workspace profile)")},
-              ),
+              span(list{Attrs.class_("text-gray-400")}, list{text("Off (Workspace profile)")}),
             },
           ),
           // E2EE
@@ -295,13 +310,18 @@ let view = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              div(list{Attrs.class_("text-lg font-medium text-gray-200")}, list{text("Voice Quality")}),
+              div(
+                list{Attrs.class_("text-lg font-medium text-gray-200")},
+                list{text("Voice Quality")},
+              ),
               span(list{Attrs.class_("text-xs text-gray-500")}, list{text("WebRTC Metrics")}),
             },
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors"),
+              Attrs.class_(
+                "px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors",
+              ),
               Events.onClick(PanelSwitcher(ClosePanels)),
             },
             list{text("Close")},
@@ -314,7 +334,9 @@ let view = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 border-b border-red-800 text-xs text-red-400")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 border-b border-red-800 text-xs text-red-400"),
+          },
           list{text(err)},
         )
       | None => noNode

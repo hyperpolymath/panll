@@ -22,16 +22,19 @@ let mintPanel = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("minter_mint_panel", {
-      "panelName": panelName,
-      "shortName": shortName,
-      "description": description,
-      "icon": icon,
-      "backendKind": backendKind,
-      "accessibility": accessibility,
-      "capabilities": capabilities,
-      "endpoint": endpoint,
-    })
+    invoke(
+      "minter_mint_panel",
+      {
+        "panelName": panelName,
+        "shortName": shortName,
+        "description": description,
+        "icon": icon,
+        "backendKind": backendKind,
+        "accessibility": accessibility,
+        "capabilities": capabilities,
+        "endpoint": endpoint,
+      },
+    )
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -46,10 +49,7 @@ let mintPanel = (
 
 /// Validate a panel name against the existing registry.
 /// Returns "valid" or an error description.
-let validateName = (
-  name: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let validateName = (name: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("minter_validate_name", {"name": name})
     ->Promise.then(result => {

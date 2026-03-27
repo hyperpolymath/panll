@@ -21,7 +21,12 @@ let categoryLabel = (cat: gistCategory): string =>
 
 /// All category tabs.
 let allCategories: array<gistCategory> = [
-  GistAll, GistQueries, GistProofs, GistAutomation, GistConfig, GistTemplates,
+  GistAll,
+  GistQueries,
+  GistProofs,
+  GistAutomation,
+  GistConfig,
+  GistTemplates,
 ]
 
 /// Language label for display.
@@ -85,36 +90,57 @@ let languageCategory = (lang: gistLanguage): gistCategory =>
 /// Estimate token count for a string (rough: ~4 chars per token).
 let estimateTokens = (text: string): int => {
   let len = String.length(text)
-  if len === 0 { 0 } else { Int.fromFloat(Math.ceil(Int.toFloat(len) /. 4.0)) }
+  if len === 0 {
+    0
+  } else {
+    Int.fromFloat(Math.ceil(Int.toFloat(len) /. 4.0))
+  }
 }
 
 /// Generate the MCP tool schema JSON for a gist (for tool discovery).
 /// This is what gets advertised to LLMs so they can invoke the gist.
 let generateMcpToolJson = (gist: scriptGist): string => {
-  let inputProps = gist.schema.inputs->Array.map(p => {
-    "\"" ++ p.name ++ "\": {\"type\": \"" ++ p.schemaType ++ "\", \"description\": \"" ++ p.description ++ "\"}"
-  })->Array.join(", ")
-  let required = gist.schema.inputs
+  let inputProps =
+    gist.schema.inputs
+    ->Array.map(p => {
+      "\"" ++
+      p.name ++
+      "\": {\"type\": \"" ++
+      p.schemaType ++
+      "\", \"description\": \"" ++
+      p.description ++ "\"}"
+    })
+    ->Array.join(", ")
+  let required =
+    gist.schema.inputs
     ->Array.filter(p => p.required)
     ->Array.map(p => "\"" ++ p.name ++ "\"")
     ->Array.join(", ")
   "{" ++
-    "\"name\": \"" ++ gist.schema.toolName ++ "\", " ++
-    "\"description\": \"" ++ gist.schema.summary ++ "\", " ++
-    "\"input_schema\": {" ++
-      "\"type\": \"object\", " ++
-      "\"properties\": {" ++ inputProps ++ "}, " ++
-      "\"required\": [" ++ required ++ "]" ++
-    "}" ++
-  "}"
+  "\"name\": \"" ++
+  gist.schema.toolName ++
+  "\", " ++
+  "\"description\": \"" ++
+  gist.schema.summary ++
+  "\", " ++
+  "\"input_schema\": {" ++
+  "\"type\": \"object\", " ++
+  "\"properties\": {" ++
+  inputProps ++
+  "}, " ++
+  "\"required\": [" ++
+  required ++
+  "]" ++
+  "}" ++ "}"
 }
 
 /// Estimate the token cost of including a gist's schema in LLM context.
 let schemaTokenCost = (schema: gistSchema): int => {
   let base = estimateTokens(schema.toolName) + estimateTokens(schema.summary)
-  let paramCost = schema.inputs->Array.reduce(0, (acc, p) =>
-    acc + estimateTokens(p.name) + estimateTokens(p.description) + 5
-  )
+  let paramCost =
+    schema.inputs->Array.reduce(0, (acc, p) =>
+      acc + estimateTokens(p.name) + estimateTokens(p.description) + 5
+    )
   base + paramCost + 20 // overhead for JSON structure
 }
 
@@ -325,8 +351,9 @@ let findCardfile = (cardfiles: array<synchronicCardfile>, id: string): option<sy
   cardfiles->Array.find(cf => cf.id === id)
 
 /// Resolve gists in a cardfile (ordered, skipping missing).
-let resolveCardfileGists = (cardfile: synchronicCardfile, allGists: array<scriptGist>): array<scriptGist> =>
-  cardfile.gistIds->Array.filterMap(id => findGist(allGists, id))
+let resolveCardfileGists = (cardfile: synchronicCardfile, allGists: array<scriptGist>): array<
+  scriptGist,
+> => cardfile.gistIds->Array.filterMap(id => findGist(allGists, id))
 
 /// Cardfile label for display.
 let cardfileLabel = (cf: synchronicCardfile): string =>

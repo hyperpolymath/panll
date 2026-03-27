@@ -46,10 +46,7 @@ let allCategories: array<settingCategory> = [
 ]
 
 /// Render a single category tab button.
-let renderCategoryTab = (
-  cat: settingCategory,
-  isActive: bool,
-): Tea_Vdom.t<msg> => {
+let renderCategoryTab = (cat: settingCategory, isActive: bool): Tea_Vdom.t<msg> => {
   let activeClass = isActive
     ? "border-indigo-500 text-indigo-300 bg-gray-800/50"
     : "border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-600"
@@ -97,14 +94,8 @@ let renderConnectionStatus = (connection: cfConnectionStatus): Tea_Vdom.t<msg> =
   div(
     list{Attrs.class_("flex items-center gap-2 px-3 py-1.5")},
     list{
-      span(
-        list{Attrs.class_(`w-2 h-2 rounded-full ${dotClass}`)},
-        list{},
-      ),
-      span(
-        list{Attrs.class_("text-xs text-gray-400")},
-        list{text(statusText)},
-      ),
+      span(list{Attrs.class_(`w-2 h-2 rounded-full ${dotClass}`)}, list{}),
+      span(list{Attrs.class_("text-xs text-gray-400")}, list{text(statusText)}),
     },
   )
 }
@@ -114,10 +105,7 @@ let renderConnectionStatus = (connection: cfConnectionStatus): Tea_Vdom.t<msg> =
 // ============================================================================
 
 /// Render the audit results summary in the right side panel.
-let renderAuditPanel = (
-  auditResult: option<auditResult>,
-  loading: bool,
-): Tea_Vdom.t<msg> => {
+let renderAuditPanel = (auditResult: option<auditResult>, loading: bool): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("w-72 border-l border-gray-800 p-3 overflow-y-auto")},
     list{
@@ -128,10 +116,7 @@ let renderAuditPanel = (
       switch auditResult {
       | None =>
         if loading {
-          div(
-            list{Attrs.class_("text-sm text-gray-500 italic")},
-            list{text("Running audit...")},
-          )
+          div(list{Attrs.class_("text-sm text-gray-500 italic")}, list{text("Running audit...")})
         } else {
           div(
             list{Attrs.class_("text-sm text-gray-600 italic")},
@@ -170,25 +155,57 @@ let renderAuditPanel = (
               list{Attrs.class_("flex gap-1 mb-3")},
               list{
                 {
-                  let critical = result.findings->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "CRITICAL")->Array.length
-                  let high = result.findings->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "HIGH")->Array.length
-                  let medium = result.findings->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "MEDIUM")->Array.length
-                  let low = result.findings->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "LOW")->Array.length
+                  let critical =
+                    result.findings
+                    ->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "CRITICAL")
+                    ->Array.length
+                  let high =
+                    result.findings
+                    ->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "HIGH")
+                    ->Array.length
+                  let medium =
+                    result.findings
+                    ->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "MEDIUM")
+                    ->Array.length
+                  let low =
+                    result.findings
+                    ->Array.filter(f => CloudGuardEngine.severityLabel(f.severity) == "LOW")
+                    ->Array.length
                   div(
                     list{Attrs.class_("flex gap-2 text-[10px]")},
                     list{
                       if critical > 0 {
-                        span(list{Attrs.class_("text-red-400")}, list{text(`${Int.toString(critical)} critical`)})
-                      } else { noNode },
+                        span(
+                          list{Attrs.class_("text-red-400")},
+                          list{text(`${Int.toString(critical)} critical`)},
+                        )
+                      } else {
+                        noNode
+                      },
                       if high > 0 {
-                        span(list{Attrs.class_("text-orange-400")}, list{text(`${Int.toString(high)} high`)})
-                      } else { noNode },
+                        span(
+                          list{Attrs.class_("text-orange-400")},
+                          list{text(`${Int.toString(high)} high`)},
+                        )
+                      } else {
+                        noNode
+                      },
                       if medium > 0 {
-                        span(list{Attrs.class_("text-amber-400")}, list{text(`${Int.toString(medium)} medium`)})
-                      } else { noNode },
+                        span(
+                          list{Attrs.class_("text-amber-400")},
+                          list{text(`${Int.toString(medium)} medium`)},
+                        )
+                      } else {
+                        noNode
+                      },
                       if low > 0 {
-                        span(list{Attrs.class_("text-gray-400")}, list{text(`${Int.toString(low)} low`)})
-                      } else { noNode },
+                        span(
+                          list{Attrs.class_("text-gray-400")},
+                          list{text(`${Int.toString(low)} low`)},
+                        )
+                      } else {
+                        noNode
+                      },
                     },
                   )
                 },
@@ -201,39 +218,55 @@ let renderAuditPanel = (
               ->CloudGuardEngine.sortFindingsBySeverity
               ->Array.map(finding =>
                 div(
-                  list{Attrs.class_("text-xs p-2 bg-gray-800/50 rounded hover:bg-gray-800/70 transition-colors")},
+                  list{
+                    Attrs.class_(
+                      "text-xs p-2 bg-gray-800/50 rounded hover:bg-gray-800/70 transition-colors",
+                    ),
+                  },
                   list{
                     div(
                       list{Attrs.class_("flex items-center gap-1.5 mb-1")},
                       list{
                         span(
-                          list{Attrs.class_(`font-bold ${CloudGuardEngine.severityColour(finding.severity)}`)},
+                          list{
+                            Attrs.class_(
+                              `font-bold ${CloudGuardEngine.severityColour(finding.severity)}`,
+                            ),
+                          },
                           list{text(CloudGuardEngine.severityLabel(finding.severity))},
                         ),
-                        span(
-                          list{Attrs.class_("text-gray-400")},
-                          list{text(finding.settingId)},
-                        ),
+                        span(list{Attrs.class_("text-gray-400")}, list{text(finding.settingId)}),
                       },
                     ),
-                    div(
-                      list{Attrs.class_("text-gray-400")},
-                      list{text(finding.message)},
-                    ),
+                    div(list{Attrs.class_("text-gray-400")}, list{text(finding.message)}),
                     // Remediation suggestion
                     div(
                       list{Attrs.class_("mt-1.5 pl-2 border-l-2 border-gray-700")},
                       list{
-                        div(list{Attrs.class_("text-[10px] text-gray-600 uppercase tracking-wider mb-0.5")}, list{text("Remediation")}),
-                        div(list{Attrs.class_("text-[10px] text-gray-500")}, list{
-                          text(`Set ${finding.settingId} from "${finding.currentValue}" to "${finding.expectedValue}"`),
-                        }),
+                        div(
+                          list{
+                            Attrs.class_(
+                              "text-[10px] text-gray-600 uppercase tracking-wider mb-0.5",
+                            ),
+                          },
+                          list{text("Remediation")},
+                        ),
+                        div(
+                          list{Attrs.class_("text-[10px] text-gray-500")},
+                          list{
+                            text(
+                              `Set ${finding.settingId} from "${finding.currentValue}" to "${finding.expectedValue}"`,
+                            ),
+                          },
+                        ),
                       },
                     ),
                     // Fix action button
                     button(
                       list{
-                        Attrs.class_("mt-1.5 px-2 py-0.5 text-[10px] bg-indigo-900/40 text-indigo-300 rounded border border-indigo-800 hover:bg-indigo-800/50 transition-colors"),
+                        Attrs.class_(
+                          "mt-1.5 px-2 py-0.5 text-[10px] bg-indigo-900/40 text-indigo-300 rounded border border-indigo-800 hover:bg-indigo-800/50 transition-colors",
+                        ),
                         Events.onClick(CloudGuard(HardenSetting(finding.settingId))),
                         Attrs.ariaLabel(`Fix ${finding.settingId}`),
                       },
@@ -276,7 +309,13 @@ let renderActionBar = (
         list{
           button(
             list{
-              Attrs.class_(if selectedCount > 0 && !loading { primaryClass } else { disabledClass }),
+              Attrs.class_(
+                if selectedCount > 0 && !loading {
+                  primaryClass
+                } else {
+                  disabledClass
+                },
+              ),
               Attrs.ariaLabel("Harden all selected domains"),
               if selectedCount > 0 && !loading {
                 Events.onClick(CloudGuard(HardenSelected))
@@ -288,7 +327,13 @@ let renderActionBar = (
           ),
           button(
             list{
-              Attrs.class_(if !loading { secondaryClass } else { disabledClass }),
+              Attrs.class_(
+                if !loading {
+                  secondaryClass
+                } else {
+                  disabledClass
+                },
+              ),
               Attrs.ariaLabel("Push local changes to Cloudflare"),
               if !loading {
                 Events.onClick(CloudGuard(PushChanges))
@@ -300,7 +345,13 @@ let renderActionBar = (
           ),
           button(
             list{
-              Attrs.class_(if !loading { secondaryClass } else { disabledClass }),
+              Attrs.class_(
+                if !loading {
+                  secondaryClass
+                } else {
+                  disabledClass
+                },
+              ),
               Attrs.ariaLabel("Download offline config"),
               if !loading {
                 Events.onClick(CloudGuard(DownloadConfig))
@@ -312,7 +363,13 @@ let renderActionBar = (
           ),
           button(
             list{
-              Attrs.class_(if selectedCount > 0 && !loading { secondaryClass } else { disabledClass }),
+              Attrs.class_(
+                if selectedCount > 0 && !loading {
+                  secondaryClass
+                } else {
+                  disabledClass
+                },
+              ),
               Attrs.ariaLabel("Run compliance audit"),
               if selectedCount > 0 && !loading {
                 Events.onClick(CloudGuard(RunAudit))
@@ -329,9 +386,7 @@ let renderActionBar = (
       | None =>
         div(
           list{Attrs.class_("text-xs text-gray-500")},
-          list{
-            text(`${Int.toString(selectedCount)}/${Int.toString(totalCount)} domains selected`),
-          },
+          list{text(`${Int.toString(selectedCount)}/${Int.toString(totalCount)} domains selected`)},
         )
       | Some(progress) =>
         div(
@@ -347,9 +402,16 @@ let renderActionBar = (
                     Attrs.style(
                       "width",
                       `${Float.toFixed(
-                        Int.toFloat(progress.completed) /. Int.toFloat(if progress.total > 0 { progress.total } else { 1 }) *. 100.0,
-                        ~digits=0,
-                      )}%`,
+                          Int.toFloat(progress.completed) /.
+                          Int.toFloat(
+                            if progress.total > 0 {
+                              progress.total
+                            } else {
+                              1
+                            },
+                          ) *. 100.0,
+                          ~digits=0,
+                        )}%`,
                     ),
                   },
                   list{},
@@ -360,18 +422,12 @@ let renderActionBar = (
             div(
               list{Attrs.class_("text-xs text-gray-400")},
               list{
-                text(
-                  `${Int.toString(progress.completed)}/${Int.toString(progress.total)} domains`,
-                ),
+                text(`${Int.toString(progress.completed)}/${Int.toString(progress.total)} domains`),
               },
             ),
             // Current domain
             switch progress.currentDomain {
-            | Some(domain) =>
-              span(
-                list{Attrs.class_("text-xs text-gray-500")},
-                list{text(domain)},
-              )
+            | Some(domain) => span(list{Attrs.class_("text-xs text-gray-500")}, list{text(domain)})
             | None => noNode
             },
           },
@@ -397,7 +453,11 @@ let view = (state: cloudguardState): Tea_Vdom.t<msg> => {
     list{
       // Header bar with title, connection status, and close button
       div(
-        list{Attrs.class_("flex items-center justify-between px-4 py-2 border-b border-gray-800 bg-gray-900/80")},
+        list{
+          Attrs.class_(
+            "flex items-center justify-between px-4 py-2 border-b border-gray-800 bg-gray-900/80",
+          ),
+        },
         list{
           div(
             list{Attrs.class_("flex items-center gap-3")},
@@ -428,21 +488,13 @@ let view = (state: cloudguardState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-
       // Domain selector ribbon
       div(
         list{Attrs.class_("px-4 py-2")},
-        list{
-          CloudGuardDomainList.view(state.zones, state.selectedZoneIds, state.filterText),
-        },
+        list{CloudGuardDomainList.view(state.zones, state.selectedZoneIds, state.filterText)},
       ),
-
       // Category tab bar
-      div(
-        list{Attrs.class_("px-4")},
-        list{renderCategoryTabBar(state.activeCategory)},
-      ),
-
+      div(list{Attrs.class_("px-4")}, list{renderCategoryTabBar(state.activeCategory)}),
       // Main content area: settings grid + audit side panel
       div(
         list{Attrs.class_("flex-1 flex overflow-hidden")},
@@ -452,7 +504,7 @@ let view = (state: cloudguardState): Tea_Vdom.t<msg> => {
             list{Attrs.class_("flex-1 overflow-y-auto px-4 py-2")},
             list{
               {
-                let currentDomain = switch Array.get(state.selectedZoneIds, 0) {
+                let currentDomain = switch state.selectedZoneIds[0] {
                 | Some(zoneId) =>
                   switch state.zones->Array.find(z => z.id === zoneId) {
                   | Some(zone) => Some(zone.name)
@@ -471,11 +523,7 @@ let view = (state: cloudguardState): Tea_Vdom.t<msg> => {
                   )
                 | Pages =>
                   // Pages tab shows the Pages setup component
-                  CloudGuardPagesSetup.view(
-                    state.pagesProjects,
-                    currentDomain,
-                    state.loading,
-                  )
+                  CloudGuardPagesSetup.view(state.pagesProjects, currentDomain, state.loading)
                 | _ =>
                   // All other tabs show the settings toggle grid
                   CloudGuardSettingsGrid.view(
@@ -499,7 +547,6 @@ let view = (state: cloudguardState): Tea_Vdom.t<msg> => {
           },
         },
       ),
-
       // Action bar (bottom)
       renderActionBar(
         Array.length(state.selectedZoneIds),

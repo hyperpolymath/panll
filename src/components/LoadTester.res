@@ -53,7 +53,11 @@ let playerStatusBadge = (status: simulatedPlayerStatus): Tea_Vdom.t<msg> =>
   switch status {
   | PlayerConnecting =>
     span(
-      list{Attrs.class_("px-1.5 py-0.5 text-xs rounded bg-amber-500 text-white font-mono animate-pulse")},
+      list{
+        Attrs.class_(
+          "px-1.5 py-0.5 text-xs rounded bg-amber-500 text-white font-mono animate-pulse",
+        ),
+      },
       list{text("CONNECTING")},
     )
   | PlayerConnected =>
@@ -284,21 +288,36 @@ let renderResultsTab = (state: loadTesterState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("text-sm font-medium text-gray-200")},
                   list{text(result.scenario.name)},
                 ),
-                span(
-                  list{Attrs.class_("text-xs text-gray-500")},
-                  list{text(result.timestamp)},
-                ),
+                span(list{Attrs.class_("text-xs text-gray-500")}, list{text(result.timestamp)}),
               },
             ),
             div(
               list{Attrs.class_("grid grid-cols-3 gap-2 text-xs")},
               list{
-                div(list{Attrs.class_("text-gray-400")}, list{text(`Peak: ${Int.toString(result.peakPlayers)} players`)}),
-                div(list{Attrs.class_("text-gray-400")}, list{text(`Avg: ${Float.toFixed(result.avgLatencyMs, ~digits=1)}ms`)}),
-                div(list{Attrs.class_("text-gray-400")}, list{text(`P99: ${Float.toFixed(result.p99LatencyMs, ~digits=1)}ms`)}),
-                div(list{Attrs.class_("text-gray-400")}, list{text(`Throughput: ${Float.toFixed(result.throughputPerSec, ~digits=0)}/s`)}),
-                div(list{Attrs.class_(errColour)}, list{text(`Errors: ${Float.toFixed(errRate, ~digits=1)}%`)}),
-                div(list{Attrs.class_("text-gray-400")}, list{text(`Duration: ${Float.toFixed(result.durationMs, ~digits=0)}ms`)}),
+                div(
+                  list{Attrs.class_("text-gray-400")},
+                  list{text(`Peak: ${Int.toString(result.peakPlayers)} players`)},
+                ),
+                div(
+                  list{Attrs.class_("text-gray-400")},
+                  list{text(`Avg: ${Float.toFixed(result.avgLatencyMs, ~digits=1)}ms`)},
+                ),
+                div(
+                  list{Attrs.class_("text-gray-400")},
+                  list{text(`P99: ${Float.toFixed(result.p99LatencyMs, ~digits=1)}ms`)},
+                ),
+                div(
+                  list{Attrs.class_("text-gray-400")},
+                  list{text(`Throughput: ${Float.toFixed(result.throughputPerSec, ~digits=0)}/s`)},
+                ),
+                div(
+                  list{Attrs.class_(errColour)},
+                  list{text(`Errors: ${Float.toFixed(errRate, ~digits=1)}%`)},
+                ),
+                div(
+                  list{Attrs.class_("text-gray-400")},
+                  list{text(`Duration: ${Float.toFixed(result.durationMs, ~digits=0)}ms`)},
+                ),
               },
             ),
           },
@@ -342,10 +361,7 @@ let view = (state: loadTesterState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between px-4 py-3 border-b border-gray-800")},
         list{
-          h2(
-            list{Attrs.class_("text-lg font-semibold text-cyan-300")},
-            list{text("Load Tester")},
-          ),
+          h2(list{Attrs.class_("text-lg font-semibold text-cyan-300")}, list{text("Load Tester")}),
           button(
             list{
               Attrs.class_(
@@ -360,10 +376,15 @@ let view = (state: loadTesterState): Tea_Vdom.t<msg> => {
       // Running indicator
       if state.running {
         div(
-          list{Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700")},
+          list{
+            Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700"),
+          },
           list{
             div(list{Attrs.class_("w-3 h-3 bg-amber-400 rounded-full animate-pulse")}, list{}),
-            span(list{Attrs.class_("text-sm text-amber-300")}, list{text("Load test in progress...")}),
+            span(
+              list{Attrs.class_("text-sm text-amber-300")},
+              list{text("Load test in progress...")},
+            ),
           },
         )
       } else {
@@ -373,7 +394,9 @@ let view = (state: loadTesterState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

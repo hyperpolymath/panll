@@ -126,10 +126,9 @@ let defaultSnapshot = (): timelineSnapshot => {
 /// @param timeline The existing timeline array
 /// @param snap     The new snapshot to append
 /// @returns Updated timeline with the snapshot added and cap enforced
-let addSnapshot = (
-  timeline: array<timelineSnapshot>,
-  snap: timelineSnapshot,
-): array<timelineSnapshot> => {
+let addSnapshot = (timeline: array<timelineSnapshot>, snap: timelineSnapshot): array<
+  timelineSnapshot,
+> => {
   let combined = Array.concat(timeline, [snap])
   let len = Array.length(combined)
   if len > maxTimelineLength {
@@ -200,7 +199,11 @@ let computeTrend = (values: array<float>): timelineTrend => {
     Stable
   } else {
     // Take the last `trendWindowSize` values (or all if fewer)
-    let windowStart = if len > trendWindowSize { len - trendWindowSize } else { 0 }
+    let windowStart = if len > trendWindowSize {
+      len - trendWindowSize
+    } else {
+      0
+    }
     let window = values->Array.slice(~start=windowStart, ~end=len)
     let windowLen = Array.length(window)
 
@@ -229,11 +232,23 @@ let computeTrend = (values: array<float>): timelineTrend => {
       } else {
         // Check for stability: all values within 5% of max
         let maxVal = window->Array.reduce(0.0, (acc, v) =>
-          if v > acc { v } else { acc }
+          if v > acc {
+            v
+          } else {
+            acc
+          }
         )
-        let threshold = if maxVal === 0.0 { 0.05 } else { maxVal *. 0.05 }
+        let threshold = if maxVal === 0.0 {
+          0.05
+        } else {
+          maxVal *. 0.05
+        }
         let minVal = window->Array.reduce(maxVal, (acc, v) =>
-          if v < acc { v } else { acc }
+          if v < acc {
+            v
+          } else {
+            acc
+          }
         )
         if maxVal -. minVal <= threshold {
           Stable
@@ -305,7 +320,7 @@ let buildMetric = (
   }
   let sparkline = sparklineData(timeline, extract, defaultSparklineCount)
   let trend = computeTrend(sparkline)
-  { name, current, previous, trend, sparkline }
+  {name, current, previous, trend, sparkline}
 }
 
 /// Lines of code metric — tracks codebase size over time.
@@ -330,9 +345,7 @@ let vexometerMetric = (timeline: array<timelineSnapshot>): timelineMetric => {
 
 /// Panic-attack findings metric — security scanner issue count.
 let panicMetric = (timeline: array<timelineSnapshot>): timelineMetric => {
-  buildMetric(timeline, "Panic-Attack Findings", snap =>
-    Float.fromInt(snap.panicAttackFindings)
-  )
+  buildMetric(timeline, "Panic-Attack Findings", snap => Float.fromInt(snap.panicAttackFindings))
 }
 
 /// All tracked metrics in a single array, for dashboard rendering.
@@ -377,10 +390,10 @@ let trendLabel = (trend: timelineTrend): string => {
 /// @returns Unicode arrow character
 let trendIcon = (trend: timelineTrend): string => {
   switch trend {
-  | Rising => "\u2191"    // ↑ upwards arrow
-  | Falling => "\u2193"   // ↓ downwards arrow
-  | Stable => "\u2192"    // → rightwards arrow
-  | Volatile => "\u2195"  // ↕ up down arrow
+  | Rising => "\u2191" // ↑ upwards arrow
+  | Falling => "\u2193" // ↓ downwards arrow
+  | Stable => "\u2192" // → rightwards arrow
+  | Volatile => "\u2195" // ↕ up down arrow
   }
 }
 

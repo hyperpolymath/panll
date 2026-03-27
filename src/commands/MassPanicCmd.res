@@ -12,10 +12,9 @@ let invoke = RuntimeBridge.invoke
 
 /// Discover git repos in a directory.
 /// Returns JSON array of { path, name, has_git } objects.
-let discoverRepos = (
-  directory: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let discoverRepos = (directory: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("mass_panic_discover_repos", {"directory": directory})
     ->Promise.then(result => {
@@ -66,9 +65,7 @@ let runAssemblyline = (
 
 /// Get scan progress (polled during long-running assemblyline scans).
 /// Returns JSON with { repos_done, repos_total, current_repo, elapsed_seconds }.
-let getProgress = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getProgress = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("mass_panic_get_progress", Dict.make())
     ->Promise.then(result => {
@@ -168,10 +165,9 @@ let buildImage = (
 
 /// List temporal snapshots in VeriSimDB.
 /// Returns JSON array of snapshot entries.
-let listSnapshots = (
-  verisimdbDir: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listSnapshots = (verisimdbDir: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("mass_panic_list_snapshots", {"verisimdb_dir": verisimdbDir})
     ->Promise.then(result => {
@@ -234,10 +230,7 @@ let takeSnapshot = (
 
 /// Load the BLAKE3 fingerprint cache (shows which repos have changed).
 /// Returns JSON with { cached_repos, total_entries }.
-let loadCache = (
-  cachePath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadCache = (cachePath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("mass_panic_load_cache", {"cache_path": cachePath})
     ->Promise.then(result => {

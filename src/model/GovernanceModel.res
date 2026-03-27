@@ -118,9 +118,9 @@ type viewMode =
 
 /// Synchronisation event types (for OrbitalSync)
 type syncEvent =
-  | SymbolicUpdate(string)   // Change in Pane-L
-  | NeuralUpdate(string)     // Change in Pane-N
-  | WorldUpdate(string)      // Change in Pane-W
+  | SymbolicUpdate(string) // Change in Pane-L
+  | NeuralUpdate(string) // Change in Pane-N
+  | WorldUpdate(string) // Change in Pane-W
   | CrossPaneLink(string, string) // Link between panes
 
 /// Synchronisation state (for OrbitalSync)
@@ -139,9 +139,9 @@ type syncState = {
 
 /// Contract enforcement level (for Contractiles)
 type enforcementLevel =
-  | Strict    // Halt on violation
-  | Warn      // Log warning, continue
-  | Adaptive  // Adjust contract based on context
+  | Strict // Halt on violation
+  | Warn // Log warning, continue
+  | Adaptive // Adjust contract based on context
 
 /// Contract status (for Contractiles)
 type contractStatus =

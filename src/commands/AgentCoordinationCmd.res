@@ -11,9 +11,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Fetch the current agent coordination topology.
 /// Returns JSON with nodes, edges, and active strategy.
-let topology = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let topology = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("agent_coord_topology", ())
     ->Promise.then(result => {
@@ -30,10 +28,7 @@ let topology = (
 
 /// Set the coordination strategy for the agent system.
 /// Returns JSON confirming the strategy change.
-let setStrategy = (
-  strategyId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let setStrategy = (strategyId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("agent_coord_set_strategy", {"strategy_id": strategyId})
     ->Promise.then(result => {

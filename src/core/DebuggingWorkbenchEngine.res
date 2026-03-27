@@ -40,16 +40,13 @@ let allTabs: array<debuggingWorkbenchTab> = [
 ]
 
 /// Number of captured snapshots.
-let snapshotCount = (tt: timeTravelState): int =>
-  Array.length(tt.snapshots)
+let snapshotCount = (tt: timeTravelState): int => Array.length(tt.snapshots)
 
 /// Whether the time-travel slider can move backward.
-let canGoBack = (tt: timeTravelState): bool =>
-  tt.currentIndex > 0
+let canGoBack = (tt: timeTravelState): bool => tt.currentIndex > 0
 
 /// Whether the time-travel slider can move forward.
-let canGoForward = (tt: timeTravelState): bool =>
-  tt.currentIndex < Array.length(tt.snapshots) - 1
+let canGoForward = (tt: timeTravelState): bool => tt.currentIndex < Array.length(tt.snapshots) - 1
 
 /// Get the current snapshot (at the current index).
 let currentSnapshot = (tt: timeTravelState): option<debugSnapshot> => {
@@ -84,12 +81,10 @@ let timelineDuration = (tt: timeTravelState): float => {
 }
 
 /// Number of watch expressions defined.
-let watchCount = (watches: array<watchExpression>): int =>
-  Array.length(watches)
+let watchCount = (watches: array<watchExpression>): int => Array.length(watches)
 
 /// Console log entry count (legacy string-based).
-let consoleLineCount = (log: array<string>): int =>
-  Array.length(log)
+let consoleLineCount = (log: array<string>): int => Array.length(log)
 
 /// Count console entries by level.
 let countConsoleByLevel = (entries: array<consoleEntry>, level: string): int =>

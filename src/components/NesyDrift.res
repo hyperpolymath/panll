@@ -61,15 +61,8 @@ let modelStatusCard = (status: modelDriftStatus): Tea_Vdom.t<msg> => {
       // Last drift kind
       switch status.lastDriftKind {
       | Some(kind) =>
-        span(
-          list{Attrs.class_("text-xs text-amber-400")},
-          list{text(driftKindLabel(kind))},
-        )
-      | None =>
-        span(
-          list{Attrs.class_("text-xs text-gray-600")},
-          list{text("No drift detected")},
-        )
+        span(list{Attrs.class_("text-xs text-amber-400")}, list{text(driftKindLabel(kind))})
+      | None => span(list{Attrs.class_("text-xs text-gray-600")}, list{text("No drift detected")})
       },
       // Magnitude bar
       div(
@@ -86,10 +79,7 @@ let modelStatusCard = (status: modelDriftStatus): Tea_Vdom.t<msg> => {
                     "bg-emerald-500"
                   }}`,
               ),
-              Attrs.style(
-                "width",
-                Float.toFixed(status.lastMagnitude *. 100.0, ~digits=0) ++ "%",
-              ),
+              Attrs.style("width", Float.toFixed(status.lastMagnitude *. 100.0, ~digits=0) ++ "%"),
             },
             list{},
           ),
@@ -112,7 +102,11 @@ let modelStatusCard = (status: modelDriftStatus): Tea_Vdom.t<msg> => {
 let alertRow = (alert: driftAlert): Tea_Vdom.t<msg> => {
   let urgencyColor = alertColor(alert.urgency)
   div(
-    list{Attrs.class_("flex items-start gap-3 px-3 py-3 border-b border-gray-800 hover:bg-gray-800/30")},
+    list{
+      Attrs.class_(
+        "flex items-start gap-3 px-3 py-3 border-b border-gray-800 hover:bg-gray-800/30",
+      ),
+    },
     list{
       // Urgency badge
       span(
@@ -138,18 +132,12 @@ let alertRow = (alert: driftAlert): Tea_Vdom.t<msg> => {
             },
           ),
           // Description
-          p(
-            list{Attrs.class_("text-xs text-gray-400 mb-1")},
-            list{text(alert.description)},
-          ),
+          p(list{Attrs.class_("text-xs text-gray-400 mb-1")}, list{text(alert.description)}),
           // Action recommendation
           div(
             list{Attrs.class_("flex items-center gap-2")},
             list{
-              span(
-                list{Attrs.class_("text-xs text-gray-500")},
-                list{text("Recommended:")},
-              ),
+              span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Recommended:")}),
               span(
                 list{Attrs.class_("text-xs text-cyan-400 font-mono")},
                 list{text(actionLabel(alert.recommendedAction))},
@@ -181,10 +169,7 @@ let urgencyFilter = (currentFilter: option<driftUrgency>): Tea_Vdom.t<msg> => {
     } else {
       "bg-gray-700 text-gray-300 hover:bg-gray-600"
     }
-    button(
-      list{Attrs.class_(`${baseClass} ${activeClass}`)},
-      list{text(label)},
-    )
+    button(list{Attrs.class_(`${baseClass} ${activeClass}`)}, list{text(label)})
   }
   div(
     list{Attrs.class_("flex gap-2 mb-3")},
@@ -212,17 +197,10 @@ let view = (state: nesyDriftState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between mb-3")},
         list{
-          h2(
-            list{Attrs.class_("text-lg font-semibold")},
-            list{text("NeSy Drift Dashboard")},
-          ),
+          h2(list{Attrs.class_("text-lg font-semibold")}, list{text("NeSy Drift Dashboard")}),
           span(
             list{Attrs.class_("text-xs text-gray-500")},
-            list{
-              text(
-                `${Int.toString(Array.length(state.modelStatuses))} models monitored`,
-              ),
-            },
+            list{text(`${Int.toString(Array.length(state.modelStatuses))} models monitored`)},
           ),
         },
       ),

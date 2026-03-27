@@ -62,7 +62,10 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              h2(list{Attrs.class_("text-lg font-bold text-red-300")}, list{text("Playtest Recorder")}),
+              h2(
+                list{Attrs.class_("text-lg font-bold text-red-300")},
+                list{text("Playtest Recorder")},
+              ),
               playbackIndicator(state.playback),
             },
           ),
@@ -81,7 +84,14 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
                   ),
                   Events.onClick(PlaytestRecorder(PrStarted)),
                 },
-                list{text(switch state.playback { | Recording => "Stop" | _ => "Record" })},
+                list{
+                  text(
+                    switch state.playback {
+                    | Recording => "Stop"
+                    | _ => "Record"
+                    },
+                  ),
+                },
               ),
               // Play button
               button(
@@ -107,8 +117,11 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Record { "bg-red-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Record {
+                  "bg-red-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(PlaytestRecorder(SetPrCategory(Record))),
             },
@@ -117,8 +130,11 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Replay { "bg-red-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Replay {
+                  "bg-red-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(PlaytestRecorder(SetPrCategory(Replay))),
             },
@@ -127,8 +143,11 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Annotations { "bg-red-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Annotations {
+                  "bg-red-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(PlaytestRecorder(SetPrCategory(Annotations))),
             },
@@ -137,8 +156,11 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Sessions { "bg-red-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Sessions {
+                  "bg-red-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(PlaytestRecorder(SetPrCategory(Sessions))),
             },
@@ -150,11 +172,18 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center",
+            ),
+          },
           list{
             text(err),
             button(
-              list{Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"), Events.onClick(PlaytestRecorder(DismissPrError))},
+              list{
+                Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
+                Events.onClick(PlaytestRecorder(DismissPrError)),
+              },
               list{text("Dismiss")},
             ),
           },
@@ -182,12 +211,13 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
                   ),
                   // Timeline placeholder
                   div(
-                    list{Attrs.class_("w-full h-8 bg-gray-900 border border-gray-800 rounded relative overflow-hidden")},
                     list{
-                      div(
-                        list{Attrs.class_("h-full bg-red-800/30")},
-                        list{},
+                      Attrs.class_(
+                        "w-full h-8 bg-gray-900 border border-gray-800 rounded relative overflow-hidden",
                       ),
+                    },
+                    list{
+                      div(list{Attrs.class_("h-full bg-red-800/30")}, list{}),
                       // Annotation markers
                       div(
                         list{Attrs.class_("absolute inset-0 flex items-center")},
@@ -224,7 +254,10 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("space-y-3")},
                 list{
-                  div(list{Attrs.class_("text-sm text-red-300 font-bold")}, list{text(session.name)}),
+                  div(
+                    list{Attrs.class_("text-sm text-red-300 font-bold")},
+                    list{text(session.name)},
+                  ),
                   div(
                     list{Attrs.class_("flex gap-4 text-xs text-gray-400")},
                     list{
@@ -245,7 +278,11 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
                             switch state.playback {
                             | Playing(t) | Paused(t) =>
                               Float.toFixed(
-                                if session.durationMs > 0.0 { t *. 1000.0 /. session.durationMs *. 100.0 } else { 0.0 },
+                                if session.durationMs > 0.0 {
+                                  t *. 1000.0 /. session.durationMs *. 100.0
+                                } else {
+                                  0.0
+                                },
                                 ~digits=1,
                               ) ++ "%"
                             | _ => "0%"
@@ -273,8 +310,11 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
                 div(
                   list{
                     Attrs.class_(
-                      "px-3 py-2 border rounded " ++
-                      if isSelected { "bg-red-900/20 border-red-700" } else { "bg-gray-900 border-gray-800" },
+                      "px-3 py-2 border rounded " ++ if isSelected {
+                        "bg-red-900/20 border-red-700"
+                      } else {
+                        "bg-gray-900 border-gray-800"
+                      },
                     ),
                   },
                   list{
@@ -286,12 +326,18 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
                           list{text(Float.toFixed(ann.timestamp, ~digits=1) ++ "s")},
                         ),
                         categoryBadge(ann.category),
-                        span(list{Attrs.class_("text-sm text-gray-200 flex-1")}, list{text(ann.text)}),
+                        span(
+                          list{Attrs.class_("text-sm text-gray-200 flex-1")},
+                          list{text(ann.text)},
+                        ),
                       },
                     ),
                     switch ann.screenshotPath {
                     | Some(path) =>
-                      div(list{Attrs.class_("text-xs text-gray-500 mt-1 font-mono")}, list{text("Screenshot: " ++ path)})
+                      div(
+                        list{Attrs.class_("text-xs text-gray-500 mt-1 font-mono")},
+                        list{text("Screenshot: " ++ path)},
+                      )
                     | None => Tea_Html.noNode
                     },
                   },
@@ -305,13 +351,23 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
               state.sessions
               ->Array.map(s =>
                 div(
-                  list{Attrs.class_("px-3 py-2 bg-gray-900 border border-gray-800 rounded cursor-pointer hover:border-gray-700")},
+                  list{
+                    Attrs.class_(
+                      "px-3 py-2 bg-gray-900 border border-gray-800 rounded cursor-pointer hover:border-gray-700",
+                    ),
+                  },
                   list{
                     div(
                       list{Attrs.class_("flex items-center justify-between")},
                       list{
-                        span(list{Attrs.class_("text-sm font-bold text-gray-200")}, list{text(s.name)}),
-                        span(list{Attrs.class_("text-xs text-gray-500")}, list{text(formatDuration(s.durationMs))}),
+                        span(
+                          list{Attrs.class_("text-sm font-bold text-gray-200")},
+                          list{text(s.name)},
+                        ),
+                        span(
+                          list{Attrs.class_("text-xs text-gray-500")},
+                          list{text(formatDuration(s.durationMs))},
+                        ),
                       },
                     ),
                     div(
@@ -319,7 +375,10 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
                       list{
                         span(list{}, list{text("Started: " ++ s.startedAt)}),
                         span(list{}, list{text(Int.toString(s.actionCount) ++ " actions")}),
-                        span(list{}, list{text(Int.toString(Array.length(s.annotations)) ++ " annotations")}),
+                        span(
+                          list{},
+                          list{text(Int.toString(Array.length(s.annotations)) ++ " annotations")},
+                        ),
                       },
                     ),
                   },

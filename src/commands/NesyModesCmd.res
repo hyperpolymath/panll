@@ -11,9 +11,7 @@ let invoke = RuntimeBridge.invoke
 
 /// Get the currently active reasoning mode.
 /// Returns JSON with the mode identifier and metadata.
-let getMode = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getMode = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("nesy_mode_get", ())
     ->Promise.then(result => {
@@ -30,10 +28,7 @@ let getMode = (
 
 /// Set the active reasoning mode.
 /// Returns JSON confirming the mode switch.
-let setMode = (
-  modeId: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let setMode = (modeId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("nesy_mode_set", {"mode_id": modeId})
     ->Promise.then(result => {

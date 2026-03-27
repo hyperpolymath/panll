@@ -68,12 +68,7 @@ let sortLabel = (s: farmSortBy): string => {
 }
 
 /// All sort options in display order.
-let allSortOptions: array<farmSortBy> = [
-  SortByName,
-  SortByPriority,
-  SortByLanguage,
-  SortByHealth,
-]
+let allSortOptions: array<farmSortBy> = [SortByName, SortByPriority, SortByLanguage, SortByHealth]
 
 /// Filter repos by a text query (matches name or description, case-insensitive).
 let filterRepos = (repos: array<farmRepo>, query: string): array<farmRepo> => {
@@ -217,10 +212,10 @@ let parseRepoFromJson = (json: JSON.t): option<farmRepo> => {
         }
       | None => []
       }
-      let forges = forgeNames->Array.map(name => ({
+      let forges = forgeNames->Array.map((name): farmForge => {
         name,
         primary: name === "github",
-      }: farmForge))
+      })
 
       let enrollment: enrollmentTier = switch Dict.get(obj, "enrollment") {
       | Some(v) =>
@@ -272,8 +267,11 @@ let farmRepoDecoder: Tea_Json.decoder<farmRepo> = json => {
 }
 
 /// Tea_Json decoder for the inventory response envelope.
-let inventoryDecoder: Tea_Json.decoder<array<farmRepo>> =
-  Decoders.fieldWithDefault("repos", Decoders.lenientArray(farmRepoDecoder), [])
+let inventoryDecoder: Tea_Json.decoder<array<farmRepo>> = Decoders.fieldWithDefault(
+  "repos",
+  Decoders.lenientArray(farmRepoDecoder),
+  [],
+)
 
 /// Parse the full inventory response from the farm_list_repos command.
 /// Returns (repos, totalCount).

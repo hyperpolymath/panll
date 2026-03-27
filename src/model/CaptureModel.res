@@ -46,8 +46,8 @@ type captureEntry = {
 /// State of an ongoing recording.
 type recordingState =
   | NotRecording
-  | Recording(string, float)  // panelId, startTime
-  | Paused(string, float)     // panelId, elapsedTime
+  | Recording(string, float) // panelId, startTime
+  | Paused(string, float) // panelId, elapsedTime
 
 // ============================================================================
 // Demo/Teaching Types
@@ -90,9 +90,9 @@ type demoPackage = {
 /// Comparison mode for side-by-side panel views.
 type comparisonMode =
   | NoComparison
-  | SideBySide(string, string)       // leftPanelId, rightPanelId
-  | DemoComparison(string, string)   // studentPanelId, demoStepCaptureId
-  | BeforeAfter(string, string)      // beforeCaptureId, afterCaptureId
+  | SideBySide(string, string) // leftPanelId, rightPanelId
+  | DemoComparison(string, string) // studentPanelId, demoStepCaptureId
+  | BeforeAfter(string, string) // beforeCaptureId, afterCaptureId
 
 // ============================================================================
 // Panel Cloning

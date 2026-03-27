@@ -85,8 +85,7 @@ let formatBytes = (bytes: int): string => {
 let renderFrameBudgetTab = (state: performanceProfilerState): Tea_Vdom.t<msg> => {
   let sampleCount = Array.length(state.frameSamples)
   let avgFps = if sampleCount > 0 {
-    let totalMs =
-      state.frameSamples->Array.reduce(0.0, (acc, s) => acc +. s.totalMs)
+    let totalMs = state.frameSamples->Array.reduce(0.0, (acc, s) => acc +. s.totalMs)
     let avg = totalMs /. Int.toFloat(sampleCount)
     if avg > 0.0 {
       1000.0 /. avg
@@ -164,11 +163,21 @@ let renderFrameBudgetTab = (state: performanceProfilerState): Tea_Vdom.t<msg> =>
           div(
             list{Attrs.class_("flex justify-between text-xs font-mono px-2 py-1")},
             list{
-              span(list{Attrs.class_("text-gray-500")}, list{text(`#${Int.toString(s.frameNumber)}`)}),
+              span(
+                list{Attrs.class_("text-gray-500")},
+                list{text(`#${Int.toString(s.frameNumber)}`)},
+              ),
               span(list{Attrs.class_(cls)}, list{text(`${Float.toFixed(s.totalMs, ~digits=2)}ms`)}),
               span(
                 list{Attrs.class_("text-gray-600")},
-                list{text(`R:${Float.toFixed(s.renderMs, ~digits=1)} U:${Float.toFixed(s.updateMs, ~digits=1)} GC:${Float.toFixed(s.gcMs, ~digits=1)}`)},
+                list{
+                  text(
+                    `R:${Float.toFixed(s.renderMs, ~digits=1)} U:${Float.toFixed(
+                        s.updateMs,
+                        ~digits=1,
+                      )} GC:${Float.toFixed(s.gcMs, ~digits=1)}`,
+                  ),
+                },
               ),
             },
           )
@@ -187,7 +196,8 @@ let renderMemoryTab = (state: performanceProfilerState): Tea_Vdom.t<msg> => {
     list{
       switch latest {
       | Some(snap) => {
-          let usedPct = Int.toFloat(snap.heapUsedBytes) /. Int.toFloat(max(1, snap.heapTotalBytes)) *. 100.0
+          let usedPct =
+            Int.toFloat(snap.heapUsedBytes) /. Int.toFloat(max(1, snap.heapTotalBytes)) *. 100.0
           let usedWidth = Int.toString(Int.fromFloat(usedPct))
           let barColour = if usedPct > 90.0 {
             "bg-red-500"
@@ -205,7 +215,11 @@ let renderMemoryTab = (state: performanceProfilerState): Tea_Vdom.t<msg> => {
                   span(list{Attrs.class_("text-gray-300")}, list{text("Heap Usage")}),
                   span(
                     list{Attrs.class_("text-gray-400 font-mono")},
-                    list{text(`${formatBytes(snap.heapUsedBytes)} / ${formatBytes(snap.heapTotalBytes)}`)},
+                    list{
+                      text(
+                        `${formatBytes(snap.heapUsedBytes)} / ${formatBytes(snap.heapTotalBytes)}`,
+                      ),
+                    },
                   ),
                 },
               ),
@@ -213,7 +227,11 @@ let renderMemoryTab = (state: performanceProfilerState): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("w-full h-3 bg-gray-700 rounded overflow-hidden")},
                 list{
                   div(
-                    list{Attrs.class_(`h-full ${barColour} transition-all duration-300 w-[${usedWidth}%]`)},
+                    list{
+                      Attrs.class_(
+                        `h-full ${barColour} transition-all duration-300 w-[${usedWidth}%]`,
+                      ),
+                    },
                     list{},
                   ),
                 },
@@ -277,11 +295,21 @@ let renderGcPressureTab = (state: performanceProfilerState): Tea_Vdom.t<msg> => 
             "text-gray-400"
           }
           div(
-            list{Attrs.class_("flex items-center justify-between px-3 py-2 bg-gray-800 rounded text-xs font-mono")},
+            list{
+              Attrs.class_(
+                "flex items-center justify-between px-3 py-2 bg-gray-800 rounded text-xs font-mono",
+              ),
+            },
             list{
               span(list{Attrs.class_("text-gray-500")}, list{text(evt.kind)}),
-              span(list{Attrs.class_(pauseColour)}, list{text(`${Float.toFixed(evt.pauseMs, ~digits=2)}ms`)}),
-              span(list{Attrs.class_("text-gray-500")}, list{text(`-${formatBytes(evt.reclaimedBytes)}`)}),
+              span(
+                list{Attrs.class_(pauseColour)},
+                list{text(`${Float.toFixed(evt.pauseMs, ~digits=2)}ms`)},
+              ),
+              span(
+                list{Attrs.class_("text-gray-500")},
+                list{text(`-${formatBytes(evt.reclaimedBytes)}`)},
+              ),
             },
           )
         })
@@ -392,7 +420,9 @@ let view = (state: performanceProfilerState): Tea_Vdom.t<msg> => {
       // Profiling indicator
       if state.profiling {
         div(
-          list{Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700")},
+          list{
+            Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700"),
+          },
           list{
             div(list{Attrs.class_("w-3 h-3 bg-red-400 rounded-full animate-pulse")}, list{}),
             span(list{Attrs.class_("text-sm text-red-300")}, list{text("Profiling active...")}),
@@ -405,7 +435,9 @@ let view = (state: performanceProfilerState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

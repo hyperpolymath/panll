@@ -25,32 +25,52 @@ let viewTypeCheckResult = (lastTypeCheck: option<string>): Tea_Vdom.t<msg> => {
     | Error(_) => noNode
     | Ok(result) =>
       let narrative = TypeLLEngine.generateNarrative(result)
-      let borderColour = if result.valid { "border-green-700 bg-green-900/20" } else { "border-red-700 bg-red-900/20" }
-      let labelColour = if result.valid { "text-green-400" } else { "text-red-400" }
-      let statusText = if result.valid { "Type-safe" } else { "Type issues detected" }
+      let borderColour = if result.valid {
+        "border-green-700 bg-green-900/20"
+      } else {
+        "border-red-700 bg-red-900/20"
+      }
+      let labelColour = if result.valid {
+        "text-green-400"
+      } else {
+        "text-red-400"
+      }
+      let statusText = if result.valid {
+        "Type-safe"
+      } else {
+        "Type issues detected"
+      }
       div(
         list{Attrs.class_("mt-4 p-3 rounded-lg border " ++ borderColour)},
         list{
           div(
             list{Attrs.class_("flex items-center gap-2 mb-2")},
             list{
-              span(list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)}, list{text("TypeLL")}),
+              span(
+                list{Attrs.class_("text-xs font-bold uppercase tracking-wider " ++ labelColour)},
+                list{text("TypeLL")},
+              ),
               span(list{Attrs.class_("text-xs text-gray-400")}, list{text(statusText)}),
             },
           ),
-          div(list{Attrs.class_("text-sm text-gray-300 font-mono mb-1")}, list{text(result.typeSignature)}),
+          div(
+            list{Attrs.class_("text-sm text-gray-300 font-mono mb-1")},
+            list{text(result.typeSignature)},
+          ),
           div(list{Attrs.class_("text-xs text-gray-400 mb-1")}, list{text(narrative.celebrate)}),
           if Array.length(result.proofObligations) > 0 {
-            div(list{Attrs.class_("text-xs text-yellow-400 mt-1")}, list{
-              text("Proof obligations: " ++ Array.join(result.proofObligations, ", ")),
-            })
+            div(
+              list{Attrs.class_("text-xs text-yellow-400 mt-1")},
+              list{text("Proof obligations: " ++ Array.join(result.proofObligations, ", "))},
+            )
           } else {
             noNode
           },
           if Array.length(result.linearityIssues) > 0 {
-            div(list{Attrs.class_("text-xs text-orange-400 mt-1")}, list{
-              text("Linearity: " ++ Array.join(result.linearityIssues, ", ")),
-            })
+            div(
+              list{Attrs.class_("text-xs text-orange-400 mt-1")},
+              list{text("Linearity: " ++ Array.join(result.linearityIssues, ", "))},
+            )
           } else {
             noNode
           },
@@ -135,14 +155,29 @@ let renderDashboard = (state: bojState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("bg-gray-800/30 border border-gray-700 rounded p-3")},
         list{
-          div(list{Attrs.class_("text-xs text-gray-400 mb-2")}, list{text("Cartridge Readiness Grades")}),
+          div(
+            list{Attrs.class_("text-xs text-gray-400 mb-2")},
+            list{text("Cartridge Readiness Grades")},
+          ),
           div(
             list{Attrs.class_("flex gap-4 text-xs")},
             list{
-              span(list{Attrs.class_("text-yellow-300")}, list{text(`D(Alpha): ${Int.toString(gradeD)}`)}),
-              span(list{Attrs.class_("text-blue-300")}, list{text(`C(Beta): ${Int.toString(gradeC)}`)}),
-              span(list{Attrs.class_("text-emerald-300")}, list{text(`B(RC): ${Int.toString(gradeB)}`)}),
-              span(list{Attrs.class_("text-green-300")}, list{text(`A(Prod): ${Int.toString(gradeA)}`)}),
+              span(
+                list{Attrs.class_("text-yellow-300")},
+                list{text(`D(Alpha): ${Int.toString(gradeD)}`)},
+              ),
+              span(
+                list{Attrs.class_("text-blue-300")},
+                list{text(`C(Beta): ${Int.toString(gradeC)}`)},
+              ),
+              span(
+                list{Attrs.class_("text-emerald-300")},
+                list{text(`B(RC): ${Int.toString(gradeB)}`)},
+              ),
+              span(
+                list{Attrs.class_("text-green-300")},
+                list{text(`A(Prod): ${Int.toString(gradeA)}`)},
+              ),
             },
           ),
         },
@@ -155,8 +190,18 @@ let renderDashboard = (state: bojState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("text-xs text-gray-300 font-mono space-y-1")},
             list{
-              div(list{}, list{text("Idris2 ABI (dependent types) → Zig FFI (C-compatible) → V-lang (REST+gRPC+GraphQL)")}),
-              div(list{}, list{text("Umoja: gossip protocol, SHA-256 attestation, distributed federation")}),
+              div(
+                list{},
+                list{
+                  text(
+                    "Idris2 ABI (dependent types) → Zig FFI (C-compatible) → V-lang (REST+gRPC+GraphQL)",
+                  ),
+                },
+              ),
+              div(
+                list{},
+                list{text("Umoja: gossip protocol, SHA-256 attestation, distributed federation")},
+              ),
               div(list{}, list{text("Hot-reload: unmount → verify hash → remount")}),
             },
           ),
@@ -167,11 +212,16 @@ let renderDashboard = (state: bojState): Tea_Vdom.t<msg> => {
         div(
           list{Attrs.class_("bg-gray-800/30 border border-gray-700 rounded p-3")},
           list{
-            div(list{Attrs.class_("text-xs text-gray-400 mb-3")}, list{text("Invocation Latency (last 20)")}),
+            div(
+              list{Attrs.class_("text-xs text-gray-400 mb-3")},
+              list{text("Invocation Latency (last 20)")},
+            ),
             // Histogram bars
             div(
               list{Attrs.class_("flex items-end gap-0.5 h-16")},
-              state.latencyLog->Array.slice(~start=0, ~end=20)->Array.map(entry => {
+              state.latencyLog
+              ->Array.slice(~start=0, ~end=20)
+              ->Array.map(entry => {
                 let maxMs = 500.0
                 let heightPct = Math.min(entry.durationMs /. maxMs *. 100.0, 100.0)
                 let colour = if entry.durationMs < 50.0 {
@@ -185,30 +235,58 @@ let renderDashboard = (state: bojState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_(`flex-1 ${colour} rounded-t transition-all min-w-1`),
                     Attrs.style("height", `${Float.toFixed(heightPct, ~digits=0)}%`),
-                    Attrs.title(`${entry.cartridge}/${entry.tool}: ${Float.toFixed(entry.durationMs, ~digits=1)}ms`),
+                    Attrs.title(
+                      `${entry.cartridge}/${entry.tool}: ${Float.toFixed(
+                          entry.durationMs,
+                          ~digits=1,
+                        )}ms`,
+                    ),
                   },
                   list{},
                 )
-              })->List.fromArray,
+              })
+              ->List.fromArray,
             ),
-            // Summary stats
             {
               let totalMs = state.latencyLog->Array.reduce(0.0, (acc, e) => acc +. e.durationMs)
               let count = Float.fromInt(Array.length(state.latencyLog))
               let avgMs = totalMs /. count
-              let maxEntry = state.latencyLog->Array.reduce(state.latencyLog->Array.getUnsafe(0), (best, e) =>
-                if e.durationMs > best.durationMs { e } else { best }
+              let maxEntry = state.latencyLog->Array.reduce(state.latencyLog->Array.getUnsafe(0), (
+                best,
+                e,
+              ) =>
+                if e.durationMs > best.durationMs {
+                  e
+                } else {
+                  best
+                }
               )
-              let minEntry = state.latencyLog->Array.reduce(state.latencyLog->Array.getUnsafe(0), (best, e) =>
-                if e.durationMs < best.durationMs { e } else { best }
+              let minEntry = state.latencyLog->Array.reduce(state.latencyLog->Array.getUnsafe(0), (
+                best,
+                e,
+              ) =>
+                if e.durationMs < best.durationMs {
+                  e
+                } else {
+                  best
+                }
               )
               div(
                 list{Attrs.class_("flex gap-4 mt-2 text-[10px] text-gray-600")},
                 list{
                   span(list{}, list{text(`Avg: ${Float.toFixed(avgMs, ~digits=1)}ms`)}),
-                  span(list{}, list{text(`Min: ${Float.toFixed(minEntry.durationMs, ~digits=1)}ms`)}),
-                  span(list{}, list{text(`Max: ${Float.toFixed(maxEntry.durationMs, ~digits=1)}ms`)}),
-                  span(list{}, list{text(`Total: ${Int.toString(Array.length(state.latencyLog))} calls`)}),
+                  span(
+                    list{},
+                    list{text(`Min: ${Float.toFixed(minEntry.durationMs, ~digits=1)}ms`)},
+                  ),
+                  span(
+                    list{},
+                    list{text(`Max: ${Float.toFixed(maxEntry.durationMs, ~digits=1)}ms`)},
+                  ),
+                  span(
+                    list{},
+                    list{text(`Total: ${Int.toString(Array.length(state.latencyLog))} calls`)},
+                  ),
                 },
               )
             },
@@ -225,12 +303,36 @@ let renderDashboard = (state: bojState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-2 text-xs")},
             list{
-              span(list{Attrs.class_("px-2 py-0.5 bg-red-900/30 text-red-400 rounded border border-red-800")}, list{text("1. Unmount")}),
+              span(
+                list{
+                  Attrs.class_(
+                    "px-2 py-0.5 bg-red-900/30 text-red-400 rounded border border-red-800",
+                  ),
+                },
+                list{text("1. Unmount")},
+              ),
               span(list{Attrs.class_("text-gray-700")}, list{text("→")}),
-              span(list{Attrs.class_("px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded border border-amber-800")}, list{text("2. Verify SHA-256")}),
+              span(
+                list{
+                  Attrs.class_(
+                    "px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded border border-amber-800",
+                  ),
+                },
+                list{text("2. Verify SHA-256")},
+              ),
               span(list{Attrs.class_("text-gray-700")}, list{text("→")}),
-              span(list{Attrs.class_("px-2 py-0.5 bg-emerald-900/30 text-emerald-400 rounded border border-emerald-800")}, list{text("3. Remount")}),
-              span(list{Attrs.class_("text-gray-600 ml-auto text-[10px]")}, list{text("Zero-downtime cartridge replacement")}),
+              span(
+                list{
+                  Attrs.class_(
+                    "px-2 py-0.5 bg-emerald-900/30 text-emerald-400 rounded border border-emerald-800",
+                  ),
+                },
+                list{text("3. Remount")},
+              ),
+              span(
+                list{Attrs.class_("text-gray-600 ml-auto text-[10px]")},
+                list{text("Zero-downtime cartridge replacement")},
+              ),
             },
           ),
         },
@@ -241,14 +343,18 @@ let renderDashboard = (state: bojState): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-cyan-900/50 text-cyan-300 rounded border border-cyan-700 hover:bg-cyan-800/50"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-cyan-900/50 text-cyan-300 rounded border border-cyan-700 hover:bg-cyan-800/50",
+              ),
               Events.onClick(Boj(RefreshHealth)),
             },
             list{text("Check Health")},
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600",
+              ),
               Events.onClick(Boj(RefreshCartridges)),
             },
             list{text("Refresh Cartridges")},
@@ -276,19 +382,22 @@ let renderCartridgeRow = (cartridge: bojCartridge): Tea_Vdom.t<msg> => {
   } else {
     span(list{Attrs.class_("text-gray-600 text-xs")}, list{text("○")})
   }
-  let protoCells = allProtocols->Array.map(proto => {
-    let has = hasProtocol(cartridge, proto)
-    td(
-      list{Attrs.class_("px-1 py-1 text-center text-xs")},
-      list{
-        if has {
-          span(list{Attrs.class_("text-cyan-400")}, list{text("██")})
-        } else {
-          span(list{Attrs.class_("text-gray-800")}, list{text("  ")})
+  let protoCells =
+    allProtocols
+    ->Array.map(proto => {
+      let has = hasProtocol(cartridge, proto)
+      td(
+        list{Attrs.class_("px-1 py-1 text-center text-xs")},
+        list{
+          if has {
+            span(list{Attrs.class_("text-cyan-400")}, list{text("██")})
+          } else {
+            span(list{Attrs.class_("text-gray-800")}, list{text("  ")})
+          },
         },
-      },
-    )
-  })->List.fromArray
+      )
+    })
+    ->List.fromArray
 
   tr(
     list{
@@ -297,10 +406,7 @@ let renderCartridgeRow = (cartridge: bojCartridge): Tea_Vdom.t<msg> => {
     },
     list{
       td(list{Attrs.class_("px-2 py-1 text-xs")}, list{loadedBadge}),
-      td(
-        list{Attrs.class_("px-2 py-1 text-xs text-gray-200")},
-        list{text(cartridge.displayName)},
-      ),
+      td(list{Attrs.class_("px-2 py-1 text-xs text-gray-200")}, list{text(cartridge.displayName)}),
       td(list{Attrs.class_("px-2 py-1")}, list{gradeBadge}),
       td(
         list{Attrs.class_("px-2 py-1 text-xs text-gray-500")},
@@ -313,12 +419,15 @@ let renderCartridgeRow = (cartridge: bojCartridge): Tea_Vdom.t<msg> => {
 
 let renderCartridgesMatrix = (state: bojState): Tea_Vdom.t<msg> => {
   let filtered = filterCartridges(state.cartridges, state.filterText)
-  let protoHeaders = allProtocols->Array.map(proto => {
-    th(
-      list{Attrs.class_("px-1 py-1 text-xs text-gray-500 font-normal text-center")},
-      list{text(protocolShort(proto))},
-    )
-  })->List.fromArray
+  let protoHeaders =
+    allProtocols
+    ->Array.map(proto => {
+      th(
+        list{Attrs.class_("px-1 py-1 text-xs text-gray-500 font-normal text-center")},
+        list{text(protocolShort(proto))},
+      )
+    })
+    ->List.fromArray
 
   div(
     list{Attrs.class_("space-y-3")},
@@ -329,7 +438,9 @@ let renderCartridgesMatrix = (state: bojState): Tea_Vdom.t<msg> => {
         list{
           input(
             list{
-              Attrs.class_("flex-1 px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700"),
+              Attrs.class_(
+                "flex-1 px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700",
+              ),
               Attrs.placeholder("Filter cartridges..."),
               Attrs.value(state.filterText),
               Events.onInput(t => Boj(SetBojFilter(t))),
@@ -338,7 +449,13 @@ let renderCartridgesMatrix = (state: bojState): Tea_Vdom.t<msg> => {
           ),
           span(
             list{Attrs.class_("text-xs text-gray-500")},
-            list{text(`${Int.toString(Array.length(filtered))} of ${Int.toString(Array.length(state.cartridges))}`)},
+            list{
+              text(
+                `${Int.toString(Array.length(filtered))} of ${Int.toString(
+                    Array.length(state.cartridges),
+                  )}`,
+              ),
+            },
           ),
         },
       ),
@@ -360,18 +477,24 @@ let renderCartridgesMatrix = (state: bojState): Tea_Vdom.t<msg> => {
                     list{Attrs.class_("border-b border-gray-700")},
                     list{
                       th(list{Attrs.class_("px-2 py-1 text-xs text-gray-500 font-normal")}, list{}),
-                      th(list{Attrs.class_("px-2 py-1 text-xs text-gray-500 font-normal")}, list{text("Cartridge")}),
-                      th(list{Attrs.class_("px-2 py-1 text-xs text-gray-500 font-normal")}, list{text("Grade")}),
-                      th(list{Attrs.class_("px-2 py-1 text-xs text-gray-500 font-normal")}, list{text("Layers")}),
+                      th(
+                        list{Attrs.class_("px-2 py-1 text-xs text-gray-500 font-normal")},
+                        list{text("Cartridge")},
+                      ),
+                      th(
+                        list{Attrs.class_("px-2 py-1 text-xs text-gray-500 font-normal")},
+                        list{text("Grade")},
+                      ),
+                      th(
+                        list{Attrs.class_("px-2 py-1 text-xs text-gray-500 font-normal")},
+                        list{text("Layers")},
+                      ),
                       ...protoHeaders,
                     },
                   ),
                 },
               ),
-              tbody(
-                list{},
-                filtered->Array.map(renderCartridgeRow)->List.fromArray,
-              ),
+              tbody(list{}, filtered->Array.map(renderCartridgeRow)->List.fromArray),
             },
           ),
         },
@@ -399,9 +522,14 @@ let renderCartridgeDetail = (state: bojState, name: string): Tea_Vdom.t<msg> => 
             div(
               list{Attrs.class_("flex items-center gap-3")},
               list{
-                span(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text(cart.displayName)}),
                 span(
-                  list{Attrs.class_(`px-1.5 py-0.5 text-xs rounded border ${gradeColour(cart.grade)}`)},
+                  list{Attrs.class_("text-sm font-medium text-gray-200")},
+                  list{text(cart.displayName)},
+                ),
+                span(
+                  list{
+                    Attrs.class_(`px-1.5 py-0.5 text-xs rounded border ${gradeColour(cart.grade)}`),
+                  },
                   list{text(gradeLabel(cart.grade))},
                 ),
               },
@@ -472,7 +600,9 @@ let renderCartridgeDetail = (state: bojState, name: string): Tea_Vdom.t<msg> => 
             if cart.loaded {
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 text-xs bg-red-900/50 text-red-300 rounded border border-red-700 hover:bg-red-800/50"),
+                  Attrs.class_(
+                    "px-3 py-1.5 text-xs bg-red-900/50 text-red-300 rounded border border-red-700 hover:bg-red-800/50",
+                  ),
                   Events.onClick(Boj(UnloadCartridge(cart.name))),
                 },
                 list{text("Unload")},
@@ -480,7 +610,9 @@ let renderCartridgeDetail = (state: bojState, name: string): Tea_Vdom.t<msg> => 
             } else {
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 text-xs bg-cyan-900/50 text-cyan-300 rounded border border-cyan-700 hover:bg-cyan-800/50"),
+                  Attrs.class_(
+                    "px-3 py-1.5 text-xs bg-cyan-900/50 text-cyan-300 rounded border border-cyan-700 hover:bg-cyan-800/50",
+                  ),
                   Events.onClick(Boj(LoadCartridge(cart.name))),
                 },
                 list{text("Load")},
@@ -488,7 +620,9 @@ let renderCartridgeDetail = (state: bojState, name: string): Tea_Vdom.t<msg> => 
             },
             button(
               list{
-                Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600"),
+                Attrs.class_(
+                  "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600",
+                ),
                 Events.onClick(Boj(SetBojCategory(Invoke))),
               },
               list{text("Invoke →")},
@@ -523,9 +657,17 @@ let renderTopologyLayer = (
   readyCount: int,
   totalCount: int,
 ): Tea_Vdom.t<msg> => {
-  let pct = if totalCount > 0 { readyCount * 100 / totalCount } else { 0 }
+  let pct = if totalCount > 0 {
+    readyCount * 100 / totalCount
+  } else {
+    0
+  }
   div(
-    list{Attrs.class_(`bg-gray-800/40 border rounded-lg p-4 ${borderColour} hover:bg-gray-800/60 transition-colors`)},
+    list{
+      Attrs.class_(
+        `bg-gray-800/40 border rounded-lg p-4 ${borderColour} hover:bg-gray-800/60 transition-colors`,
+      ),
+    },
     list{
       div(
         list{Attrs.class_("flex items-center justify-between mb-2")},
@@ -546,14 +688,25 @@ let renderTopologyLayer = (
                 list{
                   div(
                     list{
-                      Attrs.class_(`h-full rounded-full ${if pct >= 80 { "bg-emerald-500" } else if pct >= 50 { "bg-amber-500" } else { "bg-red-500" }}`),
+                      Attrs.class_(
+                        `h-full rounded-full ${if pct >= 80 {
+                            "bg-emerald-500"
+                          } else if pct >= 50 {
+                            "bg-amber-500"
+                          } else {
+                            "bg-red-500"
+                          }}`,
+                      ),
                       Attrs.style("width", `${Int.toString(pct)}%`),
                     },
                     list{},
                   ),
                 },
               ),
-              span(list{Attrs.class_("text-[10px] text-gray-500 font-mono")}, list{text(`${Int.toString(readyCount)}/${Int.toString(totalCount)}`)}),
+              span(
+                list{Attrs.class_("text-[10px] text-gray-500 font-mono")},
+                list{text(`${Int.toString(readyCount)}/${Int.toString(totalCount)}`)},
+              ),
             },
           ),
         },
@@ -561,7 +714,8 @@ let renderTopologyLayer = (
       // Metrics grid
       div(
         list{Attrs.class_("grid grid-cols-3 gap-2 mt-2")},
-        metrics->Array.map(((label, value)) =>
+        metrics
+        ->Array.map(((label, value)) =>
           div(
             list{Attrs.class_("text-xs")},
             list{
@@ -569,7 +723,8 @@ let renderTopologyLayer = (
               div(list{Attrs.class_("text-gray-300 font-mono")}, list{text(value)}),
             },
           )
-        )->List.fromArray,
+        )
+        ->List.fromArray,
       ),
     },
   )
@@ -580,11 +735,14 @@ let renderFlowArrow = (label: string): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("flex items-center justify-center py-1")},
     list{
-      div(list{Attrs.class_("text-gray-700 text-xs flex items-center gap-1")}, list{
-        span(list{}, list{text("▼")}),
-        span(list{Attrs.class_("text-[10px] text-gray-600")}, list{text(label)}),
-        span(list{}, list{text("▼")}),
-      }),
+      div(
+        list{Attrs.class_("text-gray-700 text-xs flex items-center gap-1")},
+        list{
+          span(list{}, list{text("▼")}),
+          span(list{Attrs.class_("text-[10px] text-gray-600")}, list{text(label)}),
+          span(list{}, list{text("▼")}),
+        },
+      ),
     },
   )
 }
@@ -602,7 +760,10 @@ let renderTopology = (state: bojState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("space-y-1")},
     list{
-      div(list{Attrs.class_("text-xs text-gray-400 mb-3")}, list{text("BoJ Architecture — Interactive 3-Layer Cartridge Stack")}),
+      div(
+        list{Attrs.class_("text-xs text-gray-400 mb-3")},
+        list{text("BoJ Architecture — Interactive 3-Layer Cartridge Stack")},
+      ),
       // Layer 1: V-lang Adapter
       renderTopologyLayer(
         "V-lang Triple Adapter",
@@ -657,9 +818,20 @@ let renderTopology = (state: bojState): Tea_Vdom.t<msg> => {
         [
           ("Active peers", Int.toString(Array.length(state.umoja.peers))),
           ("Gossip round", Int.toString(state.umoja.currentRound)),
-          ("Status", if state.umoja.active { "Active" } else { "Inactive" }),
+          (
+            "Status",
+            if state.umoja.active {
+              "Active"
+            } else {
+              "Inactive"
+            },
+          ),
         ],
-        if state.umoja.active { 1 } else { 0 },
+        if state.umoja.active {
+          1
+        } else {
+          0
+        },
         1,
       ),
       // Refresh
@@ -668,7 +840,9 @@ let renderTopology = (state: bojState): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600",
+              ),
               Events.onClick(Boj(RefreshTopology)),
             },
             list{text("Refresh Topology")},
@@ -706,7 +880,8 @@ let catalogueSyncLabel = (state: bojState, peer: umojaPeer): (string, string) =>
   // Compare against the first verified peer's digest as a proxy for local.
   // If the local catalogue digest is not tracked separately, we compare
   // against the most common digest among verified peers.
-  let localDigest = state.umoja.peers
+  let localDigest =
+    state.umoja.peers
     ->Array.find(p => p.state === PeerVerified && p.nodeId !== peer.nodeId)
     ->Option.map(p => p.catalogueDigest)
     ->Option.getOr("")
@@ -725,7 +900,9 @@ let renderPeerActions = (peer: umojaPeer): Tea_Vdom.t<msg> => {
   | PeerVerified | PeerExchanged =>
     button(
       list{
-        Attrs.class_("px-2 py-0.5 text-xs bg-red-900/40 text-red-300 rounded border border-red-800 hover:bg-red-800/50"),
+        Attrs.class_(
+          "px-2 py-0.5 text-xs bg-red-900/40 text-red-300 rounded border border-red-800 hover:bg-red-800/50",
+        ),
         Events.onClick(Boj(UmojaDisconnectPeer(peer.nodeId))),
         Attrs.ariaLabel(`Disconnect peer ${peer.nodeId}`),
       },
@@ -737,7 +914,9 @@ let renderPeerActions = (peer: umojaPeer): Tea_Vdom.t<msg> => {
   | PeerVerified =>
     button(
       list{
-        Attrs.class_("px-2 py-0.5 text-xs bg-cyan-900/40 text-cyan-300 rounded border border-cyan-800 hover:bg-cyan-800/50"),
+        Attrs.class_(
+          "px-2 py-0.5 text-xs bg-cyan-900/40 text-cyan-300 rounded border border-cyan-800 hover:bg-cyan-800/50",
+        ),
         Events.onClick(Boj(UmojaSyncCatalogue(peer.nodeId))),
         Attrs.ariaLabel(`Sync catalogue with peer ${peer.nodeId}`),
       },
@@ -747,16 +926,15 @@ let renderPeerActions = (peer: umojaPeer): Tea_Vdom.t<msg> => {
   }
   let metricsBtn = button(
     list{
-      Attrs.class_("px-2 py-0.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600"),
+      Attrs.class_(
+        "px-2 py-0.5 text-xs bg-gray-700 text-gray-300 rounded border border-gray-600 hover:bg-gray-600",
+      ),
       Events.onClick(Boj(UmojaPeerMetrics(peer.nodeId))),
       Attrs.ariaLabel(`View metrics for peer ${peer.nodeId}`),
     },
     list{text("Metrics")},
   )
-  div(
-    list{Attrs.class_("flex gap-1 ml-auto")},
-    list{syncBtn, disconnectBtn, metricsBtn},
-  )
+  div(list{Attrs.class_("flex gap-1 ml-auto")}, list{syncBtn, disconnectBtn, metricsBtn})
 }
 
 let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
@@ -797,7 +975,9 @@ let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
             list{
               input(
                 list{
-                  Attrs.class_("flex-1 px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700"),
+                  Attrs.class_(
+                    "flex-1 px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700",
+                  ),
                   Attrs.placeholder("Peer address (e.g. 192.168.1.100:9876 or [::1]:9876)"),
                   Attrs.value(state.umojaAddPeerInput),
                   Events.onInput(v => Boj(UmojaAddPeerInput(v))),
@@ -806,7 +986,9 @@ let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 text-xs bg-indigo-900/50 text-indigo-300 rounded border border-indigo-700 hover:bg-indigo-800/50"),
+                  Attrs.class_(
+                    "px-3 py-1.5 text-xs bg-indigo-900/50 text-indigo-300 rounded border border-indigo-700 hover:bg-indigo-800/50",
+                  ),
                   Events.onClick(Boj(UmojaAddPeer(state.umojaAddPeerInput))),
                   Attrs.disabled(state.umojaAddPeerInput === ""),
                   Attrs.ariaLabel("Add peer to federation"),
@@ -825,7 +1007,11 @@ let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
           ->Array.map(peer => {
             let (syncStatus, syncColour) = catalogueSyncLabel(state, peer)
             div(
-              list{Attrs.class_("flex items-center gap-3 bg-gray-800/30 border border-gray-700 rounded px-3 py-2")},
+              list{
+                Attrs.class_(
+                  "flex items-center gap-3 bg-gray-800/30 border border-gray-700 rounded px-3 py-2",
+                ),
+              },
               list{
                 // Peer state badge
                 span(
@@ -842,10 +1028,7 @@ let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
                   list{text(peer.lastSeen > 0.0 ? relativeTime(peer.lastSeen) : "never")},
                 ),
                 // Catalogue sync status
-                span(
-                  list{Attrs.class_(`text-xs ${syncColour}`)},
-                  list{text(syncStatus)},
-                ),
+                span(list{Attrs.class_(`text-xs ${syncColour}`)}, list{text(syncStatus)}),
                 // Catalogue digest (truncated)
                 span(
                   list{Attrs.class_("text-xs text-gray-700 font-mono truncate max-w-32")},
@@ -861,7 +1044,11 @@ let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
       } else {
         div(
           list{Attrs.class_("text-xs text-gray-500 italic")},
-          list{text("No peers discovered. Add a peer or start the Umoja federation layer to begin gossip.")},
+          list{
+            text(
+              "No peers discovered. Add a peer or start the Umoja federation layer to begin gossip.",
+            ),
+          },
         )
       },
       // Action buttons row
@@ -870,7 +1057,9 @@ let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-amber-900/50 text-amber-300 rounded border border-amber-700 hover:bg-amber-800/50"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-amber-900/50 text-amber-300 rounded border border-amber-700 hover:bg-amber-800/50",
+              ),
               Events.onClick(Boj(UmojaTriggerGossip)),
               Attrs.ariaLabel("Trigger manual gossip round"),
             },
@@ -878,7 +1067,9 @@ let renderFederation = (state: bojState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-indigo-900/50 text-indigo-300 rounded border border-indigo-700 hover:bg-indigo-800/50"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-indigo-900/50 text-indigo-300 rounded border border-indigo-700 hover:bg-indigo-800/50",
+              ),
               Events.onClick(Boj(RefreshUmoja)),
             },
             list{text("Refresh Federation")},
@@ -904,16 +1095,16 @@ let renderInvoke = (state: bojState): Tea_Vdom.t<msg> => {
           label(list{Attrs.class_("text-xs text-gray-400")}, list{text("Cartridge")}),
           select(
             list{
-              Attrs.class_("w-full px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700"),
+              Attrs.class_(
+                "w-full px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700",
+              ),
               Events.onChange(v => Boj(SetInvokeCartridge(v))),
             },
             list{
               option'(list{Attrs.value("")}, list{text("Select cartridge...")}),
               ...state.cartridges
               ->Array.filter(c => c.loaded)
-              ->Array.map(c =>
-                option'(list{Attrs.value(c.name)}, list{text(c.displayName)})
-              )
+              ->Array.map(c => option'(list{Attrs.value(c.name)}, list{text(c.displayName)}))
               ->List.fromArray,
             },
           ),
@@ -926,7 +1117,9 @@ let renderInvoke = (state: bojState): Tea_Vdom.t<msg> => {
           label(list{Attrs.class_("text-xs text-gray-400")}, list{text("Tool")}),
           input(
             list{
-              Attrs.class_("w-full px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700"),
+              Attrs.class_(
+                "w-full px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700",
+              ),
               Attrs.placeholder("Tool name (e.g. query, connect, status)"),
               Attrs.value(state.invokeTool),
               Events.onInput(v => Boj(SetInvokeTool(v))),
@@ -942,7 +1135,9 @@ let renderInvoke = (state: bojState): Tea_Vdom.t<msg> => {
           label(list{Attrs.class_("text-xs text-gray-400")}, list{text("Arguments (JSON)")}),
           textarea(
             list{
-              Attrs.class_("w-full px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700 font-mono h-20"),
+              Attrs.class_(
+                "w-full px-3 py-1.5 text-xs bg-gray-800 text-gray-200 rounded border border-gray-700 font-mono h-20",
+              ),
               Attrs.placeholder(`{"key": "value"}`),
               Events.onInput(v => Boj(SetInvokeArgs(v))),
             },
@@ -953,7 +1148,9 @@ let renderInvoke = (state: bojState): Tea_Vdom.t<msg> => {
       // Execute button
       button(
         list{
-          Attrs.class_("px-4 py-2 text-xs bg-cyan-900/50 text-cyan-300 rounded border border-cyan-700 hover:bg-cyan-800/50"),
+          Attrs.class_(
+            "px-4 py-2 text-xs bg-cyan-900/50 text-cyan-300 rounded border border-cyan-700 hover:bg-cyan-800/50",
+          ),
           Events.onClick(Boj(ExecuteInvoke)),
           Attrs.disabled(state.invokeCartridge === "" || state.invokeTool === ""),
         },
@@ -976,7 +1173,11 @@ let renderInvoke = (state: bojState): Tea_Vdom.t<msg> => {
               list{Attrs.class_("flex items-center justify-between mb-2")},
               list{
                 span(
-                  list{Attrs.class_(result.success ? "text-xs text-green-400" : "text-xs text-red-400")},
+                  list{
+                    Attrs.class_(
+                      result.success ? "text-xs text-green-400" : "text-xs text-red-400",
+                    ),
+                  },
                   list{text(result.success ? "Success" : "Failed")},
                 ),
                 span(
@@ -986,7 +1187,11 @@ let renderInvoke = (state: bojState): Tea_Vdom.t<msg> => {
               },
             ),
             pre(
-              list{Attrs.class_("text-xs text-gray-300 font-mono whitespace-pre-wrap overflow-auto max-h-40")},
+              list{
+                Attrs.class_(
+                  "text-xs text-gray-300 font-mono whitespace-pre-wrap overflow-auto max-h-40",
+                ),
+              },
               list{text(result.payload)},
             ),
           },
@@ -1017,7 +1222,10 @@ let view = (state: bojState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-sm font-medium text-cyan-300")}, list{text("BoJ — Bundle of Joy")}),
+              span(
+                list{Attrs.class_("text-sm font-medium text-cyan-300")},
+                list{text("BoJ — Bundle of Joy")},
+              ),
               renderConnectionStatus(state),
             },
           ),
@@ -1036,10 +1244,22 @@ let view = (state: bojState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("px-4 pt-2 flex gap-1 border-b border-gray-800"), Attrs.role("tablist")},
         list{
-          renderTab("Dashboard", state.activeCategory === Dashboard, Boj(SetBojCategory(Dashboard))),
-          renderTab("Cartridges", state.activeCategory === Cartridges, Boj(SetBojCategory(Cartridges))),
+          renderTab(
+            "Dashboard",
+            state.activeCategory === Dashboard,
+            Boj(SetBojCategory(Dashboard)),
+          ),
+          renderTab(
+            "Cartridges",
+            state.activeCategory === Cartridges,
+            Boj(SetBojCategory(Cartridges)),
+          ),
           renderTab("Topology", state.activeCategory === Topology, Boj(SetBojCategory(Topology))),
-          renderTab("Federation", state.activeCategory === Federation, Boj(SetBojCategory(Federation))),
+          renderTab(
+            "Federation",
+            state.activeCategory === Federation,
+            Boj(SetBojCategory(Federation)),
+          ),
           renderTab("Invoke", state.activeCategory === Invoke, Boj(SetBojCategory(Invoke))),
         },
       ),
@@ -1048,7 +1268,11 @@ let view = (state: bojState): Tea_Vdom.t<msg> => {
       | None => noNode
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/30 border border-red-800 rounded text-xs text-red-300 flex justify-between")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/30 border border-red-800 rounded text-xs text-red-300 flex justify-between",
+            ),
+          },
           list{
             span(list{}, list{text(err)}),
             button(

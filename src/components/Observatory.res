@@ -37,8 +37,24 @@ let snapshotRow = (snapshot: resourceSnapshot): Tea_Vdom.t<msg> => {
       span(list{Attrs.class_("text-sm text-gray-200 w-40")}, list{text(snapshot.name)}),
       span(list{Attrs.class_("text-xs text-gray-400 w-20")}, list{text(memLabel)}),
       span(
-        list{Attrs.class_("text-xs w-16 " ++ if snapshot.active { "text-blue-400" } else { "text-gray-600" })},
-        list{text(if snapshot.active { "Active" } else { "Idle" })},
+        list{
+          Attrs.class_(
+            "text-xs w-16 " ++ if snapshot.active {
+              "text-blue-400"
+            } else {
+              "text-gray-600"
+            },
+          ),
+        },
+        list{
+          text(
+            if snapshot.active {
+              "Active"
+            } else {
+              "Idle"
+            },
+          ),
+        },
       ),
       healthBadge(snapshot.health),
     },
@@ -51,8 +67,11 @@ let tabBtn = (current: observatoryTab, target: observatoryTab, label: string): T
   button(
     list{
       Attrs.class_(
-        "px-3 py-1 text-xs rounded " ++
-        if active { "bg-blue-600 text-white" } else { "bg-gray-800 text-gray-400 hover:bg-gray-700" },
+        "px-3 py-1 text-xs rounded " ++ if active {
+          "bg-blue-600 text-white"
+        } else {
+          "bg-gray-800 text-gray-400 hover:bg-gray-700"
+        },
       ),
       Events.onClick(Observatory(SetObsTab(target))),
       Attrs.role("tab"),
@@ -81,10 +100,20 @@ let view = (state: observatoryState): Tea_Vdom.t<msg> => {
             list{
               button(
                 list{
-                  Attrs.class_("px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600"),
+                  Attrs.class_(
+                    "px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600",
+                  ),
                   Events.onClick(Observatory(RunHealthCheck)),
                 },
-                list{text(if state.checking { "Checking..." } else { "Health Check" })},
+                list{
+                  text(
+                    if state.checking {
+                      "Checking..."
+                    } else {
+                      "Health Check"
+                    },
+                  ),
+                },
               ),
             },
           ),
@@ -105,7 +134,9 @@ let view = (state: observatoryState): Tea_Vdom.t<msg> => {
       | Some(err) =>
         div(
           list{
-            Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200"),
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200",
+            ),
             Events.onClick(Observatory(DismissObsError)),
           },
           list{text(err)},
@@ -116,15 +147,19 @@ let view = (state: observatoryState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex gap-6 px-4 py-2 text-xs text-gray-400 border-b border-gray-800")},
         list{
-          span(list{}, list{
-            text("CPU: " ++ Float.toFixed(state.systemCpu, ~digits=1) ++ "%"),
-          }),
-          span(list{}, list{
-            text("Memory: " ++ Int.toString(state.systemMemory / (1024 * 1024)) ++ " / " ++ Int.toString(state.systemMemoryTotal / (1024 * 1024)) ++ " MiB"),
-          }),
-          span(list{}, list{
-            text("Panels: " ++ Int.toString(Array.length(state.snapshots))),
-          }),
+          span(list{}, list{text("CPU: " ++ Float.toFixed(state.systemCpu, ~digits=1) ++ "%")}),
+          span(
+            list{},
+            list{
+              text(
+                "Memory: " ++
+                Int.toString(state.systemMemory / (1024 * 1024)) ++
+                " / " ++
+                Int.toString(state.systemMemoryTotal / (1024 * 1024)) ++ " MiB",
+              ),
+            },
+          ),
+          span(list{}, list{text("Panels: " ++ Int.toString(Array.length(state.snapshots)))}),
         },
       ),
       // Content
@@ -145,8 +180,14 @@ let view = (state: observatoryState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex gap-4 py-1 text-xs border-b border-gray-800")},
                   list{
-                    span(list{Attrs.class_("text-gray-500 w-40 shrink-0")}, list{text(entry.timestamp)}),
-                    span(list{Attrs.class_("text-blue-300 w-28 shrink-0")}, list{text(entry.panelName)}),
+                    span(
+                      list{Attrs.class_("text-gray-500 w-40 shrink-0")},
+                      list{text(entry.timestamp)},
+                    ),
+                    span(
+                      list{Attrs.class_("text-blue-300 w-28 shrink-0")},
+                      list{text(entry.panelName)},
+                    ),
                     span(list{Attrs.class_("text-gray-300")}, list{text(entry.event)}),
                   },
                 )

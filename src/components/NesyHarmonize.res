@@ -22,14 +22,8 @@ let statPill = (label: string, count: int, colorClass: string): Tea_Vdom.t<msg> 
   div(
     list{Attrs.class_(`flex flex-col items-center px-4 py-2 rounded ${colorClass}`)},
     list{
-      span(
-        list{Attrs.class_("text-2xl font-bold font-mono")},
-        list{text(Int.toString(count))},
-      ),
-      span(
-        list{Attrs.class_("text-xs uppercase tracking-wide opacity-80")},
-        list{text(label)},
-      ),
+      span(list{Attrs.class_("text-2xl font-bold font-mono")}, list{text(Int.toString(count))}),
+      span(list{Attrs.class_("text-xs uppercase tracking-wide opacity-80")}, list{text(label)}),
     },
   )
 }
@@ -43,7 +37,9 @@ let statsBar = (stats: harmonizeStats): Tea_Vdom.t<msg> => {
       statPill("Requires Review", stats.requiresReview, "bg-amber-500/80 text-white"),
       statPill("Critical Unsafe", stats.criticalUnsafe, "bg-red-600/80 text-white"),
       div(
-        list{Attrs.class_("flex flex-col items-center px-4 py-2 rounded bg-gray-700/50 text-gray-200")},
+        list{
+          Attrs.class_("flex flex-col items-center px-4 py-2 rounded bg-gray-700/50 text-gray-200"),
+        },
         list{
           span(
             list{Attrs.class_("text-2xl font-bold font-mono")},
@@ -65,18 +61,12 @@ let statsBar = (stats: harmonizeStats): Tea_Vdom.t<msg> => {
 
 /// Arrow separator between verdict stages.
 let arrow: Tea_Vdom.t<msg> = {
-  span(
-    list{Attrs.class_("text-gray-500 mx-1")},
-    list{text("->")},
-  )
+  span(list{Attrs.class_("text-gray-500 mx-1")}, list{text("->")})
 }
 
 /// Verdict badge with colour coding.
 let verdictBadge = (label: string, colorClass: string): Tea_Vdom.t<msg> => {
-  span(
-    list{Attrs.class_(`px-2 py-0.5 text-xs rounded font-mono ${colorClass}`)},
-    list{text(label)},
-  )
+  span(list{Attrs.class_(`px-2 py-0.5 text-xs rounded font-mono ${colorClass}`)}, list{text(label)})
 }
 
 // ============================================================================
@@ -86,7 +76,11 @@ let verdictBadge = (label: string, colorClass: string): Tea_Vdom.t<msg> => {
 /// A single harmonization entry row showing the verdict pipeline.
 let entryRow = (entry: harmonizationEntry): Tea_Vdom.t<msg> => {
   div(
-    list{Attrs.class_("flex items-center gap-2 px-3 py-2 border-b border-gray-800 hover:bg-gray-800/30")},
+    list{
+      Attrs.class_(
+        "flex items-center gap-2 px-3 py-2 border-b border-gray-800 hover:bg-gray-800/30",
+      ),
+    },
     list{
       // Timestamp
       span(
@@ -113,10 +107,7 @@ let entryRow = (entry: harmonizationEntry): Tea_Vdom.t<msg> => {
       ),
       // Symbolic wins indicator
       if entry.symbolicWins {
-        span(
-          list{Attrs.class_("text-xs text-blue-400 ml-auto")},
-          list{text("[S wins]")},
-        )
+        span(list{Attrs.class_("text-xs text-blue-400 ml-auto")}, list{text("[S wins]")})
       } else {
         noNode
       },
@@ -138,10 +129,7 @@ let filterControls = (currentFilter: option<harmonizedVerdict>): Tea_Vdom.t<msg>
     } else {
       "bg-gray-700 text-gray-300 hover:bg-gray-600"
     }
-    button(
-      list{Attrs.class_(`${baseClass} ${activeClass}`)},
-      list{text(label)},
-    )
+    button(list{Attrs.class_(`${baseClass} ${activeClass}`)}, list{text(label)})
   }
   div(
     list{Attrs.class_("flex gap-2 mb-3")},
@@ -168,10 +156,7 @@ let view = (state: nesyHarmonizeState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between mb-3")},
         list{
-          h2(
-            list{Attrs.class_("text-lg font-semibold")},
-            list{text("NeSy Harmonization Monitor")},
-          ),
+          h2(list{Attrs.class_("text-lg font-semibold")}, list{text("NeSy Harmonization Monitor")}),
           span(
             list{Attrs.class_("text-xs text-gray-500")},
             list{text(`${Int.toString(state.stats.totalCount)} entries`)},

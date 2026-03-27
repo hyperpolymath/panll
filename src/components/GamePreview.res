@@ -163,7 +163,10 @@ let renderLivePreview = (state: gamePreviewState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center gap-1")},
                   list{
-                    div(list{Attrs.class_("w-2 h-2 rounded-full bg-red-500 animate-pulse")}, list{}),
+                    div(
+                      list{Attrs.class_("w-2 h-2 rounded-full bg-red-500 animate-pulse")},
+                      list{},
+                    ),
                     span(list{Attrs.class_("text-xs text-red-400")}, list{text("REC")}),
                     button(
                       list{
@@ -210,11 +213,7 @@ let renderLivePreview = (state: gamePreviewState): Tea_Vdom.t<msg> => {
                   ),
                   span(
                     list{Attrs.class_("text-xs text-gray-400 w-10 text-center")},
-                    list{
-                      text(
-                        `${Float.toFixed(state.zoomLevel *. 100.0, ~digits=0)}%`,
-                      ),
-                    },
+                    list{text(`${Float.toFixed(state.zoomLevel *. 100.0, ~digits=0)}%`)},
                   ),
                   button(
                     list{
@@ -273,17 +272,10 @@ let renderLivePreview = (state: gamePreviewState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("text-center")},
               list{
-                div(
-                  list{Attrs.class_("text-gray-600 text-lg mb-2")},
-                  list{text("Game Preview")},
-                ),
+                div(list{Attrs.class_("text-gray-600 text-lg mb-2")}, list{text("Game Preview")}),
                 div(
                   list{Attrs.class_("text-gray-700 text-sm mb-4")},
-                  list{
-                    text(
-                      `Dev server not detected at ${state.devServerUrl}`,
-                    ),
-                  },
+                  list{text(`Dev server not detected at ${state.devServerUrl}`)},
                 ),
                 div(
                   list{Attrs.class_("text-gray-700 text-xs mb-4")},
@@ -317,15 +309,13 @@ let renderDeviceLog = (state: gamePreviewState): Tea_Vdom.t<msg> => {
         list{
           h3(
             list{Attrs.class_("text-sm font-medium text-gray-300")},
-            list{
-              text(
-                `Device Interactions (${Int.toString(Array.length(state.deviceLog))})`,
-              ),
-            },
+            list{text(`Device Interactions (${Int.toString(Array.length(state.deviceLog))})`)},
           ),
           button(
             list{
-              Attrs.class_("text-xs text-gray-400 hover:text-gray-200 px-3 py-1 rounded bg-gray-800"),
+              Attrs.class_(
+                "text-xs text-gray-400 hover:text-gray-200 px-3 py-1 rounded bg-gray-800",
+              ),
               Events.onClick(GamePreview(ClearDeviceLog)),
             },
             list{text("Clear")},
@@ -349,7 +339,10 @@ let renderDeviceLog = (state: gamePreviewState): Tea_Vdom.t<msg> => {
                 ),
               },
               list{
-                span(list{Attrs.class_("text-cyan-400 w-32 truncate")}, list{text(entry.deviceType)}),
+                span(
+                  list{Attrs.class_("text-cyan-400 w-32 truncate")},
+                  list{text(entry.deviceType)},
+                ),
                 span(list{Attrs.class_("text-gray-500 w-20")}, list{text(entry.deviceId)}),
                 span(list{Attrs.class_("text-gray-300 flex-1")}, list{text(entry.interaction)}),
               },
@@ -370,13 +363,12 @@ let renderClips = (state: gamePreviewState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between mb-4")},
         list{
-          h3(
-            list{Attrs.class_("text-sm font-medium text-gray-300")},
-            list{text("Gameplay Clips")},
-          ),
+          h3(list{Attrs.class_("text-sm font-medium text-gray-300")}, list{text("Gameplay Clips")}),
           button(
             list{
-              Attrs.class_("text-xs text-gray-400 hover:text-gray-200 px-3 py-1 rounded bg-gray-800"),
+              Attrs.class_(
+                "text-xs text-gray-400 hover:text-gray-200 px-3 py-1 rounded bg-gray-800",
+              ),
               Events.onClick(GamePreview(LoadClips)),
             },
             list{text("Refresh")},
@@ -411,7 +403,9 @@ let renderClips = (state: gamePreviewState): Tea_Vdom.t<msg> => {
                       list{Attrs.class_("text-xs text-gray-500 mt-1")},
                       list{
                         text(
-                          `${Float.toString(clip.durationSecs)}s | ${Int.toString(clip.sizeBytes)} bytes`,
+                          `${Float.toString(clip.durationSecs)}s | ${Int.toString(
+                              clip.sizeBytes,
+                            )} bytes`,
                         ),
                       },
                     ),
@@ -419,7 +413,9 @@ let renderClips = (state: gamePreviewState): Tea_Vdom.t<msg> => {
                 ),
                 button(
                   list{
-                    Attrs.class_("text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-gray-800 rounded"),
+                    Attrs.class_(
+                      "text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-gray-800 rounded",
+                    ),
                     Events.onClick(GamePreview(DeleteClip(clip.id))),
                   },
                   list{text("Delete")},
@@ -448,7 +444,9 @@ let renderPerformance = (state: gamePreviewState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("text-xs text-gray-400 hover:text-gray-200 px-3 py-1 rounded bg-gray-800"),
+              Attrs.class_(
+                "text-xs text-gray-400 hover:text-gray-200 px-3 py-1 rounded bg-gray-800",
+              ),
               Events.onClick(GamePreview(RefreshStats)),
             },
             list{text("Refresh")},
@@ -553,9 +551,7 @@ let view = (state: gamePreviewState): Tea_Vdom.t<msg> => {
             list{
               div(
                 list{Attrs.class_("w-6 h-6 rounded bg-cyan-900 flex items-center justify-center")},
-                list{
-                  span(list{Attrs.class_("text-cyan-400 text-xs font-bold")}, list{text("GP")}),
-                },
+                list{span(list{Attrs.class_("text-cyan-400 text-xs font-bold")}, list{text("GP")})},
               ),
               div(
                 list{},
@@ -596,9 +592,7 @@ let view = (state: gamePreviewState): Tea_Vdom.t<msg> => {
       | Some(err) =>
         div(
           list{Attrs.class_("px-4 py-2 bg-red-950 border-b border-red-900")},
-          list{
-            span(list{Attrs.class_("text-red-400 text-sm")}, list{text(err)}),
-          },
+          list{span(list{Attrs.class_("text-red-400 text-sm")}, list{text(err)})},
         )
       | None => noNode
       },

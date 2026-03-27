@@ -38,11 +38,7 @@ let config: tangleVizModuleConfig = {
   name: "Tangle Viz",
   version: "0.1.0",
   description: "Topological programming visualizer — braid diagrams, knot invariants, Tangle source parsing",
-  capabilities: [
-    BraidVisualization,
-    InvariantComputation,
-    SourceParsing,
-  ],
+  capabilities: [BraidVisualization, InvariantComputation, SourceParsing],
   icon: Some("knot"),
 }
 

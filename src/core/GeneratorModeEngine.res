@@ -44,8 +44,7 @@ let tabLabel = (cat: generatorModeCategory): string =>
 let allTabs: array<generatorModeCategory> = [Design, Parameters, Preview, Export]
 
 /// Count the number of districts in a world specification.
-let countDistricts = (spec: worldSpec): int =>
-  spec.districts->Array.length
+let countDistricts = (spec: worldSpec): int => spec.districts->Array.length
 
 /// Count the total number of facilities across all districts.
 let countTotalFacilities = (spec: worldSpec): int =>

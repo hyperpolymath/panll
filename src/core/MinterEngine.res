@@ -18,10 +18,23 @@ open MinterModel
 
 /// Reserved panel names that cannot be used (existing or special).
 let reservedNames: array<string> = [
-  "CloudGuard", "Vab", "Farm", "Fleet", "Hypatia",
-  "Reposystem", "Databases", "Aerie", "Interfaces",
-  "Playgrounds", "Plaza", "Minter", "PanelSwitcher",
-  "Model", "Msg", "Update", "View",
+  "CloudGuard",
+  "Vab",
+  "Farm",
+  "Fleet",
+  "Hypatia",
+  "Reposystem",
+  "Databases",
+  "Aerie",
+  "Interfaces",
+  "Playgrounds",
+  "Plaza",
+  "Minter",
+  "PanelSwitcher",
+  "Model",
+  "Msg",
+  "Update",
+  "View",
 ]
 
 /// Validate a panel name: must be PascalCase, non-empty, and not reserved.
@@ -139,10 +152,10 @@ let stepLabel = (step: int): string => {
 let canProceedFromStep = (form: minterForm, step: int): bool => {
   switch step {
   | 0 =>
-    form.nameValidation === NameValid
-    && String.length(form.panelName) >= 2
-    && String.length(form.shortName) >= 1
-    && String.length(form.description) >= 5
+    form.nameValidation === NameValid &&
+    String.length(form.panelName) >= 2 &&
+    String.length(form.shortName) >= 1 &&
+    String.length(form.description) >= 5
   | 1 => true // Backend kind always has a valid default
   | 2 => true // Capabilities are optional
   | 3 => true // Review step — ready to mint
@@ -463,7 +476,8 @@ let generateCmd = (form: minterForm): option<string> => {
   switch form.backendKind {
   | NoBackend => None
   | _ =>
-    Some(`// SPDX-License-Identifier: PMPL-1.0-or-later
+    Some(
+      `// SPDX-License-Identifier: PMPL-1.0-or-later
 
 /// PanLL ${form.panelName} Commands - backend command wrappers.
 ///
@@ -490,7 +504,8 @@ let loadData = (
     ->ignore
   })
 }
-`)
+`,
+    )
   }
 }
 
@@ -509,9 +524,7 @@ let fileSummary = (form: minterForm): array<(string, string)> => {
 
   let manifestFile = [(`src/panels/${snake}/panels/manifest.json`, "panll-harness/v2 manifest")]
 
-  let cmdFile = hasBackend
-    ? [(`src/commands/${form.panelName}Cmd.res`, "Backend commands")]
-    : []
+  let cmdFile = hasBackend ? [(`src/commands/${form.panelName}Cmd.res`, "Backend commands")] : []
 
   let rustFiles = hasBackend
     ? [
@@ -530,7 +543,10 @@ let fileSummary = (form: minterForm): array<(string, string)> => {
     ("src/Update.res", `Add update${form.panelName} handler`),
   ]
 
-  Array.concat(Array.concat(Array.concat(Array.concat(files, manifestFile), cmdFile), rustFiles), patches)
+  Array.concat(
+    Array.concat(Array.concat(Array.concat(files, manifestFile), cmdFile), rustFiles),
+    patches,
+  )
 }
 
 /// Default form state for a new minting session.

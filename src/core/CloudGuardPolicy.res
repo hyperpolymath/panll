@@ -78,7 +78,6 @@ let defaultConstraints: array<policyConstraint> = [
     severity: Medium,
     description: "TLS 1.3 with 0-RTT provides the fastest and most secure handshake.",
   },
-
   // --- Security Headers ---
   {
     id: "security_header",
@@ -88,7 +87,6 @@ let defaultConstraints: array<policyConstraint> = [
     severity: Critical,
     description: "HSTS forces browsers to use HTTPS only. max-age=1yr, includeSubDomains, preload, and nosniff are all required.",
   },
-
   // --- WAF ---
   {
     id: "browser_check",
@@ -122,7 +120,6 @@ let defaultConstraints: array<policyConstraint> = [
     severity: Medium,
     description: "Medium security level provides a good balance of protection without excessive challenges.",
   },
-
   // --- Performance ---
   {
     id: "brotli",
@@ -148,7 +145,6 @@ let defaultConstraints: array<policyConstraint> = [
     severity: Low,
     description: "HTTP/3 over QUIC improves performance, especially on mobile networks.",
   },
-
   // --- Network ---
   {
     id: "websockets",
@@ -189,10 +185,7 @@ let findConstraint = (id: string): option<policyConstraint> => {
 
 /// Evaluate a single setting against the policy. Returns Some(finding) if
 /// the setting deviates from the constraint, None if it matches.
-let evaluateSettingAgainstPolicy = (
-  domain: string,
-  setting: cfSetting,
-): option<auditFinding> => {
+let evaluateSettingAgainstPolicy = (domain: string, setting: cfSetting): option<auditFinding> => {
   switch findConstraint(setting.id) {
   | None => None // No constraint for this setting — passes by default
   | Some(rule) =>
@@ -229,10 +222,7 @@ let evaluateSettingAgainstPolicy = (
 
 /// Run a full audit of all settings against the policy for a given domain.
 /// Returns a complete auditResult with score, findings, and counts.
-let auditSettings = (
-  domain: string,
-  settings: array<cfSetting>,
-): auditResult => {
+let auditSettings = (domain: string, settings: array<cfSetting>): auditResult => {
   let enabledC = enabledConstraints()
   let findings = ref([])
 
@@ -248,12 +238,15 @@ let auditSettings = (
   let totalConstrained = enabledC->Array.length
   let failedCount = Array.length(findings.contents)
   let passedCount = totalConstrained - failedCount
-  let warningCount = findings.contents->Array.filter(f =>
-    switch f.severity {
-    | Medium | Low => true
-    | _ => false
-    }
-  )->Array.length
+  let warningCount =
+    findings.contents
+    ->Array.filter(f =>
+      switch f.severity {
+      | Medium | Low => true
+      | _ => false
+      }
+    )
+    ->Array.length
 
   let score = if totalConstrained > 0 {
     Int.toFloat(passedCount) /. Int.toFloat(totalConstrained)
@@ -302,12 +295,14 @@ let auditMultipleDomains = (
     findings: CloudGuardEngine.sortFindingsBySeverity(allFindings.contents),
     passed: totalPassed.contents,
     failed: totalFailed.contents,
-    warnings: allFindings.contents->Array.filter(f =>
+    warnings: allFindings.contents
+    ->Array.filter(f =>
       switch f.severity {
       | Medium | Low => true
       | _ => false
       }
-    )->Array.length,
+    )
+    ->Array.length,
     score,
   }
 }

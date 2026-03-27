@@ -18,10 +18,7 @@ open Model
 
 /// Map a Fleet bot ID to an AgenticBridge OODA phase based on the bot's
 /// current processing stage. Returns the OODA phase and a descriptive action.
-let botActionToOodaPhase = (
-  botId: FleetModel.botId,
-  resolved: bool,
-): (oodaPhase, string) => {
+let botActionToOodaPhase = (botId: FleetModel.botId, resolved: bool): (oodaPhase, string) => {
   let botName = switch botId {
   | Rhodibot => "rhodibot"
   | Echidnabot => "echidnabot"
@@ -52,10 +49,7 @@ let botStatusToAgentStatus = (botStatus: FleetModel.botStatus): agentStatus => {
 /// Build a bridge action record from a Fleet finding resolution event.
 /// This creates an AgenticBridge action entry that appears in the Execution
 /// tab, linking Fleet findings to OODA-phase tracking.
-let buildBridgeAction = (
-  finding: FleetModel.fleetFinding,
-  phase: oodaPhase,
-): agentAction => {
+let buildBridgeAction = (finding: FleetModel.fleetFinding, phase: oodaPhase): agentAction => {
   {
     phase,
     description: "Fleet: " ++ finding.summary,

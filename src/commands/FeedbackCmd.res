@@ -9,10 +9,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Save a feedback report to disk via the Rust backend.
-let saveReport = (
-  reportJson: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let saveReport = (reportJson: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("feedback_save_report", {"reportJson": reportJson})
     ->Promise.then(result => {

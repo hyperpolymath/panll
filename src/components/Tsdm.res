@@ -75,25 +75,16 @@ let orderItem = (
   downMsg: msg,
 ): Tea_Vdom.t<msg> => {
   div(
-    list{
-      Attrs.class_(
-        "flex items-center gap-2 py-1.5 px-3 bg-gray-800/50 rounded mb-1",
-      ),
-    },
+    list{Attrs.class_("flex items-center gap-2 py-1.5 px-3 bg-gray-800/50 rounded mb-1")},
     list{
       span(
         list{Attrs.class_("text-xs text-gray-500 font-mono w-5")},
         list{text(Int.toString(index + 1))},
       ),
-      span(
-        list{Attrs.class_(`flex-1 text-sm font-mono ${colour}`)},
-        list{text(lbl)},
-      ),
+      span(list{Attrs.class_(`flex-1 text-sm font-mono ${colour}`)}, list{text(lbl)}),
       button(
         list{
-          Attrs.class_(
-            "text-xs text-gray-500 hover:text-gray-200 disabled:opacity-30 px-1",
-          ),
+          Attrs.class_("text-xs text-gray-500 hover:text-gray-200 disabled:opacity-30 px-1"),
           Attrs.disabled(index == 0),
           Events.onClick(upMsg),
         },
@@ -101,9 +92,7 @@ let orderItem = (
       ),
       button(
         list{
-          Attrs.class_(
-            "text-xs text-gray-500 hover:text-gray-200 disabled:opacity-30 px-1",
-          ),
+          Attrs.class_("text-xs text-gray-500 hover:text-gray-200 disabled:opacity-30 px-1"),
           Attrs.disabled(index == total - 1),
           Events.onClick(downMsg),
         },
@@ -114,15 +103,10 @@ let orderItem = (
 }
 
 /// Render a toggleable cleanup step.
-let cleanupItem = (
-  step: cleanupStep,
-  enabled: bool,
-): Tea_Vdom.t<msg> => {
+let cleanupItem = (step: cleanupStep, enabled: bool): Tea_Vdom.t<msg> => {
   label(
     list{
-      Attrs.class_(
-        "flex items-center gap-2 py-1 px-3 cursor-pointer hover:bg-gray-800/30 rounded",
-      ),
+      Attrs.class_("flex items-center gap-2 py-1 px-3 cursor-pointer hover:bg-gray-800/30 rounded"),
     },
     list{
       input(
@@ -151,11 +135,7 @@ let workItemRow = (item: tsdmWorkItem): Tea_Vdom.t<msg> => {
   let axisColourClass = axisColour(item.axis)
   let doneClass = item.done ? "opacity-40" : ""
   div(
-    list{
-      Attrs.class_(
-        `flex items-center gap-3 py-1.5 px-3 border-b border-gray-700 ${doneClass}`,
-      ),
-    },
+    list{Attrs.class_(`flex items-center gap-3 py-1.5 px-3 border-b border-gray-700 ${doneClass}`)},
     list{
       span(
         list{Attrs.class_(`text-xs font-mono font-bold ${axisColourClass} min-w-[50px]`)},
@@ -176,17 +156,9 @@ let workItemRow = (item: tsdmWorkItem): Tea_Vdom.t<msg> => {
       ),
       div(
         list{Attrs.class_("flex-1 min-w-0")},
-        list{
-          div(
-            list{Attrs.class_("text-sm text-gray-200 truncate")},
-            list{text(item.title)},
-          ),
-        },
+        list{div(list{Attrs.class_("text-sm text-gray-200 truncate")}, list{text(item.title)})},
       ),
-      span(
-        list{Attrs.class_("text-xs text-gray-600 font-mono")},
-        list{text(item.sourcePanel)},
-      ),
+      span(list{Attrs.class_("text-xs text-gray-600 font-mono")}, list{text(item.sourcePanel)}),
     },
   )
 }
@@ -218,8 +190,8 @@ let axisFilterBtn = (
     list{
       Attrs.class_(
         `px-2 py-0.5 rounded font-mono text-xs ${active
-          ? "bg-indigo-600 text-white"
-          : "bg-gray-700 text-gray-400 hover:bg-gray-600"}`,
+            ? "bg-indigo-600 text-white"
+            : "bg-gray-700 text-gray-400 hover:bg-gray-600"}`,
       ),
       Events.onClick(Tsdm(SetAxisFilter(filterVal))),
     },
@@ -245,15 +217,10 @@ let view = (state: tsdmState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(
-                list{Attrs.class_("text-lg font-bold text-indigo-400")},
-                list{text("TSDM")},
-              ),
+              span(list{Attrs.class_("text-lg font-bold text-indigo-400")}, list{text("TSDM")}),
               span(
                 list{
-                  Attrs.class_(
-                    "text-xs text-gray-500 font-mono px-2 py-0.5 rounded bg-gray-700",
-                  ),
+                  Attrs.class_("text-xs text-gray-500 font-mono px-2 py-0.5 rounded bg-gray-700"),
                 },
                 list{text("directive")},
               ),
@@ -278,8 +245,8 @@ let view = (state: tsdmState): Tea_Vdom.t<msg> => {
                 list{
                   Attrs.class_(
                     `px-3 py-1 text-xs rounded font-mono ${state.locked
-                      ? "bg-amber-700 hover:bg-amber-600 text-white"
-                      : "bg-gray-700 hover:bg-gray-600 text-gray-300"}`,
+                        ? "bg-amber-700 hover:bg-amber-600 text-white"
+                        : "bg-gray-700 hover:bg-gray-600 text-gray-300"}`,
                   ),
                   Events.onClick(Tsdm(ToggleLock)),
                 },
@@ -407,14 +374,8 @@ let view = (state: tsdmState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("text-xs text-gray-400 px-3 py-1")},
                 list{
-                  div(
-                    list{},
-                    list{text(`Compliance: ${state.auditTooling.complianceTool}`)},
-                  ),
-                  div(
-                    list{},
-                    list{text(`Effects: ${state.auditTooling.effectsTool}`)},
-                  ),
+                  div(list{}, list{text(`Compliance: ${state.auditTooling.complianceTool}`)}),
+                  div(list{}, list{text(`Effects: ${state.auditTooling.effectsTool}`)}),
                 },
               ),
             },
@@ -442,11 +403,7 @@ let view = (state: tsdmState): Tea_Vdom.t<msg> => {
                     ->List.fromArray,
                   ),
                   label(
-                    list{
-                      Attrs.class_(
-                        "flex items-center gap-1 text-gray-400 cursor-pointer ml-2",
-                      ),
-                    },
+                    list{Attrs.class_("flex items-center gap-1 text-gray-400 cursor-pointer ml-2")},
                     list{
                       input(
                         list{
@@ -533,10 +490,7 @@ let view = (state: tsdmState): Tea_Vdom.t<msg> => {
                       ),
                     },
                   ),
-                  span(
-                    list{},
-                    list{text("TSDM 1.0 — Scope > Maintenance > Audit")},
-                  ),
+                  span(list{}, list{text("TSDM 1.0 — Scope > Maintenance > Audit")}),
                 },
               ),
             },
@@ -548,9 +502,7 @@ let view = (state: tsdmState): Tea_Vdom.t<msg> => {
       | Some(err) =>
         div(
           list{
-            Attrs.class_(
-              "px-4 py-2 bg-red-900/30 border-t border-red-700 text-red-300 text-sm",
-            ),
+            Attrs.class_("px-4 py-2 bg-red-900/30 border-t border-red-700 text-red-300 text-sm"),
           },
           list{text(err)},
         )

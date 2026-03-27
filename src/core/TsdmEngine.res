@@ -208,8 +208,7 @@ let sortByDirective = (
       }
     | AxisMaintenance =>
       switch item.maintenanceTier {
-      | Some(tier) =>
-        maintenanceOrder->Array.findIndex(t => t == tier)->Int.clamp(~min=0, ~max=2)
+      | Some(tier) => maintenanceOrder->Array.findIndex(t => t == tier)->Int.clamp(~min=0, ~max=2)
       | None => 99
       }
     | AxisAudit =>

@@ -15,17 +15,27 @@ let categoryLabel = (cat: aerieCategory): string =>
 
 /// Classify latency quality.
 let latencyQuality = (rttMs: float): string =>
-  if rttMs < 20.0 { "Excellent" }
-  else if rttMs < 50.0 { "Good" }
-  else if rttMs < 100.0 { "Fair" }
-  else { "Poor" }
+  if rttMs < 20.0 {
+    "Excellent"
+  } else if rttMs < 50.0 {
+    "Good"
+  } else if rttMs < 100.0 {
+    "Fair"
+  } else {
+    "Poor"
+  }
 
 /// CSS color for latency quality.
 let latencyColor = (rttMs: float): string =>
-  if rttMs < 20.0 { "text-green-400" }
-  else if rttMs < 50.0 { "text-emerald-400" }
-  else if rttMs < 100.0 { "text-amber-400" }
-  else { "text-red-400" }
+  if rttMs < 20.0 {
+    "text-green-400"
+  } else if rttMs < 50.0 {
+    "text-emerald-400"
+  } else if rttMs < 100.0 {
+    "text-amber-400"
+  } else {
+    "text-red-400"
+  }
 
 /// Average latency across all results.
 let avgLatency = (results: array<latencyResult>): float => {
@@ -59,10 +69,15 @@ let avgPacketLoss = (results: array<latencyResult>): float => {
 
 /// Classify jitter quality.
 let jitterQuality = (jitterMs: float): string =>
-  if jitterMs < 5.0 { "Excellent" }
-  else if jitterMs < 20.0 { "Good" }
-  else if jitterMs < 50.0 { "Fair" }
-  else { "Poor" }
+  if jitterMs < 5.0 {
+    "Excellent"
+  } else if jitterMs < 20.0 {
+    "Good"
+  } else if jitterMs < 50.0 {
+    "Fair"
+  } else {
+    "Poor"
+  }
 
 /// MTU mismatch severity label.
 let mtuStatus = (result: option<mtuResult>): string =>
@@ -80,7 +95,12 @@ let mtuStatus = (result: option<mtuResult>): string =>
 let mtuColor = (result: option<mtuResult>): string =>
   switch result {
   | None => "text-gray-500"
-  | Some(r) => if r.mismatch { "text-red-400" } else { "text-green-400" }
+  | Some(r) =>
+    if r.mismatch {
+      "text-red-400"
+    } else {
+      "text-green-400"
+    }
   }
 
 /// Count interfaces that are up.
@@ -89,11 +109,17 @@ let interfacesUp = (ifaces: array<interfaceSummary>): int =>
 
 /// Extended latency quality (adds "Very poor" for mobile/satellite).
 let latencyQualityExtended = (rttMs: float): string =>
-  if rttMs < 20.0 { "Excellent" }
-  else if rttMs < 50.0 { "Good" }
-  else if rttMs < 100.0 { "Fair" }
-  else if rttMs < 300.0 { "Poor" }
-  else { "Very poor" }
+  if rttMs < 20.0 {
+    "Excellent"
+  } else if rttMs < 50.0 {
+    "Good"
+  } else if rttMs < 100.0 {
+    "Fair"
+  } else if rttMs < 300.0 {
+    "Poor"
+  } else {
+    "Very poor"
+  }
 
 /// Default Aerie panel state — disconnected, no data loaded.
 let defaultState: aerieState = {

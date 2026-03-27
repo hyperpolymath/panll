@@ -31,10 +31,7 @@ let installPanel = (
 
 /// Remove a panel. For native panels, just disables it. For podded panels,
 /// deletes the container and all its data — clean uninstall, everything gone.
-let removePanel = (
-  panelName: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let removePanel = (panelName: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("provisioner_remove_panel", {"panelName": panelName})
     ->Promise.then(result => {
@@ -50,10 +47,7 @@ let removePanel = (
 }
 
 /// Save panel configuration to persistent storage.
-let saveConfig = (
-  configJson: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let saveConfig = (configJson: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("provisioner_save_config", {"config": configJson})
     ->Promise.then(result => {
@@ -69,9 +63,7 @@ let saveConfig = (
 }
 
 /// Load panel configuration from persistent storage.
-let loadConfig = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadConfig = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("provisioner_load_config", ())
     ->Promise.then(result => {

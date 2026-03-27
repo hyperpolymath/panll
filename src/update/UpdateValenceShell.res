@@ -42,17 +42,21 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
               },
             },
             Tea_Cmd.batch(list{
-              ValenceShellCmd.sendInput(input ++ "\n", result => ValenceShell(PtyOutput(
-                switch result {
-                | Ok(s) => s
-                | Error(e) => e
-                },
-                switch result {
-                | Ok(_) => true
-                | Error(_) => false
-                },
-              ))),
-              TypeLLService.checkCodeTypes(input, "shell", result => ValenceShell(TypeCheckResult(result))),
+              ValenceShellCmd.sendInput(input ++ "\n", result => ValenceShell(
+                PtyOutput(
+                  switch result {
+                  | Ok(s) => s
+                  | Error(e) => e
+                  },
+                  switch result {
+                  | Ok(_) => true
+                  | Error(_) => false
+                  },
+                ),
+              )),
+              TypeLLService.checkCodeTypes(input, "shell", result => ValenceShell(
+                TypeCheckResult(result),
+              )),
             }),
           )
         | GateEnabled | GateLearning => {
@@ -73,16 +77,18 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
                     completionsVisible: false,
                   },
                 },
-                ValenceShellCmd.sendInput(input ++ "\n", result => ValenceShell(PtyOutput(
-                  switch result {
-                  | Ok(s) => s
-                  | Error(e) => e
-                  },
-                  switch result {
-                  | Ok(_) => true
-                  | Error(_) => false
-                  },
-                ))),
+                ValenceShellCmd.sendInput(input ++ "\n", result => ValenceShell(
+                  PtyOutput(
+                    switch result {
+                    | Ok(s) => s
+                    | Error(e) => e
+                    },
+                    switch result {
+                    | Ok(_) => true
+                    | Error(_) => false
+                    },
+                  ),
+                )),
               )
             } else {
               // Queue for approval
@@ -148,7 +154,9 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
     )
   | CheckValenceAvailability => (
       model,
-      ValenceShellCmd.checkValenceAvailability(result => ValenceShell(ValenceAvailabilityResult(result))),
+      ValenceShellCmd.checkValenceAvailability(result => ValenceShell(
+        ValenceAvailabilityResult(result),
+      )),
     )
   | ValenceAvailabilityResult(Ok(_version)) => (
       {
@@ -175,16 +183,18 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
           claudeCodeActive: true,
         },
       },
-      ValenceShellCmd.sendInput("claude\n", result => ValenceShell(PtyOutput(
-        switch result {
-        | Ok(s) => s
-        | Error(e) => e
-        },
-        switch result {
-        | Ok(_) => true
-        | Error(_) => false
-        },
-      ))),
+      ValenceShellCmd.sendInput("claude\n", result => ValenceShell(
+        PtyOutput(
+          switch result {
+          | Ok(s) => s
+          | Error(e) => e
+          },
+          switch result {
+          | Ok(_) => true
+          | Error(_) => false
+          },
+        ),
+      )),
     )
   | StartRecordingSession => (
       {...model, valenceShell: {...vs, loading: true}},
@@ -242,22 +252,24 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
   | RecordingsLoaded(Ok(jsonStr)) => {
       let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
       | Some(json) =>
-
         let arr = json->JSON.Decode.array->Option.getOr([])
         let items = arr->Array.filterMap(item => {
           let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
           let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
           let name = obj->Dict.get("name")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
           let path = obj->Dict.get("path")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-          let durationSecs = obj->Dict.get("durationSecs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-          let createdAt = obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-          let sizeBytes = obj->Dict.get("sizeBytes")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let durationSecs =
+            obj->Dict.get("durationSecs")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let createdAt =
+            obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let sizeBytes =
+            obj->Dict.get("sizeBytes")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
           Some({
-            ValenceShellModel.id: id,
-            name: name,
-            path: path,
-            durationSecs: durationSecs,
-            createdAt: createdAt,
+            ValenceShellModel.id,
+            name,
+            path,
+            durationSecs,
+            createdAt,
             sizeBytes: Float.toInt(sizeBytes),
           })
         })
@@ -291,7 +303,9 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
     )
   | ExportRecordingAs(id, format) => (
       {...model, valenceShell: {...vs, loading: true}},
-      ValenceShellCmd.exportRecording(id, format, result => ValenceShell(RecordingExported(result))),
+      ValenceShellCmd.exportRecording(id, format, result => ValenceShell(
+        RecordingExported(result),
+      )),
     )
   | RecordingExported(Ok(_path)) => (
       {...model, valenceShell: {...vs, loading: false, error: None}},
@@ -308,16 +322,17 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
   | CheckpointCreated(Ok(jsonStr)) => {
       let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
       | Some(json) =>
-
         let obj = json->JSON.Decode.object->Option.getOr(Dict.make())
         let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
         let label = obj->Dict.get("label")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-        let createdAt = obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-        let opsSince = obj->Dict.get("opsSinceCheckpoint")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let createdAt =
+          obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+        let opsSince =
+          obj->Dict.get("opsSinceCheckpoint")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
         Some({
-          ValenceShellModel.id: id,
-          label: label,
-          createdAt: createdAt,
+          ValenceShellModel.id,
+          label,
+          createdAt,
           opsSinceCheckpoint: Float.toInt(opsSince),
         })
 
@@ -355,18 +370,22 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
   | CheckpointsLoaded(Ok(jsonStr)) => {
       let parsed = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
       | Some(json) =>
-
         let arr = json->JSON.Decode.array->Option.getOr([])
         let items = arr->Array.filterMap(item => {
           let obj = item->JSON.Decode.object->Option.getOr(Dict.make())
           let id = obj->Dict.get("id")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
           let label = obj->Dict.get("label")->Option.flatMap(JSON.Decode.string)->Option.getOr("")
-          let createdAt = obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
-          let opsSince = obj->Dict.get("opsSinceCheckpoint")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let createdAt =
+            obj->Dict.get("createdAt")->Option.flatMap(JSON.Decode.float)->Option.getOr(0.0)
+          let opsSince =
+            obj
+            ->Dict.get("opsSinceCheckpoint")
+            ->Option.flatMap(JSON.Decode.float)
+            ->Option.getOr(0.0)
           Some({
-            ValenceShellModel.id: id,
-            label: label,
-            createdAt: createdAt,
+            ValenceShellModel.id,
+            label,
+            createdAt,
             opsSinceCheckpoint: Float.toInt(opsSince),
           })
         })
@@ -395,10 +414,7 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
       {...model, valenceShell: {...vs, error: Some(err)}},
       Tea_Cmd.none,
     )
-  | SetApprovalGate(gate) => (
-      {...model, valenceShell: {...vs, approvalGate: gate}},
-      Tea_Cmd.none,
-    )
+  | SetApprovalGate(gate) => ({...model, valenceShell: {...vs, approvalGate: gate}}, Tea_Cmd.none)
   | ApproveCommand(idx) => {
       let cmd = vs.pendingCommands->Array.get(idx)
       switch cmd {
@@ -419,16 +435,18 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
                 commandHistory: Array.concat(vs.commandHistory, [pending.command]),
               },
             },
-            ValenceShellCmd.sendInput(pending.command ++ "\n", result => ValenceShell(PtyOutput(
-              switch result {
-              | Ok(s) => s
-              | Error(e) => e
-              },
-              switch result {
-              | Ok(_) => true
-              | Error(_) => false
-              },
-            ))),
+            ValenceShellCmd.sendInput(pending.command ++ "\n", result => ValenceShell(
+              PtyOutput(
+                switch result {
+                | Ok(s) => s
+                | Error(e) => e
+                },
+                switch result {
+                | Ok(_) => true
+                | Error(_) => false
+                },
+              ),
+            )),
           )
         }
       | None => (model, Tea_Cmd.none)
@@ -438,19 +456,19 @@ let updateValenceShell = (model: model, msg: valenceShellMsg): (model, Tea_Cmd.t
       let remaining = Array.filterWithIndex(vs.pendingCommands, (_c, i) => i !== idx)
       ({...model, valenceShell: {...vs, pendingCommands: remaining}}, Tea_Cmd.none)
     }
-  | ToggleSplitView => (
-      {...model, valenceShell: {...vs, splitView: !vs.splitView}},
-      Tea_Cmd.none,
-    )
+  | ToggleSplitView => ({...model, valenceShell: {...vs, splitView: !vs.splitView}}, Tea_Cmd.none)
   | DismissError => ({...model, valenceShell: {...vs, error: None}}, Tea_Cmd.none)
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "valenceshell", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
   }
 }

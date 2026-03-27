@@ -8,11 +8,9 @@ open Msg
 open Tea.Html
 
 /// Render a category tab button.
-let renderTab = (
-  label: string,
-  cat: multiplayerCategory,
-  active: multiplayerCategory,
-): Tea_Vdom.t<msg> => {
+let renderTab = (label: string, cat: multiplayerCategory, active: multiplayerCategory): Tea_Vdom.t<
+  msg,
+> => {
   let isActive = cat === active
   let cls = isActive
     ? "px-3 py-1.5 text-xs font-medium bg-gray-700 text-white rounded"
@@ -25,7 +23,11 @@ let renderTab = (
 
 /// Render a player card.
 let renderPlayerCard = (player: connectedPlayer, isSelected: bool): Tea_Vdom.t<msg> => {
-  let borderCls = if isSelected { "border-cyan-400" } else { "border-gray-700" }
+  let borderCls = if isSelected {
+    "border-cyan-400"
+  } else {
+    "border-gray-700"
+  }
   let latencyCls = if player.latencyMs < 50 {
     "text-emerald-400"
   } else if player.latencyMs < 100 {
@@ -35,7 +37,9 @@ let renderPlayerCard = (player: connectedPlayer, isSelected: bool): Tea_Vdom.t<m
   }
   div(
     list{
-      Attrs.class_(`p-3 bg-gray-800 rounded border ${borderCls} cursor-pointer hover:border-gray-500`),
+      Attrs.class_(
+        `p-3 bg-gray-800 rounded border ${borderCls} cursor-pointer hover:border-gray-500`,
+      ),
       Events.onClick(MultiplayerMonitor(SelectPlayer(player.playerId))),
     },
     list{
@@ -45,17 +49,29 @@ let renderPlayerCard = (player: connectedPlayer, isSelected: bool): Tea_Vdom.t<m
           div(
             list{Attrs.class_("flex items-center gap-2")},
             list{
-              span(list{Attrs.class_("text-sm font-medium text-gray-100")}, list{text(player.displayName)}),
+              span(
+                list{Attrs.class_("text-sm font-medium text-gray-100")},
+                list{text(player.displayName)},
+              ),
               if player.isHost {
-                span(list{Attrs.class_("text-xs bg-amber-700 text-amber-100 px-1.5 py-0.5 rounded")}, list{text("HOST")})
+                span(
+                  list{Attrs.class_("text-xs bg-amber-700 text-amber-100 px-1.5 py-0.5 rounded")},
+                  list{text("HOST")},
+                )
               } else if player.isSpectator {
-                span(list{Attrs.class_("text-xs bg-gray-600 text-gray-300 px-1.5 py-0.5 rounded")}, list{text("SPEC")})
+                span(
+                  list{Attrs.class_("text-xs bg-gray-600 text-gray-300 px-1.5 py-0.5 rounded")},
+                  list{text("SPEC")},
+                )
               } else {
                 noNode
               },
             },
           ),
-          span(list{Attrs.class_(`text-xs font-mono ${latencyCls}`)}, list{text(`${Int.toString(player.latencyMs)}ms`)}),
+          span(
+            list{Attrs.class_(`text-xs font-mono ${latencyCls}`)},
+            list{text(`${Int.toString(player.latencyMs)}ms`)},
+          ),
         },
       ),
       div(
@@ -86,7 +102,10 @@ let renderDashboard = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
               div(
                 list{Attrs.class_("flex items-center gap-2")},
                 list{
-                  span(list{Attrs.class_("text-sm font-medium text-gray-200")}, list{text("Sync Server")}),
+                  span(
+                    list{Attrs.class_("text-sm font-medium text-gray-200")},
+                    list{text("Sync Server")},
+                  ),
                   span(
                     list{Attrs.class_(`text-xs ${connCls}`)},
                     list{text(MultiplayerMonitorEngine.connectionLabel(state.wsConnection))},
@@ -100,7 +119,9 @@ let renderDashboard = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
                   | WsConnected =>
                     button(
                       list{
-                        Attrs.class_("px-2 py-1 text-xs bg-red-700 text-white rounded hover:bg-red-600 cursor-pointer"),
+                        Attrs.class_(
+                          "px-2 py-1 text-xs bg-red-700 text-white rounded hover:bg-red-600 cursor-pointer",
+                        ),
                         Events.onClick(MultiplayerMonitor(DisconnectServer)),
                       },
                       list{text("Disconnect")},
@@ -108,7 +129,9 @@ let renderDashboard = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
                   | WsDisconnected | WsError(_) =>
                     button(
                       list{
-                        Attrs.class_("px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+                        Attrs.class_(
+                          "px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+                        ),
                         Events.onClick(MultiplayerMonitor(ConnectServer)),
                       },
                       list{text("Connect")},
@@ -117,7 +140,9 @@ let renderDashboard = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
                   },
                   button(
                     list{
-                      Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                      Attrs.class_(
+                        "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                      ),
                       Events.onClick(MultiplayerMonitor(RefreshState)),
                     },
                     list{text("Refresh")},
@@ -126,10 +151,7 @@ let renderDashboard = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
               ),
             },
           ),
-          div(
-            list{Attrs.class_("text-xs text-gray-500 font-mono")},
-            list{text(state.serverUrl)},
-          ),
+          div(list{Attrs.class_("text-xs text-gray-500 font-mono")}, list{text(state.serverUrl)}),
         },
       ),
       // Stats row
@@ -139,14 +161,20 @@ let renderDashboard = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("p-3 bg-gray-800 rounded text-center")},
             list{
-              div(list{Attrs.class_("text-2xl font-light text-gray-100")}, list{text(Int.toString(Array.length(players)))}),
+              div(
+                list{Attrs.class_("text-2xl font-light text-gray-100")},
+                list{text(Int.toString(Array.length(players)))},
+              ),
               div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Players")}),
             },
           ),
           div(
             list{Attrs.class_("p-3 bg-gray-800 rounded text-center")},
             list{
-              div(list{Attrs.class_("text-2xl font-light text-gray-100")}, list{text(Int.toString(Array.length(state.channels)))}),
+              div(
+                list{Attrs.class_("text-2xl font-light text-gray-100")},
+                list{text(Int.toString(Array.length(state.channels)))},
+              ),
               div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Channels")}),
             },
           ),
@@ -173,7 +201,9 @@ let renderDashboard = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
                     },
                   ),
                 },
-                list{text(Int.toString(MultiplayerMonitorEngine.contestedLocks(state.deviceLocks)))},
+                list{
+                  text(Int.toString(MultiplayerMonitorEngine.contestedLocks(state.deviceLocks))),
+                },
               ),
               div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Contested Locks")}),
             },
@@ -246,7 +276,9 @@ let renderStateDiffs = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
           ),
           button(
             list{
-              Attrs.class_("px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+              Attrs.class_(
+                "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+              ),
               Events.onClick(MultiplayerMonitor(RefreshDiffs)),
             },
             list{text("Refresh")},
@@ -281,7 +313,10 @@ let renderStateDiffs = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
                     span(list{Attrs.class_("text-gray-200 font-mono")}, list{text(diff.field)}),
                     span(list{Attrs.class_("text-red-400 font-mono")}, list{text(diff.localValue)}),
                     span(list{Attrs.class_("text-gray-500")}, list{text("vs")}),
-                    span(list{Attrs.class_("text-emerald-400 font-mono")}, list{text(diff.remoteValue)}),
+                    span(
+                      list{Attrs.class_("text-emerald-400 font-mono")},
+                      list{text(diff.remoteValue)},
+                    ),
                     if diff.resolved {
                       span(list{Attrs.class_("text-emerald-500")}, list{text("Resolved")})
                     } else {
@@ -314,8 +349,8 @@ let renderLatency = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
           list{Attrs.class_("text-xs text-gray-400 mb-2")},
           list{text(`${Int.toString(Array.length(state.latencySamples))} samples`)},
         ),
-        // Simple latency bars per player
-        ...state.players
+        ...// Simple latency bars per player
+        state.players
         ->Array.map(player => {
           let latencyCls = if player.latencyMs < 50 {
             "bg-emerald-600"
@@ -325,12 +360,19 @@ let renderLatency = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
             "bg-red-600"
           }
           let widthPct = Int.toString(
-            if player.latencyMs > 200 { 100 } else { player.latencyMs * 100 / 200 },
+            if player.latencyMs > 200 {
+              100
+            } else {
+              player.latencyMs * 100 / 200
+            },
           )
           div(
             list{Attrs.class_("flex items-center gap-2")},
             list{
-              span(list{Attrs.class_("w-24 text-xs text-gray-300 truncate")}, list{text(player.displayName)}),
+              span(
+                list{Attrs.class_("w-24 text-xs text-gray-300 truncate")},
+                list{text(player.displayName)},
+              ),
               div(
                 list{Attrs.class_("flex-1 bg-gray-800 rounded h-4 overflow-hidden")},
                 list{
@@ -369,28 +411,35 @@ let renderDeviceLocks = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
       state.deviceLocks
       ->Array.map(lock => {
         let isContested = Array.length(lock.contestedBy) > 0
-        let borderCls = if isContested { "border-red-700" } else { "border-gray-700" }
+        let borderCls = if isContested {
+          "border-red-700"
+        } else {
+          "border-gray-700"
+        }
         div(
           list{Attrs.class_(`p-3 bg-gray-800 rounded border ${borderCls}`)},
           list{
             div(
               list{Attrs.class_("flex items-center justify-between mb-1")},
               list{
-                span(list{Attrs.class_("text-sm font-mono text-gray-200")}, list{text(lock.deviceId)}),
+                span(
+                  list{Attrs.class_("text-sm font-mono text-gray-200")},
+                  list{text(lock.deviceId)},
+                ),
                 switch lock.lockedBy {
                 | Some(player) =>
-                  span(list{Attrs.class_("text-xs text-cyan-400")}, list{text(`Locked by ${player}`)})
-                | None =>
-                  span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Unlocked")})
+                  span(
+                    list{Attrs.class_("text-xs text-cyan-400")},
+                    list{text(`Locked by ${player}`)},
+                  )
+                | None => span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Unlocked")})
                 },
               },
             ),
             if isContested {
               div(
                 list{Attrs.class_("text-xs text-red-400 mt-1")},
-                list{
-                  text(`Contested by: ${lock.contestedBy->Array.join(", ")}`),
-                },
+                list{text(`Contested by: ${lock.contestedBy->Array.join(", ")}`)},
               )
             } else {
               noNode
@@ -419,9 +468,16 @@ let view = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-lg font-semibold text-gray-100")}, list{text("Multiplayer Monitor")}),
               span(
-                list{Attrs.class_(`text-xs ${MultiplayerMonitorEngine.connectionColour(state.wsConnection)}`)},
+                list{Attrs.class_("text-lg font-semibold text-gray-100")},
+                list{text("Multiplayer Monitor")},
+              ),
+              span(
+                list{
+                  Attrs.class_(
+                    `text-xs ${MultiplayerMonitorEngine.connectionColour(state.wsConnection)}`,
+                  ),
+                },
                 list{text(MultiplayerMonitorEngine.connectionLabel(state.wsConnection))},
               ),
             },
@@ -444,7 +500,9 @@ let view = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
               ),
               button(
                 list{
-                  Attrs.class_("px-2 py-1 text-xs bg-amber-700 text-white rounded hover:bg-amber-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-2 py-1 text-xs bg-amber-700 text-white rounded hover:bg-amber-600 cursor-pointer",
+                  ),
                   Events.onClick(MultiplayerMonitor(ReconnectionTest)),
                 },
                 list{text("Reconnection Test")},
@@ -468,7 +526,11 @@ let view = (state: multiplayerMonitorState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300",
+            ),
+          },
           list{
             div(
               list{Attrs.class_("flex items-center justify-between")},

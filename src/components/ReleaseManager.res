@@ -39,22 +39,34 @@ let renderOverview = (state: releaseManagerState): Tea_Vdom.t<msg> => {
               div(
                 list{},
                 list{
-                  div(list{Attrs.class_("text-xs text-gray-500 mb-1")}, list{text("Current Version")}),
-                  div(list{Attrs.class_("text-2xl font-light text-gray-100 font-mono")}, list{text(state.currentVersion)}),
+                  div(
+                    list{Attrs.class_("text-xs text-gray-500 mb-1")},
+                    list{text("Current Version")},
+                  ),
+                  div(
+                    list{Attrs.class_("text-2xl font-light text-gray-100 font-mono")},
+                    list{text(state.currentVersion)},
+                  ),
                 },
               ),
               div(
                 list{},
                 list{
                   div(list{Attrs.class_("text-xs text-gray-500 mb-1")}, list{text("Next Version")}),
-                  div(list{Attrs.class_("text-2xl font-light text-cyan-400 font-mono")}, list{text(state.nextVersion)}),
+                  div(
+                    list{Attrs.class_("text-2xl font-light text-cyan-400 font-mono")},
+                    list{text(state.nextVersion)},
+                  ),
                 },
               ),
               div(
                 list{},
                 list{
                   div(list{Attrs.class_("text-xs text-gray-500 mb-1")}, list{text("Channel")}),
-                  div(list{Attrs.class_(`text-2xl font-light ${channelCls}`)}, list{text(ReleaseManagerEngine.channelLabel(state.channel))}),
+                  div(
+                    list{Attrs.class_(`text-2xl font-light ${channelCls}`)},
+                    list{text(ReleaseManagerEngine.channelLabel(state.channel))},
+                  ),
                 },
               ),
             },
@@ -65,21 +77,27 @@ let renderOverview = (state: releaseManagerState): Tea_Vdom.t<msg> => {
             list{
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(ReleaseManager(BumpVersion("patch"))),
                 },
                 list{text("Patch")},
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(ReleaseManager(BumpVersion("minor"))),
                 },
                 list{text("Minor")},
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+                  ),
                   Events.onClick(ReleaseManager(BumpVersion("major"))),
                 },
                 list{text("Major")},
@@ -100,14 +118,28 @@ let renderOverview = (state: releaseManagerState): Tea_Vdom.t<msg> => {
               let chCls = ReleaseManagerEngine.channelColour(rel.channel)
               div(
                 list{
-                  Attrs.class_("flex items-center gap-3 p-3 bg-gray-800 rounded border border-gray-700 cursor-pointer hover:border-gray-500"),
+                  Attrs.class_(
+                    "flex items-center gap-3 p-3 bg-gray-800 rounded border border-gray-700 cursor-pointer hover:border-gray-500",
+                  ),
                   Events.onClick(ReleaseManager(SelectRelease(rel.version))),
                 },
                 list{
-                  span(list{Attrs.class_("text-sm font-mono text-gray-100")}, list{text(rel.version)}),
-                  span(list{Attrs.class_(`text-xs ${chCls}`)}, list{text(ReleaseManagerEngine.channelLabel(rel.channel))}),
-                  span(list{Attrs.class_(`text-xs ${statusCls}`)}, list{text(ReleaseManagerEngine.statusLabel(rel.status))}),
-                  span(list{Attrs.class_("text-xs text-gray-500 ml-auto")}, list{text(`${Int.toString(Array.length(rel.artifacts))} artifacts`)}),
+                  span(
+                    list{Attrs.class_("text-sm font-mono text-gray-100")},
+                    list{text(rel.version)},
+                  ),
+                  span(
+                    list{Attrs.class_(`text-xs ${chCls}`)},
+                    list{text(ReleaseManagerEngine.channelLabel(rel.channel))},
+                  ),
+                  span(
+                    list{Attrs.class_(`text-xs ${statusCls}`)},
+                    list{text(ReleaseManagerEngine.statusLabel(rel.status))},
+                  ),
+                  span(
+                    list{Attrs.class_("text-xs text-gray-500 ml-auto")},
+                    list{text(`${Int.toString(Array.length(rel.artifacts))} artifacts`)},
+                  ),
                 },
               )
             })
@@ -134,7 +166,9 @@ let renderChangelog = (state: releaseManagerState): Tea_Vdom.t<msg> => {
         list{
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-cyan-700 text-white rounded hover:bg-cyan-600 cursor-pointer"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-cyan-700 text-white rounded hover:bg-cyan-600 cursor-pointer",
+              ),
               Events.onClick(ReleaseManager(GenerateChangelog)),
             },
             list{text("Generate from Git")},
@@ -157,7 +191,11 @@ let renderChangelog = (state: releaseManagerState): Tea_Vdom.t<msg> => {
       if Array.length(state.pendingChangelog) === 0 {
         div(
           list{Attrs.class_("text-center text-gray-500 text-sm py-8")},
-          list{text("No pending changelog entries — click 'Generate from Git' to create from commit history")},
+          list{
+            text(
+              "No pending changelog entries — click 'Generate from Git' to create from commit history",
+            ),
+          },
         )
       } else {
         div(
@@ -170,7 +208,10 @@ let renderChangelog = (state: releaseManagerState): Tea_Vdom.t<msg> => {
                 div(
                   list{Attrs.class_("flex items-center gap-2 mb-1")},
                   list{
-                    span(list{Attrs.class_("text-cyan-400 font-mono")}, list{text(entry.commitHash)}),
+                    span(
+                      list{Attrs.class_("text-cyan-400 font-mono")},
+                      list{text(entry.commitHash)},
+                    ),
                     span(list{Attrs.class_("text-gray-500")}, list{text(entry.category)}),
                     span(list{Attrs.class_("text-gray-600")}, list{text(entry.date)}),
                   },
@@ -219,7 +260,9 @@ let renderArtifacts = (state: releaseManagerState): Tea_Vdom.t<msg> => {
       // Build button
       button(
         list{
-          Attrs.class_("px-4 py-2 text-sm bg-purple-700 text-white rounded hover:bg-purple-600 cursor-pointer"),
+          Attrs.class_(
+            "px-4 py-2 text-sm bg-purple-700 text-white rounded hover:bg-purple-600 cursor-pointer",
+          ),
           Events.onClick(ReleaseManager(BuildArtifacts)),
         },
         list{text("Build Artifacts")},
@@ -239,9 +282,18 @@ let renderArtifacts = (state: releaseManagerState): Tea_Vdom.t<msg> => {
               list{Attrs.class_("flex items-center gap-3 p-2 bg-gray-800 rounded text-xs")},
               list{
                 span(list{Attrs.class_("text-gray-200 flex-1")}, list{text(art.name)}),
-                span(list{Attrs.class_("text-gray-500")}, list{text(ReleaseManagerEngine.platformLabel(art.platform))}),
-                span(list{Attrs.class_("text-gray-400 font-mono")}, list{text(ReleaseManagerEngine.formatSize(art.sizeBytes))}),
-                span(list{Attrs.class_("text-gray-600 font-mono truncate w-24")}, list{text(art.checksum)}),
+                span(
+                  list{Attrs.class_("text-gray-500")},
+                  list{text(ReleaseManagerEngine.platformLabel(art.platform))},
+                ),
+                span(
+                  list{Attrs.class_("text-gray-400 font-mono")},
+                  list{text(ReleaseManagerEngine.formatSize(art.sizeBytes))},
+                ),
+                span(
+                  list{Attrs.class_("text-gray-600 font-mono truncate w-24")},
+                  list{text(art.checksum)},
+                ),
               },
             )
           )
@@ -265,14 +317,19 @@ let renderDistribution = (state: releaseManagerState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-lg font-mono text-gray-100")}, list{text(state.nextVersion)}),
+              span(
+                list{Attrs.class_("text-lg font-mono text-gray-100")},
+                list{text(state.nextVersion)},
+              ),
               span(
                 list{Attrs.class_(`text-sm ${ReleaseManagerEngine.channelColour(state.channel)}`)},
                 list{text(ReleaseManagerEngine.channelLabel(state.channel))},
               ),
               button(
                 list{
-                  Attrs.class_("px-4 py-2 text-sm bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer"),
+                  Attrs.class_(
+                    "px-4 py-2 text-sm bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
+                  ),
                   Events.onClick(ReleaseManager(PublishRelease)),
                 },
                 list{text("Publish")},
@@ -294,7 +351,15 @@ let renderDistribution = (state: releaseManagerState): Tea_Vdom.t<msg> => {
                   ),
                   Events.onClick(ReleaseManager(ToggleSignArtifacts)),
                 },
-                list{text(if state.signArtifacts { "Signing: On" } else { "Signing: Off" })},
+                list{
+                  text(
+                    if state.signArtifacts {
+                      "Signing: On"
+                    } else {
+                      "Signing: Off"
+                    },
+                  ),
+                },
               ),
             },
           ),
@@ -345,13 +410,21 @@ let view = (state: releaseManagerState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              span(list{Attrs.class_("text-lg font-semibold text-gray-100")}, list{text("Release Manager")}),
-              span(list{Attrs.class_("text-xs text-gray-500 font-mono")}, list{text(state.currentVersion)}),
+              span(
+                list{Attrs.class_("text-lg font-semibold text-gray-100")},
+                list{text("Release Manager")},
+              ),
+              span(
+                list{Attrs.class_("text-xs text-gray-500 font-mono")},
+                list{text(state.currentVersion)},
+              ),
             },
           ),
           button(
             list{
-              Attrs.class_("px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer"),
+              Attrs.class_(
+                "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
+              ),
               Events.onClick(ReleaseManager(LoadReleases)),
             },
             list{text("Refresh")},
@@ -370,7 +443,11 @@ let view = (state: releaseManagerState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 p-2 bg-red-900/50 border border-red-700 rounded text-xs text-red-300",
+            ),
+          },
           list{text(err)},
         )
       | None => noNode

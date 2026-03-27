@@ -55,7 +55,11 @@ let avgFrameTime = (samples: array<frameSample>): float => {
 /// Calculate current effective FPS from frame samples.
 let currentFps = (samples: array<frameSample>): float => {
   let avg = avgFrameTime(samples)
-  if avg <= 0.0 { 0.0 } else { 1000.0 /. avg }
+  if avg <= 0.0 {
+    0.0
+  } else {
+    1000.0 /. avg
+  }
 }
 
 /// Count frames that exceeded the budget.
@@ -74,7 +78,13 @@ let overBudgetPercent = (samples: array<frameSample>, budgetMs: float): float =>
 
 /// Maximum frame time observed.
 let maxFrameTime = (samples: array<frameSample>): float =>
-  samples->Array.reduce(0.0, (acc, s) => if s.totalMs > acc { s.totalMs } else { acc })
+  samples->Array.reduce(0.0, (acc, s) =>
+    if s.totalMs > acc {
+      s.totalMs
+    } else {
+      acc
+    }
+  )
 
 /// Average render time (PixiJS render phase only).
 let avgRenderTime = (samples: array<frameSample>): float => {
@@ -113,7 +123,11 @@ let latestMemoryMb = (snapshots: array<memorySnapshot>): float => {
 let peakMemoryMb = (snapshots: array<memorySnapshot>): float =>
   snapshots->Array.reduce(0.0, (acc, s) => {
     let mb = Float.fromInt(s.heapUsedBytes) /. 1048576.0
-    if mb > acc { mb } else { acc }
+    if mb > acc {
+      mb
+    } else {
+      acc
+    }
   })
 
 /// Total GC pause time across all events.
@@ -123,7 +137,11 @@ let totalGcPauseMs = (events: array<gcEvent>): float =>
 /// Average GC pause duration.
 let avgGcPauseMs = (events: array<gcEvent>): float => {
   let count = events->Array.length
-  if count == 0 { 0.0 } else { totalGcPauseMs(events) /. Float.fromInt(count) }
+  if count == 0 {
+    0.0
+  } else {
+    totalGcPauseMs(events) /. Float.fromInt(count)
+  }
 }
 
 /// Human-readable alert severity label.

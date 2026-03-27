@@ -153,7 +153,9 @@ let renderCommentsTab = (state: codeReviewState): Tea_Vdom.t<msg> => {
           list{Attrs.class_("text-sm text-gray-400 mb-1")},
           list{
             text(
-              `${Int.toString(Array.length(state.comments))} comment(s), ${Int.toString(unresolvedCount)} unresolved`,
+              `${Int.toString(Array.length(state.comments))} comment(s), ${Int.toString(
+                  unresolvedCount,
+                )} unresolved`,
             ),
           },
         ),
@@ -172,21 +174,12 @@ let renderCommentsTab = (state: codeReviewState): Tea_Vdom.t<msg> => {
                       list{Attrs.class_("text-xs text-gray-400 font-mono")},
                       list{text(`${comment.filePath}:${Int.toString(comment.lineNumber)}`)},
                     ),
-                    span(
-                      list{Attrs.class_("text-xs text-gray-500")},
-                      list{text(comment.author)},
-                    ),
+                    span(list{Attrs.class_("text-xs text-gray-500")}, list{text(comment.author)}),
                   },
                 ),
-                div(
-                  list{Attrs.class_("text-sm text-gray-300")},
-                  list{text(comment.body)},
-                ),
+                div(list{Attrs.class_("text-sm text-gray-300")}, list{text(comment.body)}),
                 if comment.resolved {
-                  div(
-                    list{Attrs.class_("text-xs text-emerald-500 mt-1")},
-                    list{text("Resolved")},
-                  )
+                  div(list{Attrs.class_("text-xs text-emerald-500 mt-1")}, list{text("Resolved")})
                 } else {
                   noNode
                 },
@@ -220,7 +213,11 @@ let renderApprovalGateTab = (state: codeReviewState): Tea_Vdom.t<msg> => {
               div(
                 list{
                   Attrs.class_(
-                    if openCount === 0 { "text-emerald-400" } else { "text-amber-400" },
+                    if openCount === 0 {
+                      "text-emerald-400"
+                    } else {
+                      "text-amber-400"
+                    },
                   ),
                 },
                 list{text(`Open PRs: ${Int.toString(openCount)}`)},
@@ -228,7 +225,11 @@ let renderApprovalGateTab = (state: codeReviewState): Tea_Vdom.t<msg> => {
               div(
                 list{
                   Attrs.class_(
-                    if unresolvedCount === 0 { "text-emerald-400" } else { "text-red-400" },
+                    if unresolvedCount === 0 {
+                      "text-emerald-400"
+                    } else {
+                      "text-red-400"
+                    },
                   ),
                 },
                 list{text(`Unresolved comments: ${Int.toString(unresolvedCount)}`)},
@@ -274,10 +275,7 @@ let view = (state: codeReviewState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex items-center justify-between px-4 py-3 border-b border-gray-800")},
         list{
-          h2(
-            list{Attrs.class_("text-lg font-semibold text-cyan-300")},
-            list{text("Code Review")},
-          ),
+          h2(list{Attrs.class_("text-lg font-semibold text-cyan-300")}, list{text("Code Review")}),
           // Filter input
           input(
             list{
@@ -296,7 +294,9 @@ let view = (state: codeReviewState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

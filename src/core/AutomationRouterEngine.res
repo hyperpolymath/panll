@@ -67,14 +67,16 @@ let enabledCount = (rules: array<automationRule>): int =>
   rules->Array.filter(r => r.enabled)->Array.length
 
 /// Count pending actions.
-let pendingCount = (actions: array<pendingAction>): int =>
-  Array.length(actions)
+let pendingCount = (actions: array<pendingAction>): int => Array.length(actions)
 
 /// Filter rules by text and enabled state.
-let filterRules = (rules: array<automationRule>, text: string, showDisabled: bool): array<automationRule> => {
+let filterRules = (rules: array<automationRule>, text: string, showDisabled: bool): array<
+  automationRule,
+> => {
   let lower = String.toLowerCase(text)
   rules->Array.filter(r => {
-    let matchesText = text === "" ||
+    let matchesText =
+      text === "" ||
       String.toLowerCase(r.name)->String.includes(lower) ||
       String.toLowerCase(r.description)->String.includes(lower)
     let matchesEnabled = showDisabled || r.enabled

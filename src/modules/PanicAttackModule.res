@@ -48,8 +48,7 @@ let config: panicAttackModuleConfig = {
   ],
 }
 
-let hasCapability = (cap: panicAttackCapability): bool =>
-  config.capabilities->Array.includes(cap)
+let hasCapability = (cap: panicAttackCapability): bool => config.capabilities->Array.includes(cap)
 
 let capabilityLabel = (cap: panicAttackCapability): string =>
   switch cap {

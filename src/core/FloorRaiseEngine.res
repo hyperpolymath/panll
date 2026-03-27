@@ -9,12 +9,36 @@ let defaultState: floorRaiseState = {
   activeTab: TabOverview,
   adoptions: [
     {name: "proven", adoptedCount: 0, targetCount: 0, percentage: 0.0, campaignActive: false},
-    {name: "contractiles-trust", adoptedCount: 0, targetCount: 0, percentage: 0.0, campaignActive: false},
-    {name: "contractiles-dust", adoptedCount: 0, targetCount: 0, percentage: 0.0, campaignActive: false},
+    {
+      name: "contractiles-trust",
+      adoptedCount: 0,
+      targetCount: 0,
+      percentage: 0.0,
+      campaignActive: false,
+    },
+    {
+      name: "contractiles-dust",
+      adoptedCount: 0,
+      targetCount: 0,
+      percentage: 0.0,
+      campaignActive: false,
+    },
     {name: "ai-manifest", adoptedCount: 0, targetCount: 0, percentage: 0.0, campaignActive: false},
-    {name: "panic-attacker", adoptedCount: 0, targetCount: 0, percentage: 0.0, campaignActive: false},
+    {
+      name: "panic-attacker",
+      adoptedCount: 0,
+      targetCount: 0,
+      percentage: 0.0,
+      campaignActive: false,
+    },
     {name: "verisimdb", adoptedCount: 0, targetCount: 0, percentage: 0.0, campaignActive: false},
-    {name: "feedback-o-tron", adoptedCount: 0, targetCount: 0, percentage: 0.0, campaignActive: false},
+    {
+      name: "feedback-o-tron",
+      adoptedCount: 0,
+      targetCount: 0,
+      percentage: 0.0,
+      campaignActive: false,
+    },
     {name: "vexometer", adoptedCount: 0, targetCount: 0, percentage: 0.0, campaignActive: false},
   ],
   outcomes: [],
@@ -40,7 +64,11 @@ let allTabs: array<floorRaiseTab> = [TabOverview, TabCampaigns, TabOutcomes, Tab
 let overallProgress = (state: floorRaiseState): float => {
   let total = state.adoptions->Array.reduce(0.0, (acc, a) => acc +. a.percentage)
   let count = state.adoptions->Array.length->Int.toFloat
-  if count > 0.0 {total /. count} else {0.0}
+  if count > 0.0 {
+    total /. count
+  } else {
+    0.0
+  }
 }
 
 /// Count tools with active campaigns.

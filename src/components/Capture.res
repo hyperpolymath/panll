@@ -25,14 +25,19 @@ let renderGallery = (capture: captureState): Tea_Vdom.t<msg> => {
       Array.map(capture.captures, entry =>
         div(
           list{
-            Attrs.class_("bg-gray-900 rounded border border-gray-800 p-3 hover:border-gray-600 transition-colors"),
-            Attrs.title(`${entry.label} — ${entry.panelId} (${Float.toFixed(entry.timestamp, ~digits=0)})`),
+            Attrs.class_(
+              "bg-gray-900 rounded border border-gray-800 p-3 hover:border-gray-600 transition-colors",
+            ),
+            Attrs.title(
+              `${entry.label} — ${entry.panelId} (${Float.toFixed(entry.timestamp, ~digits=0)})`,
+            ),
           },
           list{
             div(list{Attrs.class_("text-xs text-gray-400 mb-1")}, list{text(entry.label)}),
-            div(list{Attrs.class_("text-xs text-gray-600")}, list{
-              text(entry.panelId ++ " " ++ (entry.isRecording ? "recording" : "screenshot")),
-            }),
+            div(
+              list{Attrs.class_("text-xs text-gray-600")},
+              list{text(entry.panelId ++ " " ++ (entry.isRecording ? "recording" : "screenshot"))},
+            ),
             button(
               list{
                 Attrs.class_("mt-2 text-xs text-red-500 hover:text-red-400"),
@@ -50,11 +55,7 @@ let renderGallery = (capture: captureState): Tea_Vdom.t<msg> => {
 /// Render recording status.
 let renderRecordingStatus = (recording: recordingState): Tea_Vdom.t<msg> => {
   switch recording {
-  | NotRecording =>
-    div(
-      list{Attrs.class_("text-xs text-gray-600")},
-      list{text("Not recording")},
-    )
+  | NotRecording => div(list{Attrs.class_("text-xs text-gray-600")}, list{text("Not recording")})
   | Recording(panelId, _startTime) =>
     div(
       list{Attrs.class_("flex items-center gap-2")},
@@ -99,7 +100,11 @@ let view = (capture: captureState): Tea_Vdom.t<msg> => {
     list{
       // Header
       div(
-        list{Attrs.class_("sticky top-0 bg-gray-950 border-b border-gray-800 p-4 flex items-center justify-between z-10")},
+        list{
+          Attrs.class_(
+            "sticky top-0 bg-gray-950 border-b border-gray-800 p-4 flex items-center justify-between z-10",
+          ),
+        },
         list{
           div(
             list{Attrs.class_("flex items-center gap-4")},
@@ -117,9 +122,11 @@ let view = (capture: captureState): Tea_Vdom.t<msg> => {
             list{
               button(
                 list{
-                  Attrs.class_(`px-2 py-1 rounded text-xs ${
-                    capture.captureBarVisible ? "bg-blue-700 text-white" : "bg-gray-800 text-gray-400"
-                  }`),
+                  Attrs.class_(
+                    `px-2 py-1 rounded text-xs ${capture.captureBarVisible
+                        ? "bg-blue-700 text-white"
+                        : "bg-gray-800 text-gray-400"}`,
+                  ),
                   Events.onClick(Capture(ToggleCaptureBar)),
                   Attrs.title("Toggle capture bar visibility on all panels"),
                 },
@@ -127,7 +134,9 @@ let view = (capture: captureState): Tea_Vdom.t<msg> => {
               ),
               button(
                 list{
-                  Attrs.class_("px-3 py-1 bg-gray-800 text-gray-400 rounded hover:bg-gray-700 transition-colors text-sm"),
+                  Attrs.class_(
+                    "px-3 py-1 bg-gray-800 text-gray-400 rounded hover:bg-gray-700 transition-colors text-sm",
+                  ),
                   Events.onClick(PanelSwitcher(ClosePanels)),
                 },
                 list{text("Close")},
@@ -136,7 +145,6 @@ let view = (capture: captureState): Tea_Vdom.t<msg> => {
           ),
         },
       ),
-
       // Body
       div(
         list{Attrs.class_("p-6 max-w-5xl mx-auto")},
@@ -150,67 +158,110 @@ let view = (capture: captureState): Tea_Vdom.t<msg> => {
               (CaptureDemos, "Demos"),
               (CaptureClones, "Clones"),
               (CaptureComparison, "Comparison"),
-            ]->Array.map(((cat, label)) =>
+            ]
+            ->Array.map(((cat, label)) =>
               button(
                 list{
-                  Attrs.class_(`px-3 py-1 rounded text-xs ${
-                    capture.activeCategory === cat ? "bg-blue-700 text-white" : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                  }`),
+                  Attrs.class_(
+                    `px-3 py-1 rounded text-xs ${capture.activeCategory === cat
+                        ? "bg-blue-700 text-white"
+                        : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`,
+                  ),
                   Events.onClick(Capture(SetCaptureCategory(cat))),
                 },
                 list{text(label)},
               )
-            )->List.fromArray,
+            )
+            ->List.fromArray,
           ),
-
           // Content based on active tab
           switch capture.activeCategory {
           | CaptureGallery => renderGallery(capture)
           | CaptureRecordings =>
             div(
               list{
-                Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800 text-xs text-gray-600"),
-                Attrs.title("Start a recording from any panel's capture bar (record icon on panel edge)"),
+                Attrs.class_(
+                  "p-4 bg-gray-900/50 rounded border border-gray-800 text-xs text-gray-600",
+                ),
+                Attrs.title(
+                  "Start a recording from any panel's capture bar (record icon on panel edge)",
+                ),
               },
-              list{text("Recordings captured via panel capture bars appear here. Use the record button on any panel edge.")},
+              list{
+                text(
+                  "Recordings captured via panel capture bars appear here. Use the record button on any panel edge.",
+                ),
+              },
             )
           | CaptureDemos =>
             div(
               list{
                 Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800"),
-                Attrs.title("Demo packages: instructor records steps, student replays and compares"),
+                Attrs.title(
+                  "Demo packages: instructor records steps, student replays and compares",
+                ),
               },
               list{
-                div(list{Attrs.class_("text-xs text-gray-500 mb-2")}, list{text(Int.toString(Array.length(capture.demos)) ++ " demos loaded")}),
-                div(list{Attrs.class_("text-xs text-gray-600")}, list{text("Record a panel session as a .panll-demo package for teaching. Students load the demo, see golden output in a locked reference panel, and work alongside it.")}),
+                div(
+                  list{Attrs.class_("text-xs text-gray-500 mb-2")},
+                  list{text(Int.toString(Array.length(capture.demos)) ++ " demos loaded")},
+                ),
+                div(
+                  list{Attrs.class_("text-xs text-gray-600")},
+                  list{
+                    text(
+                      "Record a panel session as a .panll-demo package for teaching. Students load the demo, see golden output in a locked reference panel, and work alongside it.",
+                    ),
+                  },
+                ),
               },
             )
           | CaptureClones =>
             div(
               list{
                 Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800"),
-                Attrs.title("Clone a panel to create an independent copy for before/after comparison"),
+                Attrs.title(
+                  "Clone a panel to create an independent copy for before/after comparison",
+                ),
               },
               list{
-                div(list{Attrs.class_("text-xs text-gray-500 mb-2")}, list{text(Int.toString(Array.length(capture.clones)) ++ " clones")}),
-                div(list{Attrs.class_("text-xs text-gray-600")}, list{text("Clone any panel's state for before/after analysis. Clones are independent — changes in one don't affect the other.")}),
+                div(
+                  list{Attrs.class_("text-xs text-gray-500 mb-2")},
+                  list{text(Int.toString(Array.length(capture.clones)) ++ " clones")},
+                ),
+                div(
+                  list{Attrs.class_("text-xs text-gray-600")},
+                  list{
+                    text(
+                      "Clone any panel's state for before/after analysis. Clones are independent — changes in one don't affect the other.",
+                    ),
+                  },
+                ),
               },
             )
           | CaptureComparison =>
             div(
               list{
                 Attrs.class_("p-4 bg-gray-900/50 rounded border border-gray-800"),
-                Attrs.title("Compare two panels side-by-side, or a student's work against a demo's golden output"),
+                Attrs.title(
+                  "Compare two panels side-by-side, or a student's work against a demo's golden output",
+                ),
               },
               list{
-                div(list{Attrs.class_("text-xs text-gray-600")}, list{
-                  text(switch capture.comparison {
-                  | NoComparison => "No comparison active — select two panels or a demo to compare"
-                  | SideBySide(l, r) => "Side-by-side: " ++ l ++ " vs " ++ r
-                  | DemoComparison(s, d) => "Demo comparison: student " ++ s ++ " vs golden " ++ d
-                  | BeforeAfter(b, a) => "Before/after: " ++ b ++ " vs " ++ a
-                  }),
-                }),
+                div(
+                  list{Attrs.class_("text-xs text-gray-600")},
+                  list{
+                    text(
+                      switch capture.comparison {
+                      | NoComparison => "No comparison active — select two panels or a demo to compare"
+                      | SideBySide(l, r) => "Side-by-side: " ++ l ++ " vs " ++ r
+                      | DemoComparison(s, d) =>
+                        "Demo comparison: student " ++ s ++ " vs golden " ++ d
+                      | BeforeAfter(b, a) => "Before/after: " ++ b ++ " vs " ++ a
+                      },
+                    ),
+                  },
+                ),
               },
             )
           },

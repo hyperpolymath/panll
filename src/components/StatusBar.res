@@ -78,13 +78,17 @@ let renderWidget = (widget: statusWidget, model: model): Tea_Vdom.t<msg> => {
     }
   | ActiveAgents => "0 agents"
   | UndoRedoStatus =>
-    Int.toString(Array.length(model.undoStack)) ++ "/" ++ Int.toString(Array.length(model.redoStack))
+    Int.toString(Array.length(model.undoStack)) ++
+    "/" ++
+    Int.toString(Array.length(model.redoStack))
   | CustomWidget(label) => label
   }
 
   div(
     list{
-      Attrs.class_("flex items-center gap-1 px-2 py-0.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 rounded cursor-default transition-colors"),
+      Attrs.class_(
+        "flex items-center gap-1 px-2 py-0.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 rounded cursor-default transition-colors",
+      ),
       Attrs.title(widget.label ++ ": " ++ value),
     },
     list{
@@ -105,7 +109,9 @@ let view = (model: model): Tea_Vdom.t<msg> => {
 
     div(
       list{
-        Attrs.class_("h-6 bg-gray-900 border-t border-gray-800 flex items-center justify-between px-2 relative z-20 shrink-0"),
+        Attrs.class_(
+          "h-6 bg-gray-900 border-t border-gray-800 flex items-center justify-between px-2 relative z-20 shrink-0",
+        ),
         Attrs.role("status"),
         Attrs.ariaLabel("PanLL status bar"),
       },

@@ -6,10 +6,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Load a level from a JSON file.
-let loadLevel = (
-  path: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadLevel = (path: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("load_level", {"path": path})
     ->Promise.then(result => {
@@ -25,11 +22,9 @@ let loadLevel = (
 }
 
 /// Save the current level to a JSON file.
-let saveLevel = (
-  path: string,
-  data: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let saveLevel = (path: string, data: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("save_level", {"path": path, "data": data})
     ->Promise.then(result => {
@@ -45,10 +40,7 @@ let saveLevel = (
 }
 
 /// Export the level as a LevelConfig.res source file.
-let exportLevelConfig = (
-  data: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let exportLevelConfig = (data: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("export_level_config", {"data": data})
     ->Promise.then(result => {
@@ -64,9 +56,7 @@ let exportLevelConfig = (
 }
 
 /// Browse available game assets.
-let browseAssets = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let browseAssets = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("browse_level_assets", {"_": true})
     ->Promise.then(result => {
@@ -82,10 +72,7 @@ let browseAssets = (
 }
 
 /// Validate the current level design.
-let validateLevel = (
-  data: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let validateLevel = (data: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("validate_level", {"data": data})
     ->Promise.then(result => {

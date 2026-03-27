@@ -138,10 +138,7 @@ let renderOverviewTab = (state: balanceAnalyserState): Tea_Vdom.t<msg> => {
                 Events.onClick(BalanceAnalyser(SelectLevel(level.levelId))),
               },
               list{
-                span(
-                  list{Attrs.class_("text-gray-300 truncate")},
-                  list{text(level.levelName)},
-                ),
+                span(list{Attrs.class_("text-gray-300 truncate")}, list{text(level.levelName)}),
                 span(
                   list{Attrs.class_(`text-right font-mono ${diffColour}`)},
                   list{text(Float.toFixed(level.difficultyScore, ~digits=1))},
@@ -184,7 +181,9 @@ let renderDistributionsTab = (state: balanceAnalyserState): Tea_Vdom.t<msg> => {
             list{Attrs.class_("text-gray-600 text-sm")},
             list{
               text(
-                `Difficulty distribution chart (${Int.toString(Array.length(state.distributions))} buckets)`,
+                `Difficulty distribution chart (${Int.toString(
+                    Array.length(state.distributions),
+                  )} buckets)`,
               ),
             },
           ),
@@ -248,7 +247,9 @@ let renderSimulationsTab = (state: balanceAnalyserState): Tea_Vdom.t<msg> => {
           list{Attrs.class_("text-sm text-gray-400 mb-1")},
           list{
             text(
-              `${Int.toString(Array.length(state.simulations))} simulation(s) (${Int.toString(state.simulationRuns)} runs each)`,
+              `${Int.toString(Array.length(state.simulations))} simulation(s) (${Int.toString(
+                  state.simulationRuns,
+                )} runs each)`,
             ),
           },
         ),
@@ -347,20 +348,17 @@ let renderRecommendationsTab = (state: balanceAnalyserState): Tea_Vdom.t<msg> =>
                   list{Attrs.class_(`text-xs font-mono ${deltaColour}`)},
                   list{
                     text(
-                      `${Float.toFixed(item.currentValue, ~digits=2)} -> ${Float.toFixed(item.suggestedValue, ~digits=2)} (${deltaSign}${Float.toFixed(delta, ~digits=2)})`,
+                      `${Float.toFixed(item.currentValue, ~digits=2)} -> ${Float.toFixed(
+                          item.suggestedValue,
+                          ~digits=2,
+                        )} (${deltaSign}${Float.toFixed(delta, ~digits=2)})`,
                     ),
                   },
                 ),
               },
             ),
-            div(
-              list{Attrs.class_("text-xs text-gray-400 mb-1")},
-              list{text(item.reason)},
-            ),
-            div(
-              list{Attrs.class_("text-xs text-gray-500")},
-              list{text(`Impact: ${item.impact}`)},
-            ),
+            div(list{Attrs.class_("text-xs text-gray-400 mb-1")}, list{text(item.reason)}),
+            div(list{Attrs.class_("text-xs text-gray-500")}, list{text(`Impact: ${item.impact}`)}),
             // Apply button
             div(
               list{Attrs.class_("flex justify-end mt-2")},
@@ -491,13 +489,12 @@ let view = (state: balanceAnalyserState): Tea_Vdom.t<msg> => {
       // Running indicator
       if state.running {
         div(
-          list{Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700")},
+          list{
+            Attrs.class_("flex items-center gap-2 px-4 py-2 bg-gray-800 border-b border-gray-700"),
+          },
           list{
             div(list{Attrs.class_("w-3 h-3 bg-amber-400 rounded-full animate-pulse")}, list{}),
-            span(
-              list{Attrs.class_("text-sm text-amber-300")},
-              list{text("Simulation running...")},
-            ),
+            span(list{Attrs.class_("text-sm text-amber-300")}, list{text("Simulation running...")}),
           },
         )
       } else {
@@ -507,7 +504,9 @@ let view = (state: balanceAnalyserState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

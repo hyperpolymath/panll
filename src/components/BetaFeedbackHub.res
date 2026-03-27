@@ -59,10 +59,7 @@ let categoryBadge = (cat: feedbackCategory): Tea_Vdom.t<msg> => {
   | FeedbackPerformance => ("bg-amber-600 text-white", "PERF")
   | FeedbackOther => ("bg-gray-600 text-gray-200", "OTHER")
   }
-  span(
-    list{Attrs.class_(`px-1.5 py-0.5 text-xs rounded font-mono ${colour}`)},
-    list{text(lbl)},
-  )
+  span(list{Attrs.class_(`px-1.5 py-0.5 text-xs rounded font-mono ${colour}`)}, list{text(lbl)})
 }
 
 /// Priority indicator.
@@ -299,10 +296,7 @@ let renderSubmitTab = (state: betaFeedbackHubState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex flex-col gap-1")},
         list{
-          label(
-            list{Attrs.class_("text-xs text-gray-500")},
-            list{text("Title")},
-          ),
+          label(list{Attrs.class_("text-xs text-gray-500")}, list{text("Title")}),
           input(
             list{
               Attrs.class_(
@@ -319,10 +313,7 @@ let renderSubmitTab = (state: betaFeedbackHubState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("flex flex-col gap-1")},
         list{
-          label(
-            list{Attrs.class_("text-xs text-gray-500")},
-            list{text("Details")},
-          ),
+          label(list{Attrs.class_("text-xs text-gray-500")}, list{text("Details")}),
           textarea(
             list{
               Attrs.class_(
@@ -450,7 +441,9 @@ let view = (state: betaFeedbackHubState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800")},
+          list{
+            Attrs.class_("px-4 py-2 bg-red-900/30 text-red-300 text-sm border-b border-red-800"),
+          },
           list{text(err)},
         )
       | None => noNode

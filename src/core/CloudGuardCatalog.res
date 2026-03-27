@@ -25,14 +25,14 @@ open CloudGuardModel
 /// what the setting IS, not what it's currently set to. Live values come from
 /// the API and are stored in `cfSetting.value`.
 type catalogEntry = {
-  id: string,                      // CF API setting ID
-  label: string,                   // Human-readable display label
-  description: string,             // Tooltip/help text
-  category: settingCategory,       // Which tab this appears under
+  id: string, // CF API setting ID
+  label: string, // Human-readable display label
+  description: string, // Tooltip/help text
+  category: settingCategory, // Which tab this appears under
   availability: settingAvailability, // Plan tier gating
-  valueType: string,               // "toggle" | "select" | "number" | "object"
-  options: option<array<string>>,  // Valid options for "select" type
-  defaultValue: settingValue,      // Hardening default (policy default)
+  valueType: string, // "toggle" | "select" | "number" | "object"
+  options: option<array<string>>, // Valid options for "select" type
+  defaultValue: settingValue, // Hardening default (policy default)
 }
 
 // ============================================================================
@@ -117,7 +117,9 @@ let headerSettings: array<catalogEntry> = [
     availability: Available,
     valueType: "object",
     options: None,
-    defaultValue: ObjectValue("{\"strict_transport_security\":{\"enabled\":true,\"max_age\":31536000,\"include_subdomains\":true,\"preload\":true,\"nosniff\":true}}"),
+    defaultValue: ObjectValue(
+      "{\"strict_transport_security\":{\"enabled\":true,\"max_age\":31536000,\"include_subdomains\":true,\"preload\":true,\"nosniff\":true}}",
+    ),
   },
 ]
 

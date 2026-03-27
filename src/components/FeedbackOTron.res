@@ -51,10 +51,7 @@ let getReportColour = (rt: reportType): string => {
 }
 
 /// Render a report type button
-let renderReportTypeButton = (
-  rt: reportType,
-  selectedType: option<string>,
-): Tea_Vdom.t<msg> => {
+let renderReportTypeButton = (rt: reportType, selectedType: option<string>): Tea_Vdom.t<msg> => {
   let baseClass = "px-3 py-1 rounded text-xs transition-all"
   let colour = getReportColour(rt)
   let isSelected = selectedType === Some(reportTypeToString(rt))
@@ -125,10 +122,7 @@ let renderBojContext = (boj: BojModel.bojState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("bg-sky-900/20 p-2 rounded")},
     list{
-      div(
-        list{Attrs.class_("text-sky-400 mb-1")},
-        list{text("BoJ Server")},
-      ),
+      div(list{Attrs.class_("text-sky-400 mb-1")}, list{text("BoJ Server")}),
       div(
         list{Attrs.class_("space-y-1")},
         list{
@@ -174,13 +168,15 @@ let renderFeedbackForm = (
   selectedType: option<string>,
   boj: BojModel.bojState,
 ): Tea_Vdom.t<msg> => {
-  let reportTypes = [Hallucination, ConstraintViolation, PerformanceIssue, UXFriction, FeatureRequest]
+  let reportTypes = [
+    Hallucination,
+    ConstraintViolation,
+    PerformanceIssue,
+    UXFriction,
+    FeatureRequest,
+  ]
   let errorView = switch feedbackError {
-  | Some(err) =>
-    div(
-      list{Attrs.class_("mt-2 text-xs text-red-400")},
-      list{text(err)},
-    )
+  | Some(err) => div(list{Attrs.class_("mt-2 text-xs text-red-400")}, list{text(err)})
   | None => noNode
   }
 
@@ -188,7 +184,13 @@ let renderFeedbackForm = (
     list{Attrs.class_("fixed inset-0 bg-black/80 flex items-center justify-center z-50")},
     list{
       div(
-        list{Attrs.class_("bg-gray-900 border border-gray-700 rounded-lg w-[500px] max-h-[80vh] overflow-auto"), Attrs.role("dialog"), Attrs.ariaLabel("Feedback Form")},
+        list{
+          Attrs.class_(
+            "bg-gray-900 border border-gray-700 rounded-lg w-[500px] max-h-[80vh] overflow-auto",
+          ),
+          Attrs.role("dialog"),
+          Attrs.ariaLabel("Feedback Form"),
+        },
         list{
           // Header
           div(
@@ -217,15 +219,11 @@ let renderFeedbackForm = (
               ),
             },
           ),
-
           // Report type selection
           div(
             list{Attrs.class_("p-4 border-b border-gray-800")},
             list{
-              div(
-                list{Attrs.class_("text-xs text-gray-500 mb-2")},
-                list{text("REPORT TYPE")},
-              ),
+              div(list{Attrs.class_("text-xs text-gray-500 mb-2")}, list{text("REPORT TYPE")}),
               div(
                 list{Attrs.class_("flex flex-wrap gap-2"), Attrs.role("radiogroup")},
                 reportTypes
@@ -234,15 +232,11 @@ let renderFeedbackForm = (
               ),
             },
           ),
-
           // Description
           div(
             list{Attrs.class_("p-4 border-b border-gray-800")},
             list{
-              div(
-                list{Attrs.class_("text-xs text-gray-500 mb-2")},
-                list{text("DESCRIPTION")},
-              ),
+              div(list{Attrs.class_("text-xs text-gray-500 mb-2")}, list{text("DESCRIPTION")}),
               textarea(
                 list{
                   Attrs.class_(
@@ -257,55 +251,33 @@ let renderFeedbackForm = (
               errorView,
             },
           ),
-
           // Context snapshot info
           div(
             list{Attrs.class_("p-4 border-b border-gray-800")},
             list{
-              div(
-                list{Attrs.class_("text-xs text-gray-500 mb-2")},
-                list{text("CONTEXT SNAPSHOT")},
-              ),
+              div(list{Attrs.class_("text-xs text-gray-500 mb-2")}, list{text("CONTEXT SNAPSHOT")}),
               div(
                 list{Attrs.class_("grid grid-cols-2 gap-2 text-xs")},
                 list{
                   div(
                     list{Attrs.class_("bg-indigo-900/30 p-2 rounded")},
                     list{
-                      div(
-                        list{Attrs.class_("text-indigo-400")},
-                        list{text("Panel-L")},
-                      ),
-                      div(
-                        list{Attrs.class_("text-gray-500")},
-                        list{text("Captured")},
-                      ),
+                      div(list{Attrs.class_("text-indigo-400")}, list{text("Panel-L")}),
+                      div(list{Attrs.class_("text-gray-500")}, list{text("Captured")}),
                     },
                   ),
                   div(
                     list{Attrs.class_("bg-emerald-900/30 p-2 rounded")},
                     list{
-                      div(
-                        list{Attrs.class_("text-emerald-400")},
-                        list{text("Panel-N")},
-                      ),
-                      div(
-                        list{Attrs.class_("text-gray-500")},
-                        list{text("Captured")},
-                      ),
+                      div(list{Attrs.class_("text-emerald-400")}, list{text("Panel-N")}),
+                      div(list{Attrs.class_("text-gray-500")}, list{text("Captured")}),
                     },
                   ),
                   div(
                     list{Attrs.class_("bg-gray-800/50 p-2 rounded")},
                     list{
-                      div(
-                        list{Attrs.class_("text-gray-400")},
-                        list{text("Panel-W")},
-                      ),
-                      div(
-                        list{Attrs.class_("text-gray-500")},
-                        list{text("Captured")},
-                      ),
+                      div(list{Attrs.class_("text-gray-400")}, list{text("Panel-W")}),
+                      div(list{Attrs.class_("text-gray-500")}, list{text("Captured")}),
                     },
                   ),
                   renderBojContext(boj),
@@ -313,7 +285,6 @@ let renderFeedbackForm = (
               ),
             },
           ),
-
           // Actions
           div(
             list{Attrs.class_("p-4 flex justify-end gap-2")},

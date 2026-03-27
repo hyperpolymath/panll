@@ -7,9 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Check BoJ server health.
-let health = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let health = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("boj_health", {"_": true})
     ->Promise.then(result => {
@@ -25,9 +23,7 @@ let health = (
 }
 
 /// List all cartridges from the BoJ server.
-let listCartridges = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listCartridges = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("boj_list_cartridges", {"_": true})
     ->Promise.then(result => {
@@ -43,10 +39,7 @@ let listCartridges = (
 }
 
 /// Get detailed info for a specific cartridge.
-let getCartridge = (
-  name: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let getCartridge = (name: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("boj_get_cartridge", {"name": name})
     ->Promise.then(result => {
@@ -62,10 +55,7 @@ let getCartridge = (
 }
 
 /// Load (mount) a cartridge into the BoJ runtime.
-let loadCartridge = (
-  name: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadCartridge = (name: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("boj_load_cartridge", {"name": name})
     ->Promise.then(result => {
@@ -81,10 +71,7 @@ let loadCartridge = (
 }
 
 /// Unload (unmount) a cartridge from the BoJ runtime.
-let unloadCartridge = (
-  name: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let unloadCartridge = (name: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("boj_unload_cartridge", {"name": name})
     ->Promise.then(result => {
@@ -100,9 +87,7 @@ let unloadCartridge = (
 }
 
 /// Get the full topology (architecture diagram data).
-let topology = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let topology = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("boj_topology", {"_": true})
     ->Promise.then(result => {
@@ -191,9 +176,7 @@ let invokeTypedSimple = (
 }
 
 /// Get Umoja federation status.
-let umojaStatus = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let umojaStatus = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("boj_umoja_status", {"_": true})
     ->Promise.then(result => {

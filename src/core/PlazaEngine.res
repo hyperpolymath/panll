@@ -92,14 +92,21 @@ let commonLicenses: array<string> = [
 let adoptionStatsDecoder: Tea_Json.decoder<adoptionStats> = {
   open Decoders
   map6(
-    (totalRepos, pmplRepos, mplFallbackRepos, unlicensedRepos, quantumSignedRepos, byLicense) => ({
+    (
       totalRepos,
       pmplRepos,
       mplFallbackRepos,
       unlicensedRepos,
       quantumSignedRepos,
       byLicense,
-    }: adoptionStats),
+    ): adoptionStats => {
+      totalRepos,
+      pmplRepos,
+      mplFallbackRepos,
+      unlicensedRepos,
+      quantumSignedRepos,
+      byLicense,
+    },
     intField("total_repos"),
     intField("pmpl_repos"),
     intField("mpl_fallback_repos"),

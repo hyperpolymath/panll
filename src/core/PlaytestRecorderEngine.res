@@ -38,22 +38,20 @@ let formatDuration = (ms: float): string => {
   let minutes = Math.floor(mod(totalSeconds, 3600.0) /. 60.0)
   let seconds = Math.floor(mod(totalSeconds, 60.0))
   if hours > 0.0 {
-    `${Float.toInt(hours)->Int.toString}h ${Float.toInt(minutes)->Int.toString}m ${Float.toInt(seconds)->Int.toString}s`
+    `${Float.toInt(hours)->Int.toString}h ${Float.toInt(minutes)->Int.toString}m ${Float.toInt(
+        seconds,
+      )->Int.toString}s`
   } else {
     `${Float.toInt(minutes)->Int.toString}m ${Float.toInt(seconds)->Int.toString}s`
   }
 }
 
 /// Count total annotations in the current state.
-let countAnnotations = (annotations: array<annotation>): int =>
-  annotations->Array.length
+let countAnnotations = (annotations: array<annotation>): int => annotations->Array.length
 
 /// Compute playback progress as a percentage (0.0–100.0).
 /// Returns 0.0 if no session is loaded or playback is stopped/recording.
-let playbackProgressPercent = (
-  playback: playbackState,
-  session: option<recordedSession>,
-): float =>
+let playbackProgressPercent = (playback: playbackState, session: option<recordedSession>): float =>
   switch (playback, session) {
   | (Playing(t), Some(s)) | (Paused(t), Some(s)) =>
     if s.durationMs > 0.0 {

@@ -28,16 +28,13 @@ open VabModel
 ///   - Two components sharing a port number → PortConflict
 ///   - Assembly with 3+ components but no audit → SecurityWarning
 ///   - Assembly with 3+ components but no config → SecurityWarning
-let checkDependencies = (
-  assembledIds: array<string>,
-  catalog: array<vabComponent>,
-): array<vabWarning> => {
+let checkDependencies = (assembledIds: array<string>, catalog: array<vabComponent>): array<
+  vabWarning,
+> => {
   let warnings: ref<array<vabWarning>> = ref([])
 
   // Collect all assembled components
-  let assembledComponents = Array.filterMap(assembledIds, id =>
-    VabCatalog.findById(catalog, id)
-  )
+  let assembledComponents = Array.filterMap(assembledIds, id => VabCatalog.findById(catalog, id))
 
   // Check required dependencies
   Array.forEach(assembledComponents, comp => {
@@ -79,18 +76,20 @@ let checkDependencies = (
   if componentCount >= 3 {
     let hasAudit = Array.some(assembledIds, id => id === "proven-audit")
     if !hasAudit {
-      warnings := Array.concat(
-        warnings.contents,
-        [SecurityWarning("No audit logger — operations will not be logged for compliance")],
-      )
+      warnings :=
+        Array.concat(
+          warnings.contents,
+          [SecurityWarning("No audit logger — operations will not be logged for compliance")],
+        )
     }
 
     let hasConfig = Array.some(assembledIds, id => id === "proven-config")
     if !hasConfig {
-      warnings := Array.concat(
-        warnings.contents,
-        [SecurityWarning("No configuration management — settings will be hardcoded")],
-      )
+      warnings :=
+        Array.concat(
+          warnings.contents,
+          [SecurityWarning("No configuration management — settings will be hardcoded")],
+        )
     }
   }
 
@@ -101,10 +100,11 @@ let checkDependencies = (
       Array.some(comp.ports, port => port === 443 || port === 993 || port === 8443 || port === 636)
     )
     if needsTls {
-      warnings := Array.concat(
-        warnings.contents,
-        [SecurityWarning("Components use secure ports but TLS engine is not installed")],
-      )
+      warnings :=
+        Array.concat(
+          warnings.contents,
+          [SecurityWarning("Components use secure ports but TLS engine is not installed")],
+        )
     }
   }
 
@@ -140,7 +140,20 @@ let capabilityCategories: array<(string, array<string>)> = [
   ("AI manifests (A2ML)", ["a2ml", "ai-manifest"]),
   ("K9 contractiles", ["k9-contractiles", "deployment-config"]),
   ("Internationalisation", ["i18n"]),
-  ("Document formats", ["document-json", "document-yaml", "document-toml", "document-xml", "document-adoc", "document-djot", "document-markdown", "document-pdf", "document-a2ml"]),
+  (
+    "Document formats",
+    [
+      "document-json",
+      "document-yaml",
+      "document-toml",
+      "document-xml",
+      "document-adoc",
+      "document-djot",
+      "document-markdown",
+      "document-pdf",
+      "document-a2ml",
+    ],
+  ),
 ]
 
 /// Compute the capability status list for the assembled server.
@@ -153,16 +166,12 @@ let computeCapabilities = (
   warnings: array<vabWarning>,
 ): array<capabilityStatus> => {
   // Collect all capability tags from assembled components
-  let assembledComponents = Array.filterMap(assembledIds, id =>
-    VabCatalog.findById(catalog, id)
-  )
+  let assembledComponents = Array.filterMap(assembledIds, id => VabCatalog.findById(catalog, id))
   let allCaps = Array.flatMap(assembledComponents, comp => comp.capabilities)
 
   // For each capability category, determine status
   Array.map(capabilityCategories, ((name, tags)) => {
-    let hasTag = Array.some(tags, tag =>
-      Array.some(allCaps, cap => cap === tag)
-    )
+    let hasTag = Array.some(tags, tag => Array.some(allCaps, cap => cap === tag))
 
     if hasTag {
       // Check if any warnings affect this capability

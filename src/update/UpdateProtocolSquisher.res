@@ -12,14 +12,24 @@ let updateProtocolSquisher = (model: model, msg: protocolSquisherMsg): (model, T
       {...model, protocolSquisher: {...ps, loading: true}},
       ProtocolSquisherCmd.checkCli(result => ProtocolSquisher(PsCliResult(result))),
     )
-  | PsCliResult(Ok(_)) => ({...model, protocolSquisher: {...ps, cliAvailable: true, loading: false, error: None}}, Tea_Cmd.none)
-  | PsCliResult(Error(e)) => ({...model, protocolSquisher: {...ps, cliAvailable: false, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | PsCliResult(Ok(_)) => (
+      {...model, protocolSquisher: {...ps, cliAvailable: true, loading: false, error: None}},
+      Tea_Cmd.none,
+    )
+  | PsCliResult(Error(e)) => (
+      {...model, protocolSquisher: {...ps, cliAvailable: false, loading: false, error: Some(e)}},
+      Tea_Cmd.none,
+    )
   | SetAnalyseInput(v) => ({...model, protocolSquisher: {...ps, analyseInput: v}}, Tea_Cmd.none)
   | RunAnalysis => (
       {...model, protocolSquisher: {...ps, loading: true, error: None, lastTypeCheck: None}},
       Tea_Cmd.batch(list{
-        ProtocolSquisherCmd.analyse(ps.analyseInput, result => ProtocolSquisher(AnalysisResult(result))),
-        TypeLLService.checkSchemaTypes(ps.analyseInput, "auto", result => ProtocolSquisher(SchemaTypeCheckResult(result))),
+        ProtocolSquisherCmd.analyse(ps.analyseInput, result => ProtocolSquisher(
+          AnalysisResult(result),
+        )),
+        TypeLLService.checkSchemaTypes(ps.analyseInput, "auto", result => ProtocolSquisher(
+          SchemaTypeCheckResult(result),
+        )),
       }),
     )
   | AnalysisResult(Ok(json)) =>
@@ -28,22 +38,34 @@ let updateProtocolSquisher = (model: model, msg: protocolSquisherMsg): (model, T
         // #6: Extract IR constraints from the analysis result automatically.
         let irConstraints = ProtocolSquisherEngine.extractIrConstraints(result)
         (
-          {...model, protocolSquisher: {
-            ...ps,
-            loading: false,
-            lastAnalysis: Some(result),
-            analysisHistory: Array.concat([result], ps.analysisHistory),
-            irConstraints,
-            error: None,
-          }},
+          {
+            ...model,
+            protocolSquisher: {
+              ...ps,
+              loading: false,
+              lastAnalysis: Some(result),
+              analysisHistory: Array.concat([result], ps.analysisHistory),
+              irConstraints,
+              error: None,
+            },
+          },
           Tea_Cmd.none,
         )
       }
-    | Error(e) => ({...model, protocolSquisher: {...ps, loading: false, error: Some(e)}}, Tea_Cmd.none)
+    | Error(e) => (
+        {...model, protocolSquisher: {...ps, loading: false, error: Some(e)}},
+        Tea_Cmd.none,
+      )
     }
-  | AnalysisResult(Error(e)) => ({...model, protocolSquisher: {...ps, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | AnalysisResult(Error(e)) => (
+      {...model, protocolSquisher: {...ps, loading: false, error: Some(e)}},
+      Tea_Cmd.none,
+    )
   | SetCompareLeft(v) => ({...model, protocolSquisher: {...ps, compareLeftInput: v}}, Tea_Cmd.none)
-  | SetCompareRight(v) => ({...model, protocolSquisher: {...ps, compareRightInput: v}}, Tea_Cmd.none)
+  | SetCompareRight(v) => (
+      {...model, protocolSquisher: {...ps, compareRightInput: v}},
+      Tea_Cmd.none,
+    )
   | RunComparison => (
       {...model, protocolSquisher: {...ps, loading: true, error: None}},
       ProtocolSquisherCmd.compare(
@@ -56,7 +78,15 @@ let updateProtocolSquisher = (model: model, msg: protocolSquisherMsg): (model, T
       let parsed = ProtocolSquisherEngine.parseComparison(json)
       switch parsed {
       | Ok(comparison) => (
-          {...model, protocolSquisher: {...ps, loading: false, error: None, lastComparison: Some(comparison)}},
+          {
+            ...model,
+            protocolSquisher: {
+              ...ps,
+              loading: false,
+              error: None,
+              lastComparison: Some(comparison),
+            },
+          },
           Tea_Cmd.none,
         )
       | Error(_) => (
@@ -65,13 +95,18 @@ let updateProtocolSquisher = (model: model, msg: protocolSquisherMsg): (model, T
         )
       }
     }
-  | ComparisonResult(Error(e)) => ({...model, protocolSquisher: {...ps, loading: false, error: Some(e)}}, Tea_Cmd.none)
+  | ComparisonResult(Error(e)) => (
+      {...model, protocolSquisher: {...ps, loading: false, error: Some(e)}},
+      Tea_Cmd.none,
+    )
   | SchemaTypeCheckResult(Ok(json)) => {
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
-      ({...model, protocolSquisher: {...ps, lastTypeCheck: Some(json)}, typell: newTypell}, Tea_Cmd.none)
+      (
+        {...model, protocolSquisher: {...ps, lastTypeCheck: Some(json)}, typell: newTypell},
+        Tea_Cmd.none,
+      )
     }
-  | SchemaTypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | SchemaTypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
   // #6: Import IR constraints as Panel-L symbolic constraints.
   | ImportIrConstraints => {

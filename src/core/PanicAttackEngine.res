@@ -142,12 +142,9 @@ let filterByText = (findings: array<weakPoint>, query: string): array<weakPoint>
   }
 
 /// Composite filter: category + text in one pass.
-let applyFilters = (
-  findings: array<weakPoint>,
-  category: panicCategory,
-  filterText: string,
-): array<weakPoint> =>
-  findings->filterByCategory(category)->filterByText(filterText)
+let applyFilters = (findings: array<weakPoint>, category: panicCategory, filterText: string): array<
+  weakPoint,
+> => findings->filterByCategory(category)->filterByText(filterText)
 
 // =========================================================================
 // Sorting
@@ -156,9 +153,7 @@ let applyFilters = (
 /// Sort findings by severity (most severe first), stable within severity.
 let sortBySeverity = (findings: array<weakPoint>): array<weakPoint> => {
   let sorted = Array.copy(findings)
-  sorted->Array.sort((a, b) =>
-    Int.compare(severityWeight(b.severity), severityWeight(a.severity))
-  )
+  sorted->Array.sort((a, b) => Int.compare(severityWeight(b.severity), severityWeight(a.severity)))
   sorted
 }
 
@@ -185,14 +180,13 @@ let sortByLocation = (findings: array<weakPoint>): array<weakPoint> => {
 /// Build a scan summary from an array of findings.
 let computeSummary = (findings: array<weakPoint>, language: string): scanSummary => {
   let files = findings->Array.map(wp => wp.file)->Array.filter(f => f != "")
-  let uniqueFiles =
-    files->Array.reduce([], (acc, f) =>
-      if acc->Array.some(x => x == f) {
-        acc
-      } else {
-        Array.concat(acc, [f])
-      }
-    )
+  let uniqueFiles = files->Array.reduce([], (acc, f) =>
+    if acc->Array.some(x => x == f) {
+      acc
+    } else {
+      Array.concat(acc, [f])
+    }
+  )
   {
     totalFindings: Array.length(findings),
     critical: findings->Array.filter(wp => wp.severity == Critical)->Array.length,
@@ -218,7 +212,7 @@ let groupByCategory = (findings: array<weakPoint>): array<(string, int)> => {
     let found = groups->Array.findIndex(((l, _)) => l == label)
     if found >= 0 {
       let (l, c) = groups->Array.getUnsafe(found)
-      ignore(groups->Array.splice(~start=found, ~remove=1, ~insert=[((l, c + 1))]))
+      ignore(groups->Array.splice(~start=found, ~remove=1, ~insert=[(l, c + 1)]))
     } else {
       ignore(groups->Array.push((label, 1)))
     }

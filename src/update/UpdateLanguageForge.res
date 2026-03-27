@@ -27,14 +27,8 @@ let updateLanguageForge = (model: model, msg: languageForgeMsg): (model, Tea_Cmd
       {...model, languageForge: {...forge, activeCategory: cat}},
       Tea_Cmd.none,
     )
-  | SetForgeFilter(text) => (
-      {...model, languageForge: {...forge, filterText: text}},
-      Tea_Cmd.none,
-    )
-  | SetForgeSort(sort) => (
-      {...model, languageForge: {...forge, sortBy: sort}},
-      Tea_Cmd.none,
-    )
+  | SetForgeFilter(text) => ({...model, languageForge: {...forge, filterText: text}}, Tea_Cmd.none)
+  | SetForgeSort(sort) => ({...model, languageForge: {...forge, sortBy: sort}}, Tea_Cmd.none)
   | SelectLanguage(name) => (
       {...model, languageForge: {...forge, selectedLanguage: name}},
       Tea_Cmd.none,

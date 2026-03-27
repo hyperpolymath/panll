@@ -7,9 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Read the current VM state from the running game (inter-webview).
-let readVmState = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readVmState = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("vm_inspector_read_state", {"_": true})
     ->Promise.then(result => {
@@ -25,9 +23,7 @@ let readVmState = (
 }
 
 /// Step the VM forward by one instruction.
-let stepForward = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let stepForward = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("vm_inspector_step_forward", {"_": true})
     ->Promise.then(result => {
@@ -43,9 +39,7 @@ let stepForward = (
 }
 
 /// Step the VM backward by one instruction (reverse execution).
-let stepBackward = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let stepBackward = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("vm_inspector_step_backward", {"_": true})
     ->Promise.then(result => {
@@ -61,9 +55,7 @@ let stepBackward = (
 }
 
 /// Run the VM until the next breakpoint or program end.
-let runToBreakpoint = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let runToBreakpoint = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("vm_inspector_run", {"_": true})
     ->Promise.then(result => {
@@ -79,10 +71,7 @@ let runToBreakpoint = (
 }
 
 /// Load a VM program from assembly text.
-let loadProgram = (
-  assembly: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadProgram = (assembly: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("vm_inspector_load_program", {"assembly": assembly})
     ->Promise.then(result => {
@@ -98,9 +87,7 @@ let loadProgram = (
 }
 
 /// Export the current VM state as a JSON snapshot.
-let exportSnapshot = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let exportSnapshot = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("vm_inspector_export_snapshot", {"_": true})
     ->Promise.then(result => {
@@ -116,10 +103,9 @@ let exportSnapshot = (
 }
 
 /// Read VM state from a serialised JSON file (file-based connection mode).
-let readVmStateFromFile = (
-  path: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readVmStateFromFile = (path: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("vm_inspector_read_file", {"path": path})
     ->Promise.then(result => {

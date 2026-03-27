@@ -123,16 +123,40 @@ let hasProtocol = (cartridge: bojCartridge, proto: protocolColumn): bool => {
 
 /// All protocol columns in display order.
 let allProtocols: array<protocolColumn> = [
-  ProtoMCP, ProtoLSP, ProtoDAP, ProtoBSP, ProtoNeSy,
-  ProtoAgentic, ProtoFleet, ProtoGRPC, ProtoREST, ProtoGraphQL,
+  ProtoMCP,
+  ProtoLSP,
+  ProtoDAP,
+  ProtoBSP,
+  ProtoNeSy,
+  ProtoAgentic,
+  ProtoFleet,
+  ProtoGRPC,
+  ProtoREST,
+  ProtoGraphQL,
 ]
 
 /// Layer readiness as a fraction string (e.g. "3/4").
 let layerProgress = (layers: layerStatus): string => {
-  let count = (if layers.abiReady { 1 } else { 0 })
-    + (if layers.ffiReady { 1 } else { 0 })
-    + (if layers.adapterReady { 1 } else { 0 })
-    + (if layers.sharedLibReady { 1 } else { 0 })
+  let count =
+    if layers.abiReady {
+      1
+    } else {
+      0
+    } +
+    if layers.ffiReady {
+      1
+    } else {
+      0
+    } +
+    if layers.adapterReady {
+      1
+    } else {
+      0
+    } + if layers.sharedLibReady {
+      1
+    } else {
+      0
+    }
   `${Int.toString(count)}/4`
 }
 
@@ -277,8 +301,9 @@ let cartridgeDecoder: Tea_Json.decoder<bojCartridge> = json => {
 }
 
 /// Tea_Json decoder for a cartridges array.
-let cartridgesDecoder: Tea_Json.decoder<array<bojCartridge>> =
-  Decoders.lenientArray(cartridgeDecoder)
+let cartridgesDecoder: Tea_Json.decoder<array<bojCartridge>> = Decoders.lenientArray(
+  cartridgeDecoder,
+)
 
 /// Parse a JSON string containing an array of cartridge objects.
 let parseCartridges = (json: string): result<array<bojCartridge>, string> =>
@@ -304,18 +329,16 @@ let peerDecoder: Tea_Json.decoder<umojaPeer> = json => {
 let umojaStatusDecoder: Tea_Json.decoder<umojaStatus> = {
   open Decoders
   open Tea_Json
-  map4(
-    (active, localNodeId, peers, currentRound) => ({
-      active,
-      localNodeId,
-      peers,
-      currentRound,
-    }: umojaStatus),
-    boolField("active"),
-    stringField("localNodeId"),
-    fieldWithDefault("peers", lenientArray(peerDecoder), []),
-    intField("currentRound"),
-  )
+  map4((active, localNodeId, peers, currentRound): umojaStatus => {
+    active,
+    localNodeId,
+    peers,
+    currentRound,
+  }, boolField(
+    "active",
+  ), stringField(
+    "localNodeId",
+  ), fieldWithDefault("peers", lenientArray(peerDecoder), []), intField("currentRound"))
 }
 
 /// Parse a JSON string containing Umoja federation status.
@@ -324,13 +347,11 @@ let parseUmojaStatus = (json: string): result<umojaStatus, string> =>
 
 /// Tea_Json decoder for topology diagram data.
 /// Extracts the "diagram" field as a plain string.
-let topologyDecoder: Tea_Json.decoder<string> =
-  Decoders.stringField("diagram")
+let topologyDecoder: Tea_Json.decoder<string> = Decoders.stringField("diagram")
 
 /// Parse a JSON string containing topology diagram data.
 /// Extracts the "diagram" field as a plain string.
-let parseTopology = (json: string): result<string, string> =>
-  Decoders.decode(topologyDecoder, json)
+let parseTopology = (json: string): result<string, string> => Decoders.decode(topologyDecoder, json)
 
 /// Default BoJ panel state.
 let defaultState: bojState = {

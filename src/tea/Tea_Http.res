@@ -55,7 +55,8 @@ let sendFetch = (
     let _onError = onError
     let _enqueue = callbacks.enqueue
 
-    ignore(%raw(`
+    ignore(
+      %raw(`
       (function() {
         var init = { method: _method, headers: {} };
         for (var i = 0; i < _headers.length; i++) {
@@ -88,7 +89,8 @@ let sendFetch = (
             }
           });
       })()
-    `))
+    `),
+    )
   })
 }
 

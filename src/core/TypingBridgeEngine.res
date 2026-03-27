@@ -31,8 +31,7 @@ let tabLabel = (tab: typingBridgeTab): string =>
 let allTabs: array<typingBridgeTab> = [Constraints, Inference, Editor, Diagnostics]
 
 /// Count the total number of registered type constraints.
-let countConstraints = (state: typingBridgeState): int =>
-  Array.length(state.constraints)
+let countConstraints = (state: typingBridgeState): int => Array.length(state.constraints)
 
 /// Count constraints that are currently violated (not satisfied).
 let countViolated = (state: typingBridgeState): int =>

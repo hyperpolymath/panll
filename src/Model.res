@@ -383,7 +383,6 @@ type model = {
   paneL: paneLState,
   paneN: paneNState,
   paneW: paneWState,
-
   // Cognitive governance
   antiCrash: antiCrashState,
   vexometer: vexometerState,
@@ -393,7 +392,6 @@ type model = {
   humidity: humidityLevel,
   barycentreTour: tourState,
   menuBar: menuBarState,
-
   // View state
   viewMode: viewMode,
   paneLVisible: bool,
@@ -402,230 +400,158 @@ type model = {
   protocolAnalysisVisible: bool,
   panelBarVisible: bool,
   fullscreenActive: bool,
-
   // Database backends
   verisimdb: verisimdbState,
-
   // Theorem prover backend
   echidna: echidnaState,
-
   // VAB (Verified Assembly Building)
   vab: vabState,
-
   // CloudGuard (Cloudflare domain security management)
   cloudguard: cloudguardState,
-
   // Git-Private-Farm — repo inventory and health dashboard
   farm: farmState,
-
   // Palimpsest Plaza — PMPL licensing adoption and governance
   plaza: plazaState,
-
   // Reposystem — RSR compliance across 265+ repos
   reposystem: reposystemState,
-
   // Aerie — network diagnostics, speed tests, BGP forensics
   aerie: aerieState,
-
   // 007 Toolchain — agentic compiler and high-rigor execution (Groove)
   oo7toolchain: oo7State,
-
   // Interfaces — Idris2 ABI + Zig FFI inventory + binding coverage
   interfaces: interfacesState,
-
   // Playgrounds — code sandbox + NQC console + tutorials
   playgrounds: playgroundsState,
-
   // Hypatia — neurosymbolic CI/CD intelligence (5 neural networks, 298+ repos)
   hypatia: hypatiaState,
-
   // Gitbot-Fleet — 6-bot orchestration and dispatch dashboard
   fleet: fleetState,
-
   // Panel Minter — create new panel modules with accessibility by default
   minter: minterState,
-
   // Provisioner — portfolio bundles, panel config, isolation tiers
   provisioner: provisionerState,
-
   // Code MRI VoiceTag — voice-activated annotation system (Layer 0)
   voiceTag: voiceTagState,
-
   // Provenance Map — Qubes-style code trust surface (always visible, ambient)
   provenance: provenanceState,
-
   // Code MRI Timeline — VeriSimDB-backed development time series (Layer 2)
   codeMriTimeline: TimelineModel.timelineState,
-
   // Watcher — filesystem observation infrastructure (feeds all panels)
   watcher: watcherState,
-
   // AI — multi-provider neural interface (Claude, Gemini, Mistral, GPT, local)
   ai: aiState,
-
   // Repo Loader — repository scanner and panel configuration wizard
   repoLoader: repoLoaderState,
-
   // Panel Switcher — unified panel navigation (replaces ad-hoc visible toggles)
   panelSwitcher: panelSwitcherState,
-
   // Workspace — panel arrangements, groups, sessions, modes (DD-022–DD-027)
   workspace: workspaceState,
-
   // Keybindings — customisable keyboard shortcuts
   keybindings: keybindingsState,
-
   // Capture — screenshots, recordings, demos, cloning (DD-022)
   capture: captureState,
-
   // Status Bar — configurable bottom bar with system info widgets (DD-025)
   statusBar: statusBarState,
-
   // Security — redaction, vault, 2FA, Trustfile enforcement (DD-026/027)
   security: securityState,
-
   // Migration Observatory — ReScript migration health, sessions, submissions
   migration: migrationState,
-
   // panic-attack — stress testing and weak point analysis
   panicAttack: panicAttackState,
-
   // mass-panic — organisation-scale batch scanning (assemblyline + BLAKE3 + verisimdb)
   massPanic: massPanicState,
-
   // TSDM — triaxial software development methodology directive
   tsdm: tsdmState,
-
   // Valence Shell — embedded terminal with Claude Code and reversible ops
   valenceShell: valenceShellState,
-
   // Game Preview — live IDApTIK game preview with hot-reload and overlays
   gamePreview: gamePreviewState,
-
   // VM Inspector — reversible VM visual debugger (step forward/backward)
   vmInspector: vmInspectorState,
-
   // Network Topology — IDApTIK in-game network graph viewer
   networkTopology: networkTopologyState,
-
   // Level Architect — visual level design tool
   levelArchitect: levelArchitectState,
-
   // Coprocessors — coprocessor backend monitoring dashboard
   coprocessors: coprocessorsState,
-
   // Multiplayer Monitor — Phoenix sync server inspector
   multiplayerMonitor: multiplayerMonitorState,
-
   // DLC Workshop — puzzle pack creation, testing, packaging
   dlcWorkshop: dlcWorkshopState,
-
   // Universal Modding Studio — unified IDApTIK content creation hub
   ums: umsState,
-
   // Editor Bridge — federate with external code editors (VSCodium, Zed, etc.)
   editorBridge: editorBridgeState,
-
   // Build Dashboard — build/test/error monitoring for IDApTIK sub-projects
   buildDashboard: buildDashboardState,
-
   // Release Manager — versioning, changelog, artifacts, distribution
   releaseManager: releaseManagerState,
-
   // Automation Router — hybrid cross-panel workflow orchestration
   automationRouter: automationRouterState,
-
   // Databases — unified VeriSimDB/QuandleDB/LithoGlyph management
   databases: databasesState,
-
   // BoJ — Bundle of Joy cartridge server
   boj: bojState,
-
   // Clade Browser — panel taxonomy explorer
   cladeBrowser: cladeBrowserState,
-
   // Tentacles — 7-Tentacles compiler agent panel (within/without ECHIDNA)
   tentacles: tentaclesState,
-
   // Protocol-Squisher — 13-format schema analysis and compatibility
   protocolSquisher: protocolSquisherState,
-
   // My-Lang — AI-native language workbench (Solo/Duet/Ensemble/Me dialects)
   myLang: myLangState,
-
   // TypeLL — Verification kernel (cross-panel type intelligence)
   typell: typellState,
-
   // Panel Bus — pub/sub subscriber registry and event history
   busRegistry: PanelBus.subscriberRegistry,
-
   // A2ML — last loaded/validated manifest state
   lastA2mlManifest: option<A2mlEngine.a2mlManifest>,
   lastA2mlValidation: option<A2mlEngine.a2mlValidationResult>,
   a2mlManifestPaths: array<string>,
-
   // K9 — last loaded/validated contractile state
   lastK9Contractile: option<K9Engine.k9Contractile>,
   lastK9Layout: option<K9Engine.k9Layout>,
   k9KennelSchema: option<string>,
   k9YardContract: option<string>,
-
   // Compliance seams — exception register and audit state
   seamRegister: SeamEngine.seamRegister,
   lastSeamAudit: option<SeamEngine.seamAuditResult>,
-
   // ENSAID_CONFIG — cross-panel config generation state
   ensaidConfigPreview: option<string>,
   ensaidConfigError: option<string>,
-
   // Undo/Redo — ring buffer of model snapshots
   undoStack: array<string>,
   redoStack: array<string>,
-
   // Feedback-O-Tron
   feedbackPending: option<string>,
   feedbackError: option<string>,
   feedbackReportType: option<string>,
-
   // Help — in-app help system with context-sensitive guides and glossary
   help: helpState,
-
   // Accessibility — centralised a11y preferences (palette, animation, font, focus)
   accessibility: accessibilityState,
-
   // Tiling — multi-monitor panel detachment and snap zone management
   tiling: tilingState,
-
   // Focus Dimming — focus-aware panel dimming and Smart Memory Mode
   focusDimming: focusDimmingState,
-
   // Script Gist — portable computation gists (saveable, LLM-callable, user-runnable)
   scriptGist: scriptGistState,
-
   // Stapeln — container stack assembly pipeline (constraints, reasoning, artifacts)
   stapeln: stapelnState,
-
   // Evangeliser — JS→ReScript pattern teaching with celebrate/minimize/better narratives
   evangeliser: evangeliserState,
-
   // Language Forge — nextgen-languages portfolio monitoring and development
   languageForge: languageForgeState,
-
   // TangleViz — topological programming visualizer for braid/knot topology
   tangleViz: tangleVizState,
-
   // Spec Browser — browse all language specs, grammars, typing rules
   specBrowser: specBrowserState,
-
   // Verification Dashboard — proof/test/benchmark/fuzzing status
   verificationDashboard: verificationDashboardState,
-
   // Observatory — integrative dashboard aggregating health, resources, activity
   observatory: observatoryState,
-
   // AmbientOps — hospital-model sysadmin (clinician, network ambulance, hardware crash team)
   ambientOps: ambientOpsState,
-
   // Game Testing panels
   unitTestRunner: unitTestRunnerState,
   functionalTester: functionalTesterState,
@@ -637,7 +563,6 @@ type model = {
   exploratoryWorkbench: exploratoryWorkbenchState,
   betaFeedbackHub: betaFeedbackHubState,
   balanceAnalyser: balanceAnalyserState,
-
   // Bridge panels
   typingBridge: typingBridgeState,
   neurosymBridge: neurosymBridgeState,
@@ -647,7 +572,6 @@ type model = {
   protocolBridge: protocolBridgeState,
   proofsBridge: proofsBridgeState,
   scriptingBridge: scriptingBridgeState,
-
   // Game-specific panels
   generatorMode: generatorModeState,
   architectMode: architectModeState,
@@ -655,19 +579,15 @@ type model = {
   deviceNetworkDesigner: deviceNetworkDesignerState,
   assetManager: assetManagerState,
   playtestRecorder: playtestRecorderState,
-
   // Team / collaboration panels
   codeReview: codeReviewState,
   mergeCoordinator: mergeCoordinatorState,
   teamDashboard: teamDashboardState,
   debuggingWorkbench: debuggingWorkbenchState,
-
   // Infrastructure panels
   wiringInspector: wiringInspectorState,
-
   // K9 and Contractile management panels
   k9Manager: K9Model.k9ManagerState,
-
   // Floor Raise campaign panels
   floorRaise: floorRaiseState,
   provenAdoption: provenAdoptionState,
@@ -680,7 +600,6 @@ type model = {
   llmCoding: LlmCodingModel.llmCodingState,
   // Agent Coordination View
   agentCoordination: AgentCoordinationModel.agentCoordinationState,
-
   // Burble — voice huddle integration (groove-aware, workspace profile)
   burble: BurbleModel.burbleState,
 }
@@ -738,16 +657,126 @@ let init = (): model => {
   },
   paneN: {
     tokens: [
-      {id: "t-0", content: "Initialising formal verification context...", timestamp: 0.0, confidence: 0.95, validated: true, source: NeuralInference, category: Observation, emittedDuring: Observe, causedBy: [], proofHash: None},
-      {id: "t-1", content: "Loading Coq prover backend", timestamp: 0.1, confidence: 0.88, validated: true, source: EchidnaProver, category: Observation, emittedDuring: Observe, causedBy: ["t-0"], proofHash: None},
-      {id: "t-2", content: "forall n : nat, n + 0 = n", timestamp: 0.2, confidence: 0.92, validated: true, source: EchidnaProver, category: Hypothesis, emittedDuring: Orient, causedBy: ["t-1"], proofHash: None},
-      {id: "t-3", content: "Tactic suggestion: induction on n", timestamp: 0.3, confidence: 0.78, validated: false, source: EchidnaProver, category: Abduction, emittedDuring: Orient, causedBy: ["t-2"], proofHash: None},
-      {id: "t-4", content: "Proof obligation discharged", timestamp: 0.4, confidence: 0.97, validated: true, source: EchidnaProver, category: ProofStep, emittedDuring: Decide, causedBy: ["t-2", "t-3"], proofHash: Some("sha256:a1b2c3...")},
-      {id: "t-5", content: "Checking orbital stability invariant...", timestamp: 0.5, confidence: 0.91, validated: true, source: TypeLLKernel, category: Observation, emittedDuring: Observe, causedBy: [], proofHash: None},
-      {id: "t-6", content: "Divergence bound verified: 0.23 <= 0.7", timestamp: 0.6, confidence: 0.94, validated: true, source: TypeLLKernel, category: ProofStep, emittedDuring: Decide, causedBy: ["t-5"], proofHash: Some("sha256:d4e5f6...")},
-      {id: "t-7", content: "Trust propagation: 4 artifacts in chain", timestamp: 0.7, confidence: 0.86, validated: true, source: NeuralInference, category: Deduction, emittedDuring: Orient, causedBy: ["t-4", "t-6"], proofHash: None},
-      {id: "t-8", content: "Autonomy ceiling: 0.0 <= 0.8 (human in loop)", timestamp: 0.8, confidence: 0.99, validated: true, source: AntiCrashGate, category: Observation, emittedDuring: Act, causedBy: [], proofHash: None},
-      {id: "t-9", content: "7 constraints active, 6 satisfied, 1 pending", timestamp: 0.9, confidence: 0.93, validated: true, source: NeuralInference, category: Synthesis, emittedDuring: Act, causedBy: ["t-7", "t-8"], proofHash: None},
+      {
+        id: "t-0",
+        content: "Initialising formal verification context...",
+        timestamp: 0.0,
+        confidence: 0.95,
+        validated: true,
+        source: NeuralInference,
+        category: Observation,
+        emittedDuring: Observe,
+        causedBy: [],
+        proofHash: None,
+      },
+      {
+        id: "t-1",
+        content: "Loading Coq prover backend",
+        timestamp: 0.1,
+        confidence: 0.88,
+        validated: true,
+        source: EchidnaProver,
+        category: Observation,
+        emittedDuring: Observe,
+        causedBy: ["t-0"],
+        proofHash: None,
+      },
+      {
+        id: "t-2",
+        content: "forall n : nat, n + 0 = n",
+        timestamp: 0.2,
+        confidence: 0.92,
+        validated: true,
+        source: EchidnaProver,
+        category: Hypothesis,
+        emittedDuring: Orient,
+        causedBy: ["t-1"],
+        proofHash: None,
+      },
+      {
+        id: "t-3",
+        content: "Tactic suggestion: induction on n",
+        timestamp: 0.3,
+        confidence: 0.78,
+        validated: false,
+        source: EchidnaProver,
+        category: Abduction,
+        emittedDuring: Orient,
+        causedBy: ["t-2"],
+        proofHash: None,
+      },
+      {
+        id: "t-4",
+        content: "Proof obligation discharged",
+        timestamp: 0.4,
+        confidence: 0.97,
+        validated: true,
+        source: EchidnaProver,
+        category: ProofStep,
+        emittedDuring: Decide,
+        causedBy: ["t-2", "t-3"],
+        proofHash: Some("sha256:a1b2c3..."),
+      },
+      {
+        id: "t-5",
+        content: "Checking orbital stability invariant...",
+        timestamp: 0.5,
+        confidence: 0.91,
+        validated: true,
+        source: TypeLLKernel,
+        category: Observation,
+        emittedDuring: Observe,
+        causedBy: [],
+        proofHash: None,
+      },
+      {
+        id: "t-6",
+        content: "Divergence bound verified: 0.23 <= 0.7",
+        timestamp: 0.6,
+        confidence: 0.94,
+        validated: true,
+        source: TypeLLKernel,
+        category: ProofStep,
+        emittedDuring: Decide,
+        causedBy: ["t-5"],
+        proofHash: Some("sha256:d4e5f6..."),
+      },
+      {
+        id: "t-7",
+        content: "Trust propagation: 4 artifacts in chain",
+        timestamp: 0.7,
+        confidence: 0.86,
+        validated: true,
+        source: NeuralInference,
+        category: Deduction,
+        emittedDuring: Orient,
+        causedBy: ["t-4", "t-6"],
+        proofHash: None,
+      },
+      {
+        id: "t-8",
+        content: "Autonomy ceiling: 0.0 <= 0.8 (human in loop)",
+        timestamp: 0.8,
+        confidence: 0.99,
+        validated: true,
+        source: AntiCrashGate,
+        category: Observation,
+        emittedDuring: Act,
+        causedBy: [],
+        proofHash: None,
+      },
+      {
+        id: "t-9",
+        content: "7 constraints active, 6 satisfied, 1 pending",
+        timestamp: 0.9,
+        confidence: 0.93,
+        validated: true,
+        source: NeuralInference,
+        category: Synthesis,
+        emittedDuring: Act,
+        causedBy: ["t-7", "t-8"],
+        proofHash: None,
+      },
     ],
     inferenceActive: true,
     nextTokenId: 10,
@@ -1416,7 +1445,6 @@ let init = (): model => {
   wiringInspector: WiringInspectorEngine.defaultState,
   // K9 and Contractile management panels
   k9Manager: K9Model.init,
-
   // Floor Raise campaign panels
   floorRaise: FloorRaiseEngine.defaultState,
   provenAdoption: ProvenAdoptionEngine.defaultState,

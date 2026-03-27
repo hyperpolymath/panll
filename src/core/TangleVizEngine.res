@@ -77,7 +77,11 @@ let strandCountFromWord = (generators: array<braidGenerator>): int => {
     2
   } else {
     let maxIndex = generators->Array.reduce(0, (acc, gen) => {
-      if gen.index > acc { gen.index } else { acc }
+      if gen.index > acc {
+        gen.index
+      } else {
+        acc
+      }
     })
     maxIndex + 1
   }
@@ -101,11 +105,7 @@ type exampleBraid = {
 let exampleBraids = (): array<exampleBraid> => [
   {
     name: "Trefoil",
-    generators: [
-      {index: 1, exponent: 1},
-      {index: 2, exponent: -1},
-      {index: 1, exponent: 1},
-    ],
+    generators: [{index: 1, exponent: 1}, {index: 2, exponent: -1}, {index: 1, exponent: 1}],
     description: "Simplest non-trivial knot (3₁)",
   },
   {
@@ -120,10 +120,7 @@ let exampleBraids = (): array<exampleBraid> => [
   },
   {
     name: "Hopf Link",
-    generators: [
-      {index: 1, exponent: 1},
-      {index: 1, exponent: 1},
-    ],
+    generators: [{index: 1, exponent: 1}, {index: 1, exponent: 1}],
     description: "Simplest non-trivial link (2²₁)",
   },
   {
@@ -287,16 +284,22 @@ let computeInvariant = (inv: knotInvariant, generators: array<braidGenerator>): 
 
   switch inv {
   | Writhe => {
-      let sign = if w > 0 { "+" } else if w < 0 { "-" } else { "" }
+      let sign = if w > 0 {
+        "+"
+      } else if w < 0 {
+        "-"
+      } else {
+        ""
+      }
       `w(K) = ${sign}${Int.toString(Math.Int.abs(w))} (sum of ${Int.toString(n)} crossing signs)`
     }
-  | Linking => {
-      if numComponents < 2 {
-        `lk = 0 (knot has 1 component; linking number is defined for links with >= 2 components)`
-      } else {
-        let lk = computeLinkingNumber(generators, strandCount)
-        `lk(L) = ${Int.toString(lk)} (${Int.toString(numComponents)}-component link, half the signed inter-component crossings)`
-      }
+  | Linking => if numComponents < 2 {
+      `lk = 0 (knot has 1 component; linking number is defined for links with >= 2 components)`
+    } else {
+      let lk = computeLinkingNumber(generators, strandCount)
+      `lk(L) = ${Int.toString(lk)} (${Int.toString(
+          numComponents,
+        )}-component link, half the signed inter-component crossings)`
     }
   | Jones => {
       // V(t) satisfies: t^{-1} V(L+) - t V(L-) = (t^{1/2} - t^{-1/2}) V(L0)
@@ -313,39 +316,43 @@ let computeInvariant = (inv: knotInvariant, generators: array<braidGenerator>): 
         } else {
           `(-t)^{${Int.toString(normExp)}/4}`
         }
-        `V(t) = ${normStr} * <K>(t) | w=${wStr}, n=${Int.toString(n)}, components=${compStr} | Skein: t^{-1}V(L+) - tV(L-) = (t^{1/2} - t^{-1/2})V(L0)`
+        `V(t) = ${normStr} * <K>(t) | w=${wStr}, n=${Int.toString(
+            n,
+          )}, components=${compStr} | Skein: t^{-1}V(L+) - tV(L-) = (t^{1/2} - t^{-1/2})V(L0)`
       }
     }
-  | Alexander => {
-      // Delta(t) satisfies: Delta(L+) - Delta(L-) = (t^{1/2} - t^{-1/2}) Delta(L0)
-      // For the unknot, Delta(t) = 1.
-      if n === 0 {
-        `\xce\x94(t) = 1 (unknot)`
-      } else {
-        let wStr = Int.toString(w)
-        `\xce\x94(t) via Burau matrix: ${Int.toString(strandCount)}x${Int.toString(strandCount)} reduced Burau rep, w=${wStr} | Skein: \xce\x94(L+) - \xce\x94(L-) = (t^{1/2} - t^{-1/2})\xce\x94(L0)`
-      }
+  | Alexander => // Delta(t) satisfies: Delta(L+) - Delta(L-) = (t^{1/2} - t^{-1/2}) Delta(L0)
+    // For the unknot, Delta(t) = 1.
+    if n === 0 {
+      `\xce\x94(t) = 1 (unknot)`
+    } else {
+      let wStr = Int.toString(w)
+      `\xce\x94(t) via Burau matrix: ${Int.toString(strandCount)}x${Int.toString(
+          strandCount,
+        )} reduced Burau rep, w=${wStr} | Skein: \xce\x94(L+) - \xce\x94(L-) = (t^{1/2} - t^{-1/2})\xce\x94(L0)`
     }
-  | Homfly => {
-      // P(a,z) satisfies: a P(L+) - a^{-1} P(L-) = z P(L0)
-      // For the unknot, P(a,z) = 1.
-      if n === 0 {
-        `P(a,z) = 1 (unknot)`
-      } else {
-        let posCount = generators->Array.filter(g => g.exponent > 0)->Array.length
-        let negCount = n - posCount
-        `P(a,z): ${Int.toString(n)} crossings (${Int.toString(posCount)}+, ${Int.toString(negCount)}-), ${Int.toString(numComponents)} components | Skein: aP(L+) - a^{-1}P(L-) = zP(L0)`
-      }
+  | Homfly => // P(a,z) satisfies: a P(L+) - a^{-1} P(L-) = z P(L0)
+    // For the unknot, P(a,z) = 1.
+    if n === 0 {
+      `P(a,z) = 1 (unknot)`
+    } else {
+      let posCount = generators->Array.filter(g => g.exponent > 0)->Array.length
+      let negCount = n - posCount
+      `P(a,z): ${Int.toString(n)} crossings (${Int.toString(posCount)}+, ${Int.toString(
+          negCount,
+        )}-), ${Int.toString(numComponents)} components | Skein: aP(L+) - a^{-1}P(L-) = zP(L0)`
     }
-  | Kauffman => {
-      // <K> = A<K_0> + A^{-1}<K_inf> for each crossing, where A = t^{-1/4}
-      // States: 2^n resolutions, each contributing A^{sigma} * (-A^2 - A^{-2})^{loops-1}
-      if n === 0 {
-        `<K> = 1 (unknot)`
-      } else {
-        let states = Math.Int.pow(2, ~exp=n)
-        `<K> = sum over ${Int.toString(states)} states of A^{sigma(s)}(-A^2 - A^{-2})^{|s|-1} | w=${Int.toString(w)}, normalize: f(K) = (-A^3)^{-w}<K>`
-      }
+  | Kauffman => // <K> = A<K_0> + A^{-1}<K_inf> for each crossing, where A = t^{-1/4}
+    // States: 2^n resolutions, each contributing A^{sigma} * (-A^2 - A^{-2})^{loops-1}
+    if n === 0 {
+      `<K> = 1 (unknot)`
+    } else {
+      let states = Math.Int.pow(2, ~exp=n)
+      `<K> = sum over ${Int.toString(
+          states,
+        )} states of A^{sigma(s)}(-A^2 - A^{-2})^{|s|-1} | w=${Int.toString(
+          w,
+        )}, normalize: f(K) = (-A^3)^{-w}<K>`
     }
   }
 }

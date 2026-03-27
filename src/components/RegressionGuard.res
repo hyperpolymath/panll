@@ -118,10 +118,7 @@ let renderSnapshotsTab = (state: regressionGuardState): Tea_Vdom.t<msg> => {
             },
             list{
               matchBadge(snap.matched),
-              span(
-                list{Attrs.class_("text-gray-300 flex-1 font-medium")},
-                list{text(snap.name)},
-              ),
+              span(list{Attrs.class_("text-gray-300 flex-1 font-medium")}, list{text(snap.name)}),
               span(
                 list{Attrs.class_("text-gray-500 text-xs font-mono")},
                 list{text(kindLabel(snap.kind))},
@@ -300,7 +297,9 @@ let renderSettingsTab = (state: regressionGuardState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("text-sm text-gray-400")},
         list{
-          text(`Filter: "${state.filter}" (${Int.toString(Array.length(state.snapshots))} visible)`),
+          text(
+            `Filter: "${state.filter}" (${Int.toString(Array.length(state.snapshots))} visible)`,
+          ),
         },
       ),
     },
@@ -364,10 +363,7 @@ let view = (state: regressionGuardState): Tea_Vdom.t<msg> => {
           },
           list{
             div(list{Attrs.class_("w-3 h-3 bg-amber-400 rounded-full animate-pulse")}, list{}),
-            span(
-              list{Attrs.class_("text-sm text-amber-300")},
-              list{text("Checking snapshots...")},
-            ),
+            span(list{Attrs.class_("text-sm text-amber-300")}, list{text("Checking snapshots...")}),
           },
         )
       } else {

@@ -44,7 +44,14 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "PanLL (formally eNSAID: Environment for NeSy-Agentic Integrated Development) is a neurosymbolic mission control interface. It combines symbolic reasoning (formal proofs, type systems, constraints) with neural computation (language models, learned heuristics) in a unified three-panel workspace. PanLL is designed for accessibility-first interaction, putting the operator in control of both symbolic and neural subsystems at all times.",
       category: GettingStarted,
       panelId: None,
-      keywords: ["welcome", "introduction", "ensaid", "neurosymbolic", "mission control", "getting started"],
+      keywords: [
+        "welcome",
+        "introduction",
+        "ensaid",
+        "neurosymbolic",
+        "mission control",
+        "getting started",
+      ],
     },
     /// Explains the fundamental three-panel layout.
     {
@@ -73,7 +80,6 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       panelId: None,
       keywords: ["dark start", "splash", "startup", "boot", "initialisation", "standard mode"],
     },
-
     // =========================================================================
     // Panel Guides
     // =========================================================================
@@ -85,7 +91,14 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "The ECHIDNA panel connects to the ECHIDNA theorem prover backend for formal verification. Use it to submit proof obligations, inspect proof states, and track verification progress. ECHIDNA handles dependent types, refinement types, and constructive proofs. The panel shows proof trees, goal states, and tactic suggestions. Proof results feed into the provenance system, raising the trust level of verified code to 'Verified'.",
       category: PanelGuide,
       panelId: Some(PanelSwitcherModel.PanelDatabases),
-      keywords: ["echidna", "theorem prover", "formal verification", "proofs", "dependent types", "tactics"],
+      keywords: [
+        "echidna",
+        "theorem prover",
+        "formal verification",
+        "proofs",
+        "dependent types",
+        "tactics",
+      ],
     },
     /// Guide for the TypeLL verification kernel panel.
     {
@@ -94,7 +107,14 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "TypeLL is PanLL's type checking and inference engine. It operates as a verification kernel that checks code against type-level specifications. The TypeLL panel shows type errors, inferred types, and refinement constraints in real time. It integrates with ECHIDNA for proofs that go beyond what the type system alone can verify. Use TypeLL to ensure your code satisfies its contracts before committing.",
       category: PanelGuide,
       panelId: Some(PanelSwitcherModel.PanelTypeLL),
-      keywords: ["typell", "type checking", "type inference", "verification", "kernel", "contracts"],
+      keywords: [
+        "typell",
+        "type checking",
+        "type inference",
+        "verification",
+        "kernel",
+        "contracts",
+      ],
     },
     /// Guide for the VeriSimDB simulation database panel.
     {
@@ -130,7 +150,14 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "Hypatia is the neurosymbolic security scanning system. The Hypatia panel shows scan results, vulnerability findings, and security posture across your repositories. Hypatia goes beyond traditional SAST/DAST by combining symbolic analysis (formal reasoning about code properties) with neural pattern recognition (learned vulnerability signatures). Findings are ranked by severity and include remediation suggestions.",
       category: PanelGuide,
       panelId: Some(PanelSwitcherModel.PanelHypatia),
-      keywords: ["hypatia", "security", "scanning", "vulnerabilities", "sast", "neurosymbolic security"],
+      keywords: [
+        "hypatia",
+        "security",
+        "scanning",
+        "vulnerabilities",
+        "sast",
+        "neurosymbolic security",
+      ],
     },
     /// Guide for the Aerie network analysis panel.
     {
@@ -166,9 +193,16 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "The Workspace panel gives you a high-level view of the current project state. It shows task progress, milestone tracking, blocker status, and the overall completion dashboard. The workspace integrates data from all other panels — verification status from ECHIDNA, test results from VeriSimDB, security findings from Hypatia — into a unified project health summary. The Task Barycentre indicator shows where the current work sits on the symbolic-neural spectrum.",
       category: PanelGuide,
       panelId: Some(PanelSwitcherModel.PanelWorkspace),
-      keywords: ["workspace", "project", "overview", "tasks", "milestones", "dashboard", "barycentre"],
+      keywords: [
+        "workspace",
+        "project",
+        "overview",
+        "tasks",
+        "milestones",
+        "dashboard",
+        "barycentre",
+      ],
     },
-
     // =========================================================================
     // Shortcuts
     // =========================================================================
@@ -180,9 +214,16 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "PanLL supports extensive keyboard navigation. Global shortcuts: Ctrl+/ (toggle help), Ctrl+K (command palette), Escape (close active overlay). Panel navigation: Ctrl+1 through Ctrl+9 (switch to panel by position), Ctrl+[ and Ctrl+] (previous/next panel). Within panels: Tab (cycle focus), Enter (activate), Arrow keys (navigate lists). The panel switcher responds to type-ahead filtering — just start typing a panel name. All shortcuts are customisable in Settings.",
       category: Shortcuts,
       panelId: None,
-      keywords: ["keyboard", "shortcuts", "hotkeys", "keybindings", "accessibility", "navigation", "ctrl"],
+      keywords: [
+        "keyboard",
+        "shortcuts",
+        "hotkeys",
+        "keybindings",
+        "accessibility",
+        "navigation",
+        "ctrl",
+      ],
     },
-
     // =========================================================================
     // FAQ
     // =========================================================================
@@ -203,7 +244,15 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "The Provenance bar is a horizontal stacked bar chart showing the trust composition of your codebase. Each segment represents a trust level: green for Verified (formally proven), blue for Human Reviewed, yellow for AI Assisted (human-reviewed AI code), orange for Unreviewed AI (needs review), and grey for Unknown. The bar updates in real time as code is verified, reviewed, or added. Click any segment to drill down into the specific files at that trust level. The goal is to minimise orange and grey segments.",
       category: Faq,
       panelId: Some(PanelSwitcherModel.PanelSecurity),
-      keywords: ["provenance", "bar", "trust level", "verified", "human reviewed", "ai assisted", "unreviewed"],
+      keywords: [
+        "provenance",
+        "bar",
+        "trust level",
+        "verified",
+        "human reviewed",
+        "ai assisted",
+        "unreviewed",
+      ],
     },
     /// How to change the PanLL colour palette.
     {
@@ -212,9 +261,17 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "PanLL supports multiple colour palettes for accessibility and preference. Open Settings (gear icon or Ctrl+,) and navigate to the Appearance section. Available palettes include the default neurosymbolic theme (dark with drift aura), a high-contrast mode for maximum readability, and several colour-blind-safe palettes (deuteranopia, protanopia, tritanopia). Each palette adjusts the drift aura colours, panel borders, and syntax highlighting to remain distinguishable. Changes apply immediately — no restart needed.",
       category: Faq,
       panelId: None,
-      keywords: ["colour", "color", "palette", "theme", "accessibility", "appearance", "settings", "contrast"],
+      keywords: [
+        "colour",
+        "color",
+        "palette",
+        "theme",
+        "accessibility",
+        "appearance",
+        "settings",
+        "contrast",
+      ],
     },
-
     // =========================================================================
     // Architecture
     // =========================================================================
@@ -226,7 +283,15 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "PanLL's core architecture models the relationship between symbolic and neural computation as a binary star system. Neither subsystem is primary — they co-orbit a shared barycentre, each influencing the other through gravitational coupling. The symbolic star provides formal guarantees (proofs, types, contracts). The neural star provides learned heuristics (pattern recognition, natural language understanding, probabilistic reasoning). Orbital stability measures how well these subsystems stay in sync. When they drift apart, the Drift Aura shifts colour to alert the operator.",
       category: Architecture,
       panelId: None,
-      keywords: ["binary star", "architecture", "symbolic", "neural", "co-orbital", "barycentre", "drift"],
+      keywords: [
+        "binary star",
+        "architecture",
+        "symbolic",
+        "neural",
+        "co-orbital",
+        "barycentre",
+        "drift",
+      ],
     },
     /// How the TEA update loop drives the PanLL UI.
     {
@@ -235,7 +300,16 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "PanLL's UI is driven by The Elm Architecture (TEA): a unidirectional data flow where the entire application state is a single immutable value. Every user action produces a message (Msg), which is processed by an update function to produce a new state and optional side-effect commands (Cmd). The view function renders the state to virtual DOM, and the runtime diffs and patches the real DOM. This architecture guarantees predictable state transitions, makes time-travel debugging possible, and eliminates an entire class of UI bugs related to shared mutable state.",
       category: Architecture,
       panelId: None,
-      keywords: ["tea", "elm architecture", "update loop", "unidirectional", "state", "msg", "cmd", "view"],
+      keywords: [
+        "tea",
+        "elm architecture",
+        "update loop",
+        "unidirectional",
+        "state",
+        "msg",
+        "cmd",
+        "view",
+      ],
     },
     /// How symbolic and neural systems integrate in PanLL.
     {
@@ -244,7 +318,15 @@ let allEntries = (): array<HelpModel.helpEntry> => {
       body: "PanLL integrates symbolic and neural computation at multiple levels. At the data level, VeriSimDB stores both formal proofs and neural predictions with unified provenance. At the reasoning level, ECHIDNA proofs can constrain neural outputs, and neural heuristics can guide proof search. At the UI level, the three-panel layout makes the symbolic-neural interaction visible and controllable. The Task Barycentre shows where each task sits on the spectrum. Contractiles enforce boundaries — for example, requiring that neural suggestions pass type checking before being presented to the operator.",
       category: Architecture,
       panelId: None,
-      keywords: ["neurosymbolic", "integration", "symbolic", "neural", "barycentre", "contractiles", "proofs"],
+      keywords: [
+        "neurosymbolic",
+        "integration",
+        "symbolic",
+        "neural",
+        "barycentre",
+        "contractiles",
+        "proofs",
+      ],
     },
   ]
 }

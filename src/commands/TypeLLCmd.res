@@ -11,7 +11,6 @@
 /// Unlike most panels which are self-contained, TypeLL commands are also called
 /// by other panels through TypeLLService — making TypeLL a cross-cutting concern.
 
-
 let hasDesktopRuntime = RuntimeBridge.hasDesktopRuntime
 
 /// GET helper for TypeLL direct fetch (bypasses backend invoke).
@@ -72,7 +71,12 @@ let check = (
     let p = if hasDesktopRuntime() {
       RuntimeBridge.invoke("typell_check", {"expression": expression, "context": ctx})
     } else {
-      fetchPost("/check", `{"expression":${JSON.stringifyAny(expression)->Option.getOr("\"\"")}, "context":${JSON.stringifyAny(ctx)->Option.getOr("{}")}}`)
+      fetchPost(
+        "/check",
+        `{"expression":${JSON.stringifyAny(expression)->Option.getOr(
+            "\"\"",
+          )}, "context":${JSON.stringifyAny(ctx)->Option.getOr("{}")}}`,
+      )
     }
     p
     ->Promise.then(result => {
@@ -121,7 +125,12 @@ let refine = (
     let p = if hasDesktopRuntime() {
       RuntimeBridge.invoke("typell_refine", {"spec": spec, "constraints": cons})
     } else {
-      fetchPost("/refine", `{"spec":${JSON.stringifyAny(spec)->Option.getOr("\"\"")}, "constraints":${JSON.stringifyAny(cons)->Option.getOr("[]")}}`)
+      fetchPost(
+        "/refine",
+        `{"spec":${JSON.stringifyAny(spec)->Option.getOr(
+            "\"\"",
+          )}, "constraints":${JSON.stringifyAny(cons)->Option.getOr("[]")}}`,
+      )
     }
     p
     ->Promise.then(result => {
@@ -235,10 +244,7 @@ let checkType = (
 
 /// Infer usage quantifiers (linear/affine/unrestricted) for an expression.
 /// POST /infer-usage — returns QTT quantifier annotations.
-let inferUsage = (
-  source: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let inferUsage = (source: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let body = TypeLLEngine.buildInferUsageBody(source)
     let p = if hasDesktopRuntime() {
@@ -261,10 +267,7 @@ let inferUsage = (
 
 /// Infer effects for an expression.
 /// POST /check-effects — returns effect list and purity status.
-let checkEffects = (
-  source: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkEffects = (source: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let body = TypeLLEngine.buildCheckEffectsBody(source)
     let p = if hasDesktopRuntime() {
@@ -287,10 +290,9 @@ let checkEffects = (
 
 /// Check dimensional consistency (for Eclexia's dimensional type system).
 /// POST /check-dimensional — validates unit/dimension annotations.
-let checkDimensional = (
-  source: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkDimensional = (source: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     let body = TypeLLEngine.buildCheckDimensionalBody(source)
     let p = if hasDesktopRuntime() {
@@ -313,10 +315,9 @@ let checkDimensional = (
 
 /// Generate proof obligations from dependent types in the source.
 /// POST /generate-obligations — extracts propositions that need proving.
-let generateProofObligation = (
-  source: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let generateProofObligation = (source: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     let body = TypeLLEngine.buildGenerateProofObligationBody(source)
     let p = if hasDesktopRuntime() {

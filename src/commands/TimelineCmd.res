@@ -24,10 +24,7 @@ let invoke = RuntimeBridge.invoke
 /// @param repoPath  Root path of the repository
 /// @param tagger    Callback receiving Ok(dbPath) or Error(message)
 /// @returns TEA command that initiates the connection
-let connect = (
-  repoPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let connect = (repoPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("timeline_connect", {"repoPath": repoPath})
     ->Promise.then(result => {
@@ -56,10 +53,9 @@ let connect = (
 /// @param repoPath  Root path of the repository
 /// @param tagger    Callback receiving Ok(snapshotJson) or Error(message)
 /// @returns TEA command that triggers snapshot capture
-let captureSnapshot = (
-  repoPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let captureSnapshot = (repoPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
   Tea_Cmd.call(callbacks => {
     invoke("timeline_capture_snapshot", {"repoPath": repoPath})
     ->Promise.then(result => {
@@ -82,10 +78,7 @@ let captureSnapshot = (
 /// @param repoPath  Root path of the repository
 /// @param tagger    Callback receiving Ok(snapshotsJson) or Error(message)
 /// @returns TEA command that loads the timeline history
-let loadHistory = (
-  repoPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadHistory = (repoPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("timeline_load_history", {"repoPath": repoPath})
     ->Promise.then(result => {
@@ -117,11 +110,14 @@ let queryRange = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("timeline_query_range", {
-      "repoPath": repoPath,
-      "startDate": startDate,
-      "endDate": endDate,
-    })
+    invoke(
+      "timeline_query_range",
+      {
+        "repoPath": repoPath,
+        "startDate": startDate,
+        "endDate": endDate,
+      },
+    )
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -150,10 +146,13 @@ let exportTimeline = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("timeline_export", {
-      "repoPath": repoPath,
-      "outputPath": outputPath,
-    })
+    invoke(
+      "timeline_export",
+      {
+        "repoPath": repoPath,
+        "outputPath": outputPath,
+      },
+    )
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()

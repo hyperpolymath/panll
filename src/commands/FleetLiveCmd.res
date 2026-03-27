@@ -13,7 +13,6 @@
 /// In browser-only mode (no desktop runtime), commands fall back to direct
 /// fetch() calls against the fleet server URL.
 
-
 let hasDesktopRuntime = RuntimeBridge.hasDesktopRuntime
 
 /// GET helper for fleet direct fetch (bypasses backend invoke).
@@ -136,8 +135,8 @@ let dispatchFinding = (
     } else {
       fetchPost(
         "/dispatch",
-        `{"finding_id":${JSON.stringifyAny(findingId)->Option.getOr("\"\"")},`
-        ++ `"bot_id":${JSON.stringifyAny(botId)->Option.getOr("\"\"")}}`,
+        `{"finding_id":${JSON.stringifyAny(findingId)->Option.getOr("\"\"")},` ++
+        `"bot_id":${JSON.stringifyAny(botId)->Option.getOr("\"\"")}}`,
       )
     }
     p
@@ -168,15 +167,11 @@ let checkReachable = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> =
     }
     p
     ->Promise.then(_result => {
-      callbacks.enqueue(
-        tagger(Ok(`{"reachable":true,"endpoint":"${ServiceEndpoints.fleet}"}`)),
-      )
+      callbacks.enqueue(tagger(Ok(`{"reachable":true,"endpoint":"${ServiceEndpoints.fleet}"}`)))
       Promise.resolve()
     })
     ->Promise.catch(_err => {
-      callbacks.enqueue(
-        tagger(Ok(`{"reachable":false,"endpoint":"${ServiceEndpoints.fleet}"}`)),
-      )
+      callbacks.enqueue(tagger(Ok(`{"reachable":false,"endpoint":"${ServiceEndpoints.fleet}"}`)))
       Promise.resolve()
     })
     ->ignore

@@ -30,22 +30,18 @@ let stateNode = (state: agentState, isCurrent: bool): Tea_Vdom.t<msg> => {
     "border-gray-700"
   }
   div(
-    list{Attrs.class_(`flex flex-col items-center p-3 rounded-lg border ${borderClass} ${bgColor} min-w-20`)},
     list{
-      span(
-        list{Attrs.class_("text-sm font-semibold")},
-        list{text(stateLabel(state))},
+      Attrs.class_(
+        `flex flex-col items-center p-3 rounded-lg border ${borderClass} ${bgColor} min-w-20`,
       ),
     },
+    list{span(list{Attrs.class_("text-sm font-semibold")}, list{text(stateLabel(state))})},
   )
 }
 
 /// Arrow connector between OODA states.
 let stateArrow: Tea_Vdom.t<msg> = {
-  span(
-    list{Attrs.class_("text-gray-600 text-lg self-center")},
-    list{text("->")},
-  )
+  span(list{Attrs.class_("text-gray-600 text-lg self-center")}, list{text("->")})
 }
 
 /// The full OODA state diagram showing all 4 states + Halted.
@@ -69,9 +65,7 @@ let oodaDiagram = (currentState: agentState): Tea_Vdom.t<msg> => {
       // Halted state (separate, below)
       div(
         list{Attrs.class_("flex items-center gap-2 mt-2")},
-        list{
-          stateNode(Halted, currentState == Halted),
-        },
+        list{stateNode(Halted, currentState == Halted)},
       ),
     },
   )
@@ -82,10 +76,7 @@ let oodaDiagram = (currentState: agentState): Tea_Vdom.t<msg> => {
 // ============================================================================
 
 /// A single session row in the left-hand session list.
-let sessionListItem = (
-  session: oodaSession,
-  isSelected: bool,
-): Tea_Vdom.t<msg> => {
+let sessionListItem = (session: oodaSession, isSelected: bool): Tea_Vdom.t<msg> => {
   let health = sessionHealth(session)
   let healthCls = healthColor(health)
   let selectedCls = if isSelected {
@@ -97,10 +88,7 @@ let sessionListItem = (
     list{Attrs.class_(`flex items-center gap-3 p-3 rounded border cursor-pointer ${selectedCls}`)},
     list{
       // Health indicator dot
-      span(
-        list{Attrs.class_(`w-2 h-2 rounded-full ${healthCls} shrink-0`)},
-        list{},
-      ),
+      span(list{Attrs.class_(`w-2 h-2 rounded-full ${healthCls} shrink-0`)}, list{}),
       // Agent name + state
       div(
         list{Attrs.class_("flex-1 min-w-0")},
@@ -146,10 +134,7 @@ let sessionDetailView = (detail: sessionDetail): Tea_Vdom.t<msg> => {
             list{Attrs.class_("text-lg font-semibold text-gray-100")},
             list{text(session.agentName)},
           ),
-          span(
-            list{Attrs.class_("text-xs text-gray-500 font-mono")},
-            list{text(session.id)},
-          ),
+          span(list{Attrs.class_("text-xs text-gray-500 font-mono")}, list{text(session.id)}),
         },
       ),
       // OODA state diagram
@@ -165,10 +150,7 @@ let sessionDetailView = (detail: sessionDetail): Tea_Vdom.t<msg> => {
                 list{Attrs.class_("text-xl font-bold font-mono text-gray-100")},
                 list{text(Int.toString(session.loopCount))},
               ),
-              span(
-                list{Attrs.class_("text-xs text-gray-500")},
-                list{text("Loops")},
-              ),
+              span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Loops")}),
             },
           ),
           div(
@@ -176,16 +158,9 @@ let sessionDetailView = (detail: sessionDetail): Tea_Vdom.t<msg> => {
             list{
               span(
                 list{Attrs.class_("text-xl font-bold font-mono text-gray-100")},
-                list{
-                  text(
-                    Float.toFixed(loopRate(detail), ~digits=2) ++ "/s",
-                  ),
-                },
+                list{text(Float.toFixed(loopRate(detail), ~digits=2) ++ "/s")},
               ),
-              span(
-                list{Attrs.class_("text-xs text-gray-500")},
-                list{text("Loop Rate")},
-              ),
+              span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Loop Rate")}),
             },
           ),
           div(
@@ -193,16 +168,9 @@ let sessionDetailView = (detail: sessionDetail): Tea_Vdom.t<msg> => {
             list{
               span(
                 list{Attrs.class_("text-xl font-bold font-mono text-gray-100")},
-                list{
-                  text(
-                    Float.toFixed(detail.avgLoopMs, ~digits=0) ++ "ms",
-                  ),
-                },
+                list{text(Float.toFixed(detail.avgLoopMs, ~digits=0) ++ "ms")},
               ),
-              span(
-                list{Attrs.class_("text-xs text-gray-500")},
-                list{text("Avg Loop")},
-              ),
+              span(list{Attrs.class_("text-xs text-gray-500")}, list{text("Avg Loop")}),
             },
           ),
         },
@@ -214,9 +182,7 @@ let sessionDetailView = (detail: sessionDetail): Tea_Vdom.t<msg> => {
           if session.state != Halted {
             button(
               list{
-                Attrs.class_(
-                  "px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-500",
-                ),
+                Attrs.class_("px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-500"),
               },
               list{text("Advance")},
             )
@@ -226,9 +192,7 @@ let sessionDetailView = (detail: sessionDetail): Tea_Vdom.t<msg> => {
           if session.state != Halted {
             button(
               list{
-                Attrs.class_(
-                  "px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-500",
-                ),
+                Attrs.class_("px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-500"),
               },
               list{text("Halt")},
             )
@@ -242,9 +206,7 @@ let sessionDetailView = (detail: sessionDetail): Tea_Vdom.t<msg> => {
       | Some(reason) =>
         div(
           list{
-            Attrs.class_(
-              "p-2 rounded bg-red-900/30 border border-red-500/40 text-xs text-red-400",
-            ),
+            Attrs.class_("p-2 rounded bg-red-900/30 border border-red-500/40 text-xs text-red-400"),
           },
           list{text("Halt reason: " ++ reason)},
         )
@@ -267,10 +229,7 @@ let view = (state: agentOodaState): Tea_Vdom.t<msg> => {
       div(
         list{Attrs.class_("w-64 flex flex-col gap-2 overflow-y-auto shrink-0")},
         list{
-          h2(
-            list{Attrs.class_("text-lg font-semibold mb-2")},
-            list{text("OODA Sessions")},
-          ),
+          h2(list{Attrs.class_("text-lg font-semibold mb-2")}, list{text("OODA Sessions")}),
           div(
             list{Attrs.class_("flex flex-col gap-1")},
             state.sessions

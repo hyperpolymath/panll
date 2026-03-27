@@ -28,7 +28,9 @@ let updateRepoLoader = (model: model, msg: repoLoaderMsg): (model, Tea_Cmd.t<msg
       {...model, repoLoader: {...rl, scanning: true, error: None}},
       Tea_Cmd.batch(list{
         RepoLoaderCmd.scan(path, result => RepoLoader(ScanResult(result))),
-        TypeLLService.checkConfigTypes(path, "repoloader", result => RepoLoader(TypeCheckResult(result))),
+        TypeLLService.checkConfigTypes(path, "repoloader", result => RepoLoader(
+          TypeCheckResult(result),
+        )),
       }),
     )
   | ScanResult(result) =>
@@ -51,19 +53,17 @@ let updateRepoLoader = (model: model, msg: repoLoaderMsg): (model, Tea_Cmd.t<msg
           // Push context to AI panel.
           Tea_Cmd.msg(Ai(BuildContext(repo.path))),
         )
-      | Error(e) => (
-          {...model, repoLoader: {...rl, scanning: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
+      | Error(e) => ({...model, repoLoader: {...rl, scanning: false, error: Some(e)}}, Tea_Cmd.none)
       }
-    | Error(e) => (
-        {...model, repoLoader: {...rl, scanning: false, error: Some(e)}},
-        Tea_Cmd.none,
-      )
+    | Error(e) => ({...model, repoLoader: {...rl, scanning: false, error: Some(e)}}, Tea_Cmd.none)
     }
   | ToggleSuggestion(panelName) => {
       let newSuggestions = rl.suggestions->Array.map(s =>
-        if s.panelName === panelName { {...s, enabled: !s.enabled} } else { s }
+        if s.panelName === panelName {
+          {...s, enabled: !s.enabled}
+        } else {
+          s
+        }
       )
       ({...model, repoLoader: {...rl, suggestions: newSuggestions, saved: false}}, Tea_Cmd.none)
     }
@@ -78,9 +78,7 @@ let updateRepoLoader = (model: model, msg: repoLoaderMsg): (model, Tea_Cmd.t<msg
         let jsonStr = "[" ++ Array.join(jsonEntries, ",") ++ "]"
         (
           model,
-          RepoLoaderCmd.savePanels(repo.path, jsonStr, result =>
-            RepoLoader(PanelsSaved(result))
-          ),
+          RepoLoaderCmd.savePanels(repo.path, jsonStr, result => RepoLoader(PanelsSaved(result))),
         )
       }
     | None => ({...model, repoLoader: {...rl, error: Some("No repo loaded")}}, Tea_Cmd.none)
@@ -90,10 +88,7 @@ let updateRepoLoader = (model: model, msg: repoLoaderMsg): (model, Tea_Cmd.t<msg
     | Ok(_) => ({...model, repoLoader: {...rl, saved: true, error: None}}, Tea_Cmd.none)
     | Error(e) => ({...model, repoLoader: {...rl, error: Some(e)}}, Tea_Cmd.none)
     }
-  | LoadRecent => (
-      model,
-      RepoLoaderCmd.listRecent(result => RepoLoader(RecentLoaded(result))),
-    )
+  | LoadRecent => (model, RepoLoaderCmd.listRecent(result => RepoLoader(RecentLoaded(result))))
   | RecentLoaded(result) =>
     switch result {
     | Ok(jsonStr) => {
@@ -106,19 +101,21 @@ let updateRepoLoader = (model: model, msg: repoLoaderMsg): (model, Tea_Cmd.t<msg
       model,
       RepoLoaderCmd.searchFarm(query, result => RepoLoader(FarmSearchResult(result))),
     )
-  | FarmSearchResult(_result) =>
-    // Farm search results are displayed directly — handled in UI.
+  | FarmSearchResult(_result) => // Farm search results are displayed directly — handled in UI.
     (model, Tea_Cmd.none)
   | SetRepoSearchText(text) => ({...model, repoLoader: {...rl, searchText: text}}, Tea_Cmd.none)
   | SetRepoCategory(cat) => ({...model, repoLoader: {...rl, activeCategory: cat}}, Tea_Cmd.none)
   | TypeCheckResult(Ok(json)) => {
       let checks = model.typell.panelTypeChecks
       Dict.set(checks, "repoloader", json)
-      let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1, panelTypeChecks: checks}
+      let newTypell = {
+        ...model.typell,
+        queriesServed: model.typell.queriesServed + 1,
+        panelTypeChecks: checks,
+      }
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
-  | TypeCheckResult(Error(_)) =>
-    // TypeLL unavailable — degrade gracefully
+  | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
     (model, Tea_Cmd.none)
   }
 }

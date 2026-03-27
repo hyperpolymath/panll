@@ -40,12 +40,7 @@ let config: languageForgeModuleConfig = {
   name: "Language Forge",
   version: "0.1.0",
   description: "Monitor and develop the 14 nextgen-languages portfolio — scores, phases, WASM readiness",
-  capabilities: [
-    LanguageDashboard,
-    CompilationStatus,
-    MoscowView,
-    WasmTargetTracker,
-  ],
+  capabilities: [LanguageDashboard, CompilationStatus, MoscowView, WasmTargetTracker],
   icon: Some("hammer"),
 }
 

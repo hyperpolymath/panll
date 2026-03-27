@@ -47,13 +47,23 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
           div(
             list{Attrs.class_("flex items-center gap-3")},
             list{
-              h2(list{Attrs.class_("text-lg font-bold text-cyan-300")}, list{text("Typing Bridge")}),
+              h2(
+                list{Attrs.class_("text-lg font-bold text-cyan-300")},
+                list{text("Typing Bridge")},
+              ),
               span(
                 list{Attrs.class_("text-xs text-gray-400")},
-                list{text(Int.toString(satisfiedCount) ++ "/" ++ Int.toString(totalCount) ++ " satisfied")},
+                list{
+                  text(
+                    Int.toString(satisfiedCount) ++ "/" ++ Int.toString(totalCount) ++ " satisfied",
+                  ),
+                },
               ),
               if state.running {
-                span(list{Attrs.class_("text-xs text-yellow-400 animate-pulse")}, list{text("Checking...")})
+                span(
+                  list{Attrs.class_("text-xs text-yellow-400 animate-pulse")},
+                  list{text("Checking...")},
+                )
               } else {
                 Tea_Html.noNode
               },
@@ -75,8 +85,11 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Constraints { "bg-cyan-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Constraints {
+                  "bg-cyan-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(TypingBridge(SetTbTab(Constraints))),
             },
@@ -85,8 +98,11 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Inference { "bg-cyan-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Inference {
+                  "bg-cyan-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(TypingBridge(SetTbTab(Inference))),
             },
@@ -95,8 +111,11 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Editor { "bg-cyan-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Editor {
+                  "bg-cyan-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(TypingBridge(SetTbTab(Editor))),
             },
@@ -105,8 +124,11 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
           button(
             list{
               Attrs.class_(
-                "px-3 py-1 text-xs rounded " ++
-                if state.activeTab == Diagnostics { "bg-cyan-700 text-white" } else { "bg-gray-800 text-gray-400 hover:text-gray-200" },
+                "px-3 py-1 text-xs rounded " ++ if state.activeTab == Diagnostics {
+                  "bg-cyan-700 text-white"
+                } else {
+                  "bg-gray-800 text-gray-400 hover:text-gray-200"
+                },
               ),
               Events.onClick(TypingBridge(SetTbTab(Diagnostics))),
             },
@@ -118,7 +140,11 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
       switch state.error {
       | Some(err) =>
         div(
-          list{Attrs.class_("mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center")},
+          list{
+            Attrs.class_(
+              "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200 flex justify-between items-center",
+            ),
+          },
           list{
             text(err),
             button(
@@ -146,14 +172,28 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("flex items-center gap-3 py-2 border-b border-gray-800/50")},
                   list{
                     span(
-                      list{Attrs.class_("w-3 h-3 rounded-full " ++ if c.satisfied { "bg-green-500" } else { "bg-red-500" })},
+                      list{
+                        Attrs.class_(
+                          "w-3 h-3 rounded-full " ++ if c.satisfied {
+                            "bg-green-500"
+                          } else {
+                            "bg-red-500"
+                          },
+                        ),
+                      },
                       list{},
                     ),
                     div(
                       list{Attrs.class_("flex-1 min-w-0")},
                       list{
-                        div(list{Attrs.class_("text-sm font-mono text-gray-200")}, list{text(c.name)}),
-                        div(list{Attrs.class_("text-xs text-gray-500")}, list{text(c.targetPath ++ " : " ++ c.typeExpression)}),
+                        div(
+                          list{Attrs.class_("text-sm font-mono text-gray-200")},
+                          list{text(c.name)},
+                        ),
+                        div(
+                          list{Attrs.class_("text-xs text-gray-500")},
+                          list{text(c.targetPath ++ " : " ++ c.typeExpression)},
+                        ),
                       },
                     ),
                     severityBadge(c.severity),
@@ -173,18 +213,32 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
                     div(
                       list{Attrs.class_("flex items-center gap-3")},
                       list{
-                        span(list{Attrs.class_("text-sm font-mono text-gray-200")}, list{text(r.targetPath)}),
+                        span(
+                          list{Attrs.class_("text-sm font-mono text-gray-200")},
+                          list{text(r.targetPath)},
+                        ),
                         inferenceStatusBadge(r.status),
-                        span(list{Attrs.class_("text-xs text-gray-500")}, list{text(Float.toFixed(r.inferenceTimeMs, ~digits=1) ++ "ms")}),
+                        span(
+                          list{Attrs.class_("text-xs text-gray-500")},
+                          list{text(Float.toFixed(r.inferenceTimeMs, ~digits=1) ++ "ms")},
+                        ),
                       },
                     ),
-                    div(list{Attrs.class_("text-xs text-cyan-400 font-mono mt-1")}, list{text(r.inferredType)}),
+                    div(
+                      list{Attrs.class_("text-xs text-cyan-400 font-mono mt-1")},
+                      list{text(r.inferredType)},
+                    ),
                     if Array.length(r.suggestions) > 0 {
                       div(
                         list{Attrs.class_("flex flex-wrap gap-1 mt-1")},
                         r.suggestions
                         ->Array.map(s =>
-                          span(list{Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-gray-400 rounded")}, list{text(s)})
+                          span(
+                            list{
+                              Attrs.class_("px-2 py-0.5 text-xs bg-gray-800 text-gray-400 rounded"),
+                            },
+                            list{text(s)},
+                          )
                         )
                         ->List.fromArray,
                       )
@@ -205,17 +259,34 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("flex items-center gap-3 py-2 border-b border-gray-800/50")},
                   list{
                     span(
-                      list{Attrs.class_("w-2 h-2 rounded-full " ++ if f.valid { "bg-green-500" } else { "bg-red-500" })},
+                      list{
+                        Attrs.class_(
+                          "w-2 h-2 rounded-full " ++ if f.valid {
+                            "bg-green-500"
+                          } else {
+                            "bg-red-500"
+                          },
+                        ),
+                      },
                       list{},
                     ),
                     div(
                       list{Attrs.class_("flex-1 min-w-0")},
                       list{
-                        div(list{Attrs.class_("text-sm font-mono text-gray-300")}, list{text(f.path)}),
-                        div(list{Attrs.class_("text-xs text-gray-500")}, list{text("Expected: " ++ f.expectedType)}),
+                        div(
+                          list{Attrs.class_("text-sm font-mono text-gray-300")},
+                          list{text(f.path)},
+                        ),
+                        div(
+                          list{Attrs.class_("text-xs text-gray-500")},
+                          list{text("Expected: " ++ f.expectedType)},
+                        ),
                       },
                     ),
-                    span(list{Attrs.class_("text-sm font-mono text-cyan-300")}, list{text(f.currentValue)}),
+                    span(
+                      list{Attrs.class_("text-sm font-mono text-cyan-300")},
+                      list{text(f.currentValue)},
+                    ),
                     switch f.validationMessage {
                     | Some(msg_text) =>
                       span(list{Attrs.class_("text-xs text-red-400")}, list{text(msg_text)})
@@ -234,8 +305,10 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
                   list{Attrs.class_("text-xs text-gray-500 mb-3")},
                   list{
                     text(
-                      Int.toString(totalCount) ++ " constraints, " ++
-                      Int.toString(satisfiedCount) ++ " satisfied, " ++
+                      Int.toString(totalCount) ++
+                      " constraints, " ++
+                      Int.toString(satisfiedCount) ++
+                      " satisfied, " ++
                       Int.toString(totalCount - satisfiedCount) ++ " violations",
                     ),
                   },
@@ -246,17 +319,30 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
                   ->Array.filter(c => !c.satisfied)
                   ->Array.map(c =>
                     div(
-                      list{Attrs.class_("px-3 py-2 mb-2 bg-red-900/30 border border-red-800/50 rounded")},
+                      list{
+                        Attrs.class_(
+                          "px-3 py-2 mb-2 bg-red-900/30 border border-red-800/50 rounded",
+                        ),
+                      },
                       list{
                         div(
                           list{Attrs.class_("flex items-center gap-2")},
                           list{
                             severityBadge(c.severity),
-                            span(list{Attrs.class_("text-sm text-red-200 font-mono")}, list{text(c.name)}),
+                            span(
+                              list{Attrs.class_("text-sm text-red-200 font-mono")},
+                              list{text(c.name)},
+                            ),
                           },
                         ),
-                        div(list{Attrs.class_("text-xs text-gray-400 mt-1")}, list{text(c.description)}),
-                        div(list{Attrs.class_("text-xs text-gray-500 mt-1")}, list{text(c.targetPath ++ " : " ++ c.typeExpression)}),
+                        div(
+                          list{Attrs.class_("text-xs text-gray-400 mt-1")},
+                          list{text(c.description)},
+                        ),
+                        div(
+                          list{Attrs.class_("text-xs text-gray-500 mt-1")},
+                          list{text(c.targetPath ++ " : " ++ c.typeExpression)},
+                        ),
                       },
                     )
                   )

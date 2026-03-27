@@ -69,11 +69,10 @@ let isSignificant = (msg: msg): bool => {
 
 /// Push a model snapshot onto the undo stack, clearing the redo stack.
 /// If the undo stack exceeds `maxHistory`, the oldest entry is dropped.
-let pushUndo = (
-  undoStack: array<'a>,
-  _redoStack: array<'a>,
-  snapshot: 'a,
-): (array<'a>, array<'a>) => {
+let pushUndo = (undoStack: array<'a>, _redoStack: array<'a>, snapshot: 'a): (
+  array<'a>,
+  array<'a>,
+) => {
   let newUndo = Array.concat(undoStack, [snapshot])
   // Trim to max history: keep only the most recent entries.
   let trimmed = if Array.length(newUndo) > maxHistory {
@@ -88,11 +87,11 @@ let pushUndo = (
 /// Pop the most recent snapshot from the undo stack. Returns the snapshot
 /// to restore, the new undo stack, and the updated redo stack (which gets
 /// the current state pushed onto it).
-let undo = (
-  undoStack: array<'a>,
-  redoStack: array<'a>,
-  currentState: 'a,
-): option<('a, array<'a>, array<'a>)> => {
+let undo = (undoStack: array<'a>, redoStack: array<'a>, currentState: 'a): option<(
+  'a,
+  array<'a>,
+  array<'a>,
+)> => {
   let len = Array.length(undoStack)
   if len === 0 {
     None
@@ -110,11 +109,11 @@ let undo = (
 /// Pop the most recent snapshot from the redo stack. Returns the snapshot
 /// to restore, the updated undo stack (which gets the current state pushed),
 /// and the new redo stack.
-let redo = (
-  undoStack: array<'a>,
-  redoStack: array<'a>,
-  currentState: 'a,
-): option<('a, array<'a>, array<'a>)> => {
+let redo = (undoStack: array<'a>, redoStack: array<'a>, currentState: 'a): option<(
+  'a,
+  array<'a>,
+  array<'a>,
+)> => {
   let len = Array.length(redoStack)
   if len === 0 {
     None

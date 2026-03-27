@@ -40,12 +40,12 @@ type updateStatus =
 
 /// Component category — groups components in the UI.
 type componentCategory =
-  | BaseOS         // rpm-ostree
-  | Desktop        // Flatpak
-  | Toolchain      // asdf-managed language runtimes
+  | BaseOS // rpm-ostree
+  | Desktop // Flatpak
+  | Toolchain // asdf-managed language runtimes
   | PackageManager // cargo, mix, opam, etc.
-  | Runtime        // deno, bun
-  | Firmware       // fwupd
+  | Runtime // deno, bun
+  | Firmware // fwupd
 
 /// A single updatable component.
 type component = {
@@ -71,13 +71,13 @@ type updateSummary = {
 
 /// Actions available for the update panel.
 type updateAction =
-  | CheckAll            // Scan all components for available updates
+  | CheckAll // Scan all components for available updates
   | CheckComponent(string) // Scan a single component by ID
-  | UpdateAll           // Apply all available updates
+  | UpdateAll // Apply all available updates
   | UpdateComponent(string) // Apply update to a single component
   | UpdateCategory(componentCategory) // Update all in a category
-  | ViewLogs           // Show update log history
-  | ViewSummary        // Show last update summary
+  | ViewLogs // Show update log history
+  | ViewSummary // Show last update summary
 
 /// Tauri command names for the Rust backend.
 /// Each maps to a command in src-tauri/src/system_update/commands.rs
@@ -125,12 +125,12 @@ let moduleConfig = {
   "clade": "infrastructure/system-maintenance",
   "icon": "system-software-update",
   "capabilities": [
-    "component-listing",    // List all updatable components
-    "version-checking",     // Check current vs latest versions
-    "update-execution",     // Apply updates
-    "log-history",          // View past update logs
-    "category-management",  // Group and filter by category
-    "asdf-integration",     // Deep asdf plugin management
+    "component-listing", // List all updatable components
+    "version-checking", // Check current vs latest versions
+    "update-execution", // Apply updates
+    "log-history", // View past update logs
+    "category-management", // Group and filter by category
+    "asdf-integration", // Deep asdf plugin management
   ],
 }
 
@@ -161,11 +161,11 @@ let categorySortOrder = (cat: componentCategory) => {
 /// Status badge color for the UI.
 let statusColor = (status: updateStatus) => {
   switch status {
-  | UpToDate => "#2ecc71"           // green
+  | UpToDate => "#2ecc71" // green
   | UpdateAvailable(_) => "#f39c12" // amber
-  | Updating => "#3498db"           // blue
-  | Failed(_) => "#e74c3c"          // red
-  | Unknown => "#95a5a6"            // grey
+  | Updating => "#3498db" // blue
+  | Failed(_) => "#e74c3c" // red
+  | Unknown => "#95a5a6" // grey
   }
 }
 

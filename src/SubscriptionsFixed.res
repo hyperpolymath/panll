@@ -46,10 +46,26 @@ let subscriptions = (model: model): Tea_Sub.t<msg> => {
       if model.keybindings.recording {
         let modifiers = {
           let mods = []
-          let mods = if evt.ctrlKey { Array.concat(mods, [KeybindingsModel.Ctrl]) } else { mods }
-          let mods = if evt.shiftKey { Array.concat(mods, [KeybindingsModel.Shift]) } else { mods }
-          let mods = if evt.altKey { Array.concat(mods, [KeybindingsModel.Alt]) } else { mods }
-          let mods = if evt.metaKey { Array.concat(mods, [KeybindingsModel.Meta]) } else { mods }
+          let mods = if evt.ctrlKey {
+            Array.concat(mods, [KeybindingsModel.Ctrl])
+          } else {
+            mods
+          }
+          let mods = if evt.shiftKey {
+            Array.concat(mods, [KeybindingsModel.Shift])
+          } else {
+            mods
+          }
+          let mods = if evt.altKey {
+            Array.concat(mods, [KeybindingsModel.Alt])
+          } else {
+            mods
+          }
+          let mods = if evt.metaKey {
+            Array.concat(mods, [KeybindingsModel.Meta])
+          } else {
+            mods
+          }
           mods
         }
         Keybindings(RecordKey({modifiers, key: evt.key}))
@@ -69,7 +85,6 @@ let subscriptions = (model: model): Tea_Sub.t<msg> => {
         }
       }
     }),
-
     // Update vexation index periodically (every 2 seconds).
     if model.paneN.inferenceActive {
       Tea_Time.every(2000.0, _time => {
@@ -84,9 +99,7 @@ let subscriptions = (model: model): Tea_Sub.t<msg> => {
 /// Subscription for when inference is active — more frequent vexation polling.
 let inferenceSubscriptions = (model: model): Tea_Sub.t<msg> => {
   if model.paneN.inferenceActive {
-    Tea_Sub.batch(list{
-      Tea_Time.every(500.0, _time => Vexometer(RequestVexationIndex)),
-    })
+    Tea_Sub.batch(list{Tea_Time.every(500.0, _time => Vexometer(RequestVexationIndex))})
   } else {
     Tea_Sub.none
   }
@@ -98,13 +111,9 @@ let inferenceSubscriptions = (model: model): Tea_Sub.t<msg> => {
 let neurosymbolicSubscriptions = (_model: model): Tea_Sub.t<msg> => {
   Tea_Sub.batch(list{
     // ECHIDNA proof progress → feed into proof session state.
-    GossamerEvents.onEchidnaProgress(payload =>
-      Echidna(ProofResult(Ok(payload)))
-    ),
+    GossamerEvents.onEchidnaProgress(payload => Echidna(ProofResult(Ok(payload)))),
     // ECHIDNA tactic suggestions → populate suggestion ribbon.
-    GossamerEvents.onEchidnaTactics(payload =>
-      Echidna(TacticSuggestionsLoaded(Ok(payload)))
-    ),
+    GossamerEvents.onEchidnaTactics(payload => Echidna(TacticSuggestionsLoaded(Ok(payload)))),
     // Tentacles agent phase changes → advance OODA indicators.
     // Payload expected as "agentId:phaseId" string from FFI.
     GossamerEvents.onTentaclesPhaseChange(payload => {
@@ -130,31 +139,26 @@ let neurosymbolicSubscriptions = (_model: model): Tea_Sub.t<msg> => {
       Tentacles(AgentPhaseAdvanced(agentId, phase))
     }),
     // Tentacles agent broadcasts → deliver as reasoning share.
-    GossamerEvents.onTentaclesBroadcast(payload =>
-      Tentacles(BroadcastFromAgent(Red, ReasoningShare({
-        agent: Red,
-        phase: Observe,
-        summary: payload,
-        detail: None,
-        timestamp: 0.0,
-      })))
-    ),
+    GossamerEvents.onTentaclesBroadcast(payload => Tentacles(
+      BroadcastFromAgent(
+        Red,
+        ReasoningShare({
+          agent: Red,
+          phase: Observe,
+          summary: payload,
+          detail: None,
+          timestamp: 0.0,
+        }),
+      ),
+    )),
     // VeriSimDB drift alerts → refresh drift display.
-    GossamerEvents.onVeriSimDBDrift(payload =>
-      VeriSimDB(DriftLoaded(Ok(payload)))
-    ),
+    GossamerEvents.onVeriSimDBDrift(payload => VeriSimDB(DriftLoaded(Ok(payload)))),
     // Hypatia neural network status → refresh network grid.
-    GossamerEvents.onHypatiaStatus(payload =>
-      Hypatia(ScansLoaded(Ok(payload)))
-    ),
+    GossamerEvents.onHypatiaStatus(payload => Hypatia(ScansLoaded(Ok(payload)))),
     // Governance signals → Anti-Crash intervention request.
-    GossamerEvents.onGovernanceSignal(payload =>
-      AntiCrash(RequestOperatorIntervention(payload))
-    ),
+    GossamerEvents.onGovernanceSignal(payload => AntiCrash(RequestOperatorIntervention(payload))),
     // AI streaming chunks → feed into AI panel streaming state machine.
-    GossamerEvents.onAiStreamChunk(payload =>
-      Ai(AiStreamChunkReceived(payload))
-    ),
+    GossamerEvents.onAiStreamChunk(payload => Ai(AiStreamChunkReceived(payload))),
   })
 }
 
@@ -174,18 +178,20 @@ let tokenDripFeed = (model: model): Tea_Sub.t<msg> => {
         }
         let tokenContent = "[" ++ phaseLabel ++ "] Heartbeat @ " ++ Float.toString(time)
         let tokenId = "t-" ++ Int.toString(model.paneN.nextTokenId)
-        PaneN(ReceiveToken({
-          id: tokenId,
-          content: tokenContent,
-          timestamp: time,
-          confidence: 0.5,
-          validated: false,
-          source: NeuralInference,
-          category: Observation,
-          emittedDuring: model.paneN.agency.phase,
-          causedBy: model.paneN.activeCausalChain,
-          proofHash: None,
-        }))
+        PaneN(
+          ReceiveToken({
+            id: tokenId,
+            content: tokenContent,
+            timestamp: time,
+            confidence: 0.5,
+            validated: false,
+            source: NeuralInference,
+            category: Observation,
+            emittedDuring: model.paneN.agency.phase,
+            causedBy: model.paneN.activeCausalChain,
+            proofHash: None,
+          }),
+        )
       }),
     })
   } else {
@@ -207,10 +213,12 @@ let oodaPhaseCycling = (model: model): Tea_Sub.t<msg> => {
         | Decide => Act
         | Act => Observe
         }
-        PaneN(UpdateAgency({
-          ...model.paneN.agency,
-          phase: nextPhase,
-        }))
+        PaneN(
+          UpdateAgency({
+            ...model.paneN.agency,
+            phase: nextPhase,
+          }),
+        )
       }),
     })
   } else {
@@ -231,9 +239,7 @@ let watcherSubscriptions = (_model: model): Tea_Sub.t<msg> => {
       }
     }),
     // Watcher errors → Observatory activity log
-    GossamerEvents.onWatcherError(payload =>
-      Watcher(WatcherResult(Error(payload)))
-    ),
+    GossamerEvents.onWatcherError(payload => Watcher(WatcherResult(Error(payload)))),
   })
 }
 

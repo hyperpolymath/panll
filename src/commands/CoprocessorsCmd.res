@@ -7,9 +7,7 @@
 let invoke = RuntimeBridge.invoke
 
 /// Read metrics for all coprocessor backends.
-let readMetrics = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readMetrics = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("read_coprocessor_metrics", {"_": true})
     ->Promise.then(result => {
@@ -25,9 +23,7 @@ let readMetrics = (
 }
 
 /// Read the coprocessor call log.
-let readCallLog = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readCallLog = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("read_coprocessor_call_log", {"_": true})
     ->Promise.then(result => {
@@ -43,9 +39,7 @@ let readCallLog = (
 }
 
 /// Read the heatmap data (call frequency over time).
-let readHeatmap = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let readHeatmap = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("read_coprocessor_heatmap", {"_": true})
     ->Promise.then(result => {
@@ -101,9 +95,7 @@ let queryComputeEngine = (
 }
 
 /// Discover available compute devices from all engines.
-let discoverDevices = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let discoverDevices = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("discover_compute_devices", {"_": true})
     ->Promise.then(result => {
@@ -139,9 +131,7 @@ let dispatchLocal = (
 }
 
 /// Check local FFI availability — is the .so loaded? (Phase 2).
-let checkFfiStatus = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let checkFfiStatus = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("coprocessor_check_ffi", {"_": true})
     ->Promise.then(result => {
@@ -157,9 +147,7 @@ let checkFfiStatus = (
 }
 
 /// Benchmark local compute — run standard test suite (Phase 2).
-let benchmarkLocal = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let benchmarkLocal = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("coprocessor_benchmark", {"_": true})
     ->Promise.then(result => {
@@ -176,9 +164,7 @@ let benchmarkLocal = (
 
 /// Phase 2: Load the Zig FFI shared library for local GPU/CPU dispatch.
 /// Returns JSON with load status, available devices, and library version.
-let loadLocalFfi = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let loadLocalFfi = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("coprocessor_load_ffi", {"_": true})
     ->Promise.then(result => {
@@ -194,9 +180,7 @@ let loadLocalFfi = (
 }
 
 /// Phase 2: Query local system resources (CPU utilisation, GPU memory).
-let queryLocalResources = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let queryLocalResources = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("coprocessor_local_resources", {"_": true})
     ->Promise.then(result => {

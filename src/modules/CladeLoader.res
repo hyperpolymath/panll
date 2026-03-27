@@ -150,10 +150,9 @@ let fromScanResult = (jsonStr: string): array<cladeEntry> =>
 /// Merge file-loaded clades with built-in clades. File-loaded clades take
 /// precedence over built-ins with the same ID. Built-ins without a matching
 /// file are retained as fallbacks.
-let mergeWithBuiltins = (
-  loaded: array<cladeEntry>,
-  builtins: array<cladeEntry>,
-): array<cladeEntry> => {
+let mergeWithBuiltins = (loaded: array<cladeEntry>, builtins: array<cladeEntry>): array<
+  cladeEntry,
+> => {
   let loadedIds = loaded->Array.map(c => c.id)
   let uniqueBuiltins = builtins->Array.filter(b => !(loadedIds->Array.some(id => id === b.id)))
   Array.concat(loaded, uniqueBuiltins)

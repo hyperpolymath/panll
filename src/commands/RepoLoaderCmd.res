@@ -10,10 +10,7 @@ let invoke = RuntimeBridge.invoke
 let openDialog = RuntimeBridge.Dialog.openDialog
 
 /// Scan a repository directory and return info + panel suggestions.
-let scan = (
-  repoPath: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let scan = (repoPath: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("repoloader_scan", {"repoPath": repoPath})
     ->Promise.then(result => {
@@ -49,9 +46,7 @@ let savePanels = (
 }
 
 /// List recently loaded repositories.
-let listRecent = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let listRecent = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("repoloader_list_recent", ())
     ->Promise.then(result => {
@@ -67,10 +62,7 @@ let listRecent = (
 }
 
 /// Search the git-private-farm for repos matching a query.
-let searchFarm = (
-  query: string,
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let searchFarm = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     invoke("repoloader_search_farm", {"query": query})
     ->Promise.then(result => {
@@ -86,19 +78,15 @@ let searchFarm = (
 }
 
 /// Open a directory picker dialog for the user to select a repo.
-let pickDirectory = (
-  tagger: result<string, string> => 'msg,
-): Tea_Cmd.t<'msg> => {
+let pickDirectory = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let options: JSON.t = %raw(`({ directory: true, multiple: false, title: "Select Repository" })`)
     openDialog(options)
     ->Promise.then(result => {
       switch Nullable.toOption(result) {
-      | Some(value) => {
-          switch JSON.Classify.classify(value) {
-          | String(path) => callbacks.enqueue(tagger(Ok(path)))
-          | _ => callbacks.enqueue(tagger(Error("Unexpected dialog result type")))
-          }
+      | Some(value) => switch JSON.Classify.classify(value) {
+        | String(path) => callbacks.enqueue(tagger(Ok(path)))
+        | _ => callbacks.enqueue(tagger(Error("Unexpected dialog result type")))
         }
       | None => callbacks.enqueue(tagger(Error("No directory selected")))
       }

@@ -21,17 +21,17 @@
 /// Each level strictly subsumes the previous — once you ratchet up,
 /// the linter enforces the new minimum.
 type typeSafetyLevel =
-  | L0_Unsafe        // Raw string queries, no checking
-  | L1_Parsed        // Syntactically valid VQL
-  | L2_SchemaBound   // All tables/columns resolve against schema
-  | L3_TypeCompat    // Expression types are compatible (no int = string)
-  | L4_NullSafe      // Nullable columns handled explicitly
+  | L0_Unsafe // Raw string queries, no checking
+  | L1_Parsed // Syntactically valid VQL
+  | L2_SchemaBound // All tables/columns resolve against schema
+  | L3_TypeCompat // Expression types are compatible (no int = string)
+  | L4_NullSafe // Nullable columns handled explicitly
   | L5_InjectionProof // No string interpolation in query positions
-  | L6_ResultTyped   // Return type fully determined at compile time
+  | L6_ResultTyped // Return type fully determined at compile time
   | L7_CardinalitySafe // Cardinality bounds proven (no unbounded scans)
   | L8_EffectTracked // Side effects (writes, locks) declared and tracked
-  | L9_TemporalSafe  // Temporal consistency (no future reads, no stale joins)
-  | L10_LinearSafe   // Linear resource usage (exactly-once consumption proven)
+  | L9_TemporalSafe // Temporal consistency (no future reads, no stale joins)
+  | L10_LinearSafe // Linear resource usage (exactly-once consumption proven)
 
 /// Metadata about a safety level — used for UI display and narratives.
 type levelMeta = {
@@ -40,8 +40,8 @@ type levelMeta = {
   shortName: string,
   description: string,
   glyph: string,
-  colour: string,     // Tailwind colour class
-  bgColour: string,   // Tailwind bg class
+  colour: string, // Tailwind colour class
+  bgColour: string, // Tailwind bg class
   proverRequired: bool, // Whether this level needs ECHIDNA prover dispatch
 }
 
@@ -51,23 +51,23 @@ type levelMeta = {
 
 /// Lint rule severity — determines how the linter treats violations.
 type lintSeverity =
-  | LintError    // Query will not execute
-  | LintWarning  // Query may produce unexpected results
-  | LintInfo     // Suggestion for improvement
-  | LintHint     // Style/convention recommendation
+  | LintError // Query will not execute
+  | LintWarning // Query may produce unexpected results
+  | LintInfo // Suggestion for improvement
+  | LintHint // Style/convention recommendation
 
 /// Lint rule categories — each category maps to a VQL-UT concern.
 type lintCategory =
-  | CatSyntax       // Parse-level issues (L1)
-  | CatSchema       // Schema binding issues (L2)
-  | CatType         // Type compatibility (L3-L4)
-  | CatSecurity     // Injection, access control (L5)
-  | CatPerformance  // Cardinality, indexing, scans (L7)
-  | CatCorrectness  // Effects, temporality, linearity (L8-L10)
+  | CatSyntax // Parse-level issues (L1)
+  | CatSchema // Schema binding issues (L2)
+  | CatType // Type compatibility (L3-L4)
+  | CatSecurity // Injection, access control (L5)
+  | CatPerformance // Cardinality, indexing, scans (L7)
+  | CatCorrectness // Effects, temporality, linearity (L8-L10)
 
 /// A single lint diagnostic emitted by the VQL linter.
 type lintDiagnostic = {
-  ruleId: string,           // e.g. "VQL-S001" (Syntax), "VQL-T003" (Type)
+  ruleId: string, // e.g. "VQL-S001" (Syntax), "VQL-T003" (Type)
   category: lintCategory,
   severity: lintSeverity,
   line: int,
@@ -75,25 +75,25 @@ type lintDiagnostic = {
   endLine: int,
   endColumn: int,
   message: string,
-  suggestion: option<string>,   // Auto-fix suggestion
+  suggestion: option<string>, // Auto-fix suggestion
   relatedLevel: typeSafetyLevel, // Which level this rule enforces
 }
 
 /// Linter configuration — which rules are active and at what severity.
 type lintProfile =
-  | ProfileStrict      // All rules at maximum severity
+  | ProfileStrict // All rules at maximum severity
   | ProfileRecommended // Default — errors + warnings, no hints
-  | ProfileRelaxed     // Errors only
-  | ProfileCustom      // User-configured rule set
+  | ProfileRelaxed // Errors only
+  | ProfileCustom // User-configured rule set
 
 /// Full linter state.
 type linterState = {
   profile: lintProfile,
-  minimumLevel: typeSafetyLevel,  // Floor — violations below this level are errors
+  minimumLevel: typeSafetyLevel, // Floor — violations below this level are errors
   diagnostics: array<lintDiagnostic>,
-  suppressions: array<string>,    // Rule IDs the user has suppressed
+  suppressions: array<string>, // Rule IDs the user has suppressed
   autoFixEnabled: bool,
-  lintOnType: bool,               // Lint as user types (debounced)
+  lintOnType: bool, // Lint as user types (debounced)
   lintDebounceMs: int,
 }
 
@@ -103,31 +103,31 @@ type linterState = {
 
 /// Formatter style presets — opinionated formatting for VQL queries.
 type formatStyle =
-  | StyleStandard    // VQL-UT official style (keywords uppercase, 2-space indent)
-  | StyleCompact     // Minimal whitespace, single-line where possible
-  | StyleExpanded    // One clause per line, generous whitespace
-  | StyleProof       // Annotated with type obligations and proof markers
-  | StyleCustom      // User-configured
+  | StyleStandard // VQL-UT official style (keywords uppercase, 2-space indent)
+  | StyleCompact // Minimal whitespace, single-line where possible
+  | StyleExpanded // One clause per line, generous whitespace
+  | StyleProof // Annotated with type obligations and proof markers
+  | StyleCustom // User-configured
 
 /// Formatter options — fine-grained control over output.
 type formatOptions = {
   style: formatStyle,
-  indentWidth: int,           // Spaces per indent level (default: 2)
-  uppercaseKeywords: bool,    // SELECT vs select
-  alignClauses: bool,         // Vertically align FROM, WHERE, etc.
-  trailingComma: bool,        // Comma after last SELECT column
-  maxLineWidth: int,          // Wrap threshold (default: 100)
-  insertBlankLines: bool,     // Between major clauses
-  annotateTypes: bool,        // Inline type annotations as comments
-  showLevelMarkers: bool,     // [L3] markers on type-checked expressions
-  colourOutput: bool,         // Syntax highlighting in formatted output
+  indentWidth: int, // Spaces per indent level (default: 2)
+  uppercaseKeywords: bool, // SELECT vs select
+  alignClauses: bool, // Vertically align FROM, WHERE, etc.
+  trailingComma: bool, // Comma after last SELECT column
+  maxLineWidth: int, // Wrap threshold (default: 100)
+  insertBlankLines: bool, // Between major clauses
+  annotateTypes: bool, // Inline type annotations as comments
+  showLevelMarkers: bool, // [L3] markers on type-checked expressions
+  colourOutput: bool, // Syntax highlighting in formatted output
 }
 
 /// Formatter state.
 type formatterState = {
   options: formatOptions,
   lastFormatted: option<string>, // Formatted output (for diff view)
-  showDiff: bool,                // Side-by-side original vs formatted
+  showDiff: bool, // Side-by-side original vs formatted
   formatOnSave: bool,
 }
 
@@ -137,23 +137,23 @@ type formatterState = {
 
 /// Query operation types — what the user is trying to do.
 type queryOperation =
-  | OpFindProof          // Search for proofs matching criteria
-  | OpFindSimilar        // Vector similarity search on proof embeddings
-  | OpCrossProverSearch  // Federated search across multiple provers
-  | OpProvenanceTrace    // Track proof lineage through VeriSimDB
-  | OpTemporalHistory    // View proof evolution over time
-  | OpDependencyGraph    // Map theorem dependencies
-  | OpAxiomUsage         // Which axioms does this proof rely on?
-  | OpTacticStats        // Tactic frequency and success rates
-  | OpCustom             // Raw VQL-UT query
+  | OpFindProof // Search for proofs matching criteria
+  | OpFindSimilar // Vector similarity search on proof embeddings
+  | OpCrossProverSearch // Federated search across multiple provers
+  | OpProvenanceTrace // Track proof lineage through VeriSimDB
+  | OpTemporalHistory // View proof evolution over time
+  | OpDependencyGraph // Map theorem dependencies
+  | OpAxiomUsage // Which axioms does this proof rely on?
+  | OpTacticStats // Tactic frequency and success rates
+  | OpCustom // Raw VQL-UT query
 
 /// A template parameter with type and validation.
 type templateParameter = {
   name: string,
-  paramType: string,   // "string" | "int" | "prover" | "tactic" | etc.
+  paramType: string, // "string" | "int" | "prover" | "tactic" | etc.
   description: string,
   defaultValue: option<string>,
-  validation: option<string>,  // Regex or VQL-UT type expression
+  validation: option<string>, // Regex or VQL-UT type expression
 }
 
 /// A saved query template — reusable parameterised queries.
@@ -162,7 +162,7 @@ type queryTemplate = {
   name: string,
   description: string,
   operation: queryOperation,
-  template: string,         // VQL-UT with {{param}} placeholders
+  template: string, // VQL-UT with {{param}} placeholders
   parameters: array<templateParameter>,
   requiredLevel: typeSafetyLevel,
 }
@@ -178,9 +178,9 @@ type editorState = {
   redoStack: array<string>,
   activeOperation: queryOperation,
   activeTemplate: option<queryTemplate>,
-  parameterValues: array<(string, string)>,  // Filled-in template params
+  parameterValues: array<(string, string)>, // Filled-in template params
   isDirty: bool,
-  lastSaved: option<float>,  // Timestamp
+  lastSaved: option<float>, // Timestamp
 }
 
 // ============================================================
@@ -189,22 +189,22 @@ type editorState = {
 
 /// Execution target — where the query runs.
 type executionTarget =
-  | TargetVeriSimDB      // Direct VeriSimDB HTTP API
-  | TargetEchidna        // Via ECHIDNA cross-prover engine
-  | TargetBoJ            // Via BoJ server cartridge routing
-  | TargetTypeLL         // Type-check only (no execution)
-  | TargetDryRun         // Parse + plan, don't execute
+  | TargetVeriSimDB // Direct VeriSimDB HTTP API
+  | TargetEchidna // Via ECHIDNA cross-prover engine
+  | TargetBoJ // Via BoJ server cartridge routing
+  | TargetTypeLL // Type-check only (no execution)
+  | TargetDryRun // Parse + plan, don't execute
 
 /// Query execution status.
 type executionStatus =
   | Idle
   | Parsing
-  | TypeChecking(typeSafetyLevel)  // Currently at this level
+  | TypeChecking(typeSafetyLevel) // Currently at this level
   | Planning
   | Executing
-  | Streaming(int)       // Rows received so far
-  | Complete(float)      // Duration in ms
-  | Failed(string)       // Error message
+  | Streaming(int) // Rows received so far
+  | Complete(float) // Duration in ms
+  | Failed(string) // Error message
 
 /// A single result row — generic key-value pairs.
 type resultCell =
@@ -213,11 +213,11 @@ type resultCell =
   | CellFloat(float)
   | CellBool(bool)
   | CellNull
-  | CellProver(string)      // Prover name with icon
-  | CellProof(string)       // Proof ID (clickable)
-  | CellTactic(string)      // Tactic name (clickable)
+  | CellProver(string) // Prover name with icon
+  | CellProof(string) // Proof ID (clickable)
+  | CellTactic(string) // Tactic name (clickable)
   | CellLevel(typeSafetyLevel) // Safety level badge
-  | CellOctad(string)       // VeriSimDB octad reference
+  | CellOctad(string) // VeriSimDB octad reference
 
 /// Column definition for result display.
 type resultColumn = {
@@ -230,8 +230,8 @@ type resultColumn = {
 
 /// A single step in the query execution plan.
 type rec planStep = {
-  operation: string,     // "scan", "filter", "join", "sort", "aggregate", "prove"
-  target: string,        // Table/index/prover name
+  operation: string, // "scan", "filter", "join", "sort", "aggregate", "prove"
+  target: string, // Table/index/prover name
   estimatedRows: int,
   estimatedCostPct: float,
   children: array<planStep>,
@@ -243,15 +243,15 @@ type queryPlan = {
   estimatedCost: float,
   estimatedRows: int,
   proversInvolved: array<string>,
-  octadModalities: array<string>,  // Which of the 8 modalities are touched
+  octadModalities: array<string>, // Which of the 8 modalities are touched
 }
 
 /// The 4-part evangeliser narrative from TypeLL integration.
 type typeNarrative = {
-  celebrate: string,    // What's good about this query
-  minimize: string,     // Why issues aren't catastrophic
-  showBetter: string,   // How to improve
-  safety: string,       // What safety guarantees you get
+  celebrate: string, // What's good about this query
+  minimize: string, // Why issues aren't catastrophic
+  showBetter: string, // How to improve
+  safety: string, // What safety guarantees you get
 }
 
 /// Type checking report from TypeLL.
@@ -260,15 +260,15 @@ type typeReport = {
   requestedLevel: typeSafetyLevel,
   passed: bool,
   issues: array<lintDiagnostic>,
-  inferredTypes: array<(string, string)>,  // (expression, inferred_type) pairs
+  inferredTypes: array<(string, string)>, // (expression, inferred_type) pairs
   narrative: option<typeNarrative>,
 }
 
 /// Proof obligation status.
 type obligationStatus =
   | Pending
-  | Discharged(string)  // Evidence/certificate
-  | Refuted(string)     // Counter-example
+  | Discharged(string) // Evidence/certificate
+  | Refuted(string) // Counter-example
   | Timeout
 
 /// Proof obligation generated by type checking.
@@ -324,14 +324,14 @@ type executionState = {
 
 /// VeriSimDB octad modality — the 8 dimensions of proof storage.
 type octadModality =
-  | ModSemantic     // Meaning/content (CBOR-encoded proof states)
-  | ModTemporal     // Time/versioning (proof evolution chains)
-  | ModProvenance   // Origin/attribution (who proved what, when)
-  | ModDocument     // Full-text (searchable proof text)
-  | ModGraph        // Relationships (theorem dependency DAGs)
-  | ModVector       // Embeddings (similarity search on goals)
-  | ModTensor       // Multi-dimensional metrics (performance data)
-  | ModSpatial      // Origin metadata (prover location, cluster topology)
+  | ModSemantic // Meaning/content (CBOR-encoded proof states)
+  | ModTemporal // Time/versioning (proof evolution chains)
+  | ModProvenance // Origin/attribution (who proved what, when)
+  | ModDocument // Full-text (searchable proof text)
+  | ModGraph // Relationships (theorem dependency DAGs)
+  | ModVector // Embeddings (similarity search on goals)
+  | ModTensor // Multi-dimensional metrics (performance data)
+  | ModSpatial // Origin metadata (prover location, cluster topology)
 
 /// Schema column definition.
 type schemaColumn = {
@@ -340,13 +340,13 @@ type schemaColumn = {
   nullable: bool,
   indexed: bool,
   description: string,
-  foreignKey: option<(string, string)>,  // (table, column)
+  foreignKey: option<(string, string)>, // (table, column)
 }
 
 /// Schema entity — a table, view, or virtual collection in VeriSimDB.
 type schemaEntity = {
   name: string,
-  entityType: string,  // "table" | "view" | "virtual" | "octad"
+  entityType: string, // "table" | "view" | "virtual" | "octad"
   modalities: array<octadModality>,
   columns: array<schemaColumn>,
   rowEstimate: int,
@@ -369,16 +369,16 @@ type schemaState = {
 
 /// Prover selection strategy for cross-prover queries.
 type proverStrategy =
-  | StrategyAuto        // ECHIDNA chooses based on goal structure
-  | StrategyPortfolio   // Run on all applicable provers, take first success
-  | StrategySingle(string)  // Specific prover by name
-  | StrategyTiered      // Try fast provers first, escalate to slow ones
-  | StrategyConsensus   // Require N provers to agree
+  | StrategyAuto // ECHIDNA chooses based on goal structure
+  | StrategyPortfolio // Run on all applicable provers, take first success
+  | StrategySingle(string) // Specific prover by name
+  | StrategyTiered // Try fast provers first, escalate to slow ones
+  | StrategyConsensus // Require N provers to agree
 
 /// Prover status in the dispatch panel.
 type proverStatus = {
   name: string,
-  kind: string,         // "interactive" | "smt" | "atp" | "declarative" | "constraint"
+  kind: string, // "interactive" | "smt" | "atp" | "declarative" | "constraint"
   available: bool,
   lastLatencyMs: option<float>,
   successRate: option<float>,
@@ -390,7 +390,7 @@ type dispatchState = {
   strategy: proverStrategy,
   availableProvers: array<proverStatus>,
   selectedProvers: array<string>,
-  consensusThreshold: int,   // For StrategyConsensus
+  consensusThreshold: int, // For StrategyConsensus
   timeoutPerProverMs: int,
   showProverDetails: bool,
 }
@@ -401,10 +401,10 @@ type dispatchState = {
 
 /// View layer for progressive disclosure of query complexity.
 type viewLayer =
-  | Raw       // Full VQL-UT syntax with all annotations
-  | Folded    // Collapsed sub-expressions, summary types
-  | Glyphed   // Mathematical symbols replace keywords (forall, exists, etc.)
-  | Wysiwyg   // Interactive visual query builder
+  | Raw // Full VQL-UT syntax with all annotations
+  | Folded // Collapsed sub-expressions, summary types
+  | Glyphed // Mathematical symbols replace keywords (forall, exists, etc.)
+  | Wysiwyg // Interactive visual query builder
 
 // ============================================================
 // SECTION 9: Panel Tabs
@@ -412,13 +412,13 @@ type viewLayer =
 
 /// The 7 tabs of the VQL panel — each a distinct workflow.
 type vqlTab =
-  | TabEditor       // Query editor with linting and formatting
-  | TabResults      // Result table with sorting/filtering
-  | TabPlan         // Query plan visualization (tree diagram)
-  | TabSchema       // VeriSimDB octad schema browser
-  | TabProvers      // Cross-prover dispatch configuration
-  | TabHistory      // Query history with favourites
-  | TabLintConfig   // Linter and formatter configuration
+  | TabEditor // Query editor with linting and formatting
+  | TabResults // Result table with sorting/filtering
+  | TabPlan // Query plan visualization (tree diagram)
+  | TabSchema // VeriSimDB octad schema browser
+  | TabProvers // Cross-prover dispatch configuration
+  | TabHistory // Query history with favourites
+  | TabLintConfig // Linter and formatter configuration
 
 // ============================================================
 // SECTION 10: Top-Level Panel State
@@ -428,8 +428,8 @@ type vqlTab =
 type connectionStatus =
   | VqlDisconnected
   | VqlConnecting
-  | VqlConnected(string)   // Endpoint URL
-  | VqlError(string)       // Error message
+  | VqlConnected(string) // Endpoint URL
+  | VqlError(string) // Error message
 
 /// The complete VQL panel state — assembled from all subsystems.
 type vqlState = {
@@ -438,14 +438,12 @@ type vqlState = {
   viewLayer: viewLayer,
   panelOpen: bool,
   fullscreen: bool,
-
   // Connection
   connection: connectionStatus,
   verisimEndpoint: string,
   echidnaEndpoint: string,
   typellEndpoint: string,
   bojRouting: bool,
-
   // Subsystems
   editor: editorState,
   linter: linterState,
@@ -453,7 +451,6 @@ type vqlState = {
   execution: executionState,
   schema: schemaState,
   dispatch: dispatchState,
-
   // Cross-panel
   typeCheckResult: option<typeReport>,
   pendingObligations: array<proofObligation>,
@@ -469,7 +466,6 @@ type vqlMsg =
   | SetTab(vqlTab)
   | SetViewLayer(viewLayer)
   | ToggleFullscreen
-
   // Editor
   | SetContent(string)
   | SetCursorPosition(int, int)
@@ -481,7 +477,6 @@ type vqlMsg =
   | SetParameterValue(string, string)
   | InsertSnippet(string)
   | ClearEditor
-
   // Linter
   | RunLint
   | LintComplete(array<lintDiagnostic>)
@@ -492,15 +487,13 @@ type vqlMsg =
   | UnsuppressRule(string)
   | ApplyAutoFix(lintDiagnostic)
   | ApplyAllFixes
-
   // Formatter
   | RunFormat
   | FormatComplete(string)
   | SetFormatStyle(formatStyle)
-  | SetFormatOption(string, string)  // (key, value) for custom options
+  | SetFormatOption(string, string) // (key, value) for custom options
   | ToggleFormatDiff
   | ToggleFormatOnSave
-
   // Execution
   | ExecuteQuery
   | CancelQuery
@@ -510,32 +503,27 @@ type vqlMsg =
   | QueryFailed(string)
   | SetStreamingEnabled(bool)
   | SetTimeout(int)
-
   // Results
-  | SortResults(string, bool)   // (column, ascending)
+  | SortResults(string, bool) // (column, ascending)
   | FilterResults(string, string) // (column, filter_text)
-  | PageResults(int)              // Page number
-  | ExportResults(string)         // Format: "csv" | "json" | "a2ml"
-
+  | PageResults(int) // Page number
+  | ExportResults(string) // Format: "csv" | "json" | "a2ml"
   // Schema
   | RefreshSchema
   | SchemaLoaded(array<schemaEntity>)
   | ToggleEntity(string)
   | SetSchemaFilter(string)
   | SetModalityFilter(option<octadModality>)
-
   // Provers
   | SetProverStrategy(proverStrategy)
   | ToggleProver(string)
   | RefreshProverStatus
   | ProverStatusUpdated(array<proverStatus>)
-
   // History
   | SaveToHistory
   | LoadFromHistory(historyEntry)
   | ToggleFavourite(string)
   | ClearHistory
-
   // Connection
   | Connect
   | Disconnect
@@ -543,11 +531,9 @@ type vqlMsg =
   | SetVeriSimEndpoint(string)
   | SetEchidnaEndpoint(string)
   | ToggleBojRouting
-
   // TypeLL integration
   | RequestTypeCheck
   | TypeCheckReceived(typeReport)
   | DischargeObligation(string, string) // (obligation_id, evidence)
-
   // Keyboard shortcuts
-  | KeyboardShortcut(string)  // "ctrl+enter", "ctrl+shift+f", etc.
+  | KeyboardShortcut(string) // "ctrl+enter", "ctrl+shift+f", etc.

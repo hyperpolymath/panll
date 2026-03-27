@@ -136,11 +136,7 @@ let setDemoComparison = (
 }
 
 /// Enter before/after comparison mode.
-let setBeforeAfter = (
-  state: captureState,
-  beforeId: string,
-  afterId: string,
-): captureState => {
+let setBeforeAfter = (state: captureState, beforeId: string, afterId: string): captureState => {
   {...state, comparison: BeforeAfter(beforeId, afterId)}
 }
 
