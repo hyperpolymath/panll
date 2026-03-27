@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= PanLL Design Documents
+
+Session-specific design thinking, captured at the time of creation.
+These are snapshots — the live state of the project may have evolved.
+
+== Index
+
+[cols="1,2,3"]
+|===
+| Date | File | Topic
+
+| 2026-02-28
+| link:DESIGN-2026-02-28-collaboration.md[collaboration]
+| Collaborative development model
+
+| 2026-02-28
+| link:DESIGN-2026-02-28-discipline-layouts.md[discipline-layouts]
+| Panel layouts per discipline (languages, databases, protocols)
+
+| 2026-02-28
+| link:DESIGN-2026-02-28-echidna-proof-ux.md[echidna-proof-ux]
+| ECHIDNA proof submission UX in Pane-N
+
+| 2026-02-28
+| link:DESIGN-2026-02-28-infrastructure-requirements.md[infrastructure]
+| Infrastructure requirements for v0.2.0+
+
+| 2026-02-28
+| link:DESIGN-2026-02-28-slm-heutagogy.md[slm-heutagogy]
+| Self-directed learning model (heutagogy) integration
+
+| 2026-02-28
+| link:DESIGN-2026-02-28-strategic-assessment.md[strategic-assessment]
+| Strategic assessment of PanLL ecosystem position
+
+| 2026-03-01
+| link:DESIGN-2026-03-01-vab-panel.md[vab-panel]
+| VAB (Verified Assembly Building) panel design
+
+| 2026-03-08
+| link:DESIGN-2026-03-08-idaptik-ensaid.md[idaptik-ensaid]
+| PanLL as eNSAID for IDApTIK game development
+
+| 2026-03-14
+| link:DESIGN-2026-03-14-phase3-constraint-core.md[phase3-constraint]
+| Phase 3 constraint core reframing
+
+| 2026-03-16
+| link:DESIGN-2026-03-16-feedback-o-tron-evolution.md[feedback-o-tron]
+| Feedback-O-Tron evolution and opinion mining
+
+| 2026-03-23
+| link:DESIGN-2026-03-23-effortless-immersion.adoc[effortless-immersion]
+| Effortless immersion UX philosophy
+|===
