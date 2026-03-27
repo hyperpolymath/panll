@@ -83,7 +83,8 @@ cross-pane synchronisation monitoring; and (3)~\typell{}, an invisible
 dependent-type verification backbone that type-checks neural and
 symbolic outputs against each other before results enter the shared
 workspace. The system is implemented in ReScript with The Elm
-Architecture for state management, a Rust/Tauri~2.0 backend, and an
+Architecture for state management, a Rust/Gossamer backend (Zig + WebKitGTK for a lightweight,
+container-friendly webview shell), and an
 Elixir/BEAM middleware layer, comprising over 500 source files across
 79 panel modules. We describe the formal properties of the Binary Star
 model, detail each governance subsystem with its invariants, and
@@ -174,7 +175,7 @@ This paper makes the following contributions:
     (\Cref{sec:typell}).
   \item A constraint-driven five-phase architecture from substrate
     through observability (\Cref{sec:constraint-propagation}).
-  \item An implementation report covering the ReScript/Tauri/BEAM stack
+  \item An implementation report covering the ReScript/Gossamer/BEAM stack
     (\Cref{sec:implementation}).
 \end{enumerate}
 
@@ -550,7 +551,7 @@ loop (\Cref{fig:three-pane}). Each pane dispatches typed messages;
 the pure \texttt{update} function routes them, applies validation,
 and produces the next immutable model state. There is no mutable
 global state, no event emitters with implicit coupling, and no
-callback-based side effects. Commands (Tauri IPC calls, HTTP
+callback-based side effects. Commands (Gossamer IPC calls, HTTP
 requests, filesystem operations) are described as data and executed
 by the runtime, following the command pattern from the original
 Elm Architecture~\citep{czaplicki2012elm}.
@@ -927,7 +928,7 @@ pipeline.
 The substrate layer provides the foundational services on which all
 other layers depend: file system access, network connectivity,
 process management, and hardware capability detection. In \panll{},
-the substrate is implemented in Rust within the Tauri~2.0 backend,
+the substrate is implemented in Rust within the Gossamer backend,
 providing native-speed access to system resources with memory safety
 guarantees.
 
@@ -937,7 +938,7 @@ Key substrate services include:
     probing of external tools (panic-attack, VeriSimDB, ECHIDNA).
   \item \textbf{File system watching:} Cross-platform filesystem
     event monitoring via the Rust \texttt{notify} crate.
-  \item \textbf{IPC bridge:} Tauri's command invocation system,
+  \item \textbf{IPC bridge:} Gossamer's command invocation system,
     providing typed communication between the ReScript frontend
     and the Rust backend.
 \end{itemize}
@@ -1031,7 +1032,7 @@ technology stack summarised in \Cref{tab:stack}.
 \midrule
 Frontend & ReScript + \tea{} + JSX & UI, state management \\
 Styling & Tailwind CSS 4.x & Utility-first CSS \\
-Backend & Rust + Tauri 2.0 & Native IPC, file I/O \\
+Backend & Rust + Gossamer (Zig/WebKitGTK) & Native IPC, file I/O \\
 Middleware & Elixir/BEAM & Supervision, routing \\
 Runtime & Deno & Testing, build orchestration \\
 Verification & Idris2 (planned) & ABI definitions \\
@@ -1048,13 +1049,13 @@ At the time of writing, the codebase comprises:
 \begin{itemize}
   \item 510+ ReScript source files (\texttt{.res}), including
     117 panel component files and 90+ core engine modules.
-  \item 60+ Tauri command modules bridging frontend to backend.
+  \item 60+ Gossamer command modules bridging frontend to backend.
   \item 79 distinct panel modules spanning programming languages,
     databases, protocols, containers, game development, and
     system administration.
   \item 50+ model slices composed via ReScript's \texttt{include}
     mechanism into a single unified \texttt{Model} type.
-  \item A Rust backend with 27+ Tauri command handlers.
+  \item A Rust backend with 27+ Gossamer command handlers.
   \item An Elixir/BEAM middleware layer with HTTP, GraphQL, and
     gRPC endpoints.
 \end{itemize}
@@ -1111,7 +1112,7 @@ Each panel follows a uniform structure:
     (e.g., \texttt{CloudGuard.res}).
   \item An \textbf{Engine} module containing pure business logic
     (e.g., \texttt{CloudGuardEngine.res}).
-  \item A \textbf{Command} module wrapping Tauri IPC calls
+  \item A \textbf{Command} module wrapping Gossamer IPC calls
     (e.g., \texttt{CloudGuardCmd.res}).
 \end{enumerate}
 
@@ -1398,7 +1399,7 @@ provides dependent-type verification across all three panes.
 
 \panll{} demonstrates that this model can be implemented at
 substantial scale---79 panels, 50+ model slices, 500+ source
-files---using the \tea{} pattern in ReScript with a Rust/Tauri
+files---using the \tea{} pattern in ReScript with a Rust/Gossamer
 backend and BEAM middleware. The \tea{} pattern's structural
 properties (exhaustive message handling, single update function,
 immutable model) provide compile-time enforcement of key governance
@@ -1420,8 +1421,7 @@ consequences deserve explicit architectural attention.
 
 The author thanks the contributors to the open-source tools that
 make this work possible: the ReScript team for a sound type system
-that compiles to JavaScript, the Tauri project for a credible
-Electron alternative, the Elixir and BEAM communities for
+that compiles to JavaScript, the Gossamer project for a lightweight webview shell, the Elixir and BEAM communities for
 supervision-tree thinking, and the Idris2 community for dependent
 types that prove rather than approximate.
 

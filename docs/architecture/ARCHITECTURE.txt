@@ -23,14 +23,14 @@ PanLL eNSAID — Systems Architecture (v0.3.0 Phase 1)
                           |  +----------+-----------+  |  |
                           |             |              |  |
                           |  +----------+----------+   |  |
-                          |  |    TauriCmd.res      |   |  |
+                          |  | GossamerCmd.res      |   |  |
                           |  | (invoke wrappers)    |   |  |
                           +--+----------+----------+---+
                                         |
-                              Tauri IPC Bridge
+                            Gossamer IPC Bridge
                                         |
                           +-------------+-------------+
-                          |    Tauri Rust Backend      |
+                          |  Gossamer Rust Backend      |
                           |       (main.rs)            |
                           |                            |
                           | +--------+ +--------+      |
@@ -79,8 +79,8 @@ PanLL eNSAID — Systems Architecture (v0.3.0 Phase 1)
      +---------+    +-----------+   +---------+    +------------+
                                          |
                                     +----v------+
-                                    |TauriCmd.  |
-                                    |   res     |
+                                    |Gossamer   |
+                                    |Cmd.res    |
                                     |           |
                                     | Commands: |
                                     | validate  |
@@ -139,17 +139,17 @@ PanLL eNSAID — Systems Architecture (v0.3.0 Phase 1)
 4. DATA FLOW: Proof Submission
 ===============================
 
-  User types proof    Frontend dispatches     Tauri IPC         Rust backend
+  User types proof    Frontend dispatches   Gossamer IPC        Rust backend
   in textarea         SubmitProof msg         invoke()          echidna_prove()
        |                    |                    |                    |
        v                    v                    v                    v
   +----------+     +---------------+     +-----------+     +------------------+
-  | proofInput| --> | updateEchidna | --> | TauriCmd. | --> | POST /api/prove  |
+  | proofInput| --> | updateEchidna | --> | Gossamer  | --> | POST /api/prove  |
   | in model  |     | sets loading  |     | echidna   |     | to ECHIDNA :8080 |
   +----------+     +---------------+     | Prove()   |     +--------+---------+
                                          +-----------+              |
                                                                     v
-  UI renders          Frontend updates      Tauri IPC          ECHIDNA returns
+  UI renders          Frontend updates    Gossamer IPC         ECHIDNA returns
   proof result        model from JSON       callback           dispatch result
        |                    |                    |                    |
        v                    v                    v                    v
