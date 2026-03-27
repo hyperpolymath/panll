@@ -7,6 +7,24 @@
 open Model
 open Msg
 
+/// Swap adjacent elements at index `i` and `i+1` in an array.
+/// Returns a new array with the swap applied. No-op if index is out of bounds.
+let swapAt = (arr: array<'a>, i: int): array<'a> => {
+  if i < 0 || i >= Array.length(arr) - 1 {
+    arr
+  } else {
+    let copy = Array.copy(arr)
+    let tmp = copy[i]
+    switch (tmp, copy[i + 1]) {
+    | (Some(a), Some(b)) =>
+      ignore(Array.setUnsafe(copy, i, b))
+      ignore(Array.setUnsafe(copy, i + 1, a))
+      copy
+    | _ => arr
+    }
+  }
+}
+
 let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
   let ts = model.tsdm
   switch subMsg {

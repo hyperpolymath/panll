@@ -365,11 +365,11 @@ let computeRegionHash = (
   parentHash: string,
 ): string => {
   // Concatenate all fields with a pipe separator to avoid ambiguity
-  let input = content ++ "|" ++ author ++ "|" ++ timestamp ++ "|" ++ parentHash
+  let _provenanceInput = content ++ "|" ++ author ++ "|" ++ timestamp ++ "|" ++ parentHash
   // Prime-mixing accumulator: fold over character codes with two accumulators
   // Use raw JS for bitwise hash — ReScript lacks bitwise operators.
   let hash: string = %raw(`
-    (function(input) {
+    (function(_provenanceInput) {
       var len = input.length;
       var hashA = 0x811c9dc5;
       var hashB = 0x01000193;

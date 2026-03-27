@@ -148,7 +148,7 @@ Deno.test("accessibilityDescription returns correct descriptions", () => {
 
 Deno.test("backendKindDescription returns correct descriptions", () => {
   assert(backendKindDescription("NoBackend").includes("Pure frontend"));
-  assert(backendKindDescription("FilesystemBackend").includes("Tauri"));
+  assert(backendKindDescription("FilesystemBackend").includes("backend"));
   assert(backendKindDescription("HttpBackend").includes("HTTP API"));
   assert(backendKindDescription("DatabaseBackend").includes("database"));
 });
@@ -240,8 +240,8 @@ Deno.test("generateCmd returns source string for HttpBackend", () => {
 Deno.test("fileSummary returns correct files for NoBackend", () => {
   const form = { ...defaultForm, panelName: "Weather", backendKind: "NoBackend" };
   const files = fileSummary(form);
-  // 4 source files + 6 patches = 10
-  assertEquals(files.length, 10);
+  // 4 source files + 7 patches = 11
+  assertEquals(files.length, 11);
   assert(files.some(f => f[0].includes("WeatherModel.res")));
   assert(files.some(f => f[0].includes("WeatherEngine.res")));
 });
@@ -249,8 +249,8 @@ Deno.test("fileSummary returns correct files for NoBackend", () => {
 Deno.test("fileSummary includes Rust files for HttpBackend", () => {
   const form = { ...defaultForm, panelName: "Weather", backendKind: "HttpBackend" };
   const files = fileSummary(form);
-  // 4 source + 1 cmd + 3 rust + 6 patches = 14
-  assertEquals(files.length, 14);
+  // 4 source + 1 cmd + 3 rust + 7 patches = 15
+  assertEquals(files.length, 15);
   assert(files.some(f => f[0].includes("weather/mod.rs")));
 });
 

@@ -4,7 +4,6 @@
 /// and the contractiles post-processor that runs after every state transition.
 
 open Model
-open Msg
 
 // ===========================================================================
 // Undo/Redo Snapshot Helpers

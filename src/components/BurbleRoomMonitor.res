@@ -27,7 +27,7 @@ open Tea.Html
 // ===========================================================================
 
 /// Render the "current room" section when the user is in a huddle.
-let renderCurrentRoom = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
+let rec renderCurrentRoom = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
   switch state.currentHuddle {
   | None =>
     div(

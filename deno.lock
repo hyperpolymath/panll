@@ -13,7 +13,6 @@
     "jsr:@std/net@^1.0.6": "1.0.6",
     "jsr:@std/path@^1.1.4": "1.1.4",
     "jsr:@std/streams@^1.0.17": "1.0.17",
-    "npm:@tauri-apps/api@^2.10.0": "2.10.1",
     "npm:esbuild@0.24": "0.24.2",
     "npm:rescript@12": "12.2.0"
   },
@@ -226,9 +225,6 @@
       "os": ["win32"],
       "cpu": ["x64"]
     },
-    "@tauri-apps/api@2.10.1": {
-      "integrity": "sha512-hKL/jWf293UDSUN09rR69hrToyIXBb8CjGaWC7gfinvnQrBVvnLr08FeFi38gxtugAVyVcTa5/FD/Xnkb1siBw=="
-    },
     "esbuild@0.24.2": {
       "integrity": "sha512-+9egpBW8I3CD5XPe0n6BfT5fxLzxrlDzqydF3aviG+9ni1lDC/OvMHcxqEFV0+LANZG5R1bFMWfUrjVsdwxJvA==",
       "optionalDependencies": [
@@ -280,10 +276,15 @@
     "dependencies": [
       "npm:@rescript/core@1.6.1",
       "npm:@rescript/runtime@12.2.0",
-      "npm:@tauri-apps/api@^2.10.0",
-      "npm:@tauri-apps/plugin-dialog@*",
-      "npm:@tauri-apps/plugin-fs@*",
       "npm:rescript@12"
-    ]
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:@rescript/core@^1.6.1",
+        "npm:@rescript/runtime@^12.2.0",
+        "npm:rescript@12",
+        "npm:tailwindcss@^3.4.19"
+      ]
+    }
   }
 }

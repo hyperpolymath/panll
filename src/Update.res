@@ -106,6 +106,16 @@ open UpdateFloorRaise
 // Main Dispatcher
 // ===========================================================================
 
+/// Determines whether a message should trigger auto-save to localStorage.
+/// NoOp and SaveState itself are excluded to avoid infinite loops.
+let shouldAutoSave = (msg: msg): bool => {
+  switch msg {
+  | NoOp => false
+  | SaveState => false
+  | _ => true
+  }
+}
+
 /// The main TEA update function. Routes each message variant to its domain
 /// sub-updater, then applies contractile post-processing.
 let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {

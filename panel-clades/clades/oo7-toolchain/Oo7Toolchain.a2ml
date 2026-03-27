@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# 007 Toolchain Clade — Agentic Compiler and High-Rigor Execution
+
+[clade-metadata]
+id = "oo7-toolchain"
+name = "007 Toolchain"
+short-name = "007"
+version = "0.1.0"
+kind = "development"
+icon = "code"
+description = "High-rigor agent toolchain (lex, parse, analyse, evaluate, link) with linear type enforcement."
+
+[clade-traits]
+has-backend = true           # Groove Daemon at :7007
+has-scanning = true          # Toolchain stages analysis
+has-persistence = true       # 007 source and artifacts
+has-work-items = true        # Compiler errors as TSDM items
+has-priority-ordering = true
+has-customisation = true     # Stage selection, optimization levels
+is-directive = true
+is-readonly = false
+
+[clade-capabilities]
+capabilities = [
+  "Lexing",                  # Tokenisation of .007 source
+  "Parsing",                 # AST generation with Harvard separation
+  "SemanticAnalysis",        # Linear type checking (agentic support)
+  "HighRigorEvaluation",     # Zig-based recursive evaluator
+  "Linking",                 # Binary star object linking
+  "NeurosymbolicProof",      # Integration with Echidna/TypeLL
+  "GrooveControl",           # Daemon lifecycle and permissions
+]
+
+[clade-ensaid]
+design-doc = "OO7-ENSAID-DESIGN.md"
+panel-count = 3
+must-panels = ["toolchain-dashboard", "ast-viewer", "linear-checker"]
+should-panels = ["groove-monitor", "permission-editor"]
+
+[clade-integrations]
+boj-cartridges = ["git-mcp", "container-mcp", "proof-mcp"]
+echidna = true               # For formal verification of agent proofs
+typell = true                # Cross-panel type intelligence
+panic-attack = true          # Robustness testing of generated binaries
+verisimdb = true             # Octad storage for artifacts
+
+[clade-panel-integration]
+panel-id = "PanelOo7Toolchain"
+model-module = "Oo7Model"
+component-module = "Oo7Toolchain"
+command-module = "Oo7Cmd"
+module-module = "Oo7Module"

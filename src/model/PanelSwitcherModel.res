@@ -189,6 +189,8 @@ type panelId =
   | PanelIdaptikSessionMonitor
   /// IDApTIK Player Overview — Jessica/Q stats, asymmetric balance ratio.
   | PanelIdaptikPlayerOverview
+  /// 007 Toolchain — agentic compiler and high-rigor execution (Groove).
+  | PanelOo7Toolchain
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

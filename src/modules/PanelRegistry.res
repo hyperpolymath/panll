@@ -102,6 +102,16 @@ let allPanels: array<panelMeta> = [
     cladeId: Some("aerie"),
   },
   {
+    id: PanelOo7Toolchain,
+    name: "007 Toolchain",
+    shortName: "007",
+    description: "Agentic compiler and high-rigor execution (Groove)",
+    icon: "code",
+    connectionStatus: ServiceDisconnected,
+    hasBackend: true,
+    cladeId: Some("oo7-toolchain"),
+  },
+  {
     id: PanelInterfaces,
     name: "Interfaces",
     shortName: "FFI",

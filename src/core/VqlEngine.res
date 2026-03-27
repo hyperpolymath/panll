@@ -1246,11 +1246,11 @@ let formatCell = (cell: resultCell): string =>
 /// Format execution time for display.
 let formatDuration = (ms: float): string => {
   if ms < 1.0 {
-    Float.toFixedWithPrecision(ms *. 1000.0, ~digits=0) ++ "\u00B5s"
+    Float.toFixed(ms *. 1000.0, ~digits=0) ++ "\u00B5s"
   } else if ms < 1000.0 {
-    Float.toFixedWithPrecision(ms, ~digits=1) ++ "ms"
+    Float.toFixed(ms, ~digits=1) ++ "ms"
   } else {
-    Float.toFixedWithPrecision(ms /. 1000.0, ~digits=2) ++ "s"
+    Float.toFixed(ms /. 1000.0, ~digits=2) ++ "s"
   }
 }
 
@@ -1259,8 +1259,8 @@ let formatRowCount = (count: int): string => {
   if count < 1000 {
     Int.toString(count)
   } else if count < 1000000 {
-    Float.toFixedWithPrecision(Int.toFloat(count) /. 1000.0, ~digits=1) ++ "K"
+    Float.toFixed(Int.toFloat(count) /. 1000.0, ~digits=1) ++ "K"
   } else {
-    Float.toFixedWithPrecision(Int.toFloat(count) /. 1000000.0, ~digits=2) ++ "M"
+    Float.toFixed(Int.toFloat(count) /. 1000000.0, ~digits=2) ++ "M"
   }
 }

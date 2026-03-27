@@ -103,6 +103,9 @@ include VoiceTagModel
 /// code trust surface that is always visible as an ambient layer.
 include ProvenanceModel
 
+/// Re-export 007 Toolchain types for agentic compiler and high-rigor execution.
+include Oo7ToolchainModel
+
 /// Re-export AI types (aiProviderId, aiProviderConfig, aiProviderStatus,
 /// aiMessage, aiCategory, aiState) for the multi-provider AI neural interface
 /// panel that speaks to Anthropic, Google, Mistral, OpenAI, and local models.
@@ -423,6 +426,9 @@ type model = {
 
   // Aerie — network diagnostics, speed tests, BGP forensics
   aerie: aerieState,
+
+  // 007 Toolchain — agentic compiler and high-rigor execution (Groove)
+  oo7toolchain: oo7State,
 
   // Interfaces — Idris2 ABI + Zig FFI inventory + binding coverage
   interfaces: interfacesState,
@@ -1076,6 +1082,17 @@ let init = (): model => {
     mtuResult: None,
     interfaces: [],
     bojRouting: false,
+  },
+  oo7toolchain: {
+    loaded: false,
+    loading: false,
+    error: None,
+    isConnected: false,
+    permissions: PermissionReadOnly,
+    stageOutputs: [],
+    sourceCode: "spawn agent_name {\n  40 + 2\n}",
+    activeCategory: Oo7Dashboard,
+    nesyStatus: "Waiting for analysis...",
   },
   interfaces: InterfacesEngine.defaultState,
   playgrounds: PlaygroundsEngine.defaultState,

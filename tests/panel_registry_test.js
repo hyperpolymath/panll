@@ -17,8 +17,8 @@ import {
   init,
 } from "../src/modules/PanelRegistry.res.js";
 
-Deno.test("allPanels has 94 entries", () => {
-  assertEquals(allPanels.length, 94);
+Deno.test("allPanels has 107 entries", () => {
+  assertEquals(allPanels.length, 107);
 });
 
 Deno.test("every panel has required fields", () => {
