@@ -121,7 +121,33 @@ deno task dev
 
 == Documentation
 
-* **link:docs/TEA_GUIDE.md[TEA Architecture Guide]** — Comprehensive documentation for The Elm Architecture (TEA) implementation including Tea_Cmd, Tea_Sub, Tea_Vdom, and Tea_App modules with testing guide and best practices
+=== Philosophy & Design
+
+* **link:docs/ENSAID.adoc[eNSAID Specification]** — The Binary Star model, cognitive governance, and what makes PanLL different from every other IDE
+* **link:docs/decisions/PANLL-ENSAID-SPEC-AND-DESIGN-DECISIONS.md[Design Decisions (DD-001 to DD-018)]** — Every architectural decision with context, rationale, and consequences
+* **link:docs/research/binary-star-neurosymbolic-ide.tex[Binary Star Paper]** — Full academic paper formalising the neurosymbolic co-orbit model (arXiv draft)
+
+=== Architecture
+
+* **link:docs/architecture/TOPOLOGY.md[Topology]** — System architecture map and completion dashboard
+* **link:docs/architecture/ARCHITECTURE.md[Architecture Reference]** — TEA modules, engine pattern, clade system, BoJ gateway, cognitive governance
+* **link:docs/architecture/ARCHITECTURE.txt[System Diagrams]** — ASCII-art architecture diagrams (frontend, Pane-N, data flow, trust hierarchy)
+* **link:docs/architecture/PANEL-INVENTORY.md[Panel Inventory]** — Complete inventory of all panels
+
+=== Guides
+
+* **link:docs/guides/TEA_GUIDE.md[TEA Architecture Guide]** — The Elm Architecture implementation: Tea_Cmd, Tea_Sub, Tea_Vdom, Tea_App
+* **link:docs/guides/QUICKSTART-USER.adoc[Quick Start (Users)]** — Getting started with PanLL
+* **link:docs/guides/QUICKSTART-FOR-SON.md[Quick Start (Developers)]** — Developer-focused onboarding
+* **link:docs/guides/TESTING.md[Testing Guide]** — Test strategy and conventions
+* **link:docs/guides/llm-warmup-dev.md[LLM Warmup (Dev)]** — Context for AI-assisted development
+* **link:docs/guides/llm-warmup-user.md[LLM Warmup (User)]** — User-facing LLM context
+
+=== Planning
+
+* **link:docs/ROADMAP.adoc[Roadmap]** — Version-by-version feature plan (v0.2.0 through v1.0.0)
+* **link:docs/TODO.md[TODO]** — Active task list with triaxial scoring
+* **link:docs/EXPLAINME.adoc[EXPLAINME]** — Backs up README claims for sceptics
 
 == Event-Chain Import (panic-attack)
 
@@ -193,4 +219,4 @@ PMPL-1.0-or-later
 
 == Architecture
 
-See link:TOPOLOGY.md[TOPOLOGY.md] for a visual architecture map and completion dashboard.
+See link:docs/architecture/TOPOLOGY.md[TOPOLOGY.md] for a visual architecture map and completion dashboard.

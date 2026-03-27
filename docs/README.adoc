@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= PanLL Documentation
+:toc:
+
+== Directory Structure
+
+[cols="1,3"]
+|===
+| Directory | Contents
+
+| `architecture/`
+| System architecture — topology map, ASCII diagrams, panel inventory,
+  Tauri command reference
+
+| `decisions/`
+| Design decisions (DD-001 to DD-018) and the eNSAID+IDApTIK combined
+  specification
+
+| `design/`
+| Session design documents — dated snapshots of design thinking from
+  specific sessions
+
+| `guides/`
+| User and developer guides — quick starts, TEA guide, testing, LLM
+  warmup context
+
+| `status/`
+| Status reports and audits — completion snapshots, taxonomy audits,
+  feature build status
+
+| `archive/`
+| Historical documents — completed migration guides (ReScript-TEA,
+  npm-to-Deno) kept for reference
+
+| `research/`
+| Academic work — the Binary Star paper (arXiv draft), matrix discussion
+|===
+
+== Key Entry Points
+
+* link:ENSAID.adoc[**eNSAID**] — The philosophical foundation: Binary Star
+  model, cognitive governance, TypeLL, what makes PanLL different
+* link:ROADMAP.adoc[**Roadmap**] — Version plan from v0.2.0 to v1.0.0
+* link:TODO.md[**TODO**] — Active task list with triaxial scoring
+* link:EXPLAINME.adoc[**EXPLAINME**] — Backs up README claims for sceptics

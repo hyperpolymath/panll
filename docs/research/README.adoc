@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= PanLL Research Papers
+
+== Binary Star: A Neurosymbolic IDE Architecture
+
+`binary-star-neurosymbolic-ide.tex`
+
+Full academic paper (1614 lines) formalising the Binary Star model — the
+theoretical foundation of PanLL as an eNSAID (Environment for NeSy-Agentic
+Integrated Development).
+
+=== What It Covers
+
+* **Formal definition** of the Binary Star system tuple
+  (Human, Machine, Barycentre, Gate, Divergence, Update)
+* **Three-pane architecture** (Panel-L / Panel-N / Panel-W) with typed
+  message passing and gravitational coupling
+* **Six cognitive governance subsystems** with invariants:
+  Anti-Crash Gate, Vexometer, Information Humidity, Orbital Drift Aura,
+  Contractiles, Sync Health Monitor
+* **TypeLL** cross-panel dependent type verification kernel
+* **Five-phase constraint propagation framework**
+  (Substrate -> Intent -> Propagation -> Completion -> Observability)
+* **Implementation report** covering the ReScript/Rust/BEAM stack
+* Evaluation, related work, future directions
+
+=== Building
+
+[source,bash]
+----
+cd docs/research
+pdflatex binary-star-neurosymbolic-ide.tex
+bibtex binary-star-neurosymbolic-ide
+pdflatex binary-star-neurosymbolic-ide.tex
+pdflatex binary-star-neurosymbolic-ide.tex
+----
+
+=== Status
+
+Draft — targeted at arXiv. Not yet submitted.
+
+=== Author
+
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>

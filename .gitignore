@@ -1,169 +1,124 @@
 # RSR-compliant .gitignore
 # SPDX-License-Identifier: PMPL-1.0-or-later
 
-# Node + package managers
+# ── Node + package managers ──────────────────────────────
 node_modules/
 .pnpm-store/
 
-# Deno
+# ── Deno ─────────────────────────────────────────────────
 .deno/
 
-# ReScript generated output (in-source mode)
+# ── ReScript (in-source mode) ────────────────────────────
 lib/
+lib/bs/
 .merlin
+.bsb.lock
 *.res.js
 *.resi.js
+*.cmt
+*.cmti
+*.cmi
 
-# Tauri build artifacts
+# ── Rust / Gossamer ──────────────────────────────────────
+/target/
+src-gossamer/target/
 src-tauri/target/
 src-tauri/WixTools/
 src-tauri/Cargo.lock
+/zig-out/
+/zig-cache/
 
-# BEAM/Elixir build artifacts
+# ── BEAM / Elixir ───────────────────────────────────────
+/_build/
 beam/**/_build/
 beam/**/deps/
 beam/**/.elixir_ls/
 beam/**/erl_crash.dump
-
-# Frontend build artifacts
-public/styles.css
-public/app.bundle.js
-public/app.bundle.js.map
-dist/
-build/
-coverage/
-
-# Local panic-attacker / PanLL integration artifacts
-panic-attack-*.json
-panll-event-chain-*.json
-*.ctp
-
-# Logs and temporary files
-*.log
-npm-debug.log*
-*.swp
-*.swo
-*~
-
-# Environment files
-.env
-.env.local
-.env.*.local
-runtime/.env
-runtime/.env.*
-
-# Hypatia scanning artifacts
-.hypatia/
-
-# PanLL local state (session storage, feedback logs)
-.panll/
-
-# Playwright test artifacts
-test-results/
-playwright-report/
-
-# IDE and OS files
-.idea/
-.vscode/
-.DS_Store
-Thumbs.db
-*.kate-swp
-
-
-# OS & Editor
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-*~
-.idea/
-.vscode/
-
-
-# Build
-/target/
-/_build/
-/build/
-/dist/
-/out/
-/zig-out/
-/zig-cache/
-
-
-# Dependencies
-/node_modules/
-/vendor/
-/deps/
 /.elixir_ls/
-
-
-# Rust
-
-# Cargo.lock  # Keep for binaries
-
-
-# Elixir
 /cover/
 /doc/
 *.ez
 erl_crash.dump
 
+# ── Frontend build artifacts ─────────────────────────────
+public/styles.css
+public/app.bundle.js
+public/app.bundle.js.map
+dist/
+build/
+out/
 
-# Julia
+# ── PanLL integration artifacts ─────────────────────────
+panic-attack-*.json
+panll-event-chain-*.json
+*.ctp
+.panll/
+
+# ── Test / Coverage ─────────────────────────────────────
+coverage/
+test-results/
+playwright-report/
+htmlcov/
+
+# ── Julia ────────────────────────────────────────────────
 *.jl.cov
 *.jl.mem
 /Manifest.toml
 
-
-# ReScript
-/lib/bs/
-/.bsb.lock
-
-
-# Python (SaltStack only)
+# ── Python (SaltStack only) ─────────────────────────────
 __pycache__/
 *.py[cod]
 .venv/
 
-
-# Ada/SPARK
+# ── Ada / SPARK ──────────────────────────────────────────
 *.ali
 /obj/
 /bin/
 
-
-# Haskell
+# ── Haskell ──────────────────────────────────────────────
 /.stack-work/
 /dist-newstyle/
 
-
-# Chapel
+# ── Chapel ───────────────────────────────────────────────
 *.chpl.tmp.*
 
-
-# Secrets
+# ── Secrets ──────────────────────────────────────────────
 .env
 .env.*
+.env.local
+.env.*.local
+runtime/.env
+runtime/.env.*
 *.pem
 *.key
 secrets/
 
-
-# Test/Coverage
-/coverage/
-htmlcov/
-
-
-# Logs
+# ── Logs ─────────────────────────────────────────────────
 *.log
+npm-debug.log*
 /logs/
 
+# ── OS & Editor ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.kate-swp
+.idea/
+.vscode/
 
-# Machine-readable locks
+# ── Hypatia scanning artifacts ──────────────────────────
+.hypatia/
+
+# ── Machine-readable locks ──────────────────────────────
 .machine_readable/.locks/
 
-
-# Temp
+# ── Temp ─────────────────────────────────────────────────
 /tmp/
 *.tmp
 *.bak
+
+# ── Dependencies ────────────────────────────────────────
+/vendor/
+/deps/

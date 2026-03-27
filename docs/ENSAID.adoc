@@ -1,0 +1,151 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= eNSAID — Environment for NeSy-Agentic Integrated Development
+:author: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+
+== What Is an eNSAID?
+
+An **eNSAID** (Environment for NeSy-Agentic Integrated Development) is a
+_specification_ for neurosymbolic development workbenches. PanLL is the
+reference implementation. The separation is deliberate: eNSAID is the idea,
+PanLL is the code. Ideas are bulletproof.
+
+The name is both acronym and metaphor — an anti-inflammatory for the friction
+and frustration of AI-assisted development.
+
+== The Binary Star Model
+
+Traditional AI development tools use a **master-servant topology**: the human
+commands, the machine obeys. This creates structural failure modes — unchecked
+neural hallucination, opaque reasoning, cognitive overload, and no formal
+constraints on the boundary between intent and output.
+
+eNSAID replaces this with a **Binary Star** architecture: the human operator
+and the neurosymbolic machine co-orbit a shared task barycentre, like two
+stars in a gravitational system. Neither dominates. Both are constrained by
+the task's "gravity."
+
+[cols="1,2,3"]
+|===
+| Component | Astronomical Analogy | eNSAID Realisation
+
+| **Human (H)**
+| Star contributing gravitational mass
+| Symbolic Mass — constraints, type signatures, proof obligations, acceptance
+  criteria
+
+| **Machine (M)**
+| Star contributing gravitational mass
+| Neural Mass — generated code, inferred types, reasoning traces, suggested
+  refactorings
+
+| **Barycentre (B)**
+| Shared centre of mass
+| Panel-W — validated results that have passed through both symbolic and neural
+  validation
+
+| **Validation Gate (Γ)**
+| —
+| Anti-Crash Gate — circuit breaker ensuring no neural output enters B without
+  satisfying constraints from H
+|===
+
+=== Formal Definition
+
+A Binary Star System is a tuple *S = (H, M, B, Γ, Δ, φ)* where:
+
+- **H = (Σ, C)** — human component with symbolic state Σ and constraint set C
+- **M = (N, Θ)** — machine component with neural state N and confidence Θ
+- **B ⊆ V** — barycentre (validated result set)
+- **Γ : N × C → {Valid, Invalid, Review}** — the Anti-Crash gate function
+- **Δ : H × M → [0,1]** — divergence metric measuring orbital drift
+- **φ : B × H × M → B** — barycentre update (monotonic under stable orbits)
+
+**Gate Exclusion Invariant:** No neural output enters B without
+Γ(n, C) = Valid.
+
+**Orbital Symmetry:** Both H and M are subject to the task's constraints.
+Neither has unvalidated write access to B.
+
+== The Three-Panel Architecture
+
+[cols="1,3"]
+|===
+| Panel-L (Symbolic Mass)
+| Constraints, formal specs, type rules, proof obligations. "The Law" that
+  governs neural inference. Hosts proven Safe* modules, protocol-squisher
+  compatibility classes, contractile Mustfile/Trustfile contracts.
+
+| Panel-N (Neural Stream)
+| AI reasoning, ECHIDNA proof search, agent monologue, OODA loop. The
+  machine's internal deliberation made visible — not just _what_ it produced,
+  but _why_.
+
+| Panel-W (World / Barycentre)
+| Validated results, dashboards, live data. The shared workspace where only
+  gate-validated output appears. Hosts panic-attack event chains, VeriSimDB
+  hexad queries, reposystem graphs.
+|===
+
+== Cognitive Governance
+
+Six subsystems maintain orbital stability:
+
+1. **Anti-Crash Gate** — Circuit breaker between Panel-N output and Panel-W.
+   Every neural token validated against Panel-L constraints.
+2. **Vexometer** — Friction monitor tracking cancellations, corrections, dwell
+   time. Index 0.0–1.0 triggers anti-inflammatory UI adjustments.
+3. **Information Humidity** — UI density adapts to stress. High humidity
+   (relaxed) = more detail. Low humidity (stressed) = essential info only.
+4. **Orbital Drift Aura** — Ambient visual indicating system stability.
+   Background colour shifts when human and machine diverge.
+5. **Contractiles** — Adaptive state contracts (Strict/Warn/Adaptive) between
+   operator and machine.
+6. **Sync Health Monitor** — Cross-panel synchronisation monitoring. Detects
+   when panels drift apart.
+
+== TypeLL — Cross-Panel Type Intelligence
+
+TypeLL is the invisible verification backbone. It type-checks neural and
+symbolic outputs against each other _before_ results enter the shared
+workspace. TypeLL implements a 10-level type safety hierarchy:
+
+- Levels 0-3: Standard type checking (ReScript compiler handles)
+- Levels 4-6: Semantic types, refinement types, property verification
+- Levels 7-9: Dependent types, temporal types, session types
+- Level 10: Full formal verification (Idris2/ECHIDNA)
+
+== Key Design Decisions
+
+See link:decisions/PANLL-ENSAID-SPEC-AND-DESIGN-DECISIONS.md[Design Decisions]
+for the full 18-decision record, including:
+
+- **DD-001:** eNSAID is a specification, PanLL is an implementation
+- **DD-002:** Binary Star architecture (human-machine co-orbit)
+- **DD-004:** 8-file panel module pattern
+- **DD-005:** Three-tier panel isolation (Native / Standard Pod / Hardened Pod)
+- **DD-006:** Qubes-style code provenance map
+- **DD-007:** Cognitive governance stack
+- **DD-008:** Accessibility as core, not afterthought
+- **DD-010:** Cladistic panel taxonomy
+
+== Academic Treatment
+
+The Binary Star model is formalised in a full academic paper:
+link:research/binary-star-neurosymbolic-ide.tex[Binary Star: A Neurosymbolic
+IDE Architecture with Cognitive Governance and Constraint-Validated Human-AI
+Co-Orbit] (1614 lines, LaTeX, targeted at arXiv).
+
+The paper includes formal definitions, invariants, proofs, TikZ diagrams,
+comparison with master-servant topology, and a comprehensive related work
+survey covering AI pair programming, neurosymbolic computing, cognitive load
+theory, and constraint satisfaction.
+
+== See Also
+
+- link:../README.adoc[README] — Project overview and quick start
+- link:ROADMAP.adoc[Roadmap] — Version-by-version feature plan
+- link:architecture/TOPOLOGY.md[Topology] — System architecture map
+- link:architecture/ARCHITECTURE.md[Architecture] — Technical architecture
+  reference
+- link:decisions/DESIGN-DECISIONS.md[Design Decisions] — Individual DD records
