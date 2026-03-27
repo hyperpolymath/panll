@@ -445,7 +445,7 @@ type minterMsg =
   | NextStep
   /// Go back to the previous wizard step.
   | PrevStep
-  /// Trigger the minting operation via Tauri backend.
+  /// Trigger the minting operation via Gossamer backend.
   | ExecuteMint
   /// Result of the minting operation (success or error).
   | MintResult(result<string, string>)
@@ -548,7 +548,7 @@ type provenanceMsg =
 
 /// Watcher messages — filesystem observation infrastructure.
 /// The watcher runs in a Rust background thread and emits events via the
-/// Tauri event bus. These messages handle lifecycle (start/stop/status)
+/// Gossamer event bus. These messages handle lifecycle (start/stop/status)
 /// and incoming filesystem events that panels can react to.
 type watcherMsg =
   /// Start watching the given paths.
@@ -614,7 +614,7 @@ type aiMsg =
   // ---------------------------------------------------------------------------
   // Streaming + tool_use messages (Claude Code integration)
   // ---------------------------------------------------------------------------
-  /// A stream chunk arrived from the Tauri `ai:stream-chunk` event.
+  /// A stream chunk arrived from the Gossamer `ai:stream-chunk` event.
   /// Payload is the raw JSON string from the StreamChunk enum.
   | AiStreamChunkReceived(string)
   /// Streaming session started (fire-and-forget acknowledgement).
@@ -2038,7 +2038,7 @@ type protocolSquisherMsg =
   | SetAnalyseInput(string)
   /// Run analysis on the current input path.
   | RunAnalysis
-  /// Analysis result from Tauri backend.
+  /// Analysis result from Gossamer backend.
   | AnalysisResult(result<string, string>)
   /// Update the left comparison input.
   | SetCompareLeft(string)
@@ -2046,7 +2046,7 @@ type protocolSquisherMsg =
   | SetCompareRight(string)
   /// Run comparison between left and right schemas.
   | RunComparison
-  /// Comparison result from Tauri backend.
+  /// Comparison result from Gossamer backend.
   | ComparisonResult(result<string, string>)
   /// TypeLL cross-panel type check result for the last schema analysis.
   | SchemaTypeCheckResult(result<string, string>)
@@ -2069,13 +2069,13 @@ type myLangMsg =
   | UpdateEditor(string)
   /// Compile the current editor content.
   | Compile
-  /// Compilation result from Tauri backend.
+  /// Compilation result from Gossamer backend.
   | CompileResult(result<string, string>)
   /// Update REPL input.
   | UpdateReplInput(string)
   /// Evaluate the current REPL input.
   | EvalRepl
-  /// REPL evaluation result from Tauri backend.
+  /// REPL evaluation result from Gossamer backend.
   | ReplResult(result<string, string>)
   /// TypeLL cross-panel type check result for the last compilation.
   | MlTypeCheckResult(result<string, string>)
@@ -2722,6 +2722,18 @@ type vexometerFrictionMsg =
   | SelectTool(string)
   | ClearError
 
+/// Messages for the 007 Toolchain panel.
+type oo7Msg =
+  | SetCategory(Oo7ToolchainModel.oo7Category)
+  | ConnectDaemon
+  | DisconnectDaemon
+  | SetPermissions(Oo7ToolchainModel.daemonPermission)
+  | RunStage(Oo7ToolchainModel.oo7Stage)
+  | StageResult(Oo7ToolchainModel.oo7Stage, result<string, string>)
+  | UpdateSource(string)
+  | LoadToolchain
+  | ClearError
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -2742,6 +2754,7 @@ type msg =
   | Fleet(fleetMsg) // Gitbot-Fleet orchestration
   | Reposystem(reposystemMsg) // RSR compliance auditing
   | Aerie(aerieMsg) // Network diagnostics
+  | Oo7Toolchain(oo7Msg) // Agentic compiler and high-rigor execution
   | Interfaces(interfacesMsg) // ABI/FFI inventory
   | Playgrounds(playgroundsMsg) // Code sandbox
   | Minter(minterMsg) // Panel Minter wizard

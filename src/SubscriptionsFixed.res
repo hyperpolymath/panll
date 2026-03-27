@@ -92,22 +92,22 @@ let inferenceSubscriptions = (model: model): Tea_Sub.t<msg> => {
   }
 }
 
-/// S2: Tauri backend event subscriptions — real-time neurosymbolic streaming.
+/// S2: Gossamer backend event subscriptions — real-time neurosymbolic streaming.
 /// These fire when the Rust backend receives events from ECHIDNA, Tentacles,
 /// VeriSimDB, or Hypatia. Only active when the relevant panel is connected.
 let neurosymbolicSubscriptions = (_model: model): Tea_Sub.t<msg> => {
   Tea_Sub.batch(list{
     // ECHIDNA proof progress → feed into proof session state.
-    TauriEvents.onEchidnaProgress(payload =>
+    GossamerEvents.onEchidnaProgress(payload =>
       Echidna(ProofResult(Ok(payload)))
     ),
     // ECHIDNA tactic suggestions → populate suggestion ribbon.
-    TauriEvents.onEchidnaTactics(payload =>
+    GossamerEvents.onEchidnaTactics(payload =>
       Echidna(TacticSuggestionsLoaded(Ok(payload)))
     ),
     // Tentacles agent phase changes → advance OODA indicators.
     // Payload expected as "agentId:phaseId" string from FFI.
-    TauriEvents.onTentaclesPhaseChange(payload => {
+    GossamerEvents.onTentaclesPhaseChange(payload => {
       // Parse "0:2" as agent Red, phase Decide — graceful fallback.
       let parts = String.split(payload, ":")
       let agentIdx = parts[0]->Option.getOr("0")->Int.fromString->Option.getOr(0)
@@ -130,7 +130,7 @@ let neurosymbolicSubscriptions = (_model: model): Tea_Sub.t<msg> => {
       Tentacles(AgentPhaseAdvanced(agentId, phase))
     }),
     // Tentacles agent broadcasts → deliver as reasoning share.
-    TauriEvents.onTentaclesBroadcast(payload =>
+    GossamerEvents.onTentaclesBroadcast(payload =>
       Tentacles(BroadcastFromAgent(Red, ReasoningShare({
         agent: Red,
         phase: Observe,
@@ -140,19 +140,19 @@ let neurosymbolicSubscriptions = (_model: model): Tea_Sub.t<msg> => {
       })))
     ),
     // VeriSimDB drift alerts → refresh drift display.
-    TauriEvents.onVeriSimDBDrift(payload =>
+    GossamerEvents.onVeriSimDBDrift(payload =>
       VeriSimDB(DriftLoaded(Ok(payload)))
     ),
     // Hypatia neural network status → refresh network grid.
-    TauriEvents.onHypatiaStatus(payload =>
+    GossamerEvents.onHypatiaStatus(payload =>
       Hypatia(ScansLoaded(Ok(payload)))
     ),
     // Governance signals → Anti-Crash intervention request.
-    TauriEvents.onGovernanceSignal(payload =>
+    GossamerEvents.onGovernanceSignal(payload =>
       AntiCrash(RequestOperatorIntervention(payload))
     ),
     // AI streaming chunks → feed into AI panel streaming state machine.
-    TauriEvents.onAiStreamChunk(payload =>
+    GossamerEvents.onAiStreamChunk(payload =>
       Ai(AiStreamChunkReceived(payload))
     ),
   })
@@ -224,14 +224,14 @@ let oodaPhaseCycling = (model: model): Tea_Sub.t<msg> => {
 let watcherSubscriptions = (_model: model): Tea_Sub.t<msg> => {
   Tea_Sub.batch(list{
     // Filesystem events → Watcher panel + consuming panels (Farm, Hypatia, etc.)
-    TauriEvents.onWatcherEvent(payload => {
+    GossamerEvents.onWatcherEvent(payload => {
       switch WatcherCmd.parseEvent(payload) {
       | Some(evt) => Watcher(FileEvent(evt))
       | None => NoOp
       }
     }),
     // Watcher errors → Observatory activity log
-    TauriEvents.onWatcherError(payload =>
+    GossamerEvents.onWatcherError(payload =>
       Watcher(WatcherResult(Error(payload)))
     ),
   })

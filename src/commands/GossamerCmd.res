@@ -12,6 +12,7 @@
 /// ECHIDNA, panic-attacker, vexation tracking).
 
 let invoke = RuntimeBridge.invoke
+let isGossamerRuntime = RuntimeBridge.isGossamerRuntime
 
 // ===========================================================================
 // Direct HTTP helpers for browser-only mode

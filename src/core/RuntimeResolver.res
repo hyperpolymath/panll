@@ -3,8 +3,8 @@
 /// RuntimeResolver — Resolves panll:// URIs to the active runtime's IPC.
 ///
 /// Panel manifests use `panll://service-id/path` as runtime-agnostic URIs.
-/// This module resolves them to actual IPC calls through whatever runtime
-/// is available (Gossamer or Tauri), or to direct HTTP in browser mode.
+/// This module resolves them to actual IPC calls through the Gossamer runtime,
+/// or to direct HTTP in browser mode.
 ///
 /// Used by the panel harness to dispatch data_source fetches and health checks.
 
@@ -14,9 +14,6 @@ let panllPrefix = "panll://"
 /// URI prefix for Gossamer-specific endpoints.
 let gossamerPrefix = "gossamer://"
 
-/// URI prefix for Tauri-specific endpoints (legacy).
-let tauriPrefix = "tauri://"
-
 /// Parse a panll:// URI into service_id and path.
 /// Example: "panll://system-update/components" -> ("system-update", "/components")
 let parseUri = (uri: string): option<(string, string)> => {
@@ -24,8 +21,9 @@ let parseUri = (uri: string): option<(string, string)> => {
     Some(String.sliceToEnd(uri, ~start=String.length(panllPrefix)))
   } else if String.startsWith(uri, gossamerPrefix) {
     Some(String.sliceToEnd(uri, ~start=String.length(gossamerPrefix)))
-  } else if String.startsWith(uri, tauriPrefix) {
-    Some(String.sliceToEnd(uri, ~start=String.length(tauriPrefix)))
+  } else if String.startsWith(uri, "tauri://") {
+    // Legacy tauri:// URIs — resolve to gossamer equivalent.
+    Some(String.sliceToEnd(uri, ~start=8))
   } else {
     None
   }
@@ -47,7 +45,7 @@ let parseUri = (uri: string): option<(string, string)> => {
 /// Resolve a panll:// data source path to an IPC invoke command name.
 ///
 /// Convention: panll://service-id/invoke/command_name -> invoke("command_name")
-/// This matches the existing Tauri command naming used across all panels.
+/// This matches the Gossamer command naming used across all panels.
 let resolveInvokeCommand = (uri: string): option<string> => {
   switch parseUri(uri) {
   | None => None
@@ -80,7 +78,7 @@ let fetch = (uri: string, body: option<JSON.t>): promise<string> => {
 /// Uses the service's health_check.path from the manifest.
 let healthCheck = (
   serviceId: string,
-  healthPath: string,
+  _healthPath: string,
 ): promise<bool> => {
   let command = serviceId ++ "_health"
   RuntimeBridge.invoke(command, ())
@@ -89,11 +87,10 @@ let healthCheck = (
 }
 
 /// Get the runtime-specific endpoint URI for a service.
-/// Returns gossamer:// or tauri:// based on the active runtime.
+/// Returns gossamer:// or http:// based on the active runtime.
 let resolvedEndpoint = (serviceId: string): string => {
   switch RuntimeBridge.currentRuntime() {
   | RuntimeBridge.Gossamer => gossamerPrefix ++ serviceId ++ "/bridge"
-  | RuntimeBridge.Tauri => tauriPrefix ++ serviceId
   | RuntimeBridge.BrowserOnly => "http://localhost:8000/api/" ++ serviceId
   }
 }

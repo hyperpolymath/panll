@@ -166,7 +166,7 @@ let buildContext = (
 /// `ai:stream-chunk`. This command returns immediately with "streaming_started".
 ///
 /// The streaming provider emits StreamChunk events that the frontend receives
-/// via TauriEvents.onAiStreamChunk and feeds into the TEA update loop.
+/// via GossamerEvents.onAiStreamChunk and feeds into the TEA update loop.
 ///
 /// @param content — the user's message text
 /// @param history — conversation history (JSON-serialised AiMessages)
