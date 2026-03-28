@@ -1,0 +1,21 @@
+[Desktop Entry]
+Type=Application
+Name=PanLL
+GenericName=Panel Layout Manager
+Comment=Cognitive-relief panel layout for human-machine interaction
+Exec=panll-launcher %u
+Icon=panll
+Categories=Development;Utility;
+Terminal=false
+StartupWMClass=panll
+Keywords=panels;layout;dashboard;cognitive;accessibility;
+MimeType=x-scheme-handler/panll;
+Actions=gossamer;web;
+
+[Desktop Action gossamer]
+Name=Launch Desktop App (Gossamer)
+Exec=panll-launcher --gossamer
+
+[Desktop Action web]
+Name=Launch in Browser
+Exec=panll-launcher --web
