@@ -129,13 +129,13 @@ pub async fn watcher_start(
 
                         // Emit to the frontend via Tauri event bus.
                         let payload = serde_json::to_string(&watch_event).unwrap_or_default();
-                        let _ = app_handle.emit("watcher://event", payload);
+                        let _ = app_handle.emit("watcher://event", &payload);
                     }
                 }
                 Err(e) => {
                     let _ = app_handle.emit(
                         "watcher://error",
-                        json!({ "error": format!("{e}") }).to_string(),
+                        &json!({ "error": format!("{e}") }).to_string(),
                     );
                 }
             }

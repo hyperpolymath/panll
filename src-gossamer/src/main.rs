@@ -1104,76 +1104,67 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // CloudGuard commands — delegates to cloudguard::commands::*
     // -----------------------------------------------------------------------
 
-    app.command("cloudguard_verify_token", |payload| {
-        result_to_json(cloudguard::commands::cloudguard_verify_token(
-            get_str(&payload, "token")?.to_string(),
-        ))
+    app.command("cloudguard_verify_token", |_payload| {
+        result_to_json(cloudguard::commands::cloudguard_verify_token())
     });
 
-    app.command("cloudguard_list_zones", |payload| {
-        result_to_json(cloudguard::commands::cloudguard_list_zones(
-            get_str(&payload, "token")?.to_string(),
-        ))
+    app.command("cloudguard_list_zones", |_payload| {
+        result_to_json(cloudguard::commands::cloudguard_list_zones())
     });
 
     app.command("cloudguard_get_zone", |payload| {
         result_to_json(cloudguard::commands::cloudguard_get_zone(
-            get_str(&payload, "token")?.to_string(),
             get_str(&payload, "zone_id")?.to_string(),
         ))
     });
 
     app.command("cloudguard_get_settings", |payload| {
         result_to_json(cloudguard::commands::cloudguard_get_settings(
-            get_str(&payload, "token")?.to_string(),
             get_str(&payload, "zone_id")?.to_string(),
         ))
     });
 
     app.command("cloudguard_update_setting", |payload| {
+        let value_str = serde_json::to_string(&payload.get("value").cloned().unwrap_or(Value::Null))
+            .unwrap_or_else(|_| "null".to_string());
         result_to_json(cloudguard::commands::cloudguard_update_setting(
-            get_str(&payload, "token")?.to_string(),
             get_str(&payload, "zone_id")?.to_string(),
             get_str(&payload, "setting_id")?.to_string(),
-            payload.get("value").cloned().unwrap_or(Value::Null),
+            value_str,
         ))
     });
 
     app.command("cloudguard_update_settings_batch", |payload| {
+        let settings_str = serde_json::to_string(&payload.get("settings").cloned().unwrap_or(Value::Array(vec![])))
+            .unwrap_or_else(|_| "[]".to_string());
         result_to_json(cloudguard::commands::cloudguard_update_settings_batch(
-            get_str(&payload, "token")?.to_string(),
             get_str(&payload, "zone_id")?.to_string(),
-            payload.get("settings").cloned().unwrap_or(Value::Null),
+            settings_str,
         ))
     });
 
     app.command("cloudguard_list_dns_records", |payload| {
         result_to_json(cloudguard::commands::cloudguard_list_dns_records(
-            get_str(&payload, "token")?.to_string(),
             get_str(&payload, "zone_id")?.to_string(),
         ))
     });
 
     app.command("cloudguard_create_dns_record", |payload| {
-        result_to_json(cloudguard::commands::cloudguard_create_dns_record(
-            get_str(&payload, "token")?.to_string(),
-            get_str(&payload, "zone_id")?.to_string(),
-            payload.get("record").cloned().unwrap_or(Value::Null),
-        ))
+        let record: cloudguard::commands::CreateDnsRecordPayload = serde_json::from_value(
+            payload.get("record").cloned().unwrap_or(Value::Null)
+        ).map_err(|e| format!("Invalid record: {e}"))?;
+        result_to_json(cloudguard::commands::cloudguard_create_dns_record(record))
     });
 
     app.command("cloudguard_update_dns_record", |payload| {
-        result_to_json(cloudguard::commands::cloudguard_update_dns_record(
-            get_str(&payload, "token")?.to_string(),
-            get_str(&payload, "zone_id")?.to_string(),
-            get_str(&payload, "record_id")?.to_string(),
-            payload.get("record").cloned().unwrap_or(Value::Null),
-        ))
+        let record: cloudguard::commands::UpdateDnsRecordPayload = serde_json::from_value(
+            payload.get("record").cloned().unwrap_or(Value::Null)
+        ).map_err(|e| format!("Invalid record: {e}"))?;
+        result_to_json(cloudguard::commands::cloudguard_update_dns_record(record))
     });
 
     app.command("cloudguard_delete_dns_record", |payload| {
         result_to_json(cloudguard::commands::cloudguard_delete_dns_record(
-            get_str(&payload, "token")?.to_string(),
             get_str(&payload, "zone_id")?.to_string(),
             get_str(&payload, "record_id")?.to_string(),
         ))
@@ -1181,28 +1172,24 @@ async fn main() -> Result<(), gossamer_rs::Error> {
 
     app.command("cloudguard_get_dnssec", |payload| {
         result_to_json(cloudguard::commands::cloudguard_get_dnssec(
-            get_str(&payload, "token")?.to_string(),
             get_str(&payload, "zone_id")?.to_string(),
         ))
     });
 
     app.command("cloudguard_enable_dnssec", |payload| {
         result_to_json(cloudguard::commands::cloudguard_enable_dnssec(
-            get_str(&payload, "token")?.to_string(),
             get_str(&payload, "zone_id")?.to_string(),
         ))
     });
 
     app.command("cloudguard_harden_zone", |payload| {
         result_to_json(cloudguard::commands::cloudguard_harden_zone(
-            get_str(&payload, "token")?.to_string(),
             get_str(&payload, "zone_id")?.to_string(),
         ))
     });
 
     app.command("cloudguard_download_config", |payload| {
         result_to_json(cloudguard::commands::cloudguard_download_config(
-            get_str(&payload, "token")?.to_string(),
             get_str(&payload, "zone_id")?.to_string(),
         ))
     });
@@ -1212,15 +1199,15 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // -----------------------------------------------------------------------
 
     app.command("farm_list_repos", |_payload| {
-        result_to_json(farm::commands::farm_list_repos())
+        result_to_json(tokio::runtime::Handle::current().block_on(farm::commands::farm_list_repos()))
     });
 
     app.command("farm_get_repo", |payload| {
-        result_to_json(farm::commands::farm_get_repo(get_str(&payload, "name")?.to_string()))
+        result_to_json(tokio::runtime::Handle::current().block_on(farm::commands::farm_get_repo(get_str(&payload, "name")?.to_string())))
     });
 
     app.command("farm_get_stats", |_payload| {
-        result_to_json(farm::commands::farm_get_stats())
+        result_to_json(tokio::runtime::Handle::current().block_on(farm::commands::farm_get_stats()))
     });
 
     // -----------------------------------------------------------------------
@@ -1228,33 +1215,33 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // -----------------------------------------------------------------------
 
     app.command("vm_inspector_read_state", |_payload| {
-        result_to_json(vm_inspector::commands::vm_inspector_read_state())
+        result_to_json(tokio::runtime::Handle::current().block_on(vm_inspector::commands::vm_inspector_read_state()))
     });
 
     app.command("vm_inspector_step_forward", |_payload| {
-        result_to_json(vm_inspector::commands::vm_inspector_step_forward())
+        result_to_json(tokio::runtime::Handle::current().block_on(vm_inspector::commands::vm_inspector_step_forward()))
     });
 
     app.command("vm_inspector_step_backward", |_payload| {
-        result_to_json(vm_inspector::commands::vm_inspector_step_backward())
+        result_to_json(tokio::runtime::Handle::current().block_on(vm_inspector::commands::vm_inspector_step_backward()))
     });
 
     app.command("vm_inspector_run", |_payload| {
-        result_to_json(vm_inspector::commands::vm_inspector_run())
+        result_to_json(tokio::runtime::Handle::current().block_on(vm_inspector::commands::vm_inspector_run()))
     });
 
     app.command("vm_inspector_load_program", |payload| {
         let program = get_str(&payload, "program")?.to_string();
-        result_to_json(vm_inspector::commands::vm_inspector_load_program(program))
+        result_to_json(tokio::runtime::Handle::current().block_on(vm_inspector::commands::vm_inspector_load_program(program)))
     });
 
     app.command("vm_inspector_export_snapshot", |_payload| {
-        result_to_json(vm_inspector::commands::vm_inspector_export_snapshot())
+        result_to_json(tokio::runtime::Handle::current().block_on(vm_inspector::commands::vm_inspector_export_snapshot()))
     });
 
     app.command("vm_inspector_read_file", |payload| {
         let path = get_str(&payload, "path")?.to_string();
-        result_to_json(vm_inspector::commands::vm_inspector_read_file(path))
+        result_to_json(tokio::runtime::Handle::current().block_on(vm_inspector::commands::vm_inspector_read_file(path)))
     });
 
     // -----------------------------------------------------------------------
@@ -1263,16 +1250,16 @@ async fn main() -> Result<(), gossamer_rs::Error> {
 
     app.command("plaza_scan_repo", |payload| {
         let path = get_str(&payload, "path")?.to_string();
-        result_to_json(plaza::commands::plaza_scan_repo(path))
+        result_to_json(tokio::runtime::Handle::current().block_on(plaza::commands::plaza_scan_repo(path)))
     });
 
     app.command("plaza_adoption_stats", |_payload| {
-        result_to_json(plaza::commands::plaza_adoption_stats())
+        result_to_json(tokio::runtime::Handle::current().block_on(plaza::commands::plaza_adoption_stats()))
     });
 
     app.command("plaza_check_compatibility", |payload| {
         let license = get_str(&payload, "license")?.to_string();
-        result_to_json(plaza::commands::plaza_check_compatibility(license))
+        result_to_json(tokio::runtime::Handle::current().block_on(plaza::commands::plaza_check_compatibility(license)))
     });
 
     // -----------------------------------------------------------------------
@@ -1281,11 +1268,21 @@ async fn main() -> Result<(), gossamer_rs::Error> {
 
     app.command("minter_validate_name", |payload| {
         let name = get_str(&payload, "name")?.to_string();
-        result_to_json(minter::commands::minter_validate_name(name))
+        result_to_json(tokio::runtime::Handle::current().block_on(minter::commands::minter_validate_name(name)))
     });
 
     app.command("minter_mint_panel", |payload| {
-        result_to_json(minter::commands::minter_mint_panel(payload))
+        let panel_name = get_str(&payload, "panel_name")?.to_string();
+        let short_name = get_str(&payload, "short_name")?.to_string();
+        let description = get_str(&payload, "description")?.to_string();
+        let icon = get_str(&payload, "icon")?.to_string();
+        let backend_kind = get_str(&payload, "backend_kind")?.to_string();
+        let accessibility = get_str(&payload, "accessibility")?.to_string();
+        let capabilities = get_str(&payload, "capabilities")?.to_string();
+        let endpoint = get_str(&payload, "endpoint")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(
+            minter::commands::minter_mint_panel(panel_name, short_name, description, icon, backend_kind, accessibility, capabilities, endpoint)
+        ))
     });
 
     // -----------------------------------------------------------------------
@@ -1294,23 +1291,23 @@ async fn main() -> Result<(), gossamer_rs::Error> {
 
     app.command("voicetag_load", |payload| {
         let path = get_str(&payload, "path")?.to_string();
-        result_to_json(voicetag::commands::voicetag_load(path))
+        result_to_json(tokio::runtime::Handle::current().block_on(voicetag::commands::voicetag_load(path)))
     });
 
     app.command("voicetag_save", |payload| {
         let path = get_str(&payload, "path")?.to_string();
         let data = get_str(&payload, "data")?.to_string();
-        result_to_json(voicetag::commands::voicetag_save(path, data))
+        result_to_json(tokio::runtime::Handle::current().block_on(voicetag::commands::voicetag_save(path, data)))
     });
 
     app.command("voicetag_delete", |payload| {
         let path = get_str(&payload, "path")?.to_string();
-        result_to_json(voicetag::commands::voicetag_delete(path))
+        result_to_json(tokio::runtime::Handle::current().block_on(voicetag::commands::voicetag_delete(path)))
     });
 
     app.command("voicetag_scan", |payload| {
         let dir = get_str(&payload, "dir")?.to_string();
-        result_to_json(voicetag::commands::voicetag_scan(dir))
+        result_to_json(tokio::runtime::Handle::current().block_on(voicetag::commands::voicetag_scan(dir)))
     });
 
     // -----------------------------------------------------------------------
@@ -1318,27 +1315,34 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // -----------------------------------------------------------------------
 
     app.command("watcher_start", |payload| {
-        let path = get_str(&payload, "path")?.to_string();
+        let paths: Vec<String> = payload.get("paths")
+            .and_then(Value::as_array)
+            .map(|arr| arr.iter().filter_map(Value::as_str).map(String::from).collect())
+            .unwrap_or_else(|| {
+                payload.get("path").and_then(Value::as_str)
+                    .map(|p| vec![p.to_string()])
+                    .unwrap_or_default()
+            });
         let app_handle = compat::AppHandle::new();
-        result_to_json(watcher::commands::watcher_start(app_handle, path))
+        result_to_json(tokio::runtime::Handle::current().block_on(watcher::commands::watcher_start(app_handle, paths)))
     });
 
     app.command("watcher_stop", |_payload| {
-        result_to_json(watcher::commands::watcher_stop())
+        result_to_json(tokio::runtime::Handle::current().block_on(watcher::commands::watcher_stop()))
     });
 
     app.command("watcher_add_path", |payload| {
         let path = get_str(&payload, "path")?.to_string();
-        result_to_json(watcher::commands::watcher_add_path(path))
+        result_to_json(tokio::runtime::Handle::current().block_on(watcher::commands::watcher_add_path(path)))
     });
 
     app.command("watcher_remove_path", |payload| {
         let path = get_str(&payload, "path")?.to_string();
-        result_to_json(watcher::commands::watcher_remove_path(path))
+        result_to_json(tokio::runtime::Handle::current().block_on(watcher::commands::watcher_remove_path(path)))
     });
 
     app.command("watcher_status", |_payload| {
-        result_to_json(watcher::commands::watcher_status())
+        result_to_json(tokio::runtime::Handle::current().block_on(watcher::commands::watcher_status()))
     });
 
     // -----------------------------------------------------------------------
@@ -1346,49 +1350,51 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // -----------------------------------------------------------------------
 
     app.command("ai_send_message", |payload| {
-        result_to_json(ai::commands::ai_send_message(payload))
+        let request: crate::ai::types::SendMessageRequest = serde_json::from_value(payload)
+            .map_err(|e| format!("Invalid send message request: {e}"))?;
+        result_to_json(tokio::runtime::Handle::current().block_on(ai::commands::ai_send_message(request)))
     });
 
     app.command("ai_check_provider", |payload| {
         let provider_id = get_str(&payload, "provider_id")?.to_string();
-        result_to_json(ai::commands::ai_check_provider(provider_id))
+        result_to_json(tokio::runtime::Handle::current().block_on(ai::commands::ai_check_provider(provider_id)))
     });
 
     app.command("ai_set_model", |payload| {
         let provider_id = get_str(&payload, "provider_id")?.to_string();
         let model = get_str(&payload, "model")?.to_string();
-        result_to_json(ai::commands::ai_set_model(provider_id, model))
+        result_to_json(tokio::runtime::Handle::current().block_on(ai::commands::ai_set_model(provider_id, model)))
     });
 
     app.command("ai_set_priority", |payload| {
         let provider_id = get_str(&payload, "provider_id")?.to_string();
         let priority = get_u64(&payload, "priority")? as u32;
-        result_to_json(ai::commands::ai_set_priority(provider_id, priority))
+        result_to_json(tokio::runtime::Handle::current().block_on(ai::commands::ai_set_priority(provider_id, priority)))
     });
 
     app.command("ai_toggle_provider", |payload| {
         let provider_id = get_str(&payload, "provider_id")?.to_string();
-        let enabled = payload.get("enabled").and_then(Value::as_bool).unwrap_or(true);
-        result_to_json(ai::commands::ai_toggle_provider(provider_id, enabled))
+        result_to_json(tokio::runtime::Handle::current().block_on(ai::commands::ai_toggle_provider(provider_id)))
     });
 
     app.command("ai_clear_history", |_payload| {
-        result_to_json(ai::commands::ai_clear_history())
+        result_to_json(tokio::runtime::Handle::current().block_on(ai::commands::ai_clear_history()))
     });
 
     app.command("ai_build_context", |payload| {
-        result_to_json(ai::commands::ai_build_context(payload))
+        let repo_path = get_str(&payload, "repo_path")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ai::commands::ai_build_context(repo_path)))
     });
 
     app.command("ai_get_state", |_payload| {
-        result_to_json(ai::commands::ai_get_state())
+        result_to_json(tokio::runtime::Handle::current().block_on(ai::commands::ai_get_state()))
     });
 
     // Note: ai_send_message_streaming requires AppHandle for event emission.
     // The compat shim provides AppHandle but the function is async.
     // Registered as a sync command that spawns the async work internally.
     app.command("ai_send_message_streaming", |payload| {
-        let request: ai::commands::StreamingRequest = serde_json::from_value(payload)
+        let request: crate::ai::types::StreamingRequest = serde_json::from_value(payload)
             .map_err(|e| format!("Invalid streaming request: {e}"))?;
         let app_handle = compat::AppHandle::new();
         // Spawn the streaming task on the Tokio runtime
@@ -1404,20 +1410,22 @@ async fn main() -> Result<(), gossamer_rs::Error> {
 
     app.command("repoloader_scan", |payload| {
         let path = get_str(&payload, "path")?.to_string();
-        result_to_json(repoloader::commands::repoloader_scan(path))
+        result_to_json(tokio::runtime::Handle::current().block_on(repoloader::commands::repoloader_scan(path)))
     });
 
     app.command("repoloader_save_panels", |payload| {
-        result_to_json(repoloader::commands::repoloader_save_panels(payload))
+        let repo_path = get_str(&payload, "repo_path")?.to_string();
+        let panels_json = get_str(&payload, "panels_json")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(repoloader::commands::repoloader_save_panels(repo_path, panels_json)))
     });
 
     app.command("repoloader_list_recent", |_payload| {
-        result_to_json(repoloader::commands::repoloader_list_recent())
+        result_to_json(tokio::runtime::Handle::current().block_on(repoloader::commands::repoloader_list_recent()))
     });
 
     app.command("repoloader_search_farm", |payload| {
         let query = get_str(&payload, "query")?.to_string();
-        result_to_json(repoloader::commands::repoloader_search_farm(query))
+        result_to_json(tokio::runtime::Handle::current().block_on(repoloader::commands::repoloader_search_farm(query)))
     });
 
     // -----------------------------------------------------------------------
@@ -1425,33 +1433,37 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // -----------------------------------------------------------------------
 
     app.command("save_arrangement", |payload| {
-        result_to_json(workspace::commands::save_arrangement(payload))
+        let arrangement: workspace::types::Arrangement = serde_json::from_value(payload)
+            .map_err(|e| format!("Invalid arrangement: {e}"))?;
+        result_to_json(tokio::runtime::Handle::current().block_on(workspace::commands::save_arrangement(arrangement)))
     });
 
     app.command("load_arrangements", |_payload| {
-        result_to_json(workspace::commands::load_arrangements())
+        result_to_json(tokio::runtime::Handle::current().block_on(workspace::commands::load_arrangements()))
     });
 
     app.command("delete_arrangement", |payload| {
         let name = get_str(&payload, "name")?.to_string();
-        result_to_json(workspace::commands::delete_arrangement(name))
+        result_to_json(tokio::runtime::Handle::current().block_on(workspace::commands::delete_arrangement(name)))
     });
 
     app.command("save_session", |payload| {
-        result_to_json(workspace::commands::save_session(payload))
+        let session: workspace::types::Session = serde_json::from_value(payload)
+            .map_err(|e| format!("Invalid session: {e}"))?;
+        result_to_json(tokio::runtime::Handle::current().block_on(workspace::commands::save_session(session)))
     });
 
     app.command("load_sessions", |_payload| {
-        result_to_json(workspace::commands::load_sessions())
+        result_to_json(tokio::runtime::Handle::current().block_on(workspace::commands::load_sessions()))
     });
 
     app.command("delete_session", |payload| {
         let name = get_str(&payload, "name")?.to_string();
-        result_to_json(workspace::commands::delete_session(name))
+        result_to_json(tokio::runtime::Handle::current().block_on(workspace::commands::delete_session(name)))
     });
 
     app.command("get_system_info", |_payload| {
-        result_to_json(workspace::sysinfo::get_system_info())
+        result_to_json(tokio::runtime::Handle::current().block_on(workspace::sysinfo::get_system_info()))
     });
 
     // -----------------------------------------------------------------------
@@ -1459,24 +1471,32 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // -----------------------------------------------------------------------
 
     app.command("save_screenshot", |payload| {
-        result_to_json(capture::commands::save_screenshot(payload))
+        let capture_id = get_str(&payload, "capture_id")?.to_string();
+        let panel_id = get_str(&payload, "panel_id")?.to_string();
+        let base64_data = get_str(&payload, "base64_data")?.to_string();
+        let format = get_str(&payload, "format")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(
+            capture::commands::save_screenshot(capture_id, panel_id, base64_data, format)
+        ))
     });
 
     app.command("print_panel", |payload| {
-        result_to_json(capture::commands::print_panel(payload))
+        let panel_id = get_str(&payload, "panel_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(capture::commands::print_panel(panel_id)))
     });
 
     app.command("save_demo", |payload| {
-        result_to_json(capture::commands::save_demo(payload))
+        let demo_json = get_str(&payload, "demo_json")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(capture::commands::save_demo(demo_json)))
     });
 
     app.command("load_demos", |_payload| {
-        result_to_json(capture::commands::load_demos())
+        result_to_json(tokio::runtime::Handle::current().block_on(capture::commands::load_demos()))
     });
 
     app.command("delete_demo", |payload| {
         let name = get_str(&payload, "name")?.to_string();
-        result_to_json(capture::commands::delete_demo(name))
+        result_to_json(tokio::runtime::Handle::current().block_on(capture::commands::delete_demo(name)))
     });
 
     // -----------------------------------------------------------------------
@@ -1485,27 +1505,32 @@ async fn main() -> Result<(), gossamer_rs::Error> {
 
     app.command("redact_text", |payload| {
         let text = get_str(&payload, "text")?.to_string();
-        result_to_json(security::commands::redact_text(text))
+        let panel_id = get_str(&payload, "panel_id")?.to_string();
+        let patterns_json = serde_json::to_string(&payload.get("patterns").cloned().unwrap_or(Value::Array(vec![])))
+            .unwrap_or_else(|_| "[]".to_string());
+        result_to_json(tokio::runtime::Handle::current().block_on(
+            security::commands::redact_text(text, panel_id, patterns_json)
+        ))
     });
 
     app.command("vault_store", |payload| {
         let key = get_str(&payload, "key")?.to_string();
         let value = get_str(&payload, "value")?.to_string();
-        result_to_json(security::commands::vault_store(key, value))
+        result_to_json(tokio::runtime::Handle::current().block_on(security::commands::vault_store(key, value)))
     });
 
     app.command("vault_retrieve", |payload| {
         let key = get_str(&payload, "key")?.to_string();
-        result_to_json(security::commands::vault_retrieve(key))
+        result_to_json(tokio::runtime::Handle::current().block_on(security::commands::vault_retrieve(key)))
     });
 
     app.command("vault_list", |_payload| {
-        result_to_json(security::commands::vault_list())
+        result_to_json(tokio::runtime::Handle::current().block_on(security::commands::vault_list()))
     });
 
     app.command("load_trustfile", |payload| {
         let path = get_str(&payload, "path")?.to_string();
-        result_to_json(security::commands::load_trustfile(path))
+        result_to_json(tokio::runtime::Handle::current().block_on(security::commands::load_trustfile(path)))
     });
 
     // -----------------------------------------------------------------------
@@ -1514,10 +1539,21 @@ async fn main() -> Result<(), gossamer_rs::Error> {
 
     app.command("overlay_status", |_p| { result_to_json(overlay::commands::overlay_status()) });
     app.command("overlay_health", |_p| { result_to_json(overlay::commands::overlay_health()) });
-    app.command("overlay_tor_connect", |_p| { result_to_json(overlay::commands::overlay_tor_connect()) });
+    app.command("overlay_tor_connect", |p| {
+        let control_host = get_opt_str(&p, "control_host");
+        let control_port = p.get("control_port").and_then(|v| v.as_u64()).map(|n| n as u16);
+        let socks_port = p.get("socks_port").and_then(|v| v.as_u64()).map(|n| n as u16);
+        let auth_method = p.get("auth_method").and_then(|v| v.as_u64()).map(|n| n as u8);
+        let auth_data = get_opt_str(&p, "auth_data");
+        result_to_json(overlay::commands::overlay_tor_connect(control_host, control_port, socks_port, auth_method, auth_data))
+    });
     app.command("overlay_tor_disconnect", |_p| { result_to_json(overlay::commands::overlay_tor_disconnect()) });
     app.command("overlay_tor_status", |_p| { result_to_json(overlay::commands::overlay_tor_status()) });
-    app.command("overlay_tor_create_hidden_service", |p| { result_to_json(overlay::commands::overlay_tor_create_hidden_service(p)) });
+    app.command("overlay_tor_create_hidden_service", |p| {
+        let port = p.get("port").and_then(|v| v.as_u64()).unwrap_or(80) as u16;
+        let target_port = p.get("target_port").and_then(|v| v.as_u64()).unwrap_or(8080) as u16;
+        result_to_json(overlay::commands::overlay_tor_create_hidden_service(port, target_port))
+    });
     app.command("overlay_tor_destroy_hidden_service", |p| {
         let id = get_str(&p, "service_id")?.to_string();
         result_to_json(overlay::commands::overlay_tor_destroy_hidden_service(id))
@@ -1531,12 +1567,19 @@ async fn main() -> Result<(), gossamer_rs::Error> {
         let hostname = get_str(&p, "hostname")?.to_string();
         result_to_json(overlay::commands::overlay_tor_resolve(hostname))
     });
-    app.command("overlay_ipfs_connect", |_p| { result_to_json(overlay::commands::overlay_ipfs_connect()) });
+    app.command("overlay_ipfs_connect", |p| {
+        let api_host = get_opt_str(&p, "api_host");
+        let api_port = p.get("api_port").and_then(|v| v.as_u64()).map(|n| n as u16);
+        let gateway_port = p.get("gateway_port").and_then(|v| v.as_u64()).map(|n| n as u16);
+        let repo_path = get_opt_str(&p, "repo_path");
+        result_to_json(overlay::commands::overlay_ipfs_connect(api_host, api_port, gateway_port, repo_path))
+    });
     app.command("overlay_ipfs_disconnect", |_p| { result_to_json(overlay::commands::overlay_ipfs_disconnect()) });
     app.command("overlay_ipfs_status", |_p| { result_to_json(overlay::commands::overlay_ipfs_status()) });
     app.command("overlay_ipfs_add", |p| {
         let content = get_str(&p, "content")?.to_string();
-        result_to_json(overlay::commands::overlay_ipfs_add(content))
+        let content_type = get_opt_str(&p, "content_type");
+        result_to_json(overlay::commands::overlay_ipfs_add(content, content_type))
     });
     app.command("overlay_ipfs_cat", |p| {
         let cid = get_str(&p, "cid")?.to_string();
@@ -1554,7 +1597,12 @@ async fn main() -> Result<(), gossamer_rs::Error> {
         let cid = get_str(&p, "cid")?.to_string();
         result_to_json(overlay::commands::overlay_ipfs_dag_get(cid))
     });
-    app.command("overlay_eth_connect", |_p| { result_to_json(overlay::commands::overlay_eth_connect()) });
+    app.command("overlay_eth_connect", |p| {
+        let rpc_url = get_opt_str(&p, "rpc_url");
+        let network = get_opt_str(&p, "network");
+        let chain_id = p.get("chain_id").and_then(|v| v.as_u64());
+        result_to_json(overlay::commands::overlay_eth_connect(rpc_url, network, chain_id))
+    });
     app.command("overlay_eth_disconnect", |_p| { result_to_json(overlay::commands::overlay_eth_disconnect()) });
     app.command("overlay_eth_status", |_p| { result_to_json(overlay::commands::overlay_eth_status()) });
     app.command("overlay_eth_timestamp_proof", |p| {
@@ -1585,7 +1633,12 @@ async fn main() -> Result<(), gossamer_rs::Error> {
         result_to_json(boj::commands::boj_unload_cartridge(id))
     });
     app.command("boj_topology", |_p| { result_to_json(boj::commands::boj_topology()) });
-    app.command("boj_invoke", |p| { result_to_json(boj::commands::boj_invoke(p)) });
+    app.command("boj_invoke", |p| {
+        let name = get_str(&p, "name")?.to_string();
+        let tool = get_str(&p, "tool")?.to_string();
+        let args = get_opt_str(&p, "args");
+        result_to_json(boj::commands::boj_invoke(name, tool, args))
+    });
     app.command("boj_umoja_status", |_p| { result_to_json(boj::commands::boj_umoja_status()) });
 
     // -----------------------------------------------------------------------
@@ -1594,7 +1647,12 @@ async fn main() -> Result<(), gossamer_rs::Error> {
 
     app.command("boj_live_health", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(boj_live::boj_live_health())) });
     app.command("boj_live_cartridges", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(boj_live::boj_live_cartridges())) });
-    app.command("boj_live_invoke", |p| { result_to_json(tokio::runtime::Handle::current().block_on(boj_live::boj_live_invoke(p))) });
+    app.command("boj_live_invoke", |p| {
+        let cartridge = get_str(&p, "cartridge")?.to_string();
+        let tool = get_str(&p, "tool")?.to_string();
+        let params = get_str(&p, "params")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(boj_live::boj_live_invoke(cartridge, tool, params)))
+    });
     app.command("boj_live_topology", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(boj_live::boj_live_topology())) });
     app.command("boj_live_check", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(boj_live::boj_live_check())) });
 
@@ -1603,18 +1661,33 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // -----------------------------------------------------------------------
 
     app.command("verisimdb_live_health", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_health())) });
-    app.command("verisimdb_live_list_octads", |p| { result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_list_octads(p))) });
-    app.command("verisimdb_live_query", |p| { result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_query(p))) });
-    app.command("verisimdb_live_get_octad", |p| { result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_get_octad(p))) });
+    app.command("verisimdb_live_list_octads", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_list_octads())) });
+    app.command("verisimdb_live_query", |p| {
+        let query = get_str(&p, "query")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_query(query)))
+    });
+    app.command("verisimdb_live_get_octad", |p| {
+        let id = get_str(&p, "id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_get_octad(id)))
+    });
 
     // -----------------------------------------------------------------------
     // ECHIDNA Live commands (async)
     // -----------------------------------------------------------------------
 
     app.command("echidna_live_health", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(echidna_live::echidna_live_health())) });
-    app.command("echidna_live_recommend_tactics", |p| { result_to_json(tokio::runtime::Handle::current().block_on(echidna_live::echidna_live_recommend_tactics(p))) });
-    app.command("echidna_live_submit_obligation", |p| { result_to_json(tokio::runtime::Handle::current().block_on(echidna_live::echidna_live_submit_obligation(p))) });
-    app.command("echidna_live_get_result", |p| { result_to_json(tokio::runtime::Handle::current().block_on(echidna_live::echidna_live_get_result(p))) });
+    app.command("echidna_live_recommend_tactics", |p| {
+        let obligation = get_str(&p, "obligation")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(echidna_live::echidna_live_recommend_tactics(obligation)))
+    });
+    app.command("echidna_live_submit_obligation", |p| {
+        let obligation = get_str(&p, "obligation")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(echidna_live::echidna_live_submit_obligation(obligation)))
+    });
+    app.command("echidna_live_get_result", |p| {
+        let obligation_id = get_str(&p, "obligation_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(echidna_live::echidna_live_get_result(obligation_id)))
+    });
     app.command("echidna_live_stats", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(echidna_live::echidna_live_stats())) });
 
     // -----------------------------------------------------------------------
@@ -1622,10 +1695,24 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // -----------------------------------------------------------------------
 
     app.command("typell_health", |_p| { result_to_json(typell::commands::typell_health()) });
-    app.command("typell_check", |p| { result_to_json(typell::commands::typell_check(p)) });
-    app.command("typell_infer", |p| { result_to_json(typell::commands::typell_infer(p)) });
-    app.command("typell_refine", |p| { result_to_json(typell::commands::typell_refine(p)) });
-    app.command("typell_compute", |p| { result_to_json(typell::commands::typell_compute(p)) });
+    app.command("typell_check", |p| {
+        let expression = get_str(&p, "expression")?.to_string();
+        let context = get_opt_str(&p, "context");
+        result_to_json(typell::commands::typell_check(expression, context))
+    });
+    app.command("typell_infer", |p| {
+        let expression = get_str(&p, "expression")?.to_string();
+        result_to_json(typell::commands::typell_infer(expression))
+    });
+    app.command("typell_refine", |p| {
+        let spec = get_str(&p, "spec")?.to_string();
+        let constraints = get_opt_str(&p, "constraints");
+        result_to_json(typell::commands::typell_refine(spec, constraints))
+    });
+    app.command("typell_compute", |p| {
+        let term = get_str(&p, "term")?.to_string();
+        result_to_json(typell::commands::typell_compute(term))
+    });
     app.command("typell_list_signatures", |_p| { result_to_json(typell::commands::typell_list_signatures()) });
     app.command("typell_universes", |_p| { result_to_json(typell::commands::typell_universes()) });
 
@@ -1748,257 +1835,527 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // Clade Scanner
     // -----------------------------------------------------------------------
 
-    app.command("scan_clade_files", |p| {
-        let dir = get_str(&p, "dir")?.to_string();
-        result_to_json(clade_scanner::commands::scan_clade_files(dir))
+    app.command("scan_clade_files", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(clade_scanner::commands::scan_clade_files()))
     });
 
     // -----------------------------------------------------------------------
     // Governance commands
     // -----------------------------------------------------------------------
 
-    app.command("governance_nesy_query", |p| { result_to_json(governance::commands::governance_nesy_query(p)) });
-    app.command("governance_nesy_validate", |p| { result_to_json(governance::commands::governance_nesy_validate(p)) });
-    app.command("governance_nesy_probe", |_p| { result_to_json(governance::commands::governance_nesy_probe()) });
+    app.command("governance_nesy_query", |p| {
+        let query = get_str(&p, "query")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(governance::commands::governance_nesy_query(query)))
+    });
+    app.command("governance_nesy_validate", |p| {
+        let adjustment = get_str(&p, "adjustment")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(governance::commands::governance_nesy_validate(adjustment)))
+    });
+    app.command("governance_nesy_probe", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(governance::commands::governance_nesy_probe()))
+    });
 
     // -----------------------------------------------------------------------
     // Coprocessor commands
     // -----------------------------------------------------------------------
 
-    app.command("query_compute_engine", |p| { result_to_json(coprocessor::commands::query_compute_engine(p)) });
-    app.command("discover_compute_devices", |_p| { result_to_json(coprocessor::commands::discover_compute_devices()) });
-    app.command("coprocessor_dispatch_local", |p| { result_to_json(coprocessor::commands::coprocessor_dispatch_local(p)) });
-    app.command("coprocessor_check_ffi", |p| { result_to_json(coprocessor::commands::coprocessor_check_ffi(p)) });
-    app.command("coprocessor_benchmark", |p| { result_to_json(coprocessor::commands::coprocessor_benchmark(p)) });
-    app.command("coprocessor_load_ffi", |p| { result_to_json(coprocessor::commands::coprocessor_load_ffi(p)) });
-    app.command("coprocessor_local_resources", |_p| { result_to_json(coprocessor::commands::coprocessor_local_resources()) });
-    app.command("coprocessor_smart_dispatch", |p| { result_to_json(coprocessor::commands::coprocessor_smart_dispatch(p)) });
+    app.command("query_compute_engine", |p| {
+        let engine_id = get_str(&p, "engine_id")?.to_string();
+        let operation = get_str(&p, "operation")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(coprocessor::commands::query_compute_engine(engine_id, operation)))
+    });
+    app.command("discover_compute_devices", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(coprocessor::commands::discover_compute_devices()))
+    });
+    app.command("coprocessor_dispatch_local", |p| {
+        let operation = get_str(&p, "operation")?.to_string();
+        let input = get_str(&p, "input")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(coprocessor::commands::coprocessor_dispatch_local(operation, input)))
+    });
+    app.command("coprocessor_check_ffi", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(coprocessor::commands::coprocessor_check_ffi()))
+    });
+    app.command("coprocessor_benchmark", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(coprocessor::commands::coprocessor_benchmark()))
+    });
+    app.command("coprocessor_load_ffi", |p| {
+        let lib_path = get_str(&p, "lib_path")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(coprocessor::commands::coprocessor_load_ffi(lib_path)))
+    });
+    app.command("coprocessor_local_resources", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(coprocessor::commands::coprocessor_local_resources()))
+    });
+    app.command("coprocessor_smart_dispatch", |p| {
+        let operation = get_str(&p, "operation")?.to_string();
+        let payload_str = get_str(&p, "payload")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(coprocessor::commands::coprocessor_smart_dispatch(operation, payload_str)))
+    });
 
     // -----------------------------------------------------------------------
     // Game Preview commands
     // -----------------------------------------------------------------------
 
-    app.command("game_preview_check_server", |_p| { result_to_json(game_preview::commands::game_preview_check_server()) });
-    app.command("game_preview_control", |p| { result_to_json(game_preview::commands::game_preview_control(p)) });
-    app.command("game_preview_record_start", |p| { result_to_json(game_preview::commands::game_preview_record_start(p)) });
-    app.command("game_preview_record_stop", |_p| { result_to_json(game_preview::commands::game_preview_record_stop()) });
-    app.command("game_preview_screenshot", |_p| { result_to_json(game_preview::commands::game_preview_screenshot()) });
-    app.command("game_preview_stats", |_p| { result_to_json(game_preview::commands::game_preview_stats()) });
-    app.command("game_preview_clips_list", |_p| { result_to_json(game_preview::commands::game_preview_clips_list()) });
+    app.command("game_preview_check_server", |p| {
+        let url = get_str(&p, "url")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(game_preview::commands::game_preview_check_server(url)))
+    });
+    app.command("game_preview_control", |p| {
+        let command = get_str(&p, "command")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(game_preview::commands::game_preview_control(command)))
+    });
+    app.command("game_preview_record_start", |p| {
+        let name = get_str(&p, "name")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(game_preview::commands::game_preview_record_start(name)))
+    });
+    app.command("game_preview_record_stop", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(game_preview::commands::game_preview_record_stop()))
+    });
+    app.command("game_preview_screenshot", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(game_preview::commands::game_preview_screenshot()))
+    });
+    app.command("game_preview_stats", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(game_preview::commands::game_preview_stats()))
+    });
+    app.command("game_preview_clips_list", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(game_preview::commands::game_preview_clips_list()))
+    });
     app.command("game_preview_clip_delete", |p| {
         let name = get_str(&p, "name")?.to_string();
-        result_to_json(game_preview::commands::game_preview_clip_delete(name))
+        result_to_json(tokio::runtime::Handle::current().block_on(game_preview::commands::game_preview_clip_delete(name)))
     });
 
     // -----------------------------------------------------------------------
     // Network Topology commands
     // -----------------------------------------------------------------------
 
-    app.command("read_network_topology", |p| { result_to_json(network_topology::commands::read_network_topology(p)) });
-    app.command("read_dns_table", |p| { result_to_json(network_topology::commands::read_dns_table(p)) });
-    app.command("read_packet_flow", |p| { result_to_json(network_topology::commands::read_packet_flow(p)) });
-    app.command("export_topology_svg", |p| { result_to_json(network_topology::commands::export_topology_svg(p)) });
+    app.command("read_network_topology", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(network_topology::commands::read_network_topology()))
+    });
+    app.command("read_dns_table", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(network_topology::commands::read_dns_table()))
+    });
+    app.command("read_packet_flow", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(network_topology::commands::read_packet_flow()))
+    });
+    app.command("export_topology_svg", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(network_topology::commands::export_topology_svg()))
+    });
 
     // -----------------------------------------------------------------------
     // Level Architect commands
     // -----------------------------------------------------------------------
 
-    app.command("load_level", |p| { result_to_json(level_architect::commands::load_level(p)) });
-    app.command("save_level", |p| { result_to_json(level_architect::commands::save_level(p)) });
-    app.command("export_level_config", |p| { result_to_json(level_architect::commands::export_level_config(p)) });
-    app.command("browse_level_assets", |p| { result_to_json(level_architect::commands::browse_level_assets(p)) });
-    app.command("validate_level", |p| { result_to_json(level_architect::commands::validate_level(p)) });
+    app.command("load_level", |p| {
+        let path = get_str(&p, "path")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(level_architect::commands::load_level(path)))
+    });
+    app.command("save_level", |p| {
+        let path = get_str(&p, "path")?.to_string();
+        let data = get_str(&p, "data")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(level_architect::commands::save_level(path, data)))
+    });
+    app.command("export_level_config", |p| {
+        let data = get_str(&p, "data")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(level_architect::commands::export_level_config(data)))
+    });
+    app.command("browse_level_assets", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(level_architect::commands::browse_level_assets()))
+    });
+    app.command("validate_level", |p| {
+        let data = get_str(&p, "data")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(level_architect::commands::validate_level(data)))
+    });
 
     // -----------------------------------------------------------------------
     // Valence Shell commands
     // -----------------------------------------------------------------------
 
-    app.command("valence_shell_check", |_p| { result_to_json(valence_shell::commands::valence_shell_check()) });
-    app.command("valence_shell_spawn", |p| { result_to_json(valence_shell::commands::valence_shell_spawn(p)) });
-    app.command("valence_shell_input", |p| { result_to_json(valence_shell::commands::valence_shell_input(p)) });
-    app.command("valence_shell_record_start", |p| { result_to_json(valence_shell::commands::valence_shell_record_start(p)) });
-    app.command("valence_shell_record_stop", |p| { result_to_json(valence_shell::commands::valence_shell_record_stop(p)) });
-    app.command("valence_shell_recordings_list", |_p| { result_to_json(valence_shell::commands::valence_shell_recordings_list()) });
+    app.command("valence_shell_check", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_check()))
+    });
+    app.command("valence_shell_spawn", |p| {
+        let shell = get_str(&p, "shell")?.to_string();
+        let cwd = get_str(&p, "cwd")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_spawn(shell, cwd)))
+    });
+    app.command("valence_shell_input", |p| {
+        let session_id = get_opt_str(&p, "session_id");
+        let input = get_str(&p, "input")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_input(session_id, input)))
+    });
+    app.command("valence_shell_record_start", |p| {
+        let name = get_str(&p, "name")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_record_start(name)))
+    });
+    app.command("valence_shell_record_stop", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_record_stop()))
+    });
+    app.command("valence_shell_recordings_list", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_recordings_list()))
+    });
     app.command("valence_shell_recording_delete", |p| {
         let name = get_str(&p, "name")?.to_string();
-        result_to_json(valence_shell::commands::valence_shell_recording_delete(name))
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_recording_delete(name)))
     });
-    app.command("valence_shell_checkpoint_create", |p| { result_to_json(valence_shell::commands::valence_shell_checkpoint_create(p)) });
-    app.command("valence_shell_checkpoint_restore", |p| { result_to_json(valence_shell::commands::valence_shell_checkpoint_restore(p)) });
-    app.command("valence_shell_checkpoints_list", |p| { result_to_json(valence_shell::commands::valence_shell_checkpoints_list(p)) });
-    app.command("valence_shell_screenshot", |p| { result_to_json(valence_shell::commands::valence_shell_screenshot(p)) });
-    app.command("valence_shell_recording_export", |p| { result_to_json(valence_shell::commands::valence_shell_recording_export(p)) });
+    app.command("valence_shell_checkpoint_create", |p| {
+        let label = get_str(&p, "label")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_checkpoint_create(label)))
+    });
+    app.command("valence_shell_checkpoint_restore", |p| {
+        let id = get_str(&p, "id")?.to_string();
+        let session_id = get_opt_str(&p, "session_id");
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_checkpoint_restore(id, session_id)))
+    });
+    app.command("valence_shell_checkpoints_list", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_checkpoints_list()))
+    });
+    app.command("valence_shell_screenshot", |p| {
+        let session_id = get_opt_str(&p, "session_id");
+        let lines = p.get("lines").and_then(|v| v.as_u64()).map(|n| n as usize);
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_screenshot(session_id, lines)))
+    });
+    app.command("valence_shell_recording_export", |p| {
+        let id = get_str(&p, "id")?.to_string();
+        let format = get_str(&p, "format")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(valence_shell::commands::valence_shell_recording_export(id, format)))
+    });
 
     // -----------------------------------------------------------------------
     // Multiplayer Monitor commands
     // -----------------------------------------------------------------------
 
-    app.command("multiplayer_connect", |p| { result_to_json(multiplayer_monitor::commands::multiplayer_connect(p)) });
-    app.command("multiplayer_disconnect", |_p| { result_to_json(multiplayer_monitor::commands::multiplayer_disconnect()) });
-    app.command("multiplayer_read_state", |_p| { result_to_json(multiplayer_monitor::commands::multiplayer_read_state()) });
-    app.command("multiplayer_read_diffs", |_p| { result_to_json(multiplayer_monitor::commands::multiplayer_read_diffs()) });
-    app.command("multiplayer_read_ets", |_p| { result_to_json(multiplayer_monitor::commands::multiplayer_read_ets()) });
-    app.command("multiplayer_reconnection_test", |p| { result_to_json(multiplayer_monitor::commands::multiplayer_reconnection_test(p)) });
+    app.command("multiplayer_connect", |p| {
+        let url = get_str(&p, "url")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(multiplayer_monitor::commands::multiplayer_connect(url)))
+    });
+    app.command("multiplayer_disconnect", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(multiplayer_monitor::commands::multiplayer_disconnect()))
+    });
+    app.command("multiplayer_read_state", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(multiplayer_monitor::commands::multiplayer_read_state()))
+    });
+    app.command("multiplayer_read_diffs", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(multiplayer_monitor::commands::multiplayer_read_diffs()))
+    });
+    app.command("multiplayer_read_ets", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(multiplayer_monitor::commands::multiplayer_read_ets()))
+    });
+    app.command("multiplayer_reconnection_test", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(multiplayer_monitor::commands::multiplayer_reconnection_test()))
+    });
 
     // -----------------------------------------------------------------------
     // DLC Workshop commands
     // -----------------------------------------------------------------------
 
-    app.command("dlc_load_puzzles", |p| { result_to_json(dlc_workshop::commands::dlc_load_puzzles(p)) });
-    app.command("dlc_save_puzzle", |p| { result_to_json(dlc_workshop::commands::dlc_save_puzzle(p)) });
-    app.command("dlc_run_test", |p| { result_to_json(dlc_workshop::commands::dlc_run_test(p)) });
-    app.command("dlc_run_all_tests", |p| { result_to_json(dlc_workshop::commands::dlc_run_all_tests(p)) });
-    app.command("dlc_browse_assets", |p| { result_to_json(dlc_workshop::commands::dlc_browse_assets(p)) });
-    app.command("dlc_package", |p| { result_to_json(dlc_workshop::commands::dlc_package(p)) });
-    app.command("dlc_import_puzzle", |p| { result_to_json(dlc_workshop::commands::dlc_import_puzzle(p)) });
-    app.command("dlc_export_puzzle", |p| { result_to_json(dlc_workshop::commands::dlc_export_puzzle(p)) });
+    app.command("dlc_load_puzzles", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(dlc_workshop::commands::dlc_load_puzzles()))
+    });
+    app.command("dlc_save_puzzle", |p| {
+        let data = get_str(&p, "data")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(dlc_workshop::commands::dlc_save_puzzle(data)))
+    });
+    app.command("dlc_run_test", |p| {
+        let puzzle_id = get_str(&p, "puzzle_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(dlc_workshop::commands::dlc_run_test(puzzle_id)))
+    });
+    app.command("dlc_run_all_tests", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(dlc_workshop::commands::dlc_run_all_tests()))
+    });
+    app.command("dlc_browse_assets", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(dlc_workshop::commands::dlc_browse_assets()))
+    });
+    app.command("dlc_package", |p| {
+        let data = get_str(&p, "data")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(dlc_workshop::commands::dlc_package(data)))
+    });
+    app.command("dlc_import_puzzle", |p| {
+        let path = get_str(&p, "path")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(dlc_workshop::commands::dlc_import_puzzle(path)))
+    });
+    app.command("dlc_export_puzzle", |p| {
+        let puzzle_id = get_str(&p, "puzzle_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(dlc_workshop::commands::dlc_export_puzzle(puzzle_id)))
+    });
 
     // -----------------------------------------------------------------------
     // UMS commands
     // -----------------------------------------------------------------------
 
-    app.command("ums_load_projects", |_p| { result_to_json(ums::commands::ums_load_projects()) });
-    app.command("ums_create_project", |p| { result_to_json(ums::commands::ums_create_project(p)) });
+    app.command("ums_load_projects", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_load_projects()))
+    });
+    app.command("ums_create_project", |p| {
+        let name = get_str(&p, "name")?.to_string();
+        let description = get_str(&p, "description")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_create_project(name, description)))
+    });
     app.command("ums_open_project", |p| {
         let id = get_str(&p, "id")?.to_string();
-        result_to_json(ums::commands::ums_open_project(id))
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_open_project(id)))
     });
     app.command("ums_delete_project", |p| {
         let id = get_str(&p, "id")?.to_string();
-        result_to_json(ums::commands::ums_delete_project(id))
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_delete_project(id)))
     });
-    app.command("ums_validate_level", |p| { result_to_json(ums::commands::ums_validate_level(p)) });
-    app.command("ums_load_templates", |_p| { result_to_json(ums::commands::ums_load_templates()) });
-    app.command("ums_instantiate_template", |p| { result_to_json(ums::commands::ums_instantiate_template(p)) });
-    app.command("ums_load_assets", |p| { result_to_json(ums::commands::ums_load_assets(p)) });
-    app.command("ums_import_asset", |p| { result_to_json(ums::commands::ums_import_asset(p)) });
-    app.command("ums_publish_mod", |p| { result_to_json(ums::commands::ums_publish_mod(p)) });
-    app.command("ums_load_api_reference", |_p| { result_to_json(ums::commands::ums_load_api_reference()) });
+    app.command("ums_validate_level", |p| {
+        let level_id = get_str(&p, "level_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_validate_level(level_id)))
+    });
+    app.command("ums_load_templates", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_load_templates()))
+    });
+    app.command("ums_instantiate_template", |p| {
+        let template_id = get_str(&p, "template_id")?.to_string();
+        let project_name = get_str(&p, "project_name")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_instantiate_template(template_id, project_name)))
+    });
+    app.command("ums_load_assets", |p| {
+        let project_id = get_str(&p, "project_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_load_assets(project_id)))
+    });
+    app.command("ums_import_asset", |p| {
+        let project_id = get_str(&p, "project_id")?.to_string();
+        let file_path = get_str(&p, "file_path")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_import_asset(project_id, file_path)))
+    });
+    app.command("ums_publish_mod", |p| {
+        let project_id = get_str(&p, "project_id")?.to_string();
+        let platform = get_str(&p, "platform")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_publish_mod(project_id, platform)))
+    });
+    app.command("ums_load_api_reference", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(ums::commands::ums_load_api_reference()))
+    });
 
     // -----------------------------------------------------------------------
     // UMS Cartridge commands
     // -----------------------------------------------------------------------
 
-    app.command("ums_cartridge_validate", |p| { result_to_json(ums_cartridge::commands::ums_cartridge_validate(p)) });
-    app.command("ums_cartridge_load_level", |p| { result_to_json(ums_cartridge::commands::ums_cartridge_load_level(p)) });
-    app.command("ums_cartridge_save_level", |p| { result_to_json(ums_cartridge::commands::ums_cartridge_save_level(p)) });
-    app.command("ums_cartridge_list_levels", |p| { result_to_json(ums_cartridge::commands::ums_cartridge_list_levels(p)) });
-    app.command("ums_cartridge_export_config", |p| { result_to_json(ums_cartridge::commands::ums_cartridge_export_config(p)) });
+    app.command("ums_cartridge_validate", |p| {
+        let level = get_str(&p, "level")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ums_cartridge::commands::ums_cartridge_validate(level)))
+    });
+    app.command("ums_cartridge_load_level", |p| {
+        let name = get_str(&p, "name")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ums_cartridge::commands::ums_cartridge_load_level(name)))
+    });
+    app.command("ums_cartridge_save_level", |p| {
+        let level = get_str(&p, "level")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ums_cartridge::commands::ums_cartridge_save_level(level)))
+    });
+    app.command("ums_cartridge_list_levels", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(ums_cartridge::commands::ums_cartridge_list_levels()))
+    });
+    app.command("ums_cartridge_export_config", |p| {
+        let level = get_str(&p, "level")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(ums_cartridge::commands::ums_cartridge_export_config(level)))
+    });
 
     // -----------------------------------------------------------------------
     // Release Manager commands
     // -----------------------------------------------------------------------
 
-    app.command("release_generate_changelog", |p| { result_to_json(release_manager::commands::release_generate_changelog(p)) });
-    app.command("release_build_artifacts", |p| { result_to_json(release_manager::commands::release_build_artifacts(p)) });
-    app.command("release_publish", |p| { result_to_json(release_manager::commands::release_publish(p)) });
-    app.command("release_read_history", |_p| { result_to_json(release_manager::commands::release_read_history()) });
-    app.command("release_bump_version", |p| { result_to_json(release_manager::commands::release_bump_version(p)) });
+    app.command("release_generate_changelog", |p| {
+        let from_version = get_str(&p, "from_version")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(release_manager::commands::release_generate_changelog(from_version)))
+    });
+    app.command("release_build_artifacts", |p| {
+        let version = get_str(&p, "version")?.to_string();
+        let platforms = get_str(&p, "platforms")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(release_manager::commands::release_build_artifacts(version, platforms)))
+    });
+    app.command("release_publish", |p| {
+        let version = get_str(&p, "version")?.to_string();
+        let channel = get_str(&p, "channel")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(release_manager::commands::release_publish(version, channel)))
+    });
+    app.command("release_read_history", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(release_manager::commands::release_read_history()))
+    });
+    app.command("release_bump_version", |p| {
+        let bump_type = get_str(&p, "bump_type")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(release_manager::commands::release_bump_version(bump_type)))
+    });
 
     // -----------------------------------------------------------------------
     // Umoja commands
     // -----------------------------------------------------------------------
 
-    app.command("umoja_add_peer", |p| { result_to_json(umoja::commands::umoja_add_peer(p)) });
+    app.command("umoja_add_peer", |p| {
+        let address = get_str(&p, "address")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(umoja::commands::umoja_add_peer(address)))
+    });
     app.command("umoja_disconnect_peer", |p| {
         let id = get_str(&p, "peer_id")?.to_string();
-        result_to_json(umoja::commands::umoja_disconnect_peer(id))
+        result_to_json(tokio::runtime::Handle::current().block_on(umoja::commands::umoja_disconnect_peer(id)))
     });
-    app.command("umoja_trigger_gossip", |_p| { result_to_json(umoja::commands::umoja_trigger_gossip()) });
-    app.command("umoja_sync_catalogue", |_p| { result_to_json(umoja::commands::umoja_sync_catalogue()) });
-    app.command("umoja_peer_metrics", |_p| { result_to_json(umoja::commands::umoja_peer_metrics()) });
+    app.command("umoja_trigger_gossip", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(umoja::commands::umoja_trigger_gossip()))
+    });
+    app.command("umoja_sync_catalogue", |p| {
+        let node_id = get_str(&p, "node_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(umoja::commands::umoja_sync_catalogue(node_id)))
+    });
+    app.command("umoja_peer_metrics", |p| {
+        let node_id = get_str(&p, "node_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(umoja::commands::umoja_peer_metrics(node_id)))
+    });
 
     // -----------------------------------------------------------------------
     // Observability commands
     // -----------------------------------------------------------------------
 
-    app.command("observe_export_sarif", |p| { result_to_json(observability::commands::observe_export_sarif(p)) });
-    app.command("observe_export_traces", |p| { result_to_json(observability::commands::observe_export_traces(p)) });
-    app.command("observe_summary", |_p| { result_to_json(observability::commands::observe_summary()) });
+    app.command("observe_export_sarif", |p| {
+        let report_id = get_str(&p, "report_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(observability::commands::observe_export_sarif(report_id)))
+    });
+    app.command("observe_export_traces", |p| {
+        let batch = get_str(&p, "batch")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(observability::commands::observe_export_traces(batch)))
+    });
+    app.command("observe_summary", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(observability::commands::observe_summary()))
+    });
 
     // -----------------------------------------------------------------------
     // A2ML commands
     // -----------------------------------------------------------------------
 
-    app.command("a2ml_load_manifest", |p| { result_to_json(a2ml::commands::a2ml_load_manifest(p)) });
-    app.command("a2ml_validate", |p| { result_to_json(a2ml::commands::a2ml_validate(p)) });
-    app.command("a2ml_list", |p| { result_to_json(a2ml::commands::a2ml_list(p)) });
+    app.command("a2ml_load_manifest", |p| {
+        let path = get_str(&p, "path")?.to_string();
+        result_to_json(a2ml::commands::a2ml_load_manifest(path))
+    });
+    app.command("a2ml_validate", |p| {
+        let path = get_str(&p, "path")?.to_string();
+        result_to_json(a2ml::commands::a2ml_validate(path))
+    });
+    app.command("a2ml_list", |_p| { result_to_json(a2ml::commands::a2ml_list()) });
 
     // -----------------------------------------------------------------------
     // K9 commands
     // -----------------------------------------------------------------------
 
-    app.command("k9_load_contractile", |p| { result_to_json(k9::commands::k9_load_contractile(p)) });
-    app.command("k9_validate", |p| { result_to_json(k9::commands::k9_validate(p)) });
-    app.command("k9_apply_layout", |p| { result_to_json(k9::commands::k9_apply_layout(p)) });
+    app.command("k9_load_contractile", |p| {
+        let path = get_str(&p, "path")?.to_string();
+        result_to_json(k9::commands::k9_load_contractile(path))
+    });
+    app.command("k9_validate", |p| {
+        let path = get_str(&p, "path")?.to_string();
+        result_to_json(k9::commands::k9_validate(path))
+    });
+    app.command("k9_apply_layout", |p| {
+        let name = get_str(&p, "name")?.to_string();
+        result_to_json(k9::commands::k9_apply_layout(name))
+    });
 
     // -----------------------------------------------------------------------
     // Fleet commands
     // -----------------------------------------------------------------------
 
-    app.command("fleet_get_bots", |_p| { result_to_json(fleet::commands::fleet_get_bots()) });
-    app.command("fleet_get_findings", |p| { result_to_json(fleet::commands::fleet_get_findings(p)) });
-    app.command("fleet_dispatch", |p| { result_to_json(fleet::commands::fleet_dispatch(p)) });
+    app.command("fleet_get_bots", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(fleet::commands::fleet_get_bots()))
+    });
+    app.command("fleet_get_findings", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(fleet::commands::fleet_get_findings()))
+    });
+    app.command("fleet_dispatch", |p| {
+        let finding_id = get_str(&p, "finding_id")?.to_string();
+        let bot_id = get_str(&p, "bot_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(fleet::commands::fleet_dispatch(finding_id, bot_id)))
+    });
 
     // -----------------------------------------------------------------------
     // Hypatia commands
     // -----------------------------------------------------------------------
 
-    app.command("hypatia_get_networks", |_p| { result_to_json(hypatia::commands::hypatia_get_networks()) });
-    app.command("hypatia_get_scans", |_p| { result_to_json(hypatia::commands::hypatia_get_scans()) });
+    app.command("hypatia_get_networks", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(hypatia::commands::hypatia_get_networks()))
+    });
+    app.command("hypatia_get_scans", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(hypatia::commands::hypatia_get_scans()))
+    });
     app.command("hypatia_scan_repo", |p| {
         let path = get_str(&p, "path")?.to_string();
-        result_to_json(hypatia::commands::hypatia_scan_repo(path))
+        result_to_json(tokio::runtime::Handle::current().block_on(hypatia::commands::hypatia_scan_repo(path)))
     });
 
     // -----------------------------------------------------------------------
     // Aerie commands
     // -----------------------------------------------------------------------
 
-    app.command("aerie_get_latency", |p| { result_to_json(aerie::commands::aerie_get_latency(p)) });
-    app.command("aerie_speed_test", |_p| { result_to_json(aerie::commands::aerie_speed_test()) });
+    app.command("aerie_get_latency", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(aerie::commands::aerie_get_latency()))
+    });
+    app.command("aerie_speed_test", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(aerie::commands::aerie_speed_test()))
+    });
 
     // -----------------------------------------------------------------------
     // Provenance commands
     // -----------------------------------------------------------------------
 
     app.command("provenance_analyse_file", |p| {
-        let path = get_str(&p, "path")?.to_string();
-        result_to_json(provenance::commands::provenance_analyse_file(path))
+        let repo_path = get_str(&p, "repo_path")?.to_string();
+        let file_path = get_str(&p, "file_path")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(provenance::commands::provenance_analyse_file(repo_path, file_path)))
     });
     app.command("provenance_scan_unsound", |p| {
         let dir = get_str(&p, "dir")?.to_string();
-        result_to_json(provenance::commands::provenance_scan_unsound(dir))
+        result_to_json(tokio::runtime::Handle::current().block_on(provenance::commands::provenance_scan_unsound(dir)))
     });
 
     // -----------------------------------------------------------------------
     // Feedback commands
     // -----------------------------------------------------------------------
 
-    app.command("feedback_save_report", |p| { result_to_json(feedback::commands::feedback_save_report(p)) });
+    app.command("feedback_save_report", |p| {
+        let report_json = get_str(&p, "report_json")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(feedback::commands::feedback_save_report(report_json)))
+    });
 
     // -----------------------------------------------------------------------
     // Script Gist commands
     // -----------------------------------------------------------------------
 
-    app.command("script_gist_save", |p| { result_to_json(script_gist::commands::script_gist_save(p)) });
-    app.command("script_gist_execute", |p| { result_to_json(script_gist::commands::script_gist_execute(p)) });
-    app.command("script_gist_restore_snapshot", |p| { result_to_json(script_gist::commands::script_gist_restore_snapshot(p)) });
-    app.command("script_gist_list", |_p| { result_to_json(script_gist::commands::script_gist_list()) });
+    app.command("script_gist_save", |p| {
+        let gist_json = get_str(&p, "gist_json")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(script_gist::commands::script_gist_save(gist_json)))
+    });
+    app.command("script_gist_execute", |p| {
+        let gist_json = get_str(&p, "gist_json")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(script_gist::commands::script_gist_execute(gist_json)))
+    });
+    app.command("script_gist_restore_snapshot", |p| {
+        let snapshot_json = get_str(&p, "snapshot_json")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(script_gist::commands::script_gist_restore_snapshot(snapshot_json)))
+    });
+    app.command("script_gist_list", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(script_gist::commands::script_gist_list()))
+    });
 
     // -----------------------------------------------------------------------
     // Wiring Inspector commands
     // -----------------------------------------------------------------------
 
-    app.command("wiring_inspector_verify", |p| { result_to_json(wiring_inspector::commands::wiring_inspector_verify(p)) });
-    app.command("wiring_inspector_verify_panel", |p| { result_to_json(wiring_inspector::commands::wiring_inspector_verify_panel(p)) });
+    app.command("wiring_inspector_verify", |_p| {
+        result_to_json(tokio::runtime::Handle::current().block_on(wiring_inspector::commands::wiring_inspector_verify()))
+    });
+    app.command("wiring_inspector_verify_panel", |p| {
+        let panel_id = get_str(&p, "panel_id")?.to_string();
+        result_to_json(tokio::runtime::Handle::current().block_on(wiring_inspector::commands::wiring_inspector_verify_panel(panel_id)))
+    });
 
     // -----------------------------------------------------------------------
     // LLM Coding commands
     // -----------------------------------------------------------------------
 
     app.command("llm_coding_list_sessions", |_p| { result_to_json(llm_coding::commands::llm_coding_list_sessions()) });
-    app.command("llm_coding_spawn", |p| { result_to_json(llm_coding::commands::llm_coding_spawn(p)) });
+    app.command("llm_coding_spawn", |p| {
+        let request: llm_coding::types::SpawnRequest = serde_json::from_value(p)
+            .map_err(|e| format!("Invalid spawn request: {e}"))?;
+        result_to_json(llm_coding::commands::llm_coding_spawn(request))
+    });
     app.command("llm_coding_freeze", |p| {
         let id = get_str(&p, "session_id")?.to_string();
         result_to_json(llm_coding::commands::llm_coding_freeze(id))
@@ -2013,9 +2370,8 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     });
     app.command("llm_coding_system_resources", |_p| { result_to_json(llm_coding::commands::llm_coding_system_resources()) });
     app.command("llm_coding_list_locks", |_p| { result_to_json(llm_coding::commands::llm_coding_list_locks()) });
-    app.command("llm_coding_list_messages", |p| {
-        let id = get_str(&p, "session_id")?.to_string();
-        result_to_json(llm_coding::commands::llm_coding_list_messages(id))
+    app.command("llm_coding_list_messages", |_p| {
+        result_to_json(llm_coding::commands::llm_coding_list_messages())
     });
 
     // -----------------------------------------------------------------------
