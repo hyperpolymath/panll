@@ -1,0 +1,27 @@
+= Panll — EXPLAINME
+:toc: preamble
+
+This document backs up the claims made in README with evidence and rationale.
+
+== What Is This?
+
+Panll is a hyperpolymath project. See README.adoc for usage.
+
+== Why These Choices?
+
+=== Language
+
+The language(s) used in this project were chosen per the hyperpolymath
+language policy (see CLAUDE.md for the full list of allowed/banned languages).
+
+=== Architecture
+
+Architecture decisions are documented in `.machine_readable/` checkpoint files.
+
+== Alternatives Considered
+
+(To be filled in as the project matures.)
+
+== Proof of Claims
+
+(Link formal verification results from the `proven` repo where applicable.)
