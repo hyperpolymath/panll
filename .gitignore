@@ -122,3 +122,6 @@ Thumbs.db
 # ── Dependencies ────────────────────────────────────────
 /vendor/
 /deps/
+
+# asdf version manager
+.tool-versions
