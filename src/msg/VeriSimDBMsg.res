@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+
+/// VeriSimDB database backend messages -- connection lifecycle, VQL query
+/// execution, entity browsing, drift status retrieval, normalisation,
+/// entity detail loading, and opt-in telemetry retrieval for product
+/// development insights.
+
+type verisimdbMsg =
+  | CheckHealth
+  | HealthResult(result<string, string>)
+  | SubmitQuery(string)
+  | UpdateQueryInput(string)
+  | QueryResult(result<string, string>)
+  | ListEntities
+  | EntitiesLoaded(result<string, string>)
+  | SelectEntity(string)
+  | DriftLoaded(result<string, string>)
+  | ToggleDbMenu
+  | ClearQueryResult
+  | TriggerNormalise(string)
+  | NormaliseResult(result<string, string>)
+  | LoadEntityDetail(string)
+  | EntityDetailLoaded(result<string, string>)
+  | FetchTelemetry
+  | TelemetryLoaded(result<string, string>)
+  | ToggleTelemetryPanel
+  | FetchOrchStatus
+  | OrchStatusLoaded(result<string, string>)
+  /// TypeLL cross-panel type check result for the last VQL query.
+  | VqlTypeCheckResult(result<string, string>)
+  /// Toggle VQL-UT proof obligation display in Panel-L.
+  | ToggleProofDisplay
+  /// Neural advisor suggestion for the current VQL query.
+  | InferenceSuggestion(string)
+  /// Clear inference suggestions.
+  | ClearInferenceSuggestions
+  /// Toggle Anti-Crash VQL validation.
+  | ToggleAntiCrashValidation
+  /// Toggle BoJ routing for VQL queries (database-mcp cartridge).
+  | ToggleVeriSimBojRouting
