@@ -112,6 +112,16 @@ let allPanels: array<panelMeta> = [
     cladeId: Some("oo7-toolchain"),
   },
   {
+    id: PanelVideoCoordination,
+    name: "Video Coordination",
+    shortName: "Video",
+    description: "Drive-to-Photos batch transfer dashboard",
+    icon: "video",
+    connectionStatus: ServiceDisconnected,
+    hasBackend: true,
+    cladeId: Some("video-coordination"),
+  },
+  {
     id: PanelInterfaces,
     name: "Interfaces",
     shortName: "FFI",

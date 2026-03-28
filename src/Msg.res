@@ -2734,6 +2734,15 @@ type oo7Msg =
   | LoadToolchain
   | ClearError
 
+/// Messages for the VideoCoordination panel — Drive-to-Photos batch transfers.
+type videoCoordinationMsg =
+  | StartTransfer(string, string) // source, destination
+  | PauseTransfer(string) // batchId
+  | RefreshStatus
+  | StatusResult(result<string, string>)
+  | TransferResult(result<string, string>)
+  | ClearError
+
 /// The unified message type
 type msg =
   | PaneL(paneLMsg)
@@ -2755,6 +2764,7 @@ type msg =
   | Reposystem(reposystemMsg) // RSR compliance auditing
   | Aerie(aerieMsg) // Network diagnostics
   | Oo7Toolchain(oo7Msg) // Agentic compiler and high-rigor execution
+  | VideoCoordination(videoCoordinationMsg) // Drive-to-Photos batch transfer dashboard
   | Interfaces(interfacesMsg) // ABI/FFI inventory
   | Playgrounds(playgroundsMsg) // Code sandbox
   | Minter(minterMsg) // Panel Minter wizard

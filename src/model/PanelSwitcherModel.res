@@ -191,6 +191,8 @@ type panelId =
   | PanelIdaptikPlayerOverview
   /// 007 Toolchain — agentic compiler and high-rigor execution (Groove).
   | PanelOo7Toolchain
+  /// VideoCoordination — Drive-to-Photos batch transfer dashboard.
+  | PanelVideoCoordination
 
 /// Connection status for panels backed by external services.
 type connectionStatus =

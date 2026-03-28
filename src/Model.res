@@ -105,6 +105,7 @@ include ProvenanceModel
 
 /// Re-export 007 Toolchain types for agentic compiler and high-rigor execution.
 include Oo7ToolchainModel
+include VideoCoordinationModel
 
 /// Re-export AI types (aiProviderId, aiProviderConfig, aiProviderStatus,
 /// aiMessage, aiCategory, aiState) for the multi-provider AI neural interface
@@ -418,6 +419,8 @@ type model = {
   aerie: aerieState,
   // 007 Toolchain — agentic compiler and high-rigor execution (Groove)
   oo7toolchain: oo7State,
+  // VideoCoordination — Drive-to-Photos batch transfer dashboard
+  videoCoordination: videoCoordinationState,
   // Interfaces — Idris2 ABI + Zig FFI inventory + binding coverage
   interfaces: interfacesState,
   // Playgrounds — code sandbox + NQC console + tutorials
@@ -1123,6 +1126,7 @@ let init = (): model => {
     activeCategory: Oo7Dashboard,
     nesyStatus: "Waiting for analysis...",
   },
+  videoCoordination: VideoCoordinationEngine.defaultState,
   interfaces: InterfacesEngine.defaultState,
   playgrounds: PlaygroundsEngine.defaultState,
   hypatia: HypatiaEngine.defaultState,

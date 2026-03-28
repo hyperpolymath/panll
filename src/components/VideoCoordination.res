@@ -7,8 +7,6 @@
 /// - Quota usage visualisation (Daily 750GB limit)
 /// - ARIA-live regions for status updates
 
-open Model
-open Msg
 open Tea.Html
 open VideoCoordinationModel
 open VideoCoordinationEngine

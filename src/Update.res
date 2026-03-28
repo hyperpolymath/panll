@@ -141,6 +141,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | Reposystem(subMsg) => updateReposystem(model, subMsg)
   | Aerie(subMsg) => updateAerie(model, subMsg)
   | Oo7Toolchain(subMsg) => updateOo7Toolchain(model, subMsg)
+  | VideoCoordination(subMsg) => UpdateVideoCoordination.updateVideoCoordination(model, subMsg)
   | Interfaces(subMsg) => updateInterfaces(model, subMsg)
   | Playgrounds(subMsg) => updatePlaygrounds(model, subMsg)
   | Minter(subMsg) => updateMinter(model, subMsg)

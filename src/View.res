@@ -484,6 +484,7 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelDatabases) => Databases.view(model.databases)
   | Some(PanelAerie) => Aerie.view(model.aerie)
   | Some(PanelOo7Toolchain) => Oo7Toolchain.view(model.oo7toolchain)
+  | Some(PanelVideoCoordination) => VideoCoordination.view(model.videoCoordination)
   | Some(PanelInterfaces) => Interfaces.view(model.interfaces)
   | Some(PanelPlaygrounds) => Playgrounds.view(model.playgrounds)
   | Some(PanelMinter) => Minter.view(model.minter)
