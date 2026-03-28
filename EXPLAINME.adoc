@@ -2,7 +2,7 @@
 
 = PanLL — EXPLAINME
 
-== "A practical cognitive-relief layer"
+== A practical cognitive-relief layer
 
 [quote, README.adoc]
 ____
