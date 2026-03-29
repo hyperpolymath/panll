@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (2026-03-29 — CRG D→C Prep)
+- **dogfood-test.sh** — Verifies local backends (Farm, Provenance, Watcher) return real data for CRG promotion
+- **CRG-DOGFOOD-CHECKLIST.md** — Updated: Git blame and Filesystem backends marked as code-verified
+
 ### Fixed (2026-03-23 — TEA Crash Recovery)
 - **RuntimeBridge.invoke browser-mode crash** — `JsError.throwWithMessage` threw synchronously instead of returning a rejected Promise, killing the TEA dispatch loop on the first backend call in browser mode. Fixed to use `Promise.reject(new Error(...))`. Same fix applied to `Dialog.openDialog` and Fs methods.
 - **TEA dispatch loop freeze** — Added try/catch around `processMessage`, `render`, and `subscriptions` in `Tea_App.res` so one thrown exception no longer permanently freezes all event handling.
