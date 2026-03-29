@@ -31,8 +31,8 @@ Each backend must return real data, not mock JSON.
 | 3 | ECHIDNA | 9000 | Panel-N, Proofs Bridge | ☐ |
 | 4 | gitbot-fleet | 8080 | Gitbot-Fleet Panel | ☐ |
 | 5 | Hypatia | (Elixir) | Hypatia Panel | ☐ |
-| 6 | Git blame | (local) | Provenance Map | ☐ |
-| 7 | Filesystem | (local) | Farm, Watcher | ☐ |
+| 6 | Git blame | (local) | Provenance Map | ✓ code verified (2026-03-29) — provenance/commands.rs wired |
+| 7 | Filesystem | (local) | Farm, Watcher | ✓ code verified (2026-03-29) — farm/commands.rs + watcher/commands.rs wired |
 | 8 | TypeLL | 7800 | Cross-panel type checking | ☐ |
 | 9 | Stapeln | (local) | Container management | ☐ |
 
