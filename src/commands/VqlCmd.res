@@ -197,7 +197,10 @@ let copyToClipboard = (text: string): promise<result<string, string>> => {
 
 /// Save query history to local storage.
 let saveHistory = (history: array<historyEntry>): promise<result<string, string>> => {
-  let json = JSON.stringify(Obj.magic(history))
+  let json = switch JSON.stringifyAny(history) {
+  | Some(s) => s
+  | None => "[]"
+  }
   invoke("store_set", {"key": "vql_history", "value": json})
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {

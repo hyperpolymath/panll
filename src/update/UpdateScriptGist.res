@@ -299,7 +299,10 @@ let updateScriptGist = (model: model, msg: scriptGistMsg): (model, Tea_Cmd.t<msg
     }
   | SnapshotDiachronic => {
       // Serialise the current scriptGistState into the checkpoint snapshot.
-      let snapshotStr = JSON.stringify(sg->Obj.magic)
+      let snapshotStr = switch JSON.stringifyAny(sg) {
+      | Some(s) => s
+      | None => "{}"
+      }
       let checkpoint: diachronicCheckpoint = {
         index: Array.length(sg.diachronicHistory),
         timestamp: Date.now(),
