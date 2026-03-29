@@ -9,7 +9,7 @@ let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => 
   let cap = model.capture
   switch msg {
   | CaptureScreenshot(panelId) => {
-      // Invoke html2canvas capture via JS interop, then save the result through Tauri.
+      // Invoke html2canvas capture via JS interop, then save the result through Gossamer.
       let captureId = "cap-" ++ Float.toString(Date.now())
       let format = "png"
       // The actual html2canvas call happens in JS; here we wire the save command
@@ -130,7 +130,7 @@ let updateCapture = (model: model, msg: captureMsg): (model, Tea_Cmd.t<msg>) => 
   | NextDemoStep => ({...model, capture: CaptureEngine.nextDemoStep(cap)}, Tea_Cmd.none)
   | PrevDemoStep => ({...model, capture: CaptureEngine.prevDemoStep(cap)}, Tea_Cmd.none)
   | SaveDemo => {
-      // Serialise the active demo and persist via Tauri.
+      // Serialise the active demo and persist via Gossamer.
       let demoJson = switch cap.activeDemo {
       | Some(demoId) =>
         switch cap.demos->Array.find(d => d.id === demoId) {

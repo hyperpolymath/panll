@@ -9,7 +9,7 @@
 ///   - Filter/sort controls
 ///   - Main inventory table/grid
 ///
-/// The panel reads local JSON via the Tauri backend — no HTTP service required.
+/// The panel reads local JSON via the Gossamer backend — no HTTP service required.
 
 open Model
 open Msg

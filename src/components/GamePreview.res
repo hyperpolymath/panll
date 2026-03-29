@@ -3,7 +3,7 @@
 /// PanLL Game Preview Component — renders the live IDApTIK game preview panel.
 ///
 /// The Live Preview tab embeds the Vite dev server output via an iframe.
-/// When the Tauri multi-webview system is wired (Phase 2), the iframe
+/// When the Gossamer multi-webview system is wired (Phase 2), the iframe
 /// will be replaced by a dedicated webview for tighter integration.
 ///
 /// Additional tabs show the device interaction log, saved gameplay clips,

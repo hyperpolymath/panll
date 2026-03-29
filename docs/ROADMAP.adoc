@@ -14,262 +14,171 @@ It is a three-pane neurosymbolic workbench for **design, develop, do, and evalua
 |===
 | Pane | Role | Grounded In
 
-| **Pane-L** (Symbolic Mass)
+| **Panel-L** (Symbolic Mass)
 | Constraints, properties, formal guarantees
 | proven Safe* types, protocol-squisher compatibility classes, contractiles Mustfile/Trustfile contracts
 
-| **Pane-N** (Neural Stream)
+| **Panel-N** (Neural Stream)
 | Agent reasoning, proof search, inference
 | ECHIDNA theorem prover (30 backends), hypatia rule engine, gitbot-fleet orchestration
 
-| **Pane-W** (World / Barycentre)
+| **Panel-W** (World / Barycentre)
 | Verified results, event chains, system state
 | panic-attack assault reports, reposystem graph + plans, VeriSimDB hexad queries, stapeln stack designs
 |===
 
-PanLL is **not** a generic IDE, framework, or platform. It is a personal neurosymbolic workbench — a multi-monitor trader desk with formal verification behind each panel. It is modular: each integration is a pane module that can be added, removed, or replaced independently.
+PanLL is **not** a generic IDE, framework, or platform. It is a personal neurosymbolic workbench — a multi-monitor trader desk with formal verification behind each panel.
 
-**Primary focus areas:** Programming Languages, Databases, Protocols. +
-**Secondary (later panes):** Containers, Networks, Servers. +
-**Persistence backbone:** VeriSimDB (octad hexads store all constraints, traces, and event chains). +
-**Core architecture benefit:** The three-pane model and its wiring are useful to _all_ module domains — the eNSAID serves the integrations, not the other way around.
+== Current State (2026-03-29)
 
-== Current Status: v0.1.0 (2026-02-28) — 92% Complete
+=== Metrics
+
+* **677 ReScript source files** across src/
+* **123 panel components** in src/components/
+* **615+ modules** total (ReScript + Rust + Elixir)
+* **2462 tests** (Deno.test + Rust backend)
+* **Gossamer** backend (Zig + WebKitGTK) — fully migrated from Tauri 2.0
 
 === What Works
 
-* Custom TEA runtime (Model-Update-View) — 8 files, deterministic state transitions
-* 31 ReScript source files (3400+ LOC), 1347-line Rust backend (27 functions)
-* 109 tests passing (97 Deno.test + 16 Rust, 87-91% coverage)
-* Three panes render, persist (localStorage), respond to keyboard shortcuts (Ctrl+Shift+L/N/B/W)
+* Custom TEA runtime (Model-Update-View) — 18 modules, permanent (not rescript-tea)
+* Three panels render, persist (localStorage), respond to keyboard shortcuts
 * Anti-Crash circuit breaker gates neural tokens through symbolic validation
 * Vexometer tracks cognitive load (cancellations/corrections with exponential decay)
-* OrbitalSync detects pane drift via hash-based change monitoring
+* OrbitalSync detects panel drift via hash-based change monitoring
 * Contractiles enforces adaptive state contracts (Strict/Warn/Adaptive)
-* panic-attack integration: binary discovery, capability probe, ambush execution, event-chain import (file + paste)
-* VeriSimDB: 8 Tauri commands wired (health, VQL query, list/get hexads, drift, normalise, telemetry, orch status)
+* panic-attack integration: binary discovery, capability probe, ambush execution, event-chain import
+* VeriSimDB: 8 Gossamer commands wired (health, VQL query, list/get hexads, drift, normalise, telemetry, orch status)
+* TypeLL engine: cross-panel type intelligence service
 * ARIA accessibility across all components
-* Tailwind CSS 4.x + Deno build pipeline + Tauri 2.0 desktop app
-
-=== What Does Not Work Yet
-
-* VeriSimDB is a query proxy only — no persistence of PanLL state to hexads
-* Pane-L constraints are local text entries, not connected to proven or protocol-squisher
-* Pane-N inference is validate-only, not connected to ECHIDNA or any reasoning backend
-* Pane-W shows panic-attack event chains only — no reposystem, no gitbot-fleet, no stapeln
-* No settings UI, no error boundaries, no loading states
+* Tailwind CSS 4.x + Deno build pipeline + Gossamer desktop app
+* Gossamer migration complete (src-gossamer/ Rust backend, all Tauri refs removed)
 
 == Roadmap
 
-=== v0.2.0 — Connected Workbench (MVP)
+=== v0.1.0 — TEA Foundation (COMPLETE)
 
-**Goal:** PanLL becomes a daily-use tool by connecting to real data sources. The three panes stop being standalone and start reflecting the actual state of work.
+* [x] Custom TEA runtime (8 core files, deterministic state transitions)
+* [x] Three-panel layout (Panel-L, Panel-N, Panel-W)
+* [x] Anti-Crash circuit breaker
+* [x] Vexometer cognitive load tracking
+* [x] OrbitalSync drift detection
+* [x] Contractiles adaptive state contracts
+* [x] panic-attack integration (binary discovery, probe, ambush, event-chain import)
+* [x] VeriSimDB query proxy (8 commands)
+* [x] ARIA accessibility
+* [x] Tailwind CSS 4.x + Deno build pipeline
+
+=== v0.1.1 — Gossamer Migration (COMPLETE)
+
+* [x] Migrated from Tauri 2.0 to Gossamer (Zig + WebKitGTK)
+* [x] src-gossamer/ Rust backend (replaces src-tauri/)
+* [x] RuntimeBridge for Gossamer IPC
+* [x] Dialog and mobile FFI ported
+* [x] Config schema updated
+* [x] 66 files converted across PanLL
+
+=== v0.1.2 — Scale-Up (COMPLETE)
+
+* [x] 677 ReScript source files (from 31)
+* [x] 123 panel components (from initial set)
+* [x] 2462 tests passing
+* [x] TypeLL engine integration (cross-panel type intelligence)
+* [x] Custom TEA runtime expanded to 18 modules
+* [x] Domain model modules in src/model/ (PaneModel, EchidnaModel, VeriSimModel, GovernanceModel, etc.)
+* [x] Core engines in src/core/ (AntiCrash, OrbitalSync, Contractiles, TypeLLEngine, VabEngine, etc.)
+* [x] Module registry + TypeLLService
+* [x] Msg/Model split (domain types separated from composition root)
+
+=== v0.2.0 — Connected Workbench (IN PROGRESS)
+
+**Goal:** PanLL becomes a daily-use tool by connecting to real data sources.
 
 ==== Must Have
 
-===== Reposystem event chain in Pane-W
-* Import reposystem `graph.json` as ecosystem view (400+ repos, dependencies, health scores)
-* Display reposystem plan operations as event chains (scan → plan → dispatch → execute)
-* Wire `reposystem` Rust library or JSON export as a second event-chain source alongside panic-attack
-* Rationale: Git and CI/CD are the backbone of every session. PanLL should show the ecosystem on startup.
-
-===== VeriSimDB as persistence layer
-* Store event chains as octad hexads (Document + Temporal + Provenance modalities)
-* Store Pane-L constraint sets as hexads (Semantic + Graph modalities)
-* Store reasoning traces as hexads (Temporal modality for replay)
-* Replace localStorage with VeriSimDB-backed persistence (localStorage as offline fallback)
-* Rationale: Without persistence, every session starts from zero. VeriSimDB gives PanLL memory.
-
-===== Protocol-squisher constraints in Pane-L
-* Import protocol-squisher IR analysis results as Pane-L constraints
-* Display transport class compatibility (Concorde/Business/Economy/Wheelbarrow) between formats
-* Query protocol-squisher for adapter cost when designing systems
-* Rationale: Protocol compatibility is a constraint problem — Pane-L is where constraints live.
-
-===== Settings and error handling
-* Basic settings panel (VeriSimDB URL, panic-attack binary path, reposystem graph path)
-* Error boundary handling for failed Tauri commands
-* Loading states for async operations (VeriSimDB queries, panic-attack invocations)
+* [ ] Reposystem event chain in Panel-W (import graph.json, display plan operations)
+* [ ] VeriSimDB as persistence layer (replace localStorage with VeriSimDB-backed persistence)
+* [ ] Protocol-squisher constraints in Panel-L (transport class compatibility)
+* [ ] Settings panel (VeriSimDB URL, panic-attack binary path, reposystem graph path)
+* [ ] Error boundary handling for failed Gossamer commands
+* [ ] Loading states for async operations
 
 ==== Should Have
 
-* Error boundary handling with graceful fallback
-* Loading states and transition indicators
-* Theme support (dark/light, follows system)
-
-==== Could Have
-
-* Onboarding tutorial (first-run walkthrough of three panes)
+* [ ] Theme support (dark/light, follows system)
+* [ ] Onboarding tutorial (first-run walkthrough)
 
 === v0.3.0 — Neurosymbolic Core
 
-**Goal:** The "NeSy" in eNSAID becomes real. Pane-N sends proof obligations to ECHIDNA and gets back trust-scored results. Pane-L draws constraints from proven's formally verified catalog.
+**Goal:** The "NeSy" in eNSAID becomes real. Panel-N sends proof obligations to ECHIDNA; Panel-L draws constraints from proven's formally verified catalog.
 
 ==== Must Have
 
-===== ECHIDNA as Pane-N reasoning backend
-* Wire ECHIDNA's GraphQL API (port 8080) as the reasoning backend for Pane-N
-* Send proof obligations from Pane-L constraints → ECHIDNA → results in Pane-W
-* Display trust scores (ECHIDNA's 5-level hierarchy) and axiom usage warnings
-* Support portfolio solving: multiple provers run in parallel, best result wins
-* Rationale: ECHIDNA has 30 working prover backends with trust hardening. This is not research — it is wiring.
-
-===== proven as Pane-L constraint library
-* Import proven's 104 Safe* module catalog as selectable Pane-L constraints
-* Each constraint is a formally verified property (e.g., "SafeNetwork.IPv4: no invalid octets possible")
-* When a constraint is selected, Pane-N can anchor reasoning on it (proof already exists, no need to re-prove)
-* Rationale: proven modules are the highest-quality constraints in the ecosystem — dependent types with compile-time proofs.
-
-===== Hypatia findings pipeline
-* Consume hypatia scan findings from VeriSimDB (stored as hexads by the CI/CD pipeline)
-* Display cross-repo patterns in Pane-W (hotspots, severity distributions, temporal trends)
-* Allow Pane-L constraint creation from hypatia findings ("never allow this pattern again")
-* Rationale: Closes the loop — CI/CD findings flow into the workbench for analysis and constraint creation.
-
-===== gitbot-fleet status in Pane-W
-* Display fleet status: which bots are running, what they found, what rules they propose
-* Show the learning loop (observed patterns → threshold → proposed Logtalk rules)
-* Allow approval/rejection of proposed rules from Pane-W
-* Rationale: Bot orchestration is a core part of the development workflow — it belongs in the workbench.
-
-===== Pane module interface contract
-* Extract the common pattern from existing pane modules (panic-attack, VeriSimDB, reposystem, protocol-squisher) into a documented contract
-* Define what every pane module must provide: a Tauri command (Rust), a message type (ReScript), an update handler, a view function, and a VeriSimDB hexad schema
-* Publish as typed ReScript interface + Rust trait — not a tool yet, just the specification
-* Rationale: By v0.3.0 there are 6+ working modules. That is enough to extract the real pattern from facts, not assumptions. This contract is the foundation for the Pane Studio in v0.5.0.
+* [ ] ECHIDNA as Panel-N reasoning backend (GraphQL API, trust scores, portfolio solving)
+* [ ] proven as Panel-L constraint library (104 Safe* modules as selectable constraints)
+* [ ] Hypatia findings pipeline (consume scan findings from VeriSimDB, cross-repo patterns in Panel-W)
+* [ ] gitbot-fleet status in Panel-W (bot status, learning loop, rule approval)
+* [ ] Panel module interface contract (documented specification from working modules)
 
 ==== Should Have
 
-* Reasoning trace visualization (show which prover solved what, with what axioms)
-* Performance monitoring for ECHIDNA queries (latency, prover selection)
-* Pane-N agency indicator (shows when inference is active vs. idle)
-
-==== Could Have
-
-* Interactive proof explorer (drill into ECHIDNA proof trees)
-* Custom constraint expression language (beyond selecting from proven catalog)
+* [ ] Reasoning trace visualization
+* [ ] Performance monitoring for ECHIDNA queries
+* [ ] Panel-N agency indicator
 
 === v0.4.0 — Holistic Tool Integration
 
-**Goal:** PanLL covers the full stack — languages, databases, protocols, containers, networks. Each domain is a pane module; the three-pane architecture stays constant.
+**Goal:** PanLL covers the full stack — languages, databases, protocols, containers, networks.
 
 ==== Must Have
 
-===== stapeln container integration (Pane-W module)
-* Query stapeln's REST/GraphQL API for stack designs and validation results
-* Display container security scores and gap analysis findings in Pane-W
-* Validate designs against proven constraints (SafeNetwork for ports, SafeDocker for image refs)
-* Export verified designs to docker-compose from Pane-W
-* Rationale: Container design is a verification problem. PanLL adds the formal layer stapeln lacks.
-
-===== Multi-agent coordination (Pane-N)
-* Orchestrate tool chains: panic-attack scans → echidnabot verifies → sustainabot evaluates → glambot formats
-* Display agent coordination in Pane-N (which agent is active, what it decided, why)
-* Wire gitbot-fleet's shared-context API for inter-agent state
-* Rationale: The "Agentic" in eNSAID. Not abstract agent frameworks — concrete bot orchestration.
-
-===== Eclexia as language playground (Pane-L module)
-* Import Eclexia syntax/type definitions as Pane-L constraints for language design
-* Display type system properties and validate new constructs against them
-* Rationale: Language design is constraint-driven. Pane-L is the right place for it.
+* [ ] stapeln container integration (Panel-W module — security scores, gap analysis)
+* [ ] Multi-agent coordination in Panel-N (panic-attack -> echidnabot -> sustainabot -> glambot)
+* [ ] Eclexia as language playground (Panel-L module — syntax/type definitions)
 
 ==== Should Have
 
-* Network analysis module (start with panic-attack ambush against proven-bgp)
-* proven-bgp as first "server under test" in Pane-W (BGP FSM state visualization)
-
-==== Could Have
-
-* airie network simulation tool (create when network testing needs outgrow panic-attack ambush)
+* [ ] Network analysis module (panic-attack ambush against proven-bgp)
+* [ ] proven-bgp as first "server under test" in Panel-W
 
 === v0.5.0 — Development Workflows
 
-**Goal:** PanLL becomes the command center for multi-repo development operations. Design, develop, do, evaluate — all through the three panes.
+**Goal:** PanLL becomes the command center for multi-repo development operations.
 
 ==== Must Have
 
-===== VQL/protocol REPL in Pane-L
-* Type VQL queries directly in Pane-L, see results in Pane-W, reasoning trace in Pane-N
-* Protocol-squisher queries inline (analyze a schema, get compatibility report)
-* Rationale: The REPL is where "design" and "evaluate" happen interactively.
-
-===== Reposystem plan execution
-* Design multi-repo changes in PanLL (select repos from graph, define operations)
-* Dispatch via git-dispatcher, watch gitbot-fleet execute in Pane-W
-* Dustfile rollback available if execution fails
-* Rationale: Multi-repo orchestration through the workbench, not through shell scripts.
-
-===== contractiles enforcement
-* Display Mustfile/Trustfile/Dustfile/Intentfile contracts in Pane-L
-* Verify contract satisfaction in Pane-W (green/amber/red status per contract)
-* Alert on contract violations before operations execute
-* Rationale: Contractiles is the operational safety layer — it belongs in the constraint pane.
-
-===== claim-forge integration
-* Timestamp designs and verified results via claim-forge (GPG + OpenTimestamps)
-* Attach provenance records to VeriSimDB hexads
-* Rationale: IP protection for work created in PanLL.
-
-===== Pane Studio (scaffoldia profile)
-* Build a pane module scaffolder that generates all artifacts for a new module: ReScript component, Tauri command, message types, update handler, VeriSimDB hexad schema, and test stubs
-* Implemented as a scaffoldia profile — not a separate tool. `scaffoldia generate --profile panll-pane --name my-module` produces a working module skeleton that compiles and renders immediately.
-* Uses the pane module interface contract (defined in v0.3.0) as the generation target
-* Includes MiniKanren constraints from scaffoldia to validate module structure (e.g., "every module that writes to Pane-W must define at least one event-chain parser")
-* Rationale: By v0.5.0, 8+ modules have been built by hand. The pattern is proven. Scaffoldia already solves composable template generation — a PanLL profile is a natural extension, not a new tool. This becomes the plugin system foundation for v1.0.0.
-
-==== Should Have
-
-* Scaffoldia integration (generate new repo structures from Pane-W)
-* Code navigation for files referenced in event chains and findings
-
-==== Could Have
-
-* Visual diff for reposystem plan operations (before/after preview)
+* [ ] VQL/protocol REPL in Panel-L
+* [ ] Reposystem plan execution (design multi-repo changes, dispatch via git-dispatcher)
+* [ ] contractiles enforcement (Mustfile/Trustfile/Dustfile/Intentfile display and verification)
+* [ ] claim-forge integration (timestamps, provenance records)
+* [ ] Pane Studio (scaffoldia profile for generating panel module skeletons)
 
 === v1.0.0 — Production eNSAID
 
-**Goal:** Stable, documented, daily-driver quality. The tool you use for everything.
+**Goal:** Stable, documented, daily-driver quality.
 
 ==== Must Have
 
-* Stable pane module API (no breaking changes to module interface)
-* Comprehensive documentation (architecture guide, module development guide, user guide)
-* Security audit (panic-attack self-scan + ECHIDNA verification of critical paths)
-* All pane modules have integration tests against real backends
-* Test coverage 95%+
-* Performance profiling and optimization (startup < 2s, query response < 500ms)
+* [ ] Stable panel module API (no breaking changes)
+* [ ] Comprehensive documentation (architecture, module dev, user guide)
+* [ ] Security audit (panic-attack self-scan + ECHIDNA verification)
+* [ ] All panel modules have integration tests against real backends
+* [ ] Test coverage 95%+
+* [ ] Performance: startup < 2s, query response < 500ms
 
 ==== Should Have
 
-* Plugin system for third-party pane modules (built on Pane Studio from v0.5.0 — third parties run `scaffoldia generate --profile panll-pane` and get a working module skeleton)
-* Multi-platform builds (Linux primary, macOS, Windows via Tauri)
-* Headless mode for CI/CD integration (constraint check + ECHIDNA verification as pipeline gate)
+* [ ] Plugin system for third-party panel modules
+* [ ] Multi-platform builds (Linux primary, macOS, Windows via Gossamer)
+* [ ] Headless mode for CI/CD integration
 
-==== Could Have
+== Panel Module Architecture
 
-* BEAM backend for distributed PanLL instances sharing VeriSimDB state
-* Web-based version (Tauri webview extracted to standalone)
-
-== Post-v1.0
-
-=== Near-Term
-
-* **More proven apps as test targets** — proven-httpd, proven-dns, proven-quic become servers PanLL can exercise
-* **PanLL as CI/CD gate** — Run headless in pipelines: "do these changes satisfy Pane-L constraints?"
-* **Distributed instances** — Multiple PanLL workbenches sharing VeriSimDB state via the BEAM orchestration layer
-
-=== Long-Term
-
-* **Academic publication** — The three-pane neurosymbolic model (Binary Star architecture) as a research contribution
-* **Community pane modules** — Others write modules for their own tools/databases/protocols
-
-== Pane Module Architecture
-
-Each integration is a **pane module** — a self-contained unit that provides data to one or more panes.
+Each integration is a **panel module** — a self-contained unit that provides data to one or more panels.
 
 [cols="2,1,1,1,2"]
 |===
-| Module | Pane-L | Pane-N | Pane-W | Milestone
+| Module | Panel-L | Panel-N | Panel-W | Milestone
 
 | panic-attack
 |
@@ -282,6 +191,12 @@ Each integration is a **pane module** — a self-contained unit that provides da
 |
 | Hexad results, drift heatmaps
 | v0.1.0 (partial), v0.2.0 (persistence)
+
+| TypeLL
+| Type constraints
+| Type inference
+| Type verification results
+| v0.1.2 (done)
 
 | reposystem
 |
@@ -357,10 +272,10 @@ Each integration is a **pane module** — a self-contained unit that provides da
 | Layer | Technology
 
 | Frontend
-| ReScript 11.1 (custom TEA runtime), Tailwind CSS 4.x
+| ReScript 12.x (custom TEA runtime, 18 modules), Tailwind CSS 4.x
 
 | Desktop shell
-| Tauri 2.0 (Rust backend, webview frontend)
+| Gossamer (Zig + WebKitGTK backend, Rust bridge)
 
 | Persistence
 | VeriSimDB (octad hexads), localStorage (offline fallback)
@@ -368,11 +283,14 @@ Each integration is a **pane module** — a self-contained unit that provides da
 | Reasoning
 | ECHIDNA (GraphQL/gRPC/REST, 30 prover backends)
 
+| Type intelligence
+| TypeLL (10-level type safety kernel, JSON-RPC bridge)
+
 | Constraint library
 | proven (104 Idris2 Safe* modules, Zig FFI)
 
 | Testing
-| Deno.test (frontend), cargo test (backend)
+| Deno.test (frontend), cargo test (backend), 2462 tests
 
 | Build
 | Deno (orchestration), npm (ReScript compiler only)
@@ -384,19 +302,27 @@ Each integration is a **pane module** — a self-contained unit that provides da
 == Technical Debt
 
 === High Priority
-* [ ] Increase test coverage to 95%+ (currently 87-91%)
-* [ ] Remove App.res / AppNew.res duplication
-* [ ] Robust error handling for VeriSimDB Tauri commands
+* [ ] Robust error handling for VeriSimDB Gossamer commands
 * [ ] Integration tests against real backends (VeriSimDB, panic-attack)
+* [ ] cargo build for src-gossamer/ (281 errors to resolve)
+* [ ] .cmt audit across all modules
 
 === Medium Priority
-* [ ] Inline code documentation in core modules
-* [ ] API documentation generation
+* [ ] Increase test coverage to 95%+ (currently ~87-91%)
 * [ ] Performance benchmarks (startup time, query latency)
+* [ ] API documentation generation
 
 === Low Priority
 * [x] Custom TEA declared permanent (2026-03-08) — rescript-tea migration cancelled
 * [ ] Logo and branding
+
+== Post-v1.0
+
+* **More proven apps as test targets** — proven-httpd, proven-dns, proven-quic
+* **PanLL as CI/CD gate** — Headless mode: "do these changes satisfy Panel-L constraints?"
+* **Distributed instances** — Multiple PanLL workbenches sharing VeriSimDB state via BEAM
+* **Academic publication** — Three-pane neurosymbolic model (Binary Star architecture)
+* **Community panel modules** — Others write modules for their own tools/databases/protocols
 
 == License & Governance
 
@@ -408,4 +334,4 @@ Each integration is a **pane module** — a self-contained unit that provides da
 
 ---
 
-_Last Updated: 2026-02-28_
+_Last Updated: 2026-03-29_

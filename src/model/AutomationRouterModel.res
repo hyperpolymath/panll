@@ -90,6 +90,6 @@ type automationRouterState = {
   configSource: string,
   loading: bool,
   error: option<string>,
-  /// Route automation operations through BoJ's agent-mcp cartridge instead of direct Tauri.
+  /// Route automation operations through BoJ's agent-mcp cartridge instead of direct Gossamer.
   bojRouting: bool,
 }

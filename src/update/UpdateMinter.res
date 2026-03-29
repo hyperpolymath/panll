@@ -6,7 +6,7 @@ open Msg
 ///
 /// Handles all minterMsg variants: form field updates, wizard navigation,
 /// minting execution, and result handling. Most messages are pure state
-/// updates; ExecuteMint dispatches a Tauri command via MinterCmd.
+/// updates; ExecuteMint dispatches a Gossamer command via MinterCmd.
 let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
   let minter = model.minter
   let form = minter.form

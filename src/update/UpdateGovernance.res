@@ -15,7 +15,7 @@ open Msg
 /// STATE TRANSITION: Vexometer
 /// Tracks operator vexation signals (cancellations, corrections) and manages
 /// the anti-inflammatory feedback system. Backend events are recorded via
-/// Tauri commands so the Rust VexationTracker can compute the composite index.
+/// Gossamer commands so the Rust VexationTracker can compute the composite index.
 let updateVexometer = (model: model, msg: vexometerMsg): (model, Tea_Cmd.t<msg>) => {
   let vex = model.vexometer
   switch msg {

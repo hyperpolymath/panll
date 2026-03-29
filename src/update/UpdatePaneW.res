@@ -38,7 +38,7 @@ let parsePanicAttackerCapability = (json: string): (string, option<string>, opti
 /// Orchestrates the visualization of complex temporal event chains,
 /// security study reports, and panic-attacker integration.
 ///
-/// Returns `(model, Tea_Cmd.t<msg>)` because several handlers issue Tauri
+/// Returns `(model, Tea_Cmd.t<msg>)` because several handlers issue Gossamer
 /// commands (file dialogs, backend imports, security ambush runs).
 let updatePaneW = (model: model, msg: paneWMsg): (model, Tea_Cmd.t<msg>) => {
   let paneW = model.paneW
@@ -144,7 +144,7 @@ let updatePaneW = (model: model, msg: paneWMsg): (model, Tea_Cmd.t<msg>) => {
     | Error(err) => ({...model, paneW: {...paneW, eventChainError: Some(err)}}, Tea_Cmd.none)
     }
 
-  // --- File import commands (issue Tauri commands, await result) ---
+  // --- File import commands (issue Gossamer commands, await result) ---
   | ImportEventChainFile => (
       model,
       GossamerCmd.openEventChainFile(result => PaneW(EventChainFileLoaded(result))),

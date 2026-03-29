@@ -734,7 +734,7 @@ let updateEchidna = (model: model, msg: echidnaMsg): (model, Tea_Cmd.t<msg>) => 
   | SelectEchidnaTab(tab) => ({...model, echidna: {...ec, activeTab: tab}}, Tea_Cmd.none)
 
   // --- Enterprise model checking (MOF/OCL) ---
-  | ImportXmiModel => (model, Tea_Cmd.none) // Tauri file dialog → parse XMI → XmiModelLoaded
+  | ImportXmiModel => (model, Tea_Cmd.none) // Gossamer file dialog → parse XMI → XmiModelLoaded
   | XmiModelLoaded(Ok(json)) => {
       // Parse XMI JSON into model elements (simplified — real parser needed)
       let em = ec.enterpriseModel

@@ -4,7 +4,7 @@
 ///
 /// All functions are pure (no side effects, no API calls). Takes model data
 /// and produces filtered/sorted/aggregated views. Parsing of JSON responses
-/// from Tauri commands also lives here.
+/// from Gossamer commands also lives here.
 
 open FarmModel
 

@@ -3,7 +3,7 @@
 /// PanLL My-Lang Engine — pure computation for the AI-native language panel.
 ///
 /// Provides labels, colours, parsing, and display helpers for the view layer.
-/// No side effects — all Tauri/CLI interaction is in MyLangCmd.
+/// No side effects — all Gossamer/CLI interaction is in MyLangCmd.
 
 open MyLangModel
 

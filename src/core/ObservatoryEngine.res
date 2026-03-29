@@ -9,7 +9,7 @@
 ///   - Activity logs from all panels
 ///   - Structured debug log entries (routed via DebugLogger)
 ///
-/// All functions are pure — no side effects, no Tauri invocations.
+/// All functions are pure — no side effects, no Gossamer invocations.
 /// Command wrappers for health-check polling and system stats live in
 /// ObservatoryCmd.res (if present).
 

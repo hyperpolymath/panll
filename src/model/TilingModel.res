@@ -11,7 +11,7 @@
 /// Each detached window runs a minimal PanLL shell rendering a single panel.
 ///
 /// NOTE: Virtual desktop awareness is OS-level and not accessible from
-/// browser APIs. The Tauri backend could provide this via native window
+/// browser APIs. The Gossamer backend could provide this via native window
 /// management APIs in a future phase. For now, tiling operates within
 /// the browser's own window management.
 ///

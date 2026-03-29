@@ -4,7 +4,7 @@
 ///
 /// Single pane of glass for all panel health, service status, resource
 /// usage, and ambient metrics. Aggregates data from PanelRegistry and
-/// Tauri system info queries.
+/// Gossamer system info queries.
 
 open Model
 open Msg

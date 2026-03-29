@@ -7,7 +7,7 @@
 /// them as an append-only log in VeriSimDB.
 ///
 /// The timeline state lives in the main PanLL model and is updated by
-/// TimelineCmd (Tauri invoke wrappers) and TimelineEngine (pure computation).
+/// TimelineCmd (Gossamer invoke wrappers) and TimelineEngine (pure computation).
 ///
 /// DESIGN: The timeline is a passive observer — it reads data from git,
 /// panic-attack, the Vexometer, and Code MRI tags to assemble snapshots.

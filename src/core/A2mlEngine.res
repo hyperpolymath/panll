@@ -11,7 +11,7 @@
 /// This engine provides a unified representation via `a2mlSection` trees, with
 /// parsing heuristics that detect the format and extract sections accordingly.
 ///
-/// All functions are pure — no side effects, no Tauri invocations, no I/O.
+/// All functions are pure — no side effects, no Gossamer invocations, no I/O.
 
 // ============================================================================
 // Types

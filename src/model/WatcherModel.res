@@ -7,7 +7,7 @@
 /// Plaza detects LICENSE changes, Hypatia re-scans on code modifications,
 /// Reposystem checks compliance when files are added or removed.
 ///
-/// Events arrive via Tauri's event bus (`watcher://event`) and are debounced
+/// Events arrive via Gossamer's event bus (`watcher://event`) and are debounced
 /// at 500ms on the Rust side to avoid flooding the TEA loop.
 
 /// The kind of filesystem change detected by the watcher.
@@ -28,7 +28,7 @@ type watchEventKind =
 
 /// A single filesystem event, debounced and enriched with metadata.
 ///
-/// This is the payload received from the Rust watcher via the Tauri event bus.
+/// This is the payload received from the Rust watcher via the Gossamer event bus.
 /// Each event carries enough information for panels to decide whether they
 /// care about it (extension, filename, path prefix matching).
 type watchEvent = {

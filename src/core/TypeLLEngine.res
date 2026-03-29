@@ -6,7 +6,7 @@
 /// The evangeliser view layer system is implemented here: progressive disclosure
 /// of type information from RAW (expert) through WYSIWYG (exploration).
 ///
-/// No side effects — all Tauri/server interaction is in TypeLLCmd.
+/// No side effects — all Gossamer/server interaction is in TypeLLCmd.
 
 open TypeLLModel
 

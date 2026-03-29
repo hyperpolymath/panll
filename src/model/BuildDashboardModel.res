@@ -73,6 +73,6 @@ type buildDashboardState = {
   showPassedTests: bool,
   loading: bool,
   error: option<string>,
-  /// Route BSP operations through BoJ's bsp-mcp cartridge instead of direct Tauri.
+  /// Route BSP operations through BoJ's bsp-mcp cartridge instead of direct Gossamer.
   bojRouting: bool,
 }

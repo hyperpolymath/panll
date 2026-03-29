@@ -212,7 +212,7 @@ let parseTelemetrySnapshot = (json: string): option<telemetrySnapshot> => {
 /// STATE TRANSITION: VeriSimDB (Database Backend)
 /// Manages the VeriSimDB connection state, VQL query lifecycle, entity browsing,
 /// drift detection status, normalisation, and entity detail. Each message either
-/// triggers a Tauri command (side effect) or updates model state from a command
+/// triggers a Gossamer command (side effect) or updates model state from a command
 /// result.
 let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>) => {
   let db = model.verisimdb

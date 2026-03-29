@@ -2,7 +2,7 @@
 
 /// PanLL Game Preview Model — types for the live IDApTIK game preview panel.
 ///
-/// Embeds the Vite dev server output (port 8080) in a PanLL panel via Tauri
+/// Embeds the Vite dev server output (port 8080) in a PanLL panel via Gossamer
 /// webview or iframe. Supports hot-reload, frame stepping, overlay toggles,
 /// gameplay recording, and render statistics.
 ///

@@ -3,7 +3,7 @@
 
 /// PanLL Wiring Inspector Engine — pure computation helpers for PCC state.
 ///
-/// All functions here are pure: no side effects, no Tauri calls.
+/// All functions here are pure: no side effects, no Gossamer calls.
 /// They transform PCC JSON into domain types and provide view helpers
 /// for status labels, colours, filtering, and sorting.
 

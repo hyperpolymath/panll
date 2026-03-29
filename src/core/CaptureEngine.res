@@ -4,7 +4,7 @@
 /// cloning, and comparison operations (DD-022).
 ///
 /// All functions are pure: (state, action) -> state. Actual screenshot/recording
-/// side effects happen via CaptureCmd Tauri wrappers.
+/// side effects happen via CaptureCmd Gossamer wrappers.
 
 open CaptureModel
 

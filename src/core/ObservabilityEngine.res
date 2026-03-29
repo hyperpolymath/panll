@@ -10,7 +10,7 @@
 ///   - SARIF v2.1.0 for security scan results
 ///   - Percentile latency summaries (p50, p99) for dashboards
 ///
-/// All functions are pure — no side effects, no Tauri invocations.
+/// All functions are pure — no side effects, no Gossamer invocations.
 /// Command wrappers live in ObservabilityCmd.res.
 
 // ============================================================================

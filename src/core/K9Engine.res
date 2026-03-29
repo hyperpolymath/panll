@@ -19,7 +19,7 @@
 /// (e.g., `layouts/protocol-design.k9.ncl`), which define pane sizes,
 /// promoted actions, and default prover configurations.
 ///
-/// All functions are pure — no side effects, no Tauri invocations, no I/O.
+/// All functions are pure — no side effects, no Gossamer invocations, no I/O.
 
 // ============================================================================
 // Types

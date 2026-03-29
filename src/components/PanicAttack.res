@@ -5,7 +5,7 @@
 ///
 /// Displays scan results from panic-attack across 20 weak point categories,
 /// with severity-based filtering, scan controls, report history, and
-/// report comparison. Connects to the panic-attack binary via Tauri.
+/// report comparison. Connects to the panic-attack binary via Gossamer.
 
 open Msg
 open PanicAttackModel

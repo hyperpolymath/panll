@@ -483,7 +483,7 @@ let generateCmd = (form: minterForm): option<string> => {
 ///
 /// Each function wraps a RuntimeBridge.invoke call in a \`Tea_Cmd.call\`,
 /// converting the Promise-based IPC into the TEA command model.
-/// Works with both Gossamer and Tauri runtimes.
+/// Works with Gossamer runtime.
 
 let invoke = RuntimeBridge.invoke
 
@@ -528,9 +528,9 @@ let fileSummary = (form: minterForm): array<(string, string)> => {
 
   let rustFiles = hasBackend
     ? [
-        (`src-tauri/src/${snake}/mod.rs`, "Rust module"),
-        (`src-tauri/src/${snake}/types.rs`, "Rust types"),
-        (`src-tauri/src/${snake}/commands.rs`, "Backend handlers"),
+        (`src-gossamer/src/${snake}/mod.rs`, "Rust module"),
+        (`src-gossamer/src/${snake}/types.rs`, "Rust types"),
+        (`src-gossamer/src/${snake}/commands.rs`, "Backend handlers"),
       ]
     : []
 

@@ -6,7 +6,7 @@
 ///   - Default state initialisation
 ///   - Category labels
 ///   - Suggestion filtering and sorting
-///   - JSON parsing for Tauri command responses
+///   - JSON parsing for Gossamer command responses
 
 open RepoLoaderModel
 
@@ -66,7 +66,7 @@ let defaultState: repoLoaderState = {
   saved: true,
 }
 
-/// Parse a RepoInfo from Tauri scan response JSON.
+/// Parse a RepoInfo from Gossamer scan response JSON.
 let parseRepoInfo = (obj: Dict.t<JSON.t>): option<repoInfo> => {
   let getString = (key: string): string =>
     switch Dict.get(obj, key) {
@@ -185,7 +185,7 @@ let scanResultDecoder: Tea_Json.decoder<(repoInfo, array<panelSuggestion>)> = {
   )
 }
 
-/// Parse the full scan result from the Tauri backend.
+/// Parse the full scan result from the Gossamer backend.
 let parseScanResult = (jsonStr: string): result<(repoInfo, array<panelSuggestion>), string> =>
   Decoders.decode(scanResultDecoder, jsonStr)
 

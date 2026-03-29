@@ -117,6 +117,6 @@ type verisimdbState = {
   antiCrashValidation: bool,
   /// Cumulative VQL query count for Vexometer cognitive load tracking.
   queryCount: int,
-  /// Route VQL queries through BoJ's database-mcp cartridge instead of direct Tauri.
+  /// Route VQL queries through BoJ's database-mcp cartridge instead of direct Gossamer.
   bojRouting: bool,
 }

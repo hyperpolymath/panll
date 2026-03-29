@@ -128,7 +128,7 @@ let updateScriptGist = (model: model, msg: scriptGistMsg): (model, Tea_Cmd.t<msg
       }
       ({...model, scriptGist: {...sg, gists, selectedGistId}}, Tea_Cmd.none)
     }
-  | SaveGist => // Persist the currently selected gist to ~/.panll/gists/<id>.json via Tauri.
+  | SaveGist => // Persist the currently selected gist to ~/.panll/gists/<id>.json via Gossamer.
     switch sg.selectedGistId {
     | Some(gistId) =>
       switch sg.gists->Array.find(g => g.id === gistId) {
@@ -166,7 +166,7 @@ let updateScriptGist = (model: model, msg: scriptGistMsg): (model, Tea_Cmd.t<msg
         Tea_Cmd.none,
       )
     }
-  | ExecuteGist => // Dispatch the currently selected gist to its execution target via BoJ/Tauri.
+  | ExecuteGist => // Dispatch the currently selected gist to its execution target via BoJ/Gossamer.
     switch sg.selectedGistId {
     | Some(gistId) =>
       switch sg.gists->Array.find(g => g.id === gistId) {

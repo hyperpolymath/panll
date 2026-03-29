@@ -3,7 +3,7 @@
 /// PanLL Protocol-Squisher Engine — pure computation for format analysis.
 ///
 /// Provides labels, colours, parsing, and display helpers for the view layer.
-/// No side effects — all Tauri/CLI interaction is in ProtocolSquisherCmd.
+/// No side effects — all Gossamer/CLI interaction is in ProtocolSquisherCmd.
 
 open ProtocolSquisherModel
 

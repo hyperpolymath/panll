@@ -158,7 +158,7 @@ let allPanels: array<panelMeta> = [
     description: "Panel creation wizard — generate accessible panel modules from templates",
     icon: "wand",
     connectionStatus: ServiceConnected, // Local generation, always available
-    hasBackend: true, // Tauri backend generates files and patches wiring
+    hasBackend: true, // Gossamer backend generates files and patches wiring
     cladeId: Some("minter"),
   },
   {
@@ -198,7 +198,7 @@ let allPanels: array<panelMeta> = [
     description: "Repository scanner and panel configuration — load a repo, configure panels",
     icon: "folder-open",
     connectionStatus: ServiceConnected, // Local filesystem scanning, always available
-    hasBackend: true, // Scans filesystem and reads manifests via Tauri
+    hasBackend: true, // Scans filesystem and reads manifests via Gossamer
     cladeId: Some("repoloader"),
   },
   {
@@ -208,7 +208,7 @@ let allPanels: array<panelMeta> = [
     description: "Panel arrangements, groups, sessions, modes, and configurator",
     icon: "layout",
     connectionStatus: ServiceConnected, // Local state management, always available
-    hasBackend: true, // System info queries via Tauri
+    hasBackend: true, // System info queries via Gossamer
     cladeId: Some("workspace"),
   },
   {
@@ -218,7 +218,7 @@ let allPanels: array<panelMeta> = [
     description: "Screenshots, recordings, demos, panel cloning, and comparison views",
     icon: "camera",
     connectionStatus: ServiceConnected, // Local file I/O, always available
-    hasBackend: true, // File saving via Tauri
+    hasBackend: true, // File saving via Gossamer
     cladeId: Some("capture"),
   },
   {
@@ -228,7 +228,7 @@ let allPanels: array<panelMeta> = [
     description: "Secrets redaction, vault, 2FA, Trustfile enforcement, shoulder-safe mode",
     icon: "lock",
     connectionStatus: ServiceConnected, // Local + vault CLI, always available
-    hasBackend: true, // Redaction regex + vault I/O via Tauri
+    hasBackend: true, // Redaction regex + vault I/O via Gossamer
     cladeId: Some("security"),
   },
   {
@@ -248,7 +248,7 @@ let allPanels: array<panelMeta> = [
     description: "Stress testing and logic-based bug signature detection — 47 languages, 20 categories",
     icon: "zap",
     connectionStatus: ServiceDisconnected, // Probes for local panic-attack binary
-    hasBackend: true, // Invokes panic-attack CLI via Tauri
+    hasBackend: true, // Invokes panic-attack CLI via Gossamer
     cladeId: Some("panic-attack"),
   },
   {
@@ -258,7 +258,7 @@ let allPanels: array<panelMeta> = [
     description: "Organisation-scale batch scanning — assemblyline + BLAKE3 + verisimdb + delta",
     icon: "zap-off",
     connectionStatus: ServiceDisconnected, // Probes for panic-attack binary
-    hasBackend: true, // Invokes panic-attack assemblyline via Tauri
+    hasBackend: true, // Invokes panic-attack assemblyline via Gossamer
     cladeId: Some("mass-panic"),
   },
   {
@@ -278,7 +278,7 @@ let allPanels: array<panelMeta> = [
     description: "Embedded terminal with Claude Code, session recording, reversible ops, and collaborative approval gate",
     icon: "terminal-square",
     connectionStatus: ServiceDisconnected, // Probes for Valence shell binary + PTY allocation
-    hasBackend: true, // PTY via Tauri shell plugin + Valence binary
+    hasBackend: true, // PTY via Gossamer shell plugin + Valence binary
     cladeId: Some("valence-shell"),
   },
   {
@@ -288,7 +288,7 @@ let allPanels: array<panelMeta> = [
     description: "Live IDApTIK game preview with hot-reload, frame stepping, overlays, and gameplay recording",
     icon: "gamepad-2",
     connectionStatus: ServiceDisconnected, // Probes for Vite dev server on :8080
-    hasBackend: true, // Embedded iframe/webview + Tauri game control bridge
+    hasBackend: true, // Embedded iframe/webview + Gossamer game control bridge
     cladeId: Some("game-preview"),
   },
   {
@@ -298,7 +298,7 @@ let allPanels: array<panelMeta> = [
     description: "Reversible VM visual debugger — stack, memory, instructions, step forward and backward",
     icon: "cpu",
     connectionStatus: ServiceDisconnected, // Connects to running VM via inter-webview or file
-    hasBackend: true, // Tauri inter-webview messaging or file I/O
+    hasBackend: true, // Gossamer inter-webview messaging or file I/O
     cladeId: Some("vm-inspector"),
   },
   {
@@ -318,7 +318,7 @@ let allPanels: array<panelMeta> = [
     description: "Visual level design — device placement, guard patrols, defence flags, validation, LevelConfig export",
     icon: "map",
     connectionStatus: ServiceDisconnected, // File I/O for level data
-    hasBackend: true, // Tauri file I/O + validation
+    hasBackend: true, // Gossamer file I/O + validation
     cladeId: Some("level-architect"),
   },
   {
@@ -348,7 +348,7 @@ let allPanels: array<panelMeta> = [
     description: "Create, test, and package DLC puzzle packs — VM composer, solution testing, asset bundling",
     icon: "puzzle",
     connectionStatus: ServiceDisconnected, // File I/O for DLC data
-    hasBackend: true, // Tauri file I/O + test runner
+    hasBackend: true, // Gossamer file I/O + test runner
     cladeId: Some("dlc-workshop"),
   },
   {
@@ -358,7 +358,7 @@ let allPanels: array<panelMeta> = [
     description: "Federate with external code editors — LSP diagnostics, symbols, open files, jump-to-line",
     icon: "file-code",
     connectionStatus: ServiceDisconnected, // LSP connection to external editor
-    hasBackend: true, // LSP protocol via Tauri
+    hasBackend: true, // LSP protocol via Gossamer
     cladeId: Some("editor-bridge"),
   },
   {
@@ -368,7 +368,7 @@ let allPanels: array<panelMeta> = [
     description: "Monitor builds, tests, errors, and compilation status across IDApTIK sub-projects",
     icon: "hammer",
     connectionStatus: ServiceDisconnected, // Build process monitoring
-    hasBackend: true, // Tauri build process invocation
+    hasBackend: true, // Gossamer build process invocation
     cladeId: Some("build-dashboard"),
   },
   {
@@ -378,7 +378,7 @@ let allPanels: array<panelMeta> = [
     description: "Versioning, changelog, artifact building, signing, and distribution of IDApTIK builds",
     icon: "package-check",
     connectionStatus: ServiceDisconnected, // Release pipeline
-    hasBackend: true, // Tauri release process invocation
+    hasBackend: true, // Gossamer release process invocation
     cladeId: Some("release-manager"),
   },
   {
@@ -388,7 +388,7 @@ let allPanels: array<panelMeta> = [
     description: "Hybrid cross-panel workflow orchestration — event-driven rules with approval gates",
     icon: "route",
     connectionStatus: ServiceConnected, // Local rule engine, always available
-    hasBackend: true, // Tauri rule execution + .machine_readable/ENSAID_CONFIG.a2ml reading
+    hasBackend: true, // Gossamer rule execution + .machine_readable/ENSAID_CONFIG.a2ml reading
     cladeId: Some("automation-router"),
   },
   {
@@ -398,7 +398,7 @@ let allPanels: array<panelMeta> = [
     description: "Portable computation gists — Minskian diachronic scripts (time) and synchronic schemata (space) as cardfiles, LLM-callable via MCP",
     icon: "file-code",
     connectionStatus: ServiceConnected, // Local gist engine, always available
-    hasBackend: false, // Pure TEA state + optional Tauri persistence
+    hasBackend: false, // Pure TEA state + optional Gossamer persistence
     cladeId: Some("script-gist"),
   },
   {
@@ -408,7 +408,7 @@ let allPanels: array<panelMeta> = [
     description: "Bundle of Joy — unified cartridge server with 17 domains (incl. LSP/DAP/BSP), 3-layer ABI/FFI/Adapter, Umoja federation",
     icon: "box",
     connectionStatus: ServiceDisconnected, // Probes BoJ server at :7700
-    hasBackend: true, // HTTP proxy to BoJ server via Tauri
+    hasBackend: true, // HTTP proxy to BoJ server via Gossamer
     cladeId: Some("boj"),
   },
   {
@@ -498,7 +498,7 @@ let allPanels: array<panelMeta> = [
     description: "Integrative dashboard — cross-panel health, service status, resource usage, ambient metrics",
     icon: "activity",
     connectionStatus: ServiceConnected, // Aggregates local state, always available
-    hasBackend: true, // Queries Tauri for system info + panel health
+    hasBackend: true, // Queries Gossamer for system info + panel health
     cladeId: Some("observatory"),
   },
   {
@@ -508,7 +508,7 @@ let allPanels: array<panelMeta> = [
     description: "Hospital-model sysadmin — clinician, network ambulance, hardware crash team, emergency room",
     icon: "stethoscope",
     connectionStatus: ServiceDisconnected, // Probes for ambientops services
-    hasBackend: true, // Invokes clinician/network-repair CLIs via Tauri
+    hasBackend: true, // Invokes clinician/network-repair CLIs via Gossamer
     cladeId: Some("ambientops"),
   },
   {
@@ -558,7 +558,7 @@ let allPanels: array<panelMeta> = [
     description: "Unified hub for IDApTIK game content creation — project management, ABI validation, asset pipeline, mod distribution",
     icon: "wrench",
     connectionStatus: ServiceDisconnected, // File I/O + ABI validation
-    hasBackend: true, // Tauri file I/O + validation engine
+    hasBackend: true, // Gossamer file I/O + validation engine
     cladeId: Some("ums"),
   },
   // ── Game Testing panels ───────────────────────────────────────────────
@@ -863,7 +863,7 @@ let allPanels: array<panelMeta> = [
     description: "Self-validating K9 contractile file management — Kennel/Yard/Hunt security levels",
     icon: "dog",
     connectionStatus: ServiceConnected, // Local file I/O, always available
-    hasBackend: true, // Tauri file I/O for loading .k9.ncl files
+    hasBackend: true, // Gossamer file I/O for loading .k9.ncl files
     cladeId: Some("k9-manager"),
   },
   {

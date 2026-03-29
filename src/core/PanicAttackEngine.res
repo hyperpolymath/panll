@@ -6,7 +6,7 @@
 ///
 /// Provides severity/category classification, finding filtering and sorting,
 /// summary computation, and SARIF-compatible output helpers. All functions
-/// are side-effect-free; Tauri commands live in PanicAttackCmd.
+/// are side-effect-free; Gossamer commands live in PanicAttackCmd.
 
 open PanicAttackModel
 

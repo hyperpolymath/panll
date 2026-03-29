@@ -33,7 +33,7 @@ let updateAi = (model: model, msg: aiMsg): (model, Tea_Cmd.t<msg>) => {
       | Some(p) => Some(AiEngine.providerIdToString(p.id))
       | None => None
       }
-      // Build history as a simple JSON array for the Tauri backend.
+      // Build history as a simple JSON array for the Gossamer backend.
       // We pass an empty array; the backend rebuilds from the request.
       let history: array<JSON.t> = []
       (

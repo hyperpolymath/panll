@@ -6,7 +6,7 @@
 /// and temporal snapshot navigation.
 ///
 /// All functions are side-effect-free and operate on MassPanicModel types.
-/// Tauri commands and I/O live in MassPanicCmd; this module is for
+/// Gossamer commands and I/O live in MassPanicCmd; this module is for
 /// deterministic transformations only.
 
 open MassPanicModel

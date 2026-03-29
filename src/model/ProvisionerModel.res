@@ -24,7 +24,7 @@
 
 /// Panel isolation tier — determines how a panel runs.
 type panelIsolation =
-  /// Runs directly in the PanLL Tauri process. Fastest, full trust.
+  /// Runs directly in the PanLL Gossamer process. Fastest, full trust.
   | Native
   /// Runs in a standard Alpine + Podman OCI container. Good isolation,
   /// quick startup, clean uninstall by deleting the pod.

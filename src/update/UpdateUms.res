@@ -109,7 +109,7 @@ let updateUms = (model: model, msg: umsMsg): (model, Tea_Cmd.t<msg>) => {
       Tea_Cmd.none,
     )
   | ValidateLevel(levelId) => {
-      // Route through BoJ database-mcp when bojRouting is enabled, otherwise Tauri direct.
+      // Route through BoJ database-mcp when bojRouting is enabled, otherwise Gossamer direct.
       let validateCmd = if u.bojRouting {
         BojCmd.invokeCartridgeWithLatency(
           "database-mcp",

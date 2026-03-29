@@ -4,7 +4,7 @@
 /// enforcement (DD-026, DD-027).
 ///
 /// Pure functions for the security layer. Actual vault I/O and 2FA TOTP
-/// verification happen via SecurityCmd Tauri wrappers.
+/// verification happen via SecurityCmd Gossamer wrappers.
 
 open SecurityModel
 

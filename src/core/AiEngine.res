@@ -7,7 +7,7 @@
 ///   - Provider label, colour, and icon helpers
 ///   - Message formatting and token display
 ///   - Precedence sorting and provider selection
-///   - JSON parsing for Tauri command responses
+///   - JSON parsing for Gossamer command responses
 
 open AiModel
 
@@ -146,7 +146,7 @@ let getProviderStatus = (
   }
 }
 
-/// Serialise a provider ID to a string for the Tauri command bridge.
+/// Serialise a provider ID to a string for the Gossamer command bridge.
 let providerIdToString = (id: aiProviderId): string => {
   switch id {
   | Anthropic => "anthropic"
@@ -298,7 +298,7 @@ let messageResponseDecoder: Tea_Json.decoder<aiMessage> = json => {
   }
 }
 
-/// Parse a SendMessageResponse from the Tauri backend JSON.
+/// Parse a SendMessageResponse from the Gossamer backend JSON.
 let parseMessageResponse = (jsonStr: string): result<aiMessage, string> =>
   Decoders.decode(messageResponseDecoder, jsonStr)
 
@@ -344,7 +344,7 @@ let providerStateDecoder: Tea_Json.decoder<array<aiProviderConfig>> = Tea_Json.f
   Decoders.lenientArray(providerConfigDecoder),
 )
 
-/// Parse provider config state from the Tauri backend JSON.
+/// Parse provider config state from the Gossamer backend JSON.
 let parseProviderState = (jsonStr: string): result<array<aiProviderConfig>, string> =>
   Decoders.decode(providerStateDecoder, jsonStr)
 
@@ -352,7 +352,7 @@ let parseProviderState = (jsonStr: string): result<array<aiProviderConfig>, stri
 // Streaming helpers — parse stream chunks and manage streaming state
 // ---------------------------------------------------------------------------
 
-/// Parse a stream chunk JSON from a Tauri event payload.
+/// Parse a stream chunk JSON from a Gossamer event payload.
 /// Returns `(chunkType, optionalData)` where chunkType is one of:
 /// "TextDelta", "ToolUseStart", "ToolUseDelta", "ToolUseEnd", "Complete", "Error".
 let parseStreamChunk = (json: string): result<(string, option<JSON.t>), string> => {

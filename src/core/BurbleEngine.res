@@ -5,7 +5,7 @@
 //
 // Manages workspace huddle voice chat using the Burble Workspace profile
 // (always-on VAD, noise suppression, echo cancellation, no spatial audio).
-// All functions are pure — side effects (WebSocket, Tauri invoke) happen
+// All functions are pure — side effects (WebSocket, Gossamer invoke) happen
 // in BurbleCmd.
 //
 // TEA integration:

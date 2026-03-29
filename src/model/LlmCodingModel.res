@@ -9,7 +9,7 @@
 /// destructive actions, and prevent conflicts without the LLM being able to
 /// override those controls.
 ///
-/// Designed to work with both Tauri (current) and Gossamer (target) backends.
+/// Designed to work with both Gossamer backends.
 ///
 /// Dependency: leaf module — no imports from other PanLL models.
 

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 //
 // Decoders.res — Extended Tea_Json decoder combinators and domain-specific
-// decoders for PanLL Tauri command responses.
+// decoders for PanLL Gossamer command responses.
 //
 // Provides map6–map13 for records with more than 5 fields, plus convenience
 // wrappers used across Update.res and engine modules.

@@ -5,7 +5,7 @@
 /// Provides labels, filtering, sorting, taxonomy completeness calculations,
 /// and hardcoded spec data for all 16 nextgen-languages projects.
 ///
-/// No side effects — all filesystem scanning would go through Tauri commands.
+/// No side effects — all filesystem scanning would go through Gossamer commands.
 
 open SpecBrowserModel
 

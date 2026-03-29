@@ -395,7 +395,7 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
       {...model, massPanic: {...mp, imagingLoading: false, lastError: Some(err)}},
       Tea_Cmd.none,
     )
-  | ImportImageFile => // Wire file picker dialog — invoke Tauri open dialog, then load the selected file.
+  | ImportImageFile => // Wire file picker dialog — invoke Gossamer open dialog, then load the selected file.
     (
       {...model, massPanic: {...mp, imagingLoading: true}},
       MassPanicCmd.buildImage(mp.reposDirectory, false, None, result => MassPanic(

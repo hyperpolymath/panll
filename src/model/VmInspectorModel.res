@@ -7,7 +7,7 @@
 /// pointer with assembly listing, and supports stepping forward AND backward
 /// (leveraging the VM's reversibility).
 ///
-/// The inspector connects to the running game's VM state via Tauri
+/// The inspector connects to the running game's VM state via Gossamer
 /// inter-webview messaging or serialised JSON file (decoupled mode).
 ///
 /// Dependency: leaf module — no imports from other PanLL models.
@@ -90,7 +90,7 @@ type vmBreakpoint =
 
 /// VM connection mode — how the inspector gets VM state.
 type vmConnectionMode =
-  /// Live connection via Tauri inter-webview messaging.
+  /// Live connection via Gossamer inter-webview messaging.
   | VmLiveConnection
   /// File-based: reads serialised VM state from a JSON file (watcher picks up changes).
   | VmFileConnection(string)
@@ -146,6 +146,6 @@ type vmInspectorState = {
   loading: bool,
   /// Whether multi-VM view is active (shows multiple VMs for multiplayer).
   multiVmView: bool,
-  /// Route DAP operations through BoJ's dap-mcp cartridge instead of direct Tauri.
+  /// Route DAP operations through BoJ's dap-mcp cartridge instead of direct Gossamer.
   bojRouting: bool,
 }

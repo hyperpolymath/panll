@@ -94,7 +94,7 @@ let updateTsdm = (model: model, subMsg: tsdmMsg): (model, Tea_Cmd.t<msg>) => {
   | ToggleLock => ({...model, tsdm: {...ts, locked: !ts.locked}}, Tea_Cmd.none)
   | ResetToDefaults => ({...model, tsdm: TsdmModel.init}, Tea_Cmd.none)
   | SaveDirective => {
-      // Serialise the current TSDM state as JSON and persist via Tauri.
+      // Serialise the current TSDM state as JSON and persist via Gossamer.
       let axisOrderJson = ts.axisOrder->Array.map(a =>
         switch a {
         | AxisScope => "scope"

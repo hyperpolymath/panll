@@ -6,7 +6,7 @@
 /// session protection, execution modes, and poly tool management.
 ///
 /// All functions are pure: (state, action) -> state. Side effects (filesystem
-/// save/load, Tauri IPC) happen elsewhere via Tea_Cmd.
+/// save/load, Gossamer IPC) happen elsewhere via Tea_Cmd.
 
 open WorkspaceModel
 
