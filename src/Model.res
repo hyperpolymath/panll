@@ -103,6 +103,12 @@ include VoiceTagModel
 /// code trust surface that is always visible as an ambient layer.
 include ProvenanceModel
 
+/// Re-export Pattern Diagnostics types (Layer 3) — pattern detection, gamification.
+include PatternDiagModel
+
+/// Re-export Attribution-to-Licensing types (Layer 4) — SPDX, trust→license link.
+include AttributionLicenseModel
+
 /// Re-export 007 Toolchain types for agentic compiler and high-rigor execution.
 include Oo7ToolchainModel
 include VideoCoordinationModel
@@ -441,6 +447,10 @@ type model = {
   provenance: provenanceState,
   // Code MRI Timeline — VeriSimDB-backed development time series (Layer 2)
   codeMriTimeline: TimelineModel.timelineState,
+  // Code MRI Pattern Diagnostics — anti-pattern detection + gamification (Layer 3)
+  patternDiag: patternDiagState,
+  // Code MRI Attribution-to-Licensing — SPDX/provenance→license link (Layer 4)
+  attributionLicense: attributionLicenseState,
   // Watcher — filesystem observation infrastructure (feeds all panels)
   watcher: watcherState,
   // AI — multi-provider neural interface (Claude, Gemini, Mistral, GPT, local)
@@ -1231,6 +1241,8 @@ let init = (): model => {
   voiceTag: VoiceTagEngine.defaultState,
   provenance: ProvenanceEngine.defaultState,
   codeMriTimeline: TimelineModel.defaultTimelineState(),
+  patternDiag: PatternDiagModel.init,
+  attributionLicense: AttributionLicenseModel.init,
   watcher: {
     running: false,
     watchedPaths: [],

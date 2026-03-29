@@ -182,6 +182,12 @@ include EnsaidConfigMsg
 /// Re-export Code MRI Timeline messages.
 include TimelineMsg
 
+/// Re-export Code MRI Pattern Diagnostics messages (Layer 3).
+include PatternDiagMsg
+
+/// Re-export Code MRI Attribution-to-Licensing messages (Layer 4).
+include AttributionLicenseMsg
+
 /// Re-export Clade Browser messages.
 include CladeBrowserMsg
 
@@ -441,6 +447,8 @@ type msg =
   | TypeLL(typellMsg) // Verification kernel (cross-panel type intelligence)
   | EnsaidConfig(ensaidConfigMsg) // Cross-panel ENSAID_CONFIG generation and I/O
   | Timeline(timelineMsg) // Code MRI Layer 2 -- VeriSimDB development timeline
+  | PatternDiag(patternDiagMsg) // Code MRI Layer 3 -- pattern diagnostics + gamification
+  | AttrLicense(attributionLicenseMsg) // Code MRI Layer 4 -- attribution-to-licensing
   | Bus(panelBusMsg) // Panel Bus subscriber management
   | RecordBojLatency(string, string, float) // cartridge, tool, elapsed ms
   | GovernanceNesyResult(result<string, string>) // nesy-mcp governance query response

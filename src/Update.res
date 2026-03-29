@@ -89,6 +89,8 @@ open UpdateTiling
 open UpdateFocusDimming
 open UpdateEnsaidConfig
 open UpdateTimeline
+open UpdatePatternDiag
+open UpdateAttributionLicense
 open UpdateStapeln
 open UpdateEvangeliser
 open UpdateLanguageForge
@@ -192,6 +194,8 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | TangleViz(subMsg) => updateTangleViz(model, subMsg)
   | EnsaidConfig(subMsg) => updateEnsaidConfig(model, subMsg)
   | Timeline(subMsg) => updateTimeline(model, subMsg)
+  | PatternDiag(subMsg) => updatePatternDiag(model, subMsg)
+  | AttrLicense(subMsg) => updateAttributionLicense(model, subMsg)
   // Game Dev panels — testing
   | UnitTestRunner(subMsg) => updateUnitTestRunner(model, subMsg)
   | FunctionalTester(subMsg) => updateFunctionalTester(model, subMsg)
