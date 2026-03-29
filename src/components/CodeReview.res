@@ -245,6 +245,7 @@ let renderApprovalGateTab = (state: codeReviewState): Tea_Vdom.t<msg> => {
               "px-4 py-2 text-sm bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer font-medium",
             ),
             Events.onClick(CodeReview(ApprovePr)),
+            KeyboardNav.onActivate(CodeReview(ApprovePr)),
           },
           list{text("Approve Selected PR")},
         )

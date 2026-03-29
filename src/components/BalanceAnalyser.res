@@ -481,6 +481,7 @@ let view = (state: balanceAnalyserState): Tea_Vdom.t<msg> => {
                 "px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer font-medium",
               ),
               Events.onClick(BalanceAnalyser(RunSimulation)),
+              KeyboardNav.onActivate(BalanceAnalyser(RunSimulation)),
             },
             list{text("Run Simulation")},
           ),

@@ -175,6 +175,7 @@ let view = (ps: protocolSquisherState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700"),
               Events.onClick(PanelSwitcher(ClosePanels)),
+              KeyboardNav.onActivate(PanelSwitcher(ClosePanels)),
             },
             list{text("Close")},
           ),
@@ -214,6 +215,7 @@ let view = (ps: protocolSquisherState): Tea_Vdom.t<msg> => {
                           "px-4 py-2 text-sm bg-cyan-600 text-white rounded hover:bg-cyan-500 disabled:opacity-50",
                         ),
                         Events.onClick(ProtocolSquisher(RunAnalysis)),
+                        KeyboardNav.onActivate(ProtocolSquisher(RunAnalysis)),
                       },
                       list{text("Analyse")},
                     ),
@@ -265,6 +267,7 @@ let view = (ps: protocolSquisherState): Tea_Vdom.t<msg> => {
                           "px-4 py-2 text-sm bg-cyan-600 text-white rounded hover:bg-cyan-500",
                         ),
                         Events.onClick(ProtocolSquisher(RunComparison)),
+                        KeyboardNav.onActivate(ProtocolSquisher(RunComparison)),
                       },
                       list{text("Compare")},
                     ),

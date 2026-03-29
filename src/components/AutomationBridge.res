@@ -74,6 +74,7 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
                 "px-3 py-1 text-xs bg-emerald-800 hover:bg-emerald-700 text-white rounded",
               ),
               Events.onClick(AutomationBridge(AutoBStarted)),
+              KeyboardNav.onActivate(AutomationBridge(AutoBStarted)),
             },
             list{text("Trigger Build")},
           ),
@@ -152,6 +153,7 @@ let view = (state: automationBridgeState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
                 Events.onClick(AutomationBridge(DismissAutoBError)),
+                KeyboardNav.onActivate(AutomationBridge(DismissAutoBError)),
               },
               list{text("Dismiss")},
             ),

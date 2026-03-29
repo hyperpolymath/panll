@@ -135,6 +135,7 @@ let renderOverview = (state: buildDashboardState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(BuildDashboard(ToggleWatchMode)),
+              KeyboardNav.onActivate(BuildDashboard(ToggleWatchMode)),
             },
             list{
               text(
@@ -156,6 +157,7 @@ let renderOverview = (state: buildDashboardState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(BuildDashboard(ToggleAutoRebuild)),
+              KeyboardNav.onActivate(BuildDashboard(ToggleAutoRebuild)),
             },
             list{
               text(
@@ -184,6 +186,7 @@ let renderOverview = (state: buildDashboardState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(BuildDashboard(ToggleBuildBojRouting)),
+              KeyboardNav.onActivate(BuildDashboard(ToggleBuildBojRouting)),
             },
             list{
               text(
@@ -270,6 +273,7 @@ let renderTests = (state: buildDashboardState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(BuildDashboard(ToggleShowPassed)),
+              KeyboardNav.onActivate(BuildDashboard(ToggleShowPassed)),
             },
             list{text("Show Passed")},
           ),
@@ -407,6 +411,7 @@ let view = (state: buildDashboardState): Tea_Vdom.t<msg> => {
                 "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
               ),
               Events.onClick(BuildDashboard(RefreshBuildStatus)),
+              KeyboardNav.onActivate(BuildDashboard(RefreshBuildStatus)),
             },
             list{text("Refresh")},
           ),

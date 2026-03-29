@@ -228,6 +228,7 @@ let renderPanel = (state: accessibilityState): Tea_Vdom.t<msg> => {
               Attrs.title("Close accessibility panel"),
               Attrs.ariaLabel("Close accessibility panel"),
               Events.onClick(AccessibilityCtrl(ToggleAccessibilityToolbar)),
+              KeyboardNav.onActivate(AccessibilityCtrl(ToggleAccessibilityToolbar)),
             },
             list{text("X")},
           ),
@@ -293,6 +294,7 @@ let view = (state: accessibilityState): Tea_Vdom.t<msg> => {
             state.toolbarExpanded ? "Close accessibility settings" : "Open accessibility settings",
           ),
           Events.onClick(AccessibilityCtrl(ToggleAccessibilityToolbar)),
+          KeyboardNav.onActivate(AccessibilityCtrl(ToggleAccessibilityToolbar)),
         },
         list{
           // Accessibility icon (universal access symbol approximation using text)

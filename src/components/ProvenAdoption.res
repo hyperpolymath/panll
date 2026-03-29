@@ -105,6 +105,7 @@ let view = (state: provenAdoptionState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600"),
               Events.onClick(ProvenAdoption(ScanRepos)),
+              KeyboardNav.onActivate(ProvenAdoption(ScanRepos)),
             },
             list{
               text(

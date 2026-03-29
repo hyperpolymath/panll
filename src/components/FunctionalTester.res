@@ -327,6 +327,7 @@ let view = (state: functionalTesterState): Tea_Vdom.t<msg> => {
                     "px-3 py-1.5 text-xs bg-blue-700 text-white rounded hover:bg-blue-600 cursor-pointer font-medium",
                   ),
                   Events.onClick(FunctionalTester(NewWorkflow)),
+                  KeyboardNav.onActivate(FunctionalTester(NewWorkflow)),
                 },
                 list{text("New Workflow")},
               ),

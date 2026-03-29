@@ -313,6 +313,7 @@ let renderDashboard = (state: coprocessorsState): Tea_Vdom.t<msg> => {
                     "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
                   ),
                   Events.onClick(Coprocessors(DiscoverDevices)),
+                  KeyboardNav.onActivate(Coprocessors(DiscoverDevices)),
                 },
                 list{text("Discover")},
               ),
@@ -367,6 +368,7 @@ let renderDashboard = (state: coprocessorsState): Tea_Vdom.t<msg> => {
                       "ml-2 px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
                     ),
                     Events.onClick(Coprocessors(RefreshMetrics)),
+                    KeyboardNav.onActivate(Coprocessors(RefreshMetrics)),
                   },
                   list{text("Refresh")},
                 ),
@@ -839,6 +841,7 @@ let renderSettings = (state: coprocessorsState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(Coprocessors(ToggleAutoRefresh)),
+              KeyboardNav.onActivate(Coprocessors(ToggleAutoRefresh)),
             },
             list{
               text(
@@ -931,6 +934,7 @@ let view = (state: coprocessorsState): Tea_Vdom.t<msg> => {
                 "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
               ),
               Events.onClick(Coprocessors(RefreshMetrics)),
+              KeyboardNav.onActivate(Coprocessors(RefreshMetrics)),
             },
             list{text("Refresh")},
           ),
@@ -965,6 +969,7 @@ let view = (state: coprocessorsState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_("text-red-400 hover:text-red-200 cursor-pointer"),
                     Events.onClick(Coprocessors(DismissCoprocError)),
+                    KeyboardNav.onActivate(Coprocessors(DismissCoprocError)),
                   },
                   list{text("Dismiss")},
                 ),

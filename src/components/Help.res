@@ -101,6 +101,7 @@ let renderHeader = (state: helpState): Tea_Vdom.t<msg> => {
               ),
               Attrs.ariaLabel("Close help panel"),
               Events.onClick(Help(CloseHelp)),
+              KeyboardNav.onActivate(Help(CloseHelp)),
             },
             list{text("close")},
           ),
@@ -616,6 +617,7 @@ let renderOnboarding = (state: onboardingState): Tea_Vdom.t<msg> => {
                       ),
                       Attrs.ariaLabel("Skip onboarding walkthrough"),
                       Events.onClick(Help(SkipOnboarding)),
+                      KeyboardNav.onActivate(Help(SkipOnboarding)),
                     },
                     list{text("Skip walkthrough")},
                   ),
@@ -634,6 +636,7 @@ let renderOnboarding = (state: onboardingState): Tea_Vdom.t<msg> => {
                             ),
                             Attrs.ariaLabel("Previous onboarding step"),
                             Events.onClick(Help(PrevOnboardingStep)),
+                            KeyboardNav.onActivate(Help(PrevOnboardingStep)),
                           },
                           list{text("Previous")},
                         )

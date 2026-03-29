@@ -223,6 +223,7 @@ let renderHostileUxToggle = (suppressed: bool): Tea_Vdom.t<msg> => {
             : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`,
       ),
       Events.onClick(Provenance(ToggleHostileUx)),
+      KeyboardNav.onActivate(Provenance(ToggleHostileUx)),
       Attrs.ariaLabel(
         suppressed
           ? "Hostile UX suppressed — click to re-enable violation warnings"

@@ -396,6 +396,7 @@ let renderScanTab = (state: evangeliserState): Tea_Vdom.t<msg> => {
                       ),
                       Attrs.disabled(state.scanning),
                       Events.onClick(Evangeliser(RunScan)),
+                      KeyboardNav.onActivate(Evangeliser(RunScan)),
                       Attrs.ariaLabel("Scan JavaScript code for patterns"),
                     },
                     list{

@@ -376,6 +376,7 @@ let renderImagingView = (state: massPanicState): Tea_Vdom.t<msg> => {
               ),
               Attrs.disabled(state.imagingLoading || state.reposDirectory == ""),
               Events.onClick(MassPanic(BuildImage)),
+              KeyboardNav.onActivate(MassPanic(BuildImage)),
             },
             list{
               text(
@@ -393,6 +394,7 @@ let renderImagingView = (state: massPanicState): Tea_Vdom.t<msg> => {
                 "px-3 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 text-gray-200 font-mono",
               ),
               Events.onClick(MassPanic(ImportImageFile)),
+              KeyboardNav.onActivate(MassPanic(ImportImageFile)),
             },
             list{text("import JSON")},
           ),
@@ -563,6 +565,7 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
               ),
               Attrs.disabled(state.temporalLoading),
               Events.onClick(MassPanic(ListSnapshots)),
+              KeyboardNav.onActivate(MassPanic(ListSnapshots)),
             },
             list{
               text(
@@ -586,6 +589,7 @@ let renderTemporalView = (state: massPanicState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(MassPanic(DiffSnapshots)),
+              KeyboardNav.onActivate(MassPanic(DiffSnapshots)),
             },
             list{text("diff selected")},
           ),
@@ -908,6 +912,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                   ),
                   Attrs.disabled(state.scanning || state.reposDirectory == ""),
                   Events.onClick(MassPanic(RunAssemblyline)),
+                  KeyboardNav.onActivate(MassPanic(RunAssemblyline)),
                 },
                 list{text("scan all")},
               ),
@@ -918,6 +923,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                   ),
                   Attrs.disabled(state.scanning || Array.length(state.selectedRepos) == 0),
                   Events.onClick(MassPanic(RunSelected)),
+                  KeyboardNav.onActivate(MassPanic(RunSelected)),
                 },
                 list{text(`scan ${Int.toString(Array.length(state.selectedRepos))} selected`)},
               ),
@@ -938,6 +944,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("ml-2 text-red-400 hover:text-red-200 text-xs"),
                 Events.onClick(MassPanic(DismissMassPanicError)),
+                KeyboardNav.onActivate(MassPanic(DismissMassPanicError)),
               },
               list{text("[dismiss]")},
             ),
@@ -978,6 +985,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                     ),
                     Attrs.disabled(state.reposDirectory == ""),
                     Events.onClick(MassPanic(DiscoverRepos)),
+                    KeyboardNav.onActivate(MassPanic(DiscoverRepos)),
                   },
                   list{text("discover")},
                 ),
@@ -998,6 +1006,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                         Attrs.checked(state.incremental),
                         Attrs.class_("w-3.5 h-3.5 accent-blue-500"),
                         Events.onClick(MassPanic(ToggleIncremental)),
+                        KeyboardNav.onActivate(MassPanic(ToggleIncremental)),
                       },
                       list{},
                     ),
@@ -1013,6 +1022,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                         Attrs.checked(state.notifyEnabled),
                         Attrs.class_("w-3.5 h-3.5 accent-amber-500"),
                         Events.onClick(MassPanic(ToggleNotify)),
+                        KeyboardNav.onActivate(MassPanic(ToggleNotify)),
                       },
                       list{},
                     ),
@@ -1069,6 +1079,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                           Attrs.checked(state.selectAll),
                           Attrs.class_("w-3.5 h-3.5 accent-amber-500"),
                           Events.onClick(MassPanic(ToggleSelectAll)),
+                          KeyboardNav.onActivate(MassPanic(ToggleSelectAll)),
                         },
                         list{},
                       ),
@@ -1117,6 +1128,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                         list{
                           Attrs.class_("ml-auto text-gray-500 hover:text-gray-300"),
                           Events.onClick(MassPanic(ToggleDelta)),
+                          KeyboardNav.onActivate(MassPanic(ToggleDelta)),
                         },
                         list{text("[close]")},
                       ),
@@ -1195,6 +1207,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
                     Attrs.class_("text-gray-500 hover:text-gray-300"),
                     Attrs.disabled(state.scanning),
                     Events.onClick(MassPanic(ToggleDelta)),
+                    KeyboardNav.onActivate(MassPanic(ToggleDelta)),
                   },
                   list{text("show delta")},
                 )

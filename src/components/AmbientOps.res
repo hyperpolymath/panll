@@ -131,6 +131,7 @@ let view = (state: ambientOpsState): Tea_Vdom.t<msg> => {
                     "px-3 py-1 text-xs rounded bg-teal-700 text-white hover:bg-teal-600",
                   ),
                   Events.onClick(AmbientOps(RunDiagnostics)),
+                  KeyboardNav.onActivate(AmbientOps(RunDiagnostics)),
                 },
                 list{
                   text(
@@ -166,6 +167,7 @@ let view = (state: ambientOpsState): Tea_Vdom.t<msg> => {
               "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200",
             ),
             Events.onClick(AmbientOps(DismissOpsError)),
+            KeyboardNav.onActivate(AmbientOps(DismissOpsError)),
           },
           list{text(err)},
         )

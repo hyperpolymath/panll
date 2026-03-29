@@ -93,6 +93,7 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-lime-800 hover:bg-lime-700 text-white rounded"),
               Events.onClick(ProofsBridge(PrBStarted)),
+              KeyboardNav.onActivate(ProofsBridge(PrBStarted)),
             },
             list{text("Verify All")},
           ),
@@ -171,6 +172,7 @@ let view = (state: proofsBridgeState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
                 Events.onClick(ProofsBridge(DismissPrBError)),
+                KeyboardNav.onActivate(ProofsBridge(DismissPrBError)),
               },
               list{text("Dismiss")},
             ),

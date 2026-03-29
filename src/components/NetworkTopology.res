@@ -197,6 +197,7 @@ let renderPacketFlow = (state: networkTopologyState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(NetworkTopology(TogglePacketAnimation)),
+              KeyboardNav.onActivate(NetworkTopology(TogglePacketAnimation)),
             },
             list{
               text(
@@ -297,6 +298,7 @@ let view = (state: networkTopologyState): Tea_Vdom.t<msg> => {
                     },
                   ),
                   Events.onClick(NetworkTopology(ToggleLabels)),
+                  KeyboardNav.onActivate(NetworkTopology(ToggleLabels)),
                 },
                 list{text("Labels")},
               ),
@@ -311,6 +313,7 @@ let view = (state: networkTopologyState): Tea_Vdom.t<msg> => {
                     },
                   ),
                   Events.onClick(NetworkTopology(ToggleSecurityLevels)),
+                  KeyboardNav.onActivate(NetworkTopology(ToggleSecurityLevels)),
                 },
                 list{text("Security")},
               ),
@@ -321,6 +324,7 @@ let view = (state: networkTopologyState): Tea_Vdom.t<msg> => {
                     "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
                   ),
                   Events.onClick(NetworkTopology(RefreshTopology)),
+                  KeyboardNav.onActivate(NetworkTopology(RefreshTopology)),
                 },
                 list{text("Refresh")},
               ),
@@ -356,6 +360,7 @@ let view = (state: networkTopologyState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_("text-red-400 hover:text-red-200 cursor-pointer"),
                     Events.onClick(NetworkTopology(DismissTopoError)),
+                    KeyboardNav.onActivate(NetworkTopology(DismissTopoError)),
                   },
                   list{text("Dismiss")},
                 ),

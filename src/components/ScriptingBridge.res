@@ -77,6 +77,7 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-rose-800 hover:bg-rose-700 text-white rounded"),
               Events.onClick(ScriptingBridge(ScBStarted)),
+              KeyboardNav.onActivate(ScriptingBridge(ScBStarted)),
             },
             list{text("Execute")},
           ),
@@ -155,6 +156,7 @@ let view = (state: scriptingBridgeState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
                 Events.onClick(ScriptingBridge(DismissScBError)),
+                KeyboardNav.onActivate(ScriptingBridge(DismissScBError)),
               },
               list{text("Dismiss")},
             ),

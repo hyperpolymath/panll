@@ -186,6 +186,7 @@ let view = (state: architectModeState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
                 Events.onClick(ArchitectMode(DismissArchModeError)),
+                KeyboardNav.onActivate(ArchitectMode(DismissArchModeError)),
               },
               list{text("Dismiss")},
             ),

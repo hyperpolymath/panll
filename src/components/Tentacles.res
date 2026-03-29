@@ -384,6 +384,7 @@ let renderOrchestra = (state: tentaclesState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("text-xs text-gray-500 hover:text-gray-300 cursor-pointer"),
               Events.onClick(Tentacles(ToggleOrchestraCompact)),
+              KeyboardNav.onActivate(Tentacles(ToggleOrchestraCompact)),
             },
             list{text(state.orchestraCompact ? "Expand" : "Compact")},
           ),
@@ -562,6 +563,7 @@ let renderProgress = (state: tentaclesState): Tea_Vdom.t<msg> => {
                 list{
                   Attrs.class_("text-xs text-cyan-400 hover:text-cyan-300 cursor-pointer"),
                   Events.onClick(Tentacles(CheckFfiBridge)),
+                  KeyboardNav.onActivate(Tentacles(CheckFfiBridge)),
                 },
                 list{text("Check Connection")},
               ),

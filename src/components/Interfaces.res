@@ -139,6 +139,7 @@ let view = (iface: interfacesState): Tea_Vdom.t<msg> => {
                     "px-3 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-500",
                   ),
                   Events.onClick(Interfaces(ScanInterfaces)),
+                  KeyboardNav.onActivate(Interfaces(ScanInterfaces)),
                 },
                 list{text("Scan")},
               ),
@@ -148,6 +149,7 @@ let view = (iface: interfacesState): Tea_Vdom.t<msg> => {
                     "px-3 py-1 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700",
                   ),
                   Events.onClick(PanelSwitcher(ClosePanels)),
+                  KeyboardNav.onActivate(PanelSwitcher(ClosePanels)),
                 },
                 list{text("Close")},
               ),
@@ -173,6 +175,7 @@ let view = (iface: interfacesState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_("px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-500"),
                     Events.onClick(Interfaces(ScanInterfaces)),
+                    KeyboardNav.onActivate(Interfaces(ScanInterfaces)),
                   },
                   list{text("Scan ABI/FFI")},
                 ),

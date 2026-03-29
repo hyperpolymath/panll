@@ -368,6 +368,7 @@ let view = (state: loadTesterState): Tea_Vdom.t<msg> => {
                 "px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer font-medium",
               ),
               Events.onClick(LoadTester(RunSelectedScenario)),
+              KeyboardNav.onActivate(LoadTester(RunSelectedScenario)),
             },
             list{text("Run Scenario")},
           ),

@@ -83,6 +83,7 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
                     },
                   ),
                   Events.onClick(PlaytestRecorder(PrStarted)),
+                  KeyboardNav.onActivate(PlaytestRecorder(PrStarted)),
                 },
                 list{
                   text(
@@ -183,6 +184,7 @@ let view = (state: playtestRecorderState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
                 Events.onClick(PlaytestRecorder(DismissPrError)),
+                KeyboardNav.onActivate(PlaytestRecorder(DismissPrError)),
               },
               list{text("Dismiss")},
             ),

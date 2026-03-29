@@ -117,6 +117,7 @@ let view = (state: generatorModeState): Tea_Vdom.t<msg> => {
                 "px-3 py-1 text-xs bg-indigo-800 hover:bg-indigo-700 text-white rounded",
               ),
               Events.onClick(GeneratorMode(GenStarted)),
+              KeyboardNav.onActivate(GeneratorMode(GenStarted)),
             },
             list{text("Generate")},
           ),
@@ -195,6 +196,7 @@ let view = (state: generatorModeState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
                 Events.onClick(GeneratorMode(DismissGenError)),
+                KeyboardNav.onActivate(GeneratorMode(DismissGenError)),
               },
               list{text("Dismiss")},
             ),

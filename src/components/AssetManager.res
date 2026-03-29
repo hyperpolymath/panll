@@ -92,6 +92,7 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-pink-800 hover:bg-pink-700 text-white rounded"),
               Events.onClick(AssetManager(AmStarted)),
+              KeyboardNav.onActivate(AssetManager(AmStarted)),
             },
             list{text("Import")},
           ),
@@ -196,6 +197,7 @@ let view = (state: assetManagerState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
                 Events.onClick(AssetManager(DismissAmError)),
+                KeyboardNav.onActivate(AssetManager(DismissAmError)),
               },
               list{text("Dismiss")},
             ),

@@ -88,6 +88,7 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
                     "px-3 py-1 text-xs bg-amber-800 hover:bg-amber-700 text-white rounded",
                   ),
                   Events.onClick(AgenticBridge(AbStarted)),
+                  KeyboardNav.onActivate(AgenticBridge(AbStarted)),
                 },
                 list{text("Launch All")},
               ),
@@ -168,6 +169,7 @@ let view = (state: agenticBridgeState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
                 Events.onClick(AgenticBridge(DismissAbError)),
+                KeyboardNav.onActivate(AgenticBridge(DismissAbError)),
               },
               list{text("Dismiss")},
             ),

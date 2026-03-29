@@ -164,6 +164,7 @@ let view = (state: vexometerFrictionState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600"),
               Events.onClick(VexometerFriction(MeasureAll)),
+              KeyboardNav.onActivate(VexometerFriction(MeasureAll)),
             },
             list{
               text(

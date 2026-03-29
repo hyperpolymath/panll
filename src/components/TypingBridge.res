@@ -73,6 +73,7 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-cyan-800 hover:bg-cyan-700 text-white rounded"),
               Events.onClick(TypingBridge(TbStarted)),
+              KeyboardNav.onActivate(TypingBridge(TbStarted)),
             },
             list{text("Run Type Check")},
           ),
@@ -151,6 +152,7 @@ let view = (state: typingBridgeState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-red-400 hover:text-red-200 text-xs ml-2"),
                 Events.onClick(TypingBridge(DismissTbError)),
+                KeyboardNav.onActivate(TypingBridge(DismissTbError)),
               },
               list{text("Dismiss")},
             ),

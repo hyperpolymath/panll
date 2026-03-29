@@ -147,6 +147,7 @@ let view = (state: floorRaiseState): Tea_Vdom.t<msg> => {
                     "px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600",
                   ),
                   Events.onClick(FloorRaise(ScanAdoption)),
+                  KeyboardNav.onActivate(FloorRaise(ScanAdoption)),
                 },
                 list{
                   text(
@@ -181,6 +182,7 @@ let view = (state: floorRaiseState): Tea_Vdom.t<msg> => {
               "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200",
             ),
             Events.onClick(FloorRaise(ClearError)),
+            KeyboardNav.onActivate(FloorRaise(ClearError)),
           },
           list{text(err)},
         )

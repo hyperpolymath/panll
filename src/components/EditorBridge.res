@@ -59,6 +59,7 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                         "px-2 py-1 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
                       ),
                       Events.onClick(EditorBridge(DetectEditor)),
+                      KeyboardNav.onActivate(EditorBridge(DetectEditor)),
                     },
                     list{text("Detect")},
                   ),
@@ -68,6 +69,7 @@ let renderOverview = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                         "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
                       ),
                       Events.onClick(EditorBridge(ConnectLsp)),
+                      KeyboardNav.onActivate(EditorBridge(ConnectLsp)),
                     },
                     list{text("Connect LSP")},
                   ),
@@ -241,6 +243,7 @@ let renderDiagnostics = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(EditorBridge(ToggleShowErrors)),
+              KeyboardNav.onActivate(EditorBridge(ToggleShowErrors)),
             },
             list{text("Errors")},
           ),
@@ -254,6 +257,7 @@ let renderDiagnostics = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(EditorBridge(ToggleShowWarnings)),
+              KeyboardNav.onActivate(EditorBridge(ToggleShowWarnings)),
             },
             list{text("Warnings")},
           ),
@@ -267,6 +271,7 @@ let renderDiagnostics = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(EditorBridge(ToggleShowInfo)),
+              KeyboardNav.onActivate(EditorBridge(ToggleShowInfo)),
             },
             list{text("Info")},
           ),
@@ -458,6 +463,7 @@ let renderSettings = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(EditorBridge(ToggleAutoSync)),
+              KeyboardNav.onActivate(EditorBridge(ToggleAutoSync)),
             },
             list{
               text(
@@ -523,6 +529,7 @@ let view = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                     },
                   ),
                   Events.onClick(EditorBridge(ToggleBojRouting)),
+                  KeyboardNav.onActivate(EditorBridge(ToggleBojRouting)),
                 },
                 list{
                   text(
@@ -540,6 +547,7 @@ let view = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                     "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
                   ),
                   Events.onClick(EditorBridge(RefreshBridge)),
+                  KeyboardNav.onActivate(EditorBridge(RefreshBridge)),
                 },
                 list{text("Refresh")},
               ),
@@ -576,6 +584,7 @@ let view = (state: editorBridgeState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_("text-red-400 hover:text-red-200 cursor-pointer"),
                     Events.onClick(EditorBridge(DismissBridgeError)),
+                    KeyboardNav.onActivate(EditorBridge(DismissBridgeError)),
                   },
                   list{text("Dismiss")},
                 ),

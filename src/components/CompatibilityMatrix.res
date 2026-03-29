@@ -396,6 +396,7 @@ let view = (state: compatibilityMatrixState): Tea_Vdom.t<msg> => {
                 "px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer font-medium",
               ),
               Events.onClick(CompatibilityMatrix(RunAll)),
+              KeyboardNav.onActivate(CompatibilityMatrix(RunAll)),
             },
             list{text("Run All")},
           ),

@@ -103,6 +103,7 @@ let renderDbConnectionIndicator = (db: verisimdbState): Tea_Vdom.t<msg> => {
             "ml-auto px-2 py-0.5 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
           ),
           Events.onClick(VeriSimDB(CheckHealth)),
+          KeyboardNav.onActivate(VeriSimDB(CheckHealth)),
         },
         list{text("Ping")},
       ),
@@ -144,6 +145,7 @@ let renderVqlQueryArea = (db: verisimdbState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
               Events.onClick(VeriSimDB(ListEntities)),
+              KeyboardNav.onActivate(VeriSimDB(ListEntities)),
             },
             list{text("List Entities")},
           ),
@@ -151,6 +153,7 @@ let renderVqlQueryArea = (db: verisimdbState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-gray-900 hover:bg-gray-800 rounded text-gray-400"),
               Events.onClick(VeriSimDB(ClearQueryResult)),
+              KeyboardNav.onActivate(VeriSimDB(ClearQueryResult)),
             },
             list{text("Clear")},
           ),
@@ -402,6 +405,7 @@ let renderTelemetryPanel = (db: verisimdbState): Tea_Vdom.t<msg> => {
                 "px-2 py-1 text-[10px] bg-emerald-700 hover:bg-emerald-600 rounded text-gray-100",
               ),
               Events.onClick(VeriSimDB(FetchTelemetry)),
+              KeyboardNav.onActivate(VeriSimDB(FetchTelemetry)),
             },
             list{text("Fetch Telemetry")},
           ),
@@ -537,6 +541,7 @@ let renderTelemetryPanel = (db: verisimdbState): Tea_Vdom.t<msg> => {
                     "px-2 py-0.5 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
                   ),
                   Events.onClick(VeriSimDB(FetchTelemetry)),
+                  KeyboardNav.onActivate(VeriSimDB(FetchTelemetry)),
                 },
                 list{text("Refresh")},
               ),
@@ -576,6 +581,7 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
                   "px-2 py-0.5 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
                 ),
                 Events.onClick(VeriSimDB(ToggleTelemetryPanel)),
+                KeyboardNav.onActivate(VeriSimDB(ToggleTelemetryPanel)),
               },
               list{
                 text(
@@ -604,6 +610,7 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
                   "px-2 py-0.5 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
                 ),
                 Events.onClick(VeriSimDB(ToggleProofDisplay)),
+                KeyboardNav.onActivate(VeriSimDB(ToggleProofDisplay)),
               },
               list{
                 text(
@@ -635,6 +642,7 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
                   },
                 ),
                 Events.onClick(VeriSimDB(ToggleAntiCrashValidation)),
+                KeyboardNav.onActivate(VeriSimDB(ToggleAntiCrashValidation)),
               },
               list{
                 text(
@@ -670,6 +678,7 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
                   },
                 ),
                 Events.onClick(VeriSimDB(ToggleVeriSimBojRouting)),
+                KeyboardNav.onActivate(VeriSimDB(ToggleVeriSimBojRouting)),
               },
               list{
                 text(
@@ -720,6 +729,7 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
                 "px-2 py-1 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
               ),
               Events.onClick(VeriSimDB(ToggleDbMenu)),
+              KeyboardNav.onActivate(VeriSimDB(ToggleDbMenu)),
             },
             list{
               text(
@@ -789,6 +799,7 @@ let renderSecurityTools = (state: paneWState): Tea_Vdom.t<msg> => {
                 "px-2 py-1 text-[10px] bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
               ),
               Events.onClick(PaneW(ToggleSecurityTools)),
+              KeyboardNav.onActivate(PaneW(ToggleSecurityTools)),
             },
             list{
               text(
@@ -850,6 +861,7 @@ let renderSecurityDialog = (state: paneWState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_("text-xs text-gray-300 px-2 py-1 border border-gray-700 rounded"),
                     Events.onClick(PaneW(CloseSecurityDialog)),
+                    KeyboardNav.onActivate(PaneW(CloseSecurityDialog)),
                   },
                   list{text("Close")},
                 ),
@@ -905,6 +917,7 @@ let renderSecurityDialog = (state: paneWState): Tea_Vdom.t<msg> => {
                           "px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
                         ),
                         Events.onClick(PaneW(LoadSecurityTimelineFile)),
+                        KeyboardNav.onActivate(PaneW(LoadSecurityTimelineFile)),
                       },
                       list{text("Browse")},
                     ),
@@ -983,6 +996,7 @@ let renderSecurityDialog = (state: paneWState): Tea_Vdom.t<msg> => {
                       "px-4 py-2 text-xs bg-emerald-500 hover:bg-emerald-400 rounded text-gray-900 font-semibold",
                     ),
                     Events.onClick(PaneW(LaunchSecurityAmbush)),
+                    KeyboardNav.onActivate(PaneW(LaunchSecurityAmbush)),
                   },
                   list{text("Launch Ambush")},
                 ),
@@ -992,6 +1006,7 @@ let renderSecurityDialog = (state: paneWState): Tea_Vdom.t<msg> => {
                       "px-4 py-2 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
                     ),
                     Events.onClick(PaneW(ClearEventChain)),
+                    KeyboardNav.onActivate(PaneW(ClearEventChain)),
                   },
                   list{text("Reset")},
                 ),
@@ -1001,6 +1016,7 @@ let renderSecurityDialog = (state: paneWState): Tea_Vdom.t<msg> => {
                       "px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 rounded text-gray-200",
                     ),
                     Events.onClick(PaneW(ToggleSecurityStudyView)),
+                    KeyboardNav.onActivate(PaneW(ToggleSecurityStudyView)),
                   },
                   list{
                     text(
@@ -1173,6 +1189,7 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
               Events.onClick(PaneW(ImportEventChain)),
+              KeyboardNav.onActivate(PaneW(ImportEventChain)),
             },
             list{text("Import JSON")},
           ),
@@ -1180,6 +1197,7 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
               Events.onClick(PaneW(ImportEventChainFile)),
+              KeyboardNav.onActivate(PaneW(ImportEventChainFile)),
             },
             list{text("Load File")},
           ),
@@ -1187,6 +1205,7 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
               Events.onClick(PaneW(CheckPanicAttackerCapability)),
+              KeyboardNav.onActivate(PaneW(CheckPanicAttackerCapability)),
             },
             list{text("Probe panic-attacker")},
           ),
@@ -1194,6 +1213,7 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
               Events.onClick(PaneW(ImportPanicAttackerReportFile)),
+              KeyboardNav.onActivate(PaneW(ImportPanicAttackerReportFile)),
             },
             list{text("Load panic-attacker Report")},
           ),
@@ -1201,6 +1221,7 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300"),
               Events.onClick(PaneW(ImportLatestPanicAttacker)),
+              KeyboardNav.onActivate(PaneW(ImportLatestPanicAttacker)),
             },
             list{text("Latest panic-attacker")},
           ),
@@ -1208,6 +1229,7 @@ let renderEventChainPanel = (state: paneWState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs bg-gray-900 hover:bg-gray-800 rounded text-gray-400"),
               Events.onClick(PaneW(ClearEventChain)),
+              KeyboardNav.onActivate(PaneW(ClearEventChain)),
             },
             list{text("Clear")},
           ),
@@ -1337,6 +1359,7 @@ let renderTourOverlay = (tour: tourState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_("text-gray-500 hover:text-gray-300 text-xs px-2 py-1"),
                     Events.onClick(PaneW(CloseTour)),
+                    KeyboardNav.onActivate(PaneW(CloseTour)),
                   },
                   list{text("Skip tour")},
                 ),
@@ -1378,6 +1401,7 @@ let renderTourOverlay = (tour: tourState): Tea_Vdom.t<msg> => {
                         "px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 rounded text-gray-300",
                       ),
                       Events.onClick(PaneW(PrevTourStep)),
+                      KeyboardNav.onActivate(PaneW(PrevTourStep)),
                     },
                     list{text("Back")},
                   )
@@ -1564,6 +1588,7 @@ let renderTopologyView = (
                 ),
                 Attrs.title("Take a guided tour of the Task Barycentre"),
                 Events.onClick(PaneW(StartTour)),
+                KeyboardNav.onActivate(PaneW(StartTour)),
               },
               list{
                 text(
@@ -1825,6 +1850,7 @@ let renderTopologyView = (
               Attrs.title("Toggle between topology graph and code output view"),
               Attrs.ariaLabel("Switch to Code View"),
               Events.onClick(PaneW(ToggleTopologyView)),
+              KeyboardNav.onActivate(PaneW(ToggleTopologyView)),
             },
             list{text("Code View")},
           ),
@@ -1898,6 +1924,7 @@ let renderContentView = (state: paneWState, db: verisimdbState): Tea_Vdom.t<msg>
                 "px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded text-sm text-gray-400 transition-colors",
               ),
               Events.onClick(PaneW(ToggleTopologyView)),
+              KeyboardNav.onActivate(PaneW(ToggleTopologyView)),
             },
             list{text("Switch to Topology View")},
           ),

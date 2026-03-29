@@ -552,6 +552,7 @@ let view = (fleet: fleetState): Tea_Vdom.t<msg> => {
                   ),
                   Attrs.ariaLabel("Refresh fleet status"),
                   Events.onClick(Fleet(LoadFleet)),
+                  KeyboardNav.onActivate(Fleet(LoadFleet)),
                 },
                 list{text("Refresh")},
               ),
@@ -562,6 +563,7 @@ let view = (fleet: fleetState): Tea_Vdom.t<msg> => {
                   ),
                   Attrs.ariaLabel("Close Fleet panel"),
                   Events.onClick(PanelSwitcher(ClosePanels)),
+                  KeyboardNav.onActivate(PanelSwitcher(ClosePanels)),
                 },
                 list{text("Close")},
               ),
@@ -591,6 +593,7 @@ let view = (fleet: fleetState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_("px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-500"),
                     Events.onClick(Fleet(LoadFleet)),
+                    KeyboardNav.onActivate(Fleet(LoadFleet)),
                   },
                   list{text("Connect to Fleet")},
                 ),

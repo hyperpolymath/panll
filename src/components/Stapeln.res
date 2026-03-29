@@ -195,6 +195,7 @@ let viewConstraints = (model: model): Tea_Vdom.t<msg> => {
                 },
               ),
               Events.onClick(Stapeln(Connect)),
+              KeyboardNav.onActivate(Stapeln(Connect)),
             },
             list{
               text(
@@ -399,6 +400,7 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
                       "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer ml-auto",
                     ),
                     Events.onClick(Stapeln(RefreshStatus)),
+                    KeyboardNav.onActivate(Stapeln(RefreshStatus)),
                   },
                   list{text("Refresh")},
                 ),
@@ -443,6 +445,7 @@ let viewReasoning = (model: model): Tea_Vdom.t<msg> => {
                   "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
                 ),
                 Events.onClick(Stapeln(RefreshStatus)),
+                KeyboardNav.onActivate(Stapeln(RefreshStatus)),
               },
               list{text("Refresh Status")},
             ),
@@ -653,6 +656,7 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
                   "px-3 py-1.5 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
                 ),
                 Events.onClick(Stapeln(RequestValidation)),
+                KeyboardNav.onActivate(Stapeln(RequestValidation)),
               },
               list{text("Run Validation")},
             ),
@@ -714,6 +718,7 @@ let viewResults = (model: model): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_("text-xs text-red-500 hover:text-red-400 cursor-pointer"),
                     Events.onClick(Stapeln(DismissError)),
+                    KeyboardNav.onActivate(Stapeln(DismissError)),
                   },
                   list{text("dismiss")},
                 ),

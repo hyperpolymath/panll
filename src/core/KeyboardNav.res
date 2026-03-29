@@ -139,3 +139,9 @@ let livePolite = (children: list<Tea_Vdom.t<'msg>>): Tea_Vdom.t<'msg> =>
 /// Helper: aria-live assertive region wrapper (for errors/alerts).
 let liveAssertive = (children: list<Tea_Vdom.t<'msg>>): Tea_Vdom.t<'msg> =>
   div(list{Attrs.ariaLive("assertive")}, children)
+
+/// Bundle: onClick + keyboard activation + tabIndex in one call.
+/// Use instead of bare Events.onClick for all interactive elements.
+/// This is the primary entry point for keyboard accessibility.
+let clickable = (msg: 'msg): list<attribute<'msg>> =>
+  list{Events.onClick(msg), onActivate(msg), Attrs.tabIndex(0)}

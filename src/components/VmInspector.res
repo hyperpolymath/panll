@@ -59,6 +59,7 @@ let renderStepControls = (state: vmInspectorState): Tea_Vdom.t<msg> => {
             "px-3 py-1.5 text-xs rounded bg-amber-800 text-amber-200 hover:bg-amber-700 font-medium",
           ),
           Events.onClick(VmInspector(StepBackward)),
+          KeyboardNav.onActivate(VmInspector(StepBackward)),
         },
         list{text("Step Back")},
       ),
@@ -69,6 +70,7 @@ let renderStepControls = (state: vmInspectorState): Tea_Vdom.t<msg> => {
             "px-3 py-1.5 text-xs rounded bg-emerald-800 text-emerald-200 hover:bg-emerald-700 font-medium",
           ),
           Events.onClick(VmInspector(StepForward)),
+          KeyboardNav.onActivate(VmInspector(StepForward)),
         },
         list{text("Step Forward")},
       ),
@@ -105,6 +107,7 @@ let renderStepControls = (state: vmInspectorState): Tea_Vdom.t<msg> => {
         list{
           Attrs.class_("px-3 py-1.5 text-xs rounded bg-gray-800 text-gray-400 hover:text-gray-200"),
           Events.onClick(VmInspector(ResetVm)),
+          KeyboardNav.onActivate(VmInspector(ResetVm)),
         },
         list{text("Reset")},
       ),
@@ -360,6 +363,7 @@ let renderDebugger = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                     "text-xs text-gray-500 hover:text-gray-300 px-2 py-1 rounded bg-gray-800",
                   ),
                   Events.onClick(VmInspector(ExportSnapshot)),
+                  KeyboardNav.onActivate(VmInspector(ExportSnapshot)),
                 },
                 list{text("Export State")},
               ),
@@ -372,6 +376,7 @@ let renderDebugger = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                         : "bg-gray-800 text-gray-500"}`,
                   ),
                   Events.onClick(VmInspector(ToggleMultiVm)),
+                  KeyboardNav.onActivate(VmInspector(ToggleMultiVm)),
                 },
                 list{text("Multi-VM")},
               ),
@@ -393,6 +398,7 @@ let renderDebugger = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                     },
                   ),
                   Events.onClick(VmInspector(ToggleVmBojRouting)),
+                  KeyboardNav.onActivate(VmInspector(ToggleVmBojRouting)),
                 },
                 list{
                   text(
@@ -772,6 +778,7 @@ let view = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                 "text-gray-500 hover:text-gray-300 px-3 py-1.5 text-sm rounded bg-gray-800 hover:bg-gray-700",
               ),
               Events.onClick(PanelSwitcher(ClosePanels)),
+              KeyboardNav.onActivate(PanelSwitcher(ClosePanels)),
             },
             list{text("Close")},
           ),
@@ -791,6 +798,7 @@ let view = (state: vmInspectorState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_("text-red-500 hover:text-red-400 text-xs"),
                     Events.onClick(VmInspector(DismissVmError)),
+                    KeyboardNav.onActivate(VmInspector(DismissVmError)),
                   },
                   list{text("Dismiss")},
                 ),

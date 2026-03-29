@@ -66,6 +66,7 @@ let renderRecordingStatus = (recording: recordingState): Tea_Vdom.t<msg> => {
           list{
             Attrs.class_("text-xs text-gray-400 hover:text-gray-300"),
             Events.onClick(Capture(StopRecording)),
+            KeyboardNav.onActivate(Capture(StopRecording)),
           },
           list{text("Stop")},
         ),
@@ -81,6 +82,7 @@ let renderRecordingStatus = (recording: recordingState): Tea_Vdom.t<msg> => {
           list{
             Attrs.class_("text-xs text-gray-400 hover:text-gray-300"),
             Events.onClick(Capture(TogglePauseRecording)),
+            KeyboardNav.onActivate(Capture(TogglePauseRecording)),
           },
           list{text("Resume")},
         ),
@@ -128,6 +130,7 @@ let view = (capture: captureState): Tea_Vdom.t<msg> => {
                         : "bg-gray-800 text-gray-400"}`,
                   ),
                   Events.onClick(Capture(ToggleCaptureBar)),
+                  KeyboardNav.onActivate(Capture(ToggleCaptureBar)),
                   Attrs.title("Toggle capture bar visibility on all panels"),
                 },
                 list{text("Capture Bars")},
@@ -138,6 +141,7 @@ let view = (capture: captureState): Tea_Vdom.t<msg> => {
                     "px-3 py-1 bg-gray-800 text-gray-400 rounded hover:bg-gray-700 transition-colors text-sm",
                   ),
                   Events.onClick(PanelSwitcher(ClosePanels)),
+                  KeyboardNav.onActivate(PanelSwitcher(ClosePanels)),
                 },
                 list{text("Close")},
               ),

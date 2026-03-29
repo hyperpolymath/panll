@@ -285,6 +285,7 @@ let view = (prov: provisionerState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700"),
               Events.onClick(PanelSwitcher(ClosePanels)),
+              KeyboardNav.onActivate(PanelSwitcher(ClosePanels)),
             },
             list{text("Close")},
           ),
@@ -448,6 +449,7 @@ let view = (prov: provisionerState): Tea_Vdom.t<msg> => {
                             "px-4 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-500",
                           ),
                           Events.onClick(Provisioner(SaveCustomPortfolio)),
+                          KeyboardNav.onActivate(Provisioner(SaveCustomPortfolio)),
                         },
                         list{
                           text(

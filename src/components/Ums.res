@@ -209,6 +209,7 @@ let renderAbiValidator = (state: umsState): Tea_Vdom.t<msg> => {
                 "px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer",
               ),
               Events.onClick(Ums(ValidateAll)),
+              KeyboardNav.onActivate(Ums(ValidateAll)),
             },
             list{text("Validate All Levels")},
           ),
@@ -315,6 +316,7 @@ let renderTemplates = (state: umsState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-cyan-400 hover:text-cyan-300 underline cursor-pointer"),
                 Events.onClick(Ums(LoadTemplates)),
+                KeyboardNav.onActivate(Ums(LoadTemplates)),
               },
               list{text("Load templates")},
             ),
@@ -394,6 +396,7 @@ let renderAssets = (state: umsState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-cyan-400 hover:text-cyan-300 underline cursor-pointer"),
                 Events.onClick(Ums(LoadAssets)),
+                KeyboardNav.onActivate(Ums(LoadAssets)),
               },
               list{text("Load assets")},
             ),
@@ -461,6 +464,7 @@ let renderDistributionTarget = (target: distributionTarget): Tea_Vdom.t<msg> => 
             "px-2 py-1 text-xs bg-purple-700 text-white rounded hover:bg-purple-600 cursor-pointer",
           ),
           Events.onClick(Ums(PublishMod)),
+          KeyboardNav.onActivate(Ums(PublishMod)),
         },
         list{text("Publish")},
       ),
@@ -542,6 +546,7 @@ let renderApiReference = (state: umsState): Tea_Vdom.t<msg> => {
                 "px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 cursor-pointer",
               ),
               Events.onClick(Ums(LoadApiReference)),
+              KeyboardNav.onActivate(Ums(LoadApiReference)),
             },
             list{text("Refresh")},
           ),
@@ -562,6 +567,7 @@ let renderApiReference = (state: umsState): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-cyan-400 hover:text-cyan-300 underline cursor-pointer"),
                 Events.onClick(Ums(LoadApiReference)),
+                KeyboardNav.onActivate(Ums(LoadApiReference)),
               },
               list{text("Load API reference")},
             ),
@@ -714,6 +720,7 @@ let view = (state: umsState, ~levelArchitect: levelArchitectState): Tea_Vdom.t<m
                     },
                   ),
                   Events.onClick(Ums(ToggleUmsBojRouting)),
+                  KeyboardNav.onActivate(Ums(ToggleUmsBojRouting)),
                 },
                 list{text("BoJ Routing")},
               ),
@@ -751,6 +758,7 @@ let view = (state: umsState, ~levelArchitect: levelArchitectState): Tea_Vdom.t<m
                   list{
                     Attrs.class_("text-red-400 hover:text-red-200 cursor-pointer"),
                     Events.onClick(Ums(DismissUmsError)),
+                    KeyboardNav.onActivate(Ums(DismissUmsError)),
                   },
                   list{text("Dismiss")},
                 ),

@@ -115,6 +115,7 @@ let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700"),
               Events.onClick(PanelSwitcher(ClosePanels)),
+              KeyboardNav.onActivate(PanelSwitcher(ClosePanels)),
             },
             list{text("Close")},
           ),
@@ -169,6 +170,7 @@ let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
                                   : "bg-teal-600 text-white hover:bg-teal-500"}`,
                             ),
                             Events.onClick(Playgrounds(Execute)),
+                            KeyboardNav.onActivate(Playgrounds(Execute)),
                           },
                           list{text(pg.executing ? "Running..." : "Execute")},
                         ),
@@ -309,6 +311,7 @@ let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
                         list{
                           Attrs.class_("ml-auto text-xs text-gray-600 hover:text-gray-400"),
                           Events.onClick(Playgrounds(ClearNqcHistory)),
+                          KeyboardNav.onActivate(Playgrounds(ClearNqcHistory)),
                         },
                         list{text("Clear History")},
                       )
@@ -351,6 +354,7 @@ let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
                                   : "bg-teal-600 text-white hover:bg-teal-500"}`,
                             ),
                             Events.onClick(Playgrounds(ExecuteNqc)),
+                            KeyboardNav.onActivate(Playgrounds(ExecuteNqc)),
                             Attrs.disabled(pg.executing || pg.nqcInput === ""),
                           },
                           list{text(pg.executing ? "Running..." : "Execute")},

@@ -104,6 +104,7 @@ let view = (state: observatoryState): Tea_Vdom.t<msg> => {
                     "px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600",
                   ),
                   Events.onClick(Observatory(RunHealthCheck)),
+                  KeyboardNav.onActivate(Observatory(RunHealthCheck)),
                 },
                 list{
                   text(
@@ -138,6 +139,7 @@ let view = (state: observatoryState): Tea_Vdom.t<msg> => {
               "mx-4 mt-2 px-3 py-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200",
             ),
             Events.onClick(Observatory(DismissObsError)),
+            KeyboardNav.onActivate(Observatory(DismissObsError)),
           },
           list{text(err)},
         )

@@ -779,6 +779,7 @@ let renderSubmissions = (mig: migrationState): Tea_Vdom.t<msg> => {
                   "px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
                 ),
                 Events.onClick(Migration(SubmitApproved)),
+                KeyboardNav.onActivate(Migration(SubmitApproved)),
               },
               list{text("Submit Approved")},
             )
@@ -922,6 +923,7 @@ let view = (mig: migrationState): Tea_Vdom.t<msg> => {
                     "px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
                   ),
                   Events.onClick(Migration(RefreshMigrationHealth)),
+                  KeyboardNav.onActivate(Migration(RefreshMigrationHealth)),
                 },
                 list{text(mig.loaded ? "Refresh" : "Load Data")},
               ),
@@ -931,6 +933,7 @@ let view = (mig: migrationState): Tea_Vdom.t<msg> => {
                     "px-3 py-1 text-sm bg-gray-800 text-gray-300 rounded hover:bg-gray-700",
                   ),
                   Events.onClick(PanelSwitcher(ClosePanels)),
+                  KeyboardNav.onActivate(PanelSwitcher(ClosePanels)),
                 },
                 list{text("Close")},
               ),
@@ -967,6 +970,7 @@ let view = (mig: migrationState): Tea_Vdom.t<msg> => {
                   list{
                     Attrs.class_("px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-500"),
                     Events.onClick(Migration(LoadMigrationData)),
+                    KeyboardNav.onActivate(Migration(LoadMigrationData)),
                   },
                   list{text("Load Migration Data")},
                 ),

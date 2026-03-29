@@ -323,6 +323,7 @@ let view = (state: BurbleModel.burbleState): Tea_Vdom.t<msg> => {
                 "px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 bg-gray-800 rounded hover:bg-gray-700 transition-colors",
               ),
               Events.onClick(PanelSwitcher(ClosePanels)),
+              KeyboardNav.onActivate(PanelSwitcher(ClosePanels)),
             },
             list{text("Close")},
           ),

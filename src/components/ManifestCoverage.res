@@ -105,6 +105,7 @@ let view = (state: manifestCoverageState): Tea_Vdom.t<msg> => {
             list{
               Attrs.class_("px-3 py-1 text-xs rounded bg-green-700 text-white hover:bg-green-600"),
               Events.onClick(ManifestCoverage(ScanRepos)),
+              KeyboardNav.onActivate(ManifestCoverage(ScanRepos)),
             },
             list{
               text(

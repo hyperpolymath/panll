@@ -138,6 +138,7 @@ let renderSessionTab = (state: exploratoryWorkbenchState): Tea_Vdom.t<msg> => {
                       : "bg-gray-700 text-gray-400"}`,
                 ),
                 Events.onClick(ExploratoryWorkbench(ToggleAnomalyDetection)),
+                KeyboardNav.onActivate(ExploratoryWorkbench(ToggleAnomalyDetection)),
               },
               list{
                 text(state.anomalyDetectionEnabled ? "Auto-Detection: ON" : "Auto-Detection: OFF"),
@@ -311,6 +312,7 @@ let view = (state: exploratoryWorkbenchState): Tea_Vdom.t<msg> => {
                     "px-3 py-1.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 cursor-pointer font-medium",
                   ),
                   Events.onClick(ExploratoryWorkbench(StartRecording)),
+                  KeyboardNav.onActivate(ExploratoryWorkbench(StartRecording)),
                 },
                 list{text("Start Recording")},
               ),
@@ -320,6 +322,7 @@ let view = (state: exploratoryWorkbenchState): Tea_Vdom.t<msg> => {
                     "px-3 py-1.5 text-xs bg-red-700 text-white rounded hover:bg-red-600 cursor-pointer font-medium",
                   ),
                   Events.onClick(ExploratoryWorkbench(StopRecording)),
+                  KeyboardNav.onActivate(ExploratoryWorkbench(StopRecording)),
                 },
                 list{text("Stop Recording")},
               ),

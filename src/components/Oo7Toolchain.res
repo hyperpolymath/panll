@@ -76,6 +76,7 @@ let view = (state: oo7State): Tea_Vdom.t<msg> => {
                     "px-3 py-1 text-sm bg-slate-800 text-slate-300 rounded hover:bg-slate-700",
                   ),
                   Events.onClick(PanelSwitcher(ClosePanels)),
+                  KeyboardNav.onActivate(PanelSwitcher(ClosePanels)),
                 },
                 list{text("Close")},
               ),
@@ -263,6 +264,7 @@ let view = (state: oo7State): Tea_Vdom.t<msg> => {
                                 "px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500",
                               ),
                               Events.onClick(Oo7Toolchain(ConnectDaemon)),
+                              KeyboardNav.onActivate(Oo7Toolchain(ConnectDaemon)),
                             },
                             list{text("Start Daemon")},
                           )
@@ -273,6 +275,7 @@ let view = (state: oo7State): Tea_Vdom.t<msg> => {
                                 "px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500",
                               ),
                               Events.onClick(Oo7Toolchain(DisconnectDaemon)),
+                              KeyboardNav.onActivate(Oo7Toolchain(DisconnectDaemon)),
                             },
                             list{text("Stop Daemon")},
                           )
@@ -472,6 +475,7 @@ let view = (state: oo7State): Tea_Vdom.t<msg> => {
               list{
                 Attrs.class_("text-red-200 hover:text-white"),
                 Events.onClick(Oo7Toolchain(ClearError)),
+                KeyboardNav.onActivate(Oo7Toolchain(ClearError)),
               },
               list{text("Dismiss")},
             ),
