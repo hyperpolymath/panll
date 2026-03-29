@@ -79,8 +79,8 @@ type updateAction =
   | ViewLogs // Show update log history
   | ViewSummary // Show last update summary
 
-/// Tauri command names for the Rust backend.
-/// Each maps to a command in src-tauri/src/system_update/commands.rs
+/// Gossamer command names for the Rust backend.
+/// Each maps to a command in src-gossamer/src/system_update/commands.rs
 module Commands = {
   /// List all components with current/latest versions.
   /// Returns: array<component>

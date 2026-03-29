@@ -7,7 +7,7 @@
 ///
 ///   1. Discover available database backends
 ///   2. Render capability-appropriate UI per module
-///   3. Route Tauri commands to the correct backend
+///   3. Route Gossamer commands to the correct backend
 ///   4. Manage the playground gallery (one playground per query language)
 ///
 /// ## Module lifecycle
@@ -15,13 +15,13 @@
 ///   1. Module config defined in this file
 ///   2. `allModules()` returns the list of registered modules
 ///   3. PanLL initialises a `moduleState` per module via `DatabaseModule.initModuleState`
-///   4. Tauri commands are dispatched by module ID
+///   4. Gossamer commands are dispatched by module ID
 ///
 /// ## Adding a new database
 ///
 ///   1. Define its `moduleConfig` below
 ///   2. Add it to the `allModules` function
-///   3. Implement Tauri commands (prefixed with the module ID)
+///   3. Implement Gossamer commands (prefixed with the module ID)
 
 open DatabaseModule
 

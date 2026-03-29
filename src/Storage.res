@@ -2,7 +2,7 @@
 
 /// Storage module for persisting PanLL state between sessions.
 ///
-/// Uses localStorage for now (Tauri storage API can be added later).
+/// Uses localStorage for now (Gossamer storage API can be added later).
 /// Handles serialization/deserialization of Model types to/from JSON.
 
 open Model

@@ -16,7 +16,7 @@
 ///
 /// 1. Define a `moduleConfig` with the database's identity and capabilities
 /// 2. Register it in `DatabaseRegistry.res`
-/// 3. Implement Tauri commands for each supported capability
+/// 3. Implement Gossamer commands for each supported capability
 /// 4. The PanLL UI automatically adapts to the declared capabilities
 
 /// Capabilities that a database module may support. PanLL only renders UI

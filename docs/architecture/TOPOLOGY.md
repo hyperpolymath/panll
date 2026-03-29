@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
 <!-- TOPOLOGY.md — Project architecture map and completion dashboard -->
-<!-- Last updated: 2026-03-15 (A2ML migration, K9/Contractile Manager, rainbow agents, PCC v1) -->
+<!-- Last updated: 2026-03-29 (108 panels, Obj.magic eliminated, CRG dogfood checklist, Gossamer verified) -->
 
 # PanLL eNSAID — Project Topology
 
@@ -181,7 +181,7 @@ CUSTOM TEA RUNTIME (18 modules, permanent)
   Tea_Cmd / Tea_Sub                 ██████████ 100%    Commands and subscriptions    D
   Tea_Vdom (ARIA, attributes)       ██████████ 100%    Accessibility attributes      D
 
-BACKEND CONNECTIONS (Rust — 34 modules in src-tauri/)
+BACKEND CONNECTIONS (Rust — 34 modules in src-gossamer/)
   Farm (local JSON)                 ██████████ 100%    3 Rust cmds, manifest parser  D
   Fleet (Axum API)                  ██████████ 100%    3 Rust cmds, reqwest :8080    D
   Hypatia (Elixir API)              ██████████ 100%    3 Rust cmds, reqwest Elixir   D
