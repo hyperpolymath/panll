@@ -1,0 +1,189 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# stapeln.toml — Layer-based container build for PanLL eNSAID
+#
+# stapeln builds containers as composable layers (German: "to stack").
+# Each layer is independently cacheable, verifiable, and signable.
+#
+# PanLL has three build artefacts:
+#   1. panll-gossamer  — Rust binary (Gossamer webview backend, 103 IPC commands)
+#   2. Frontend bundle — ReScript -> JS, Deno-bundled, Tailwind CSS
+#   3. panll_beam      — Elixir OTP release (HTTP :4100, GraphQL :4101, gRPC :50051)
+#
+# The production target assembles all three into a single container.
+
+[metadata]
+name = "panll"
+version = "0.2.0"
+description = "PanLL eNSAID — Environment for NeSy-Agentic Integrated Development"
+author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
+license = "PMPL-1.0-or-later"
+registry = "ghcr.io/hyperpolymath"
+
+[build]
+containerfile = "Containerfile"
+context = "."
+runtime = "podman"
+
+# ── Layer Definitions ──────────────────────────────────────────
+
+[layers.base]
+description = "Chainguard Wolfi minimal base"
+from = "cgr.dev/chainguard/wolfi-base:latest"
+cache = true
+verify = true
+
+# ── Rust / Gossamer backend ───────────────────────────────────
+
+[layers.rust-toolchain]
+description = "Rust compiler and build dependencies for Gossamer backend"
+extends = "base"
+packages = ["rust", "pkgconf", "build-base", "openssl-dev"]
+cache = true
+
+[layers.rust-deps]
+description = "Cargo dependency fetch (lockfile-keyed cache)"
+extends = "rust-toolchain"
+commands = ["cargo fetch --locked"]
+cache-key = "Cargo.lock"
+cache = true
+
+[layers.gossamer-build]
+description = "Build panll-gossamer binary (Gossamer webview backend)"
+extends = "rust-deps"
+commands = ["cargo build --release --bin panll-gossamer"]
+artifacts = [
+    { src = "target/release/panll-gossamer", dst = "/app/bin/panll-gossamer" },
+]
+
+# ── ReScript + Deno frontend ─────────────────────────────────
+
+[layers.deno-toolchain]
+description = "Deno runtime for bundling and dev tasks"
+extends = "base"
+packages = ["deno", "nodejs-22"]
+cache = true
+
+[layers.frontend-deps]
+description = "Install ReScript compiler and frontend dependencies"
+extends = "deno-toolchain"
+commands = [
+    "deno cache deno.json",
+    "deno run -A npm:rescript build",
+]
+cache-key = "deno.lock"
+cache = true
+
+[layers.frontend-build]
+description = "Bundle ReScript output and build Tailwind CSS"
+extends = "frontend-deps"
+commands = [
+    "DENO_NO_PACKAGE_JSON=1 deno run -A scripts/bundle.ts",
+    "deno run -A npm:tailwindcss -i ./src/styles/input.css -o ./public/styles.css --minify",
+]
+artifacts = [
+    { src = "public/", dst = "/app/public/" },
+    { src = "mod.js", dst = "/app/mod.js" },
+]
+
+# ── Elixir / BEAM middleware ──────────────────────────────────
+
+[layers.elixir-toolchain]
+description = "Elixir and Erlang/OTP for BEAM middleware"
+extends = "base"
+packages = ["elixir", "erlang-dev", "build-base"]
+cache = true
+
+[layers.beam-deps]
+description = "Fetch and compile BEAM dependencies"
+extends = "elixir-toolchain"
+workdir = "beam/panll_beam"
+commands = [
+    "mix local.hex --force",
+    "mix local.rebar --force",
+    "mix deps.get --only prod",
+    "mix deps.compile",
+]
+env = { MIX_ENV = "prod" }
+cache-key = "beam/panll_beam/mix.lock"
+cache = true
+
+[layers.beam-build]
+description = "Build panll_beam OTP release"
+extends = "beam-deps"
+workdir = "beam/panll_beam"
+commands = ["mix release"]
+env = { MIX_ENV = "prod" }
+artifacts = [
+    { src = "beam/panll_beam/_build/prod/rel/panll_beam/", dst = "/app/beam/" },
+]
+
+# ── Runtime assembly ──────────────────────────────────────────
+
+[layers.runtime]
+description = "Minimal production runtime — all three artefacts assembled"
+from = "cgr.dev/chainguard/wolfi-base:latest"
+packages = ["ca-certificates", "curl", "libgcc", "openssl", "erlang"]
+copy-from = [
+    { layer = "gossamer-build", src = "/app/bin/panll-gossamer", dst = "/app/bin/panll-gossamer" },
+    { layer = "frontend-build", src = "/app/public/", dst = "/app/public/" },
+    { layer = "frontend-build", src = "/app/mod.js", dst = "/app/mod.js" },
+    { layer = "beam-build", src = "/app/beam/", dst = "/app/beam/" },
+]
+entrypoint = ["/app/bin/panll-gossamer"]
+user = "nonroot"
+expose = [8000, 4100, 4101, 50051]
+env = { PANLL_PUBLIC_DIR = "/app/public", PANLL_BEAM_DIR = "/app/beam", PANLL_BEAM_HTTP_PORT = "4100", PANLL_BEAM_GRAPHQL_PORT = "4101", PANLL_BEAM_GRPC_PORT = "50051" }
+
+# ── Security ───────────────────────────────────────────────────
+
+[security]
+non-root = true
+read-only-root = false
+no-new-privileges = true
+cap-drop = ["ALL"]
+seccomp-profile = "default"
+
+[security.signing]
+algorithm = "ML-DSA-87"
+provider = "cerro-torre"
+
+[security.sbom]
+format = "spdx-json"
+output = "sbom.spdx.json"
+include-deps = true
+
+# ── Verification ───────────────────────────────────────────────
+
+[verify]
+vordr = true
+svalinn = true
+scan-on-build = true
+fail-on = ["critical", "high"]
+
+# ── Targets ────────────────────────────────────────────────────
+
+[targets.development]
+description = "Full dev stack with all build toolchains"
+layers = ["base", "rust-toolchain", "deno-toolchain", "elixir-toolchain", "gossamer-build", "frontend-build", "beam-build"]
+env = { LOG_LEVEL = "debug", MIX_ENV = "dev", PANLL_BEAM_APIS = "http,graphql,grpc" }
+
+[targets.production]
+description = "Minimal runtime with assembled artefacts"
+layers = ["runtime"]
+env = { LOG_LEVEL = "info", MIX_ENV = "prod", PANLL_BEAM_APIS = "http,graphql,grpc" }
+
+[targets.test]
+description = "Test target with full toolchains for Deno and Rust tests"
+layers = ["base", "rust-toolchain", "deno-toolchain", "gossamer-build", "frontend-build"]
+env = { LOG_LEVEL = "debug", MIX_ENV = "test" }
+
+[targets.frontend-only]
+description = "Frontend-only build for static deployment or CDN"
+layers = ["base", "deno-toolchain", "frontend-build"]
+env = { LOG_LEVEL = "info" }
+
+[targets.beam-only]
+description = "BEAM middleware only (for standalone API gateway deployment)"
+layers = ["base", "elixir-toolchain", "beam-build"]
+env = { LOG_LEVEL = "info", MIX_ENV = "prod", PANLL_BEAM_APIS = "http,graphql,grpc" }
+expose = [4100, 4101, 50051]
