@@ -415,6 +415,8 @@ type model = {
   plaza: plazaState,
   // Reposystem — RSR compliance across 265+ repos
   reposystem: reposystemState,
+  // System Update — rpm-ostree, flatpak, asdf, cargo, fwupd component management
+  systemUpdate: SystemUpdateModel.systemUpdateState,
   // Aerie — network diagnostics, speed tests, BGP forensics
   aerie: aerieState,
   // 007 Toolchain — agentic compiler and high-rigor execution (Groove)
@@ -1060,6 +1062,7 @@ let init = (): model => {
     selectedRepo: None,
   },
   reposystem: ReposystemEngine.defaultState,
+  systemUpdate: SystemUpdateModel.init,
   aerie: {
     loaded: true,
     loading: false,

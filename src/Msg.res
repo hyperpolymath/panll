@@ -506,6 +506,7 @@ type msg =
   | VerisimdbFeeds(verisimdbFeedsMsg) // VeriSimDB data feed viewer
   | FeedbackRouting(feedbackRoutingMsg) // Feedback-o-Tron routing viewer
   | VexometerFriction(vexometerFrictionMsg) // Vexometer friction viewer
+  | SystemUpdate(SystemUpdateMsg.systemUpdateMsg) // System component update management
   | Burble(BurbleModel.burbleMsg) // Burble voice huddle (groove-aware)
   | Undo // Undo last significant action
   | Redo // Redo last undone action

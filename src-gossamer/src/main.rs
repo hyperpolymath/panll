@@ -89,6 +89,9 @@ mod typell;
 /// Valence Shell — PTY session management, asciicast recordings, and checkpoints.
 mod valence_shell;
 
+/// System Update — component update management (rpm-ostree, flatpak, asdf, cargo, etc.).
+mod system_update;
+
 /// Clade Scanner — reads `.a2ml` clade definition files from `panel-clades/clades/`.
 mod clade_scanner;
 
@@ -2372,6 +2375,39 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     app.command("llm_coding_list_locks", |_p| { result_to_json(llm_coding::commands::llm_coding_list_locks()) });
     app.command("llm_coding_list_messages", |_p| {
         result_to_json(llm_coding::commands::llm_coding_list_messages())
+    });
+
+    // -----------------------------------------------------------------------
+    // System Update commands — delegates to system_update::commands::*
+    // -----------------------------------------------------------------------
+
+    app.command("system_update_list_components", |_payload| {
+        result_to_json(system_update::commands::system_update_list_components())
+    });
+    app.command("system_update_check_all", |_payload| {
+        result_to_json(system_update::commands::system_update_check_all())
+    });
+    app.command("system_update_check_component", |payload| {
+        result_to_json(system_update::commands::system_update_check_component(
+            get_str(&payload, "component_id")?.to_string(),
+        ))
+    });
+    app.command("system_update_apply_component", |payload| {
+        result_to_json(system_update::commands::system_update_apply_component(
+            get_str(&payload, "component_id")?.to_string(),
+        ))
+    });
+    app.command("system_update_apply_all", |_payload| {
+        result_to_json(system_update::commands::system_update_apply_all())
+    });
+    app.command("system_update_asdf_status", |_payload| {
+        result_to_json(system_update::commands::system_update_asdf_status())
+    });
+    app.command("system_update_logs", |_payload| {
+        result_to_json(system_update::commands::system_update_logs())
+    });
+    app.command("system_update_last_summary", |_payload| {
+        result_to_json(system_update::commands::system_update_last_summary())
     });
 
     // -----------------------------------------------------------------------
