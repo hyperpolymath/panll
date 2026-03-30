@@ -248,20 +248,38 @@
 
     const panll = window.__panll || null;
 
-    // Gossamer IPC helper — invokes opsm-runtime via the shell-exec handler
+    // IPC helper — invokes opsm_runtime via Gossamer, Tauri, or PanLL bridge
+    // Tries each runtime in priority order (Gossamer > Tauri > PanLL)
     async function opsmInvoke(cmd, tool, version) {
+      const payload = { cmd };
+      if (tool) payload.tool = tool;
+      if (version) payload.version = version;
+
+      // 1. Gossamer runtime (preferred)
       if (typeof window.__gossamer_invoke === 'function') {
-        const payload = { cmd };
-        if (tool) payload.tool = tool;
-        if (version) payload.version = version;
         const result = await window.__gossamer_invoke('opsm_runtime', payload);
-        // Result is JSON: {output: "...", exit_code: 0}
         if (typeof result === 'string') {
           try { return JSON.parse(result); } catch(_) { return { output: result, exit_code: 0 }; }
         }
         return result;
       }
-      throw new Error('Gossamer IPC not available — run PanLL via gossamer dev');
+
+      // 2. Tauri runtime (mobile/desktop app)
+      if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke) {
+        const result = await window.__TAURI_INTERNALS__.invoke('opsm_runtime', payload);
+        return result;
+      }
+
+      // 3. PanLL IPC bridge
+      if (panll && typeof panll.invoke === 'function') {
+        const result = await panll.invoke('opsm_runtime', payload);
+        if (typeof result === 'string') {
+          try { return JSON.parse(result); } catch(_) { return { output: result, exit_code: 0 }; }
+        }
+        return result;
+      }
+
+      throw new Error('No IPC runtime available — run via PanLL, Gossamer, or Tauri');
     }
 
     // --- Tab switching ---

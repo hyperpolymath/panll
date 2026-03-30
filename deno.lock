@@ -277,14 +277,6 @@
       "npm:@rescript/core@1.6.1",
       "npm:@rescript/runtime@12.2.0",
       "npm:rescript@12"
-    ],
-    "packageJson": {
-      "dependencies": [
-        "npm:@rescript/core@^1.6.1",
-        "npm:@rescript/runtime@^12.2.0",
-        "npm:rescript@12",
-        "npm:tailwindcss@^3.4.19"
-      ]
-    }
+    ]
   }
 }
