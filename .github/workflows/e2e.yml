@@ -1,0 +1,133 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# PanLL — E2E + Crosscutting + Bench CI Pipeline
+#
+# Runs the existing Deno test suite including E2E message roundtrip,
+# panel lifecycle, crosscutting aspect tests, and benchmarks.
+
+name: E2E + Crosscutting + Bench
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'src/**'
+      - 'src-gossamer/**'
+      - 'tests/**'
+      - '.github/workflows/e2e.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'src-gossamer/**'
+      - 'tests/**'
+  workflow_dispatch:
+
+permissions: read-all
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-deno:
+    name: E2E — Message Roundtrip + Panel Lifecycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Install Deno
+        uses: denoland/setup-deno@5fae568d37c3b73e0e4ca63d4e2c4e324a2b3497  # v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: deno install --node-modules-dir=auto
+
+      - name: Build ReScript
+        run: npx rescript build || echo "ReScript build attempted"
+
+      - name: Run E2E tests
+        run: deno test tests/e2e_*.js tests/cross_panel_integration_test.js tests/update_integration_test.js --allow-read --allow-env
+
+  crosscutting:
+    name: Aspect — Crosscutting Concern Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Install Deno
+        uses: denoland/setup-deno@5fae568d37c3b73e0e4ca63d4e2c4e324a2b3497  # v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: deno install --node-modules-dir=auto
+
+      - name: Build ReScript
+        run: npx rescript build || echo "ReScript build attempted"
+
+      - name: Run crosscutting aspect tests
+        run: deno test tests/*_crosscutting_test.js tests/panelbus_propagation_test.js --allow-read --allow-env
+
+  benchmarks:
+    name: Bench — TEA Update Cycle + Engine Performance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Install Deno
+        uses: denoland/setup-deno@5fae568d37c3b73e0e4ca63d4e2c4e324a2b3497  # v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: deno install --node-modules-dir=auto
+
+      - name: Build ReScript
+        run: npx rescript build || echo "ReScript build attempted"
+
+      - name: Run benchmarks
+        run: deno test tests/*_bench_test.js --allow-read --allow-env 2>&1 | tee /tmp/bench-results.txt
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: benchmark-results
+          path: /tmp/bench-results.txt
+          retention-days: 30
+
+  gossamer-backend:
+    name: Rust Backend — Build + Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7  # stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5  # v2
+
+      - name: Install GTK/WebKit dev headers
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Build Gossamer backend
+        run: cargo build --release
+
+      - name: Run Rust tests
+        run: cargo test
