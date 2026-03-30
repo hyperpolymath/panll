@@ -3,8 +3,8 @@
 // cannot handle via import maps.
 //
 // Usage:
-//   deno run -A scripts/bundle.ts          # one-shot build
-//   deno run -A scripts/bundle.ts --watch  # watch mode for dev
+//   deno run --allow-read --allow-write --allow-env --allow-net scripts/bundle.ts          # one-shot build
+//   deno run --allow-read --allow-write --allow-env --allow-net scripts/bundle.ts --watch  # watch mode for dev
 
 import * as esbuild from "npm:esbuild@0.24";
 
