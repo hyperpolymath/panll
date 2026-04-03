@@ -236,3 +236,95 @@ impl AiProvidersFile {
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Smoke tests — type construction, serde round-trips, and defaults
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn smoke_provider_id_all_variants_serialise() {
+        let ids = [
+            ProviderId::Anthropic,
+            ProviderId::Google,
+            ProviderId::Mistral,
+            ProviderId::OpenAI,
+            ProviderId::Local,
+        ];
+        for id in &ids {
+            let json = serde_json::to_string(id).expect("ProviderId must serialise");
+            let _back: ProviderId = serde_json::from_str(&json).expect("ProviderId must deserialise");
+        }
+    }
+
+    #[test]
+    fn smoke_ai_providers_file_defaults_has_five_providers() {
+        let file = AiProvidersFile::defaults();
+        assert_eq!(file.providers.len(), 5, "defaults() must return 5 providers");
+    }
+
+    #[test]
+    fn smoke_ai_providers_file_defaults_anthropic_is_enabled_and_priority_one() {
+        let file = AiProvidersFile::defaults();
+        let anthropic = file.providers.iter().find(|p| p.id == ProviderId::Anthropic)
+            .expect("Anthropic provider must exist");
+        assert!(anthropic.enabled, "Anthropic must be enabled by default");
+        assert_eq!(anthropic.priority, 1, "Anthropic must have priority 1");
+        assert_eq!(anthropic.env_var, "ANTHROPIC_API_KEY");
+    }
+
+    #[test]
+    fn smoke_ai_message_roundtrip() {
+        let msg = AiMessage {
+            role: MessageRole::User,
+            content: "Hello, world!".to_string(),
+            provider: None,
+            model: None,
+            input_tokens: 5,
+            output_tokens: 0,
+            timestamp: 1_700_000_000.0,
+        };
+        let json = serde_json::to_string(&msg).expect("AiMessage must serialise");
+        let back: AiMessage = serde_json::from_str(&json).expect("AiMessage must deserialise");
+        assert_eq!(back.role, MessageRole::User);
+        assert_eq!(back.content, "Hello, world!");
+        assert!(back.provider.is_none());
+    }
+
+    #[test]
+    fn smoke_provider_status_variants_serialise() {
+        let statuses: Vec<ProviderStatus> = vec![
+            ProviderStatus::Ready,
+            ProviderStatus::Checking,
+            ProviderStatus::QuotaExhausted,
+            ProviderStatus::Error("timeout".to_string()),
+            ProviderStatus::Disabled,
+            ProviderStatus::NoKey,
+        ];
+        for status in statuses {
+            let json = serde_json::to_string(&status).expect("ProviderStatus must serialise");
+            assert!(!json.is_empty());
+        }
+    }
+
+    #[test]
+    fn smoke_stream_chunk_text_delta() {
+        let chunk = StreamChunk::TextDelta("Hello".to_string());
+        let json = serde_json::to_string(&chunk).expect("StreamChunk::TextDelta must serialise");
+        assert!(json.contains("Hello"));
+    }
+
+    #[test]
+    fn smoke_tool_definition_serialise() {
+        let tool = ToolDefinition {
+            name: "boj_cartridge_invoke".to_string(),
+            description: "Invoke a BoJ cartridge".to_string(),
+            input_schema: serde_json::json!({"type": "object", "properties": {}}),
+        };
+        let json = serde_json::to_string(&tool).expect("ToolDefinition must serialise");
+        assert!(json.contains("boj_cartridge_invoke"));
+    }
+}

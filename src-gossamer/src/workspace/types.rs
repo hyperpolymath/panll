@@ -120,3 +120,95 @@ pub struct SystemInfo {
     /// System uptime in seconds.
     pub uptime_seconds: u64,
 }
+
+// ---------------------------------------------------------------------------
+// Smoke tests — serde round-trips and invariants for workspace types
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn smoke_panel_position_roundtrip() {
+        let pos = PanelPosition {
+            panel_id: "panel-l".to_string(),
+            x: 0.0,
+            y: 0.0,
+            width: 800.0,
+            height: 600.0,
+            z_index: 1,
+            visible: true,
+        };
+        let json = serde_json::to_string(&pos).expect("PanelPosition must serialise");
+        let back: PanelPosition = serde_json::from_str(&json).expect("PanelPosition must deserialise");
+        assert_eq!(back.panel_id, "panel-l");
+        assert!(back.visible);
+        assert!(back.width > 0.0);
+    }
+
+    #[test]
+    fn smoke_arrangement_empty_positions() {
+        let arr = Arrangement {
+            id: "arr-001".to_string(),
+            name: "Default".to_string(),
+            positions: vec![],
+            groups: vec![],
+            built_in: true,
+            last_saved: 1_700_000_000.0,
+        };
+        assert!(arr.built_in);
+        assert!(arr.positions.is_empty());
+    }
+
+    #[test]
+    fn smoke_workspace_mode_all_variants_serialise() {
+        let modes = [
+            WorkspaceMode::RhodiumMode,
+            WorkspaceMode::EverythingMode,
+            WorkspaceMode::CodeMode,
+            WorkspaceMode::BespokeMode,
+        ];
+        for mode in modes {
+            let json = serde_json::to_string(&mode).expect("WorkspaceMode must serialise");
+            assert!(!json.is_empty());
+        }
+    }
+
+    #[test]
+    fn smoke_session_protection_sandboxed() {
+        let prot = SessionProtection::Sandboxed;
+        let json = serde_json::to_string(&prot).expect("SessionProtection must serialise");
+        assert!(json.contains("Sandboxed"));
+    }
+
+    #[test]
+    fn smoke_system_info_memory_invariant() {
+        let info = SystemInfo {
+            cpu_usage: 25.0,
+            memory_total: 16_000_000_000,
+            memory_used: 8_000_000_000,
+            disk_total: 500_000_000_000,
+            disk_used: 100_000_000_000,
+            uptime_seconds: 86400,
+        };
+        assert!(info.memory_used <= info.memory_total, "used memory must not exceed total");
+        assert!(info.disk_used <= info.disk_total, "used disk must not exceed total");
+        assert!(info.cpu_usage >= 0.0 && info.cpu_usage <= 100.0, "CPU must be in [0,100]");
+    }
+
+    #[test]
+    fn smoke_panel_group_panel_ids_are_unique() {
+        let group = PanelGroup {
+            id: "grp-001".to_string(),
+            name: "Dev Tools".to_string(),
+            panel_ids: vec!["panel-l".to_string(), "panel-n".to_string(), "panel-w".to_string()],
+            locked: false,
+            visible: true,
+            z_index: 0,
+            shared_with: vec![],
+        };
+        let ids: std::collections::HashSet<_> = group.panel_ids.iter().collect();
+        assert_eq!(ids.len(), group.panel_ids.len(), "panel IDs in group must be unique");
+    }
+}

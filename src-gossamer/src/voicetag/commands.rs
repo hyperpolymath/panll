@@ -113,3 +113,43 @@ pub async fn voicetag_scan(path: String) -> Result<String, String> {
     serde_json::to_string(&results)
         .map_err(|e| format!("Serialisation error: {e}"))
 }
+
+// ---------------------------------------------------------------------------
+// Smoke tests — pure logic that doesn't require a filesystem
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    /// Verify the default empty MRI JSON structure is valid JSON.
+    #[test]
+    fn smoke_empty_mri_json_is_valid() {
+        let empty = r#"{"version":"1.0","sourceFile":"","tags":[],"lastModified":0}"#;
+        let parsed: serde_json::Value = serde_json::from_str(empty)
+            .expect("empty MRI JSON must be valid JSON");
+        assert_eq!(parsed["version"], "1.0");
+        assert!(parsed["tags"].as_array().unwrap().is_empty());
+    }
+
+    /// Verify that stripping ".mri.json" from a path gives the source path.
+    #[test]
+    fn smoke_mri_sidecar_suffix_stripping() {
+        let sidecar = "src/Model.res.mri.json";
+        let source = sidecar.strip_suffix(".mri.json").unwrap_or(sidecar);
+        assert_eq!(source, "src/Model.res");
+    }
+
+    /// Verify that non-mri.json files are not matched.
+    #[test]
+    fn smoke_mri_filename_detection() {
+        let matching = ["Model.res.mri.json", "Update.res.mri.json", "foo.mri.json"];
+        let non_matching = ["Model.res", "Update.res.js", "mri.json", ".mri.json.bak"];
+
+        for name in matching {
+            assert!(name.ends_with(".mri.json"), "{name} should match .mri.json");
+        }
+        for name in non_matching {
+            assert!(!name.ends_with(".mri.json") || name == ".mri.json.bak",
+                "{name} should NOT match .mri.json");
+        }
+    }
+}

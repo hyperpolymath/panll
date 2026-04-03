@@ -113,4 +113,22 @@ mod tests {
         let result = hypatia_scan_repo("test-repo".into()).await;
         assert!(result.is_err());
     }
+
+    /// Verify the default Hypatia URL is the expected localhost endpoint.
+    #[test]
+    fn smoke_hypatia_url_default() {
+        // Unset the env var to ensure we get the hardcoded default.
+        std::env::remove_var("HYPATIA_URL");
+        let url = hypatia_url();
+        assert_eq!(url, "http://localhost:4040/api/v1");
+    }
+
+    /// Verify that HYPATIA_URL env var overrides the default.
+    #[test]
+    fn smoke_hypatia_url_override() {
+        std::env::set_var("HYPATIA_URL", "http://custom-host:9999/api/v2");
+        let url = hypatia_url();
+        assert_eq!(url, "http://custom-host:9999/api/v2");
+        std::env::remove_var("HYPATIA_URL");
+    }
 }

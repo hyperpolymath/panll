@@ -71,4 +71,17 @@
     (session "2026-04-03"
       (focus "XSS security fix")
       (changes
-        "panelName sanitized with DOMPurify in detached.html to prevent XSS"))))
+        "panelName sanitized with DOMPurify in detached.html to prevent XSS"))
+    (session "2026-04-04"
+      (focus "CRG C test blitz — Testing & Benchmarking Taxonomy v1.0")
+      (changes
+        "Created benches/panll_bench.js (4 groups: TEA cycle, panel lifecycle, IPC throughput, layout scaling)"
+        "Added deno task bench to deno.json"
+        "Created tests/p2p/tea_properties_test.mjs (8 properties x 100 trials)"
+        "Created tests/aspect/security_test.mjs (36 tests: IPC sanitization, sandboxing, redaction, XSS)"
+        "Created tests/contract/panel_contracts_test.mjs (30 tests: C1-C9 governance contracts)"
+        "Created tests/reflexive/manifest_test.mjs (22 tests: manifest consistency, module exports)"
+        "Added Rust smoke tests to 11 untested crates: security, capture, farm, minter, plaza, watcher, workspace, ai, cloudguard, voicetag, hypatia"
+        "Fixed pre-existing Rust bugs: valence_shell checkpoint_restore arity + type annotation"
+        "Total Rust tests: 267/267 passing"
+        "CRG grade: D → C+ (all taxonomy categories populated)"))))

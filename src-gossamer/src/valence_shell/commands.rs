@@ -728,7 +728,7 @@ mod tests {
         // Recover from poisoned mutex to prevent cascading test failures.
         if let Ok(mut sessions) = SESSIONS
             .lock()
-            .map_or_else(|poisoned| Ok(poisoned.into_inner()), Ok)
+            .map_or_else(|poisoned| Ok::<_, std::convert::Infallible>(poisoned.into_inner()), Ok)
         {
             // Kill any lingering child processes before dropping sessions.
             for (_, mut session) in sessions.drain() {
@@ -894,7 +894,7 @@ mod tests {
         let json: serde_json::Value = serde_json::from_str(&create).unwrap();
         let id = json["id"].as_str().unwrap().to_string();
 
-        let result = valence_shell_checkpoint_restore(id).await;
+        let result = valence_shell_checkpoint_restore(id, None).await;
         assert!(result.is_ok());
         let restored: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
         assert_eq!(restored["status"], "restored");
@@ -905,7 +905,7 @@ mod tests {
     async fn test_checkpoint_restore_not_found() {
         let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
-        let result = valence_shell_checkpoint_restore("nonexistent".to_string()).await;
+        let result = valence_shell_checkpoint_restore("nonexistent".to_string(), None).await;
         assert!(result.is_err());
     }
 

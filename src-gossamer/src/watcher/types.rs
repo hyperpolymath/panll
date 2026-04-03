@@ -58,3 +58,68 @@ pub struct WatcherStatus {
     /// Total number of events emitted since the watcher started.
     pub event_count: u64,
 }
+
+// ---------------------------------------------------------------------------
+// Smoke tests — serialisation round-trips and structural invariants
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn smoke_watch_event_kind_all_variants_roundtrip() {
+        let kinds = [
+            WatchEventKind::Created,
+            WatchEventKind::Modified,
+            WatchEventKind::Removed,
+            WatchEventKind::Renamed,
+            WatchEventKind::Other,
+        ];
+        for kind in kinds {
+            let json = serde_json::to_string(&kind).expect("serialise WatchEventKind must succeed");
+            let _back: WatchEventKind = serde_json::from_str(&json).expect("deserialise must succeed");
+        }
+    }
+
+    #[test]
+    fn smoke_watch_event_roundtrip() {
+        let evt = WatchEvent {
+            path: "/home/hyper/Documents/hyperpolymath-repos/panll/src/Model.res".to_string(),
+            kind: WatchEventKind::Modified,
+            is_dir: false,
+            timestamp: 1_700_000_000.0,
+            extension: "res".to_string(),
+            filename: "Model.res".to_string(),
+        };
+        let json = serde_json::to_string(&evt).expect("serialise WatchEvent must succeed");
+        let back: WatchEvent = serde_json::from_str(&json).expect("deserialise must succeed");
+        assert_eq!(back.extension, "res");
+        assert_eq!(back.filename, "Model.res");
+        assert!(!back.is_dir);
+    }
+
+    #[test]
+    fn smoke_watcher_status_not_running_by_default() {
+        let status = WatcherStatus {
+            running: false,
+            watched_paths: vec![],
+            event_count: 0,
+        };
+        assert!(!status.running);
+        assert!(status.watched_paths.is_empty());
+        assert_eq!(status.event_count, 0);
+    }
+
+    #[test]
+    fn smoke_watcher_status_running_increments_count() {
+        let status = WatcherStatus {
+            running: true,
+            watched_paths: vec!["/var/mnt/eclipse/repos".to_string()],
+            event_count: 42,
+        };
+        assert!(status.running);
+        assert_eq!(status.watched_paths.len(), 1);
+        assert_eq!(status.event_count, 42);
+    }
+}

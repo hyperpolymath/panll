@@ -108,3 +108,80 @@ pub struct BotFinding {
     /// File involved (if any).
     pub file: Option<String>,
 }
+
+// ---------------------------------------------------------------------------
+// Smoke tests — construction, serialisation, and field invariants
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn smoke_backend_kind_all_variants_serialise() {
+        let kinds = [
+            BackendKind::NoBackend,
+            BackendKind::FilesystemBackend,
+            BackendKind::HttpBackend,
+            BackendKind::DatabaseBackend,
+        ];
+        for kind in kinds {
+            serde_json::to_string(&kind).expect("BackendKind must serialise");
+        }
+    }
+
+    #[test]
+    fn smoke_mint_result_success_fields() {
+        let result = MintResult {
+            success: true,
+            files_created: vec!["src/components/Wharf.res".to_string()],
+            files_patched: vec!["src/Msg.res".to_string()],
+            warnings: vec![],
+            error: None,
+            wiring_score: "7/7".to_string(),
+            wiring_details: vec![],
+            bot_findings: vec![],
+        };
+        assert!(result.success);
+        assert_eq!(result.wiring_score, "7/7");
+        assert!(result.error.is_none());
+        assert_eq!(result.files_created.len(), 1);
+    }
+
+    #[test]
+    fn smoke_wiring_detail_connected() {
+        let detail = WiringDetail {
+            file: "src/Msg.res".to_string(),
+            description: "Msg variant added".to_string(),
+            connected: true,
+            note: None,
+        };
+        let json = serde_json::to_string(&detail).expect("serialise must succeed");
+        assert!(json.contains("Msg.res"));
+    }
+
+    #[test]
+    fn smoke_bot_finding_severity_values() {
+        for severity in ["error", "warning", "info", "suggestion"] {
+            let finding = BotFinding {
+                bot: "rhodibot".to_string(),
+                rule_id: "PANEL-001".to_string(),
+                severity: severity.to_string(),
+                message: "Test finding".to_string(),
+                file: None,
+            };
+            assert_eq!(finding.severity, severity);
+        }
+    }
+
+    #[test]
+    fn smoke_capability_roundtrip() {
+        let cap = Capability {
+            id: "repo-inventory".to_string(),
+            label: "Repository Inventory".to_string(),
+        };
+        let json = serde_json::to_string(&cap).expect("serialise must succeed");
+        let back: Capability = serde_json::from_str(&json).expect("deserialise must succeed");
+        assert_eq!(back.id, "repo-inventory");
+    }
+}

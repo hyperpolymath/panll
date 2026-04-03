@@ -18,12 +18,14 @@
     "test": "deno test --no-check --allow-read --allow-env tests/",
     "test:watch": "deno test --no-check --watch --allow-read --allow-env tests/",
     "test:coverage": "deno test --no-check --coverage=coverage/ tests/ && deno coverage coverage/",
+    "bench": "deno bench --no-check --allow-read --allow-env benches/",
+    "bench:tests": "deno bench --no-check --allow-read --allow-env tests/",
     "lint": "deno lint scripts/",
     "fmt": "deno fmt scripts/",
     "mock:echidna": "deno run --allow-net=127.0.0.1:9000 scripts/mock-echidna.ts",
     "res:build": "deno run -A npm:rescript build",
     "res:clean": "deno run -A npm:rescript clean",
-    "res:watch": "deno run -A npm:rescript build -w"
+    "res:watch": "deno run -A npm:rescript watch"
   },
   "imports": {
     "@std/": "jsr:@std/",

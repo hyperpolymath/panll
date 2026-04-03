@@ -82,3 +82,70 @@ pub struct FarmInventory {
     /// Distinct forges found.
     pub forge_names: Vec<String>,
 }
+
+// ---------------------------------------------------------------------------
+// Smoke tests — construction and JSON serialisation
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn smoke_farm_repo_entry_serialises() {
+        let entry = FarmRepoEntry {
+            name: "panll".to_string(),
+            description: "PanLL workspace".to_string(),
+            language: "ReScript".to_string(),
+            priority: "high".to_string(),
+            forges: vec!["github".to_string(), "gitlab".to_string()],
+            auto_propagate: true,
+            group: Some("core".to_string()),
+        };
+        let json = serde_json::to_string(&entry).expect("serialise FarmRepoEntry must succeed");
+        assert!(json.contains("panll"));
+        assert!(json.contains("github"));
+    }
+
+    #[test]
+    fn smoke_farm_inventory_total_matches_repos() {
+        let inv = FarmInventory {
+            total: 2,
+            repos: vec![
+                FarmRepoEntry {
+                    name: "repo-a".to_string(),
+                    description: "".to_string(),
+                    language: "Rust".to_string(),
+                    priority: "medium".to_string(),
+                    forges: vec![],
+                    auto_propagate: false,
+                    group: None,
+                },
+                FarmRepoEntry {
+                    name: "repo-b".to_string(),
+                    description: "".to_string(),
+                    language: "Gleam".to_string(),
+                    priority: "low".to_string(),
+                    forges: vec![],
+                    auto_propagate: false,
+                    group: None,
+                },
+            ],
+            groups: HashMap::new(),
+            languages: vec!["Rust".to_string(), "Gleam".to_string()],
+            forge_names: vec![],
+        };
+        assert_eq!(inv.total, inv.repos.len());
+        assert_eq!(inv.languages.len(), 2);
+    }
+
+    #[test]
+    fn smoke_manifest_repo_all_optional_fields() {
+        // ManifestRepo is deserialisable from a minimal JSON object
+        let json = r#"{}"#;
+        let repo: ManifestRepo = serde_json::from_str(json).expect("empty ManifestRepo must parse");
+        assert!(repo.description.is_none());
+        assert!(repo.forges.is_none());
+        assert!(repo.auto_propagate.is_none());
+    }
+}
