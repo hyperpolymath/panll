@@ -103,7 +103,7 @@
 
       // Extract panel name from window.name (set by WindowBridge.openWindow)
       var windowName = window.name || 'panll-detach-unknown';
-      var panelName = windowName.replace('panll-detach-', '');
+      var panelName = DOMPurify.sanitize(windowName.replace('panll-detach-', ''), {ALLOWED_TAGS: []});
 
       // UI references
       var nameEl = document.getElementById('panel-name');
