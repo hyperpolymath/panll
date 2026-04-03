@@ -22,7 +22,8 @@ let parseUri = (uri: string): option<(string, string)> => {
   } else if String.startsWith(uri, gossamerPrefix) {
     Some(String.sliceToEnd(uri, ~start=String.length(gossamerPrefix)))
   } else if String.startsWith(uri, "tauri://") {
-    // Legacy tauri:// URIs — resolve to gossamer equivalent.
+    // DEPRECATED: Legacy tauri:// URIs from pre-Gossamer era.
+    // Kept for backward compatibility — resolves to gossamer equivalent.
     Some(String.sliceToEnd(uri, ~start=8))
   } else {
     None

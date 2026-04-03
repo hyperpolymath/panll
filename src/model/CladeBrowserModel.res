@@ -47,8 +47,8 @@ type cladeProtocol =
   | ProtoWebSocket
   /// Server-Sent Events — unidirectional server-to-client streaming.
   | ProtoSSE
-  /// Tauri IPC — inter-process communication via Tauri invoke/listen.
-  | ProtoTauriIPC
+  /// Gossamer IPC — inter-process communication via Gossamer invoke/listen.
+  | ProtoGossamerIPC
   /// Unix Domain Socket — local process-to-process communication.
   | ProtoUnixSocket
   /// D-Bus — Linux desktop IPC (notifications, file pickers, portals).

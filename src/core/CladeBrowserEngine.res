@@ -165,7 +165,7 @@ let withDefaults = (
 }
 
 /// Built-in clade data (loaded from panel-clades/ at compile time).
-/// In a full implementation, this would be loaded via Tauri from the
+/// In a full implementation, this would be loaded via Gossamer from the
 /// filesystem. For now, we embed the 36 known clades.
 let builtinCladesBase: array<cladeEntry> = [
   {
@@ -1670,7 +1670,7 @@ let builtinCladesBase: array<cladeEntry> = [
     consumedBy: [],
     supersedes: [],
     parentCladeId: None,
-    protocols: [ProtoTauriIPC],
+    protocols: [ProtoGossamerIPC],
     capabilities: [CapVisualisation, CapStreaming],
     requires: [],
     enhances: ["workspace", "provisioner", "focus-dimming"],
@@ -1698,7 +1698,7 @@ let builtinCladesBase: array<cladeEntry> = [
     consumedBy: [],
     supersedes: [],
     parentCladeId: Some("network"),
-    protocols: [ProtoTauriIPC, ProtoREST],
+    protocols: [ProtoGossamerIPC, ProtoREST],
     capabilities: [CapProcessSpawn, CapFilesystem, CapNetwork],
     requires: [],
     enhances: ["aerie", "security", "observatory"],
@@ -1935,7 +1935,7 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
   switch entry.id {
   | "boj" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoGRPC, ProtoGraphQL, ProtoMCP, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGRPC, ProtoGraphQL, ProtoMCP, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapProcessSpawn, CapStreaming],
       ~enhances=["aerie", "ai", "databases"],
       ~isolation=IsolationProcess,
@@ -1943,7 +1943,7 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "typell" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoStdio],
+      ~protocols=[ProtoGossamerIPC, ProtoStdio],
       ~capabilities=[CapTypeChecking, CapProofProduction, CapProofConsumption, CapStreaming],
       ~enhances=["databases", "protocol-squisher", "my-lang", "playgrounds"],
       entry,
@@ -1973,7 +1973,7 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "valence-shell" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoStdio],
+      ~protocols=[ProtoGossamerIPC, ProtoStdio],
       ~capabilities=[CapShell, CapProcessSpawn, CapFilesystem, CapClipboard, CapSessionRecording],
       ~isolation=IsolationContainer,
       ~sandbox=Some({
@@ -1992,28 +1992,28 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "databases" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoGraphQL, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGraphQL, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapFilesystem, CapStreaming],
       ~isolation=IsolationProcess,
       entry,
     )
   | "protocol-squisher" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoStdio],
+      ~protocols=[ProtoGossamerIPC, ProtoStdio],
       ~capabilities=[CapTypeChecking, CapSecurityScan],
       ~enhances=["boj", "interfaces"],
       entry,
     )
   | "my-lang" =>
     withDefaults(
-      ~protocols=[ProtoLSP, ProtoTauriIPC, ProtoStdio],
+      ~protocols=[ProtoLSP, ProtoGossamerIPC, ProtoStdio],
       ~capabilities=[CapFilesystem, CapProcessSpawn, CapTypeChecking],
       ~isolation=IsolationProcess,
       entry,
     )
   | "panic-attack" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoStdio],
+      ~protocols=[ProtoGossamerIPC, ProtoStdio],
       ~capabilities=[CapFilesystem, CapProcessSpawn, CapSecurityScan],
       ~enhances=["security"],
       ~isolation=IsolationContainer,
@@ -2027,7 +2027,7 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "mass-panic" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGossamerIPC],
       ~capabilities=[CapFilesystem, CapNetwork, CapProcessSpawn, CapSecurityScan, CapContainerised],
       ~requires=[{cladeId: "panic-attack", required: true, reason: "Core scanning engine"}],
       ~enhances=["security", "farm"],
@@ -2048,21 +2048,21 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "security" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapSecretManagement, CapSecurityScan, CapClipboard],
       ~isolation=IsolationProcess,
       entry,
     )
   | "automation-router" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoWebSocket],
+      ~protocols=[ProtoGossamerIPC, ProtoWebSocket],
       ~capabilities=[CapStreaming],
       ~enhances=["workspace", "fleet"],
       entry,
     )
   | "aerie" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoWebSocket, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoWebSocket, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapVisualisation],
       ~enhances=["cloudguard", "network-topology"],
       ~isolation=IsolationProcess,
@@ -2070,7 +2070,7 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "cloudguard" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapSecretManagement],
       ~enhances=["aerie"],
       ~isolation=IsolationProcess,
@@ -2078,16 +2078,16 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "fleet" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoWebSocket, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoWebSocket, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapProcessSpawn],
       ~enhances=["farm", "hypatia"],
       ~isolation=IsolationProcess,
       entry,
     )
-  | "farm" => withDefaults(~protocols=[ProtoTauriIPC], ~capabilities=[CapFilesystem], entry)
+  | "farm" => withDefaults(~protocols=[ProtoGossamerIPC], ~capabilities=[CapFilesystem], entry)
   | "playgrounds" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoStdio],
+      ~protocols=[ProtoGossamerIPC, ProtoStdio],
       ~capabilities=[CapProcessSpawn, CapShell, CapStreaming],
       ~isolation=IsolationContainer,
       ~sandbox=Some({
@@ -2100,20 +2100,20 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "workspace" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapFilesystem, CapSessionRecording],
       entry,
     )
   | "capture" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapFilesystem, CapClipboard, CapVisualisation, CapSessionRecording],
       ~enhances=["workspace"],
       entry,
     )
   | "game-preview" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoWebSocket],
+      ~protocols=[ProtoGossamerIPC, ProtoWebSocket],
       ~capabilities=[CapStreaming, CapVisualisation],
       ~enhances=["vm-inspector", "level-architect"],
       ~isolation=IsolationProcess,
@@ -2121,7 +2121,7 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "vm-inspector" =>
     withDefaults(
-      ~protocols=[ProtoDAP, ProtoTauriIPC],
+      ~protocols=[ProtoDAP, ProtoGossamerIPC],
       ~capabilities=[CapVisualisation, CapStreaming],
       ~enhances=["game-preview"],
       ~isolation=IsolationProcess,
@@ -2129,68 +2129,68 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "level-architect" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapFilesystem, CapVisualisation],
       ~enhances=["game-preview"],
       entry,
     )
   | "network-topology" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoWebSocket],
+      ~protocols=[ProtoGossamerIPC, ProtoWebSocket],
       ~capabilities=[CapVisualisation, CapStreaming],
       ~enhances=["game-preview"],
       entry,
     )
   | "multiplayer-monitor" =>
     withDefaults(
-      ~protocols=[ProtoWebSocket, ProtoTauriIPC],
+      ~protocols=[ProtoWebSocket, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapStreaming, CapVisualisation],
       ~isolation=IsolationProcess,
       entry,
     )
   | "build-dashboard" =>
     withDefaults(
-      ~protocols=[ProtoBSP, ProtoTauriIPC],
+      ~protocols=[ProtoBSP, ProtoGossamerIPC],
       ~capabilities=[CapProcessSpawn, CapFilesystem],
       ~enhances=["my-lang", "release-manager"],
       entry,
     )
   | "release-manager" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGossamerIPC],
       ~capabilities=[CapFilesystem, CapNetwork, CapProcessSpawn],
       ~enhances=["build-dashboard"],
       ~isolation=IsolationProcess,
       entry,
     )
-  | "minter" => withDefaults(~protocols=[ProtoTauriIPC], ~capabilities=[CapFilesystem], entry)
+  | "minter" => withDefaults(~protocols=[ProtoGossamerIPC], ~capabilities=[CapFilesystem], entry)
   | "interfaces" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapFilesystem],
       ~enhances=["boj", "protocol-squisher"],
       entry,
     )
   | "repoloader" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapFilesystem],
       ~enhances=["farm"],
       entry,
     )
-  | "tsdm" => withDefaults(~protocols=[ProtoTauriIPC], entry)
+  | "tsdm" => withDefaults(~protocols=[ProtoGossamerIPC], entry)
   | "vab" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapFilesystem, CapProcessSpawn],
       ~enhances=["build-dashboard"],
       ~isolation=IsolationProcess,
       entry,
     )
-  | "voicetag" => withDefaults(~protocols=[ProtoTauriIPC], ~capabilities=[CapFilesystem], entry)
+  | "voicetag" => withDefaults(~protocols=[ProtoGossamerIPC], ~capabilities=[CapFilesystem], entry)
   | "coprocessors" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoWebSocket],
+      ~protocols=[ProtoGossamerIPC, ProtoWebSocket],
       ~capabilities=[CapStreaming, CapVisualisation],
       ~enhances=["game-preview", "vm-inspector"],
       ~isolation=IsolationProcess,
@@ -2198,14 +2198,14 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "dlc-workshop" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapFilesystem, CapVisualisation],
       ~enhances=["game-preview", "level-architect"],
       entry,
     )
   | "ums" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoREST],
+      ~protocols=[ProtoGossamerIPC, ProtoREST],
       ~capabilities=[CapFilesystem, CapVisualisation, CapProofProduction, CapTypeChecking],
       ~enhances=["level-architect", "dlc-workshop", "game-preview", "vm-inspector"],
       ~requires=[
@@ -2219,35 +2219,35 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
     )
   | "plaza" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapFilesystem],
       ~enhances=["reposystem", "farm"],
       entry,
     )
   | "provisioner" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapFilesystem],
       ~enhances=["minter", "workspace"],
       entry,
     )
   | "reposystem" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoREST],
+      ~protocols=[ProtoGossamerIPC, ProtoREST],
       ~capabilities=[CapFilesystem, CapSecurityScan],
       ~enhances=["farm", "fleet"],
       entry,
     )
   | "migration" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoLSP],
+      ~protocols=[ProtoGossamerIPC, ProtoLSP],
       ~capabilities=[CapFilesystem, CapTypeChecking],
       ~enhances=["editor-bridge", "build-dashboard"],
       entry,
     )
   | "echidna" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoGRPC, ProtoTauriIPC, ProtoStdio],
+      ~protocols=[ProtoREST, ProtoGRPC, ProtoGossamerIPC, ProtoStdio],
       ~capabilities=[CapProofProduction, CapProofConsumption, CapTypeChecking, CapStreaming],
       ~isolation=IsolationProcess,
       ~requires=[
@@ -2260,47 +2260,47 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
       ~enhances=["typell", "databases"],
       entry,
     )
-  | "help" => withDefaults(~protocols=[ProtoTauriIPC], entry)
-  | "accessibility" => withDefaults(~protocols=[ProtoTauriIPC], ~enhances=["workspace"], entry)
+  | "help" => withDefaults(~protocols=[ProtoGossamerIPC], entry)
+  | "accessibility" => withDefaults(~protocols=[ProtoGossamerIPC], ~enhances=["workspace"], entry)
   | "menu-bar" =>
-    withDefaults(~protocols=[ProtoTauriIPC], ~enhances=["workspace", "keybindings"], entry)
+    withDefaults(~protocols=[ProtoGossamerIPC], ~enhances=["workspace", "keybindings"], entry)
   | "status-bar" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapStreaming],
       ~enhances=["workspace", "build-dashboard"],
       entry,
     )
   | "vexometer" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapStreaming, CapVisualisation],
       ~enhances=["accessibility", "workspace"],
       entry,
     )
   | "provenance" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC, ProtoREST],
+      ~protocols=[ProtoGossamerIPC, ProtoREST],
       ~capabilities=[CapSecurityScan, CapFilesystem],
       ~enhances=["security", "panic-attack"],
       entry,
     )
   | "feedback" =>
-    withDefaults(~protocols=[ProtoTauriIPC, ProtoREST], ~capabilities=[CapFilesystem], entry)
+    withDefaults(~protocols=[ProtoGossamerIPC, ProtoREST], ~capabilities=[CapFilesystem], entry)
   | "keybindings" =>
     withDefaults(
-      ~protocols=[ProtoTauriIPC],
+      ~protocols=[ProtoGossamerIPC],
       ~capabilities=[CapFilesystem],
       ~enhances=["workspace", "menu-bar"],
       entry,
     )
-  | "tiling" => withDefaults(~protocols=[ProtoTauriIPC], ~enhances=["workspace"], entry)
+  | "tiling" => withDefaults(~protocols=[ProtoGossamerIPC], ~enhances=["workspace"], entry)
   | "focus-dimming" =>
-    withDefaults(~protocols=[ProtoTauriIPC], ~enhances=["workspace", "accessibility"], entry)
+    withDefaults(~protocols=[ProtoGossamerIPC], ~enhances=["workspace", "accessibility"], entry)
   // Game Server Admin — universal game server probe + config management via Gossamer + VeriSimDB
   | "gsa" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoWebSocket, ProtoSSE, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoWebSocket, ProtoSSE, ProtoGossamerIPC],
       ~capabilities=[
         CapNetwork,
         CapShell,
@@ -2316,56 +2316,56 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
       entry,
     )
   | "gsa-browser" =>
-    withDefaults(~protocols=[ProtoREST, ProtoTauriIPC], ~capabilities=[CapNetwork], entry)
+    withDefaults(~protocols=[ProtoREST, ProtoGossamerIPC], ~capabilities=[CapNetwork], entry)
   | "gsa-config" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapShell, CapSecretManagement],
       entry,
     )
   | "gsa-actions" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapShell, CapProcessSpawn, CapContainerised],
       entry,
     )
   | "gsa-logs" =>
     withDefaults(
-      ~protocols=[ProtoWebSocket, ProtoTauriIPC],
+      ~protocols=[ProtoWebSocket, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapStreaming],
       entry,
     )
   | "gsa-health" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoSSE, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoSSE, ProtoGossamerIPC],
       ~capabilities=[CapNetwork],
       ~enhances=["databases"],
       entry,
     )
   | "gsa-history" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGossamerIPC],
       ~capabilities=[CapNetwork],
       ~enhances=["databases"],
       entry,
     )
   | "gsa-search" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGossamerIPC],
       ~capabilities=[CapNetwork],
       ~enhances=["databases"],
       entry,
     )
   | "gsa-game" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapShell, CapContainerised],
       entry,
     )
   // Burble Admin — voice platform management
   | "burble-admin" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoWebSocket, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoWebSocket, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapStreaming, CapVisualisation],
       ~enhances=["infrastructure"],
       ~isolation=IsolationProcess,
@@ -2374,7 +2374,7 @@ let enrichClade = (entry: cladeEntry): cladeEntry =>
   // IDApTIK Admin — game server management
   | "idaptik-admin" =>
     withDefaults(
-      ~protocols=[ProtoREST, ProtoWebSocket, ProtoTauriIPC],
+      ~protocols=[ProtoREST, ProtoWebSocket, ProtoGossamerIPC],
       ~capabilities=[CapNetwork, CapShell, CapContainerised, CapStreaming],
       ~enhances=["infrastructure", "gsa"],
       ~isolation=IsolationProcess,
@@ -2402,7 +2402,7 @@ let protocolLabel = (p: cladeProtocol): string =>
   | ProtoGraphQL => "GraphQL"
   | ProtoWebSocket => "WebSocket"
   | ProtoSSE => "SSE"
-  | ProtoTauriIPC => "Tauri IPC"
+  | ProtoGossamerIPC => "Gossamer IPC"
   | ProtoUnixSocket => "Unix Socket"
   | ProtoDBus => "D-Bus"
   | ProtoStdio => "Stdio"
