@@ -67,4 +67,8 @@
         "Completed Tauri→Gossamer migration (270 commands)"
         "Fixed ReScript build errors (open keyword, indexOf, duplicate symbols)"
         "Added 13 placeholder panel views for GSA/Burble/IDApTIK"
-        "Moved back button to top-right pill"))))
+        "Moved back button to top-right pill"))
+    (session "2026-04-03"
+      (focus "XSS security fix")
+      (changes
+        "panelName sanitized with DOMPurify in detached.html to prevent XSS"))))
