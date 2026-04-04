@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# wokelangiser manifest for panll
+
+[project]
+name = "panll"
+
+[consent]
+gdpr = true
+ccpa = true
+default-state = "opt-out"
+categories = ["functional"]
+
+[accessibility]
+wcag-level = "AA"
+check-contrast = true
+check-alt-text = true
+check-aria = true
+min-contrast-ratio = 4.5
+
+[i18n]
+default-locale = "en-GB"
+supported-locales = ["en-GB", "fr-FR", "de-DE"]
+extract-strings = true
+
+[report]
+format = "text"
