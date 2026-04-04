@@ -1,0 +1,13 @@
+# Auto-generated K9 contract for panel-harness
+# Safety tier: yard
+
+[must]
+
+[trust]
+signed-by = "ci-pipeline"
+
+[dust]
+# (no dust rules defined)
+
+[intend]
+production-ready = true

@@ -234,12 +234,26 @@ let setItem: (
   string,
 ) => unit = %raw(`function(key, value) { localStorage.setItem(key, value) }`)
 
-// Save model to localStorage
+/// Save model to localStorage (synchronous) and VeriSimDB (async fire-and-forget).
+///
+/// localStorage is always written first as the fast synchronous fallback.
+/// If a Gossamer runtime is available, the state is also persisted to
+/// VeriSimDB for cross-session durability and identity snapshot support.
 let save = (model: model): unit => {
   try {
     let state = extractPersistedState(model)
     let json = serialize(state)
+    // Always write localStorage (fast, synchronous)
     setItem(storageKey, json)
+    // Also persist to VeriSimDB (async, fire-and-forget)
+    if RuntimeBridge.isGossamerRuntime() {
+      RuntimeBridge.invoke("verisimdb_save_state", {"key": storageKey, "state": json})
+      ->Promise.catch(_err => {
+        Console.warn("VeriSimDB state save failed — localStorage backup active")
+        Promise.resolve()
+      })
+      ->ignore
+    }
   } catch {
   | exn => Console.error2("Failed to save state:", exn)
   }
@@ -533,5 +547,42 @@ let clear = (): unit => {
     removeItem(storageKey)
   } catch {
   | exn => Console.error2("Failed to clear state:", exn)
+  }
+}
+
+// ===========================================================================
+// VeriSimDB Async Persistence (Connected Workbench v0.2.0)
+// ===========================================================================
+
+/// Load persisted state from VeriSimDB (async).
+///
+/// Returns `Some(model)` if VeriSimDB holds valid state, `None` otherwise.
+/// Used at startup after the synchronous localStorage load to upgrade to
+/// the latest VeriSimDB-backed state if available.
+let loadFromVeriSimDB = (): promise<option<model>> => {
+  if RuntimeBridge.isGossamerRuntime() {
+    RuntimeBridge.invoke("verisimdb_load_state", {"key": storageKey})
+    ->Promise.then(jsonStr => {
+      // VeriSimDB returns the state wrapper — extract the inner state JSON
+      let stateJson = switch JSON.parseExn(jsonStr)->JSON.Classify.classify {
+      | Object(d) =>
+        switch d->Dict.get("state") {
+        | Some(v) =>
+          switch JSON.Classify.classify(v) {
+          | String(s) => s
+          | _ => jsonStr
+          }
+        | None => jsonStr
+        }
+      | _ => jsonStr
+      }
+      switch Decoders.decodeOption(persistedStateDecoder, stateJson) {
+      | Some(state) => Promise.resolve(Some(modelFromPersisted(state)))
+      | None => Promise.resolve(None)
+      }
+    })
+    ->Promise.catch(_err => Promise.resolve(None))
+  } else {
+    Promise.resolve(None)
   }
 }

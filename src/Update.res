@@ -114,6 +114,11 @@ let shouldAutoSave = (msg: msg): bool => {
   switch msg {
   | NoOp => false
   | SaveState => false
+  | VeriSimDBStateLoaded(_) => false
+  | VeriSimDBStateSaved(_) => false
+  | Service(_) => false // Service health checks should not trigger state save
+  | Settings(_) => false // Settings changes persist via their own mechanism
+  | Identity(_) => false // Identity operations have their own persistence
   | _ => true
   }
 }
@@ -386,6 +391,51 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
       Storage.save(model)
       (model, Tea_Cmd.none)
     }
+  // VeriSimDB async state restoration (Connected Workbench v0.2.0)
+  | VeriSimDBStateLoaded(result) =>
+    switch result {
+    | Ok(jsonStr) => {
+        // Parse the VeriSimDB response — extract the inner "state" field
+        let stateJson = switch JSON.parseExn(jsonStr)->JSON.Classify.classify {
+        | Object(d) =>
+          switch d->Dict.get("state") {
+          | Some(v) =>
+            switch JSON.Classify.classify(v) {
+            | String(s) => s
+            | _ => jsonStr
+            }
+          | None => jsonStr
+          }
+        | _ => jsonStr
+        }
+        switch Decoders.decodeOption(Storage.persistedStateDecoder, stateJson) {
+        | Some(state) => {
+            let restoredModel = Storage.modelFromPersisted(state)
+            // Merge restored state with current model to preserve runtime-only fields
+            (
+              {
+                ...model,
+                paneL: restoredModel.paneL,
+                paneN: restoredModel.paneN,
+                paneW: restoredModel.paneW,
+                viewMode: restoredModel.viewMode,
+                paneLVisible: restoredModel.paneLVisible,
+                paneNVisible: restoredModel.paneNVisible,
+                paneWVisible: restoredModel.paneWVisible,
+                humidity: restoredModel.humidity,
+                vexometer: {...model.vexometer, index: restoredModel.vexometer.index},
+                orbital: {...model.orbital, stability: restoredModel.orbital.stability},
+              },
+              Tea_Cmd.none,
+            )
+          }
+        | None => (model, Tea_Cmd.none)
+        }
+      }
+    | Error(_) => (model, Tea_Cmd.none) // VeriSimDB unavailable — localStorage already loaded
+    }
+  // VeriSimDB save confirmation (log-only, no state change)
+  | VeriSimDBStateSaved(_result) => (model, Tea_Cmd.none)
   // BoJ latency recording
   | RecordBojLatency(cartridge, tool, elapsed) => {
       let entry: BojModel.bojLatencyEntry = {
@@ -691,6 +741,12 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
     }
   // Burble — groove-aware voice huddle integration
   | Burble(subMsg) => ({...model, burble: BurbleEngine.update(model.burble, subMsg)}, Tea_Cmd.none)
+  // Service Registry — centralized backend service lifecycle (Connected Workbench v0.2.0)
+  | Service(subMsg) => UpdateService.updateService(model, subMsg)
+  // Settings — user configuration (Connected Workbench v0.2.0)
+  | Settings(subMsg) => UpdateSettings.updateSettings(model, subMsg)
+  // Identity — snapshots and team replication (Connected Workbench v0.2.0)
+  | Identity(subMsg) => UpdateIdentity.updateIdentity(model, subMsg)
   // System Update — component update management
   | SystemUpdate(subMsg) => {
       let su = model.systemUpdate

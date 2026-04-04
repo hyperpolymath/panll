@@ -1,0 +1,32 @@
+# src/core/ — Domain Engines
+
+## Purpose
+
+Contains pure business logic engines that operate on model state without side effects. Engines compute state transitions, validate invariants, and provide utility functions that sub-updaters compose.
+
+## Boundary
+
+- **Imports**: `Model` types (read-only)
+- **Used by**: `src/update/` sub-updaters, `src/components/` views
+- **Does NOT import**: `Msg`, `RuntimeBridge`, or any command modules
+
+## Key Engines
+
+| Engine | Purpose |
+|--------|---------|
+| `AntiCrash.res` | Circuit breaker — validates neural tokens before acceptance |
+| `OrbitalSync.res` | Cross-panel synchronisation metrics |
+| `BurbleEngine.res` | Pure voice huddle state transitions |
+| `ConnectionManager.res` | Service health status transitions |
+| `ErrorBoundary.res` | Standardized error handling for Gossamer commands (v0.2.0) |
+| `RuntimeBridge.res` | IPC bridge to Gossamer backend |
+
+## Invariants
+
+- Engines are pure functions — no promises, no side effects, no mutable state
+- Exception: `RuntimeBridge.res` and `ErrorBoundary.res` which bridge to IPC
+- Engine output is always a new state value, never a mutation
+
+## Naming Convention
+
+`{Domain}Engine.res` or `{Concept}.res` — e.g. `BurbleEngine.res`, `ConnectionManager.res`

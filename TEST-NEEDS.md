@@ -1,5 +1,7 @@
 # TEST-NEEDS.md — panll
 
+## CRG Grade: C — ACHIEVED 2026-04-04
+
 > Generated 2026-03-29 by punishing audit. Updated 2026-04-04 by CRG C blitz.
 
 ## Current State

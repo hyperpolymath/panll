@@ -1,0 +1,18 @@
+# Auto-generated K9 contract for clade-portal-config
+# Safety tier: yard
+
+[must]
+app.security.sandbox.enabled : string { == true }
+app.ipc.timeout : string { > 0 }
+app.ipc.maxMessageSize : string { > 0 }
+bundle.license : string { == 'PMPL-1.0-or-later' }
+ephapax.linearVerification : string { == true }
+
+[trust]
+signed-by = "ci-pipeline"
+
+[dust]
+# (no dust rules defined)
+
+[intend]
+production-ready = true

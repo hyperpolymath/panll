@@ -3,6 +3,12 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Avoid noisy caniuse-lite age warnings during desktop launches.
+export BROWSERSLIST_IGNORE_OLD_DATA=1
+
 # Ensure just is installed
 if ! command -v just &>/dev/null; then
     echo "Error: 'just' is not installed but is required for this project."

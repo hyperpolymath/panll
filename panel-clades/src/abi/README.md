@@ -1,0 +1,40 @@
+# panel-clades/src/abi/ — Idris2 ABI Formal Proofs
+
+## Purpose
+
+Formal verification of the panel-clades C ABI using Idris2 dependent types. Proves memory layout correctness, alignment properties, and type safety for the Zig FFI layer.
+
+## Boundary
+
+- **Verified by**: Idris2 0.8.0 type checker
+- **Implemented by**: `panel-clades/ffi/zig/` (Zig FFI matching these proofs)
+- **Generated output**: `generated/abi/*.h` (C headers from ABI definitions)
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `Types.idr` | Core ABI types: Platform, CladeKind, Result, Handle with proofs |
+| `Layout.idr` | Memory layout proofs: alignment, struct sizing, C ABI compliance |
+| `Foreign.idr` | FFI function declarations with type signatures |
+
+## Invariants
+
+- `%default total` — all functions must be provably total
+- 0 `believe_me` — no unsafe escape hatches
+- 0 `assert_total` — no totality bypasses
+- Proofs use `So` witnesses, `Divides` proofs, and `DivideBy` constructors
+- CladeKind exhaustiveness proven via vector-based witnesses (13 variants)
+
+## Proof Status (v0.2.0)
+
+- `fieldsAlignedProof`: CLOSED — recursive proof via `proveFieldsAligned`
+- `exampleFieldsAligned`: CLOSED — concrete proof for 3-field example layout
+- `offsetInBoundsProof`: CLOSED — runtime boolean check (no Elem witness needed)
+
+## Adding New Proofs
+
+1. Define types in `Types.idr` with appropriate indices
+2. Write layout proofs in `Layout.idr` using `FieldsAligned` and `CABICompliant`
+3. Declare FFI functions in `Foreign.idr`
+4. Verify with `idris2 --check` (requires `.ipkg` — currently missing)

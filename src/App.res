@@ -36,7 +36,35 @@ let init = (): (Model.model, Tea_Cmd.t<Msg.msg>) => {
     }
   )
 
-  (model, Tea_Cmd.batch(list{colorSchemeCmd, fontSizeCmd, grooveCmd}))
+  // Attempt async VeriSimDB state restore (Connected Workbench v0.2.0).
+  // Fires after the synchronous localStorage load above — if VeriSimDB holds
+  // newer/richer state, the VeriSimDBStateLoaded handler will merge it in.
+  let verisimdbStateCmd = GossamerCmd.loadStateFromVeriSimDB(result =>
+    Msg.VeriSimDBStateLoaded(result)
+  )
+
+  // Probe all registered services at startup (Connected Workbench v0.2.0).
+  // Non-blocking — populates the service registry with current health status.
+  let serviceRefreshCmd = ServiceCmd.refreshAll(result =>
+    Msg.Service(RefreshAllResult(result))
+  )
+
+  // Load user settings from ~/.panll/config.json (Connected Workbench v0.2.0).
+  let settingsCmd = SettingsCmd.getSettings(result =>
+    Msg.Settings(SettingsLoaded(result))
+  )
+
+  (
+    model,
+    Tea_Cmd.batch(list{
+      colorSchemeCmd,
+      fontSizeCmd,
+      grooveCmd,
+      verisimdbStateCmd,
+      serviceRefreshCmd,
+      settingsCmd,
+    }),
+  )
 }
 
 /// Main TEA program

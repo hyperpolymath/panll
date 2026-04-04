@@ -1,0 +1,251 @@
+K9!
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# coordination.k9 — AI Coordination Protocol for PanLL
+#
+# This file is the single source of truth for all AI agent behaviour.
+# Do NOT edit generated files (.cursorrules, AGENTS.md, etc.) directly.
+# Edit this file, then re-generate.
+#
+# PanLL is a neurosymbolic IDE with 106 panels, a custom TEA runtime,
+# and deep integration with the hyperpolymath ecosystem. It is the
+# project most likely to be damaged by an uninformed AI agent.
+#
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+
+---
+metadata:
+  schema: k9-coordination
+  schema_version: 1.0.0
+  generated_by: k9-coordination-generator
+  last_updated: 2026-04-03
+
+project:
+  name: "PanLL"
+  description: "Neurosymbolic IDE built on the Binary Star model — human (symbolic, Panel-L) and machine (neural, Panel-N) orbiting a shared world state (Panel-W). 106 panels, custom TEA runtime, Gossamer desktop backend."
+  license: PMPL-1.0-or-later
+  repo: "hyperpolymath/panll"
+  languages:
+    - ReScript
+    - Rust
+    - Elixir
+    - JavaScript
+  build_system: just
+  runtime: deno
+
+build_commands:
+  just build: "Full build (ReScript + CSS + bundle)"
+  just res: "ReScript compile only"
+  just bundle: "esbuild bundle"
+  just css: "Build CSS"
+  just dev: "Start dev server on port 8000"
+  just test: "Run test suite (979 tests, 41 suites)"
+  just coverage: "Run tests with coverage"
+  just lint: "Lint ReScript source"
+  just doctor: "Run project health checks"
+
+invariants:
+  - id: custom-tea-runtime
+    rule: "The custom TEA runtime in src/tea/ (18 modules) must NEVER be replaced with rescript-tea or any other library"
+    reason: "rescript-tea was deliberately evaluated and rejected. The custom TEA runtime handles PanLL-specific needs: Anti-Crash circuit breaking, Vexometer cognitive load adaptation, OrbitalSync multi-panel state coherence, and panel lifecycle management. It is not legacy — it is the architecture."
+    severity: critical
+
+  - id: no-typescript
+    rule: "Do not introduce TypeScript files — ReScript is the frontend language"
+    reason: "ReScript provides better type safety with less overhead. This is a deliberate, ecosystem-wide decision."
+    severity: critical
+
+  - id: no-tauri
+    rule: "Do not introduce Tauri references or dependencies — Gossamer is the desktop backend"
+    reason: "PanLL was migrated FROM Tauri 2.0 TO Gossamer. This migration is complete and intentional."
+    severity: critical
+
+  - id: tea-pattern-only
+    rule: "All state management uses TEA (Model -> Msg -> Update -> View) — no MVC, Redux, hooks, or other patterns"
+    reason: "TEA is foundational to PanLL's architecture. Model.res holds all state, Msg.res defines all messages, Update.res is the state transition kernel."
+    severity: critical
+
+  - id: all-state-in-model
+    rule: "ALL application state lives in Model.model — no global mutable state, no module-level state, no window.* state"
+    reason: "TEA requires single state tree. Anti-Crash and OrbitalSync depend on this invariant for correctness."
+    severity: critical
+
+  - id: no-npm-bun
+    rule: "No npm, Bun, pnpm, or yarn — Deno is the orchestrator"
+    reason: "npm is used ONLY for the ReScript compiler (which requires it). All other tooling uses Deno. Do not add npm dependencies."
+    severity: critical
+
+  - id: anticrash-validates-all
+    rule: "Anti-Crash circuit breaker validates ALL neural tokens before symbolic execution — never bypass this"
+    reason: "Safety-critical: prevents untrusted neural output from corrupting symbolic state. The validation path exists for a reason."
+    severity: critical
+
+  - id: panels-not-panes
+    rule: "UI elements are called 'panels', NEVER 'panes', 'tabs', or 'windows'"
+    reason: "PanLL naming convention — 'panels' is the correct term everywhere in code, docs, and communication"
+    severity: high
+
+  - id: no-bulk-panel-deletion
+    rule: "Do not delete more than 2 panel files in a single operation without explicit user approval"
+    reason: "106 panels have complex interdependencies. Bulk deletion can cascade and break OrbitalSync."
+    severity: critical
+
+  - id: gossamer-bridge-pattern
+    rule: "Gossamer commands in src/commands/ are invoke wrappers only — do not put business logic there"
+    reason: "Business logic belongs in Update.res. Commands are thin bridges to the Gossamer backend."
+    severity: high
+
+  - id: binary-star-model
+    rule: "The Binary Star architecture (Panel-L symbolic + Panel-N neural + Panel-W world) is deliberate — do not flatten into a single panel type"
+    reason: "The three panel types serve fundamentally different roles. This is the core design of PanLL."
+    severity: critical
+
+  - id: rescript-core-team
+    rule: "The project owner is on the ReScript core team — do not suggest migrating away from ReScript"
+    reason: "ReScript is not a temporary choice. The owner contributes to ReScript itself."
+    severity: critical
+
+protected:
+  - path: src/tea/
+    reason: "Custom TEA runtime — 18 modules. NEVER replace with rescript-tea."
+  - path: src/Model.res
+    reason: "Single state tree — all application state lives here"
+  - path: src/Msg.res
+    reason: "Message type definitions — the TEA message catalogue"
+  - path: src/Update.res
+    reason: "State transition kernel — ~7500 lines, the heart of PanLL"
+  - path: src/View.res
+    reason: "Root view renderer"
+  - path: src/App.res
+    reason: "Application entry point"
+  - path: src/core/
+    reason: "Core engines — AntiCrash, OrbitalSync, Contractiles, TypeLLEngine, VabEngine"
+  - path: src/components/
+    reason: "106 panel views — do not bulk-delete"
+  - path: src/commands/
+    reason: "Gossamer bridge commands — thin wrappers only"
+  - path: src/modules/
+    reason: "Module registry + TypeLLService — cross-panel type intelligence"
+  - path: src-gossamer/
+    reason: "Rust backend (WebKitGTK) — Gossamer desktop integration"
+  - path: beam/
+    reason: "Elixir/BEAM API layer"
+  - path: tests/
+    reason: "979 tests, 41 suites — never delete tests"
+  - path: .machine_readable/
+    reason: "Canonical location for A2ML state files — MUST stay here"
+  - path: coordination.k9
+    reason: "This file — source of truth for AI coordination"
+
+architecture:
+  - id: gossamer-not-tauri
+    decision: "Gossamer (Zig + WebKitGTK) is the desktop backend — migration from Tauri 2.0 is complete"
+    reason: "Gossamer is the hyperpolymath desktop runtime. Tauri was used previously but replaced."
+    alternatives_rejected:
+      - Tauri 2.0
+      - Electron
+      - native GTK
+
+  - id: custom-tea-not-rescript-tea
+    decision: "Custom TEA runtime (src/tea/, 18 modules) instead of the rescript-tea library"
+    reason: "PanLL needs Anti-Crash integration, OrbitalSync, Vexometer hooks, and panel lifecycle — none available in rescript-tea"
+    alternatives_rejected:
+      - rescript-tea
+      - Redux
+      - MobX
+      - React hooks pattern
+
+  - id: deno-npm-hybrid
+    decision: "Deno orchestrates everything, but npm is used solely for the ReScript compiler"
+    reason: "ReScript compiler requires npm — this is the ONLY permitted npm usage. Do not extend npm's role."
+
+  - id: binary-star
+    decision: "Three panel types: Panel-L (symbolic/human), Panel-N (neural/machine), Panel-W (world/shared)"
+    reason: "Neurosymbolic architecture requires clear separation of human reasoning, machine inference, and shared world state"
+
+  - id: vexometer-cognitive-load
+    decision: "Vexometer monitors operator stress and adapts UI detail density"
+    reason: "HTI (Human-Tool Interaction) principle — the IDE adapts to the human, not vice versa"
+
+  - id: anticrash-circuit-breaker
+    decision: "Anti-Crash validates all neural tokens before they enter the symbolic pipeline"
+    reason: "Safety boundary between neural and symbolic systems — prevents hallucinated code from corrupting state"
+
+do_not_create:
+  - pattern: "**/*.ts"
+    reason: "TypeScript is banned — use ReScript"
+  - pattern: "Dockerfile"
+    reason: "Use Containerfile (Podman, not Docker)"
+  - pattern: "**/*.py"
+    reason: "Python is banned — use ReScript, Rust, or Elixir"
+  - description: "A replacement TEA runtime or state management library"
+    reason: "src/tea/ is the TEA runtime — it is custom, deliberate, and must not be replaced"
+  - description: "REST API endpoints parallel to existing Groove protocol endpoints"
+    reason: "Groove is the inter-service communication protocol — do not create REST alternatives"
+  - description: "A new panel type beyond Panel-L, Panel-N, Panel-W"
+    reason: "Binary Star model has exactly three types — adding more would break OrbitalSync"
+  - description: "Direct Tauri imports or tauri.conf.json"
+    reason: "Tauri migration to Gossamer is complete — do not reintroduce"
+
+terminology:
+  - correct: panels
+    incorrect:
+      - panes
+      - tabs
+      - windows
+    context: "PanLL UI elements are always called panels — this is enforced everywhere"
+  - correct: Binary Star
+    incorrect:
+      - dual-pane
+      - split-view
+      - two-panel
+    context: "The architectural model is Binary Star (Panel-L + Panel-N orbiting Panel-W)"
+  - correct: Anti-Crash
+    incorrect:
+      - validator
+      - sanitizer
+      - filter
+    context: "The neural token validation system is called Anti-Crash"
+  - correct: Vexometer
+    incorrect:
+      - stress meter
+      - load indicator
+      - fatigue tracker
+    context: "The cognitive load monitoring system is called Vexometer"
+  - correct: OrbitalSync
+    incorrect:
+      - state sync
+      - panel sync
+      - sync engine
+    context: "The multi-panel state coherence system is called OrbitalSync"
+
+ports:
+  dev-server: 8000
+  echidna: 9000
+  verisimdb: 8080
+  boj-server: 7700
+  typell: 7800
+
+ecosystem:
+  depends_on:
+    - name: gossamer
+      role: "Desktop backend runtime (Zig + WebKitGTK)"
+    - name: verisimdb
+      role: "Persistent storage layer"
+    - name: typell
+      role: "Type intelligence engine — cross-panel type checking"
+    - name: boj-server
+      role: "MCP server — all external tool integration"
+  consumed_by:
+    - name: idaptik
+      role: "Uses PanLL as level editor for game content"
+  related:
+    - name: echidna
+      role: "Proof engine — formal verification integration"
+    - name: hypatia
+      role: "Neurosymbolic CI/CD scanning"
+    - name: panic-attack
+      role: "Security scanning tool"
+    - name: gitbot-fleet
+      role: "Bot orchestration (rhodibot, echidnabot, etc.)"
+    - name: proven
+      role: "Formally verified alternatives library"

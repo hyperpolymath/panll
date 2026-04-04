@@ -382,6 +382,15 @@ include Oo7Msg
 /// Re-export VideoCoordination messages.
 include VideoCoordinationMsg
 
+/// Re-export Service Registry messages (Connected Workbench v0.2.0).
+include ServiceMsg
+
+/// Re-export Settings messages (Connected Workbench v0.2.0).
+include SettingsMsg
+
+/// Re-export Identity messages (Connected Workbench v0.2.0).
+include IdentityMsg
+
 // -- The unified message type --------------------------------------------
 
 /// The unified message type
@@ -516,7 +525,12 @@ type msg =
   | VexometerFriction(vexometerFrictionMsg) // Vexometer friction viewer
   | SystemUpdate(SystemUpdateMsg.systemUpdateMsg) // System component update management
   | Burble(BurbleModel.burbleMsg) // Burble voice huddle (groove-aware)
+  | Service(serviceMsg) // Service registry lifecycle (Connected Workbench v0.2.0)
+  | Settings(settingsMsg) // User configuration (Connected Workbench v0.2.0)
+  | Identity(identityMsg) // Identity snapshots + team replication (Connected Workbench v0.2.0)
   | Undo // Undo last significant action
   | Redo // Redo last undone action
   | SaveState // Persist current state to storage
+  | VeriSimDBStateLoaded(result<string, string>) // Async state restored from VeriSimDB
+  | VeriSimDBStateSaved(result<string, string>) // Confirmation/error from VeriSimDB save
   | NoOp

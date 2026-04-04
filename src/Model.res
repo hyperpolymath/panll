@@ -383,6 +383,17 @@ include VerisimdbFeedsModel
 include FeedbackRoutingModel
 include VexometerFrictionModel
 
+/// Re-export Service Registry types (serviceStatus, serviceEntry,
+/// serviceRegistryState) for centralized backend service lifecycle management.
+include ServiceModel
+
+/// Re-export Settings types (settingsState) for user configuration management.
+include SettingsModel
+
+/// Re-export Identity types (identitySnapshot, identityState) for snapshots
+/// and team replication.
+include IdentityModel
+
 /// The complete Model — composes all domain slices into a single record.
 /// This is the "Gravitational Centre" of the Binary Star system.
 type model = {
@@ -617,6 +628,12 @@ type model = {
   agentCoordination: AgentCoordinationModel.agentCoordinationState,
   // Burble — voice huddle integration (groove-aware, workspace profile)
   burble: BurbleModel.burbleState,
+  // Service Registry — centralized backend service lifecycle (Connected Workbench v0.2.0)
+  serviceRegistry: serviceRegistryState,
+  // Settings — user configuration (Connected Workbench v0.2.0)
+  settings: settingsState,
+  // Identity — named snapshots and team replication (Connected Workbench v0.2.0)
+  identity: identityState,
 }
 
 /// Initial model state - "Dark Start" mode
@@ -1475,4 +1492,30 @@ let init = (): model => {
   llmCoding: LlmCodingEngine.init,
   agentCoordination: AgentCoordinationEngine.init,
   burble: BurbleEngine.defaultState,
+  serviceRegistry: {
+    services: Dict.make(),
+    lastChecked: None,
+    isRefreshing: false,
+  },
+  settings: {
+    verisimdbUrl: "http://localhost:8080",
+    echidnaUrl: "http://localhost:9000",
+    burbleUrl: "http://localhost:6473",
+    bojUrl: "http://localhost:7700",
+    typellUrl: "http://localhost:7800",
+    configDir: "~/.panll",
+    theme: "DarkStart",
+    autoSaveIntervalMs: 30000,
+    autoConnectServices: true,
+    isLoading: false,
+    error: None,
+    isDirty: false,
+  },
+  identity: {
+    snapshots: [],
+    activeSnapshotId: None,
+    isCapturing: false,
+    isRestoring: false,
+    error: None,
+  },
 }

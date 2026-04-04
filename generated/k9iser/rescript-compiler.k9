@@ -1,0 +1,16 @@
+# Auto-generated K9 contract for rescript-compiler
+# Safety tier: yard
+
+[must]
+name : string { == 'panll' }
+package-specs[0].module : string { == 'esmodule' }
+package-specs[0].in-source : string { == true }
+
+[trust]
+signed-by = "ci-pipeline"
+
+[dust]
+remove = ["deprecated suffix .js (use .res.js)"]
+
+[intend]
+production-ready = true

@@ -490,6 +490,51 @@ let getOrchStatus = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> =>
 }
 
 // ===========================================================================
+// VeriSimDB State Persistence Commands (Connected Workbench v0.2.0)
+// ===========================================================================
+
+/// Load persisted PanLL state from VeriSimDB.
+///
+/// Sends a load request for the canonical state key. On success, the tagger
+/// receives `Ok(stateJson)` which can be decoded via `Storage.persistedStateDecoder`.
+/// On failure, receives `Error(reason)` — the caller should fall back to localStorage.
+let loadStateFromVeriSimDB = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("verisimdb_load_state", {"key": "panll_state_v1"})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("VeriSimDB state load failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+/// Save persisted PanLL state to VeriSimDB.
+///
+/// Accepts the pre-serialized JSON string from `Storage.serialize()`.
+/// Returns confirmation or error via the tagger.
+let saveStateToVeriSimDB = (stateJson: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<
+  'msg,
+> => {
+  Tea_Cmd.call(callbacks => {
+    invoke("verisimdb_save_state", {"key": "panll_state_v1", "state": stateJson})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("VeriSimDB state save failed")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+
+// ===========================================================================
 // ECHIDNA Theorem Prover Backend Commands
 // ===========================================================================
 

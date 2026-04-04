@@ -1,0 +1,14 @@
+# Auto-generated K9 contract for pcc-cargo
+# Safety tier: yard
+
+[must]
+package.edition : string { == '2021' }
+
+[trust]
+signed-by = "ci-pipeline"
+
+[dust]
+# (no dust rules defined)
+
+[intend]
+production-ready = true

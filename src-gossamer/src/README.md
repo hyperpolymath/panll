@@ -1,0 +1,42 @@
+# src-gossamer/src/ — Rust Backend Modules
+
+## Purpose
+
+The Gossamer-native backend for PanLL. Replaces the former Tauri 2.0 backend. Contains 40+ domain modules registered as IPC command handlers in `main.rs`. All commands are invoked from the ReScript frontend via `RuntimeBridge.invoke`.
+
+## Boundary
+
+- **Exposes**: IPC commands via `app.command("name", |payload| { ... })`
+- **Consumed by**: ReScript frontend through `window.__gossamer_invoke`
+- **Dependencies**: `reqwest` (HTTP), `serde_json` (JSON), `gossamer-rs` (runtime)
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `main.rs` | Command registration hub (100+ handlers) |
+| `http_client.rs` | Shared async/blocking HTTP client infrastructure |
+| `verisimdb_live.rs` | VeriSimDB connection (health, octads, VQL, state persistence) |
+| `echidna_live.rs` | ECHIDNA theorem prover connection |
+| `boj_live.rs` | BoJ cartridge server connection |
+| `service_registry.rs` | Centralized service lifecycle (v0.2.0) |
+| `settings.rs` | User settings persistence (v0.2.0) |
+| `identity.rs` | Identity snapshots and team replication (v0.2.0) |
+| `compat.rs` | Tauri → Gossamer AppHandle shim |
+| `groove.rs` | Groove agent execution kernel |
+
+## Command Registration Pattern
+
+```rust
+app.command("command_name", |payload| {
+    let arg = get_str(&payload, "field")?;
+    result_to_json(module::function(arg))
+});
+```
+
+## Invariants
+
+- All service URLs respect environment variables (`VERISIMDB_URL`, `ECHIDNA_URL`, etc.)
+- Blocking commands use `reqwest::blocking::Client` (inline commands in main.rs)
+- Async commands use the `http_client` module's `ServiceEndpoint` + async functions
+- New modules: declare `mod xxx;` in main.rs, register commands, add to this README

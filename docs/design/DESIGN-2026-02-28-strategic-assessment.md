@@ -180,7 +180,7 @@ Phase 6: Discipline Layouts (P2)
 └── Deliverable: Adobe Connect-style viewshift
 
 Phase 7: Internationalisation (P2)
-├── Project Fluent setup + en locale
+├── polyglot-i18n + LOL setup + en locale
 ├── Extract all hardcoded strings
 ├── RTL layout support (CSS logical properties)
 ├── Math notation screen reader localisation

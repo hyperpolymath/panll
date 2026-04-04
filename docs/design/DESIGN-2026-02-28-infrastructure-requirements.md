@@ -146,23 +146,24 @@ RTL support as future work.
 
 ### Architecture
 
-**Framework:** Project Fluent (`.ftl` files)
+**Framework:** polyglot-i18n + LOL (Localisation Overlay Language)
 
-Why Fluent over gettext/ICU:
-- Designed for modern UIs (not printf-style interpolation)
-- Handles plurals, gender, and grammatical cases cleanly
-- Mozilla-backed, used in Firefox (proven at scale)
-- ReScript bindings feasible (FFI to `@fluent/bundle`)
+Why polyglot-i18n + LOL over Project Fluent/gettext/ICU:
+- Hyperpolymath-native i18n stack — dogfooded across the estate
+- LOL handles plurals, gender, and grammatical cases cleanly
+- polyglot-i18n provides the runtime loader and locale resolution
+- ReScript integration via the polyglot-i18n ReScript bindings
+- No dependency on Mozilla's `@fluent/bundle` npm package
 
 **File structure:**
 ```
 locales/
 ├── en/                    # English (source)
-│   ├── app.ftl            # Core UI strings
-│   ├── proofs.ftl         # Proof-specific terminology
-│   ├── database.ftl       # Database-specific terminology
-│   ├── protocols.ftl      # Protocol-specific terminology
-│   └── accessibility.ftl  # Screen reader announcements
+│   ├── app.lol            # Core UI strings
+│   ├── proofs.lol         # Proof-specific terminology
+│   ├── database.lol       # Database-specific terminology
+│   ├── protocols.lol      # Protocol-specific terminology
+│   └── accessibility.lol  # Screen reader announcements
 ├── fr/
 ├── de/
 ├── ja/
@@ -171,8 +172,8 @@ locales/
 └── ...
 ```
 
-**Example Fluent file (`locales/en/proofs.ftl`):**
-```fluent
+**Example LOL file (`locales/en/proofs.lol`):**
+```
 proof-goal-solved = Goal { $number } solved
 proof-goals-remaining = { $count ->
     [one] { $count } goal remaining
@@ -433,7 +434,7 @@ When the PanLL Trustfile is created, it must declare:
   (policy "no feature ships without A compliance"))
 
 (internationalisation
-  (framework "Project Fluent")
+  (framework "polyglot-i18n + LOL")
   (source-language "en")
   (rtl-support "planned v1.0")
   (math-notation "universal, not translated"))
@@ -470,11 +471,11 @@ Infrastructure features must not degrade the core experience:
 | Keyboard navigation audit | P0 | Immediate | Existing components   |
 | Fuzzy search     | P1       | Next sprint  | Pure ReScript         |
 | Pandoc export    | P1       | Next sprint  | Pandoc binary         |
-| Fluent i18n setup| P2       | v1.0 prep    | @fluent/bundle FFI    |
+| polyglot-i18n + LOL setup| P2 | v1.0 prep  | polyglot-i18n bindings|
 | Zotero local API | P2       | v1.0 prep    | HTTP client           |
 | OCR (Tesseract)  | P3       | v1.0+        | Tesseract binary      |
 | OCR (math/Nougat)| P3       | v1.0+        | GPU, model download   |
-| RTL layout       | P3       | v1.0+        | Fluent + CSS logical  |
+| RTL layout       | P3       | v1.0+        | LOL + CSS logical     |
 
 ---
 
@@ -501,7 +502,7 @@ Infrastructure features must not degrade the core experience:
 ## References
 
 - WCAG 2.3: https://www.w3.org/TR/WCAG23/
-- Project Fluent: https://projectfluent.org/
+- polyglot-i18n + LOL: https://github.com/hyperpolymath/polyglot-i18n
 - Zotero Web API v3: https://www.zotero.org/support/dev/web_api/v3/start
 - Zotero Local API: https://www.zotero.org/support/dev/client_coding/connector_http_server
 - Pandoc: https://pandoc.org/

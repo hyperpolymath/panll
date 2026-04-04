@@ -164,6 +164,15 @@ mod llm_coding;
 /// Groove — Gossamer groove discovery endpoint (port 8000).
 mod groove;
 
+/// Service Registry — centralized lifecycle management for backend services (v0.2.0).
+mod service_registry;
+
+/// Settings — user configuration persistence and management (v0.2.0).
+mod settings;
+
+/// Identity — named identity snapshots and team replication (v0.2.0).
+mod identity;
+
 // ===========================================================================
 // Constants and helpers (moved from old Tauri main.rs)
 // ===========================================================================
@@ -1032,6 +1041,93 @@ async fn main() -> Result<(), gossamer_rs::Error> {
 
     app.command("verisimdb_orch_status", |_payload| {
         result_to_json(blocking_get(&format!("{}/status", verisimdb_orch_url()), 5))
+    });
+
+    // VeriSimDB state persistence (Connected Workbench v0.2.0)
+    app.command("verisimdb_save_state", |payload| {
+        let key = get_str(&payload, "key")?.to_string();
+        let state = get_str(&payload, "state")?.to_string();
+        let url = format!("{}/state/{}", verisimdb_url(), key);
+        result_to_json(blocking_post(&url, &json!({"state": state}), 10))
+    });
+
+    app.command("verisimdb_load_state", |payload| {
+        let key = get_str(&payload, "key")?.to_string();
+        let url = format!("{}/state/{}", verisimdb_url(), key);
+        result_to_json(blocking_get(&url, 10))
+    });
+
+    // -----------------------------------------------------------------------
+    // Service Registry commands (Connected Workbench v0.2.0)
+    // -----------------------------------------------------------------------
+
+    app.command("service_status_all", |_payload| {
+        result_to_json(service_registry::check_all_services())
+    });
+
+    app.command("service_status", |payload| {
+        let key = get_str(&payload, "service_key")?;
+        result_to_json(service_registry::check_service(key))
+    });
+
+    app.command("service_update_url", |payload| {
+        let key = get_str(&payload, "service_key")?;
+        let url = get_str(&payload, "url")?;
+        result_to_json(service_registry::update_service_url(key, url))
+    });
+
+    app.command("service_registry_get", |_payload| {
+        result_to_json(service_registry::get_registry())
+    });
+
+    // -----------------------------------------------------------------------
+    // Settings commands (Connected Workbench v0.2.0)
+    // -----------------------------------------------------------------------
+
+    app.command("settings_get", |_payload| {
+        result_to_json(settings::settings_get())
+    });
+
+    app.command("settings_set", |payload| {
+        let key = get_str(&payload, "key")?;
+        let value = get_str(&payload, "value")?;
+        result_to_json(settings::settings_set(key, value))
+    });
+
+    app.command("settings_save", |payload| {
+        let settings_json = get_str(&payload, "settings")?.to_string();
+        result_to_json(settings::settings_save(&settings_json))
+    });
+
+    // -----------------------------------------------------------------------
+    // Identity snapshot commands (Connected Workbench v0.2.0)
+    // -----------------------------------------------------------------------
+
+    app.command("identity_save", |payload| {
+        let name = get_str(&payload, "name")?;
+        let panll_state = get_str(&payload, "panll_state")?;
+        let settings_json = get_str(&payload, "settings")?;
+        let service_urls = get_str(&payload, "service_urls")?;
+        result_to_json(identity::identity_save(name, panll_state, settings_json, service_urls))
+    });
+
+    app.command("identity_load", |payload| {
+        let id = get_str(&payload, "id")?;
+        result_to_json(identity::identity_load(id))
+    });
+
+    app.command("identity_list", |_payload| {
+        result_to_json(identity::identity_list())
+    });
+
+    app.command("identity_delete", |payload| {
+        let id = get_str(&payload, "id")?;
+        result_to_json(identity::identity_delete(id))
+    });
+
+    app.command("team_broadcast_state", |payload| {
+        let snapshot_json = get_str(&payload, "snapshot")?.to_string();
+        result_to_json(identity::team_broadcast_state(&snapshot_json))
     });
 
     // -----------------------------------------------------------------------

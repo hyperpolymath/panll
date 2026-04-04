@@ -1,0 +1,111 @@
+# k9iser manifest — wrap configs into self-validating K9 contracts
+# SPDX-License-Identifier: PMPL-1.0-or-later
+#
+# panll: multi-panel workspace (TEA/ReScript + Gossamer).
+# Safety-tier "yard" — application framework, moderate scrutiny.
+
+[project]
+name = "panll"
+safety-tier = "yard"  # application framework
+
+# ── rescript.json — ReScript compiler config ──────────────────────────────────
+
+[[configs]]
+name = "rescript-compiler"
+source = "rescript.json"
+format = "json"
+must = [
+  "name == 'panll'",
+  "package-specs[0].module == 'esmodule'",             # ESM output required
+  "package-specs[0].in-source == true",                # in-source .res.js required
+  "dependencies contains '@rescript/core'",            # rescript/core mandatory
+  "compiler-flags contains '-open RescriptCore'",      # RescriptCore open required
+  "warnings.error is set",                             # warnings-as-errors configured
+  "no dependency on Belt",                             # Belt fully banned
+]
+trust = ["signed-by: ci-pipeline"]
+dust = ["remove: deprecated suffix .js (use .res.js)"]
+intend = ["production-ready"]
+
+# ── clade-portal/gossamer.conf.json — clade portal UI config ──────────────────
+
+[[configs]]
+name = "clade-portal-config"
+source = "clade-portal/gossamer.conf.json"
+format = "json"
+must = [
+  "app.security.sandbox.enabled == true",
+  "app.ipc.timeout > 0",
+  "app.ipc.maxMessageSize > 0",
+  "bundle.license == 'PMPL-1.0-or-later'",
+  "ephapax.linearVerification == true",
+]
+trust = ["signed-by: ci-pipeline"]
+dust = []
+intend = ["production-ready"]
+
+# ── clade-portal/panels/manifest.json — panel harness manifest ───────────────
+
+[[configs]]
+name = "panel-harness"
+source = "clade-portal/panels/manifest.json"
+format = "json"
+must = [
+  "panels is set",                                     # panels array present
+]
+trust = ["signed-by: ci-pipeline"]
+dust = []
+intend = ["production-ready"]
+
+# ── tools/pcc/Cargo.toml — PanLL contract compiler ────────────────────────────
+
+[[configs]]
+name = "pcc-cargo"
+source = "tools/pcc/Cargo.toml"
+format = "toml"
+must = [
+  "package.edition == '2021'",
+  "package.license is set",
+]
+trust = ["signed-by: ci-pipeline"]
+dust = []
+intend = ["production-ready"]
+
+# ── contracts/workspace.toml — workspace panel contract ──────────────────────
+
+[[configs]]
+name = "contract-workspace"
+source = "contracts/workspace.toml"
+format = "toml"
+must = [
+  "panel_id is non-empty",
+  "module_name is non-empty",
+  "model_slice is non-empty",
+  "msg_namespace is non-empty",
+  "view_route is non-empty",
+  "clade_id is non-empty",
+]
+trust = ["signed-by: ci-pipeline"]
+dust = []
+intend = ["panel-contract-valid"]
+
+# ── contracts/security.toml — security panel contract ────────────────────────
+
+[[configs]]
+name = "contract-security"
+source = "contracts/security.toml"
+format = "toml"
+must = [
+  "panel_id is non-empty",
+  "module_name is non-empty",
+  "model_slice is non-empty",
+  "clade_id is non-empty",
+]
+trust = ["signed-by: ci-pipeline"]
+dust = []
+intend = ["panel-contract-valid"]
+
+[validation]
+strict = true
+auto-fix = false
+report-format = "text"
