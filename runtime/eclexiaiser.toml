@@ -1,0 +1,25 @@
+# eclexiaiser manifest — energy/carbon resource budgets
+# SPDX-License-Identifier: PMPL-1.0-or-later
+
+[project]
+name = "runtime"
+
+[[functions]]
+name = "process_batch"
+source = "src/batch.rs"
+energy-budget-mj = 50.0
+carbon-budget-mg = 10.0
+
+[[functions]]
+name = "render_page"
+source = "src/web.rs"
+energy-budget-mj = 5.0
+
+[carbon]
+provider = "static"
+region = "GB"
+static-intensity = 200.0
+
+[report]
+format = "text"
+include-recommendations = true
