@@ -5,15 +5,10 @@
 name = "runtime"
 
 [[functions]]
-name = "process_batch"
-source = "src/batch.rs"
-energy-budget-mj = 50.0
-carbon-budget-mg = 10.0
-
-[[functions]]
-name = "render_page"
-source = "src/web.rs"
-energy-budget-mj = 5.0
+name = "stack-up"
+source = "scripts/stack-up.sh"
+energy-budget-mj = 20.0
+carbon-budget-mg = 4.0
 
 [carbon]
 provider = "static"

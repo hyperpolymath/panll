@@ -5,15 +5,10 @@
 name = "panel-clades"
 
 [[functions]]
-name = "process_batch"
-source = "src/batch.rs"
-energy-budget-mj = 50.0
-carbon-budget-mg = 10.0
-
-[[functions]]
-name = "render_page"
-source = "src/web.rs"
-energy-budget-mj = 5.0
+name = "mountApp"
+source = "examples/SafeDOMExample.res"
+energy-budget-mj = 10.0
+carbon-budget-mg = 2.0
 
 [carbon]
 provider = "static"
