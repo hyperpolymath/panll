@@ -11,7 +11,7 @@
   panel = {
     id = "Mass Panic",
     short_name = "MP",
-    description = "Organisation-scale batch scanning — assemblyline + BLAKE3 + verisimdb + delta",
+    description = "Organisation-scale batch scanning — assemblyline + BLAKE3 + verisim + delta",
     has_backend = true,
     clade_id = "mass-panic",
     isolation_tier = "native",

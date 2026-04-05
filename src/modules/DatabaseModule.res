@@ -22,7 +22,7 @@
 /// Capabilities that a database module may support. PanLL only renders UI
 /// for capabilities the module declares.
 type capability =
-  | QueryExecution // Can run queries in a native language (VQL, KQL, GQL)
+  | QueryExecution // Can run queries in a native language (VCL, KQL, GQL)
   | DriftDetection // Can detect cross-modal consistency drift
   | ProofGeneration // Can generate verifiable proof certificates
   | Normalisation // Can self-repair drifted modalities
@@ -84,9 +84,9 @@ type exampleQuery = {
 
 /// The query language configuration for the playground.
 type playgroundConfig = {
-  languageName: string, // "VQL", "KQL", "GQL"
+  languageName: string, // "VCL", "KQL", "GQL"
   languageVersion: string, // "1.0", "0.5-alpha"
-  fileExtension: string, // ".vql", ".kql", ".gql"
+  fileExtension: string, // ".vcl", ".kql", ".gql"
   keywords: array<string>, // syntax keywords for highlighting
   exampleQueries: array<exampleQuery>,
   hasDependentTypes: bool, // supports a -DT variant
@@ -96,7 +96,7 @@ type playgroundConfig = {
 
 /// Configuration for registering a database module with PanLL.
 type moduleConfig = {
-  id: string, // unique module identifier (e.g., "verisimdb")
+  id: string, // unique module identifier (e.g., "verisim")
   name: string, // display name (e.g., "VeriSimDB")
   version: string, // module version
   description: string, // one-line description

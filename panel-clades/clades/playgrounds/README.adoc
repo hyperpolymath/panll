@@ -5,7 +5,7 @@
 == What is this?
 
 This directory defines the **Playgrounds** panel clade for PanLL.
-Interactive query sandbox — VQL-DT, GQL-DT, KQL-DT testing environment.
+Interactive query sandbox — VCL-DT, GQL-DT, KQL-DT testing environment.
 
 == Files
 

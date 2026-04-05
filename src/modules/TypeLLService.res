@@ -4,7 +4,7 @@
 ///
 /// This is what makes TypeLL different from every other panel. It isn't just
 /// a visible panel — it's an invisible verification backbone that any panel
-/// can query. When you write a VQL query in VeriSimDB, TypeLL checks its
+/// can query. When you write a VCL query in VeriSimDB, TypeLL checks its
 /// dependent types. When you analyse a schema in Protocol-Squisher, TypeLL
 /// verifies the type compatibility. When you write code in My-Lang, TypeLL
 /// provides the type inference.
@@ -13,7 +13,7 @@
 ///
 /// | Panel              | What TypeLL provides                                    |
 /// |--------------------|---------------------------------------------------------|
-/// | VeriSimDB          | VQL-UT proof obligations, query type safety             |
+/// | VeriSimDB          | VCL-total proof obligations, query type safety             |
 /// | Protocol-Squisher  | Schema type compatibility, adapter type safety           |
 /// | My-Lang            | Full type checking across all 4 dialects                |
 /// | Anti-Crash         | Type-level validation before token acceptance            |
@@ -33,10 +33,10 @@
 ///
 /// The TypeLL panel's `queriesServed` counter tracks cross-panel usage.
 
-/// Check types for a VQL query expression.
+/// Check types for a VCL query expression.
 /// Used by VeriSimDB panel to validate queries before execution.
 let checkVqlTypes = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
-  let context = `{"language":"vql","dialect":"vql-ut","features":["dependent","linear","proof-carrying"]}`
+  let context = `{"language":"vcl","dialect":"vcl-total","features":["dependent","linear","proof-carrying"]}`
   TypeLLCmd.check(query, Some(context), tagger)
 }
 

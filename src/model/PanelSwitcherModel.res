@@ -19,7 +19,7 @@ type panelId =
   | PanelHypatia
   | PanelReposystem
   | PanelDatabases
-  /// VQL-UT — type-safe query language for VeriSimDB (flagship panel).
+  /// VCL-total — type-safe query language for VeriSimDB (flagship panel).
   | PanelVql
   | PanelAerie
   | PanelInterfaces
@@ -173,7 +173,7 @@ type panelId =
   | PanelGsaHealthDashboard
   /// GSA Config History — temporal version timeline with diff viewer.
   | PanelGsaConfigHistory
-  /// GSA Cross-Server Search — VQL-powered cross-server config search.
+  /// GSA Cross-Server Search — VCL-powered cross-server config search.
   | PanelGsaCrossSearch
   // Burble Admin panels — voice platform management via Gossamer
   /// Burble Server Status — node health, rooms, participants, uptime.

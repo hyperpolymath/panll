@@ -282,7 +282,7 @@ jobs:
           fi
 
           # VeriSimDB integration?
-          if grep -rl 'verisimdb\|VeriSimDB' --include='*.toml' --include='*.yaml' --include='*.yml' --include='*.json' --include='*.rs' --include='*.ex' . 2>/dev/null | head -1 | grep -q .; then
+          if grep -rl 'verisim\|VeriSimDB' --include='*.toml' --include='*.yaml' --include='*.yml' --include='*.json' --include='*.rs' --include='*.ex' . 2>/dev/null | head -1 | grep -q .; then
             SCORE=$((SCORE + 1))
             VSDB_STATUS=":white_check_mark:"
           else

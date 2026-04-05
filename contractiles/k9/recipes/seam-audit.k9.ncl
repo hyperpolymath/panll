@@ -95,8 +95,8 @@
       on_failure = "TypeLL kernel API drift detected — bridge crates may need updating.",
     },
 
-    verisimdb_interface = {
-      command = "tools/pcc/target/release/panll seam check-verisimdb --repo-root .",
+    verisim_interface = {
+      command = "tools/pcc/target/release/panll seam check-verisim --repo-root .",
       description = "Verify VeriSimDB query interface alignment with PanLL data models",
       timeout_seconds = 60,
       expected_exit = 0,

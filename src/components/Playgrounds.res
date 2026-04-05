@@ -2,7 +2,7 @@
 
 /// PanLL Playgrounds Component — Code sandbox and NQC console.
 ///
-/// Multi-language editor (VQL, KQL, GQL, ReScript, Gleam, Idris2, Nickel),
+/// Multi-language editor (VCL, KQL, GQL, ReScript, Gleam, Idris2, Nickel),
 /// NQC database console connecting to proxy at :4000, snippet library,
 /// and tutorial mode.
 
@@ -10,7 +10,7 @@ open Model
 open Msg
 open Tea.Html
 
-/// Render the language selector radio group (VQL, KQL, GQL, ReScript, Gleam, Idris2, Nickel).
+/// Render the language selector radio group (VCL, KQL, GQL, ReScript, Gleam, Idris2, Nickel).
 let renderLanguageSelector = (active: playgroundLanguage): Tea_Vdom.t<msg> => {
   let langs: array<playgroundLanguage> = [
     LangVql,
@@ -247,7 +247,7 @@ let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("space-y-4")},
               list{
-                // NQC language selector (VQL/KQL/GQL only)
+                // NQC language selector (VCL/KQL/GQL only)
                 div(
                   list{Attrs.class_("flex items-center gap-3")},
                   list{

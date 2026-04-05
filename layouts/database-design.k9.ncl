@@ -21,7 +21,7 @@ let layout | LayoutPreset | PaneSizesSum100 = {
   version = "1.0.0",
   base = 'DatabaseDesign,
 
-  # Pane-L 30%: VQL-DT query builder, type definitions, constraint editing
+  # Pane-L 30%: VCL-DT query builder, type definitions, constraint editing
   # Pane-N 20%: Neural stream, drift alerts, normalisation suggestions
   # Pane-W 50%: Entity browser, query results, drift heatmap, telemetry
   pane_l_size = 30,
@@ -29,7 +29,7 @@ let layout | LayoutPreset | PaneSizesSum100 = {
   pane_w_size = 50,
 
   # VeriSimDB is the primary tool — always expanded
-  verisimdb_panel = 'Expanded,
+  verisim_panel = 'Expanded,
   # ECHIDNA for schema invariant proofs — available but secondary
   echidna_panel = 'Collapsed,
   # Security for database stress-testing — available but secondary
@@ -38,8 +38,8 @@ let layout | LayoutPreset | PaneSizesSum100 = {
   # Provers for data integrity: SMT first (constraint solving), then tactic
   default_provers = ['Z3, 'Coq, 'Lean4],
 
-  # VQL-DT (VeriSimDB Query Language with Dependent Types)
-  default_notation = "vql-dt",
+  # VCL-DT (VeriSimDB Query Language with Dependent Types)
+  default_notation = "vcl-dt",
 
   # Database-centric toolbar
   promoted_actions = [

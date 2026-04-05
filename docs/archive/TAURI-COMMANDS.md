@@ -36,14 +36,14 @@ Commands defined directly in `main.rs`, not in a sub-module.
 
 | Command | Parameters | Returns | Used By |
 |---------|-----------|---------|---------|
-| `verisimdb_health` | (none) | `Result<Value, String>` | Databases panel |
-| `verisimdb_query` | VQL query string | `Result<Value, String>` | Databases, Panel-W |
-| `verisimdb_list_hexads` | (none) | `Result<Value, String>` | Databases panel |
-| `verisimdb_get_drift` | hexad ID | `Result<Value, String>` | Databases panel |
-| `verisimdb_normalise` | entity data | `Result<Value, String>` | Databases panel |
-| `verisimdb_get_entity` | entity ID | `Result<Value, String>` | Databases panel |
-| `verisimdb_telemetry` | (none) | `Result<Value, String>` | Databases panel |
-| `verisimdb_orch_status` | (none) | `Result<Value, String>` | Databases panel |
+| `verisim_health` | (none) | `Result<Value, String>` | Databases panel |
+| `verisim_query` | VCL query string | `Result<Value, String>` | Databases, Panel-W |
+| `verisim_list_hexads` | (none) | `Result<Value, String>` | Databases panel |
+| `verisim_get_drift` | hexad ID | `Result<Value, String>` | Databases panel |
+| `verisim_normalise` | entity data | `Result<Value, String>` | Databases panel |
+| `verisim_get_entity` | entity ID | `Result<Value, String>` | Databases panel |
+| `verisim_telemetry` | (none) | `Result<Value, String>` | Databases panel |
+| `verisim_orch_status` | (none) | `Result<Value, String>` | Databases panel |
 
 ### ECHIDNA Commands (main.rs)
 

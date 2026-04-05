@@ -300,7 +300,7 @@ OpenAPI spec and committed to the ECHIDNA repo.
 
 **3. VeriSimDB ← Discipline layout reveals the query UX gap**
 The Database Design layout shows that VeriSimDB's query interface needs a visual
-query builder (not just text VQL-DT input). The drift heatmap and telemetry dashboard
+query builder (not just text VCL-DT input). The drift heatmap and telemetry dashboard
 are genuinely useful UI patterns that should be designed as standalone components
 reusable outside PanLL.
 

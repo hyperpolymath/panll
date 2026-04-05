@@ -272,7 +272,7 @@ let defaultSubscribers: array<subscriber> = [
   },
   {cladeId: "databases", topics: [TopicDatabase, TopicType], active: true, priority: Normal},
   {
-    cladeId: "vql",
+    cladeId: "vcl",
     topics: [TopicDatabase, TopicType, TopicProtocol],
     active: true,
     priority: Normal,

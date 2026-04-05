@@ -54,7 +54,7 @@ type tokenSource =
   | EchidnaProver
   /// Tokens from TypeLL type-checking / proof obligations.
   | TypeLLKernel
-  /// Tokens from VeriSimDB VQL inference stream.
+  /// Tokens from VeriSimDB VCL inference stream.
   | VeriSimInference
   /// Tokens from Anti-Crash validation feedback.
   | AntiCrashGate

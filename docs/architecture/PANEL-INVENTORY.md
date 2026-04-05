@@ -99,7 +99,7 @@ Ambient cognitive ergonomics — always present, no dedicated panel IDs.
 
 | Panel | panelId | Short | Source Files | Rust Backend | Description |
 |-------|---------|-------|-------------|--------------|-------------|
-| Databases | `PanelDatabases` | DB | — | main.rs (8 verisimdb + 10 echidna) | VeriSimDB, QuandleDB, LithoGlyph management |
+| Databases | `PanelDatabases` | DB | — | main.rs (8 verisim + 10 echidna) | VeriSimDB, QuandleDB, LithoGlyph management |
 | AI | `PanelAi` | AI | AiEngine, AiModel | `ai/` (8 commands) | Multi-provider neural interface |
 | Repo Loader | `PanelRepoLoader` | Repo | RepoLoaderEngine | `repoloader/` (4 commands) | Repository scanner and panel configuration |
 | Workspace | `PanelWorkspace` | WS | WorkspaceEngine, WorkspaceModel | `workspace/` (7 commands) | Arrangements, groups, sessions, modes |

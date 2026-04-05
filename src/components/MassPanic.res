@@ -5,7 +5,7 @@
 ///
 /// Provides a visual interface for panic-attack's mass-panic deployment mode:
 /// repo discovery, select-all/checkbox batch controls, assemblyline scanning
-/// with progress tracking, incremental BLAKE3 delta, verisimdb persistence,
+/// with progress tracking, incremental BLAKE3 delta, verisim persistence,
 /// result sorting/filtering, delta comparison, and notification generation.
 ///
 /// Replaces the complex CLI orchestration of:
@@ -1192,7 +1192,7 @@ let view = (state: massPanicState): Tea_Vdom.t<msg> => {
               | Filesystem(path) =>
                 span(list{Attrs.class_("text-emerald-600")}, list{text(`store: ${path}`)})
               | VerisimDB(path) =>
-                span(list{Attrs.class_("text-cyan-500")}, list{text(`verisimdb: ${path}`)})
+                span(list{Attrs.class_("text-cyan-500")}, list{text(`verisim: ${path}`)})
               },
             },
           ),

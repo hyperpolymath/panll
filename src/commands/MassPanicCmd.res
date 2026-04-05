@@ -3,7 +3,7 @@
 
 /// PanLL Mass Panic command wrappers — invoke bridge for the
 /// organisation-scale batch scanning panel (assemblyline + incremental
-/// BLAKE3 + verisimdb + delta reporting + notifications).
+/// BLAKE3 + verisim + delta reporting + notifications).
 ///
 /// All commands invoke panic-attack assemblyline via the backend.
 /// Uses `Tea_Cmd.call` for async operations.
@@ -169,7 +169,7 @@ let listSnapshots = (verisimdbDir: string, tagger: result<string, string> => 'ms
   'msg,
 > => {
   Tea_Cmd.call(callbacks => {
-    invoke("mass_panic_list_snapshots", {"verisimdb_dir": verisimdbDir})
+    invoke("mass_panic_list_snapshots", {"verisim_dir": verisimdbDir})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -193,7 +193,7 @@ let diffSnapshots = (
   Tea_Cmd.call(callbacks => {
     invoke(
       "mass_panic_diff_snapshots",
-      {"verisimdb_dir": verisimdbDir, "from_seq": fromSeq, "to_seq": toSeq},
+      {"verisim_dir": verisimdbDir, "from_seq": fromSeq, "to_seq": toSeq},
     )
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
@@ -215,7 +215,7 @@ let takeSnapshot = (
   tagger: result<string, string> => 'msg,
 ): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("mass_panic_take_snapshot", {"verisimdb_dir": verisimdbDir, "label": label})
+    invoke("mass_panic_take_snapshot", {"verisim_dir": verisimdbDir, "label": label})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()

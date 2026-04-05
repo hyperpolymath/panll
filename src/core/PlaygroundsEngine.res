@@ -14,7 +14,7 @@ let categoryLabel = (cat: playgroundsCategory): string =>
 
 let languageLabel = (lang: playgroundLanguage): string =>
   switch lang {
-  | LangVql => "VQL"
+  | LangVql => "VCL"
   | LangKql => "KQL"
   | LangGql => "GQL"
   | LangRescript => "ReScript"
@@ -26,7 +26,7 @@ let languageLabel = (lang: playgroundLanguage): string =>
 /// File extension for syntax highlighting hints.
 let languageExt = (lang: playgroundLanguage): string =>
   switch lang {
-  | LangVql => ".vql"
+  | LangVql => ".vcl"
   | LangKql => ".kql"
   | LangGql => ".gql"
   | LangRescript => ".res"
@@ -45,8 +45,8 @@ let isDbLanguage = (lang: playgroundLanguage): bool =>
 /// Built-in tutorial snippets.
 let defaultSnippets: array<snippet> = [
   {
-    id: "vql-hello",
-    title: "VQL: Hello VeriSimDB",
+    id: "vcl-hello",
+    title: "VCL: Hello VeriSimDB",
     code: "SELECT * FROM octads LIMIT 10;",
     language: LangVql,
     isTutorial: true,
@@ -86,7 +86,7 @@ let defaultState: playgroundsState = {
 /// and returns a JSON result envelope.
 let wrapForExecution = (code: string, language: playgroundLanguage): string => {
   let prefix = switch language {
-  | LangVql => "// VeriSimDB VQL query\n"
+  | LangVql => "// VeriSimDB VCL query\n"
   | LangKql => "// Knowledge Query Language\n"
   | LangGql => "// Graph Query Language\n"
   | LangRescript => "// ReScript (compiled to JS)\n"

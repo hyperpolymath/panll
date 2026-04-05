@@ -16,7 +16,7 @@ A comprehensive panel suite that turns PanLL into an **embedded Neurosymbolic AI
 - **BGP route validation rules**: "Route to AS64512 must traverse no more than 4 hops"
 - **Proof envelope requirements**: "All responses MUST carry SHA-256 proof"
 - **Policy gate constraints**: "Module `telemetry:read` requires API key"
-- **VQL-DT temporal constraints**: "Audit events older than 30 days must be in VeriSimDB"
+- **VCL-DT temporal constraints**: "Audit events older than 30 days must be in VeriSimDB"
 - **ABI/FFI type constraints**: From Idris2 dependent types (TelemetrySample, RouteHop)
 
 ### Panel-N (Neural/Agentic Reasoning)
@@ -126,7 +126,7 @@ The embedded shell for running Claude Code inside PanLL. Named after the outermo
 **Kind**: builder | **Backend**: Tauri (podman CLI) | **Icon**: box
 
 **Features**:
-- Podman Compose status (6 services: gateway, librespeed, smokeping, hyperglass, redis, verisimdb)
+- Podman Compose status (6 services: gateway, librespeed, smokeping, hyperglass, redis, verisim)
 - Start/stop/restart individual services
 - Log viewer per container
 - Resource usage per container (CPU, memory)
@@ -179,7 +179,7 @@ Already partially implemented in PanLL. Enhanced for Aerie:
 **Kind**: database | **Backend**: HTTP (port 8084) | **Icon**: database
 
 Already partially in PanLL Databases panel. Specialised for Aerie:
-- VQL-DT query builder for audit events
+- VCL-DT query builder for audit events
 - Bitemporal query modes (as-of, between, history)
 - Drift score monitoring
 - Entity explorer for Aerie schema

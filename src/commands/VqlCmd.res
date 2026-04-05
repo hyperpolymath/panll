@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-// VQL-UT Commands — backend command bridge for VQL panel I/O.
+// VCL-total Commands — backend command bridge for VCL panel I/O.
 //
 // All side effects (HTTP calls, file I/O, clipboard) route through here.
-// The VQL panel's Engine layer is pure; this module handles the real world.
+// The VCL panel's Engine layer is pure; this module handles the real world.
 //
 // Endpoints:
 //   VeriSimDB  — http://localhost:8200 (octad query execution)
@@ -22,7 +22,7 @@ let invoke = RuntimeBridge.invoke
 // SECTION 2: VeriSimDB Commands
 // ============================================================
 
-/// Execute a VQL-UT query against VeriSimDB.
+/// Execute a VCL-total query against VeriSimDB.
 let executeQuery = (
   query: string,
   target: executionTarget,
@@ -31,9 +31,9 @@ let executeQuery = (
 ): promise<result<string, string>> => {
   let endpoint = switch target {
   | TargetVeriSimDB => "http://localhost:8200/api/v1/query"
-  | TargetEchidna => "http://localhost:8000/api/v1/vql"
-  | TargetBoJ => "http://localhost:7700/echidna-llm/vql"
-  | TargetTypeLL => "http://localhost:7800/api/v1/vql-ut/check"
+  | TargetEchidna => "http://localhost:8000/api/v1/vcl"
+  | TargetBoJ => "http://localhost:7700/echidna-llm/vcl"
+  | TargetTypeLL => "http://localhost:7800/api/v1/vcl-total/check"
   | TargetDryRun => "http://localhost:8200/api/v1/explain"
   }
   let levelInt = VqlEngine.levelToInt(level)
@@ -93,13 +93,13 @@ let checkConnection = (): promise<result<string, string>> => {
 // SECTION 3: TypeLL Type Checking Commands
 // ============================================================
 
-/// Send a VQL-UT query to TypeLL for type checking.
+/// Send a VCL-total query to TypeLL for type checking.
 let typeCheckQuery = (query: string, level: typeSafetyLevel): promise<result<string, string>> => {
   let levelInt = VqlEngine.levelToInt(level)
   let body = `{"query": ${JSON.stringify(JSON.Encode.string(query))}, "level": ${Int.toString(
       levelInt,
-    )}, "mode": "vql-ut"}`
-  invoke("http_post", {"url": "http://localhost:7800/api/v1/vql-ut/check", "body": body})
+    )}, "mode": "vcl-total"}`
+  invoke("http_post", {"url": "http://localhost:7800/api/v1/vcl-total/check", "body": body})
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
@@ -138,7 +138,7 @@ let fetchProverStatus = (): promise<result<string, string>> => {
 /// Get a query execution plan without executing.
 let explainQuery = (query: string): promise<result<string, string>> => {
   let body = `{"query": ${JSON.stringify(JSON.Encode.string(query))}, "explain": true}`
-  invoke("http_post", {"url": "http://localhost:8000/api/v1/vql/explain", "body": body})
+  invoke("http_post", {"url": "http://localhost:8000/api/v1/vcl/explain", "body": body})
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
@@ -159,7 +159,7 @@ let explainQuery = (query: string): promise<result<string, string>> => {
 
 /// Export query results to a file.
 let exportResults = (data: string, format: string): promise<result<string, string>> => {
-  invoke("save_file", {"content": data, "format": format, "defaultName": `vql-results.${format}`})
+  invoke("save_file", {"content": data, "format": format, "defaultName": `vcl-results.${format}`})
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
@@ -201,7 +201,7 @@ let saveHistory = (history: array<historyEntry>): promise<result<string, string>
   | Some(s) => s
   | None => "[]"
   }
-  invoke("store_set", {"key": "vql_history", "value": json})
+  invoke("store_set", {"key": "vcl_history", "value": json})
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {
@@ -218,7 +218,7 @@ let saveHistory = (history: array<historyEntry>): promise<result<string, string>
 
 /// Load query history from local storage.
 let loadHistory = (): promise<result<string, string>> => {
-  invoke("store_get", {"key": "vql_history"})
+  invoke("store_get", {"key": "vcl_history"})
   ->Promise.then(r => Promise.resolve(Ok(r)))
   ->Promise.catch(err => {
     let msg = switch err {

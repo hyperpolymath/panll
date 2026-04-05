@@ -48,7 +48,7 @@ PanLL is **not** a generic IDE, framework, or platform. It is a personal neurosy
 * OrbitalSync detects panel drift via hash-based change monitoring
 * Contractiles enforces adaptive state contracts (Strict/Warn/Adaptive)
 * panic-attack integration: binary discovery, capability probe, ambush execution, event-chain import
-* VeriSimDB: 8 Gossamer commands wired (health, VQL query, list/get hexads, drift, normalise, telemetry, orch status)
+* VeriSimDB: 8 Gossamer commands wired (health, VCL query, list/get hexads, drift, normalise, telemetry, orch status)
 * TypeLL engine: cross-panel type intelligence service
 * ARIA accessibility across all components
 * Tailwind CSS 4.x + Deno build pipeline + Gossamer desktop app
@@ -147,7 +147,7 @@ PanLL is **not** a generic IDE, framework, or platform. It is a personal neurosy
 
 ==== Must Have
 
-* [ ] VQL/protocol REPL in Panel-L
+* [ ] VCL/protocol REPL in Panel-L
 * [ ] Reposystem plan execution (design multi-repo changes, dispatch via git-dispatcher)
 * [ ] contractiles enforcement (Mustfile/Trustfile/Dustfile/Intentfile display and verification)
 * [ ] claim-forge integration (timestamps, provenance records)
@@ -187,7 +187,7 @@ Each integration is a **panel module** — a self-contained unit that provides d
 | v0.1.0 (done)
 
 | VeriSimDB
-| VQL queries
+| VCL queries
 |
 | Hexad results, drift heatmaps
 | v0.1.0 (partial), v0.2.0 (persistence)

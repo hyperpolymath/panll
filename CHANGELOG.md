@@ -77,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Dependency graph: `cladeDependency` with hard/soft requirements
   - Fault isolation levels: None, Soft, Process, Container
 - **TypeLL cross-panel wiring** — 8 integration points all live
-  - VeriSimDB: VQL type checking on query submit
+  - VeriSimDB: VCL type checking on query submit
   - Protocol-Squisher: schema type checking on analysis
   - My-Lang: dialect-aware type checking on compile
   - Anti-Crash: type-level token validation with constraint expressions

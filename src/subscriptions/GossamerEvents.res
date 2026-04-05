@@ -74,7 +74,7 @@ let onTentaclesBroadcast = (tagger: string => 'msg): Tea_Sub.t<'msg> => {
 
 /// Listen for VeriSimDB drift alerts pushed from the backend.
 let onVeriSimDBDrift = (tagger: string => 'msg): Tea_Sub.t<'msg> => {
-  safeListen("gossamer:verisimdb-drift", "verisimdb:drift-alert", tagger)
+  safeListen("gossamer:verisim-drift", "verisim:drift-alert", tagger)
 }
 
 /// Listen for Hypatia neural network status changes.

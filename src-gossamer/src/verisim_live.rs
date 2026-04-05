@@ -4,7 +4,7 @@
 //! Live VeriSimDB connection module (async).
 //!
 //! Connects to VeriSimDB at localhost:8080 for proof-carrying data
-//! operations: octad CRUD, VQL queries, proof verification, and
+//! operations: octad CRUD, VCL queries, proof verification, and
 //! health monitoring.
 //!
 //! This module uses the shared [`http_client`] infrastructure for
@@ -20,7 +20,7 @@ const DEFAULT_VERISIMDB_URL: &str = "http://localhost:8080";
 
 /// Build the VeriSimDB endpoint, respecting the `VERISIMDB_URL`
 /// environment variable if set.
-fn verisimdb_endpoint() -> ServiceEndpoint {
+fn verisim_endpoint() -> ServiceEndpoint {
     let url =
         std::env::var("VERISIMDB_URL").unwrap_or_else(|_| DEFAULT_VERISIMDB_URL.to_string());
     ServiceEndpoint::new(&url)
@@ -56,8 +56,8 @@ pub struct OctadSummary {
 ///
 /// `GET /health` — returns the full health envelope as a JSON string.
 
-pub async fn verisimdb_live_health() -> Result<String, String> {
-    let endpoint = verisimdb_endpoint();
+pub async fn verisim_live_health() -> Result<String, String> {
+    let endpoint = verisim_endpoint();
     let health: VeriSimHealth = http_client::get_json(&endpoint, "/health").await?;
     serde_json::to_string(&health).map_err(|e| format!("JSON serialise error: {}", e))
 }
@@ -66,29 +66,29 @@ pub async fn verisimdb_live_health() -> Result<String, String> {
 ///
 /// `GET /api/octads` — returns a JSON array of octad summaries.
 
-pub async fn verisimdb_live_list_octads() -> Result<String, String> {
-    let endpoint = verisimdb_endpoint();
+pub async fn verisim_live_list_octads() -> Result<String, String> {
+    let endpoint = verisim_endpoint();
     let octads: Vec<OctadSummary> = http_client::get_json(&endpoint, "/api/octads").await?;
     serde_json::to_string(&octads).map_err(|e| format!("JSON serialise error: {}", e))
 }
 
-/// Execute a VQL query against VeriSimDB (async).
+/// Execute a VCL query against VeriSimDB (async).
 ///
-/// `POST /api/vql` with a JSON body containing the query string.
+/// `POST /api/vcl` with a JSON body containing the query string.
 /// Returns the query result as a JSON string.
 
-pub async fn verisimdb_live_query(query: String) -> Result<String, String> {
-    let endpoint = verisimdb_endpoint();
+pub async fn verisim_live_query(query: String) -> Result<String, String> {
+    let endpoint = verisim_endpoint();
     let body = json!({ "query": query });
-    http_client::post_json_raw(&endpoint, "/api/vql", &body).await
+    http_client::post_json_raw(&endpoint, "/api/vcl", &body).await
 }
 
 /// Get a single octad by ID (async).
 ///
 /// `GET /api/octads/:id` — returns the octad with all modalities.
 
-pub async fn verisimdb_live_get_octad(id: String) -> Result<String, String> {
-    let endpoint = verisimdb_endpoint();
+pub async fn verisim_live_get_octad(id: String) -> Result<String, String> {
+    let endpoint = verisim_endpoint();
     let path = format!("/api/octads/{}", id);
     http_client::get_raw(&endpoint, &path).await
 }

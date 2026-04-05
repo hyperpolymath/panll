@@ -32,7 +32,7 @@ let allCategories: array<gistCategory> = [
 /// Language label for display.
 let languageLabel = (lang: gistLanguage): string =>
   switch lang {
-  | GistVql => "VQL"
+  | GistVql => "VCL"
   | GistKql => "KQL"
   | GistGql => "GQL"
   | GistReScript => "ReScript"
@@ -46,7 +46,7 @@ let languageLabel = (lang: gistLanguage): string =>
 /// Language file extension.
 let languageExt = (lang: gistLanguage): string =>
   switch lang {
-  | GistVql => ".vql"
+  | GistVql => ".vcl"
   | GistKql => ".kql"
   | GistGql => ".gql"
   | GistReScript => ".res"
@@ -245,8 +245,8 @@ let newGist = (id: string, title: string, language: gistLanguage): scriptGist =>
 /// Built-in templates for common operations.
 let builtinTemplates: array<gistTemplate> = [
   {
-    id: "tpl-vql-query",
-    name: "VQL Query",
+    id: "tpl-vcl-query",
+    name: "VCL Query",
     description: "VeriSimDB entity query with modality filter",
     templateCode: "SELECT * FROM entities\nWHERE modality = '{{modality}}'\nLIMIT {{limit}};",
     language: GistVql,

@@ -111,12 +111,12 @@ let renderDbConnectionIndicator = (db: verisimdbState): Tea_Vdom.t<msg> => {
   )
 }
 
-/// VQL query textarea and execute button.
+/// VCL query textarea and execute button.
 let renderVqlQueryArea = (db: verisimdbState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("space-y-2")},
     list{
-      div(list{Attrs.class_("text-[11px] text-gray-400")}, list{text("VQL Query")}),
+      div(list{Attrs.class_("text-[11px] text-gray-400")}, list{text("VCL Query")}),
       textarea(
         list{
           Attrs.class_(
@@ -125,7 +125,7 @@ let renderVqlQueryArea = (db: verisimdbState): Tea_Vdom.t<msg> => {
           Attrs.placeholder("SELECT GRAPH.* FROM HEXAD 'entity-id'"),
           Attrs.value(db.lastQuery),
           Events.onInput(value => VeriSimDB(UpdateQueryInput(value))),
-          Attrs.ariaLabel("VQL query input"),
+          Attrs.ariaLabel("VCL query input"),
         },
         list{},
       ),
@@ -379,7 +379,7 @@ let renderDriftStatus = (db: verisimdbState): Tea_Vdom.t<msg> => {
 
 /// Telemetry dashboard panel — shows aggregate product development metrics.
 /// Displays modality usage heatmap, query pattern distribution, performance,
-/// drift frequency, and VQL-UT proof adoption. All data is aggregate-only.
+/// drift frequency, and VCL-total proof adoption. All data is aggregate-only.
 let renderTelemetryPanel = (db: verisimdbState): Tea_Vdom.t<msg> => {
   if !db.telemetryVisible {
     text("")
@@ -602,7 +602,7 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
           list{
             div(
               list{Attrs.class_("text-[11px] text-gray-400")},
-              list{text("VQL-UT Proof Obligations")},
+              list{text("VCL-total Proof Obligations")},
             ),
             button(
               list{
@@ -630,7 +630,7 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
           list{
             div(
               list{Attrs.class_("text-[11px] text-gray-400")},
-              list{text("Anti-Crash VQL Validation")},
+              list{text("Anti-Crash VCL Validation")},
             ),
             button(
               list{

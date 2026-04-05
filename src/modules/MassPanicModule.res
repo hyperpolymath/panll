@@ -5,7 +5,7 @@
 /// batch scanning panel.
 ///
 /// Mass-panic is a deployment mode of panic-attack: assemblyline batch scanning
-/// with rayon parallelism, incremental BLAKE3 fingerprinting, verisimdb octad
+/// with rayon parallelism, incremental BLAKE3 fingerprinting, verisim octad
 /// persistence, delta reporting, and notification pipeline. This panel provides
 /// a GUI for operations that would otherwise require complex CLI orchestration.
 
@@ -34,7 +34,7 @@ let config: massPanicModuleConfig = {
   id: "mass-panic",
   name: "Mass Panic",
   version: "2.1.0",
-  description: "Organisation-scale batch scanning — assemblyline + BLAKE3 + imaging + temporal + verisimdb",
+  description: "Organisation-scale batch scanning — assemblyline + BLAKE3 + imaging + temporal + verisim",
   binaryName: "panic-attack",
   icon: Some("zap-off"), // differentiate from single-repo "zap"
   capabilities: [

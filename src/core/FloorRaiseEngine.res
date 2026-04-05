@@ -31,7 +31,7 @@ let defaultState: floorRaiseState = {
       percentage: 0.0,
       campaignActive: false,
     },
-    {name: "verisimdb", adoptedCount: 0, targetCount: 0, percentage: 0.0, campaignActive: false},
+    {name: "verisim", adoptedCount: 0, targetCount: 0, percentage: 0.0, campaignActive: false},
     {
       name: "feedback-o-tron",
       adoptedCount: 0,

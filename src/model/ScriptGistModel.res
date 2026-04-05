@@ -67,7 +67,7 @@ type gistSchema = {
 type gistTarget =
   /// Local Deno sandbox (default for most languages).
   | TargetDeno
-  /// NQC database proxy (for VQL/KQL/GQL).
+  /// NQC database proxy (for VCL/KQL/GQL).
   | TargetNqc
   /// ECHIDNA prover backend (for Idris2/OCL).
   | TargetEchidna
@@ -155,7 +155,7 @@ type gistTemplate = {
 type gistCategory =
   /// All gists in a flat list.
   | GistAll
-  /// Database queries (VQL/KQL/GQL).
+  /// Database queries (VCL/KQL/GQL).
   | GistQueries
   /// Proof scripts (Idris2/OCL).
   | GistProofs

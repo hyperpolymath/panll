@@ -3,11 +3,11 @@
 
 /// VeriSimDB Live Commands — async VeriSimDB connection via the shared HTTP client.
 ///
-/// These wrap the async backend commands from `verisimdb_live.rs` and provide the same
+/// These wrap the async backend commands from `verisim_live.rs` and provide the same
 /// TEA-compatible callback interface used throughout PanLL. Panels can switch between
 /// mock and live backends by routing through the panel config's routing flag.
 ///
-/// All commands talk to the VeriSimDB server at ServiceEndpoints.verisimdb
+/// All commands talk to the VeriSimDB server at ServiceEndpoints.verisim
 /// (default http://localhost:8080/api/v1).
 ///
 /// In browser-only mode (no desktop runtime), commands fall back to direct
@@ -43,14 +43,14 @@ let fetchPost: (string, string) => promise<string> = %raw(`
 `)
 
 /// Check VeriSimDB server health (async endpoint).
-/// Calls `verisimdb_live_health` which hits `GET /health` on the VeriSimDB server.
+/// Calls `verisim_live_health` which hits `GET /health` on the VeriSimDB server.
 /// Returns a JSON string with server status, uptime, and octad store metrics.
 ///
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let checkHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let p = if hasDesktopRuntime() {
-      RuntimeBridge.invoke("verisimdb_live_health", ())
+      RuntimeBridge.invoke("verisim_live_health", ())
     } else {
       fetchGet("/health")
     }
@@ -68,14 +68,14 @@ let checkHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
 }
 
 /// List all octads in the VeriSimDB store (async endpoint).
-/// Calls `verisimdb_live_list_octads` which hits `GET /octads` on the VeriSimDB server.
+/// Calls `verisim_live_list_octads` which hits `GET /octads` on the VeriSimDB server.
 /// Returns a JSON array of octad summaries (id, name, modality counts).
 ///
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let listOctads = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let p = if hasDesktopRuntime() {
-      RuntimeBridge.invoke("verisimdb_live_list_octads", ())
+      RuntimeBridge.invoke("verisim_live_list_octads", ())
     } else {
       fetchGet("/octads")
     }
@@ -92,16 +92,16 @@ let listOctads = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   })
 }
 
-/// Execute a VQL query against VeriSimDB (async endpoint).
-/// Calls `verisimdb_live_query` which hits `POST /query` on the VeriSimDB server.
-/// The query string is a VQL-UT expression that selects across octad modalities.
+/// Execute a VCL query against VeriSimDB (async endpoint).
+/// Calls `verisim_live_query` which hits `POST /query` on the VeriSimDB server.
+/// The query string is a VCL-total expression that selects across octad modalities.
 ///
-/// @param query — VQL-UT query string (e.g. "SELECT * FROM octad WHERE modality = 'text'")
+/// @param query — VCL-total query string (e.g. "SELECT * FROM octad WHERE modality = 'text'")
 /// @param tagger — TEA message tagger receiving Ok(json) or Error(reason)
 let executeQuery = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let p = if hasDesktopRuntime() {
-      RuntimeBridge.invoke("verisimdb_live_query", {"query": query})
+      RuntimeBridge.invoke("verisim_live_query", {"query": query})
     } else {
       fetchPost("/query", `{"query":${JSON.stringifyAny(query)->Option.getOr("\"\"")}}`)
     }
@@ -119,7 +119,7 @@ let executeQuery = (query: string, tagger: result<string, string> => 'msg): Tea_
 }
 
 /// Retrieve a specific octad by ID (async endpoint).
-/// Calls `verisimdb_live_get_octad` which hits `GET /octads/{id}` on the VeriSimDB server.
+/// Calls `verisim_live_get_octad` which hits `GET /octads/{id}` on the VeriSimDB server.
 /// Returns the full octad structure including all 8 modality slots.
 ///
 /// @param id — the octad identifier (UUID or slug)
@@ -127,7 +127,7 @@ let executeQuery = (query: string, tagger: result<string, string> => 'msg): Tea_
 let getOctad = (id: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let p = if hasDesktopRuntime() {
-      RuntimeBridge.invoke("verisimdb_live_get_octad", {"id": id})
+      RuntimeBridge.invoke("verisim_live_get_octad", {"id": id})
     } else {
       fetchGet("/octads/" ++ id)
     }
@@ -153,18 +153,18 @@ let getOctad = (id: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'
 let checkReachable = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
     let p = if hasDesktopRuntime() {
-      RuntimeBridge.invoke("verisimdb_live_health", ())
+      RuntimeBridge.invoke("verisim_live_health", ())
     } else {
       fetchGet("/health")
     }
     p
     ->Promise.then(_result => {
-      callbacks.enqueue(tagger(Ok(`{"reachable":true,"endpoint":"${ServiceEndpoints.verisimdb}"}`)))
+      callbacks.enqueue(tagger(Ok(`{"reachable":true,"endpoint":"${ServiceEndpoints.verisim}"}`)))
       Promise.resolve()
     })
     ->Promise.catch(_err => {
       callbacks.enqueue(
-        tagger(Ok(`{"reachable":false,"endpoint":"${ServiceEndpoints.verisimdb}"}`)),
+        tagger(Ok(`{"reachable":false,"endpoint":"${ServiceEndpoints.verisim}"}`)),
       )
       Promise.resolve()
     })

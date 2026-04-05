@@ -3,7 +3,7 @@
 /// Sub-updater for Mass Panic — organisation-scale batch scanning.
 ///
 /// Handles assemblyline scanning, repo discovery, incremental BLAKE3,
-/// verisimdb persistence, delta reporting, and notification generation.
+/// verisim persistence, delta reporting, and notification generation.
 
 open Model
 open Msg
@@ -465,7 +465,7 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
   | ListSnapshots => {
       let storePath = switch mp.storage {
       | VerisimDB(p) => p
-      | _ => "verisimdb-data"
+      | _ => "verisim-data"
       }
       (
         {...model, massPanic: {...mp, temporalLoading: true, lastError: None}},
@@ -516,7 +516,7 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
   | DiffSnapshots => {
       let storePath = switch mp.storage {
       | VerisimDB(p) => p
-      | _ => "verisimdb-data"
+      | _ => "verisim-data"
       }
       switch mp.selectedSnapshots {
       | (Some(fromIdx), Some(toIdx)) => (
@@ -612,7 +612,7 @@ let updateMassPanic = (model: model, subMsg: massPanicMsg): (model, Tea_Cmd.t<ms
   | TakeSnapshot(label) => {
       let storePath = switch mp.storage {
       | VerisimDB(p) => p
-      | _ => "verisimdb-data"
+      | _ => "verisim-data"
       }
       (
         {...model, massPanic: {...mp, temporalLoading: true}},

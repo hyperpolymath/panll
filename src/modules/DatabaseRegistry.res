@@ -27,12 +27,12 @@ open DatabaseModule
 
 /// VeriSimDB — octad multimodal database with drift detection, self-normalisation,
 /// and formally verified queries across 8 modalities.
-let verisimdb: moduleConfig = {
-  id: "verisimdb",
+let verisim: moduleConfig = {
+  id: "verisim",
   name: "VeriSimDB",
   version: "0.1.0-beta",
   description: "Octad multimodal database with cross-modal drift detection",
-  endpoint: ServiceEndpoints.verisimdb,
+  endpoint: ServiceEndpoints.verisim,
   capabilities: [
     QueryExecution,
     DriftDetection,
@@ -43,9 +43,9 @@ let verisimdb: moduleConfig = {
     Playground,
   ],
   playground: Some({
-    languageName: "VQL",
+    languageName: "VCL",
     languageVersion: "1.0",
-    fileExtension: ".vql",
+    fileExtension: ".vcl",
     keywords: [
       "SELECT",
       "FROM",
@@ -203,7 +203,7 @@ let lithoglyph: moduleConfig = {
 /// to initialise module states, render the module gallery, and populate
 /// the playground gallery.
 let allModules = (): array<moduleConfig> => {
-  [verisimdb, quandledb, lithoglyph]
+  [verisim, quandledb, lithoglyph]
 }
 
 /// Find a module config by its ID. Returns None if not registered.

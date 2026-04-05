@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 {
   pedigree = {
-    name = "verisimdb-feeds-config",
+    name = "verisim-feeds-config",
     version = "0.1.0",
     author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
     leash = 'Kennel,
@@ -13,7 +13,7 @@
     short_name = "VF",
     description = "VeriSimDB data feeds — cross-repo analytics health and flow",
     has_backend = true,
-    clade_id = "verisimdb-feeds",
+    clade_id = "verisim-feeds",
     isolation_tier = "native",
   },
   wiring = {

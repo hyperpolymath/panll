@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
 /// Mass-panic panel messages -- assemblyline batch scanning, repo discovery,
-/// incremental BLAKE3, verisimdb persistence, delta reporting, notifications.
+/// incremental BLAKE3, verisim persistence, delta reporting, notifications.
 
 type massPanicMsg =
   /// Set the repos directory path.

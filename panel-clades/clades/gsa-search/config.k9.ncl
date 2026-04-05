@@ -9,7 +9,7 @@
   panel = {
     id = "GsaCrossSearch",
     short_name = "Search",
-    description = "VQL-powered cross-server config search",
+    description = "VCL-powered cross-server config search",
     has_backend = true,
     clade_id = "gsa-search",
     isolation_tier = "native",

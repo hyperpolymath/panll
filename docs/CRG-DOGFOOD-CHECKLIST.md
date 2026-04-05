@@ -27,7 +27,7 @@ Each backend must return real data, not mock JSON.
 | # | Backend | Port | Panel(s) | Status |
 |---|---------|------|----------|--------|
 | 1 | BoJ-server | 7700 | BoJ Panel, Automation Router | ☐ |
-| 2 | VeriSimDB | 8093 | Panel-W, VQL Panel | ☐ |
+| 2 | VeriSimDB | 8093 | Panel-W, VCL Panel | ☐ |
 | 3 | ECHIDNA | 9000 | Panel-N, Proofs Bridge | ☐ |
 | 4 | gitbot-fleet | 8080 | Gitbot-Fleet Panel | ☐ |
 | 5 | Hypatia | (Elixir) | Hypatia Panel | ☐ |
@@ -64,7 +64,7 @@ These panels have the shortest path to Grade C:
 2. **Provenance Map** — git blame is local
 3. **Filesystem Watcher** — Rust notify is already wired
 4. **BoJ Panel** — BoJ-server is usually running
-5. **VQL Panel** — VeriSimDB when running
+5. **VCL Panel** — VeriSimDB when running
 
 ## Sign-Off
 

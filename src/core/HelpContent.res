@@ -118,12 +118,12 @@ let allEntries = (): array<HelpModel.helpEntry> => {
     },
     /// Guide for the VeriSimDB simulation database panel.
     {
-      id: "panel-verisimdb",
+      id: "panel-verisim",
       title: "VeriSimDB — Simulation Database",
       body: "VeriSimDB is a verification-aware simulation database. It stores simulation runs, test results, and verification outcomes with full provenance tracking. The VeriSimDB panel lets you query past simulations, compare runs, and inspect how changes affected verification status over time. It serves as the persistent memory of your verification workflow, ensuring no proof or test result is ever lost.",
       category: PanelGuide,
       panelId: Some(PanelSwitcherModel.PanelDatabases),
-      keywords: ["verisimdb", "database", "simulation", "test results", "provenance", "history"],
+      keywords: ["verisim", "database", "simulation", "test results", "provenance", "history"],
     },
     /// Guide for the Farm panel (repo management).
     {

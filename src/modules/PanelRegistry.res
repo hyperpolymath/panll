@@ -83,13 +83,13 @@ let allPanels: array<panelMeta> = [
   },
   {
     id: PanelVql,
-    name: "VQL-UT",
-    shortName: "VQL",
+    name: "VCL-total",
+    shortName: "VCL",
     description: "Type-safe query language for VeriSimDB — 10-level progressive safety, cross-prover dispatch, dedicated linter and formatter",
     icon: "database-search",
     connectionStatus: ServiceDisconnected,
     hasBackend: true,
-    cladeId: Some("vql"),
+    cladeId: Some("vcl"),
   },
   {
     id: PanelAerie,
@@ -255,7 +255,7 @@ let allPanels: array<panelMeta> = [
     id: PanelMassPanic,
     name: "Mass Panic",
     shortName: "MP",
-    description: "Organisation-scale batch scanning — assemblyline + BLAKE3 + verisimdb + delta",
+    description: "Organisation-scale batch scanning — assemblyline + BLAKE3 + verisim + delta",
     icon: "zap-off",
     connectionStatus: ServiceDisconnected, // Probes for panic-attack binary
     hasBackend: true, // Invokes panic-attack assemblyline via Gossamer
@@ -268,7 +268,7 @@ let allPanels: array<panelMeta> = [
     description: "Triaxial Software Development Methodology — directive panel for priority ordering across all panels",
     icon: "compass",
     connectionStatus: ServiceConnected, // Pure client-side state, always available
-    hasBackend: false, // Directive state is local; optional verisimdb persistence
+    hasBackend: false, // Directive state is local; optional verisim persistence
     cladeId: Some("tsdm"),
   },
   {
@@ -883,7 +883,7 @@ let allPanels: array<panelMeta> = [
     shortName: "FR",
     description: "Floor Raise campaign — foundational tool adoption dashboard",
     icon: "trending-up",
-    connectionStatus: ServiceDisconnected, // Reads verisimdb data
+    connectionStatus: ServiceDisconnected, // Reads verisim data
     hasBackend: true, // VeriSimDB queries for adoption metrics
     cladeId: Some("floor-raise"),
   },
@@ -925,7 +925,7 @@ let allPanels: array<panelMeta> = [
     icon: "activity",
     connectionStatus: ServiceDisconnected, // Connects to VeriSimDB
     hasBackend: true, // VeriSimDB queries
-    cladeId: Some("verisimdb-feeds"),
+    cladeId: Some("verisim-feeds"),
   },
   {
     id: PanelFeedbackRouting,
@@ -1034,7 +1034,7 @@ let allPanels: array<panelMeta> = [
     id: PanelGsaCrossSearch,
     name: "Cross-Server Search",
     shortName: "Search",
-    description: "VQL-powered cross-server config search",
+    description: "VCL-powered cross-server config search",
     icon: "search",
     connectionStatus: ServiceConnected,
     hasBackend: true,

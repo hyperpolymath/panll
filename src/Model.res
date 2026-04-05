@@ -155,7 +155,7 @@ include PanicAttackModel
 
 /// Re-export MassPanic types (repoScanStatus, repoResult, assemblylineSummary,
 /// deltaEntry, repoSortMode, repoFilterMode, storageTarget, massPanicState) for
-/// the organisation-scale batch scanning panel (assemblyline + BLAKE3 + verisimdb).
+/// the organisation-scale batch scanning panel (assemblyline + BLAKE3 + verisim).
 include MassPanicModel
 
 /// Re-export TSDM types (scopeTier, maintenanceTier, auditTier, cleanupStep,
@@ -419,7 +419,7 @@ type model = {
   panelBarVisible: bool,
   fullscreenActive: bool,
   // Database backends
-  verisimdb: verisimdbState,
+  verisim: verisimdbState,
   // Theorem prover backend
   echidna: echidnaState,
   // VAB (Verified Assembly Building)
@@ -484,7 +484,7 @@ type model = {
   migration: migrationState,
   // panic-attack — stress testing and weak point analysis
   panicAttack: panicAttackState,
-  // mass-panic — organisation-scale batch scanning (assemblyline + BLAKE3 + verisimdb)
+  // mass-panic — organisation-scale batch scanning (assemblyline + BLAKE3 + verisim)
   massPanic: massPanicState,
   // TSDM — triaxial software development methodology directive
   tsdm: tsdmState,
@@ -920,9 +920,9 @@ let init = (): model => {
       lastEvaluated: 0.0,
     },
   ],
-  verisimdb: {
+  verisim: {
     connected: true,
-    endpoint: ServiceEndpoints.verisimdb,
+    endpoint: ServiceEndpoints.verisim,
     lastQuery: "SELECT * FROM entities WHERE modality = 'graph' LIMIT 10",
     queryResult: None,
     queryError: None,

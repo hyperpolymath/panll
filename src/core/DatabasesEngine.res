@@ -12,7 +12,7 @@ open DatabasesModel
 /// Initialise the databases panel state with all registered modules.
 let defaultState: databasesState = {
   modules: DatabaseRegistry.allModules()->Array.map(initModuleState),
-  selectedModule: "verisimdb",
+  selectedModule: "verisim",
   activeCategory: DbDashboard,
   queryInput: "",
   queryLoading: false,
@@ -160,7 +160,7 @@ let connectionColour = (status: connectionStatus): string => {
 /// Module accent colour for UI differentiation.
 let moduleAccent = (id: string): string => {
   switch id {
-  | "verisimdb" => "#34d399" // emerald
+  | "verisim" => "#34d399" // emerald
   | "quandledb" => "#818cf8" // indigo
   | "lithoglyph" => "#fb923c" // orange
   | _ => "#9ca3af" // gray
@@ -170,7 +170,7 @@ let moduleAccent = (id: string): string => {
 /// Module icon label.
 let moduleIcon = (id: string): string => {
   switch id {
-  | "verisimdb" => "VDB"
+  | "verisim" => "VDB"
   | "quandledb" => "QDB"
   | "lithoglyph" => "LG"
   | _ => "DB"

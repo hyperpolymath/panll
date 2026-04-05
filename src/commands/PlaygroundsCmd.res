@@ -2,7 +2,7 @@
 
 /// PanLL Playgrounds Commands — Backend wrappers for code execution.
 ///
-/// Connects to the NQC proxy at :4000 for VQL/KQL/GQL queries.
+/// Connects to the NQC proxy at :4000 for VCL/KQL/GQL queries.
 
 let invoke = RuntimeBridge.invoke
 

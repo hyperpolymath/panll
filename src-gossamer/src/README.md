@@ -16,7 +16,7 @@ The Gossamer-native backend for PanLL. Replaces the former Tauri 2.0 backend. Co
 |------|---------|
 | `main.rs` | Command registration hub (100+ handlers) |
 | `http_client.rs` | Shared async/blocking HTTP client infrastructure |
-| `verisimdb_live.rs` | VeriSimDB connection (health, octads, VQL, state persistence) |
+| `verisim_live.rs` | VeriSimDB connection (health, octads, VCL, state persistence) |
 | `echidna_live.rs` | ECHIDNA theorem prover connection |
 | `boj_live.rs` | BoJ cartridge server connection |
 | `service_registry.rs` | Centralized service lifecycle (v0.2.0) |

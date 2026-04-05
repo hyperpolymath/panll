@@ -29,7 +29,7 @@ let renderDriftAura = (orbital: orbitalState, humidity: humidityLevel): Tea_Vdom
 }
 
 /// Render Pane-L (Symbolic Mass) - using full component.
-/// Receives proof obligations from VeriSimDB VQL-UT queries to display
+/// Receives proof obligations from VeriSimDB VCL-total queries to display
 /// as symbolic constraints alongside the constraint editor.
 let renderPaneL = (paneL: paneLState, proofs: array<proofObligation>, visible: bool): Tea_Vdom.t<
   msg,
@@ -573,9 +573,9 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelVexometerFriction) => VexometerFriction.view(model.vexometerFriction)
   | Some(PanelK9Manager) => K9Manager.view(model.k9Manager)
   | Some(PanelContractileManager) => ContractileManager.view(model.contractiles, model.vexometer)
-  // VQL-UT panel (broken JSX — disabled pending Vql.res fix)
+  // VCL-total panel (broken JSX — disabled pending Vql.res fix)
   | Some(PanelVql) =>
-    div(list{Attrs.class_("p-4 text-gray-400")}, list{text("VQL-UT panel loading...")})
+    div(list{Attrs.class_("p-4 text-gray-400")}, list{text("VCL-total panel loading...")})
   // LLM Coding — multi-session Claude/LLM coordinator
   | Some(PanelLlmCoding) => LlmCoding.view(model.llmCoding)
   // Agent Coordination View
@@ -764,8 +764,8 @@ let view = (model: model): Tea_Vdom.t<msg> => {
               list{
                 renderPaneL(
                   model.paneL,
-                  if model.verisimdb.proofDisplayActive {
-                    model.verisimdb.proofObligations
+                  if model.verisim.proofDisplayActive {
+                    model.verisim.proofObligations
                   } else {
                     []
                   },
@@ -796,7 +796,7 @@ let view = (model: model): Tea_Vdom.t<msg> => {
                 renderPaneN(
                   model.paneN,
                   model.echidna,
-                  ~inferenceStream=model.verisimdb.inferenceStream,
+                  ~inferenceStream=model.verisim.inferenceStream,
                   model.paneNVisible,
                 ),
                 CaptureBar.view(
@@ -826,7 +826,7 @@ let view = (model: model): Tea_Vdom.t<msg> => {
                 renderPaneW(
                   model.paneW,
                   model.orbital,
-                  model.verisimdb,
+                  model.verisim,
                   model.contractiles,
                   model.barycentreTour,
                   model.paneWVisible,

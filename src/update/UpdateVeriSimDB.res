@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
 /// Extracted sub-updater for VeriSimDB (Database Backend).
-/// Manages the VeriSimDB connection state, VQL query lifecycle, entity browsing,
+/// Manages the VeriSimDB connection state, VCL query lifecycle, entity browsing,
 /// drift detection status, normalisation, entity detail, telemetry, orchestration
 /// status, proof obligations, inference suggestions, and BoJ routing toggles.
 
@@ -12,8 +12,8 @@ open Msg
 // VeriSimDB Parsers
 // ===========================================================================
 
-/// Parse proof obligations from a VQL-UT JSON response.
-/// VQL-UT queries return a `proof_certificate` object with an array of proofs.
+/// Parse proof obligations from a VCL-total JSON response.
+/// VCL-total queries return a `proof_certificate` object with an array of proofs.
 /// Each proof has type, contract, verified status, and hash fields.
 /// Tea_Json decoder for a single proof obligation.
 let proofObligationDecoder: Tea_Json.decoder<proofObligation> = Tea_Json.map4(
@@ -210,12 +210,12 @@ let parseTelemetrySnapshot = (json: string): option<telemetrySnapshot> => {
 // ===========================================================================
 
 /// STATE TRANSITION: VeriSimDB (Database Backend)
-/// Manages the VeriSimDB connection state, VQL query lifecycle, entity browsing,
+/// Manages the VeriSimDB connection state, VCL query lifecycle, entity browsing,
 /// drift detection status, normalisation, and entity detail. Each message either
 /// triggers a Gossamer command (side effect) or updates model state from a command
 /// result.
 let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>) => {
-  let db = model.verisimdb
+  let db = model.verisim
   switch msg {
   | CheckHealth => {
       let cmd = if db.bojRouting {
@@ -233,14 +233,14 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     }
   | HealthResult(result) =>
     switch result {
-    | Ok(_json) => ({...model, verisimdb: {...db, connected: true, queryError: None}}, Tea_Cmd.none)
+    | Ok(_json) => ({...model, verisim: {...db, connected: true, queryError: None}}, Tea_Cmd.none)
     | Error(err) => (
-        {...model, verisimdb: {...db, connected: false, queryError: Some(err)}},
+        {...model, verisim: {...db, connected: false, queryError: Some(err)}},
         Tea_Cmd.none,
       )
     }
   | SubmitQuery(query) => {
-      // #4: Optionally validate VQL through Anti-Crash before execution.
+      // #4: Optionally validate VCL through Anti-Crash before execution.
       let antiCrashCmd = if db.antiCrashValidation {
         let tokenId = "t-" ++ Int.toString(model.paneN.nextTokenId)
         let token: neuralToken = {
@@ -259,7 +259,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       } else {
         Tea_Cmd.none
       }
-      // #5: Track VQL query count for Vexometer cognitive load.
+      // #5: Track VCL query count for Vexometer cognitive load.
       let newDb = {
         ...db,
         lastQuery: query,
@@ -283,7 +283,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
         GossamerCmd.queryVeriSimDB(query, result => VeriSimDB(QueryResult(result)))
       }
       (
-        {...model, verisimdb: newDb},
+        {...model, verisim: newDb},
         Tea_Cmd.batch(list{
           queryCmd,
           TypeLLService.checkVqlTypes(query, result => VeriSimDB(VqlTypeCheckResult(result))),
@@ -292,21 +292,21 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
         }),
       )
     }
-  | UpdateQueryInput(text) => ({...model, verisimdb: {...db, lastQuery: text}}, Tea_Cmd.none)
+  | UpdateQueryInput(text) => ({...model, verisim: {...db, lastQuery: text}}, Tea_Cmd.none)
   | QueryResult(result) =>
     switch result {
     | Ok(json) =>
-      // Parse proof obligations from VQL-UT responses
+      // Parse proof obligations from VCL-total responses
       let proofs = parseProofObligations(json)
       (
         {
           ...model,
-          verisimdb: {...db, queryResult: Some(json), queryError: None, proofObligations: proofs},
+          verisim: {...db, queryResult: Some(json), queryError: None, proofObligations: proofs},
         },
         Tea_Cmd.none,
       )
     | Error(err) => (
-        {...model, verisimdb: {...db, queryResult: None, queryError: Some(err)}},
+        {...model, verisim: {...db, queryResult: None, queryError: Some(err)}},
         Tea_Cmd.none,
       )
     }
@@ -326,8 +326,8 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     }
   | EntitiesLoaded(result) =>
     switch result {
-    | Ok(_json) => ({...model, verisimdb: {...db, queryError: None}}, Tea_Cmd.none)
-    | Error(err) => ({...model, verisimdb: {...db, queryError: Some(err)}}, Tea_Cmd.none)
+    | Ok(_json) => ({...model, verisim: {...db, queryError: None}}, Tea_Cmd.none)
+    | Error(err) => ({...model, verisim: {...db, queryError: Some(err)}}, Tea_Cmd.none)
     }
   | SelectEntity(entityId) => {
       let (driftCmd, detailCmd) = if db.bojRouting {
@@ -354,7 +354,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
         )
       }
       (
-        {...model, verisimdb: {...db, selectedEntity: Some(entityId), entityDetail: None}},
+        {...model, verisim: {...db, selectedEntity: Some(entityId), entityDetail: None}},
         Tea_Cmd.batch(list{driftCmd, detailCmd}),
       )
     }
@@ -365,23 +365,23 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       (
         {
           ...model,
-          verisimdb: {...db, driftStatus: Some(json), driftScores: scores, queryError: None},
+          verisim: {...db, driftStatus: Some(json), driftScores: scores, queryError: None},
         },
         Tea_Cmd.none,
       )
     | Error(err) => (
-        {...model, verisimdb: {...db, driftStatus: None, driftScores: None, queryError: Some(err)}},
+        {...model, verisim: {...db, driftStatus: None, driftScores: None, queryError: Some(err)}},
         Tea_Cmd.none,
       )
     }
   | ToggleDbMenu => (
-      {...model, verisimdb: {...db, dbMenuExpanded: !db.dbMenuExpanded}},
+      {...model, verisim: {...db, dbMenuExpanded: !db.dbMenuExpanded}},
       Tea_Cmd.none,
     )
   | ClearQueryResult => (
       {
         ...model,
-        verisimdb: {
+        verisim: {
           ...db,
           queryResult: None,
           queryError: None,
@@ -392,13 +392,13 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
       Tea_Cmd.none,
     )
   | TriggerNormalise(entityId) => (
-      {...model, verisimdb: {...db, normalisingEntity: Some(entityId)}},
+      {...model, verisim: {...db, normalisingEntity: Some(entityId)}},
       GossamerCmd.triggerNormalise(entityId, result => VeriSimDB(NormaliseResult(result))),
     )
   | NormaliseResult(result) =>
     switch result {
     | Ok(_json) => (
-        {...model, verisimdb: {...db, normalisingEntity: None, queryError: None}},
+        {...model, verisim: {...db, normalisingEntity: None, queryError: None}},
         // Refresh drift status after normalisation
         switch db.selectedEntity {
         | Some(entityId) => GossamerCmd.getDrift(entityId, result => VeriSimDB(DriftLoaded(result)))
@@ -406,7 +406,7 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
         },
       )
     | Error(err) => (
-        {...model, verisimdb: {...db, normalisingEntity: None, queryError: Some(err)}},
+        {...model, verisim: {...db, normalisingEntity: None, queryError: Some(err)}},
         Tea_Cmd.none,
       )
     }
@@ -417,11 +417,11 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
   | EntityDetailLoaded(result) =>
     switch result {
     | Ok(json) => (
-        {...model, verisimdb: {...db, entityDetail: Some(json), queryError: None}},
+        {...model, verisim: {...db, entityDetail: Some(json), queryError: None}},
         Tea_Cmd.none,
       )
     | Error(err) => (
-        {...model, verisimdb: {...db, entityDetail: None, queryError: Some(err)}},
+        {...model, verisim: {...db, entityDetail: None, queryError: Some(err)}},
         Tea_Cmd.none,
       )
     }
@@ -443,14 +443,14 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
     switch result {
     | Ok(json) =>
       let snapshot = parseTelemetrySnapshot(json)
-      ({...model, verisimdb: {...db, telemetry: snapshot, queryError: None}}, Tea_Cmd.none)
+      ({...model, verisim: {...db, telemetry: snapshot, queryError: None}}, Tea_Cmd.none)
     | Error(err) => (
-        {...model, verisimdb: {...db, telemetry: None, queryError: Some(err)}},
+        {...model, verisim: {...db, telemetry: None, queryError: Some(err)}},
         Tea_Cmd.none,
       )
     }
   | ToggleTelemetryPanel => (
-      {...model, verisimdb: {...db, telemetryVisible: !db.telemetryVisible}},
+      {...model, verisim: {...db, telemetryVisible: !db.telemetryVisible}},
       Tea_Cmd.none,
     )
   | FetchOrchStatus => {
@@ -470,46 +470,46 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
   | OrchStatusLoaded(result) =>
     switch result {
     | Ok(json) => (
-        {...model, verisimdb: {...db, orchStatus: Some(json), queryError: None}},
+        {...model, verisim: {...db, orchStatus: Some(json), queryError: None}},
         Tea_Cmd.none,
       )
     | Error(err) => (
-        {...model, verisimdb: {...db, orchStatus: None, queryError: Some(err)}},
+        {...model, verisim: {...db, orchStatus: None, queryError: Some(err)}},
         Tea_Cmd.none,
       )
     }
   | VqlTypeCheckResult(Ok(json)) => {
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
-      ({...model, verisimdb: {...db, lastTypeCheck: Some(json)}, typell: newTypell}, Tea_Cmd.none)
+      ({...model, verisim: {...db, lastTypeCheck: Some(json)}, typell: newTypell}, Tea_Cmd.none)
     }
   | VqlTypeCheckResult(Error(_)) => {
       UpdateHelpers.logDegradedService(
         "TypeLL",
-        "VQL type check failed — VQL workflow continues unblocked",
+        "VCL type check failed — VCL workflow continues unblocked",
       )
       (model, Tea_Cmd.none)
     }
   // #2: Toggle proof obligation display in Panel-L.
   | ToggleProofDisplay => (
-      {...model, verisimdb: {...db, proofDisplayActive: !db.proofDisplayActive}},
+      {...model, verisim: {...db, proofDisplayActive: !db.proofDisplayActive}},
       Tea_Cmd.none,
     )
-  // #3: Neural advisor inference suggestion for VQL.
+  // #3: Neural advisor inference suggestion for VCL.
   | InferenceSuggestion(suggestion) => (
       {
         ...model,
-        verisimdb: {...db, inferenceStream: Array.concat(db.inferenceStream, [suggestion])},
+        verisim: {...db, inferenceStream: Array.concat(db.inferenceStream, [suggestion])},
       },
       Tea_Cmd.none,
     )
-  | ClearInferenceSuggestions => ({...model, verisimdb: {...db, inferenceStream: []}}, Tea_Cmd.none)
-  // #4: Toggle Anti-Crash validation of VQL queries.
+  | ClearInferenceSuggestions => ({...model, verisim: {...db, inferenceStream: []}}, Tea_Cmd.none)
+  // #4: Toggle Anti-Crash validation of VCL queries.
   | ToggleAntiCrashValidation => (
-      {...model, verisimdb: {...db, antiCrashValidation: !db.antiCrashValidation}},
+      {...model, verisim: {...db, antiCrashValidation: !db.antiCrashValidation}},
       Tea_Cmd.none,
     )
   | ToggleVeriSimBojRouting => (
-      {...model, verisimdb: {...db, bojRouting: !db.bojRouting}},
+      {...model, verisim: {...db, bojRouting: !db.bojRouting}},
       Tea_Cmd.none,
     )
   }

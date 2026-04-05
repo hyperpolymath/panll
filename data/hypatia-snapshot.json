@@ -2350,7 +2350,7 @@
       "passed": false
     },
     {
-      "repo_name": "verisimdb",
+      "repo_name": "verisim",
       "risk_score": 0.096,
       "finding_count": 24,
       "quarantine_count": 0,

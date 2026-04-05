@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
 /// PanLL Mass Panic Model — types for the organisation-scale batch scanning
-/// panel (assemblyline + incremental BLAKE3 + verisimdb + delta reporting).
+/// panel (assemblyline + incremental BLAKE3 + verisim + delta reporting).
 ///
 /// This is the "mass-panic" deployment mode of panic-attack: scan hundreds or
 /// thousands of repos in parallel, persist results, compare runs, and generate
@@ -72,7 +72,7 @@ type repoFilterMode =
 type storageTarget =
   | NoStorage
   | Filesystem(string) // base directory
-  | VerisimDB(string) // verisimdb data directory
+  | VerisimDB(string) // verisim data directory
 
 // ---------------------------------------------------------------------------
 // Imaging — fNIRS-style spatial health map (panll.system-image.v0)

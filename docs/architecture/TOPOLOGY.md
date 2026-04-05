@@ -242,7 +242,7 @@ BoJ ───────> Panel-W (cartridge status -> dashboard display)
   |
   ├────────> Editor Bridge (LSP via lsp-mcp when bojRouting=true)
   |
-  ├────────> VeriSimDB (VQL queries via database-mcp when bojRouting=true)
+  ├────────> VeriSimDB (VCL queries via database-mcp when bojRouting=true)
   |
   ├────────> VM Inspector (DAP debug via dap-mcp when bojRouting=true)
   |

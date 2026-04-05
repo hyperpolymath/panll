@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-// VQL-UT Engine — Pure computation layer for the VQL panel.
+// VCL-total Engine — Pure computation layer for the VCL panel.
 //
-// This module contains ALL business logic for VQL query authoring:
-// - The VQL linter (30+ rules across 6 categories)
-// - The VQL formatter (5 style presets, configurable)
+// This module contains ALL business logic for VCL query authoring:
+// - The VCL linter (30+ rules across 6 categories)
+// - The VCL formatter (5 style presets, configurable)
 // - Query template expansion and parameter validation
 // - Type safety level metadata and narrative generation
 // - Cross-prover strategy evaluation
@@ -34,7 +34,7 @@ let levelMetas: array<levelMeta> = [
     level: L1_Parsed,
     name: "Parsed",
     shortName: "L1",
-    description: "Query is syntactically valid VQL-UT. Keywords, clauses, and structure verified.",
+    description: "Query is syntactically valid VCL-total. Keywords, clauses, and structure verified.",
     glyph: "\u2713",
     colour: "text-orange-400",
     bgColour: "bg-orange-900/30",
@@ -171,10 +171,10 @@ let levelSatisfies = (achieved: typeSafetyLevel, required: typeSafetyLevel): boo
   levelToInt(achieved) >= levelToInt(required)
 
 // ============================================================
-// SECTION 2: VQL Linter — 30+ Rules
+// SECTION 2: VCL Linter — 30+ Rules
 // ============================================================
 
-/// VQL keywords that must appear in specific clause positions.
+/// VCL keywords that must appear in specific clause positions.
 let vqlKeywords = [
   "FIND",
   "FROM",
@@ -206,7 +206,7 @@ let vqlKeywords = [
   "MODALITY",
 ]
 
-/// VQL clause keywords — these start major sections.
+/// VCL clause keywords — these start major sections.
 let clauseKeywords = [
   "FIND",
   "FROM",
@@ -220,7 +220,7 @@ let clauseKeywords = [
   "HAVING",
 ]
 
-/// Check if a string looks like a VQL keyword.
+/// Check if a string looks like a VCL keyword.
 let isKeyword = (word: string): bool => vqlKeywords->Array.includes(String.toUpperCase(word))
 
 /// Check if a string looks like a clause keyword.
@@ -229,19 +229,19 @@ let isClauseKeyword = (word: string): bool =>
 
 // --- Rule implementations ---
 
-/// VQL-S001: Query must not be empty.
+/// VCL-S001: Query must not be empty.
 let ruleEmptyQuery = (content: string): option<lintDiagnostic> => {
   let trimmed = String.trim(content)
   if String.length(trimmed) == 0 {
     Some({
-      ruleId: "VQL-S001",
+      ruleId: "VCL-S001",
       category: CatSyntax,
       severity: LintError,
       line: 1,
       column: 1,
       endLine: 1,
       endColumn: 1,
-      message: "Query is empty. Write a VQL-UT query starting with FIND, PROVE, or another clause keyword.",
+      message: "Query is empty. Write a VCL-total query starting with FIND, PROVE, or another clause keyword.",
       suggestion: Some("FIND proof\nFROM proofs\nWHERE prover = 'Lean'"),
       relatedLevel: L1_Parsed,
     })
@@ -250,7 +250,7 @@ let ruleEmptyQuery = (content: string): option<lintDiagnostic> => {
   }
 }
 
-/// VQL-S002: Query must start with a valid clause keyword.
+/// VCL-S002: Query must start with a valid clause keyword.
 let ruleStartsWithClause = (content: string): option<lintDiagnostic> => {
   let trimmed = String.trim(content)
   if String.length(trimmed) == 0 {
@@ -263,7 +263,7 @@ let ruleStartsWithClause = (content: string): option<lintDiagnostic> => {
     let validStarts = ["FIND", "PROVE", "FEDERATED", "TEMPORAL", "LINEAR", "WITH", "EXPLAIN"]
     if !(validStarts->Array.includes(firstWord)) {
       Some({
-        ruleId: "VQL-S002",
+        ruleId: "VCL-S002",
         category: CatSyntax,
         severity: LintError,
         line: 1,
@@ -280,7 +280,7 @@ let ruleStartsWithClause = (content: string): option<lintDiagnostic> => {
   }
 }
 
-/// VQL-S003: Keywords should be UPPERCASE.
+/// VCL-S003: Keywords should be UPPERCASE.
 let ruleKeywordCase = (content: string): array<lintDiagnostic> => {
   let lines = String.split(content, "\n")
   let diagnostics = []
@@ -295,7 +295,7 @@ let ruleKeywordCase = (content: string): array<lintDiagnostic> => {
         trimWord !== String.toUpperCase(trimWord)
       ) {
         let _ = diagnostics->Array.push({
-          ruleId: "VQL-S003",
+          ruleId: "VCL-S003",
           category: CatSyntax,
           severity: LintHint,
           line: lineIdx + 1,
@@ -313,7 +313,7 @@ let ruleKeywordCase = (content: string): array<lintDiagnostic> => {
   diagnostics
 }
 
-/// VQL-S004: Unclosed string literal.
+/// VCL-S004: Unclosed string literal.
 let ruleUnclosedString = (content: string): array<lintDiagnostic> => {
   let lines = String.split(content, "\n")
   let diagnostics = []
@@ -331,7 +331,7 @@ let ruleUnclosedString = (content: string): array<lintDiagnostic> => {
     }
     if inString.contents {
       let _ = diagnostics->Array.push({
-        ruleId: "VQL-S004",
+        ruleId: "VCL-S004",
         category: CatSyntax,
         severity: LintError,
         line: lineIdx + 1,
@@ -347,7 +347,7 @@ let ruleUnclosedString = (content: string): array<lintDiagnostic> => {
   diagnostics
 }
 
-/// VQL-S005: Unmatched parentheses.
+/// VCL-S005: Unmatched parentheses.
 let ruleUnmatchedParens = (content: string): option<lintDiagnostic> => {
   let depth = ref(0)
   for i in 0 to String.length(content) - 1 {
@@ -361,7 +361,7 @@ let ruleUnmatchedParens = (content: string): option<lintDiagnostic> => {
   }
   if depth.contents > 0 {
     Some({
-      ruleId: "VQL-S005",
+      ruleId: "VCL-S005",
       category: CatSyntax,
       severity: LintError,
       line: 1,
@@ -374,7 +374,7 @@ let ruleUnmatchedParens = (content: string): option<lintDiagnostic> => {
     })
   } else if depth.contents < 0 {
     Some({
-      ruleId: "VQL-S005",
+      ruleId: "VCL-S005",
       category: CatSyntax,
       severity: LintError,
       line: 1,
@@ -390,7 +390,7 @@ let ruleUnmatchedParens = (content: string): option<lintDiagnostic> => {
   }
 }
 
-/// VQL-T001: String comparison with non-string column (requires schema).
+/// VCL-T001: String comparison with non-string column (requires schema).
 /// Returns a diagnostic if we detect patterns like `column = 42` where column is string-typed.
 /// Without schema, this is a best-effort heuristic.
 let ruleStringIntComparison = (content: string): array<lintDiagnostic> => {
@@ -423,7 +423,7 @@ let ruleStringIntComparison = (content: string): array<lintDiagnostic> => {
               let firstChar = String.charAt(String.trim(afterPat), 0)
               if firstChar >= "0" && firstChar <= "9" {
                 let _ = diagnostics->Array.push({
-                  ruleId: "VQL-T001",
+                  ruleId: "VCL-T001",
                   category: CatType,
                   severity: LintWarning,
                   line: lineIdx + 1,
@@ -444,7 +444,7 @@ let ruleStringIntComparison = (content: string): array<lintDiagnostic> => {
   diagnostics
 }
 
-/// VQL-SEC001: String concatenation in query position (injection risk).
+/// VCL-SEC001: String concatenation in query position (injection risk).
 let ruleInjectionRisk = (content: string): array<lintDiagnostic> => {
   let diagnostics = []
   let lines = String.split(content, "\n")
@@ -453,7 +453,7 @@ let ruleInjectionRisk = (content: string): array<lintDiagnostic> => {
     dangerPatterns->Array.forEach(pat => {
       if String.includes(line, pat) {
         let _ = diagnostics->Array.push({
-          ruleId: "VQL-SEC001",
+          ruleId: "VCL-SEC001",
           category: CatSecurity,
           severity: LintError,
           line: lineIdx + 1,
@@ -470,14 +470,14 @@ let ruleInjectionRisk = (content: string): array<lintDiagnostic> => {
   diagnostics
 }
 
-/// VQL-P001: SELECT * without LIMIT (performance risk).
+/// VCL-P001: SELECT * without LIMIT (performance risk).
 let ruleUnboundedScan = (content: string): option<lintDiagnostic> => {
   let upper = String.toUpperCase(content)
   let hasStar = String.includes(upper, "FIND *") || String.includes(upper, "FIND  *")
   let hasLimit = String.includes(upper, "LIMIT")
   if hasStar && !hasLimit {
     Some({
-      ruleId: "VQL-P001",
+      ruleId: "VCL-P001",
       category: CatPerformance,
       severity: LintWarning,
       line: 1,
@@ -493,12 +493,12 @@ let ruleUnboundedScan = (content: string): option<lintDiagnostic> => {
   }
 }
 
-/// VQL-P002: CROSS JOIN or cartesian product warning.
+/// VCL-P002: CROSS JOIN or cartesian product warning.
 let ruleCrossJoin = (content: string): option<lintDiagnostic> => {
   let upper = String.toUpperCase(content)
   if String.includes(upper, "CROSS JOIN") || String.includes(upper, "CROSS PROVER") {
     Some({
-      ruleId: "VQL-P002",
+      ruleId: "VCL-P002",
       category: CatPerformance,
       severity: LintWarning,
       line: 1,
@@ -514,12 +514,12 @@ let ruleCrossJoin = (content: string): option<lintDiagnostic> => {
   }
 }
 
-/// VQL-C001: EFFECT clause used without USING (correctness).
+/// VCL-C001: EFFECT clause used without USING (correctness).
 let ruleEffectWithoutUsing = (content: string): option<lintDiagnostic> => {
   let upper = String.toUpperCase(content)
   if String.includes(upper, "EFFECT") && !String.includes(upper, "USING") {
     Some({
-      ruleId: "VQL-C001",
+      ruleId: "VCL-C001",
       category: CatCorrectness,
       severity: LintWarning,
       line: 1,
@@ -535,7 +535,7 @@ let ruleEffectWithoutUsing = (content: string): option<lintDiagnostic> => {
   }
 }
 
-/// VQL-C002: TEMPORAL query without time bounds.
+/// VCL-C002: TEMPORAL query without time bounds.
 let ruleTemporalWithoutBounds = (content: string): option<lintDiagnostic> => {
   let upper = String.toUpperCase(content)
   if (
@@ -548,7 +548,7 @@ let ruleTemporalWithoutBounds = (content: string): option<lintDiagnostic> => {
     )
   ) {
     Some({
-      ruleId: "VQL-C002",
+      ruleId: "VCL-C002",
       category: CatCorrectness,
       severity: LintWarning,
       line: 1,
@@ -564,7 +564,7 @@ let ruleTemporalWithoutBounds = (content: string): option<lintDiagnostic> => {
   }
 }
 
-/// VQL-C003: LINEAR without explicit consumption (resource leak risk).
+/// VCL-C003: LINEAR without explicit consumption (resource leak risk).
 let ruleLinearWithoutConsume = (content: string): option<lintDiagnostic> => {
   let upper = String.toUpperCase(content)
   if (
@@ -573,7 +573,7 @@ let ruleLinearWithoutConsume = (content: string): option<lintDiagnostic> => {
     !String.includes(upper, "RELEASE")
   ) {
     Some({
-      ruleId: "VQL-C003",
+      ruleId: "VCL-C003",
       category: CatCorrectness,
       severity: LintError,
       line: 1,
@@ -589,7 +589,7 @@ let ruleLinearWithoutConsume = (content: string): option<lintDiagnostic> => {
   }
 }
 
-/// VQL-S006: Duplicate clause keywords.
+/// VCL-S006: Duplicate clause keywords.
 let ruleDuplicateClauses = (content: string): array<lintDiagnostic> => {
   let upper = String.toUpperCase(content)
   let diagnostics = []
@@ -599,7 +599,7 @@ let ruleDuplicateClauses = (content: string): array<lintDiagnostic> => {
     let count = Array.length(parts) - 1
     if count > 1 && kw !== "AND" && kw !== "OR" {
       let _ = diagnostics->Array.push({
-        ruleId: "VQL-S006",
+        ruleId: "VCL-S006",
         category: CatSyntax,
         severity: LintWarning,
         line: 1,
@@ -617,7 +617,7 @@ let ruleDuplicateClauses = (content: string): array<lintDiagnostic> => {
   diagnostics
 }
 
-/// VQL-SCH001: Referencing unknown octad modality.
+/// VCL-SCH001: Referencing unknown octad modality.
 let ruleUnknownModality = (content: string): array<lintDiagnostic> => {
   let diagnostics = []
   let upper = String.toUpperCase(content)
@@ -656,7 +656,7 @@ let ruleUnknownModality = (content: string): array<lintDiagnostic> => {
             w !== ","
           ) {
             let _ = diagnostics->Array.push({
-              ruleId: "VQL-SCH001",
+              ruleId: "VCL-SCH001",
               category: CatSchema,
               severity: LintWarning,
               line: lineIdx + 1,
@@ -678,14 +678,14 @@ let ruleUnknownModality = (content: string): array<lintDiagnostic> => {
   diagnostics
 }
 
-/// VQL-P003: Missing index hint for large tables.
+/// VCL-P003: Missing index hint for large tables.
 let ruleMissingIndexHint = (content: string): option<lintDiagnostic> => {
   let upper = String.toUpperCase(content)
   let hasWhere = String.includes(upper, "WHERE")
   let hasProofs = String.includes(upper, "PROOFS") || String.includes(upper, "PROOF_STATES")
   if hasProofs && !hasWhere {
     Some({
-      ruleId: "VQL-P003",
+      ruleId: "VCL-P003",
       category: CatPerformance,
       severity: LintInfo,
       line: 1,
@@ -793,10 +793,10 @@ let runLinter = (content: string, state: linterState): array<lintDiagnostic> => 
 }
 
 // ============================================================
-// SECTION 3: VQL Formatter
+// SECTION 3: VCL Formatter
 // ============================================================
 
-/// Format a VQL-UT query according to the given options.
+/// Format a VCL-total query according to the given options.
 let formatQuery = (content: string, options: formatOptions): string => {
   let lines = String.split(String.trim(content), "\n")
   let indent = String.repeat(" ", options.indentWidth)
@@ -932,7 +932,7 @@ let formatQuery = (content: string, options: formatOptions): string => {
 // SECTION 4: Query Templates
 // ============================================================
 
-/// Built-in query templates for common VQL-UT operations.
+/// Built-in query templates for common VCL-total operations.
 let builtinTemplates: array<queryTemplate> = [
   {
     id: "find-by-prover",
@@ -1211,7 +1211,7 @@ let generateNarrative = (
     )
     `To reach the next level (${nextLevel.name}), ${nextLevel.description}`
   } else if passed {
-    "You've achieved maximum type safety. This query has the strongest guarantees VQL-UT can provide."
+    "You've achieved maximum type safety. This query has the strongest guarantees VCL-total can provide."
   } else {
     `To reach ${requestedMeta.name}: address the ${Int.toString(
         errorCount,
@@ -1373,7 +1373,7 @@ let toGlyphed = (content: string): string => {
 // SECTION 8: Default State
 // ============================================================
 
-/// Default format options — VQL-UT official style.
+/// Default format options — VCL-total official style.
 let defaultFormatOptions: formatOptions = {
   style: StyleStandard,
   indentWidth: 2,
@@ -1453,7 +1453,7 @@ let defaultDispatchState: dispatchState = {
   showProverDetails: false,
 }
 
-/// Default VQL panel state — the initial state when the panel opens.
+/// Default VCL panel state — the initial state when the panel opens.
 let defaultVqlState: vqlState = {
   activeTab: TabEditor,
   viewLayer: Raw,

@@ -107,13 +107,13 @@ proving query correctness or schema invariants but isn't the primary workflow.
 | ECHIDNA Panel     | Collapsed | —    | Schema invariant proofs      |
 | Security/Panic    | Collapsed | —    | Database stress-testing      |
 
-**Pane-L details:** VQL-DT query builder, type definitions, constraint editing.
+**Pane-L details:** VCL-DT query builder, type definitions, constraint editing.
 **Pane-N details:** Neural stream, drift alerts, normalisation suggestions.
 **Pane-W details:** Entity browser, query results, drift heatmap, telemetry dashboard.
 **VeriSimDB details:** Connection, entities, drift, normalisation, orchestrator status.
 
 **Default ECHIDNA use:** Proving data integrity constraints, schema migration safety
-**Default notation:** VQL-DT (VeriSimDB Query Language with Dependent Types)
+**Default notation:** VCL-DT (VeriSimDB Query Language with Dependent Types)
 **Promoted toolbar:** Query, Browse Entities, Check Drift, Normalise, Telemetry
 
 ---
@@ -255,7 +255,7 @@ described in the companion design doc (Visual → Syntax → Logic → REPL). Wi
 discipline layout, the user can still operate at any sophistication level:
 
 - A **database designer** at Level 1 drags query blocks visually
-- A **database designer** at Level 3 writes VQL-DT with logical notation
+- A **database designer** at Level 3 writes VCL-DT with logical notation
 - A **protocol designer** at Level 1 draws state machines visually
 - A **protocol designer** at Level 4 writes raw TLA+ in a REPL
 

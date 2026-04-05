@@ -28,9 +28,9 @@ let updateVexometer = (model: model, msg: vexometerMsg): (model, Tea_Cmd.t<msg>)
       GossamerCmd.recordVexationEvent("correction", _result => NoOp),
     )
   | RecordVqlQuery => (
-      // VQL queries contribute to cognitive load — tracked as a lighter-weight event.
+      // VCL queries contribute to cognitive load — tracked as a lighter-weight event.
       model,
-      GossamerCmd.recordVexationEvent("vql_query", _result => NoOp),
+      GossamerCmd.recordVexationEvent("vcl_query", _result => NoOp),
     )
   | RequestVexationIndex => (
       model,
@@ -369,10 +369,10 @@ let applyContractiles = (model: model, cmd: Tea_Cmd.t<msg>): (model, Tea_Cmd.t<m
   }
 
   // Emit database connection change if VeriSimDB state changed.
-  let busEvents = if newModel.verisimdb.connected !== model.verisimdb.connected {
+  let busEvents = if newModel.verisim.connected !== model.verisim.connected {
     Array.concat(
       busEvents,
-      [PanelBus.DatabaseConnectionChanged("verisimdb", newModel.verisimdb.connected)],
+      [PanelBus.DatabaseConnectionChanged("verisim", newModel.verisim.connected)],
     )
   } else {
     busEvents

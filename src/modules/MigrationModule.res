@@ -89,7 +89,7 @@ let moduleConfig = {
     {"name": "panic-attack", "type": "cli", "target": "panic-attack migration-snapshot"},
     {"name": "feedback-o-tron", "type": "mcp", "target": "feedback-a-tron"},
     {"name": "merge-resolver", "type": "cli", "target": "merge-resolver"},
-    {"name": "verisimdb", "type": "api", "target": "http://localhost:8080/api/v1"},
+    {"name": "verisim", "type": "api", "target": "http://localhost:8080/api/v1"},
   ],
   "panelMapping": {
     "panelL": [

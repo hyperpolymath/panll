@@ -358,7 +358,7 @@ let recordVexationEvent = (eventType: string, tagger: result<unit, string> => 'm
 /// Check VeriSimDB server health status.
 let checkVeriSimDBHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_health", ())
+    invoke("verisim_health", ())
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -371,16 +371,16 @@ let checkVeriSimDBHealth = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'
   })
 }
 
-/// Execute a VQL query against VeriSimDB.
+/// Execute a VCL query against VeriSimDB.
 let queryVeriSimDB = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_query", {"query": query})
+    invoke("verisim_query", {"query": query})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
     })
     ->Promise.catch(_err => {
-      callbacks.enqueue(tagger(Error("VQL query execution failed")))
+      callbacks.enqueue(tagger(Error("VCL query execution failed")))
       Promise.resolve()
     })
     ->ignore
@@ -392,7 +392,7 @@ let listOctads = (limit: int, offset: int, tagger: result<string, string> => 'ms
   'msg,
 > => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_list_octads", {"limit": limit, "offset": offset})
+    invoke("verisim_list_octads", {"limit": limit, "offset": offset})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -408,7 +408,7 @@ let listOctads = (limit: int, offset: int, tagger: result<string, string> => 'ms
 /// Get drift detection status for a specific entity.
 let getDrift = (entityId: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_get_drift", {"entity_id": entityId})
+    invoke("verisim_get_drift", {"entity_id": entityId})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -426,7 +426,7 @@ let triggerNormalise = (entityId: string, tagger: result<string, string> => 'msg
   'msg,
 > => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_normalise", {"entity_id": entityId})
+    invoke("verisim_normalise", {"entity_id": entityId})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -444,7 +444,7 @@ let getEntityDetail = (entityId: string, tagger: result<string, string> => 'msg)
   'msg,
 > => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_get_entity", {"entity_id": entityId})
+    invoke("verisim_get_entity", {"entity_id": entityId})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -460,7 +460,7 @@ let getEntityDetail = (entityId: string, tagger: result<string, string> => 'msg)
 /// Fetch product telemetry from VeriSimDB.
 let getTelemetry = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_telemetry", ())
+    invoke("verisim_telemetry", ())
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -476,7 +476,7 @@ let getTelemetry = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => 
 /// Fetch orchestration status from VeriSimDB.
 let getOrchStatus = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_orch_status", ())
+    invoke("verisim_orch_status", ())
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -500,7 +500,7 @@ let getOrchStatus = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> =>
 /// On failure, receives `Error(reason)` — the caller should fall back to localStorage.
 let loadStateFromVeriSimDB = (tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_load_state", {"key": "panll_state_v1"})
+    invoke("verisim_load_state", {"key": "panll_state_v1"})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()
@@ -521,7 +521,7 @@ let saveStateToVeriSimDB = (stateJson: string, tagger: result<string, string> =>
   'msg,
 > => {
   Tea_Cmd.call(callbacks => {
-    invoke("verisimdb_save_state", {"key": "panll_state_v1", "state": stateJson})
+    invoke("verisim_save_state", {"key": "panll_state_v1", "state": stateJson})
     ->Promise.then(result => {
       callbacks.enqueue(tagger(Ok(result)))
       Promise.resolve()

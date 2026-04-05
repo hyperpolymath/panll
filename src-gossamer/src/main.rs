@@ -75,7 +75,7 @@ mod boj;
 mod boj_live;
 
 /// VeriSimDB Live — async VeriSimDB connection for proof-carrying data operations.
-mod verisimdb_live;
+mod verisim_live;
 
 /// ECHIDNA Live — async ECHIDNA theorem prover connection.
 mod echidna_live;
@@ -797,11 +797,11 @@ fn run_panic_attack_ambush(options: AmbushOptions) -> Result<String, String> {
 // panic-attack:allow insecure-protocol — localhost dev endpoint
 const DEFAULT_VERISIMDB_URL: &str = "http://localhost:8080/api/v1";
 
-fn verisimdb_url() -> String {
+fn verisim_url() -> String {
     env::var("VERISIMDB_URL").unwrap_or_else(|_| DEFAULT_VERISIMDB_URL.to_string())
 }
 
-fn verisimdb_orch_url() -> String {
+fn verisim_orch_url() -> String {
     env::var("VERISIMDB_ORCH_URL").unwrap_or_else(|_| "http://localhost:4080".to_string())
 }
 
@@ -1004,56 +1004,56 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // VeriSimDB commands
     // -----------------------------------------------------------------------
 
-    app.command("verisimdb_health", |_payload| {
-        result_to_json(blocking_get(&format!("{}/health", verisimdb_url()), 5))
+    app.command("verisim_health", |_payload| {
+        result_to_json(blocking_get(&format!("{}/health", verisim_url()), 5))
     });
 
-    app.command("verisimdb_query", |payload| {
+    app.command("verisim_query", |payload| {
         let query = get_str(&payload, "query")?.to_string();
-        let url = format!("{}/vql/execute", verisimdb_url());
+        let url = format!("{}/vcl/execute", verisim_url());
         result_to_json(blocking_post(&url, &json!({"query": query}), 30))
     });
 
-    app.command("verisimdb_list_octads", |payload| {
+    app.command("verisim_list_octads", |payload| {
         let limit = get_usize(&payload, "limit")?;
         let offset = get_usize(&payload, "offset")?;
-        result_to_json(blocking_get(&format!("{}/octads?limit={}&offset={}", verisimdb_url(), limit, offset), 10))
+        result_to_json(blocking_get(&format!("{}/octads?limit={}&offset={}", verisim_url(), limit, offset), 10))
     });
 
-    app.command("verisimdb_get_drift", |payload| {
+    app.command("verisim_get_drift", |payload| {
         let entity_id = get_str(&payload, "entity_id")?;
-        result_to_json(blocking_get(&format!("{}/drift/entity/{}", verisimdb_url(), entity_id), 10))
+        result_to_json(blocking_get(&format!("{}/drift/entity/{}", verisim_url(), entity_id), 10))
     });
 
-    app.command("verisimdb_normalise", |payload| {
+    app.command("verisim_normalise", |payload| {
         let entity_id = get_str(&payload, "entity_id")?;
-        result_to_json(blocking_post_empty(&format!("{}/normalizer/trigger/{}", verisimdb_url(), entity_id), 30))
+        result_to_json(blocking_post_empty(&format!("{}/normalizer/trigger/{}", verisim_url(), entity_id), 30))
     });
 
-    app.command("verisimdb_get_entity", |payload| {
+    app.command("verisim_get_entity", |payload| {
         let entity_id = get_str(&payload, "entity_id")?;
-        result_to_json(blocking_get(&format!("{}/octads/{}", verisimdb_url(), entity_id), 10))
+        result_to_json(blocking_get(&format!("{}/octads/{}", verisim_url(), entity_id), 10))
     });
 
-    app.command("verisimdb_telemetry", |_payload| {
-        result_to_json(blocking_get(&format!("{}/telemetry", verisimdb_orch_url()), 10))
+    app.command("verisim_telemetry", |_payload| {
+        result_to_json(blocking_get(&format!("{}/telemetry", verisim_orch_url()), 10))
     });
 
-    app.command("verisimdb_orch_status", |_payload| {
-        result_to_json(blocking_get(&format!("{}/status", verisimdb_orch_url()), 5))
+    app.command("verisim_orch_status", |_payload| {
+        result_to_json(blocking_get(&format!("{}/status", verisim_orch_url()), 5))
     });
 
     // VeriSimDB state persistence (Connected Workbench v0.2.0)
-    app.command("verisimdb_save_state", |payload| {
+    app.command("verisim_save_state", |payload| {
         let key = get_str(&payload, "key")?.to_string();
         let state = get_str(&payload, "state")?.to_string();
-        let url = format!("{}/state/{}", verisimdb_url(), key);
+        let url = format!("{}/state/{}", verisim_url(), key);
         result_to_json(blocking_post(&url, &json!({"state": state}), 10))
     });
 
-    app.command("verisimdb_load_state", |payload| {
+    app.command("verisim_load_state", |payload| {
         let key = get_str(&payload, "key")?.to_string();
-        let url = format!("{}/state/{}", verisimdb_url(), key);
+        let url = format!("{}/state/{}", verisim_url(), key);
         result_to_json(blocking_get(&url, 10))
     });
 
@@ -1759,15 +1759,15 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     // VeriSimDB Live commands (async)
     // -----------------------------------------------------------------------
 
-    app.command("verisimdb_live_health", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_health())) });
-    app.command("verisimdb_live_list_octads", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_list_octads())) });
-    app.command("verisimdb_live_query", |p| {
+    app.command("verisim_live_health", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(verisim_live::verisim_live_health())) });
+    app.command("verisim_live_list_octads", |_p| { result_to_json(tokio::runtime::Handle::current().block_on(verisim_live::verisim_live_list_octads())) });
+    app.command("verisim_live_query", |p| {
         let query = get_str(&p, "query")?.to_string();
-        result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_query(query)))
+        result_to_json(tokio::runtime::Handle::current().block_on(verisim_live::verisim_live_query(query)))
     });
-    app.command("verisimdb_live_get_octad", |p| {
+    app.command("verisim_live_get_octad", |p| {
         let id = get_str(&p, "id")?.to_string();
-        result_to_json(tokio::runtime::Handle::current().block_on(verisimdb_live::verisimdb_live_get_octad(id)))
+        result_to_json(tokio::runtime::Handle::current().block_on(verisim_live::verisim_live_get_octad(id)))
     });
 
     // -----------------------------------------------------------------------

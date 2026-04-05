@@ -6,7 +6,7 @@
 ///
 /// The TSDM panel is a directive panel — it stores user preferences for
 /// axis ordering, tier priorities, and cleanup steps. These are persisted
-/// to localStorage (fast) and optionally to verisimdb (durable).
+/// to localStorage (fast) and optionally to verisim (durable).
 ///
 /// No heavy backend operations — this is mostly client-side state management
 /// with optional persistence calls.

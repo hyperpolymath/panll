@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-// VQL-UT Panel Model — The flagship PanLL panel for type-safe query authoring.
+// VCL-total Panel Model — The flagship PanLL panel for type-safe query authoring.
 //
-// This model defines the complete state for the VQL panel, including:
-// - 10-level progressive type safety (the core VQL-UT innovation)
+// This model defines the complete state for the VCL panel, including:
+// - 10-level progressive type safety (the core VCL-total innovation)
 // - A dedicated linter with 30+ rules across 6 categories
 // - A dedicated formatter with configurable style presets
 // - Cross-prover query construction and dispatch
@@ -10,19 +10,19 @@
 // - Query plan visualization and cost estimation
 // - Session management with proof obligation tracking
 //
-// The VQL panel is the primary interface through which PanLL users
+// The VCL panel is the primary interface through which PanLL users
 // interact with the entire VeriSimDB + ECHIDNA proof ecosystem.
 
 // ============================================================
-// SECTION 1: Type Safety Levels (the 10-level VQL-UT ratchet)
+// SECTION 1: Type Safety Levels (the 10-level VCL-total ratchet)
 // ============================================================
 
-/// The 10 progressive type safety levels of VQL-UT.
+/// The 10 progressive type safety levels of VCL-total.
 /// Each level strictly subsumes the previous — once you ratchet up,
 /// the linter enforces the new minimum.
 type typeSafetyLevel =
   | L0_Unsafe // Raw string queries, no checking
-  | L1_Parsed // Syntactically valid VQL
+  | L1_Parsed // Syntactically valid VCL
   | L2_SchemaBound // All tables/columns resolve against schema
   | L3_TypeCompat // Expression types are compatible (no int = string)
   | L4_NullSafe // Nullable columns handled explicitly
@@ -56,7 +56,7 @@ type lintSeverity =
   | LintInfo // Suggestion for improvement
   | LintHint // Style/convention recommendation
 
-/// Lint rule categories — each category maps to a VQL-UT concern.
+/// Lint rule categories — each category maps to a VCL-total concern.
 type lintCategory =
   | CatSyntax // Parse-level issues (L1)
   | CatSchema // Schema binding issues (L2)
@@ -65,9 +65,9 @@ type lintCategory =
   | CatPerformance // Cardinality, indexing, scans (L7)
   | CatCorrectness // Effects, temporality, linearity (L8-L10)
 
-/// A single lint diagnostic emitted by the VQL linter.
+/// A single lint diagnostic emitted by the VCL linter.
 type lintDiagnostic = {
-  ruleId: string, // e.g. "VQL-S001" (Syntax), "VQL-T003" (Type)
+  ruleId: string, // e.g. "VCL-S001" (Syntax), "VCL-T003" (Type)
   category: lintCategory,
   severity: lintSeverity,
   line: int,
@@ -101,9 +101,9 @@ type linterState = {
 // SECTION 3: Formatter System
 // ============================================================
 
-/// Formatter style presets — opinionated formatting for VQL queries.
+/// Formatter style presets — opinionated formatting for VCL queries.
 type formatStyle =
-  | StyleStandard // VQL-UT official style (keywords uppercase, 2-space indent)
+  | StyleStandard // VCL-total official style (keywords uppercase, 2-space indent)
   | StyleCompact // Minimal whitespace, single-line where possible
   | StyleExpanded // One clause per line, generous whitespace
   | StyleProof // Annotated with type obligations and proof markers
@@ -145,7 +145,7 @@ type queryOperation =
   | OpDependencyGraph // Map theorem dependencies
   | OpAxiomUsage // Which axioms does this proof rely on?
   | OpTacticStats // Tactic frequency and success rates
-  | OpCustom // Raw VQL-UT query
+  | OpCustom // Raw VCL-total query
 
 /// A template parameter with type and validation.
 type templateParameter = {
@@ -153,7 +153,7 @@ type templateParameter = {
   paramType: string, // "string" | "int" | "prover" | "tactic" | etc.
   description: string,
   defaultValue: option<string>,
-  validation: option<string>, // Regex or VQL-UT type expression
+  validation: option<string>, // Regex or VCL-total type expression
 }
 
 /// A saved query template — reusable parameterised queries.
@@ -162,7 +162,7 @@ type queryTemplate = {
   name: string,
   description: string,
   operation: queryOperation,
-  template: string, // VQL-UT with {{param}} placeholders
+  template: string, // VCL-total with {{param}} placeholders
   parameters: array<templateParameter>,
   requiredLevel: typeSafetyLevel,
 }
@@ -401,7 +401,7 @@ type dispatchState = {
 
 /// View layer for progressive disclosure of query complexity.
 type viewLayer =
-  | Raw // Full VQL-UT syntax with all annotations
+  | Raw // Full VCL-total syntax with all annotations
   | Folded // Collapsed sub-expressions, summary types
   | Glyphed // Mathematical symbols replace keywords (forall, exists, etc.)
   | Wysiwyg // Interactive visual query builder
@@ -410,7 +410,7 @@ type viewLayer =
 // SECTION 9: Panel Tabs
 // ============================================================
 
-/// The 7 tabs of the VQL panel — each a distinct workflow.
+/// The 7 tabs of the VCL panel — each a distinct workflow.
 type vqlTab =
   | TabEditor // Query editor with linting and formatting
   | TabResults // Result table with sorting/filtering
@@ -431,7 +431,7 @@ type connectionStatus =
   | VqlConnected(string) // Endpoint URL
   | VqlError(string) // Error message
 
-/// The complete VQL panel state — assembled from all subsystems.
+/// The complete VCL panel state — assembled from all subsystems.
 type vqlState = {
   // Panel chrome
   activeTab: vqlTab,
@@ -460,7 +460,7 @@ type vqlState = {
 // SECTION 11: Messages
 // ============================================================
 
-/// All messages the VQL panel can receive — each maps to a state transition.
+/// All messages the VCL panel can receive — each maps to a state transition.
 type vqlMsg =
   // Tab navigation
   | SetTab(vqlTab)

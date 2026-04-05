@@ -51,12 +51,12 @@ pub struct ServiceEntry {
 /// Global service registry, initialised from environment variables.
 ///
 /// Access via `REGISTRY.lock()`. Each entry is keyed by a short identifier
-/// (e.g. "verisimdb", "echidna") matching the IPC command namespace.
+/// (e.g. "verisim", "echidna") matching the IPC command namespace.
 static REGISTRY: Lazy<Mutex<HashMap<String, ServiceEntry>>> = Lazy::new(|| {
     let mut map = HashMap::new();
 
     map.insert(
-        "verisimdb".into(),
+        "verisim".into(),
         ServiceEntry {
             name: "VeriSimDB".into(),
             url: std::env::var("VERISIMDB_URL")

@@ -31,7 +31,7 @@ type serviceEntry = {
 
 /// Full state of the service registry.
 type serviceRegistryState = {
-  /// All registered services, keyed by identifier (e.g. "verisimdb").
+  /// All registered services, keyed by identifier (e.g. "verisim").
   services: Dict.t<serviceEntry>,
   /// Timestamp of last full health check (milliseconds since epoch).
   lastChecked: option<float>,

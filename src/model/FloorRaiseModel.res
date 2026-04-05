@@ -3,7 +3,7 @@
 /// PanLL Floor Raise Model — floor-raising campaign dashboard state.
 ///
 /// Tracks foundational tool adoption across the hyperpolymath ecosystem.
-/// Aggregates proven, contractile, manifest, verisimdb, feedback-o-tron,
+/// Aggregates proven, contractile, manifest, verisim, feedback-o-tron,
 /// and vexometer adoption metrics.
 ///
 /// Dependency: leaf module — no imports from other PanLL models.

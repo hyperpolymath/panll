@@ -1942,7 +1942,7 @@ let renderEchidnaPanel = (echidna: echidnaState): Tea_Vdom.t<msg> => {
 
 /// Main Pane-N view — renders the neural stream panel and the ECHIDNA
 /// theorem prover panel below it.
-/// Render VQL inference stream suggestions from VeriSimDB.
+/// Render VCL inference stream suggestions from VeriSimDB.
 let renderInferenceStream = (suggestions: array<string>): Tea_Vdom.t<msg> => {
   if Array.length(suggestions) == 0 {
     noNode
@@ -1955,7 +1955,7 @@ let renderInferenceStream = (suggestions: array<string>): Tea_Vdom.t<msg> => {
           list{
             div(
               list{Attrs.class_("text-xs text-violet-400 font-semibold tracking-wide uppercase")},
-              list{text(`VQL Inference Stream (${Int.toString(Array.length(suggestions))})`)},
+              list{text(`VCL Inference Stream (${Int.toString(Array.length(suggestions))})`)},
             ),
             button(
               list{
@@ -2013,7 +2013,7 @@ let view = (
       renderAgencyMonitor(state.agency),
       // Token stream
       renderTokenStream(state.tokens, state.filters),
-      // VQL Inference stream (from VeriSimDB)
+      // VCL Inference stream (from VeriSimDB)
       renderInferenceStream(inferenceStream),
       // Monologue
       renderMonologue(state.monologue, state.inferenceActive),

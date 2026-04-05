@@ -3,7 +3,7 @@
 # dogfood-test.sh — Verify local backends return real data for CRG D→C promotion.
 #
 # Usage:
-#   ./scripts/dogfood-test.sh [--with-boj] [--with-verisimdb]
+#   ./scripts/dogfood-test.sh [--with-boj] [--with-verisim]
 #
 # Tests the 3 local backends (Farm, Provenance, Watcher) that require
 # no network services. With flags, also tests BoJ and VeriSimDB.
@@ -97,7 +97,7 @@ fi
 
 echo ""
 echo "5. VeriSimDB (port 8093)"
-if [[ "${1:-}" == *"--with-verisimdb"* ]] || [[ "${2:-}" == *"--with-verisimdb"* ]]; then
+if [[ "${1:-}" == *"--with-verisim"* ]] || [[ "${2:-}" == *"--with-verisim"* ]]; then
     if curl -sf http://localhost:8093/health >/dev/null 2>&1; then
         check "VeriSimDB reachable" "ok"
     else

@@ -10,7 +10,7 @@
 
 /// Supported playground languages.
 type playgroundLanguage =
-  /// VQL — VeriSimDB Query Language.
+  /// VCL — VeriSimDB Query Language.
   | LangVql
   /// KQL — QuandleDB Query Language.
   | LangKql
@@ -57,7 +57,7 @@ type queryResult = {
 type playgroundsCategory =
   /// Code editor with language selector and output.
   | PlayEditor
-  /// NQC database console (VQL/KQL/GQL).
+  /// NQC database console (VCL/KQL/GQL).
   | PlayNqc
   /// Saved snippets library.
   | PlaySnippets
@@ -84,7 +84,7 @@ type playgroundsState = {
   nqcConnected: bool,
   /// NQC console query input (separate from editor).
   nqcInput: string,
-  /// NQC console active query language (VQL/KQL/GQL).
+  /// NQC console active query language (VCL/KQL/GQL).
   nqcLanguage: playgroundLanguage,
   /// NQC console query history (most recent first).
   nqcHistory: array<(string, playgroundLanguage, option<queryResult>)>,

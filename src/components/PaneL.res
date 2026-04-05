@@ -215,7 +215,7 @@ let renderEditor = (content: string): Tea_Vdom.t<msg> => {
   )
 }
 
-/// Render proof obligations from a VQL-UT query result certificate.
+/// Render proof obligations from a VCL-total query result certificate.
 /// Displays proof type, contract, verification status, and hash for each
 /// obligation the type checker inferred during query execution.
 let renderProofObligations = (proofs: array<proofObligation>): Tea_Vdom.t<msg> => {
@@ -263,11 +263,11 @@ let renderProofObligations = (proofs: array<proofObligation>): Tea_Vdom.t<msg> =
       list{
         div(
           list{Attrs.class_("text-xs text-indigo-400 tracking-widest uppercase")},
-          list{text("PROOF OBLIGATIONS (VQL-UT)")},
+          list{text("PROOF OBLIGATIONS (VCL-total)")},
         ),
         div(
           list{Attrs.class_("text-[10px] text-gray-500")},
-          list{text(Int.toString(Array.length(proofs)) ++ " proof(s) from last VQL-UT query")},
+          list{text(Int.toString(Array.length(proofs)) ++ " proof(s) from last VCL-total query")},
         ),
         div(list{Attrs.class_("space-y-0.5")}, rows),
       },
@@ -355,7 +355,7 @@ let view = (state: paneLState, proofs: array<proofObligation>): Tea_Vdom.t<msg> 
       renderMassDensityBar(state.constraints, state.editorContent),
       // Constraint list
       renderConstraintList(state.constraints),
-      // Proof obligations from VQL-UT queries
+      // Proof obligations from VCL-total queries
       renderProofObligations(proofs),
       // Editor
       renderEditor(state.editorContent),

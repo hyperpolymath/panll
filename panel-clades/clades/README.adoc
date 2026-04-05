@@ -129,7 +129,7 @@ and users can customise how clades interact.
 | `playgrounds/`
 | database
 | Play
-| Interactive query sandbox — VQL-DT, GQL-DT, KQL-DT testing
+| Interactive query sandbox — VCL-DT, GQL-DT, KQL-DT testing
 
 | `farm/`
 | viewer

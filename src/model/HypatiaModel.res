@@ -2,8 +2,8 @@
 
 /// PanLL Hypatia Model — types for the Hypatia neurosymbolic scanner panel.
 ///
-/// Hypatia is the intelligence hub: 5 neural networks, VQL queries against
-/// verisimdb-data flat files, safety triangle routing, quarantine, and
+/// Hypatia is the intelligence hub: 5 neural networks, VCL queries against
+/// verisim-data flat files, safety triangle routing, quarantine, and
 /// learning cycles. This panel is the brain of the entire ecosystem — it
 /// sees across all 301+ repos and feeds findings to gitbot-fleet for execution.
 ///

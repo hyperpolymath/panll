@@ -60,7 +60,7 @@ Only 7 aria-live regions across 108+ panels. Status changes, form validation,
 and dynamic content updates are silent to screen readers.
 
 **Remediation:** Add `aria-live="polite"` to status bars, notification areas,
-and VQL result displays. Add `aria-live="assertive"` to error messages.
+and VCL result displays. Add `aria-live="assertive"` to error messages.
 
 ### 4. Screen Reader Text (Priority 2)
 

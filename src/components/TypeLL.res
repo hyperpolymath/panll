@@ -1141,7 +1141,7 @@ let view = (tl: typellState): Tea_Vdom.t<msg> => {
                                 ),
                                 span(
                                   list{Attrs.class_("text-gray-400")},
-                                  list{text("VQL-UT 10-level type safety (supersedes VQL-DT)")},
+                                  list{text("VCL-total 10-level type safety (supersedes VCL-DT)")},
                                 ),
                               },
                             ),
@@ -1152,7 +1152,7 @@ let view = (tl: typellState): Tea_Vdom.t<msg> => {
                               list{
                                 div(
                                   list{Attrs.class_("text-cyan-500 font-bold mb-1")},
-                                  list{text("VQL-UT Safety Levels")},
+                                  list{text("VCL-total Safety Levels")},
                                 ),
                                 div(
                                   list{Attrs.class_("grid grid-cols-2 gap-1 text-gray-500")},

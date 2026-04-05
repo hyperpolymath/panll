@@ -19,7 +19,7 @@ let invoke = RuntimeBridge.invoke
 /// Connect to the VeriSimDB timeline database for the current repo.
 ///
 /// Creates the database file if it doesn't exist. The path is derived from
-/// the repo root: `<repo>/.panll/timeline.verisimdb`.
+/// the repo root: `<repo>/.panll/timeline.verisim`.
 ///
 /// @param repoPath  Root path of the repository
 /// @param tagger    Callback receiving Ok(dbPath) or Error(message)

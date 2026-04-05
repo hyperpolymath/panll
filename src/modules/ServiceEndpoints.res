@@ -12,7 +12,7 @@
 /// deployments override these via environment variables or config files.
 
 /// VeriSimDB octad multimodal database.
-let verisimdb = "http://localhost:8080/api/v1"
+let verisim = "http://localhost:8080/api/v1"
 
 /// QuandleDB algebraic query database.
 let quandledb = "http://localhost:8081/api/v1"

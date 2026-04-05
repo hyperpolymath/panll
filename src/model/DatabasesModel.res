@@ -71,7 +71,7 @@ type schemaEntity = {
 type databasesState = {
   /// Per-module runtime state indexed by module ID.
   modules: array<moduleState>,
-  /// Currently selected module ID (e.g., "verisimdb").
+  /// Currently selected module ID (e.g., "verisim").
   selectedModule: string,
   /// Active category tab.
   activeCategory: databasesCategory,

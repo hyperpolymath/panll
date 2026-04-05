@@ -51,7 +51,7 @@ let capabilityLabel = (cap: tsdmCapability): string =>
   | TierCustomisation => "Tier Customisation (priority within each axis)"
   | CleanupConfiguration => "Cleanup/Finish-Off Configuration"
   | WorkItemAggregation => "Work Item Aggregation (from consumer panels)"
-  | DirectivePersistence => "Directive Persistence (localStorage + verisimdb)"
+  | DirectivePersistence => "Directive Persistence (localStorage + verisim)"
   | DirectiveLocking => "Directive Locking (prevent mid-session changes)"
   | ConsumerBroadcast => "Consumer Broadcast (notify panels of ordering changes)"
   }

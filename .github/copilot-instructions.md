@@ -207,7 +207,7 @@ Use the correct terms for this project:
 |---------|------|
 | dev-server | 8000 |
 | echidna | 9000 |
-| verisimdb | 8080 |
+| verisim | 8080 |
 | boj-server | 7700 |
 | typell | 7800 |
 
@@ -215,7 +215,7 @@ Use the correct terms for this project:
 
 **Depends on:**
 - **gossamer** — Desktop backend runtime (Zig + WebKitGTK)
-- **verisimdb** — Persistent storage layer
+- **verisim** — Persistent storage layer
 - **typell** — Type intelligence engine — cross-panel type checking
 - **boj-server** — MCP server — all external tool integration
 

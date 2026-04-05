@@ -191,7 +191,7 @@ events to the TEA message loop.
 ### VeriSimDB Backing
 
 Panel state, feedback history, and diagnostic data persist to VeriSimDB (port 8080)
-via the `DatabaseModule` and `DatabaseBridgeEngine`. Queries use VQL-UT through
+via the `DatabaseModule` and `DatabaseBridgeEngine`. Queries use VCL-total through
 the BoJ database-mcp cartridge when `bojRouting` is enabled.
 
 ### Panel Organisation
@@ -261,7 +261,7 @@ deno task res:watch
 |---------|------|----------|---------|
 | Gossamer shell | — | IPC | Desktop webview host (Zig + WebKitGTK) |
 | ECHIDNA | 9000 | HTTP | Theorem prover dispatch |
-| VeriSimDB | 8080 | HTTP/VQL-UT | 8-modality versioned database |
+| VeriSimDB | 8080 | HTTP/VCL-total | 8-modality versioned database |
 | BoJ-Server | 7700 | HTTP | Cartridge server (17 cartridges) and protocol gateway |
 | TypeLL | 7800 | HTTP | Cross-panel type verification kernel |
 | Hypatia | — | HTTP (Elixir) | Neurosymbolic CI/CD intelligence |
