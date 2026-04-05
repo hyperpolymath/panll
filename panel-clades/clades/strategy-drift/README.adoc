@@ -1,0 +1,74 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= Strategy Drift Panel (StrategyDrift)
+:toc: preamble
+
+Visualises the learning loop's strategy recommendations over time,
+the PROVEN/SANCTIFY certificate landscape, and strategy-shift events
+that trigger re-proving of previously-failed attempts.
+
+== Data Sources
+
+Four endpoints on `verisim-api` plus one ETS snapshot on `hypatia`:
+
+[cols="1,2,2"]
+|===
+| Source | Endpoint | Refresh
+
+| Strategy
+| `GET /api/v1/proof_attempts/strategy?class=X`
+| On user action (class selector)
+
+| Certificates
+| `GET /api/v1/proof_attempts/certificates`
+| Every 60s
+
+| Coverage
+| `GET /api/v1/proof_attempts/coverage`
+| Every 60s
+
+| Drift snapshot
+| `Hypatia.Rules.StrategyDrift.snapshot/0` (ETS via HTTP bridge)
+| Every 60s
+|===
+
+== Views
+
+=== Timeline
+Per-class top-prover trajectory. Each obligation class gets its own row;
+colour-coded segments show which prover held the top rank during that
+time window. Drift events appear as vertical separators.
+
+=== Certs Grid
+11-obligation-classes × 42-provers cell grid. Each cell shows
+`success_rate × total_attempts` as size and colour intensity. Cell
+border indicates certificate status:
+
+* thin grey — pending
+* green — proven
+* gold double-border — proven AND part of a sanctified class
+
+=== Drift Events
+Append-only log of `{timestamp, class, old_top, new_top, candidates_requeued}`
+records, produced by `Hypatia.Rules.StrategyDrift.check_all_shifts/1`
+on each polling tick.
+
+=== Coverage Bars
+Per-class horizontal bar triple: `n_repos`, `n_provers`, `n_attempts`.
+Surfaces how narrow or broad the evidence base is for each class —
+a class with `n_repos=1` has narrow cross-repo transfer confidence.
+
+== Related
+
+* verisimdb source — `.../proof_attempts*` handlers and MV DDL
+* hypatia — `Hypatia.Rules.ProofStrategySelection` (N1 novelty gate +
+  N2 quarantine) and `Hypatia.Rules.StrategyDrift` (N4 drift tracker)
+* `docs/design/DESIGN-2026-04-05-V4-proof-attempts-vqldt.adoc` (V4 cert design)
+
+== Implementation Status (2026-04-05)
+
+* Config scaffolded (this file)
+* Backend endpoints live on `verisim-api` (strategy, certificates,
+  coverage — all tested, plus hypatia ETS snapshot via StrategyDrift)
+* ReScript/Deno panel module — not yet written (placeholder for
+  follow-up sprint). Skeleton files follow the pattern established by
+  `verisim-feeds` and other real panels.
