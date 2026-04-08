@@ -1,0 +1,123 @@
+# Fixing PanLL Desktop Icon Issues
+
+## Problem
+The PanLL desktop icon shows an error: "Unable to make the service PanLL executable, aborting execution. Existing file /home/hyper/Desktop/panll.desktop is not writable."
+
+## Root Cause
+The desktop file is **read-only (444)** for security, but something is trying to modify it after creation.
+
+## Solution
+
+### Option 1: Don't use the install script
+Simply launch PanLL directly from the existing desktop icon. The launcher is already configured correctly.
+
+### Option 2: Modify the install script
+If you need to reinstall, modify `scripts/install-desktop.sh` to not change desktop file permissions:
+
+```bash
+# Remove or comment out this line:
+# chmod +x "$APPS_DIR/${APP_NAME}.desktop"
+```
+
+### Option 3: Temporarily make writable
+If you must modify the desktop file:
+
+```bash
+# Make writable
+sudo chmod 644 /home/hyper/Desktop/panll.desktop
+
+# Make your changes
+
+# Restore protection
+sudo chmod 444 /home/hyper/Desktop/panll.desktop
+```
+
+## Current Status
+
+✅ **Desktop file is properly configured**
+- Exec: `/var/mnt/eclipse/repos/.desktop-tools/panll-launcher.sh serve`
+- Terminal: false
+- Permissions: 444 (read-only, secure)
+
+✅ **Launcher is fixed**
+- Uses `nohup` for background processes
+- Waits for server to be ready
+- Keeps running with `tail -f /dev/null`
+- Opens browser automatically
+
+## How to Launch
+
+1. **From desktop icon**: Click the PanLL icon in your desktop environment
+2. **From terminal**: `/var/mnt/eclipse/repos/.desktop-tools/panll-launcher.sh serve`
+3. **Stop**: `/var/mnt/eclipse/repos/.desktop-tools/panll-launcher.sh stop`
+
+## Verification
+
+```bash
+# Check if server is running
+curl -v http://localhost:3000
+
+# Check logs
+ tail -50 /tmp/panll-server.log
+
+# Check process
+ps aux | grep panll
+```
+
+## Troubleshooting
+
+If it still doesn't work:
+
+1. **Check Gossamer**: `command -v gossamer && gossamer --version`
+2. **Check Deno**: `command -v deno && deno --version`
+3. **Check actual port**: `ss -tlnp | grep deno` or `lsof -i :8000`
+4. **Verify launcher port matches**: `grep "URL=" /var/mnt/eclipse/repos/.desktop-tools/panll-launcher.sh`
+5. **Update launcher if needed**: Change URL in launcher to match actual server port
+6. **Run diagnostics**: `panll-dustfile.sh --diagnose`
+7. **Try repair**: `panll-dustfile.sh --repair`
+
+### Common Port Issues
+
+The launcher and server ports must match:
+
+```bash
+# Check what port the server is actually using
+ss -tlnp | grep deno
+
+# Check what port the launcher expects
+grep "URL=" /var/mnt/eclipse/repos/.desktop-tools/panll-launcher.sh
+
+# If they don't match, update the launcher:
+sed -i 's|URL="http://localhost:3000"|URL="http://localhost:8000"|' /var/mnt/eclipse/repos/.desktop-tools/panll-launcher.sh
+```
+
+Default ports:
+- PanLL: 8000 (deno dev server)
+- IDApTIK: 8080
+- Game Server Admin: VeriSimDB on 8090
+
+## Security Note
+
+Desktop files use **555 permissions** (read+execute, no write) for security. This prevents:
+- Accidental modification
+- Malware tampering
+- Unauthorized changes
+- Code injection attacks
+
+While still allowing:
+- Execution by desktop environment
+- Reading by users
+- Legitimate updates (temporarily change to 755)
+
+### Permission Reference:
+- `444` = read-only (too restrictive, can't execute)
+- `555` = read+execute (recommended for desktop files)
+- `644` = read+write for owner (use temporarily for updates)
+- `755` = read+execute for all, write for owner (standard for scripts)
+
+To modify temporarily:
+```bash
+sudo chmod 755 /home/hyper/Desktop/panll.desktop
+# Make your changes
+sudo chmod 555 /home/hyper/Desktop/panll.desktop
+```

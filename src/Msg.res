@@ -92,6 +92,9 @@ include MinterMsg
 /// Re-export Provisioner messages.
 include ProvisionerMsg
 
+/// Re-export Wizard messages.
+include WizardMsg
+
 /// Re-export Code MRI VoiceTag messages.
 include VoiceTagMsg
 
@@ -428,6 +431,7 @@ type msg =
   | Workspace(workspaceMsg) // Workspace management layer (DD-022–DD-027)
   | Capture(captureMsg) // Screenshots, recordings, demos (DD-022)
   | Security(securityMsg) // Redaction, vault, 2FA, Trustfile (DD-026/027)
+  | Wizard(wizardMsg) // Plugin/panel creation wizard
   | Keybindings(keybindingsMsg) // Keyboard shortcut management
   | Migration(migrationMsg) // ReScript Migration Observatory
   | PanicAttack(panicAttackMsg) // Stress testing and bug detection

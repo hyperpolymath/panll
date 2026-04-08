@@ -95,6 +95,7 @@ open UpdateStapeln
 open UpdateEvangeliser
 open UpdateLanguageForge
 open UpdateTangleViz
+open UpdateWizard
 
 // Grouped small updaters
 open UpdateGameDevTesting
@@ -243,6 +244,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | VerisimdbFeeds(subMsg) => updateVerisimdbFeeds(model, subMsg)
   | FeedbackRouting(subMsg) => updateFeedbackRouting(model, subMsg)
   | VexometerFriction(subMsg) => updateVexometerFriction(model, subMsg)
+  | Wizard(subMsg) => UpdateWizard.update(model, subMsg)
   // SpecBrowser — language specification browsing
   | SpecBrowser(subMsg) =>
     switch subMsg {

@@ -1,0 +1,381 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+//
+// PanLL Groove Protocol Specification
+//
+// Defines the Groove inter-service communication protocol used throughout
+// the PanLL ecosystem for service discovery, capability negotiation, and
+// component integration.
+
+= Groove Protocol Specification
+:toc:
+:toclevels: 3
+
+== Overview
+
+Groove is a lightweight, capability-based protocol for service discovery and
+inter-component communication within the PanLL ecosystem. It enables:
+
+* Service discovery via `.well-known/groove` endpoint
+* Capability negotiation between components
+* Loose coupling between optional components
+* Tight integration for core systems
+
+== Protocol Endpoints
+
+=== Discovery Endpoint
+
+`GET /.well-known/groove`
+
+Returns a capability manifest describing available services.
+
+[source,json]
+----
+{
+  "groove_version": "1",
+  "service_id": "panll",
+  "capabilities": [
+    {
+      "id": "portfolio-management",
+      "name": "Portfolio Management",
+      "endpoint": "/panels/provisioner",
+      "methods": ["GET", "POST"]
+    },
+    {
+      "id": "panel-configuration",
+      "name": "Panel Configuration",
+      "endpoint": "/panels/configurator",
+      "methods": ["GET", "PUT"]
+    }
+  ],
+  "health": "/.well-known/groove/status",
+  "mesh": "/.well-known/groove/mesh"
+}
+----
+
+=== Health Endpoint
+
+`GET /.well-known/groove/status`
+
+Returns health status of the Groove mesh.
+
+[source,json]
+----
+{
+  "status": "healthy",
+  "services": 12,
+  "timestamp": "2026-04-05T10:00:00Z"
+}
+----
+
+=== Mesh Endpoint
+
+`GET /.well-known/groove/mesh`
+
+Returns the current mesh topology.
+
+[source,json]
+----
+{
+  "nodes": [
+    {
+      "id": "provisioner",
+      "status": "healthy",
+      "capabilities": ["portfolio-management"]
+    },
+    {
+      "id": "configurator",
+      "status": "healthy",
+      "capabilities": ["panel-configuration"]
+    }
+  ],
+  "connections": [
+    {"from": "provisioner", "to": "panel-bus"},
+    {"from": "configurator", "to": "panel-bus"}
+  ]
+}
+----
+
+== Integration Patterns
+
+=== Soft Groove Integration
+
+Event-based integration for optional components.
+
+[source,rescript]
+----
+// Subscribe to events
+Groove.subscribe("provisioner.portfolio.installed", payload => {
+  // Handle portfolio installation
+})
+
+// Publish events
+Groove.publish("configurator.updated", {
+  panelId: "my-panel",
+  config: {...}
+})
+
+// Unsubscribe
+Groove.unsubscribe("provisioner.portfolio.installed")
+----
+
+=== Hard Groove Integration
+
+Direct integration for core components.
+
+[source,rescript]
+----
+// Register core service
+Groove.registerCoreService({
+  id: "panel-system",
+  capabilities: ["panel-management"],
+  handlers: {
+    createPanel: (panelId) => {...},
+    destroyPanel: (panelId) => {...}
+  }
+})
+
+// Direct method call
+PanelSystem.create("my-panel")
+----
+
+== Capability Manifest Format
+
+[source,json]
+----
+{
+  "groove_version": "1",
+  "service_id": "string",          // Unique service identifier
+  "capabilities": [                 // Array of capability descriptors
+    {
+      "id": "string",             // Machine-readable ID
+      "name": "string",           // Human-readable name
+      "description": "string",      // Optional description
+      "endpoint": "string",         // API endpoint
+      "methods": ["string"],        // Supported HTTP methods
+      "version": "string",         // Optional version
+      "tier": "string"             // Optional trust tier
+    }
+  ],
+  "health": "string",             // Health endpoint
+  "mesh": "string",                // Mesh topology endpoint
+  "timestamp": "string"            // ISO 8601 timestamp
+}
+----
+
+== Error Handling
+
+=== Error Responses
+
+[source,json]
+----
+{
+  "error": "string",              // Machine-readable error code
+  "message": "string",           // Human-readable message
+  "details": {...},               // Optional error details
+  "timestamp": "string"           // ISO 8601 timestamp
+}
+----
+
+=== Common Error Codes
+
+[cols="1,1,2"]
+|===
+| Code | HTTP Status | Description
+
+| `groove_unavailable`
+| 503
+| Groove service unavailable
+
+| `service_not_found`
+| 404
+| Requested service not found
+
+| `capability_not_found`
+| 404
+| Requested capability not found
+
+| `invalid_request`
+| 400
+| Invalid request format
+
+| `unauthorized`
+| 401
+| Authentication required
+
+| `forbidden`
+| 403
+| Access denied
+
+| `rate_limited`
+| 429
+| Too many requests
+
+| `internal_error`
+| 500
+| Internal server error
+
+|===
+
+== Security Considerations
+
+=== Authentication
+
+Groove supports multiple authentication mechanisms:
+
+* **API Keys**: Simple key-based authentication
+* **JWT**: JSON Web Tokens for stateless auth
+* **OAuth 2.0**: Delegated authorization
+* **None**: For internal trusted networks
+
+=== Authorization
+
+Capability-based authorization:
+
+* Services declare required capabilities
+* Clients must possess required capabilities
+* Capabilities granted via trust tiers
+
+=== Trust Tiers
+
+[cols="1,2,2"]
+|===
+| Tier | Description | Example Services
+
+| `teranga`
+| Core services, always available
+| Panel System, TEA Runtime
+
+| `shield`
+| Security-critical services
+| Anti-Crash, Safety Systems
+
+| `ayo`
+| Community/contributed services
+| Plugins, Optional Features
+
+|===
+
+== Performance Characteristics
+
+=== Latency
+
+[cols="1,1,1"]
+|===
+| Integration Mode | Typical Latency | 95th Percentile
+
+| Soft Groove (events)
+| 10-50μs
+| < 100μs
+
+| Hard Groove (direct)
+| 1-5μs
+| < 10μs
+
+|===
+
+=== Throughput
+
+[cols="1,1,1"]
+|===
+| Integration Mode | Requests/sec | Max Concurrent
+
+| Soft Groove (events)
+| 1,000-5,000
+| 100+
+
+| Hard Groove (direct)
+| 10,000-50,000
+| 1,000+
+
+|===
+
+== Best Practices
+
+=== Service Design
+
+* **Idempotency**: Design for idempotent operations
+* **Statelessness**: Prefer stateless services
+* **Small Payloads**: Keep messages < 1KB
+* **Clear Naming**: Use hierarchical namespaces
+* **Documentation**: Document all capabilities
+
+=== Client Design
+
+* **Retry Logic**: Implement exponential backoff
+* **Circuit Breakers**: Fail fast, recover gracefully
+* **Bulk Operations**: Batch where possible
+* **Caching**: Cache capability manifests
+* **Cleanup**: Unsubscribe when done
+
+=== Error Handling
+
+* **Graceful Degradation**: Handle errors smoothly
+* **Fallbacks**: Provide alternative paths
+* **Logging**: Log errors for debugging
+* **Metrics**: Track error rates
+* **Alerts**: Notify on critical failures
+
+== Examples
+
+=== Portfolio Management
+
+[source,rescript]
+----
+// Soft Groove: Event-based portfolio updates
+Groove.subscribe("provisioner.portfolio.installed", payload => {
+  // Update local state
+  let portfolio = payload.portfolio
+  // ... handle installation
+})
+
+// Publish installation complete
+Groove.publish("provisioner.portfolio.ready", {
+  portfolioId: "my-portfolio",
+  status: "installed"
+})
+----
+
+=== Panel Configuration
+
+[source,rescript]
+----
+// Soft Groove: Configuration changes
+Groove.subscribe("configurator.updated", payload => {
+  // Apply configuration
+  let config = payload.config
+  // ... update panel
+})
+
+// Request configuration update
+Groove.publish("configurator.request", {
+  panelId: "my-panel",
+  config: {theme: "dark"}
+})
+----
+
+== Migration Guide
+
+=== From No Integration to Soft Groove
+
+1. Identify component capabilities
+2. Define event names and payloads
+3. Implement subscription handlers
+4. Add event publishing
+5. Test in isolation
+6. Integrate with mesh
+
+=== From Soft Groove to Hard Groove
+
+1. Define direct interface
+2. Implement handlers
+3. Register with Groove core
+4. Maintain Soft Groove for compatibility
+5. Update all callers
+6. Deprecate Soft Groove
+
+== References
+
+* Integration Modes: link:INTEGRATION-MODES.adoc[INTEGRATION-MODES.adoc]
+* PanLL Architecture: link:../../../architecture/ARCHITECTURE.adoc[ARCHITECTURE.adoc]
+* Component Design: link:../../../guides/COMPONENT-DESIGN.adoc[COMPONENT-DESIGN.adoc]

@@ -1,0 +1,349 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+//
+// PanLL Groove Integration Standards
+//
+// Defines the Soft Groove / Hard Groove integration patterns for component
+// connectivity within the PanLL ecosystem.
+
+= Groove Integration Modes
+:toc:
+:toclevels: 3
+
+== Overview
+
+The Groove protocol supports two integration modes that provide different tradeoffs
+between coupling, performance, and flexibility. Understanding when to use each mode
+is critical for maintaining PanLL's architectural balance.
+
+== Soft Groove Integration
+
+=== Definition
+
+*Lightweight, event-based integration* that allows components to communicate without
+tight coupling. Components can "snap on" and "snap off" the Groove mesh with minimal
+impact on the overall system.
+
+=== Characteristics
+
+* **Coupling**: Loose
+* **Communication**: Event-based (pub/sub)
+* **Performance**: Moderate (event overhead)
+* **Flexibility**: High (easy to add/remove)
+* **Setup Complexity**: Low
+* **Use Case**: Optional components, plugins, non-critical services
+
+=== When to Use
+
+* Components that may be disabled or removed
+* Optional features and plugins
+* Non-critical services
+* Components with variable availability
+* Experimental features
+
+=== Implementation Pattern
+
+[source,rescript]
+----
+// Subscribe to events
+Groove.subscribe("provisioner.updates", handleUpdate)
+
+// Publish events
+Groove.publish("plugin.installed", {pluginId: "my-plugin"})
+
+// Unsubscribe when done
+Groove.unsubscribe("provisioner.updates", handleUpdate)
+----
+
+=== Examples in PanLL
+
+* **Provisioner**: Portfolio management (optional component)
+* **Configurator**: Runtime configuration (optional component)
+* **Plugins**: All plugin cartridges use Soft Groove
+* **Experimental Features**: A/B tests, beta features
+
+== Hard Groove Integration
+
+=== Definition
+
+*Deep, tightly-coupled integration* that provides maximum performance and reliability
+for core system components. Hard Groove components are essential to PanLL's operation
+and cannot be easily removed.
+
+=== Characteristics
+
+* **Coupling**: Tight
+* **Communication**: Direct method calls
+* **Performance**: High (minimal overhead)
+* **Flexibility**: Low (hard to change)
+* **Setup Complexity**: High
+* **Use Case**: Core systems, critical services, performance-sensitive components
+
+=== When to Use
+
+* Core system components
+* Performance-critical services
+* Components that must always be available
+* Tightly coupled subsystems
+* Foundational infrastructure
+
+=== Implementation Pattern
+
+[source,rescript]
+----
+// Direct registration with Groove core
+Groove.registerCoreService({
+  id: "panel-system",
+  capabilities: ["panel-management", "lifecycle"],
+  handlers: {
+    createPanel: PanelSystem.create,
+    destroyPanel: PanelSystem.destroy,
+  }
+})
+
+// Direct method calls (no event overhead)
+PanelSystem.create("my-panel")
+----
+
+=== Examples in PanLL
+
+* **Panel System**: Core UI framework
+* **TEA Runtime**: State management engine
+* **Panel Bus**: IPC infrastructure
+* **Groove Core**: Protocol implementation
+* **Anti-Crash System**: Safety infrastructure
+
+== Comparison Table
+
+[cols="1,1,1,1,1,1"]
+|===
+| Aspect | Soft Groove | Hard Groove | When to Choose Soft | When to Choose Hard | PanLL Example
+
+| Coupling
+| Loose
+| Tight
+| Optional components
+| Core systems
+| Provisioner vs Panel System
+
+| Communication
+| Events (pub/sub)
+| Direct calls
+| Variable availability
+| Always available
+| Plugins vs TEA Runtime
+
+| Performance
+| Moderate
+| High
+| Non-critical
+| Performance-critical
+| Configurator vs Panel Bus
+
+| Flexibility
+| High
+| Low
+| Experimental features
+| Foundational services
+| Beta features vs Groove Core
+
+| Setup Complexity
+| Low
+| High
+| Quick integration
+| Complex integration
+| Plugin installation vs Core init
+
+| Availability
+| Variable
+| Always on
+| Can be disabled
+| Must be running
+| Optional panels vs Core panels
+
+|===
+
+== Decision Framework
+
+=== Decision Tree
+
+. Is the component optional or can it be disabled?
+  [yes] -> Use **Soft Groove**
+  [no] -> Continue to next question
+
+. Is the component performance-critical?
+  [yes] -> Use **Hard Groove**
+  [no] -> Continue to next question
+
+. Is the component part of PanLL's core infrastructure?
+  [yes] -> Use **Hard Groove**
+  [no] -> Use **Soft Groove**
+
+=== Decision Examples
+
+[cols="1,1,1"]
+|===
+| Component | Decision Process | Result
+
+| Provisioner
+| Optional? Yes → Soft Groove
+| Soft Groove
+
+| Configurator
+| Optional? Yes → Soft Groove
+| Soft Groove
+
+| Panel System
+| Optional? No → Performance-critical? Yes → Core? Yes → Hard Groove
+| Hard Groove
+
+| Plugin Cartridges
+| Optional? Yes → Soft Groove
+| Soft Groove
+
+| TEA Runtime
+| Optional? No → Performance-critical? Yes → Core? Yes → Hard Groove
+| Hard Groove
+
+|===
+
+== Architectural Benefits
+
+=== Maintainability
+
+* **Soft Groove** components are easier to:
+  - Add new components
+  - Remove old components
+  - Update component implementations
+  - Test in isolation
+
+* **Hard Groove** components provide:
+  - Maximum performance
+  - System stability
+  - Predictable behavior
+  - Minimal overhead
+
+=== Flexibility
+
+The separation allows PanLL to:
+* Add optional features without bloat
+* Experiment with new components
+* Support plugin ecosystem
+* Maintain core performance
+
+=== Performance
+
+* **Soft Groove**: ~10-50μs event overhead
+* **Hard Groove**: ~1-5μs direct call overhead
+* **Tradeoff**: 10x performance for 10x flexibility
+
+== Best Practices
+
+=== Soft Groove Best Practices
+
+* **Event Naming**: Use clear, hierarchical names
+  - Good: `"provisioner.portfolio.installed"`
+  - Bad: `"portfolio"`
+
+* **Payload Size**: Keep event payloads small (< 1KB)
+
+* **Subscription Management**: Always unsubscribe when component unmounts
+
+* **Error Handling**: Handle missing handlers gracefully
+
+* **Documentation**: Document all published events
+
+=== Hard Groove Best Practices
+
+* **Interface Stability**: Never change core interfaces
+
+* **Versioning**: Use semantic versioning for breaking changes
+
+* **Performance**: Optimize for minimum overhead
+
+* **Safety**: Validate all inputs rigorously
+
+* **Documentation**: Complete API documentation required
+
+== Migration Between Modes
+
+=== Soft → Hard
+
+*Only migrate when:
+* Component becomes critical
+* Performance bottleneck identified
+* Permanent addition to core
+
+*Migration steps:
+1. Add Hard Groove interface
+2. Maintain Soft Groove for backward compatibility
+3. Deprecate Soft Groove after migration period
+4. Remove Soft Groove in next major version
+
+=== Hard → Soft
+
+*Only migrate when:
+* Component becomes optional
+* Performance no longer critical
+* Refactoring to separate concerns
+
+*Migration steps:
+1. Add Soft Groove interface
+2. Route Hard Groove calls through Soft Groove
+3. Update all callers to use Soft Groove
+4. Remove Hard Groove in next major version
+
+== Testing Strategies
+
+=== Soft Groove Testing
+
+* **Event Simulation**: Test with simulated events
+* **Handler Isolation**: Test handlers independently
+* **Subscription Lifecycle**: Test subscribe/unsubscribe
+* **Error Conditions**: Test missing handlers
+
+=== Hard Groove Testing
+
+* **Interface Contracts**: Test all methods
+* **Performance Benchmarks**: Measure overhead
+* **Stress Testing**: High load scenarios
+* **Backward Compatibility**: Version compatibility
+
+== Future Evolution
+
+=== Potential Enhancements
+
+* **Hybrid Mode**: Combine Soft and Hard Groove
+* **Dynamic Switching**: Change mode at runtime
+* **Performance Monitoring**: Track overhead
+* **Automatic Migration**: Tooling to assist migration
+
+=== Research Directions
+
+* Optimal balance between modes
+* Performance/flexibility tradeoffs
+* Pattern catalog for common scenarios
+* Automated mode selection
+
+== Conclusion
+
+The Soft Groove / Hard Groove separation is a **fundamental architectural pattern** in
+PanLL that enables:
+
+* **Flexibility** where needed (Soft Groove)
+* **Performance** where critical (Hard Groove)
+* **Balance** between the two extremes
+* **Evolution** as components mature
+
+This pattern should be **preserved and extended** as PanLL grows, ensuring that:
+
+* New optional features use Soft Groove
+* Core systems maintain Hard Groove
+* The balance is regularly reviewed
+* Migration paths are clear and documented
+
+== References
+
+* Groove Protocol Specification: link:protocol/GROOVE-PROTOCOL.adoc[GROOVE-PROTOCOL.adoc]
+* PanLL Architecture: link:../../../architecture/ARCHITECTURE.adoc[ARCHITECTURE.adoc]
+* Component Design: link:../../../guides/COMPONENT-DESIGN.adoc[COMPONENT-DESIGN.adoc]

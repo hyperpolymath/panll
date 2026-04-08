@@ -96,6 +96,10 @@ pub async fn minter_mint_panel(
     accessibility: String,
     capabilities: String,
     endpoint: String,
+    plugin_type: Option<String>,
+    protocol_dependencies: Option<String>,
+    sandbox_policy: Option<String>,
+    groove_endpoint: Option<String>,
 ) -> Result<String, String> {
     let _request = MintRequest {
         panel_name: panel_name.clone(),
@@ -106,6 +110,10 @@ pub async fn minter_mint_panel(
         accessibility: accessibility.clone(),
         capabilities: capabilities.clone(),
         endpoint: endpoint.clone(),
+        plugin_type: plugin_type.clone(),
+        protocol_dependencies: protocol_dependencies.clone(),
+        sandbox_policy: sandbox_policy.clone(),
+        groove_endpoint: groove_endpoint.clone(),
     };
 
     // Validate panel_name to prevent path traversal — must be alphanumeric PascalCase.

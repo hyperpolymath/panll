@@ -1,51 +1,19 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
-= PanLL Contractiles — Security and Governance Declarations
-Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Contractiles Template Set
+:toc:
+:sectnums:
 
-== What Are Contractiles?
+This directory contains the generalized contractiles templates. Copy the `.machine_readable/contractiles/` directory into a new repo to establish a consistent operational, validation, trust, recovery, and intent framework.
 
-Contractiles are the elastic, adaptive state-shapes between the Operator
-and the Machine. They declare what PanLL **must** do, what it **can** recover
-from, and where it **intends** to go.
+== Fill-In Instructions
 
-== Directory Structure
+1. Update the Mustfile to reflect your real invariants (paths, schema versions, ports).
+2. Replace Trustfile.hs placeholders with your actual key paths and verification commands.
+3. Adjust Dustfile handlers to match your rollback and recovery tooling.
+4. Update Intentfile to mirror the roadmap you want the system to evolve toward.
 
-[cols="1,2,3"]
-|===
-| Directory | File | Purpose
+== Contents
 
-| `trust/`
-| `Trustfile.a2ml`
-| Cryptographic and policy declarations — post-quantum keys, threat model, formal verification theorems, accessibility commitments, container supply chain
-
-| `must/`
-| `Mustfile`
-| Declarative invariant checks — build succeeds, tests pass, layout contracts valid, SPDX headers present, no port conflicts
-
-| `dust/`
-| `Dustfile`
-| Recovery and rollback semantics — state corruption, proof session crashes, tactic undo, layout preset corruption
-
-| `lust/`
-| `Intentfile`
-| Declared future intent — proof UX, SLM integration, collaboration, discipline layouts, persistence, accessibility, infrastructure
-|===
-
-== Relationship to K9-SVC
-
-The `layouts/` directory at the project root contains K9 Self-Validating
-Components at **Yard** security level (Nickel evaluation, no I/O). These
-are governed by the Trustfile's `layout_presets` policy.
-
-The collaboration server deployment (when built) will use K9 components
-at **Hunt** level (full execution, signature required).
-
-== Relationship to PanLL Cognitive Governance
-
-PanLL's runtime contractiles (Anti-Crash, Vexometer, Orbital Sync,
-Divergence Limit, Autonomy Bound) are defined in
-`src/model/GovernanceModel.res` and evaluated by `src/core/Contractiles.res`.
-
-These _build-time_ contractiles in this directory complement the runtime
-ones — the Mustfile checks that the code compiles correctly, the Trustfile
-declares the formal properties, and the Dustfile handles recovery.
+* `must/Mustfile` - required invariants and validations.
+* `trust/Trustfile.hs` - cryptographic verification steps.
+* `dust/Dustfile` - rollback and recovery semantics.
+* `lust/Intentfile` - future intent and roadmap direction.

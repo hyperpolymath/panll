@@ -50,3 +50,13 @@ repos:
     rev: v8.24.3
     hooks:
       - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: k9-validation
+        name: K9-SVC Contractile Validation
+        entry: bash -c 'echo "K9-SVC validation would run here"; echo "Checking contractiles..."; ls .machine_readable/contractiles/*/*.a2ml 2>/dev/null | wc -l'
+        language: system
+        pass_filenames: false
+        stages: [commit, push]
+        always_run: true

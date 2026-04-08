@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+//
+// PanLL Groove Standards
+//
+// Documentation for the Groove inter-service communication protocol and
+// integration patterns used throughout the PanLL ecosystem.
+
+= Groove Standards Documentation
+:toc:
+
+== Overview
+
+This directory contains documentation for the Groove protocol and integration patterns
+used in PanLL for inter-component communication.
+
+== Documents
+
+=== Protocol Specification
+
+link:protocol/GROOVE-PROTOCOL.adoc[GROOVE-PROTOCOL.adoc]::
+The complete Groove protocol specification including:
+
+* Protocol endpoints and formats
+* Integration patterns (Soft/Hard Groove)
+* Capability manifest format
+* Error handling and codes
+* Security considerations
+* Performance characteristics
+* Best practices and examples
+
+=== Integration Modes
+
+link:INTEGRATION-MODES.adoc[INTEGRATION-MODES.adoc]::
+Detailed guide to Soft Groove vs Hard Groove integration including:
+
+* Definitions and characteristics
+* When to use each mode
+* Implementation patterns
+* Decision framework
+* Migration strategies
+* Architectural benefits
+* Best practices
+
+== Usage Guidelines
+
+=== When to Use Soft Groove
+
+* Optional components (Provisioner, Configurator)
+* Plugin cartridges
+* Experimental features
+* Non-critical services
+* Components that may be disabled
+
+=== When to Use Hard Groove
+
+* Core system components (Panel System, TEA Runtime)
+* Performance-critical services
+* Components that must always be available
+* Tightly coupled subsystems
+* Foundational infrastructure
+
+=== Decision Flow
+
+. Is the component optional?
+  [yes] → Use Soft Groove
+  [no] → Continue
+
+. Is it performance-critical?
+  [yes] → Use Hard Groove
+  [no] → Continue
+
+. Is it core infrastructure?
+  [yes] → Use Hard Groove
+  [no] → Use Soft Groove
+
+== Maintenance
+
+* **Review**: Regularly review integration modes
+* **Update**: Keep documentation in sync with implementation
+* **Extend**: Add new patterns as needed
+* **Deprecate**: Mark old patterns as deprecated
+
+== Related Documentation
+
+* link:../../architecture/ARCHITECTURE.adoc[PanLL Architecture]
+* link:../../guides/COMPONENT-DESIGN.adoc[Component Design Guide]
+* link:../../decisions/DESIGN-DECISIONS.adoc[Design Decisions]

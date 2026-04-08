@@ -55,6 +55,14 @@ pub struct MintRequest {
     pub capabilities: String,
     /// Endpoint URL for HTTP/Database backends (empty string if not applicable).
     pub endpoint: String,
+    /// Optional plugin type: "UI", "Backend", "Hybrid".
+    pub plugin_type: Option<String>,
+    /// Optional JSON-encoded protocol dependencies array.
+    pub protocol_dependencies: Option<String>,
+    /// Optional JSON-encoded sandbox policy.
+    pub sandbox_policy: Option<String>,
+    /// Optional groove endpoint path.
+    pub groove_endpoint: Option<String>,
 }
 
 /// Result of a minting operation — returned to the ReScript frontend.
@@ -183,5 +191,83 @@ mod tests {
         let json = serde_json::to_string(&cap).expect("serialise must succeed");
         let back: Capability = serde_json::from_str(&json).expect("deserialise must succeed");
         assert_eq!(back.id, "repo-inventory");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Plugin-specific types (added for cartridge/plugin support)
+// ---------------------------------------------------------------------------
+
+/// Protocol dependency for a plugin cartridge.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ProtocolDependency {
+    /// Protocol name (e.g., "MCP", "LSP", "DAP").
+    pub name: String,
+    /// Version requirement.
+    pub version: String,
+    /// Trust tier: "teranga", "shield", or "ayo".
+    pub tier: String,
+}
+
+/// Sandbox policy for plugin isolation.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SandboxPolicy {
+    /// Allowed capabilities.
+    pub capabilities: Vec<String>,
+    /// Isolation level.
+    pub isolation_level: String,
+    /// Network access permission.
+    pub network_access: bool,
+    /// Filesystem access permission.
+    pub filesystem_access: bool,
+}
+
+/// Plugin type enumeration.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PluginType {
+    /// UI-only plugin (ReScript frontend).
+    UI,
+    /// Backend-only plugin (Rust service).
+    Backend,
+    /// Hybrid plugin (both frontend and backend).
+    Hybrid,
+}
+
+#[cfg(test)]
+mod plugin_tests {
+    use super::*;
+
+    #[test]
+    fn smoke_protocol_dependency_serialization() {
+        let dep = ProtocolDependency {
+            name: "MCP".to_string(),
+            version: "1.0".to_string(),
+            tier: "teranga".to_string(),
+        };
+        let json = serde_json::to_string(&dep).expect("must serialise");
+        assert!(json.contains("MCP"));
+        let back: ProtocolDependency = serde_json::from_str(&json).expect("must deserialise");
+        assert_eq!(back.name, "MCP");
+    }
+
+    #[test]
+    fn smoke_sandbox_policy_defaults() {
+        let policy = SandboxPolicy {
+            capabilities: vec!["filesystem".to_string()],
+            isolation_level: "StandardPod".to_string(),
+            network_access: false,
+            filesystem_access: true,
+        };
+        assert_eq!(policy.isolation_level, "StandardPod");
+        assert!(!policy.network_access);
+    }
+
+    #[test]
+    fn smoke_plugin_type_variants() {
+        let variants = vec![PluginType::UI, PluginType::Backend, PluginType::Hybrid];
+        for variant in variants {
+            serde_json::to_string(&variant).expect("must serialise");
+        }
     }
 }

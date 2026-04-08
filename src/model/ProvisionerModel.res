@@ -106,32 +106,210 @@ type portfolioInstallProgress = {
 type provisionerCategory =
   /// Browse available portfolios.
   | Portfolios
+  /// Browse available plugin bundles.
+  | PluginBundles
   /// View and edit per-panel configuration.
   | Configurator
   /// View installed panels and their isolation tiers.
   | Installed
   /// Create a custom portfolio.
   | CustomPortfolio
+  /// Create a custom plugin bundle.
+  | CustomPluginBundle
+  /// Create mixed deployment bundles.
+  | DeploymentBundles
+
+/// Provisioning target type - what are we provisioning?
+type provisioningTarget =
+  /// Traditional PanLL panels
+  | PanelTarget
+  /// Plugin cartridges
+  | PluginTarget
+  /// Mixed panel/plugin bundles
+  | MixedTarget
+
+/// Plugin trust tiers for security classification
+type pluginTrustTier =
+  /// Core plugins, always available, high trust
+  | Teranga
+  /// Security-critical plugins, elevated trust
+  | Shield
+  /// Community-contributed plugins, standard trust
+  | Ayo
+
+/// Plugin dependency declaration
+type pluginDependency = {
+  /// Plugin identifier
+  pluginId: string,
+  /// Required version
+  version: string,
+  /// Trust tier requirement
+  tier: pluginTrustTier,
+}
+
+/// Sandbox policy for plugin isolation
+type sandboxPolicy = {
+  /// Network access permission
+  networkAccess: bool,
+  /// Filesystem access permission
+  filesystemAccess: bool,
+  /// Allowed capabilities
+  allowedCapabilities: array<string>,
+}
+
+/// Plugin configuration
+type pluginConfig = {
+  /// Plugin unique identifier
+  pluginId: string,
+  /// Backend endpoint URL
+  endpoint: string,
+  /// Enabled capabilities
+  capabilities: array<string>,
+  /// Sandbox security policy
+  sandboxPolicy: sandboxPolicy,
+  /// Isolation tier
+  isolation: panelIsolation,
+  /// Custom environment variables
+  envVars: array<(string, string)>,
+  /// Auto-start on PanLL launch
+  autoStart: bool,
+}
+
+/// Plugin bundle - curated collection of plugins
+type pluginBundle = {
+  /// Unique bundle identifier (kebab-case)
+  id: string,
+  /// Human-readable bundle name
+  name: string,
+  /// One-line description
+  description: string,
+  /// Plugins included in this bundle
+  plugins: array<string>,
+  /// Plugin dependencies
+  dependencies: array<pluginDependency>,
+  /// Overall trust tier (highest of included plugins)
+  trustTier: pluginTrustTier,
+  /// Recommended isolation tier
+  defaultIsolation: panelIsolation,
+  /// Whether this is a built-in bundle
+  builtIn: bool,
+  /// Icon identifier
+  icon: string,
+  /// Target audience
+  audience: string,
+}
+
+/// Groove service descriptor for unified discovery
+type grooveService = {
+  /// Service identifier
+  id: string,
+  /// Human-readable name
+  name: string,
+  /// Provided capabilities
+  capabilities: array<string>,
+  /// Endpoint URL
+  endpoint: string,
+  /// Source type (panel or plugin)
+  sourceType: sourceType,
+  /// Trust tier (for plugins)
+  trustTier: option<pluginTrustTier>,
+}
+
+/// Source type for Groove services
+type sourceType =
+  /// Service provided by a panel
+  | PanelSource(string)  // panelId
+  /// Service provided by a plugin
+  | PluginSource(string)  // pluginId
+
+/// Deployment bundle - mixed panels and plugins
+type deploymentBundle = {
+  /// Bundle identifier
+  id: string,
+  /// Bundle name
+  name: string,
+  /// Panels in this deployment
+  panels: array<string>,
+  /// Plugins in this deployment
+  plugins: array<string>,
+  /// Unified Groove services
+  grooveServices: array<grooveService>,
+  /// Dependency graph
+  dependencies: array<dependency>,
+  /// Configuration graph
+  configuration: configurationGraph,
+  /// Installation status
+  installStatus: bundleInstallStatus,
+}
+
+/// Bundle installation status
+type bundleInstallStatus =
+  /// Not installed
+  | BundleNotInstalled
+  /// Installing components
+  | BundleInstalling(int, int)  // (installed, total)
+  /// Fully installed
+  | BundleInstalled
+  /// Installation failed
+  | BundleInstallFailed(string)
+
+/// Configuration graph node
+type configNode =
+  /// Panel configuration
+  | PanelConfigNode(panelConfig)
+  /// Plugin configuration
+  | PluginConfigNode(pluginConfig)
+  /// Dependency reference
+  | DependencyConfigNode(string)
+
+/// Configuration graph - connects configs and dependencies
+type configurationGraph = array<configNode>
+
+/// Dependency declaration (panel or plugin)
+type dependency =
+  /// Panel dependency
+  | PanelDependency(string)  // panelId
+  /// Plugin dependency
+  | PluginDependency(pluginDependency)
 
 /// The complete Provisioner state.
 type provisionerState = {
   /// Available portfolios (built-in + user-created).
   portfolios: array<portfolio>,
+  /// Available plugin bundles.
+  pluginBundles: array<pluginBundle>,
   /// Per-panel configurations.
-  configs: array<panelConfig>,
+  panelConfigs: array<panelConfig>,
+  /// Per-plugin configurations.
+  pluginConfigs: array<pluginConfig>,
   /// Installation status per panel name.
-  installStatus: array<(string, panelInstallStatus)>,
+  panelInstallStatus: array<(string, panelInstallStatus)>,
+  /// Installation status per plugin name.
+  pluginInstallStatus: array<(string, panelInstallStatus)>,
   /// Current portfolio installation progress (if installing).
   installProgress: option<portfolioInstallProgress>,
+  /// Current plugin bundle installation progress.
+  pluginInstallProgress: option<portfolioInstallProgress>,
+  /// Deployment bundles (mixed panels/plugins).
+  deploymentBundles: array<deploymentBundle>,
   /// Active category tab.
   activeCategory: provisionerCategory,
-  /// Text filter for searching portfolios/panels.
+  /// Current provisioning target.
+  provisioningTarget: provisioningTarget,
+  /// Text filter for searching portfolios/panels/plugins.
   filterText: string,
   /// Loading state.
   loading: bool,
   /// Error from the last operation.
   error: option<string>,
-  /// Custom portfolio being built (name, selected panels).
+  /// Custom portfolio being built.
   customName: string,
   customPanels: array<string>,
+  /// Custom plugin bundle being built.
+  customPluginBundleName: string,
+  customPluginBundlePlugins: array<string>,
+  /// Custom deployment bundle being built.
+  customDeploymentBundleName: string,
+  customDeploymentPanels: array<string>,
+  customDeploymentPlugins: array<string>,
 }

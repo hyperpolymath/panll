@@ -172,6 +172,16 @@ let allPanels: array<panelMeta> = [
     cladeId: Some("provisioner"),
   },
   {
+    id: PanelWizard,
+    name: "Wizard",
+    shortName: "Wiz",
+    description: "Guided plugin/panel creation wizard",
+    icon: "wand",
+    connectionStatus: ServiceConnected, // Local state management
+    hasBackend: false, // Wizard logic is frontend-only
+    cladeId: None,
+  },
+  {
     id: PanelVoiceTag,
     name: "Code MRI",
     shortName: "MRI",

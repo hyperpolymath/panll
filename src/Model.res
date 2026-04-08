@@ -462,6 +462,8 @@ type model = {
   patternDiag: patternDiagState,
   // Code MRI Attribution-to-Licensing — SPDX/provenance→license link (Layer 4)
   attributionLicense: attributionLicenseState,
+  // Wizard — Plugin/panel creation wizard
+  wizard: WizardModel.wizardState,
   // Watcher — filesystem observation infrastructure (feeds all panels)
   watcher: watcherState,
   // AI — multi-provider neural interface (Claude, Gemini, Mistral, GPT, local)
@@ -1260,6 +1262,7 @@ let init = (): model => {
   codeMriTimeline: TimelineModel.defaultTimelineState(),
   patternDiag: PatternDiagModel.init,
   attributionLicense: AttributionLicenseModel.init,
+  wizard: WizardModel.defaultWizardState,
   watcher: {
     running: false,
     watchedPaths: [],
