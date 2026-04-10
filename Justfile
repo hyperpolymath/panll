@@ -47,6 +47,10 @@ test *args:
     @echo "🧪 Running PanLL test suite..."
     deno task test {{args}}
 
+# Run Invariant Path overlay tools for this repository
+invariant-path *ARGS:
+    ./scripts/invariant-path.sh {{ARGS}}
+
 # Clean build artifacts
 clean:
     @echo "🧹 Cleaning build artifacts..."
