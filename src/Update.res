@@ -97,6 +97,17 @@ open UpdateLanguageForge
 open UpdateTangleViz
 open UpdateWizard
 
+// Extracted sub-updaters (formerly inline in this file)
+open UpdateSpecBrowser
+open UpdateVerificationDashboard
+open UpdateBus
+open UpdateObservatory
+open UpdateAmbientOps
+open UpdateObservability
+open UpdateA2ml
+open UpdateK9
+open UpdateSystemUpdate
+
 // Grouped small updaters
 open UpdateGameDevTesting
 open UpdateGameDevBridges
@@ -246,93 +257,11 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | VexometerFriction(subMsg) => updateVexometerFriction(model, subMsg)
   | Wizard(subMsg) => UpdateWizard.update(model, subMsg)
   // SpecBrowser — language specification browsing
-  | SpecBrowser(subMsg) =>
-    switch subMsg {
-    | SetSpecCategory(cat) => (
-        {...model, specBrowser: {...model.specBrowser, activeCategory: cat}},
-        Tea_Cmd.none,
-      )
-    | SelectSpecLanguage(name) => (
-        {...model, specBrowser: {...model.specBrowser, selectedLanguage: name}},
-        Tea_Cmd.none,
-      )
-    | SetComparisonSide(side, name) =>
-      switch side {
-      | LeftSide => (
-          {...model, specBrowser: {...model.specBrowser, comparisonLeft: Some(name)}},
-          Tea_Cmd.none,
-        )
-      | RightSide => (
-          {...model, specBrowser: {...model.specBrowser, comparisonRight: Some(name)}},
-          Tea_Cmd.none,
-        )
-      }
-    | SetSpecFilter(txt) => (
-        {...model, specBrowser: {...model.specBrowser, filterText: txt}},
-        Tea_Cmd.none,
-      )
-    | ToggleIncompleteOnly => (
-        {
-          ...model,
-          specBrowser: {
-            ...model.specBrowser,
-            showIncompleteOnly: !model.specBrowser.showIncompleteOnly,
-          },
-        },
-        Tea_Cmd.none,
-      )
-    | DismissSpecError => (
-        {...model, specBrowser: {...model.specBrowser, error: None}},
-        Tea_Cmd.none,
-      )
-    }
+  | SpecBrowser(subMsg) => updateSpecBrowser(model, subMsg)
   // VerificationDashboard — proof/test/benchmark status
-  | VerificationDashboard(subMsg) =>
-    switch subMsg {
-    | SetVdCategory(cat) => (
-        {...model, verificationDashboard: {...model.verificationDashboard, activeCategory: cat}},
-        Tea_Cmd.none,
-      )
-    | SelectVdLanguage(name) => (
-        {...model, verificationDashboard: {...model.verificationDashboard, selectedLanguage: name}},
-        Tea_Cmd.none,
-      )
-    | SetVdFilter(txt) => (
-        {...model, verificationDashboard: {...model.verificationDashboard, filterText: txt}},
-        Tea_Cmd.none,
-      )
-    | SetVdSort(sortBy) => (
-        {...model, verificationDashboard: {...model.verificationDashboard, sortBy}},
-        Tea_Cmd.none,
-      )
-    | ToggleDebtOnly => (
-        {
-          ...model,
-          verificationDashboard: {
-            ...model.verificationDashboard,
-            showDebtOnly: !model.verificationDashboard.showDebtOnly,
-          },
-        },
-        Tea_Cmd.none,
-      )
-    | DismissVdError => (
-        {...model, verificationDashboard: {...model.verificationDashboard, error: None}},
-        Tea_Cmd.none,
-      )
-    }
+  | VerificationDashboard(subMsg) => updateVerificationDashboard(model, subMsg)
   // Panel Bus — cross-panel messaging
-  | Bus(busMsg) =>
-    switch busMsg {
-    | BusSubscribe(cladeId, topics) =>
-      let busRegistry = PanelBus.subscribe(model.busRegistry, cladeId, topics)
-      ({...model, busRegistry}, Tea_Cmd.none)
-    | BusUnsubscribe(cladeId) =>
-      let busRegistry = PanelBus.unsubscribe(model.busRegistry, cladeId)
-      ({...model, busRegistry}, Tea_Cmd.none)
-    | BusClearHistory =>
-      let busRegistry = {...model.busRegistry, recentEvents: [], nextEventId: 1}
-      ({...model, busRegistry}, Tea_Cmd.none)
-    }
+  | Bus(busMsg) => updateBus(model, busMsg)
   // Undo/Redo
   | Undo => {
       let len = Array.length(model.undoStack)
@@ -522,167 +451,11 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
     | Error(_) => (model, Tea_Cmd.none)
     }
   // Observability
-  | Observability(obsMsg) => switch obsMsg {
-    | ExportSarifViaObserveMcp(reportId) =>
-      let cmd = ObservabilityCmd.exportSarifViaObserveMcp(reportId, r => Observability(
-        SarifExportResult(r),
-      ))
-      (model, cmd)
-    | SarifExportResult(result) =>
-      switch result {
-      | Ok(_) => (model, Tea_Cmd.none)
-      | Error(_) => (model, Tea_Cmd.none)
-      }
-    | ExportOtelTraces =>
-      let batch = ObservabilityEngine.exportTraceBatch(model.boj.latencyLog)
-      let cmd = ObservabilityCmd.exportOtelTraces(batch, r => Observability(OtelExportResult(r)))
-      (model, cmd)
-    | OtelExportResult(result) =>
-      switch result {
-      | Ok(_) => (model, Tea_Cmd.none)
-      | Error(_) => (model, Tea_Cmd.none)
-      }
-    | FetchObservabilitySummary =>
-      let cmd = ObservabilityCmd.fetchObservabilitySummary(r => Observability(
-        ObservabilitySummaryResult(r),
-      ))
-      (model, cmd)
-    | ObservabilitySummaryResult(result) =>
-      switch result {
-      | Ok(_) => (model, Tea_Cmd.none)
-      | Error(_) => (model, Tea_Cmd.none)
-      }
-    | TypeCheckResult(Ok(json)) => {
-        let checks = model.typell.panelTypeChecks
-        Dict.set(checks, "observability", json)
-        let newTypell = {
-          ...model.typell,
-          queriesServed: model.typell.queriesServed + 1,
-          panelTypeChecks: checks,
-        }
-        ({...model, typell: newTypell}, Tea_Cmd.none)
-      }
-    | TypeCheckResult(Error(_)) => (model, Tea_Cmd.none)
-    }
+  | Observability(obsMsg) => updateObservability(model, obsMsg)
   // A2ML manifest management
-  | A2ml(a2mlMsg) => switch a2mlMsg {
-    | LoadManifest(path) =>
-      let cmd = A2mlCmd.loadManifest(path, r => A2ml(ManifestLoaded(r)))
-      (model, cmd)
-    | ManifestLoaded(result) =>
-      switch result {
-      | Ok(jsonStr) =>
-        let manifest = A2mlEngine.parseA2mlContent(jsonStr)
-        let validation = A2mlEngine.validateManifest(manifest)
-        let (_coverage, _testTypes, _notes) = A2mlEngine.extractTestCoveragePolicy(manifest)
-        (
-          {...model, lastA2mlManifest: Some(manifest), lastA2mlValidation: Some(validation)},
-          Tea_Cmd.none,
-        )
-      | Error(_) => (model, Tea_Cmd.none)
-      }
-    | ValidateManifest(path) =>
-      let cmd = A2mlCmd.validateManifestFile(path, r => A2ml(ManifestValidated(r)))
-      (model, cmd)
-    | ManifestValidated(result) =>
-      switch result {
-      | Ok(jsonStr) =>
-        let manifest = A2mlEngine.parseA2mlContent(jsonStr)
-        let validation = A2mlEngine.validateManifest(manifest)
-        (
-          {...model, lastA2mlManifest: Some(manifest), lastA2mlValidation: Some(validation)},
-          Tea_Cmd.none,
-        )
-      | Error(_) => (model, Tea_Cmd.none)
-      }
-    | ListManifests =>
-      let cmd = A2mlCmd.listManifests(r => A2ml(ManifestsListed(r)))
-      (model, cmd)
-    | ManifestsListed(result) =>
-      switch result {
-      | Ok(jsonStr) =>
-        let paths = switch Decoders.decodeOption(Tea_Json.value, jsonStr) {
-        | Some(parsed) =>
-          switch JSON.Classify.classify(parsed) {
-          | Array(arr) =>
-            arr->Array.filterMap(item =>
-              switch JSON.Classify.classify(item) {
-              | String(s) => Some(s)
-              | _ => None
-              }
-            )
-          | _ => []
-          }
-
-        | None => []
-        }
-        ({...model, a2mlManifestPaths: paths}, Tea_Cmd.none)
-      | Error(_) => (model, Tea_Cmd.none)
-      }
-    | TypeCheckResult(Ok(json)) => {
-        let checks = model.typell.panelTypeChecks
-        Dict.set(checks, "a2ml", json)
-        let newTypell = {
-          ...model.typell,
-          queriesServed: model.typell.queriesServed + 1,
-          panelTypeChecks: checks,
-        }
-        ({...model, typell: newTypell}, Tea_Cmd.none)
-      }
-    | TypeCheckResult(Error(_)) => (model, Tea_Cmd.none)
-    }
+  | A2ml(a2mlMsg) => updateA2ml(model, a2mlMsg)
   // K9 contractile management
-  | K9(k9Msg) => switch k9Msg {
-    | LoadContractile(path) =>
-      let cmd = K9Cmd.loadContractile(path, r => K9(ContractileLoaded(r)))
-      (model, cmd)
-    | ContractileLoaded(result) =>
-      switch result {
-      | Ok(jsonStr) =>
-        let contractile = K9Engine.validateContractile(jsonStr, ~path="loaded")
-        let kennelSchema = if contractile.securityLevel == K9Engine.Kennel {
-          Some(jsonStr)
-        } else {
-          model.k9KennelSchema
-        }
-        (
-          {...model, lastK9Contractile: Some(contractile), k9KennelSchema: kennelSchema},
-          Tea_Cmd.none,
-        )
-      | Error(_) => (model, Tea_Cmd.none)
-      }
-    | ValidateContractile(path) =>
-      let cmd = K9Cmd.validateContractileFile(path, r => K9(ContractileValidated(r)))
-      (model, cmd)
-    | ContractileValidated(result) =>
-      switch result {
-      | Ok(jsonStr) =>
-        let contractile = K9Engine.validateContractile(jsonStr, ~path="validated")
-        ({...model, lastK9Contractile: Some(contractile)}, Tea_Cmd.none)
-      | Error(_) => (model, Tea_Cmd.none)
-      }
-    | ApplyLayout(name) =>
-      let cmd = K9Cmd.applyLayout(name, r => K9(LayoutApplied(r)))
-      (model, cmd)
-    | LayoutApplied(result) =>
-      switch result {
-      | Ok(jsonStr) =>
-        let layout = K9Engine.parseLayoutPanels(jsonStr)
-        ({...model, lastK9Layout: Some(layout)}, Tea_Cmd.none)
-      | Error(_) => (model, Tea_Cmd.none)
-      }
-    | TypeCheckResult(Ok(json)) => {
-        let checks = model.typell.panelTypeChecks
-        Dict.set(checks, "k9", json)
-        let newTypell = {
-          ...model.typell,
-          queriesServed: model.typell.queriesServed + 1,
-          panelTypeChecks: checks,
-        }
-        ({...model, typell: newTypell}, Tea_Cmd.none)
-      }
-    | TypeCheckResult(Error(_)) => (model, Tea_Cmd.none)
-    }
+  | K9(k9Msg) => updateK9(model, k9Msg)
   // Seam auditing
   | AuditSeams => {
       let register = SeamEngine.buildRegister("2026-03-09")
@@ -691,56 +464,9 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
     }
   | SeamAuditResult(audit) => ({...model, lastSeamAudit: Some(audit)}, Tea_Cmd.none)
   // Observatory — integrative dashboard
-  | Observatory(subMsg) =>
-    switch subMsg {
-    | SetObsTab(tab) => (
-        {...model, observatory: {...model.observatory, activeTab: tab}},
-        Tea_Cmd.none,
-      )
-    | RunHealthCheck => (
-        {...model, observatory: {...model.observatory, checking: true}},
-        Tea_Cmd.none,
-      )
-    | HealthCheckComplete(result) =>
-      switch result {
-      | Ok(snapshots) => (
-          {...model, observatory: {...model.observatory, snapshots, checking: false, error: None}},
-          Tea_Cmd.none,
-        )
-      | Error(err) => (
-          {...model, observatory: {...model.observatory, checking: false, error: Some(err)}},
-          Tea_Cmd.none,
-        )
-      }
-    | DismissObsError => (
-        {...model, observatory: {...model.observatory, error: None}},
-        Tea_Cmd.none,
-      )
-    }
+  | Observatory(subMsg) => updateObservatory(model, subMsg)
   // AmbientOps — hospital-model sysadmin
-  | AmbientOps(subMsg) =>
-    switch subMsg {
-    | SetOpsTab(tab) => (
-        {...model, ambientOps: {...model.ambientOps, activeTab: tab}},
-        Tea_Cmd.none,
-      )
-    | RunDiagnostics => (
-        {...model, ambientOps: {...model.ambientOps, scanning: true}},
-        Tea_Cmd.none,
-      )
-    | DiagnosticsComplete(result) =>
-      switch result {
-      | Ok(findings) => (
-          {...model, ambientOps: {...model.ambientOps, findings, scanning: false, error: None}},
-          Tea_Cmd.none,
-        )
-      | Error(err) => (
-          {...model, ambientOps: {...model.ambientOps, scanning: false, error: Some(err)}},
-          Tea_Cmd.none,
-        )
-      }
-    | DismissOpsError => ({...model, ambientOps: {...model.ambientOps, error: None}}, Tea_Cmd.none)
-    }
+  | AmbientOps(subMsg) => updateAmbientOps(model, subMsg)
   // Burble — groove-aware voice huddle integration
   | Burble(subMsg) => ({...model, burble: BurbleEngine.update(model.burble, subMsg)}, Tea_Cmd.none)
   // Service Registry — centralized backend service lifecycle (Connected Workbench v0.2.0)
@@ -750,91 +476,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   // Identity — snapshots and team replication (Connected Workbench v0.2.0)
   | Identity(subMsg) => UpdateIdentity.updateIdentity(model, subMsg)
   // System Update — component update management
-  | SystemUpdate(subMsg) => {
-      let su = model.systemUpdate
-      switch subMsg {
-      | ListComponents => (
-          {...model, systemUpdate: {...su, loading: true}},
-          SystemUpdateCmd.listComponents(r => SystemUpdate(ComponentsLoaded(r))),
-        )
-      | ComponentsLoaded(Ok(json)) => {
-          // Parse components from JSON — for now store raw, frontend will handle
-          let _ = json
-          ({...model, systemUpdate: {...su, loading: false}}, Tea_Cmd.none)
-        }
-      | ComponentsLoaded(Error(e)) => (
-          {...model, systemUpdate: {...su, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
-      | CheckAll => (
-          {...model, systemUpdate: {...su, loading: true}},
-          SystemUpdateCmd.checkAll(r => SystemUpdate(CheckAllResult(r))),
-        )
-      | CheckAllResult(Ok(_json)) => ({...model, systemUpdate: {...su, loading: false}}, Tea_Cmd.none)
-      | CheckAllResult(Error(e)) => (
-          {...model, systemUpdate: {...su, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
-      | CheckComponent(id) => (
-          {...model, systemUpdate: {...su, loading: true}},
-          SystemUpdateCmd.checkComponent(id, r => SystemUpdate(CheckComponentResult(r))),
-        )
-      | CheckComponentResult(Ok(_json)) => ({...model, systemUpdate: {...su, loading: false}}, Tea_Cmd.none)
-      | CheckComponentResult(Error(e)) => (
-          {...model, systemUpdate: {...su, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
-      | ApplyComponent(id) => (
-          {...model, systemUpdate: {...su, loading: true}},
-          SystemUpdateCmd.applyComponent(id, r => SystemUpdate(ApplyComponentResult(r))),
-        )
-      | ApplyComponentResult(Ok(_json)) => ({...model, systemUpdate: {...su, loading: false}}, Tea_Cmd.none)
-      | ApplyComponentResult(Error(e)) => (
-          {...model, systemUpdate: {...su, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
-      | ApplyAll => (
-          {...model, systemUpdate: {...su, loading: true}},
-          SystemUpdateCmd.applyAll(r => SystemUpdate(ApplyAllResult(r))),
-        )
-      | ApplyAllResult(Ok(_json)) => ({...model, systemUpdate: {...su, loading: false}}, Tea_Cmd.none)
-      | ApplyAllResult(Error(e)) => (
-          {...model, systemUpdate: {...su, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
-      | AsdfStatus => (
-          {...model, systemUpdate: {...su, loading: true}},
-          SystemUpdateCmd.asdfStatus(r => SystemUpdate(AsdfStatusResult(r))),
-        )
-      | AsdfStatusResult(Ok(_json)) => ({...model, systemUpdate: {...su, loading: false}}, Tea_Cmd.none)
-      | AsdfStatusResult(Error(e)) => (
-          {...model, systemUpdate: {...su, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
-      | ViewLogs => (
-          {...model, systemUpdate: {...su, loading: true}},
-          SystemUpdateCmd.logs(r => SystemUpdate(LogsLoaded(r))),
-        )
-      | LogsLoaded(Ok(_json)) => ({...model, systemUpdate: {...su, loading: false}}, Tea_Cmd.none)
-      | LogsLoaded(Error(e)) => (
-          {...model, systemUpdate: {...su, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
-      | LastSummary => (
-          {...model, systemUpdate: {...su, loading: true}},
-          SystemUpdateCmd.lastSummary(r => SystemUpdate(LastSummaryResult(r))),
-        )
-      | LastSummaryResult(Ok(_json)) => ({...model, systemUpdate: {...su, loading: false}}, Tea_Cmd.none)
-      | LastSummaryResult(Error(e)) => (
-          {...model, systemUpdate: {...su, loading: false, error: Some(e)}},
-          Tea_Cmd.none,
-        )
-      | ToggleShowLogs => (
-          {...model, systemUpdate: {...su, showLogs: !su.showLogs}},
-          Tea_Cmd.none,
-        )
-      }
-    }
+  | SystemUpdate(subMsg) => updateSystemUpdate(model, subMsg)
   | NoOp => (model, Tea_Cmd.none)
   }
 
