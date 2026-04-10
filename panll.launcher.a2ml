@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# panll.launcher.a2ml — per-app launcher config for PanLL.
+
+[project]
+name         = "panll"
+display      = "PanLL"
+description  = "PanLL — panels framework (TEA + workspace layer + Stapeln integration)"
+categories   = ["Development", "Utility"]
+version      = "0.2.0"
+license      = "PMPL-1.0-or-later"
+
+[repo]
+path = "/var/mnt/eclipse/repos/panll"
+
+[runtime]
+kind    = "server-url"
+port    = 8000
+url     = "http://localhost:8000/public/"
+command = ["just", "serve"]
+pid-file = "/tmp/panll-server.pid"
+log-file = "/tmp/panll-server.log"
+
+[icon]
+source = "{repo-dir}/assets/icon-256.png"
