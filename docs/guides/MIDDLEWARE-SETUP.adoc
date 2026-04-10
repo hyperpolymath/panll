@@ -1,0 +1,166 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= PanLL Middleware Setup Guide
+:toc: macro
+:icons: font
+:source-highlighter: rouge
+
+toc::[]
+
+== Overview
+
+PanLL supports three optional middleware layers that extend its core Gossamer backend
+with additional runtime capabilities: Elixir/BEAM for fault-tolerant service supervision,
+Julia for numeric analysis and batch processing, and Idris2 for high-assurance interface
+verification. All three are optional — PanLL runs without them — but each unlocks specific
+capabilities for production or research use.
+
+== Elixir/BEAM Middleware
+
+=== Purpose
+
+The Elixir/BEAM middleware layer provides OTP supervision trees for resilient panel
+connections and service lifecycle management. It wraps the external service bridges
+(VeriSimDB, BoJ, ECHIDNA, TypeLL, Hypatia) under a supervisor hierarchy, enabling
+automatic process restart, health reporting, and fault isolation without coupling those
+concerns to the Gossamer Rust core.
+
+=== Location
+
+----
+beam/panll_beam
+----
+
+=== Setup
+
+[source,bash]
+----
+cd beam/panll_beam
+mix deps.get && mix compile
+----
+
+=== API Modes
+
+The BEAM middleware exposes three API surfaces, each toggled via the `PANLL_BEAM_APIS`
+environment variable:
+
+HTTP (Bandit/Plug)::
+  Standard HTTP endpoints served by Bandit with Plug routing. Suitable for REST-style
+  integration with the Gossamer backend or external tooling.
+
+GraphQL (Absinthe)::
+  A GraphQL schema over the panel supervision state and service health data, served
+  via Absinthe and Absinthe.Plug. Useful for Observatory panel queries and dashboards.
+
+gRPC::
+  Protocol Buffers over gRPC (via the `grpc` and `protobuf` Mix dependencies).
+  Preferred for low-latency, typed communication between the BEAM layer and
+  latency-sensitive service bridges.
+
+=== Configuration
+
+Set the `PANLL_BEAM_APIS` environment variable to a comma-separated list of the API
+modes to enable before starting the application:
+
+[source,bash]
+----
+# Enable all three API surfaces
+export PANLL_BEAM_APIS=http,graphql,grpc
+mix run --no-halt
+
+# Enable HTTP only
+export PANLL_BEAM_APIS=http
+mix run --no-halt
+----
+
+=== When to Use
+
+Use the Elixir/BEAM middleware in production deployments where fault-tolerant service
+supervision is required. The OTP supervisor model gives you per-service restart strategies,
+cascading failure isolation, and live introspection without modifying the Gossamer core.
+It is not needed for local development where all services are started manually.
+
+== Julia Middleware
+
+=== Purpose
+
+The Julia middleware layer handles numeric analysis, calibration, and batch processing
+tasks that are impractical in the Rust/ReScript stack. This includes metrics computation
+(e.g., proof complexity statistics, type-check latency distributions), statistical
+hypothesis testing over telemetry data, and data pipeline processing for research
+workflows built on PanLL's proof-carrying data.
+
+=== Location
+
+Julia scripts live alongside the analysis pipelines they serve. Batch scripts are
+colocated with the data or reporting stage that consumes them. There is no single
+top-level Julia package directory — each analysis pipeline carries its own
+`Project.toml` and `Manifest.toml`.
+
+=== Setup
+
+From the directory containing the relevant `Project.toml`:
+
+[source,bash]
+----
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
+----
+
+This resolves and precompiles all declared dependencies for that pipeline's environment.
+
+=== When to Use
+
+Use Julia middleware when:
+
+* Computing aggregate metrics or statistical summaries over proof session telemetry.
+* Running statistical tests to validate performance regressions or calibration changes.
+* Processing data pipelines that feed into research publications or compliance reports
+  derived from PanLL's observability output.
+* Performing calibration passes over numeric parameters used by ECHIDNA or TypeLL.
+
+Julia is not involved in the real-time request path. All Julia processing is offline
+or batch-scheduled.
+
+== Idris2 ABI Middleware
+
+=== Purpose
+
+The Idris2 ABI middleware layer provides high-assurance interface verification for
+critical IPC boundaries. Where the circuit breaker pattern and graceful degradation
+principles give _operational_ resilience, the Idris2 layer gives _formal_ guarantees:
+machine-checked proofs that serialization and deserialization of IPC messages correctly
+implement the agreed contract at every trust boundary.
+
+=== Status
+
+[IMPORTANT]
+====
+This layer is *planned* and has not yet been implemented. The design below describes
+the intended architecture.
+====
+
+=== Goal
+
+Formally verify the IPC message serialization and deserialization contracts used by the
+Gossamer command layer. Each `invoke` command crossing the webview/backend boundary has
+a defined schema; the Idris2 ABI layer will generate or check proofs that:
+
+* Every serialized message can be round-tripped without loss of information.
+* Every deserializer rejects out-of-contract inputs with a typed error rather than
+  silently producing a wrong value.
+* Schema evolution (adding fields, deprecating variants) preserves backward compatibility
+  at the ABI level.
+
+=== When to Use
+
+Use the Idris2 ABI layer at critical trust boundaries where "probably correct" is not
+a sufficient assurance level. Typical candidates include:
+
+* The serialization boundary between the ReScript frontend and the Gossamer Rust backend
+  for commands that carry proof certificates or VCL query results.
+* Any message type used to authorize a destructive operation (e.g., workspace deletion,
+  cartridge unload).
+* Integration points with external theorem provers where a malformed message could
+  corrupt proof state.
+
+Until the Idris2 layer is implemented, these boundaries rely on property-based tests
+and the existing contract suite in `contracts/`.

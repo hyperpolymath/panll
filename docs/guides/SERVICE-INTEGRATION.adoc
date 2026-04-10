@@ -1,0 +1,178 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+= PanLL Service Integration Guide
+:author: Jonathan D.A. Jewell
+:toc: macro
+:icons: font
+:source-highlighter: rouge
+
+toc::[]
+
+== Overview
+
+PanLL connects to multiple backend services to deliver its neurosymbolic development
+environment. These services handle proof storage, cartridge dispatch, type checking,
+theorem proving, and static analysis. Each service runs as an independent process,
+typically on localhost, and is accessed by the Gossamer IPC command layer in
+`src-gossamer/`.
+
+Because any service may be unavailable — due to a crash, a slow startup, a network
+partition, or deliberate teardown during development — every service bridge must
+implement a defined failure mode rather than blocking the UI or propagating an
+unhandled error to the user.
+
+== Service Inventory
+
+[cols="1,1,2,2", options="header"]
+|===
+| Service | Port | Purpose | Failure Mode
+
+| VeriSimDB
+| 8080
+| 8-modality versioned database for proof-carrying data; stores octads, VCL queries,
+  and proof certificates.
+| Fall back to `localStorage` cache. Serve last-known-good octad snapshots until the
+  service reconnects.
+
+| BoJ
+| 7700
+| Cartridge server and protocol gateway; loads and invokes `.boj` cartridge modules,
+  exposes health and topology endpoints.
+| Queue outgoing commands in memory. Replay the queue on reconnect. Surface a
+  degraded-mode banner in the Observatory panel.
+
+| ECHIDNA
+| 9000
+| Theorem prover dispatch; selects tactics, manages the prover pool, and returns
+  proof results and tactic recommendations.
+| Degrade to cached proofs stored in `localStorage`. Mark obligations as
+  "proof pending — ECHIDNA offline" rather than failing the session.
+
+| TypeLL
+| 7800
+| Type verification kernel; checks expressions against PanLL's dependent type
+  system, evaluates type-level computations.
+| Skip active type checks and warn the user with a visible indicator. Re-queue
+  pending checks when the service comes back online.
+
+| Hypatia
+| (dynamic)
+| Static analysis; performs code quality analysis, linting, and pattern detection
+  across the active workspace.
+| Degrade gracefully. Continue showing the last successfully computed analysis
+  results, marked as stale, until a fresh run completes.
+|===
+
+== Circuit Breaker Pattern
+
+Each service bridge in `src-gossamer/` should implement the standard three-state
+circuit breaker pattern to prevent cascading failures and eliminate repeated
+wait-for-timeout overhead when a backend is down.
+
+=== States
+
+Closed (normal operation)::
+  Requests pass through to the service. Failure count is tracked. If the failure
+  rate exceeds a threshold within a rolling window, the breaker trips to *Open*.
+
+Open (service assumed failed)::
+  All calls to this service are rejected immediately without attempting a network
+  round-trip. A deadline timer is started. The panel receives the degraded-mode
+  fallback response without blocking. When the timer expires, the breaker moves
+  to *Half-Open*.
+
+Half-Open (probing for recovery)::
+  A single probe request is sent to the service. If it succeeds, the breaker
+  resets to *Closed* and normal operation resumes. If it fails, the breaker
+  returns to *Open* and resets the timer.
+
+=== Implementation Guidance
+
+All live service modules (`boj_live.rs`, `verisim_live.rs`, `echidna_live.rs`, and
+any future service bridges) should wrap their `ServiceEndpoint` calls with a
+shared circuit breaker guard. The shared HTTP client in `src-gossamer/src/http_client.rs`
+provides the low-level timeout infrastructure; the circuit breaker layer sits above
+it and consults the breaker state before handing a request to `http_client::get_json`
+or `http_client::post_json`.
+
+State for each breaker (failure count, state enum, next-probe timestamp) should be
+held in an `Arc<Mutex<BreakerState>>` registered in the Gossamer application context
+at startup, so that all panels share a consistent view of each service's health.
+
+== Graceful Degradation Principles
+
+The following principles apply to all service integrations in PanLL:
+
+* *Never block the UI on a service call.* All service requests must be asynchronous.
+  The Gossamer command layer runs these on a Tokio runtime; commands must return
+  immediately with a pending/cached response if the service is unavailable.
+
+* *Always show last-known-good state.* Panels must cache the most recent successful
+  response for each service query and display it when the live call fails or is
+  short-circuited by an open breaker. Stale results must be visually marked.
+
+* *Surface service health in the Observatory panel.* The Observatory panel
+  (`PanelObservatory`, clade `observatory`) is the designated home for cross-panel
+  health and resource status. Each service bridge should emit health events that
+  the Observatory can display, including the current breaker state.
+
+* *Log failures to the BoJ latency log for observability.* Service call failures,
+  breaker state transitions, and degraded-mode activations must be recorded via
+  the observability subsystem so that developers can diagnose intermittent issues
+  after the fact.
+
+== Example: Gossamer Command Handler with Service Failure Handling
+
+The following pseudocode (Rust-like syntax) illustrates how a Gossamer command
+handler should interact with a service bridge that has a circuit breaker.
+
+[source,rust]
+----
+// In src-gossamer/src/verisim_live.rs (or a wrapper command module):
+
+pub async fn cmd_get_octad_summary(params: Value) -> String {
+    let id = params["id"].as_str().unwrap_or("");
+
+    // 1. Check circuit breaker state.
+    let breaker = VERISIMDB_BREAKER.lock().unwrap();
+    if breaker.is_open() {
+        // Fast-reject: return cached result without touching the network.
+        log_service_event("verisimdb", "circuit_open", "fast-reject");
+        return cached_octad_summary(id)
+            .map(|v| mark_stale(v))
+            .unwrap_or_else(|| json!({"error": "VeriSimDB unavailable", "stale": true}).to_string());
+    }
+    drop(breaker);
+
+    // 2. Attempt the live call.
+    match verisim_live_get_octad(id).await {
+        Ok(summary) => {
+            // Success: reset failure count, store in cache.
+            VERISIMDB_BREAKER.lock().unwrap().record_success();
+            store_cached_octad_summary(id, &summary);
+            summary
+        }
+        Err(e) => {
+            // Failure: record it; breaker may trip to Open.
+            let tripped = VERISIMDB_BREAKER.lock().unwrap().record_failure();
+            log_service_event("verisimdb", "call_failed", &e);
+            if tripped {
+                log_service_event("verisimdb", "circuit_tripped", "now open");
+            }
+            // Fall back to cache.
+            cached_octad_summary(id)
+                .map(|v| mark_stale(v))
+                .unwrap_or_else(|| json!({"error": e, "stale": true}).to_string())
+        }
+    }
+}
+----
+
+Key points:
+
+* The breaker guard is checked *before* any I/O.
+* The fallback path never panics or returns an empty string — it always gives the
+  panel something renderable.
+* Failures are logged before returning the fallback, ensuring the BoJ latency log
+  and Observatory panel receive the signal.
+* The cache write happens on the success path, keeping last-known-good state fresh.
