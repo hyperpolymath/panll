@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
-# Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}>
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # META.a2ml — Project meta-level information
 # Architecture decisions, design rationale, governance.
 
 [metadata]
 version = "0.1.0"
-last-updated = "{{CURRENT_DATE}}"
+last-updated = "2026-04-11"
 
 [project-info]
-type = "{{PROJECT_TYPE}}"  # library | binary | monorepo | service | website
+type = "library"  # TODO: update type (library|binary|service|website|monorepo)  # library | binary | monorepo | service | website
 languages = []             # e.g. ["rust", "zig", "idris2"]
 license = "PMPL-1.0-or-later"
-author = "{{AUTHOR}} ({{OWNER}})"
+author = "Jonathan D.A. Jewell (hyperpolymath)"
 
 [architecture-decisions]
 # ADR format: status = proposed | accepted | deprecated | superseded | rejected
