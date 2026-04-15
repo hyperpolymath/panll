@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PanLL — Mission Control</title>
+    <style>
+        :root {
+            --bg: #fcfcfc;
+            --text: #2c3e50;
+            --accent: #3498db;
+            --pane-l: #eef2f3;
+            --pane-n: #f4f7f8;
+            --pane-w: #ffffff;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        #app {
+            background-color: var(--pane-w);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            min-height: 200px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            font-weight: 300;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
+        }
+        button {
+            background-color: #fff;
+            color: #555;
+            border: 1px solid #ccc;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        button:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background-color: #f0f9ff;
+        }
+        #btn-back {
+            background-color: #fdfdfd;
+            border-style: dashed;
+        }
+        h1 {
+            font-weight: 200;
+            letter-spacing: 0.5em;
+            margin-bottom: 40px;
+            color: #999;
+        }
+        .mode-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 0.7em;
+            color: #ccc;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mode-indicator">COGNITIVE RELIEF LAYER ACTIVE</div>
+    <h1>PANLL</h1>
+    <div id="app">Initialising HTI...</div>
+    
+    <div class="controls">
+        <button id="btn-pane-l">Pane-L (Symbolic)</button>
+        <button id="btn-pane-n">Pane-N (Neural)</button>
+        <button id="btn-pane-w">Pane-W (World)</button>
+        <button id="btn-vexometer">Vexometer</button>
+        <button id="btn-back">Undo Navigation</button>
+    </div>
+
+    <script type="module">
+        import { load, Msg, PanLLPane } from '../tea/panll_tea.js';
+
+        async function main() {
+            try {
+                const tea = await load('./assets/wasm/panll_gui.wasm');
+                
+                let currentModel = tea.init();
+                const appDiv = document.getElementById('app');
+                
+                function render() {
+                    appDiv.textContent = tea.view(currentModel);
+                    
+                    // Subtle background shift based on pane
+                    const panes = ['#eef2f3', '#f4f7f8', '#ffffff', '#fff0f0'];
+                    const modelObj = currentModel; // Note: model is opaque i32 pointer, but we can't easily read its fields without more exports
+                    // In a real implementation, we'd export a get_current_pane function
+                }
+
+                function dispatch(msg) {
+                    currentModel = tea.update(msg, currentModel);
+                    render();
+                }
+
+                document.getElementById('btn-pane-l').addEventListener('click', () => dispatch(Msg.Navigate(PanLLPane.PaneL)));
+                document.getElementById('btn-pane-n').addEventListener('click', () => dispatch(Msg.Navigate(PanLLPane.PaneN)));
+                document.getElementById('btn-pane-w').addEventListener('click', () => dispatch(Msg.Navigate(PanLLPane.PaneW)));
+                document.getElementById('btn-vexometer').addEventListener('click', () => dispatch(Msg.Navigate(PanLLPane.Vexometer)));
+                document.getElementById('btn-back').addEventListener('click', () => dispatch(Msg.PopState()));
+
+                render();
+            } catch (err) {
+                console.error("PanLL Bridge Error:", err);
+                document.getElementById('app').textContent = "HTI FAILURE: " + err.message;
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>

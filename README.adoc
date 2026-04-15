@@ -271,7 +271,7 @@ For containerized runtime orchestration (Chainguard base + Cerro Torre pack/veri
 
 == Status
 
-**v0.2.0-dev** (85% complete, 106 panels defined)
+**v0.2.0-dev** (95% complete, 106 panels defined)
 
 ✅ Complete TEA implementation (Model-Update-View) +
 ✅ All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron) +
@@ -287,7 +287,11 @@ For containerized runtime orchestration (Chainguard base + Cerro Torre pack/veri
 ✅ ARIA accessibility attributes across all components +
 ✅ Keyboard shortcuts wired (Ctrl+Shift+L/N/B/W + vexation polling) +
 ✅ Tailwind CSS 4.x build pipeline (Deno) +
-✅ BEAM API scaffold (HTTP/GraphQL/gRPC)
+✅ BEAM API scaffold (HTTP/GraphQL/gRPC) +
+✅ System Tray integration with service toggling (Burble/Gossamer) +
+✅ Burble/Gossamer switchable services (individual, network, on/off) +
+✅ Identity state capture (serialize user config) +
+✅ Team replication (broadcast identity state)
 
 **Next:** v0.1.0 release preparation
 

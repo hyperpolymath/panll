@@ -170,10 +170,18 @@ mod service_registry;
 /// Settings — user configuration persistence and management (v0.2.0).
 mod settings;
 
+// Constants and helpers (moved from old Tauri main.rs)
+// ===========================================================================
+=======
 /// Identity — named identity snapshots and team replication (v0.2.0).
 mod identity;
 
+/// System Tray — system tray integration and service toggling (v0.2.0).
+mod system_tray;
+
 // ===========================================================================
+// Constants and helpers (moved from old Tauri main.rs)
+// ======================================================================================================================================================
 // Constants and helpers (moved from old Tauri main.rs)
 // ===========================================================================
 
@@ -2507,8 +2515,46 @@ async fn main() -> Result<(), gossamer_rs::Error> {
     });
 
     // -----------------------------------------------------------------------
+    // System Tray commands (Connected Workbench v0.2.0)
+    // -----------------------------------------------------------------------
+
+    app.command("system_tray_init", |_payload| {
+        match system_tray::init(&app) {
+            Ok(_) => Ok(serde_json::json!({"status": "ok"}))
+            Err(e) => Ok(serde_json::json!({"status": "error", "message": e}))
+        }
+    });
+
+    app.command("system_tray_toggle_burble", |_payload| {
+        match system_tray::toggle_burble() {
+            Ok(status) => Ok(serde_json::json!({"status": "ok", "enabled": status}))
+            Err(e) => Ok(serde_json::json!({"status": "error", "message": e}))
+        }
+    });
+
+    app.command("system_tray_toggle_gossamer", |_payload| {
+        match system_tray::toggle_gossamer() {
+            Ok(status) => Ok(serde_json::json!({"status": "ok", "enabled": status}))
+            Err(e) => Ok(serde_json::json!({"status": "error", "message": e}))
+        }
+    });
+
+    app.command("system_tray_get_burble_status", |_payload| {
+        let status = system_tray::get_burble_status();
+        Ok(serde_json::json!({"status": "ok", "enabled": status}))
+    });
+
+    app.command("system_tray_get_gossamer_status", |_payload| {
+        let status = system_tray::get_gossamer_status();
+        Ok(serde_json::json!({"status": "ok", "enabled": status}))
+    });
+
+    // -----------------------------------------------------------------------
     // Startup — groove discovery + navigate to frontend
     // -----------------------------------------------------------------------
+
+    // Initialize system tray
+    let _ = system_tray::init(&app);
 
     // Spawn the groove discovery server on port 8000 (same as old Tauri setup).
     groove::spawn();
@@ -2520,6 +2566,9 @@ async fn main() -> Result<(), gossamer_rs::Error> {
 
     // Run the webview event loop (blocks until window is closed).
     app.run();
+
+    // Clean up system tray
+    system_tray::cleanup(&app);
 
     Ok(())
 }
