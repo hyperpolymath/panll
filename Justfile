@@ -4,6 +4,8 @@
 set shell := ["bash", "-uc"]
 set dotenv-load := true
 
+import? "contractile.just"
+
 project := "PanLL"
 version := "0.1.0-alpha"
 
