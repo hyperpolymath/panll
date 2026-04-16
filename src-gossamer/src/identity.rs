@@ -13,6 +13,7 @@
 //! Part of Connected Workbench v0.2.0.
 
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -73,8 +74,9 @@ fn iso_now() -> String {
 
 /// Save a new identity snapshot.
 ///
-/// Generates a UUID, writes to `~/.panll/identities/<id>.json`, and
-/// returns the full snapshot as JSON.
+/// Primary storage: VeriSimDB (POST /api/identity).
+/// Fallback: `~/.panll/identities/<id>.json`.
+/// Returns the full snapshot as JSON.
 pub fn identity_save(name: &str, panll_state: &str, settings: &str, service_urls: &str) -> Result<String, String> {
     ensure_identities_dir()?;
 
@@ -90,15 +92,59 @@ pub fn identity_save(name: &str, panll_state: &str, settings: &str, service_urls
     let json = serde_json::to_string_pretty(&snapshot)
         .map_err(|e| format!("JSON serialise error: {}", e))?;
 
-    let path = identities_dir().join(format!("{}.json", snapshot.id));
-    fs::write(&path, &json)
-        .map_err(|e| format!("Failed to write snapshot: {}", e))?;
+    // Primary: VeriSimDB
+    let verisim_url = std::env::var("VERISIMDB_URL")
+        .unwrap_or_else(|_| "http://localhost:8080/api/v1".into());
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    let url = format!("{}/state/{}", verisim_url.trim_end_matches('/'), snapshot.id);
+    match client.post(&url).json(&json!({"state": json})).send() {
+        Ok(resp) => {
+            if !resp.status().is_success() {
+                // Fallback to filesystem
+                let path = identities_dir().join(format!("{}.json", snapshot.id));
+                fs::write(&path, &json)
+                    .map_err(|e| format!("Failed to write snapshot: {}", e))?;
+            }
+        }
+        Err(_) => {
+            // Fallback to filesystem
+            let path = identities_dir().join(format!("{}.json", snapshot.id));
+            fs::write(&path, &json)
+                .map_err(|e| format!("Failed to write snapshot: {}", e))?;
+        }
+    }
 
     Ok(json)
 }
 
 /// Load an identity snapshot by ID.
+///
+/// Primary source: VeriSimDB (GET /state/<id>).
+/// Fallback: `~/.panll/identities/<id>.json`.
 pub fn identity_load(id: &str) -> Result<String, String> {
+    // Primary: VeriSimDB
+    let verisim_url = std::env::var("VERISIMDB_URL")
+        .unwrap_or_else(|_| "http://localhost:8080/api/v1".into());
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    let url = format!("{}/state/{}", verisim_url.trim_end_matches('/'), id);
+    match client.get(&url).send() {
+        Ok(resp) => {
+            if resp.status().is_success() {
+                return resp.text().map_err(|e| format!("Failed to read response: {}", e));
+            }
+        }
+        Err(_) => {}
+    }
+
+    // Fallback to filesystem
     let path = identities_dir().join(format!("{}.json", id));
     fs::read_to_string(&path)
         .map_err(|e| format!("Snapshot not found: {}", e))

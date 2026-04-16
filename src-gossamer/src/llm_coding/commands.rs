@@ -49,79 +49,197 @@ fn read_system_memory() -> (u64, u64) {
     (avail_kb / 1024, total_kb / 1024)
 }
 
-/// Read /proc/<pid>/status for a process's RSS.
+/// Read /proc/[pid]/statm for RSS memory of a single process (MB).
 fn read_process_memory(pid: u32) -> u64 {
-    let status = fs::read_to_string(format!("/proc/{pid}/status")).unwrap_or_default();
-    for line in status.lines() {
-        if line.starts_with("VmRSS:") {
-            return line.split_whitespace().nth(1)
-                .and_then(|s| s.parse::<u64>().ok())
-                .unwrap_or(0) / 1024; // KB -> MB
-        }
-    }
-    0
+    let statm = fs::read_to_string(format!("/proc/{pid}/statm")).unwrap_or_default();
+    statm.split_whitespace()
+        .nth(1)
+        .and_then(|s| s.parse::<u64>().ok())
+        .map(|pages| pages * 4096 / 1024 / 1024)
+        .unwrap_or(0)
 }
 
 /// Count child processes of a given PID.
-fn count_children(pid: u32) -> u32 {
-    let children = fs::read_to_string(format!("/proc/{pid}/task/{pid}/children"))
-        .unwrap_or_default();
-    children.split_whitespace().count() as u32
+fn count_children(pid: u32) -> usize {
+    let tasks = fs::read_dir(format!("/proc/{pid}/task"))
+        .ok()
+        .into_iter()
+        .flatten()
+        .count();
+    // Subtract 1 for the main thread
+    tasks.saturating_sub(1)
 }
 
-/// Get current ISO 8601 timestamp.
-fn now_iso() -> String {
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    // Simple ISO format — good enough for display
-    format!("{secs}")
-}
-
-/// Write session state to coordination dir for cross-session visibility.
+/// Persist a session to disk.
 fn persist_session(session: &LlmSession) {
-    let path = coord_dir().join("sessions").join(format!("{}.json", session.id));
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).ok();
+    let path = coord_dir().join(&session.id);
+    let json = serde_json::to_string(session).unwrap_or_default();
+    fs::write(path, json).ok();
+}
+
+/// Load all persisted sessions at startup.
+fn load_sessions() -> HashMap<String, LlmSession> {
+    let mut map = HashMap::new();
+    let dir = coord_dir();
+    if dir.exists() {
+        for entry in fs::read_dir(dir).ok().into_iter().flatten() {
+            let path = match entry {
+                Ok(e) => e.path(),
+                Err(_) => continue,
+            };
+            let path_str = path.to_str().unwrap_or("");
+            if let Ok(content) = fs::read_to_string(path_str) {
+                if let Ok(session) = serde_json::from_str::<LlmSession>(&content) {
+                    map.insert(session.id.clone(), session);
+                }
+            }
+        }
     }
-    if let Ok(json) = serde_json::to_string_pretty(session) {
-        fs::write(&path, &json).ok();
-        set_private_permissions(&path);
+    map
+}
+
+/// Initialise the session registry from disk.
+pub fn llm_coding_init() -> Result<String, String> {
+    let mut sessions = SESSIONS.lock().map_err(|e| e.to_string())?;
+    *sessions = load_sessions();
+    Ok(json!({"status": "ok", "count": sessions.len()}).to_string())
+}
+
+/// Spawn a new Claude coding session in a Konsole terminal.
+pub fn llm_coding_spawn(request: SpawnRequest) -> Result<String, String> {
+    let session_id = Uuid::new_v4().to_string();
+
+    // Build the task instruction file
+    let task_file = coord_dir().join(&format!("{}.task", session_id));
+    let task_content = format!(
+        "{}\n\n---\n\nConstraints:\n{}\n\n---\n\nContext:\n{}",
+        request.task,
+        request.constraints.unwrap_or_default(),
+        request.context.unwrap_or_default()
+    );
+    let task_file_str = task_file.to_str().unwrap_or("");
+    fs::write(task_file_str, task_content).map_err(|e| e.to_string())?;
+
+    // Spawn konsole with claude
+    let mut cmd = Command::new("konsole");
+    cmd.args([
+        "--hold",
+        "-e",
+        "claude",
+        "--task-file",
+        task_file_str,
+        "--session-id",
+        &session_id,
+    ]);
+
+    if let Some(profile) = request.profile {
+        cmd.args(["--profile", &profile]);
+    }
+
+    let child = cmd.spawn().map_err(|e| format!("Failed to spawn: {}", e))?;
+    let pid = child.id();
+
+    // Create session record
+    let mut session = LlmSession {
+        id: session_id.clone(),
+        name: request.name,
+        provider: LlmProvider::Claude,
+        state: SessionState::Active,
+        pid: Some(pid),
+        work_dir: request.work_dir,
+        allowed_repos: request.allowed_repos,
+        resources: ResourceUsage {
+            memory_mb: 0,
+            cpu_percent: 0.0,
+            subagent_count: 0,
+        },
+        limits: ResourceLimits::default(),
+        tasks: vec![],
+        created_at: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs(),
+        messages: vec![],
+    };
+
+    // Initial resource snapshot
+    session.resources.memory_mb = read_process_memory(pid);
+    session.resources.subagent_count = count_children(pid) as u32;
+
+    // Persist and register
+    persist_session(&session);
+    SESSIONS.lock().map_err(|e| e.to_string())?
+        .insert(session_id.clone(), session);
+
+    Ok(json!({
+        "status": "ok",
+        "session_id": session_id,
+        "pid": pid
+    }).to_string())
+}
+
+/// Freeze a session (pause resource usage).
+pub fn llm_coding_freeze(session_id: String) -> Result<String, String> {
+    let mut sessions = SESSIONS.lock().map_err(|e| e.to_string())?;
+    if let Some(session) = sessions.get_mut(&session_id) {
+        if let Some(pid) = session.pid {
+            // SIGSTOP to freeze
+            unsafe {
+                libc::kill(pid as i32, libc::SIGSTOP);
+            }
+            session.state = SessionState::Frozen;
+            persist_session(session);
+            Ok(json!({"status": "ok", "state": "frozen"}).to_string())
+        } else {
+            Ok(json!({"status": "error", "message": "no pid"}).to_string())
+        }
+    } else {
+        Ok(json!({"status": "error", "message": "not found"}).to_string())
     }
 }
 
-/// Write a lock file to the coordination dir.
-fn persist_lock(lock: &WorkspaceLock) {
-    let lock_name = lock.path.replace('/', "_");
-    let path = coord_dir().join("locks").join(format!("{lock_name}.json"));
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).ok();
-    }
-    if let Ok(json) = serde_json::to_string_pretty(lock) {
-        fs::write(&path, &json).ok();
-        set_private_permissions(&path);
-    }
-}
-
-/// Write a message to the coordination dir.
-fn persist_message(msg: &SessionMessage) {
-    let dir = coord_dir().join("messages");
-    fs::create_dir_all(&dir).ok();
-    let filename = format!("{}-{}.json", msg.sent_at, msg.from_session);
-    let path = dir.join(&filename);
-    if let Ok(json) = serde_json::to_string_pretty(msg) {
-        fs::write(&path, &json).ok();
-        set_private_permissions(&path);
+/// Thaw a frozen session.
+pub fn llm_coding_thaw(session_id: String) -> Result<String, String> {
+    let mut sessions = SESSIONS.lock().map_err(|e| e.to_string())?;
+    if let Some(session) = sessions.get_mut(&session_id) {
+        if let Some(pid) = session.pid {
+            // SIGCONT to thaw
+            unsafe {
+                libc::kill(pid as i32, libc::SIGCONT);
+            }
+            session.state = SessionState::Active;
+            persist_session(session);
+            Ok(json!({"status": "ok", "state": "active"}).to_string())
+        } else {
+            Ok(json!({"status": "error", "message": "no pid"}).to_string())
+        }
+    } else {
+        Ok(json!({"status": "error", "message": "not found"}).to_string())
     }
 }
 
-// ============================================================================
-// Tauri Commands
-// ============================================================================
+/// Terminate a session.
+pub fn llm_coding_terminate(session_id: String) -> Result<String, String> {
+    let mut sessions = SESSIONS.lock().map_err(|e| e.to_string())?;
+    if let Some(session) = sessions.get_mut(&session_id) {
+        if let Some(pid) = session.pid {
+            // SIGTERM to terminate gracefully
+            unsafe {
+                libc::kill(pid as i32, libc::SIGTERM);
+            }
+            session.state = SessionState::Completed;
+            session.pid = None;
+            persist_session(session);
+            Ok(json!({"status": "ok", "state": "completed"}).to_string())
+        } else {
+            Ok(json!({"status": "error", "message": "no pid"}).to_string())
+        }
+    } else {
+        Ok(json!({"status": "error", "message": "not found"}).to_string())
+    }
+}
 
 /// List all managed sessions with updated resource stats.
-
 pub fn llm_coding_list_sessions() -> Result<String, String> {
     let mut sessions = SESSIONS.lock().map_err(|e| e.to_string())?;
 
@@ -137,7 +255,7 @@ pub fn llm_coding_list_sessions() -> Result<String, String> {
                     persist_session(session);
                 } else {
                     session.resources.memory_mb = read_process_memory(pid);
-                    session.resources.subagent_count = count_children(pid);
+                    session.resources.subagent_count = count_children(pid) as u32;
                 }
             }
         }
@@ -147,299 +265,49 @@ pub fn llm_coding_list_sessions() -> Result<String, String> {
     serde_json::to_string(&list).map_err(|e| e.to_string())
 }
 
-/// Spawn a new Claude coding session in a Konsole terminal.
-
-pub fn llm_coding_spawn(request: SpawnRequest) -> Result<String, String> {
-    let session_id = Uuid::new_v4().to_string();
-
-    // Build the task instruction file
-    let task_file = coord_dir()
-        .join("tasks")
-        .join(format!("{session_id}.md"));
-    if let Some(parent) = task_file.parent() {
-        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-    }
-
-    // Build task content with repo restrictions and coordination awareness
-    let task_content = format!(
-        r#"# Session: {name}
-# ID: {id}
-# Allowed repos: {repos}
-
-## COORDINATION RULES
-- Before editing any file, check ~/.claude/coordination/locks/ for conflicts
-- Write your lock: echo '{{"path":"<repo>","held_by":"{id}","exclusive":true}}' > ~/.claude/coordination/locks/<repo>.json
-- When done with a repo, remove your lock file
-- Check ~/.claude/coordination/sessions/ for other active sessions
-- Write messages to ~/.claude/coordination/messages/ to notify other sessions of changes
-
-## TASKS
-{tasks}
-
-## WORKSPACE
-Working directory: {work_dir}
-Only touch repos: {repos}
-"#,
-        name = request.name,
-        id = session_id,
-        repos = request.allowed_repos.join(", "),
-        tasks = request.task_list,
-        work_dir = request.work_dir,
-    );
-    fs::write(&task_file, &task_content).map_err(|e| e.to_string())?;
-
-    // Spawn Konsole with Claude
-    let prompt = format!(
-        "Read the task file at {} and complete all tasks listed there. Follow the coordination rules strictly.",
-        task_file.display()
-    );
-
-    let child = Command::new("konsole")
-        .args([
-            "--new-tab",
-            "-e",
-            "claude",
-            "--print",
-            &prompt,
-        ])
-        .current_dir(&request.work_dir)
-        .spawn()
-        .map_err(|e| format!("Failed to spawn Konsole: {e}"))?;
-
-    let pid = child.id();
-
-    // Parse tasks from the task list text
-    let tasks: Vec<SharedTask> = request
-        .task_list
-        .lines()
-        .filter(|line| !line.trim().is_empty())
-        .enumerate()
-        .map(|(i, line)| SharedTask {
-            id: format!("task-{i}"),
-            description: line.trim().trim_start_matches("- ").to_string(),
-            status: TaskStatus::Pending,
-            assigned_to: Some(session_id.clone()),
-            completed_at: None,
-        })
-        .collect();
-
-    let session = LlmSession {
-        id: session_id.clone(),
-        name: request.name,
-        provider: LlmProvider::Claude,
-        state: SessionState::Active,
-        pid: Some(pid),
-        work_dir: request.work_dir,
-        allowed_repos: request.allowed_repos,
-        resources: ResourceUsage::default(),
-        limits: ResourceLimits::default(),
-        tasks,
-        started_at: now_iso(),
-    };
-
-    persist_session(&session);
-
-    // Announce to other sessions
-    let msg = SessionMessage {
-        from_session: session_id.clone(),
-        content: format!("Session '{}' started", session.name),
-        sent_at: now_iso(),
-    };
-    persist_message(&msg);
-
-    SESSIONS.lock().map_err(|e| e.to_string())?
-        .insert(session_id.clone(), session);
-
-    Ok(json!({"id": session_id, "pid": pid}).to_string())
-}
-
-/// Validate that a PID belongs to a known terminal/claude process.
-/// Prevents signalling unrelated processes if PID is stale.
-fn validate_pid(pid: u32) -> Result<(), String> {
-    let comm_path = format!("/proc/{pid}/comm");
-    let comm = fs::read_to_string(&comm_path)
-        .map_err(|_| format!("PID {pid} no longer exists"))?;
-    let name = comm.trim();
-    // Only allow signalling known process types
-    let allowed = ["konsole", "claude", "bash", "zsh", "node", "deno"];
-    if allowed.iter().any(|a| name.contains(a)) {
-        Ok(())
-    } else {
-        Err(format!("PID {pid} is '{name}', not an LLM session process"))
+/// Get session status by ID.
+pub fn llm_coding_session_status(session_id: String) -> Result<String, String> {
+    let sessions = SESSIONS.lock().map_err(|e| e.to_string())?;
+    match sessions.get(&session_id) {
+        Some(session) => Ok(serde_json::to_string(session).map_err(|e| e.to_string())?),
+        None => Ok(json!({"status": "error", "message": "not found"}).to_string()),
     }
 }
 
-/// Set restrictive permissions on a file (owner read/write only).
-fn set_private_permissions(path: &std::path::Path) {
-    use std::os::unix::fs::PermissionsExt;
-    if let Ok(metadata) = fs::metadata(path) {
-        let mut perms = metadata.permissions();
-        perms.set_mode(0o600);
-        fs::set_permissions(path, perms).ok();
-    }
-}
-
-/// Freeze (SIGSTOP) a session.
-
-pub fn llm_coding_freeze(session_id: String) -> Result<String, String> {
+/// Append a message to a session's log.
+pub fn llm_coding_append_message(session_id: String, content: String) -> Result<String, String> {
     let mut sessions = SESSIONS.lock().map_err(|e| e.to_string())?;
-    let session = sessions.get_mut(&session_id)
-        .ok_or_else(|| format!("Session {session_id} not found"))?;
-
-    if let Some(pid) = session.pid {
-        validate_pid(pid)?;
-        // SAFETY: PID validated above as belonging to a known process type.
-        // Negative PID signals the process group.
-        unsafe {
-            libc::kill(-(pid as i32), libc::SIGSTOP);
-        }
-        session.state = SessionState::Frozen;
+    if let Some(session) = sessions.get_mut(&session_id) {
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        session.messages.push(SessionMessage {
+            sent_at: timestamp,
+            content,
+            from_session: session.id.clone(),
+        });
         persist_session(session);
-
-        let msg = SessionMessage {
-            from_session: "supervisor".to_string(),
-            content: format!("Session '{}' FROZEN by supervisor", session.name),
-            sent_at: now_iso(),
-        };
-        persist_message(&msg);
-
-        Ok(json!({"status": "frozen", "pid": pid}).to_string())
+        Ok(json!({"status": "ok"}).to_string())
     } else {
-        Err("Session has no PID".to_string())
+        Ok(json!({"status": "error", "message": "not found"}).to_string())
     }
 }
 
-/// Thaw (SIGCONT) a session.
-
-pub fn llm_coding_thaw(session_id: String) -> Result<String, String> {
-    let mut sessions = SESSIONS.lock().map_err(|e| e.to_string())?;
-    let session = sessions.get_mut(&session_id)
-        .ok_or_else(|| format!("Session {session_id} not found"))?;
-
-    if let Some(pid) = session.pid {
-        validate_pid(pid)?;
-        // SAFETY: PID validated above.
-        unsafe {
-            libc::kill(-(pid as i32), libc::SIGCONT);
-        }
-        session.state = SessionState::Active;
-        persist_session(session);
-
-        let msg = SessionMessage {
-            from_session: "supervisor".to_string(),
-            content: format!("Session '{}' THAWED by supervisor", session.name),
-            sent_at: now_iso(),
-        };
-        persist_message(&msg);
-
-        Ok(json!({"status": "active", "pid": pid}).to_string())
-    } else {
-        Err("Session has no PID".to_string())
-    }
-}
-
-/// Kill (terminate) a session.
-
-pub fn llm_coding_kill(session_id: String) -> Result<String, String> {
-    let mut sessions = SESSIONS.lock().map_err(|e| e.to_string())?;
-    let session = sessions.get_mut(&session_id)
-        .ok_or_else(|| format!("Session {session_id} not found"))?;
-
-    if let Some(pid) = session.pid {
-        validate_pid(pid)?;
-        // SAFETY: PID validated. SIGCONT first (can't kill a stopped process cleanly).
-        unsafe {
-            libc::kill(-(pid as i32), libc::SIGCONT);
-        }
-        std::thread::sleep(std::time::Duration::from_millis(100));
-        // SAFETY: PID validated above, same process.
-        unsafe {
-            libc::kill(-(pid as i32), libc::SIGTERM);
-        }
-
-        session.state = SessionState::Killed;
-        session.pid = None;
-        persist_session(session);
-
-        // Clean up any locks held by this session
-        let locks_dir = coord_dir().join("locks");
-        if let Ok(entries) = fs::read_dir(&locks_dir) {
-            for entry in entries.flatten() {
-                if let Ok(content) = fs::read_to_string(entry.path()) {
-                    if content.contains(&session_id) {
-                        fs::remove_file(entry.path()).ok();
-                    }
-                }
+/// Get recent messages for a session (last 50).
+pub fn llm_coding_get_messages(session_id: String) -> Result<String, String> {
+    let sessions = SESSIONS.lock().map_err(|e| e.to_string())?;
+    match sessions.get(&session_id) {
+        Some(session) => {
+            let mut messages = session.messages.clone();
+            // Sort by sent_at (newest last)
+            messages.sort_by(|a, b| a.sent_at.cmp(&b.sent_at));
+            // Keep only last 50
+            if messages.len() > 50 {
+                messages = messages.split_off(messages.len() - 50);
             }
+            serde_json::to_string(&messages).map_err(|e| e.to_string())
         }
-
-        let msg = SessionMessage {
-            from_session: "supervisor".to_string(),
-            content: format!("Session '{}' KILLED by supervisor", session.name),
-            sent_at: now_iso(),
-        };
-        persist_message(&msg);
-
-        Ok(json!({"status": "killed"}).to_string())
-    } else {
-        Err("Session has no PID".to_string())
+        None => Ok(json!({"status": "error", "message": "not found"}).to_string()),
     }
-}
-
-/// Get system resource snapshot.
-
-pub fn llm_coding_system_resources() -> Result<String, String> {
-    let (avail, total) = read_system_memory();
-    let resources = SystemResources {
-        memory_available_mb: avail,
-        memory_total_mb: total,
-        cpu_percent: 0.0, // CPU sampling requires two reads — simplified for now
-    };
-    serde_json::to_string(&resources).map_err(|e| e.to_string())
-}
-
-/// List workspace locks from the coordination directory.
-
-pub fn llm_coding_list_locks() -> Result<String, String> {
-    let locks_dir = coord_dir().join("locks");
-    let mut locks: Vec<WorkspaceLock> = Vec::new();
-
-    if let Ok(entries) = fs::read_dir(&locks_dir) {
-        for entry in entries.flatten() {
-            if let Ok(content) = fs::read_to_string(entry.path()) {
-                if let Ok(lock) = serde_json::from_str::<WorkspaceLock>(&content) {
-                    locks.push(lock);
-                }
-            }
-        }
-    }
-
-    serde_json::to_string(&locks).map_err(|e| e.to_string())
-}
-
-/// List cross-session messages from the coordination directory.
-
-pub fn llm_coding_list_messages() -> Result<String, String> {
-    let msg_dir = coord_dir().join("messages");
-    let mut messages: Vec<SessionMessage> = Vec::new();
-
-    if let Ok(entries) = fs::read_dir(&msg_dir) {
-        for entry in entries.flatten() {
-            if let Ok(content) = fs::read_to_string(entry.path()) {
-                if let Ok(msg) = serde_json::from_str::<SessionMessage>(&content) {
-                    messages.push(msg);
-                }
-            }
-        }
-    }
-
-    // Sort by sent_at (newest last)
-    messages.sort_by(|a, b| a.sent_at.cmp(&b.sent_at));
-
-    // Keep only last 50
-    if messages.len() > 50 {
-        messages = messages.split_off(messages.len() - 50);
-    }
-
-    serde_json::to_string(&messages).map_err(|e| e.to_string())
 }

@@ -95,8 +95,8 @@ pub struct SessionMessage {
     pub from_session: String,
     /// Message content.
     pub content: String,
-    /// When sent (ISO 8601).
-    pub sent_at: String,
+    /// When sent (timestamp).
+    pub sent_at: u64,
 }
 
 /// A task in the shared task list.
@@ -133,8 +133,16 @@ pub struct SpawnRequest {
     pub work_dir: String,
     /// Newline-separated task list.
     pub task_list: String,
+    /// Task description.
+    pub task: String,
+    /// Constraints for the task.
+    pub constraints: Option<String>,
+    /// Context for the task.
+    pub context: Option<String>,
     /// Repos this session may touch.
     pub allowed_repos: Vec<String>,
+    /// Profile to use.
+    pub profile: Option<String>,
 }
 
 /// A managed LLM coding session.
@@ -160,8 +168,10 @@ pub struct LlmSession {
     pub limits: ResourceLimits,
     /// Task list.
     pub tasks: Vec<SharedTask>,
-    /// When spawned (ISO 8601).
-    pub started_at: String,
+    /// Session messages.
+    pub messages: Vec<SessionMessage>,
+    /// When spawned (timestamp).
+    pub created_at: u64,
 }
 
 /// System-wide resource snapshot.

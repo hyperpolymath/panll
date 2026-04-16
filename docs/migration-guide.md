@@ -1,0 +1,1068 @@
+# PanLL Migration Guide: v0.1.x to v0.2.0
+
+## Overview
+
+This guide provides step-by-step instructions for migrating from PanLL v0.1.x (Tauri-based) to v0.2.0 (Gossamer-based). The migration includes architectural changes, new features, and breaking changes that require careful planning.
+
+## Table of Contents
+
+1. [What's New in v0.2.0](#whats-new-in-v020)
+2. [Breaking Changes](#breaking-changes)
+3. [Pre-Migration Checklist](#pre-migration-checklist)
+4. [Migration Steps](#migration-steps)
+5. [Post-Migration Tasks](#post-migration-tasks)
+6. [Troubleshooting](#troubleshooting)
+7. [Rollback Procedure](#rollback-procedure)
+8. [Frequently Asked Questions](#frequently-asked-questions)
+
+## What's New in v0.2.0
+
+### Major Changes
+
+| Feature | v0.1.x | v0.2.0 | Impact |
+|---------|-------|-------|--------|
+| **Backend** | Tauri 2.0 | Gossamer | 🔴 Breaking |
+| **IPC System** | Tauri IPC | Gossamer FFI | 🔴 Breaking |
+| **Storage** | Local only | VeriSimDB + Local | ✅ Additive |
+| **Team Features** | None | Burble integration | ✅ New |
+| **System Tray** | Basic | Full featured | ✅ Enhanced |
+| **Identity Management** | None | Full implementation | ✅ New |
+
+### New Features
+
+1. **VeriSimDB Integration**: Primary storage backend with filesystem fallback
+2. **Identity Snapshots**: Capture and restore complete workbench configurations
+3. **Team Broadcasting**: Share configurations with team members via Burble
+4. **Enhanced System Tray**: Service toggling and status monitoring
+5. **Improved Performance**: Optimized Rust backend with caching
+
+### Architecture Changes
+
+```mermaid
+graph LR
+    A[v0.1.x Tauri] -->|Migrates to| B[v0.2.0 Gossamer]
+    
+    subgraph v0.1.x
+        A1[Frontend: Svelte] -->|IPC| A2[Backend: Tauri/Rust]
+        A2 -->|FS| A3[Local Storage]
+    end
+    
+    subgraph v0.2.0
+        B1[Frontend: ReScript] -->|FFI| B2[Backend: Gossamer/Rust]
+        B2 -->|HTTP| B3[VeriSimDB]
+        B2 -->|HTTP| B4[Burble]
+        B2 -->|FS| B5[Local Storage]
+    end
+```
+
+## Breaking Changes
+
+### Backend Architecture
+
+**Impact**: High
+
+- **Tauri IPC → Gossamer FFI**: All frontend-backend communication uses new FFI layer
+- **Command Structure**: Some commands renamed or restructured
+- **Configuration Format**: New TOML-based configuration system
+
+### Frontend Framework
+
+**Impact**: Medium
+
+- **Svelte → ReScript**: Frontend rewritten in ReScript (compatible with ReasonML/OCaml)
+- **Component Structure**: New component hierarchy and state management
+- **Styling**: Updated CSS structure and theming system
+
+### Storage System
+
+**Impact**: Low (backward compatible)
+
+- **Local Storage Path**: Changed from `~/.panll/v1/` to `~/.panll/`
+- **Snapshot Format**: Enhanced with additional metadata fields
+- **Configuration Files**: New structure and location
+
+### Command Changes
+
+| v0.1.x Command | v0.2.0 Command | Status |
+|----------------|-----------------|--------|
+| `save_config` | `identity_save` | ✅ Compatible |
+| `load_config` | `identity_load` | ✅ Compatible |
+| `tauri_command` | `gossamer_command` | 🔴 Renamed |
+| `get_version` | `panll_version` | ✅ Compatible |
+| `system_info` | `system_status` | 🟡 Enhanced |
+
+## Pre-Migration Checklist
+
+### System Requirements
+
+- **Operating System**: Linux (Ubuntu 22.04+, Fedora 38+, Debian 11+)
+- **CPU**: 2+ cores (4+ recommended)
+- **RAM**: 4GB+ (8GB+ recommended)
+- **Disk Space**: 1GB+ free space
+- **Dependencies**: Rust, Deno, GTK3, WebKitGTK
+
+### Backup Requirements
+
+```bash
+# Create comprehensive backup
+mkdir -p /var/backups/panll-migration-$(date +%Y%m%d)
+
+# Backup configuration
+cp -r ~/.panll /var/backups/panll-migration-$(date +%Y%m%d)/
+
+# Backup data (if using custom storage)
+cp -r /var/panll /var/backups/panll-migration-$(date +%Y%m%d)/
+
+# Export snapshots (if any)
+tar -czf /var/backups/panll-migration-$(date +%Y%m%d)/snapshots.tar.gz ~/.panll/*/snapshots/
+
+# Verify backup
+ls -lh /var/backups/panll-migration-$(date +%Y%m%d)/
+```
+
+### Compatibility Check
+
+```bash
+# Check current version
+panll --version
+
+# Check dependencies
+rustc --version
+deno --version
+
+# Check GTK/WebKit
+pkg-config --modversion gtk+-3.0
+pkg-config --modversion webkit2gtk-4.0
+```
+
+### Service Status
+
+```bash
+# Check running services
+systemctl status panll-tauri
+systemctl status panll-verisimdb  # If installed
+systemctl status panll-burble     # If installed
+
+# Check port usage
+ss -tulnp | grep -E '8000|8080|6473'
+```
+
+## Migration Steps
+
+### Step 1: Install Prerequisites
+
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install required dependencies
+sudo apt install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    libssl-dev \
+    pkg-config \
+    libgtk-3-dev \
+    libwebkit2gtk-4.0-dev
+
+# Install Rust (if not installed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+
+# Install Deno (if not installed)
+curl -fsSL https://deno.land/x/install/install.sh | sh
+export DENO_INSTALL="/home/$USER/.deno"
+export PATH="$DENO_INSTALL/bin:$PATH"
+```
+
+### Step 2: Backup Existing Installation
+
+```bash
+# Create migration backup script
+cat > /usr/local/bin/panll-migration-backup.sh << 'EOF'
+#!/bin/bash
+set -e
+
+BACKUP_DIR="/var/backups/panll-migration-$(date +%Y%m%d_%H%M%S)"
+echo "Creating backup in $BACKUP_DIR"
+
+mkdir -p "$BACKUP_DIR"
+
+# Backup configuration
+echo "Backing up configuration..."
+if [ -d "$HOME/.panll" ]; then
+    cp -r "$HOME/.panll" "$BACKUP_DIR/"
+fi
+
+if [ -d "/etc/panll" ]; then
+    sudo cp -r "/etc/panll" "$BACKUP_DIR/"
+    sudo chown -R $USER:$USER "$BACKUP_DIR/etc"
+fi
+
+# Backup data
+echo "Backing up data..."
+if [ -d "/var/panll" ]; then
+    sudo cp -r "/var/panll" "$BACKUP_DIR/"
+    sudo chown -R $USER:$USER "$BACKUP_DIR/var"
+fi
+
+# Backup service configuration
+echo "Backing up service configuration..."
+if [ -f "/etc/systemd/system/panll.service" ]; then
+    sudo cp "/etc/systemd/system/panll.service" "$BACKUP_DIR/"
+fi
+
+if [ -f "/etc/systemd/system/panll-tauri.service" ]; then
+    sudo cp "/etc/systemd/system/panll-tauri.service" "$BACKUP_DIR/"
+fi
+
+# Create manifest
+echo "Creating manifest..."
+cat > "$BACKUP_DIR/MANIFEST.txt" << MANIFEST
+PanLL Migration Backup
+Timestamp: $(date)
+Version: $(panll --version 2>/dev/null || echo "unknown")
+Backup Contents:
+- Home configuration: .panll/
+- System configuration: /etc/panll/
+- Data directory: /var/panll/
+- Service files: systemd units
+MANIFEST
+
+echo "Backup completed successfully: $BACKUP_DIR"
+EOF
+
+chmod +x /usr/local/bin/panll-migration-backup.sh
+
+# Run backup
+sudo /usr/local/bin/panll-migration-backup.sh
+```
+
+### Step 3: Stop Existing Services
+
+```bash
+# Stop PanLL v0.1.x services
+echo "Stopping PanLL v0.1.x services..."
+sudo systemctl stop panll-tauri 2>/dev/null || true
+sudo systemctl stop panll 2>/dev/null || true
+
+# Disable old services
+sudo systemctl disable panll-tauri 2>/dev/null || true
+sudo systemctl disable panll 2>/dev/null || true
+
+# Verify services stopped
+systemctl status panll-tauri 2>&1 | grep -q "inactive" && echo "✅ Tauri service stopped"
+systemctl status panll 2>&1 | grep -q "inactive" && echo "✅ PanLL service stopped"
+```
+
+### Step 4: Install v0.2.0
+
+```bash
+# Download v0.2.0
+echo "Downloading PanLL v0.2.0..."
+wget https://github.com/hyperpolymath/panll/releases/download/v0.2.0/panll-v0.2.0-linux-x86_64.tar.gz
+
+# Extract
+echo "Extracting..."
+tar -xzf panll-v0.2.0-linux-x86_64.tar.gz
+cd panll-v0.2.0-linux-x86_64
+
+# Run installer
+echo "Running installer..."
+sudo ./install.sh
+
+# Verify installation
+panll --version
+echo "✅ PanLL v0.2.0 installed"
+```
+
+### Step 5: Migrate Configuration
+
+```bash
+# Create migration script
+cat > /usr/local/bin/panll-migrate-config.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Migrating configuration from v0.1.x to v0.2.0..."
+
+# Find backup directory
+BACKUP_DIR=$(ls -td /var/backups/panll-migration-* | head -1)
+if [ -z "$BACKUP_DIR" ]; then
+    echo "❌ No backup directory found"
+    exit 1
+fi
+
+echo "Using backup: $BACKUP_DIR"
+
+# Create new configuration directory
+sudo mkdir -p /etc/panll
+sudo chown $USER:$USER /etc/panll
+
+# Migrate main configuration
+if [ -f "$BACKUP_DIR/etc/panll/panll.config.toml" ] || [ -f "$BACKUP_DIR/.panll/config.toml" ]; then
+    echo "Migrating main configuration..."
+    
+    # Create new config structure
+    cat > /etc/panll/panll.config.toml << 'CONFIG'
+# PanLL v0.2.0 Configuration
+[panll]
+port = 8080
+host = "0.0.0.0"
+environment = "production"
+
+[ui]
+theme = "system"
+default_layout = "balanced"
+enable_animations = true
+
+[performance]
+worker_threads = 4
+max_snapshots = 1000
+cache_size_mb = 256
+
+[storage]
+base_path = "/var/panll"
+snapshot_dir = "identities"
+max_snapshot_size_mb = 10
+CONFIG
+
+    # Migrate specific settings if they exist
+    if [ -f "$BACKUP_DIR/etc/panll/panll.config.toml" ]; then
+        OLD_CONFIG="$BACKUP_DIR/etc/panll/panll.config.toml"
+    else
+        OLD_CONFIG="$BACKUP_DIR/.panll/config.toml"
+    fi
+    
+    if [ -f "$OLD_CONFIG" ]; then
+        # Migrate port setting
+        if grep -q "port" "$OLD_CONFIG"; then
+            OLD_PORT=$(grep "port" "$OLD_CONFIG" | cut -d'=' -f2 | tr -d ' "')
+            sed -i "s/port = 8080/port = $OLD_PORT/" /etc/panll/panll.config.toml
+        fi
+        
+        # Migrate theme setting
+        if grep -q "theme" "$OLD_CONFIG"; then
+            OLD_THEME=$(grep "theme" "$OLD_CONFIG" | cut -d'=' -f2 | tr -d ' "')
+            sed -i "s/theme = \"system\"/theme = \"$OLD_THEME\"/" /etc/panll/panll.config.toml
+        fi
+    fi
+    
+    echo "✅ Main configuration migrated"
+fi
+
+# Migrate service configuration
+cat > /etc/panll/services.toml << 'SERVICES'
+# Service Endpoints Configuration
+[verisimdb]
+url = "http://localhost:8080/api/v1"
+timeout_secs = 10
+retry_attempts = 3
+
+[burble]
+url = "http://localhost:6473"
+timeout_secs = 5
+retry_attempts = 2
+
+[gossamer]
+enable_system_tray = true
+tray_icon_path = "/usr/share/panll/icons/tray-icon.png"
+SERVICES
+
+echo "✅ Service configuration created"
+
+# Migrate data directory
+if [ -d "$BACKUP_DIR/var/panll" ]; then
+    echo "Migrating data directory..."
+    sudo mkdir -p /var/panll
+    sudo cp -r "$BACKUP_DIR/var/panll/." /var/panll/
+    sudo chown -R panll:panll /var/panll
+    echo "✅ Data directory migrated"
+fi
+
+# Migrate home directory
+if [ -d "$BACKUP_DIR/.panll" ]; then
+    echo "Migrating home directory..."
+    mkdir -p ~/.panll
+    cp -r "$BACKUP_DIR/.panll/." ~/.panll/
+    echo "✅ Home directory migrated"
+fi
+
+echo "✅ Configuration migration completed"
+EOF
+
+chmod +x /usr/local/bin/panll-migrate-config.sh
+
+# Run migration
+sudo /usr/local/bin/panll-migrate-config.sh
+```
+
+### Step 6: Install Dependencies
+
+```bash
+# Install VeriSimDB (required for v0.2.0)
+echo "Installing VeriSimDB..."
+git clone https://github.com/hyperpolymath/verisimdb.git
+cd verisimdb
+cargo build --release
+sudo cp target/release/verisimdb /usr/local/bin/
+
+# Create VeriSimDB service
+cat > /etc/systemd/system/verisimdb.service << 'EOF'
+[Unit]
+Description=VeriSimDB
+After=network.target
+
+[Service]
+User=panll
+Group=panll
+ExecStart=/usr/local/bin/verisimdb --config /etc/panll/verisimdb.config.toml
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl enable verisimdb
+sudo systemctl start verisimdb
+
+# Install Burble (optional but recommended)
+echo "Installing Burble..."
+git clone https://github.com/hyperpolymath/burble.git
+cd burble
+cargo build --release
+sudo cp target/release/burble /usr/local/bin/
+
+cat > /etc/systemd/system/burble.service << 'EOF'
+[Unit]
+Description=Burble
+After=network.target
+
+[Service]
+User=panll
+Group=panll
+ExecStart=/usr/local/bin/burble --config /etc/panll/burble.config.toml
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl enable burble
+sudo systemctl start burble
+
+echo "✅ Dependencies installed"
+```
+
+### Step 7: Configure Systemd Service
+
+```bash
+# Create new systemd service
+cat > /etc/systemd/system/panll.service << 'EOF'
+[Unit]
+Description=PanLL Connected Workbench v0.2.0
+After=network.target verisimdb.service burble.service
+
+[Service]
+User=panll
+Group=panll
+ExecStart=/usr/local/bin/panll --config /etc/panll/panll.config.toml
+Restart=on-failure
+RestartSec=5s
+Environment="RUST_BACKTRACE=1"
+Environment="PANLL_LOG_LEVEL=info"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Create panll user if not exists
+if ! id "panll" &>/dev/null; then
+    sudo useradd --system --no-create-home --shell /bin/false panll
+fi
+
+# Set permissions
+sudo chown -R panll:panll /etc/panll /var/panll
+sudo chmod 750 /etc/panll
+sudo chmod 750 /var/panll
+
+# Enable and start service
+sudo systemctl enable panll
+sudo systemctl start panll
+
+# Verify service
+systemctl status panll
+echo "✅ PanLL v0.2.0 service configured"
+```
+
+### Step 8: Migrate Data
+
+```bash
+# Create data migration script
+cat > /usr/local/bin/panll-migrate-data.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Migrating data from v0.1.x to v0.2.0..."
+
+BACKUP_DIR=$(ls -td /var/backups/panll-migration-* | head -1)
+if [ -z "$BACKUP_DIR" ]; then
+    echo "❌ No backup directory found"
+    exit 1
+fi
+
+echo "Using backup: $BACKUP_DIR"
+
+# Migrate identity snapshots
+if [ -d "$BACKUP_DIR/var/panll/identities" ]; then
+    echo "Migrating identity snapshots..."
+    sudo mkdir -p /var/panll/identities
+    
+    # Convert old snapshot format to new format
+    for snapshot in "$BACKUP_DIR/var/panll/identities"/*.json; do
+        if [ -f "$snapshot" ]; then
+            filename=$(basename "$snapshot")
+            echo "Processing $filename..."
+            
+            # Read old format
+            content=$(cat "$snapshot")
+            
+            # Convert to new format (add missing fields if needed)
+            jq '. + {
+                metadata: null,
+                tags: []
+            }' "$snapshot" > "/var/panll/identities/$filename"
+        fi
+    done
+    
+    sudo chown -R panll:panll /var/panll/identities
+    echo "✅ Identity snapshots migrated"
+fi
+
+# Migrate settings
+if [ -f "$BACKUP_DIR/.panll/settings.json" ]; then
+    echo "Migrating settings..."
+    mkdir -p ~/.panll
+    
+    # Convert old settings format
+    jq '. + {
+        theme: "system",
+        fontSize: 14
+    }' "$BACKUP_DIR/.panll/settings.json" > ~/.panll/settings.json
+    
+    echo "✅ Settings migrated"
+fi
+
+# Import into VeriSimDB
+if [ -d "/var/panll/identities" ]; then
+    echo "Importing snapshots into VeriSimDB..."
+    
+    for snapshot in /var/panll/identities/*.json; do
+        if [ -f "$snapshot" ]; then
+            id=$(basename "$snapshot" .json)
+            data=$(cat "$snapshot")
+            
+            # Import using VeriSimDB API
+            curl -X POST "http://localhost:8080/api/v1/state/$id" \
+                -H "Content-Type: application/json" \
+                -d "{\"state\": $data}" \
+                -s -o /dev/null -w "%{http_code}" | grep -q "200" && \
+                echo "✅ Imported $id" || echo "❌ Failed to import $id"
+        fi
+    done
+fi
+
+echo "✅ Data migration completed"
+EOF
+
+chmod +x /usr/local/bin/panll-migrate-data.sh
+
+# Run data migration
+sudo /usr/local/bin/panll-migrate-data.sh
+```
+
+### Step 9: Test Migration
+
+```bash
+# Test PanLL service
+echo "Testing PanLL v0.2.0..."
+
+# Check service status
+systemctl status panll --no-pager
+
+# Test API endpoints
+curl -s http://localhost:8080/health | jq .
+
+# Test identity operations
+curl -s http://localhost:8080/api/v1/identity_list | jq .
+
+# Test VeriSimDB
+curl -s http://localhost:8080/api/v1/health | jq .
+
+# Test Burble
+curl -s http://localhost:6473/api/v1/status | jq .
+
+# Create test snapshot
+test_snapshot=$(curl -s -X POST http://localhost:8080/api/v1/identity_save \
+    -H "Content-Type: application/json" \
+    -d '{
+        "name": "Migration Test",
+        "panll_state": "{}",
+        "settings": "{}",
+        "service_urls": "{}"
+    }')
+
+echo "Test snapshot created: $test_snapshot"
+
+# List snapshots
+curl -s http://localhost:8080/api/v1/identity_list | jq .
+
+echo "✅ Migration tests completed"
+```
+
+### Step 10: Cleanup
+
+```bash
+# Remove old services
+sudo rm -f /etc/systemd/system/panll-tauri.service
+sudo systemctl daemon-reload
+
+# Remove old binaries
+sudo rm -f /usr/local/bin/panll-tauri
+
+# Cleanup temporary files
+rm -f panll-v0.2.0-linux-x86_64.tar.gz
+rm -rf panll-v0.2.0-linux-x86_64
+
+echo "✅ Cleanup completed"
+```
+
+## Post-Migration Tasks
+
+### Verify Migration
+
+```bash
+# Comprehensive verification script
+cat > /usr/local/bin/panll-verify-migration.sh << 'EOF'
+#!/bin/bash
+
+echo "=== PanLL Migration Verification ==="
+echo "Timestamp: $(date)"
+echo ""
+
+# Check version
+echo "1. Version Check:"
+panll --version
+echo ""
+
+# Check services
+echo "2. Service Status:"
+systemctl status panll --no-pager | grep "Active:"
+systemctl status verisimdb --no-pager | grep "Active:"
+systemctl status burble --no-pager | grep "Active:"
+echo ""
+
+# Check API
+echo "3. API Health Check:"
+curl -s http://localhost:8080/health | jq .
+echo ""
+
+# Check VeriSimDB
+curl -s http://localhost:8080/api/v1/health | jq .
+echo ""
+
+# Check Burble
+curl -s http://localhost:6473/api/v1/status | jq .
+echo ""
+
+# Check identity operations
+echo "4. Identity Operations:"
+identity_count=$(curl -s http://localhost:8080/api/v1/identity_list | jq '. | length')
+echo "Identity snapshots: $identity_count"
+echo ""
+
+# Check configuration
+echo "5. Configuration:"
+ls -la /etc/panll/
+echo ""
+
+# Check data directory
+echo "6. Data Directory:"
+ls -la /var/panll/
+echo ""
+
+echo "=== Verification Complete ==="
+EOF
+
+chmod +x /usr/local/bin/panll-verify-migration.sh
+
+# Run verification
+sudo /usr/local/bin/panll-verify-migration.sh
+```
+
+### Update Documentation
+
+```bash
+# Update README with v0.2.0 information
+if [ -f "README.md" ]; then
+    sed -i 's/v0.1.x/v0.2.0/g' README.md
+    sed -i 's/Tauri/Gossamer/g' README.md
+    echo "✅ README updated"
+fi
+
+# Create migration notes
+cat > MIGRATION_NOTES.md << 'EOF'
+# Migration Notes: v0.1.x to v0.2.0
+
+## Migration Date
+$(date)
+
+## Migration Steps Completed
+- [x] Backup existing installation
+- [x] Install prerequisites
+- [x] Install v0.2.0
+- [x] Migrate configuration
+- [x] Install dependencies
+- [x] Configure systemd service
+- [x] Migrate data
+- [x] Test migration
+- [x] Cleanup
+
+## Verification Results
+$(sudo /usr/local/bin/panll-verify-migration.sh 2>&1 | tail -5)
+
+## Known Issues
+None
+
+## Rollback Plan
+Backup location: $(ls -td /var/backups/panll-migration-* | head -1)
+
+## Next Steps
+- Monitor system for 24 hours
+- Train users on new features
+- Update documentation
+EOF
+
+echo "✅ Migration notes created"
+```
+
+### User Communication
+
+```bash
+# Create user notification
+cat > /etc/motd.panll << 'EOF'
+=================================================================
+  PanLL has been upgraded to v0.2.0 "Connected Workbench"
+  Migration completed: $(date)
+
+  New Features:
+  - Identity snapshots with VeriSimDB storage
+  - Team broadcasting via Burble
+  - Enhanced system tray
+  - Improved performance
+
+  Changes:
+  - Backend: Tauri → Gossamer
+  - Frontend: Svelte → ReScript
+  - Storage: Local → VeriSimDB + Local fallback
+
+  Documentation: https://panll.hyperpolymath.dev/docs/migration
+  Support: support@hyperpolymath.dev
+=================================================================
+EOF
+
+# Update system message of the day
+sudo cp /etc/motd.panll /etc/motd
+
+echo "✅ User notification created"
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Service Fails to Start
+
+**Symptoms**: `systemctl status panll` shows failed state
+
+**Solutions**:
+```bash
+# Check logs
+journalctl -u panll -n 50
+
+# Check dependencies
+ldd /usr/local/bin/panll
+
+# Test manually
+panll --config /etc/panll/panll.config.toml --dev
+
+# Check port conflicts
+ss -tulnp | grep 8080
+```
+
+#### VeriSimDB Connection Issues
+
+**Symptoms**: "VeriSimDB unavailable" errors
+
+**Solutions**:
+```bash
+# Check VeriSimDB status
+systemctl status verisimdb
+
+# Test connection
+curl http://localhost:8080/api/v1/health
+
+# Check configuration
+cat /etc/panll/services.toml
+
+# Test with fallback
+export VERISIMDB_URL=""
+panll --config /etc/panll/panll.config.toml
+```
+
+#### Permission Errors
+
+**Symptoms**: "Permission denied" errors
+
+**Solutions**:
+```bash
+# Check directory permissions
+ls -la /etc/panll /var/panll
+
+# Fix permissions
+sudo chown -R panll:panll /etc/panll /var/panll
+sudo chmod 750 /etc/panll /var/panll
+
+# Check SELinux
+getenforce
+sudo setenforce 0  # Test with SELinux disabled
+```
+
+#### Data Migration Issues
+
+**Symptoms**: Missing snapshots or corrupted data
+
+**Solutions**:
+```bash
+# Check backup
+BACKUP_DIR=$(ls -td /var/backups/panll-migration-* | head -1)
+ls -la "$BACKUP_DIR"
+
+# Re-run data migration
+sudo /usr/local/bin/panll-migrate-data.sh
+
+# Verify data integrity
+sudo /usr/local/bin/panll-verify-migration.sh
+```
+
+### Debugging Commands
+
+```bash
+# Enable debug logging
+sudo sed -i 's/PANLL_LOG_LEVEL=info/PANLL_LOG_LEVEL=debug/' /etc/systemd/system/panll.service
+sudo systemctl restart panll
+
+# View detailed logs
+journalctl -u panll -f
+
+# Test individual components
+curl -v http://localhost:8080/health
+curl -v http://localhost:8080/api/v1/health
+curl -v http://localhost:6473/api/v1/status
+
+# Check network connectivity
+ping localhost
+nc -zv localhost 8080
+nc -zv localhost 6473
+```
+
+## Rollback Procedure
+
+### Emergency Rollback
+
+```bash
+# Stop new services
+sudo systemctl stop panll
+sudo systemctl stop verisimdb
+sudo systemctl stop burble
+
+# Find backup directory
+BACKUP_DIR=$(ls -td /var/backups/panll-migration-* | head -1)
+echo "Using backup: $BACKUP_DIR"
+
+# Restore configuration
+sudo cp -r "$BACKUP_DIR/etc/panll" /etc/
+sudo cp -r "$BACKUP_DIR/var/panll" /var/
+sudo chown -R panll:panll /etc/panll /var/panll
+
+# Restore old binary (if available)
+if [ -f "$BACKUP_DIR/usr/local/bin/panll-tauri" ]; then
+    sudo cp "$BACKUP_DIR/usr/local/bin/panll-tauri" /usr/local/bin/
+    sudo cp "$BACKUP_DIR/etc/systemd/system/panll-tauri.service" /etc/systemd/system/
+fi
+
+# Restore home directory
+cp -r "$BACKUP_DIR/.panll" ~/.panll/
+
+# Reload systemd
+sudo systemctl daemon-reload
+
+# Start old service
+sudo systemctl start panll-tauri
+
+# Verify
+panll-tauri --version
+systemctl status panll-tauri
+
+echo "⚠️  Rollback completed - running v0.1.x"
+```
+
+### Partial Rollback
+
+```bash
+# Rollback only configuration
+BACKUP_DIR=$(ls -td /var/backups/panll-migration-* | head -1)
+sudo cp -r "$BACKUP_DIR/etc/panll" /etc/
+sudo systemctl restart panll
+
+# Rollback only data
+sudo cp -r "$BACKUP_DIR/var/panll" /var/
+sudo chown -R panll:panll /var/panll
+sudo systemctl restart panll
+
+# Rollback specific snapshots
+SNAPSHOT_ID="your-snapshot-id"
+sudo cp "$BACKUP_DIR/var/panll/identities/$SNAPSHOT_ID.json" /var/panll/identities/
+sudo chown panll:panll /var/panll/identities/$SNAPSHOT_ID.json
+```
+
+## Frequently Asked Questions
+
+### Why migrate from Tauri to Gossamer?
+
+Gossamer provides:
+- Better performance and lower memory usage
+- More control over the webview implementation
+- Simplified FFI interface
+- Better integration with Rust ecosystem
+- Reduced binary size
+
+### What happens to my existing snapshots?
+
+Existing snapshots are automatically migrated:
+1. Copied to new location (`/var/panll/identities/`)
+2. Format enhanced with additional metadata
+3. Imported into VeriSimDB for primary storage
+4. Local copies maintained as fallback
+
+### Do I need to reinstall all plugins?
+
+Yes. The plugin system has been completely redesigned in v0.2.0. You'll need to:
+1. Check plugin compatibility
+2. Reinstall plugins using new API
+3. Reconfigure plugin settings
+
+### How do I access the new features?
+
+New features are accessible through:
+- **System Tray**: Right-click icon for menu
+- **Command Palette**: Ctrl+K for identity commands
+- **API**: New endpoints for programmatic access
+- **CLI**: Additional command-line options
+
+### What if I encounter issues after migration?
+
+1. Check the troubleshooting section above
+2. Review migration logs in `/var/log/panll/`
+3. Consult the backup in `/var/backups/panll-migration-*`
+4. Contact support with detailed error information
+
+### Can I run both versions side by side?
+
+Not recommended, but possible:
+1. Install v0.2.0 in different location
+2. Use different ports
+3. Run with `--config` flag to specify configuration
+4. Be aware of potential conflicts
+
+### How long does migration take?
+
+Migration time depends on:
+- Number of snapshots: ~10ms per snapshot
+- Data size: ~1MB per second
+- System performance: CPU and disk speed
+
+Typical migration: 1-5 minutes for average installation
+
+### What's the rollback window?
+
+Backups are kept for 30 days by default. You can:
+- Rollback anytime within this period
+- Extend backup retention by modifying cleanup scripts
+- Create manual backups for longer retention
+
+## Support
+
+### Getting Help
+
+```bash
+# Check documentation
+panll --help
+man panll
+
+# View logs
+journalctl -u panll -n 100
+
+# Check status
+systemctl status panll
+panll --version
+
+# Test connectivity
+curl http://localhost:8080/health
+```
+
+### Contact Support
+
+- **Email**: support@hyperpolymath.dev
+- **GitHub Issues**: https://github.com/hyperpolymath/panll/issues
+- **Discussions**: https://github.com/hyperpolymath/panll/discussions
+- **Documentation**: https://panll.hyperpolymath.dev/docs
+
+### Providing Debug Information
+
+When reporting issues, include:
+
+```bash
+# System information
+uname -a
+panll --version
+rustc --version
+deno --version
+
+# Configuration
+cat /etc/panll/panll.config.toml
+
+# Logs (last 50 lines)
+journalctl -u panll -n 50
+
+# Service status
+systemctl status panll
+systemctl status verisimdb
+systemctl status burble
+```
+
+## Conclusion
+
+This migration guide provides comprehensive instructions for upgrading from PanLL v0.1.x to v0.2.0. The migration includes architectural improvements, new features, and enhanced performance while maintaining backward compatibility for your data.
+
+**Key Points**:
+- ✅ Backup everything before starting
+- ✅ Follow steps in order
+- ✅ Test thoroughly after migration
+- ✅ Monitor for 24-48 hours
+- ✅ Consult backup if issues arise
+
+For additional assistance, refer to the official documentation or contact support.

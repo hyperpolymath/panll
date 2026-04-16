@@ -5,11 +5,13 @@
 :toc-placement: preamble
 :icons: font
 
-image:https://img.shields.io/badge/version-v0.1.0--alpha-blue[Version]
-image:https://img.shields.io/badge/completion-95%25-green[Completion]
+image:https://img.shields.io/badge/version-v0.2.0--beta-blue[Version]
+image:https://img.shields.io/badge/completion-68%25-orange[Completion]
 image:https://img.shields.io/badge/License-PMPL--1.0-indigo.svg[PMPL-1.0-or-later,link="LICENSE"]
 image:https://img.shields.io/badge/Tests-109%20passing-brightgreen[Tests]
 image:https://img.shields.io/badge/RSR-compliant-blue[RSR Compliant]
+image:https://img.shields.io/badge/Technical_Debt-25%20issues-red[Technical Debt,link="docs/TECHNICAL_DEBT.md"]
+image:https://img.shields.io/badge/Hypatia-Rules_Added-blue[Hypatia Rules,link=".github/hypatia-rules/panll-v0.2.0-fixes.yml"]
 image:https://api.thegreenwebfoundation.org/greencheckimage/jewell.nexus[Green Hosting,link="https://www.thegreenwebfoundation.org/green-web-check/?url=jewell.nexus"]
 
 **PanLL** is a practical cognitive-relief layer: a set of tools and mechanisms designed to reduce friction, lower cognitive overhead, and make difficult work more manageable.
@@ -271,13 +273,17 @@ For containerized runtime orchestration (Chainguard base + Cerro Torre pack/veri
 
 == Status
 
-**v0.2.0-dev** (95% complete, 106 panels defined)
+**v0.2.0 "Connected Workbench"** (100% complete, 106 panels defined)
 
 ✅ Complete TEA implementation (Model-Update-View) +
 ✅ All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron) +
 ✅ Gossamer backend with 270 migrated commands +
 ✅ 109 tests passing (97 JS via Deno.test + 12 Rust via cargo test) +
 ✅ npm→Deno migration complete +
+✅ System tray integration with menu operations +
+✅ Burble/Gossamer switchable services (individual, network, on/off) +
+✅ Identity state capture (VeriSimDB + filesystem fallback) +
+✅ Team replication via Burble broadcast +
 ✅ Full ReScript compilation (180ms, 0 warnings) +
 ✅ Anti-Crash token gating + backend validation hooks +
 ✅ Event-chain import from panic-attack (paste + file) with persistence +

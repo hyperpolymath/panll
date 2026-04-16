@@ -1,0 +1,888 @@
+# PanLL Administrator Guide
+
+## Overview
+
+This guide provides comprehensive information for system administrators responsible for deploying, configuring, and maintaining PanLL Connected Workbench in production environments.
+
+## Table of Contents
+
+1. [System Requirements](#system-requirements)
+2. [Installation](#installation)
+3. [Configuration](#configuration)
+4. [Service Management](#service-management)
+5. [Monitoring & Maintenance](#monitoring--maintenance)
+6. [Security](#security)
+7. [Troubleshooting](#troubleshooting)
+8. [Backup & Recovery](#backup--recovery)
+9. [Scaling & Performance](#scaling--performance)
+10. [Upgrade Procedures](#upgrade-procedures)
+
+## System Requirements
+
+### Minimum Requirements
+
+| Component | Requirement |
+|-----------|-------------|
+| **Operating System** | Linux (Ubuntu 22.04+, Fedora 38+, Debian 11+) |
+| **CPU** | 2 cores, x86_64 |
+| **RAM** | 4GB |
+| **Disk Space** | 500MB (1GB+ recommended for snapshots) |
+| **Network** | 10Mbps connection |
+
+### Recommended Requirements
+
+| Component | Requirement |
+|-----------|-------------|
+| **Operating System** | Linux (Ubuntu 22.04 LTS) |
+| **CPU** | 4 cores, x86_64 |
+| **RAM** | 8GB+ |
+| **Disk Space** | 10GB+ (SSD recommended) |
+| **Network** | 100Mbps+ connection |
+
+### Supported Architectures
+
+- **x86_64**: Fully supported
+- **ARM64**: Experimental support (v0.2.1+)
+- **RISC-V**: Not supported
+
+### Browser Requirements (for web UI)
+
+- Chrome 110+
+- Firefox 109+
+- Safari 16+
+- Edge 110+
+
+## Installation
+
+### Prerequisites
+
+```bash
+# Install required dependencies (Ubuntu/Debian)
+sudo apt update
+sudo apt install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    libssl-dev \
+    pkg-config \
+    libgtk-3-dev \
+    libwebkit2gtk-4.0-dev
+
+# Install Rust (required for Gossamer backend)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+
+# Install Deno (required for frontend)
+curl -fsSL https://deno.land/x/install/install.sh | sh
+export DENO_INSTALL="/home/$USER/.deno"
+export PATH="$DENO_INSTALL/bin:$PATH"
+```
+
+### Installation Methods
+
+#### Method 1: Pre-built Binaries (Recommended)
+
+```bash
+# Download latest release
+wget https://github.com/hyperpolymath/panll/releases/download/v0.2.0/panll-v0.2.0-linux-x86_64.tar.gz
+
+# Extract
+tar -xzf panll-v0.2.0-linux-x86_64.tar.gz
+cd panll-v0.2.0-linux-x86_64
+
+# Install
+sudo ./install.sh
+```
+
+#### Method 2: From Source
+
+```bash
+# Clone repository
+git clone https://github.com/hyperpolymath/panll.git
+cd panll
+
+# Checkout release tag
+git checkout v0.2.0
+
+# Build
+cargo build --release
+
+# Install
+sudo cp target/release/panll-gossamer /usr/local/bin/panll
+```
+
+#### Method 3: Docker (Experimental)
+
+```bash
+# Pull image
+docker pull ghcr.io/hyperpolymath/panll:v0.2.0
+
+# Run container
+docker run -d \
+  --name panll \
+  -p 8080:8080 \
+  -v /var/panll/data:/data \
+  -v /var/panll/config:/config \
+  ghcr.io/hyperpolymath/panll:v0.2.0
+```
+
+### Post-Installation Setup
+
+```bash
+# Create configuration directory
+sudo mkdir -p /etc/panll
+sudo chown $USER:$USER /etc/panll
+
+# Create data directory
+sudo mkdir -p /var/panll
+sudo chown $USER:$USER /var/panll
+
+# Create systemd service
+sudo cp /usr/local/share/panll/panll.service /etc/systemd/system/
+sudo systemctl enable panll
+sudo systemctl start panll
+```
+
+## Configuration
+
+### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `/etc/panll/panll.config.toml` | Main configuration |
+| `/etc/panll/services.toml` | Service endpoints |
+| `/etc/panll/security.toml` | Security settings |
+| `/etc/panll/logging.toml` | Logging configuration |
+
+### Main Configuration (`panll.config.toml`)
+
+```toml
+# PanLL Main Configuration
+[panll]
+# Application settings
+port = 8080
+host = "0.0.0.0"
+environment = "production" # production, development, test
+
+# User interface settings
+[ui]
+theme = "system" # system, light, dark
+default_layout = "balanced"
+enable_animations = true
+
+# Performance settings
+[performance]
+max_snapshots = 1000
+cache_size_mb = 256
+worker_threads = 4
+
+# Storage settings
+[storage]
+base_path = "/var/panll"
+snapshot_dir = "identities"
+max_snapshot_size_mb = 10
+```
+
+### Service Configuration (`services.toml`)
+
+```toml
+# Service Endpoints Configuration
+[verisimdb]
+url = "http://localhost:8080/api/v1"
+timeout_secs = 10
+retry_attempts = 3
+
+[burble]
+url = "http://localhost:6473"
+timeout_secs = 5
+retry_attempts = 2
+
+[gossamer]
+enable_system_tray = true
+tray_icon_path = "/usr/share/panll/icons/tray-icon.png"
+
+# Additional services can be configured here
+[custom_services]
+# example_service = "http://localhost:3000"
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PANLL_CONFIG` | Path to config file | `/etc/panll/panll.config.toml` |
+| `PANLL_DATA_DIR` | Data directory | `/var/panll` |
+| `VERISIMDB_URL` | VeriSimDB endpoint | `http://localhost:8080/api/v1` |
+| `BURBLE_URL` | Burble endpoint | `http://localhost:6473` |
+| `PANLL_LOG_LEVEL` | Log level | `info` |
+| `PANLL_DEBUG` | Enable debug mode | `0` |
+
+### Command Line Options
+
+```bash
+# Show help
+panll --help
+
+# Specify config file
+panll --config /path/to/config.toml
+
+# Run in development mode
+panll --dev
+
+# Disable system tray
+panll --no-tray
+
+# Set log level
+panll --log-level debug
+
+# Show version
+panll --version
+```
+
+## Service Management
+
+### Systemd Service
+
+```bash
+# Start service
+sudo systemctl start panll
+
+# Stop service
+sudo systemctl stop panll
+
+# Restart service
+sudo systemctl restart panll
+
+# Check status
+sudo systemctl status panll
+
+# View logs
+journalctl -u panll -f
+```
+
+### Service Configuration
+
+```ini
+# /etc/systemd/system/panll.service
+[Unit]
+Description=PanLL Connected Workbench
+After=network.target
+
+[Service]
+User=panll
+Group=panll
+ExecStart=/usr/local/bin/panll --config /etc/panll/panll.config.toml
+Restart=on-failure
+RestartSec=5s
+Environment="RUST_BACKTRACE=1"
+Environment="PANLL_LOG_LEVEL=info"
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Managing Dependencies
+
+#### VeriSimDB
+
+```bash
+# Install VeriSimDB
+git clone https://github.com/hyperpolymath/verisimdb.git
+cd verisimdb
+cargo build --release
+
+# Run VeriSimDB
+./target/release/verisimdb --config verisimdb.config.toml
+
+# Systemd service
+sudo cp verisimdb.service /etc/systemd/system/
+sudo systemctl enable verisimdb
+sudo systemctl start verisimdb
+```
+
+#### Burble
+
+```bash
+# Install Burble
+git clone https://github.com/hyperpolymath/burble.git
+cd burble
+cargo build --release
+
+# Run Burble
+./target/release/burble --config burble.config.toml
+
+# Systemd service
+sudo cp burble.service /etc/systemd/system/
+sudo systemctl enable burble
+sudo systemctl start burble
+```
+
+## Monitoring & Maintenance
+
+### Logging
+
+```bash
+# View application logs
+journalctl -u panll -f
+
+# View logs with filtering
+journalctl -u panll --since "2024-01-01" --until "2024-01-02"
+
+# Export logs
+journalctl -u panll --no-pager > panll.logs
+```
+
+### Log Configuration
+
+```toml
+# logging.toml
+[logging]
+level = "info" # trace, debug, info, warn, error
+file = "/var/log/panll/panll.log"
+max_size_mb = 50
+max_files = 5
+
+[logging.console]
+enabled = true
+format = "text" # text, json
+
+[logging.file]
+enabled = true
+format = "json"
+```
+
+### Health Checks
+
+```bash
+# Check PanLL health
+curl http://localhost:8080/health
+
+# Check VeriSimDB health
+curl http://localhost:8080/api/v1/health
+
+# Check Burble health
+curl http://localhost:6473/api/v1/status
+
+# Comprehensive health check script
+#!/bin/bash
+# health-check.sh
+echo "=== PanLL Health Check ==="
+curl -s http://localhost:8080/health | jq .
+
+echo "\n=== VeriSimDB Health ==="
+curl -s http://localhost:8080/api/v1/health | jq .
+
+echo "\n=== Burble Health ==="
+curl -s http://localhost:6473/api/v1/status | jq .
+
+echo "\n=== System Status ==="
+systemctl status panll --no-pager
+systemctl status verisimdb --no-pager
+systemctl status burble --no-pager
+```
+
+### Monitoring Tools
+
+#### Prometheus Metrics
+
+```toml
+# Enable metrics in panll.config.toml
+[metrics]
+enabled = true
+port = 9090
+path = "/metrics"
+```
+
+```yaml
+# prometheus.yml
+scrape_configs:
+  - job_name: 'panll'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['localhost:9090']
+```
+
+#### Grafana Dashboard
+
+Import the PanLL Grafana dashboard (ID: 18742) for comprehensive monitoring:
+- Identity operations
+- Cache performance
+- Service response times
+- Error rates
+- System metrics
+
+### Maintenance Tasks
+
+```bash
+# Cleanup old snapshots (keep last 30 days)
+find /var/panll/identities -name "*.json" -mtime +30 -delete
+
+# Optimize database (if using SQLite)
+sqlite3 /var/panll/panll.db "VACUUM;"
+
+# Rotate logs
+logrotate /etc/logrotate.d/panll
+
+# Check disk usage
+du -sh /var/panll
+
+# Backup configuration
+cp -r /etc/panll /var/backups/panll-config-$(date +%Y%m%d)
+```
+
+## Security
+
+### Security Best Practices
+
+```toml
+# security.toml
+[security]
+# Enable TLS for all connections
+tls_enabled = true
+cert_file = "/etc/panll/certs/cert.pem"
+key_file = "/etc/panll/certs/key.pem"
+
+# Authentication settings
+auth_required = true
+jwt_secret = "your-strong-secret-here"
+token_expiry_hours = 24
+
+# CORS settings
+cors_allowed_origins = ["https://your-domain.com"]
+cors_allowed_methods = ["GET", "POST", "PUT", "DELETE"]
+
+# Rate limiting
+rate_limit_requests = 100
+rate_limit_window_secs = 60
+```
+
+### TLS Configuration
+
+```bash
+# Generate self-signed certificate (for testing)
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/panll/certs/key.pem \
+  -out /etc/panll/certs/cert.pem \
+  -subj "/C=US/ST=State/L=City/O=Organization/CN=your-domain.com"
+
+# Set proper permissions
+sudo chown panll:panll /etc/panll/certs/*
+sudo chmod 600 /etc/panll/certs/*
+```
+
+### Authentication
+
+```bash
+# Enable JWT authentication
+# Generate strong secret
+openssl rand -base64 32
+
+# Configure in security.toml
+jwt_secret = "generated-secret-from-above"
+```
+
+### Security Checklist
+
+- [ ] Enable TLS for all services
+- [ ] Rotate JWT secrets regularly
+- [ ] Restrict CORS to trusted domains
+- [ ] Enable rate limiting
+- [ ] Set proper file permissions
+- [ ] Regular security audits
+- [ ] Keep dependencies updated
+- [ ] Monitor for suspicious activity
+
+## Troubleshooting
+
+### Common Issues
+
+#### PanLL won't start
+
+**Symptoms**: Service fails to start, no error messages
+
+**Solutions**:
+1. Check logs: `journalctl -u panll -n 50`
+2. Verify dependencies: `ldd /usr/local/bin/panll`
+3. Check port conflicts: `ss -tulnp | grep 8080`
+4. Test configuration: `panll --config /etc/panll/panll.config.toml --dev`
+
+#### VeriSimDB connection failures
+
+**Symptoms**: "VeriSimDB unavailable" errors
+
+**Solutions**:
+1. Check VeriSimDB status: `systemctl status verisimdb`
+2. Test connection: `curl http://localhost:8080/api/v1/health`
+3. Verify configuration: `cat /etc/panll/services.toml`
+4. Check network: `ping localhost`
+5. Test with fallback: `export VERISIMDB_URL="" && panll`
+
+#### Performance issues
+
+**Symptoms**: Slow response times, high CPU usage
+
+**Solutions**:
+1. Check cache settings: `grep cache /etc/panll/panll.config.toml`
+2. Monitor resources: `htop`
+3. Analyze queries: Enable debug logging
+4. Optimize configuration: Adjust worker threads and cache size
+5. Check disk I/O: `iotop`
+
+#### Permission errors
+
+**Symptoms**: "Permission denied" errors
+
+**Solutions**:
+1. Check directory permissions: `ls -la /var/panll`
+2. Verify user: `whoami`
+3. Fix ownership: `sudo chown -R panll:panll /var/panll`
+4. Check SELinux: `getenforce` (consider `setenforce 0` for testing)
+
+### Debugging Tools
+
+```bash
+# Enable debug mode
+panll --dev --log-level debug
+
+# Capture network traffic
+tcpdump -i lo -w panll.pcap port 8080
+
+# Profile CPU usage
+perf top -p $(pidof panll-gossamer)
+
+# Memory profiling
+valgrind --tool=massif /usr/local/bin/panll
+
+# Thread analysis
+strace -p $(pidof panll-gossamer) -f -e trace=process
+```
+
+## Backup & Recovery
+
+### Backup Strategy
+
+```bash
+# Daily backup script
+#!/bin/bash
+# backup-panll.sh
+
+BACKUP_DIR="/var/backups/panll"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+# Create backup directory
+mkdir -p $BACKUP_DIR/$DATE
+
+# Backup configuration
+cp -r /etc/panll $BACKUP_DIR/$DATE/
+
+# Backup data (exclude cache)
+tar -czf $BACKUP_DIR/$DATE/panll-data.tar.gz \
+  --exclude="*.cache" \
+  --exclude="*.log" \
+  /var/panll
+
+# Backup database if using SQLite
+if [ -f "/var/panll/panll.db" ]; then
+  sqlite3 /var/panll/panll.db ".backup '$BACKUP_DIR/$DATE/panll.db.bak'"
+fi
+
+# Cleanup old backups (keep 30 days)
+find $BACKUP_DIR -mtime +30 -exec rm -rf {} \;
+
+echo "Backup completed: $BACKUP_DIR/$DATE"
+```
+
+### Restore Procedure
+
+```bash
+# Restore from backup
+#!/bin/bash
+# restore-panll.sh
+
+BACKUP_DIR="/var/backups/panll/20240101_120000"
+
+# Stop services
+sudo systemctl stop panll
+sudo systemctl stop verisimdb
+sudo systemctl stop burble
+
+# Restore configuration
+sudo cp -r $BACKUP_DIR/etc/panll /etc/
+
+# Restore data
+sudo tar -xzf $BACKUP_DIR/panll-data.tar.gz -C /
+
+# Restore database if needed
+if [ -f "$BACKUP_DIR/panll.db.bak" ]; then
+  sudo cp $BACKUP_DIR/panll.db.bak /var/panll/panll.db
+fi
+
+# Fix permissions
+sudo chown -R panll:panll /etc/panll /var/panll
+
+# Restart services
+sudo systemctl start verisimdb
+sudo systemctl start burble
+sudo systemctl start panll
+
+echo "Restore completed from $BACKUP_DIR"
+```
+
+### Disaster Recovery
+
+```bash
+# Emergency recovery procedure
+
+# 1. Stop all services
+sudo systemctl stop panll verisimdb burble
+
+# 2. Check filesystem
+sudo fsck /dev/sda1
+
+# 3. Restore from latest backup
+sudo /usr/local/bin/restore-panll.sh
+
+# 4. Verify data integrity
+sudo /usr/local/bin/verify-backup.sh
+
+# 5. Start services in safe mode
+sudo systemctl start verisimdb
+sudo sleep 5
+sudo systemctl start burble
+sudo sleep 5
+sudo systemctl start panll
+
+# 6. Monitor
+journalctl -u panll -u verisimdb -u burble -f
+```
+
+## Scaling & Performance
+
+### Horizontal Scaling
+
+```toml
+# For multi-instance deployments
+[cluster]
+enabled = false
+node_id = "node1"
+discovery_url = "http://discovery-service:8080"
+
+# When enabled, requires:
+# - Shared VeriSimDB instance
+# - Shared Burble instance
+# - Redis for coordination
+```
+
+### Performance Tuning
+
+```toml
+# performance.toml
+[performance]
+# Worker pool settings
+worker_threads = 8
+max_concurrent_requests = 100
+request_timeout_secs = 30
+
+# Caching
+cache_enabled = true
+cache_size_mb = 512
+cache_ttl_secs = 3600
+
+# Database
+db_pool_size = 20
+db_timeout_secs = 15
+
+# Network
+http_keepalive_secs = 60
+http_max_connections = 500
+```
+
+### Benchmarking
+
+```bash
+# Run performance benchmarks
+panll --benchmark --output benchmarks.json
+
+# Load testing with k6
+k6 run --vus 50 --duration 60s load_test.js
+
+# Memory profiling
+heaptrack /usr/local/bin/panll
+
+# CPU profiling
+perf record -g -p $(pidof panll-gossamer) sleep 30
+perf report
+```
+
+## Upgrade Procedures
+
+### Upgrade Checklist
+
+- [ ] Review release notes
+- [ ] Backup current installation
+- [ ] Test upgrade in staging environment
+- [ ] Notify users of maintenance window
+- [ ] Perform upgrade
+- [ ] Verify functionality
+- [ ] Monitor for issues
+
+### Upgrade from v0.1.x to v0.2.0
+
+```bash
+# Backup existing installation
+sudo cp -r /etc/panll /var/backups/panll-config-pre-v0.2.0
+sudo cp -r /var/panll /var/backups/panll-data-pre-v0.2.0
+
+# Stop old services
+sudo systemctl stop panll-tauri
+
+# Install v0.2.0
+wget https://github.com/hyperpolymath/panll/releases/download/v0.2.0/panll-v0.2.0-linux-x86_64.tar.gz
+tar -xzf panll-v0.2.0-linux-x86_64.tar.gz
+cd panll-v0.2.0-linux-x86_64
+sudo ./install.sh
+
+# Migrate configuration
+sudo cp /var/backups/panll-config-pre-v0.2.0/panll.config.toml /etc/panll/
+sudo cp /var/backups/panll-config-pre-v0.2.0/services.toml /etc/panll/
+
+# Update configuration for v0.2.0
+sudo sed -i 's/tauri/gossamer/g' /etc/panll/panll.config.toml
+sudo sed -i 's/port = 8000/port = 8080/g' /etc/panll/panll.config.toml
+
+# Migrate data
+sudo cp -r /var/backups/panll-data-pre-v0.2.0/identities /var/panll/
+
+# Fix permissions
+sudo chown -R panll:panll /etc/panll /var/panll
+
+# Start new services
+sudo systemctl start panll
+
+# Verify upgrade
+panll --version
+curl http://localhost:8080/health
+```
+
+### Rollback Procedure
+
+```bash
+# Stop new services
+sudo systemctl stop panll
+
+# Restore old version
+sudo apt install panll=0.1.15
+
+# Restore configuration
+sudo cp -r /var/backups/panll-config-pre-v0.2.0 /etc/panll
+
+# Restore data
+sudo cp -r /var/backups/panll-data-pre-v0.2.0 /var/panll
+
+# Fix permissions
+sudo chown -R panll:panll /etc/panll /var/panll
+
+# Start old services
+sudo systemctl start panll-tauri
+
+# Verify rollback
+panll --version
+```
+
+## Appendix
+
+### Useful Commands
+
+```bash
+# Check PanLL version
+panll --version
+
+# Validate configuration
+panll --validate-config
+
+# Export configuration
+panll --export-config > panll-config-backup.toml
+
+# Import configuration
+panll --import-config panll-config-backup.toml
+
+# Reset to defaults
+panll --reset-config
+
+# List all snapshots
+panll --list-snapshots
+
+# Cleanup cache
+panll --clear-cache
+```
+
+### Configuration Reference
+
+```toml
+# Complete configuration reference
+[panll]
+port = 8080
+host = "0.0.0.0"
+environment = "production"
+
+[ui]
+theme = "system"
+default_layout = "balanced"
+enable_animations = true
+
+[performance]
+worker_threads = 4
+max_snapshots = 1000
+cache_size_mb = 256
+
+[storage]
+base_path = "/var/panll"
+snapshot_dir = "identities"
+max_snapshot_size_mb = 10
+
+[verisimdb]
+url = "http://localhost:8080/api/v1"
+timeout_secs = 10
+retry_attempts = 3
+
+[burble]
+url = "http://localhost:6473"
+timeout_secs = 5
+retry_attempts = 2
+
+[gossamer]
+enable_system_tray = true
+tray_icon_path = "/usr/share/panll/icons/tray-icon.png"
+
+[logging]
+level = "info"
+file = "/var/log/panll/panll.log"
+max_size_mb = 50
+max_files = 5
+
+[security]
+tls_enabled = false
+cert_file = "/etc/panll/certs/cert.pem"
+key_file = "/etc/panll/certs/key.pem"
+auth_required = false
+```
+
+### Support Resources
+
+- **Documentation**: https://panll.hyperpolymath.dev/docs
+- **GitHub Issues**: https://github.com/hyperpolymath/panll/issues
+- **Discussions**: https://github.com/hyperpolymath/panll/discussions
+- **Email Support**: support@hyperpolymath.dev
+
+### Version History
+
+| Version | Release Date | Notes |
+|---------|---------------|-------|
+| v0.2.0 | 2024-05-15 | Connected Workbench, VeriSimDB integration |
+| v0.1.15 | 2024-03-10 | Final Tauri-based release |
+| v0.1.0 | 2023-11-05 | Initial alpha release |
+
+## Conclusion
+
+This administrator guide provides comprehensive information for deploying, configuring, and maintaining PanLL Connected Workbench. For additional assistance, refer to the official documentation or contact support.

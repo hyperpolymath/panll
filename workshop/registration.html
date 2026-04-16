@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PanLL v0.2.0 Workshop Registration</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .workshop-info {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .workshop-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .detail-item {
+            margin-bottom: 10px;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .registration-form {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .speakers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .speaker-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .speaker-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .speaker-title {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        @media (max-width: 600px) {
+            .workshop-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>PanLL v0.2.0 Workshop Registration</h1>
+        <p>Mastering Advanced Identity Management & Team Collaboration</p>
+    </header>
+
+    <div class="workshop-info">
+        <div class="workshop-details">
+            <div>
+                <div class="detail-item">
+                    <span class="detail-label">Date:</span> June 5, 2024
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Time:</span> 14:00 - 16:00 UTC
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Location:</span> Virtual (Zoom)
+                </div>
+            </div>
+            <div>
+                <div class="detail-item">
+                    <span class="detail-label">Capacity:</span> 200 attendees
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Cost:</span> Free
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Level:</span> Intermediate/Advanced
+                </div>
+            </div>
+        </div>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+            <li>Deep dive into identity management architecture</li>
+            <li>Advanced team collaboration patterns with Burble</li>
+            <li>Automation and integration techniques</li>
+            <li>Extending PanLL with custom plugins and storage backends</li>
+        </ul>
+
+        <h2>Prerequisites</h2>
+        <ul>
+            <li>PanLL v0.2.0 installed</li>
+            <li>Basic familiarity with PanLL interface</li>
+            <li>VeriSimDB and Burble services running</li>
+        </ul>
+    </div>
+
+    <div class="registration-form">
+        <h2>Register Now</h2>
+        <form id="registrationForm" action="https://formspree.io/f/myourformid" method="POST">
+            <div class="form-group">
+                <label for="name">Full Name*</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email*</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="company">Company/Organization</label>
+                <input type="text" id="company" name="company">
+            </div>
+
+            <div class="form-group">
+                <label for="role">Your Role</label>
+                <select id="role" name="role">
+                    <option value="developer">Developer</option>
+                    <option value="devops">DevOps Engineer</option>
+                    <option value="architect">Architect</option>
+                    <option value="manager">Manager</option>
+                    <option value="student">Student</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="experience">Experience with PanLL</label>
+                <select id="experience" name="experience">
+                    <option value="none">None</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="questions">What topics interest you most?</label>
+                <textarea id="questions" name="questions" placeholder="Identity management, team collaboration, automation, extending PanLL, etc."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="newsletter" checked> Subscribe to PanLL newsletter
+                </label>
+            </div>
+
+            <button type="submit">Register for Free</button>
+        </form>
+    </div>
+
+    <div class="speakers">
+        <div class="speaker-card">
+            <h3 class="speaker-name">Jonathan D.A. Jewell</h3>
+            <p class="speaker-title">Project Lead & Architect</p>
+            <p>Creator of PanLL, ambient computing expert</p>
+        </div>
+
+        <div class="speaker-card">
+            <h3 class="speaker-name">Claude</h3>
+            <p class="speaker-title">Backend Architect</p>
+            <p>Rust systems programming specialist</p>
+        </div>
+
+        <div class="speaker-card">
+            <h3 class="speaker-name">Vibe</h3>
+            <p class="speaker-title">Frontend Lead</p>
+            <p>ReScript/React collaboration interfaces</p>
+        </div>
+
+        <div class="speaker-card">
+            <h3 class="speaker-name">Gemini</h3>
+            <p class="speaker-title">DevOps Engineer</p>
+            <p>Automation and CI/CD expert</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>Questions? Email us at workshop@panll.hyperpolymath.dev</p>
+        <p>&copy; 2024 PanLL Project. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Thank you for registering! You will receive a confirmation email shortly.');
+            // In a real implementation, this would submit to your form backend
+            // For now, we'll just show the alert
+        });
+    </script>
+</body>
+</html>

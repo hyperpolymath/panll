@@ -1,0 +1,90 @@
+# GitHub Discussions Configuration for PanLL
+
+# Welcome message for new discussions
+welcome_message: |
+  Welcome to the PanLL community discussions! 🎉
+  
+  This is the place to:
+  - Ask questions about using PanLL
+  - Discuss feature ideas and roadmap
+  - Share your use cases and experiences
+  - Get help with development and contributions
+  
+  Please review our [Code of Conduct](https://github.com/hyperpolymath/panll/blob/main/CODE_OF_CONDUCT.md) before participating.
+
+# Discussion categories
+categories:
+  - name: General
+    description: General discussion about PanLL
+    emoji: 💬
+    color: "#667eea"
+
+  - name: Q&A
+    description: Ask questions about using PanLL
+    emoji: ❓
+    color: "#764ba2"
+
+  - name: Feature Requests
+    description: Suggest and discuss new features
+    emoji: 🚀
+    color: "#f0b90b"
+
+  - name: Show and Tell
+    description: Share what you've built with PanLL
+    emoji: 🎨
+    color: "#10b981"
+
+  - name: Development
+    description: Discussion about PanLL development
+    emoji: 🛠️
+    color: "#3b82f6"
+
+  - name: Announcements
+    description: Official announcements from the PanLL team
+    emoji: 📢
+    color: "#ef4444"
+
+# Labels for discussions
+labels:
+  - name: "good first discussion"
+    description: Good for new contributors
+    color: "#0ea5e9"
+
+  - name: "help wanted"
+    description: Extra attention needed
+    color: "#10b981"
+
+  - name: "question"
+    description: Further information requested
+    color: "#f59e0b"
+
+  - name: "status: answered"
+    description: This discussion has been answered
+    color: "#10b981"
+
+  - name: "status: duplicate"
+    description: This discussion is a duplicate
+    color: "#6b7280"
+
+  - name: "status: outdated"
+    description: This discussion is outdated
+    color: "#9ca3af"
+
+# Moderation settings
+moderation:
+  # Enable akismet spam filtering
+  akismet: true
+  
+  # Require new users to have their first comment approved
+  require_approved_first_comment: false
+  
+  # Lock inactive discussions after 90 days
+  lock_inactive_after: 90
+
+# Notification settings
+notifications:
+  # Notify maintainers of new discussions
+  maintainers_on_new: true
+  
+  # Default subscription for new discussions
+  default_subscription: watch
