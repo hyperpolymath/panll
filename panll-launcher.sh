@@ -17,7 +17,7 @@
 #     "LM-LA-LIFECYCLE-STANDARD.adoc"
 #     "cross-platform-system-integration-modes"
 #   ]
-#   standard-spec-version = "0.1.0"
+#   standard-spec-version = "0.2.0"
 #   generator             = "launch-scaffolder"
 # )
 # @a2ml-metadata end
@@ -44,14 +44,14 @@ APP_CATEGORIES="Development;Utility;"
 APP_GENERIC_NAME="PanLL"
 RUNTIME_KIND="server-url"
 
-REPO_DIR="/var/mnt/eclipse/repos/panll"
-ICON_SOURCE="/var/mnt/eclipse/repos/panll/assets/icon-256.png"
+REPO_DIR="/var/mnt/eclipse/repos/verification-ecosystem/panll"
+ICON_SOURCE="/var/mnt/eclipse/repos/verification-ecosystem/panll/assets/icon-256.png"
 
 # Absolute path back to the per-app `<app>.launcher.a2ml` config that
 # produced this script. Consumed by the --integ / --disinteg arms when
 # the `launch-scaffolder` binary is on $PATH, so they can delegate to
 # the Rust implementation instead of running the shell fallback.
-CONFIG_FILE="/var/mnt/eclipse/repos/panll/panll.launcher.a2ml"
+CONFIG_FILE="/var/mnt/eclipse/repos/verification-ecosystem/panll/panll.launcher.a2ml"
 
 URL="http://localhost:8000/public/"
 APP_PORT="8000"
@@ -266,6 +266,16 @@ write_linux_desktop_file() {
     else
         icon_name="package-x-generic"
     fi
+
+    # keepopen.sh implements the standard fallback ladder: GUI → TUI →
+    # bash-at-repo-root. See launcher-standard.adoc §Fallback Ladder.
+    local keepopen="/var/mnt/eclipse/repos/.desktop-tools/keepopen.sh"
+    local gui_cmd tui_cmd
+# server-url: GUI = start server + open browser + tail log (so terminal
+    # stays open); TUI = start-only + follow log; Shell = repo root.
+    gui_cmd="$LAUNCHER_TARGET --auto && tail -f $LOG_FILE"
+    tui_cmd="$LAUNCHER_TARGET --start && tail -f $LOG_FILE"
+
     cat > "$target" <<EOF
 [Desktop Entry]
 Type=Application
@@ -273,9 +283,9 @@ Version=1.0
 Name=$APP_DISPLAY
 GenericName=$APP_GENERIC_NAME
 Comment=$APP_DESC
-Exec=$LAUNCHER_TARGET --auto
+Exec=$keepopen "$APP_DISPLAY" "$REPO_DIR" "$gui_cmd" "$tui_cmd" "$LOG_FILE"
 Icon=$icon_name
-Terminal=false
+Terminal=true
 Categories=$APP_CATEGORIES
 StartupNotify=true
 StartupWMClass=$APP_NAME
