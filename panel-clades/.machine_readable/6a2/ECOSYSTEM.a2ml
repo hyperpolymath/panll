@@ -29,7 +29,7 @@ projects = [
   { name = "sustainabot", relationship = "consumer", notes = "TSDM effects axis uses sustainabot for ecological checking" },
   { name = "gitbot-fleet", relationship = "consumer", notes = "Fleet clade — bots read clade directives to sequence work" },
   { name = "proven-servers", relationship = "consumer", notes = "VAB clade composes proven-servers components visually" },
-  { name = "verisimdb", relationship = "consumer", notes = "Databases clade — VQL-DT query interface" },
+  { name = "verisimdb", relationship = "consumer", notes = "Databases clade — VCL-DT query interface" },
   { name = "quandledb", relationship = "consumer", notes = "Databases clade — GQL-DT query interface" },
   { name = "lithoglyph", relationship = "consumer", notes = "Databases clade — KQL-DT query interface" },
   { name = "rsr-template-repo", relationship = "sibling-standard", notes = "RSR template includes TSDM policies; clades formalise them as panel-level directives" },

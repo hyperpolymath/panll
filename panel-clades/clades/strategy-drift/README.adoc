@@ -62,7 +62,7 @@ a class with `n_repos=1` has narrow cross-repo transfer confidence.
 * verisimdb source — `.../proof_attempts*` handlers and MV DDL
 * hypatia — `Hypatia.Rules.ProofStrategySelection` (N1 novelty gate +
   N2 quarantine) and `Hypatia.Rules.StrategyDrift` (N4 drift tracker)
-* `docs/design/DESIGN-2026-04-05-V4-proof-attempts-vqldt.adoc` (V4 cert design)
+* `docs/design/DESIGN-2026-04-05-V4-proof-attempts-vcldt.adoc` (V4 cert design)
 
 == Implementation Status (2026-04-05)
 

@@ -97,3 +97,11 @@ ai-cli-crash-capture/
 
 # Sync artifacts
 sync_report*.txt
+target/
+node_modules/
+_build/
+deps/
+.elixir_ls/
+.cache/
+build/
+dist/

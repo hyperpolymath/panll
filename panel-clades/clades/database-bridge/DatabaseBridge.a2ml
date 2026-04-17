@@ -29,7 +29,7 @@ capabilities = [
   "MigrationManagement",
   "ConnectionPooling",
   "ResultCaching",
-  "VQLSupport",
+  "VCLSupport",
   "CrossDBJoin",
 ]
 

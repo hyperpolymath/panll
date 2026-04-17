@@ -73,10 +73,10 @@ notes = "Fleet panel wired with 6 bots and safety triangle. BoJ agent-mcp routes
 
 [related-projects.verisimdb]
 relationship = "primary-backend-module"
-nature = """VeriSimDB is PanLL's first database backend. VQL-DT maps to three-panel layout:
+nature = """VeriSimDB is PanLL's first database backend. VCL-DT maps to three-panel layout:
 Panel-L = proof obligations, Panel-N = agentic inference, Panel-W = query results."""
 integration-status = "active"
-notes = "BoJ database-mcp cartridge routes VQL queries when bojRouting=true."
+notes = "BoJ database-mcp cartridge routes VCL queries when bojRouting=true."
 
 [related-projects.quandledb]
 relationship = "future-backend-module"

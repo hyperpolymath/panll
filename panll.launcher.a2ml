@@ -12,7 +12,7 @@ version      = "0.2.0"
 license      = "PMPL-1.0-or-later"
 
 [repo]
-path = "/var/mnt/eclipse/repos/verification-ecosystem/panll"
+path = "/var/mnt/eclipse/repos/panll"
 
 [runtime]
 kind    = "server-url"

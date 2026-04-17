@@ -16,7 +16,7 @@ TypeLL is PanLL's primary type intelligence service, operating both as a standal
 and as a cross-cutting service callable by any panel via TypeLLService helpers. It provides
 7 core operations: health, check, infer, refine, compute, list-signatures, and universes.
 
-Currently wired to 7 panels: VeriSimDB (VQL type checking), Protocol-Squisher (schema
+Currently wired to 7 panels: VeriSimDB (VCL type checking), Protocol-Squisher (schema
 type checking), My-Lang (dialect-aware type checking), Anti-Crash (type-level token
 validation), Pane-L (constraint type inference), BoJ (cartridge ABI checking), and
 ECHIDNA (proof obligation generation).

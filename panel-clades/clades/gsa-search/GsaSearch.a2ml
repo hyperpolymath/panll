@@ -8,7 +8,7 @@ short-name = "Search"
 version = "1.0.0"
 kind = "database"
 icon = "search"
-description = "Search across all managed servers using VQL full-text search, vector similarity, or raw VQL queries. Supports faceted filtering by game type, status, and drift level."
+description = "Search across all managed servers using VCL full-text search, vector similarity, or raw VCL queries. Supports faceted filtering by game type, status, and drift level."
 
 [clade-traits]
 has-backend = true

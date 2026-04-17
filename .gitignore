@@ -128,3 +128,8 @@ Thumbs.db
 
 # wokelangiser generated i18n locale files (too large for GitHub)
 generated/wokelangiser/i18n/
+target/
+_build/
+deps/
+.elixir_ls/
+.cache/
