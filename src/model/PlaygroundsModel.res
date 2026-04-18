@@ -11,7 +11,7 @@
 /// Supported playground languages.
 type playgroundLanguage =
   /// VCL — VeriSimDB Query Language.
-  | LangVql
+  | LangVcl
   /// KQL — QuandleDB Query Language.
   | LangKql
   /// GQL — LithoGlyph Query Language.

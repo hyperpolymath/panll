@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-// VQL-UT Panel — The flagship PanLL panel.
+// VCL-UT Panel — The flagship PanLL panel.
 //
 // This is the primary interface through which PanLL users interact with
-// VeriSimDB, ECHIDNA provers, and the VQL-UT type-safe query language.
+// VeriSimDB, ECHIDNA provers, and the VCL-UT type-safe query language.
 //
 // 7 tabs:
 //   1. Editor    — Query authoring with live linting and formatting
@@ -19,8 +19,8 @@
 //   - Evangeliser narratives — celebrate achievement, minimize fear
 //   - Graceful degradation — works without TypeLL, ECHIDNA, or VeriSimDB
 
-open VqlModel
-open VqlEngine
+open VclModel
+open VclEngine
 
 // ============================================================
 // SECTION 1: Shared Sub-Components
@@ -102,11 +102,11 @@ let viewNarrative = (narrative: typeNarrative) => {
 
 /// Render a tab button.
 let viewTabButton = (
-  ~activeTab: vqlTab,
-  ~tab: vqlTab,
+  ~activeTab: vclTab,
+  ~tab: vclTab,
   ~label: string,
   ~icon: string,
-  ~dispatch: vqlMsg => unit,
+  ~dispatch: vclMsg => unit,
 ) => {
   let isActive = activeTab == tab
   let baseClass = "px-3 py-1.5 text-sm rounded-t transition-colors"
@@ -122,7 +122,7 @@ let viewTabButton = (
 }
 
 /// View layer selector buttons (shared with TypeLL).
-let viewLayerSelector = (activeLayer: viewLayer, dispatch: vqlMsg => unit) => {
+let viewLayerSelector = (activeLayer: viewLayer, dispatch: vclMsg => unit) => {
   let layers: array<viewLayer> = [Raw, Folded, Glyphed, Wysiwyg]
   <div className="flex gap-1">
     {layers->Array.map(vl => {
@@ -143,10 +143,10 @@ let viewLayerSelector = (activeLayer: viewLayer, dispatch: vqlMsg => unit) => {
 /// Connection status badge.
 let viewConnectionBadge = (status: connectionStatus) => {
   let (colour, label) = switch status {
-  | VqlDisconnected => ("bg-gray-700 text-gray-400", "Disconnected")
-  | VqlConnecting => ("bg-amber-900/40 text-amber-400 animate-pulse", "Connecting\u2026")
-  | VqlConnected(url) => ("bg-emerald-900/40 text-emerald-400", `Connected: ${url}`)
-  | VqlError(msg) => ("bg-red-900/40 text-red-400", `Error: ${msg}`)
+  | VclDisconnected => ("bg-gray-700 text-gray-400", "Disconnected")
+  | VclConnecting => ("bg-amber-900/40 text-amber-400 animate-pulse", "Connecting\u2026")
+  | VclConnected(url) => ("bg-emerald-900/40 text-emerald-400", `Connected: ${url}`)
+  | VclError(msg) => ("bg-red-900/40 text-red-400", `Error: ${msg}`)
   }
   <span className={`text-xs px-2 py-0.5 rounded ${colour}`}>{label->React.string}</span>
 }
@@ -158,7 +158,7 @@ let viewConnectionBadge = (status: connectionStatus) => {
 /// The query editor tab — the primary authoring surface.
 /// Features: textarea with live linting, operation selector, template picker,
 /// parameter inputs, format button, type-check button, execute button.
-let viewEditorTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+let viewEditorTab = (state: vclState, dispatch: vclMsg => unit) => {
   let diagnosticCounts = {
     let errors = state.linter.diagnostics->Array.filter(d => d.severity == LintError)->Array.length
     let warnings = state.linter.diagnostics->Array.filter(d => d.severity == LintWarning)->Array.length
@@ -310,7 +310,7 @@ let viewEditorTab = (state: vqlState, dispatch: vqlMsg => unit) => {
             let v = (e->ReactEvent.Form.target)["value"]
             dispatch(SetContent(v))
           }}
-          placeholder="Write your VQL-UT query here\u2026\n\nFIND proof, theorem, goal\nFROM proof_states\nWHERE prover = 'Lean'\nLIMIT 100"
+          placeholder="Write your VCL-UT query here\u2026\n\nFIND proof, theorem, goal\nFROM proof_states\nWHERE prover = 'Lean'\nLIMIT 100"
           spellCheck=false
         />
         // Execution status overlay
@@ -383,7 +383,7 @@ let viewEditorTab = (state: vqlState, dispatch: vqlMsg => unit) => {
 // ============================================================
 
 /// The results tab — tabular display of query results.
-let viewResultsTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+let viewResultsTab = (state: vclState, dispatch: vclMsg => unit) => {
   switch state.execution.lastResult {
   | None =>
     <div className="flex flex-col items-center justify-center h-full text-gray-600">
@@ -527,7 +527,7 @@ let rec viewPlanStep = (step: planStep, depth: int) => {
 }
 
 /// The query plan tab — visualizes how the query will be executed.
-let viewPlanTab = (state: vqlState, _dispatch: vqlMsg => unit) => {
+let viewPlanTab = (state: vclState, _dispatch: vclMsg => unit) => {
   switch state.execution.lastResult {
   | Some({queryPlan: Some(plan)}) =>
     <div className="flex flex-col h-full">
@@ -566,7 +566,7 @@ let viewPlanTab = (state: vqlState, _dispatch: vqlMsg => unit) => {
 // ============================================================
 
 /// The schema tab — browse VeriSimDB octad entities.
-let viewSchemaTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+let viewSchemaTab = (state: vclState, dispatch: vclMsg => unit) => {
   let filteredEntities = state.schema.entities->Array.filter(e => {
     let matchesSearch = String.length(state.schema.searchFilter) == 0 ||
       String.includes(String.toLowerCase(e.name), String.toLowerCase(state.schema.searchFilter)) ||
@@ -687,7 +687,7 @@ let viewSchemaTab = (state: vqlState, dispatch: vqlMsg => unit) => {
 // ============================================================
 
 /// The provers tab — ECHIDNA cross-prover dispatch configuration.
-let viewProversTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+let viewProversTab = (state: vclState, dispatch: vclMsg => unit) => {
   let proversByKind = (kind: string) =>
     state.dispatch.availableProvers->Array.filter(p => p.kind == kind)
 
@@ -782,7 +782,7 @@ let viewProversTab = (state: vqlState, dispatch: vqlMsg => unit) => {
 // ============================================================
 
 /// The history tab — past queries with replay and favourites.
-let viewHistoryTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+let viewHistoryTab = (state: vclState, dispatch: vclMsg => unit) => {
   let sortedHistory = state.execution.history
     ->Array.copy
     ->Array.toSorted((a, b) => b.timestamp -. a.timestamp)
@@ -837,7 +837,7 @@ let viewHistoryTab = (state: vqlState, dispatch: vqlMsg => unit) => {
 // ============================================================
 
 /// The config tab — linter rules, formatter options, connections.
-let viewConfigTab = (state: vqlState, dispatch: vqlMsg => unit) => {
+let viewConfigTab = (state: vclState, dispatch: vclMsg => unit) => {
   <div className="flex flex-col h-full overflow-auto p-4 space-y-6">
     // Linter configuration
     <div>
@@ -1000,15 +1000,15 @@ let viewConfigTab = (state: vqlState, dispatch: vqlMsg => unit) => {
 // SECTION 9: Main Panel View
 // ============================================================
 
-/// The complete VQL panel — assembled from all tabs.
+/// The complete VCL panel — assembled from all tabs.
 /// This is the entry point rendered by PanLL's View.res.
 @react.component
-let make = (~state: vqlState, ~dispatch: vqlMsg => unit) => {
+let make = (~state: vclState, ~dispatch: vclMsg => unit) => {
   <div className="fixed inset-0 bg-gray-950 z-50 flex flex-col">
     // Panel header
     <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800">
       <div className="flex items-center gap-3">
-        <span className="text-lg font-semibold text-cyan-400">{"VQL-UT"->React.string}</span>
+        <span className="text-lg font-semibold text-cyan-400">{"VCL-UT"->React.string}</span>
         <span className="text-xs text-gray-500">{"Type-Safe Query Language for VeriSimDB"->React.string}</span>
         {viewConnectionBadge(state.connection)}
       </div>

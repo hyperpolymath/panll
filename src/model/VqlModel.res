@@ -411,7 +411,7 @@ type viewLayer =
 // ============================================================
 
 /// The 7 tabs of the VCL panel — each a distinct workflow.
-type vqlTab =
+type vclTab =
   | TabEditor // Query editor with linting and formatting
   | TabResults // Result table with sorting/filtering
   | TabPlan // Query plan visualization (tree diagram)
@@ -426,15 +426,15 @@ type vqlTab =
 
 /// Connection status to VeriSimDB.
 type connectionStatus =
-  | VqlDisconnected
-  | VqlConnecting
-  | VqlConnected(string) // Endpoint URL
-  | VqlError(string) // Error message
+  | VclDisconnected
+  | VclConnecting
+  | VclConnected(string) // Endpoint URL
+  | VclError(string) // Error message
 
 /// The complete VCL panel state — assembled from all subsystems.
-type vqlState = {
+type vclState = {
   // Panel chrome
-  activeTab: vqlTab,
+  activeTab: vclTab,
   viewLayer: viewLayer,
   panelOpen: bool,
   fullscreen: bool,
@@ -461,9 +461,9 @@ type vqlState = {
 // ============================================================
 
 /// All messages the VCL panel can receive — each maps to a state transition.
-type vqlMsg =
+type vclMsg =
   // Tab navigation
-  | SetTab(vqlTab)
+  | SetTab(vclTab)
   | SetViewLayer(viewLayer)
   | ToggleFullscreen
   // Editor

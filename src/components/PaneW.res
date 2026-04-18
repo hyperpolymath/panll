@@ -112,7 +112,7 @@ let renderDbConnectionIndicator = (db: verisimdbState): Tea_Vdom.t<msg> => {
 }
 
 /// VCL query textarea and execute button.
-let renderVqlQueryArea = (db: verisimdbState): Tea_Vdom.t<msg> => {
+let renderVclQueryArea = (db: verisimdbState): Tea_Vdom.t<msg> => {
   div(
     list{Attrs.class_("space-y-2")},
     list{
@@ -565,7 +565,7 @@ let renderDatabaseTools = (db: verisimdbState): Tea_Vdom.t<msg> => {
       },
       list{
         renderDbConnectionIndicator(db),
-        renderVqlQueryArea(db),
+        renderVclQueryArea(db),
         renderQueryResult(db),
         viewTypeCheckResult(db.lastTypeCheck),
         renderEntityList(db),

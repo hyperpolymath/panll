@@ -13,7 +13,7 @@ open Tea.Html
 /// Render the language selector radio group (VCL, KQL, GQL, ReScript, Gleam, Idris2, Nickel).
 let renderLanguageSelector = (active: playgroundLanguage): Tea_Vdom.t<msg> => {
   let langs: array<playgroundLanguage> = [
-    LangVql,
+    LangVcl,
     LangKql,
     LangGql,
     LangRescript,
@@ -257,11 +257,11 @@ let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
                         Attrs.role("radiogroup"),
                         Attrs.ariaLabel("NQC query language"),
                       },
-                      [LangVql, LangKql, LangGql]
+                      [LangVcl, LangKql, LangGql]
                       ->Array.map(lang => {
                         let isActive = lang === pg.nqcLanguage
                         let accentColor = switch lang {
-                        | LangVql => "bg-teal-600 text-white"
+                        | LangVcl => "bg-teal-600 text-white"
                         | LangKql => "bg-purple-600 text-white"
                         | LangGql => "bg-amber-600 text-white"
                         | _ => "bg-indigo-600 text-white"
@@ -331,7 +331,7 @@ let view = (pg: playgroundsState): Tea_Vdom.t<msg> => {
                         ),
                         Attrs.placeholder(
                           switch pg.nqcLanguage {
-                          | LangVql => "SELECT * FROM entities WHERE confidence > 0.9 LIMIT 10"
+                          | LangVcl => "SELECT * FROM entities WHERE confidence > 0.9 LIMIT 10"
                           | LangKql => "MATCH (n:Concept)-[r:RELATES_TO]->(m) RETURN n, r, m"
                           | LangGql => "{ entities(filter: {type: \"document\"}) { id name confidence } }"
                           | _ => "Enter query..."

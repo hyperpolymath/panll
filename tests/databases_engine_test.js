@@ -69,7 +69,7 @@ Deno.test("DatabasesEngine.filteredEntities filters by kind", () => {
 });
 
 Deno.test("DatabasesEngine.addToHistory prepends entry", () => {
-  const entry = { query: "SELECT 1", language: "VQL", timestamp: "2026-03-14T10:00:00Z", success: true, durationMs: 5.0 };
+  const entry = { query: "SELECT 1", language: "VCL", timestamp: "2026-03-14T10:00:00Z", success: true, durationMs: 5.0 };
   const newState = DatabasesEngine.addToHistory(DatabasesEngine.defaultState, entry);
   assertEquals(newState.queryHistory.length, 1);
   assertEquals(newState.queryHistory[0].query, "SELECT 1");

@@ -17,7 +17,7 @@
 /// The language a gist is written in.
 type gistLanguage =
   /// VeriSimDB query language — routed to NQC proxy.
-  | GistVql
+  | GistVcl
   /// QuandleDB knowledge queries — routed to NQC proxy.
   | GistKql
   /// LithoGlyph graph queries — routed to NQC proxy.

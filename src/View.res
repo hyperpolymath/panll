@@ -574,8 +574,8 @@ let renderActivePanel = (model: model): Tea_Vdom.t<msg> => {
   | Some(PanelVexometerFriction) => VexometerFriction.view(model.vexometerFriction)
   | Some(PanelK9Manager) => K9Manager.view(model.k9Manager)
   | Some(PanelContractileManager) => ContractileManager.view(model.contractiles, model.vexometer)
-  // VCL-total panel (broken JSX — disabled pending Vql.res fix)
-  | Some(PanelVql) =>
+  // VCL-total panel (broken JSX — disabled pending Vcl.res fix)
+  | Some(PanelVcl) =>
     div(list{Attrs.class_("p-4 text-gray-400")}, list{text("VCL-total panel loading...")})
   // LLM Coding — multi-session Claude/LLM coordinator
   | Some(PanelLlmCoding) => LlmCoding.view(model.llmCoding)

@@ -27,7 +27,7 @@ type verisimdbMsg =
   | FetchOrchStatus
   | OrchStatusLoaded(result<string, string>)
   /// TypeLL cross-panel type check result for the last VCL query.
-  | VqlTypeCheckResult(result<string, string>)
+  | VclTypeCheckResult(result<string, string>)
   /// Toggle VCL-total proof obligation display in Panel-L.
   | ToggleProofDisplay
   /// Neural advisor suggestion for the current VCL query.

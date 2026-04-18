@@ -68,7 +68,7 @@ let updateEditorBridge = (model: model, msg: editorBridgeMsg): (model, Tea_Cmd.t
             result => EditorBridge(LspConnected(result)),
             (c, t, e) => RecordBojLatency(c, t, e),
           ),
-          Tea_Cmd.msg(Vexometer(RecordVqlQuery)),
+          Tea_Cmd.msg(Vexometer(RecordVclQuery)),
           TypeLLService.checkConfigTypes(args, "editor-bridge", result => EditorBridge(
             TypeCheckResult(result),
           )),

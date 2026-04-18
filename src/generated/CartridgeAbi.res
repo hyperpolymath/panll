@@ -229,7 +229,7 @@ type databaseTool =
   | ConnectVerisimdb
   | Disconnect
   | ExecuteSql
-  | ExecuteVql
+  | ExecuteVcl
   | GetState
   | Reset
 
@@ -240,7 +240,7 @@ let databaseToolToString = (t: databaseTool): string =>
   | ConnectVerisimdb => "connect_verisimdb"
   | Disconnect => "disconnect"
   | ExecuteSql => "execute_sql"
-  | ExecuteVql => "execute_vql"
+  | ExecuteVcl => "execute_vcl"
   | GetState => "get_state"
   | Reset => "reset"
   }

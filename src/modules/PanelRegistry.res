@@ -82,7 +82,7 @@ let allPanels: array<panelMeta> = [
     cladeId: Some("databases"),
   },
   {
-    id: PanelVql,
+    id: PanelVcl,
     name: "VCL-total",
     shortName: "VCL",
     description: "Type-safe query language for VeriSimDB — 10-level progressive safety, cross-prover dispatch, dedicated linter and formatter",

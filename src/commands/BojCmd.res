@@ -153,7 +153,7 @@ let invokeCartridgeWithLatency = (
 
 /// Type-safe cartridge invocation — compile-time validated via CartridgeAbi.
 /// Prefer this over the raw string-based invokeCartridge/invokeCartridgeWithLatency.
-/// Usage: BojCmd.invokeTyped(Database(ExecuteVql), args, resultTagger, latencyTagger)
+/// Usage: BojCmd.invokeTyped(Database(ExecuteVcl), args, resultTagger, latencyTagger)
 let invokeTyped = (
   inv: CartridgeAbi.invocation,
   args: string,

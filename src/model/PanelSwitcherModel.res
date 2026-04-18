@@ -20,7 +20,7 @@ type panelId =
   | PanelReposystem
   | PanelDatabases
   /// VCL-total — type-safe query language for VeriSimDB (flagship panel).
-  | PanelVql
+  | PanelVcl
   | PanelAerie
   | PanelInterfaces
   | PanelPlaygrounds

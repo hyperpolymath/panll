@@ -175,21 +175,21 @@ fn discover_flatpak() -> Vec<Component> {
 
 /// Discover asdf plugins and their versions.
 fn discover_asdf() -> Vec<Component> {
-    let output = run_cmd_quiet("asdf", &["plugin", "list"]);
+    let output = run_cmd_quiet("opsm", &["plugin", "list"]);
 
     output
         .lines()
         .filter(|l| !l.is_empty())
         .map(|plugin| {
             let plugin = plugin.trim();
-            let current = run_cmd_quiet("asdf", &["current", plugin]);
+            let current = run_cmd_quiet("opsm", &["current", plugin]);
             let current_ver = current
                 .split_whitespace()
                 .nth(1)
                 .unwrap_or("none")
                 .to_string();
 
-            let latest = run_cmd_quiet("asdf", &["latest", plugin]);
+            let latest = run_cmd_quiet("opsm", &["latest", plugin]);
             let latest_ver = latest.trim().to_string();
 
             let has_update =
@@ -387,9 +387,9 @@ pub fn system_update_apply_component(component_id: String) -> Result<String, Str
         }
     } else if component_id.starts_with("asdf-") {
         let plugin = component_id.trim_start_matches("asdf-");
-        let latest = run_cmd("asdf", &["latest", plugin])
+        let latest = run_cmd("opsm", &["latest", plugin])
             .unwrap_or_else(|_| "latest".to_string());
-        match run_cmd("asdf", &["install", plugin, latest.trim()]) {
+        match run_cmd("opsm", &["install", plugin, latest.trim()]) {
             Ok(o) => (true, o),
             Err(e) => (false, e),
         }
@@ -458,13 +458,13 @@ pub fn system_update_asdf_status() -> Result<String, String> {
         .filter(|l| !l.is_empty())
         .map(|plugin| {
             let plugin = plugin.trim();
-            let current = run_cmd_quiet("asdf", &["current", plugin]);
+            let current = run_cmd_quiet("opsm", &["current", plugin]);
             let installed = current
                 .split_whitespace()
                 .nth(1)
                 .unwrap_or("none")
                 .to_string();
-            let latest = run_cmd_quiet("asdf", &["latest", plugin]);
+            let latest = run_cmd_quiet("opsm", &["latest", plugin]);
 
             AsdfPlugin {
                 plugin: plugin.to_string(),
@@ -519,7 +519,7 @@ pub fn system_update_last_summary() -> Result<String, String> {
         .lines()
         .count();
 
-    let asdf_count = run_cmd_quiet("asdf", &["plugin", "list"])
+    let asdf_count = run_cmd_quiet("opsm", &["plugin", "list"])
         .lines()
         .filter(|l| !l.is_empty())
         .count();

@@ -118,7 +118,7 @@
         "connect_verisimdb": { "params": { "url": "string" }, "returns": "session" },
         "disconnect": { "params": { "slot": "int" }, "returns": "string" },
         "execute_sql": { "params": { "slot": "int", "sql": "string" }, "returns": "query_result" },
-        "execute_vql": { "params": { "slot": "int", "vcl": "string" }, "returns": "query_result" },
+        "execute_vcl": { "params": { "slot": "int", "vcl": "string" }, "returns": "query_result" },
         "get_state": { "params": { "slot": "int" }, "returns": "state" },
         "reset": { "params": {}, "returns": "string" }
       }

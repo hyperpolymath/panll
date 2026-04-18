@@ -32,7 +32,7 @@ let allCategories: array<gistCategory> = [
 /// Language label for display.
 let languageLabel = (lang: gistLanguage): string =>
   switch lang {
-  | GistVql => "VCL"
+  | GistVcl => "VCL"
   | GistKql => "KQL"
   | GistGql => "GQL"
   | GistReScript => "ReScript"
@@ -46,7 +46,7 @@ let languageLabel = (lang: gistLanguage): string =>
 /// Language file extension.
 let languageExt = (lang: gistLanguage): string =>
   switch lang {
-  | GistVql => ".vcl"
+  | GistVcl => ".vcl"
   | GistKql => ".kql"
   | GistGql => ".gql"
   | GistReScript => ".res"
@@ -60,7 +60,7 @@ let languageExt = (lang: gistLanguage): string =>
 /// CSS colour class for language badge.
 let languageColour = (lang: gistLanguage): string =>
   switch lang {
-  | GistVql | GistKql | GistGql => "text-cyan-400"
+  | GistVcl | GistKql | GistGql => "text-cyan-400"
   | GistReScript => "text-red-400"
   | GistGleam => "text-pink-400"
   | GistIdris2 => "text-purple-400"
@@ -72,7 +72,7 @@ let languageColour = (lang: gistLanguage): string =>
 /// Resolve the default execution target for a language.
 let defaultTarget = (lang: gistLanguage): gistTarget =>
   switch lang {
-  | GistVql | GistKql | GistGql => TargetNqc
+  | GistVcl | GistKql | GistGql => TargetNqc
   | GistIdris2 | GistOcl => TargetEchidna
   | GistShell => TargetShell
   | GistReScript | GistGleam | GistNickel => TargetDeno
@@ -81,7 +81,7 @@ let defaultTarget = (lang: gistLanguage): gistTarget =>
 /// Resolve the category a gist belongs to based on its language.
 let languageCategory = (lang: gistLanguage): gistCategory =>
   switch lang {
-  | GistVql | GistKql | GistGql => GistQueries
+  | GistVcl | GistKql | GistGql => GistQueries
   | GistIdris2 | GistOcl => GistProofs
   | GistShell | GistReScript => GistAutomation
   | GistNickel | GistGleam => GistConfig
@@ -249,7 +249,7 @@ let builtinTemplates: array<gistTemplate> = [
     name: "VCL Query",
     description: "VeriSimDB entity query with modality filter",
     templateCode: "SELECT * FROM entities\nWHERE modality = '{{modality}}'\nLIMIT {{limit}};",
-    language: GistVql,
+    language: GistVcl,
     target: TargetNqc,
     placeholders: ["modality", "limit"],
   },

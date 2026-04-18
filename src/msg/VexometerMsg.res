@@ -6,7 +6,7 @@ type vexometerMsg =
   | RecordCancellation
   | RecordCorrection
   /// Record a VCL query execution for cognitive load tracking.
-  | RecordVqlQuery
+  | RecordVclQuery
   | RequestVexationIndex
   | UpdateVexationIndex(float)
   | ToggleAntiInflammatory(bool)

@@ -27,7 +27,7 @@ let updateVexometer = (model: model, msg: vexometerMsg): (model, Tea_Cmd.t<msg>)
       {...model, vexometer: {...vex, recentCorrections: vex.recentCorrections + 1}},
       GossamerCmd.recordVexationEvent("correction", _result => NoOp),
     )
-  | RecordVqlQuery => (
+  | RecordVclQuery => (
       // VCL queries contribute to cognitive load — tracked as a lighter-weight event.
       model,
       GossamerCmd.recordVexationEvent("vcl_query", _result => NoOp),

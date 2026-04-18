@@ -35,7 +35,7 @@
 
 /// Check types for a VCL query expression.
 /// Used by VeriSimDB panel to validate queries before execution.
-let checkVqlTypes = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+let checkVclTypes = (query: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
   let context = `{"language":"vcl","dialect":"vcl-total","features":["dependent","linear","proof-carrying"]}`
   TypeLLCmd.check(query, Some(context), tagger)
 }

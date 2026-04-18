@@ -14,7 +14,7 @@ let categoryLabel = (cat: playgroundsCategory): string =>
 
 let languageLabel = (lang: playgroundLanguage): string =>
   switch lang {
-  | LangVql => "VCL"
+  | LangVcl => "VCL"
   | LangKql => "KQL"
   | LangGql => "GQL"
   | LangRescript => "ReScript"
@@ -26,7 +26,7 @@ let languageLabel = (lang: playgroundLanguage): string =>
 /// File extension for syntax highlighting hints.
 let languageExt = (lang: playgroundLanguage): string =>
   switch lang {
-  | LangVql => ".vcl"
+  | LangVcl => ".vcl"
   | LangKql => ".kql"
   | LangGql => ".gql"
   | LangRescript => ".res"
@@ -38,7 +38,7 @@ let languageExt = (lang: playgroundLanguage): string =>
 /// Whether this language connects to the NQC proxy.
 let isDbLanguage = (lang: playgroundLanguage): bool =>
   switch lang {
-  | LangVql | LangKql | LangGql => true
+  | LangVcl | LangKql | LangGql => true
   | _ => false
   }
 
@@ -48,7 +48,7 @@ let defaultSnippets: array<snippet> = [
     id: "vcl-hello",
     title: "VCL: Hello VeriSimDB",
     code: "SELECT * FROM octads LIMIT 10;",
-    language: LangVql,
+    language: LangVcl,
     isTutorial: true,
   },
   {
@@ -69,7 +69,7 @@ let defaultSnippets: array<snippet> = [
 
 let defaultState: playgroundsState = {
   activeCategory: PlayEditor,
-  activeLanguage: LangVql,
+  activeLanguage: LangVcl,
   editorContent: "",
   lastResult: None,
   executing: false,
@@ -77,7 +77,7 @@ let defaultState: playgroundsState = {
   snippets: defaultSnippets,
   nqcConnected: false,
   nqcInput: "",
-  nqcLanguage: LangVql,
+  nqcLanguage: LangVcl,
   nqcHistory: [],
 }
 
@@ -86,7 +86,7 @@ let defaultState: playgroundsState = {
 /// and returns a JSON result envelope.
 let wrapForExecution = (code: string, language: playgroundLanguage): string => {
   let prefix = switch language {
-  | LangVql => "// VeriSimDB VCL query\n"
+  | LangVcl => "// VeriSimDB VCL query\n"
   | LangKql => "// Knowledge Query Language\n"
   | LangGql => "// Graph Query Language\n"
   | LangRescript => "// ReScript (compiled to JS)\n"
@@ -119,7 +119,7 @@ let formatOutput = (result: string, elapsedMs: float): string => {
 /// Determine if a language needs the NQC database proxy for execution.
 let needsNqcProxy = (language: playgroundLanguage): bool => {
   switch language {
-  | LangVql | LangKql | LangGql => true
+  | LangVcl | LangKql | LangGql => true
   | _ => false
   }
 }

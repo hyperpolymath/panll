@@ -21,9 +21,9 @@ import {
 
 // -- wrapForExecution --
 
-Deno.test("wrapForExecution prepends VQL prefix for LangVql", () => {
-  const result = wrapForExecution("SELECT * FROM octads;", "LangVql");
-  assert(result.startsWith("// VeriSimDB VQL query\n"));
+Deno.test("wrapForExecution prepends VCL prefix for LangVcl", () => {
+  const result = wrapForExecution("SELECT * FROM octads;", "LangVcl");
+  assert(result.startsWith("// VeriSimDB VCL query\n"));
   assert(result.includes("SELECT * FROM octads;"));
 });
 
@@ -60,13 +60,13 @@ Deno.test("wrapForExecution prepends Nickel prefix", () => {
 // -- preflightCheck --
 
 Deno.test("preflightCheck returns error for empty code", () => {
-  const result = preflightCheck("", "LangVql");
+  const result = preflightCheck("", "LangVcl");
   assertExists(result);
   assert(result.includes("Empty code"));
 });
 
 Deno.test("preflightCheck returns error for whitespace-only code", () => {
-  const result = preflightCheck("   \n  ", "LangVql");
+  const result = preflightCheck("   \n  ", "LangVcl");
   assertExists(result);
   assert(result.includes("Empty code"));
 });
@@ -91,7 +91,7 @@ Deno.test("preflightCheck detects for(;;) infinite loop", () => {
 });
 
 Deno.test("preflightCheck returns undefined for valid code", () => {
-  const result = preflightCheck("SELECT * FROM octads LIMIT 10;", "LangVql");
+  const result = preflightCheck("SELECT * FROM octads LIMIT 10;", "LangVcl");
   assertEquals(result, undefined);
 });
 
@@ -112,7 +112,7 @@ Deno.test("formatOutput handles zero elapsed time", () => {
 // -- needsNqcProxy --
 
 Deno.test("needsNqcProxy returns true for database languages", () => {
-  assertEquals(needsNqcProxy("LangVql"), true);
+  assertEquals(needsNqcProxy("LangVcl"), true);
   assertEquals(needsNqcProxy("LangKql"), true);
   assertEquals(needsNqcProxy("LangGql"), true);
 });
@@ -127,7 +127,7 @@ Deno.test("needsNqcProxy returns false for non-database languages", () => {
 // -- Language helpers --
 
 Deno.test("languageLabel maps all languages", () => {
-  assertEquals(languageLabel("LangVql"), "VQL");
+  assertEquals(languageLabel("LangVcl"), "VCL");
   assertEquals(languageLabel("LangKql"), "KQL");
   assertEquals(languageLabel("LangGql"), "GQL");
   assertEquals(languageLabel("LangRescript"), "ReScript");
@@ -137,13 +137,13 @@ Deno.test("languageLabel maps all languages", () => {
 });
 
 Deno.test("languageExt returns correct file extensions", () => {
-  assertEquals(languageExt("LangVql"), ".vql");
+  assertEquals(languageExt("LangVcl"), ".vcl");
   assertEquals(languageExt("LangRescript"), ".res");
   assertEquals(languageExt("LangIdris2"), ".idr");
 });
 
-Deno.test("isDbLanguage returns true for VQL, KQL, GQL only", () => {
-  assertEquals(isDbLanguage("LangVql"), true);
+Deno.test("isDbLanguage returns true for VCL, KQL, GQL only", () => {
+  assertEquals(isDbLanguage("LangVcl"), true);
   assertEquals(isDbLanguage("LangKql"), true);
   assertEquals(isDbLanguage("LangGql"), true);
   assertEquals(isDbLanguage("LangRescript"), false);
@@ -161,7 +161,7 @@ Deno.test("defaultSnippets contains 3 tutorial snippets", () => {
 
 Deno.test("defaultState has expected initial values", () => {
   assertEquals(defaultState.activeCategory, "PlayEditor");
-  assertEquals(defaultState.activeLanguage, "LangVql");
+  assertEquals(defaultState.activeLanguage, "LangVcl");
   assertEquals(defaultState.editorContent, "");
   assertEquals(defaultState.executing, false);
   assertEquals(defaultState.nqcConnected, false);

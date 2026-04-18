@@ -9,9 +9,9 @@
 // - Cross-prover strategy evaluation
 // - Result formatting and export
 //
-// Zero side effects — all I/O goes through VqlCmd.res.
+// Zero side effects — all I/O goes through VclCmd.res.
 
-open VqlModel
+open VclModel
 
 // ============================================================
 // SECTION 1: Safety Level Metadata
@@ -175,7 +175,7 @@ let levelSatisfies = (achieved: typeSafetyLevel, required: typeSafetyLevel): boo
 // ============================================================
 
 /// VCL keywords that must appear in specific clause positions.
-let vqlKeywords = [
+let vclKeywords = [
   "FIND",
   "FROM",
   "WHERE",
@@ -221,7 +221,7 @@ let clauseKeywords = [
 ]
 
 /// Check if a string looks like a VCL keyword.
-let isKeyword = (word: string): bool => vqlKeywords->Array.includes(String.toUpperCase(word))
+let isKeyword = (word: string): bool => vclKeywords->Array.includes(String.toUpperCase(word))
 
 /// Check if a string looks like a clause keyword.
 let isClauseKeyword = (word: string): bool =>
@@ -1454,12 +1454,12 @@ let defaultDispatchState: dispatchState = {
 }
 
 /// Default VCL panel state — the initial state when the panel opens.
-let defaultVqlState: vqlState = {
+let defaultVclState: vclState = {
   activeTab: TabEditor,
   viewLayer: Raw,
   panelOpen: false,
   fullscreen: false,
-  connection: VqlDisconnected,
+  connection: VclDisconnected,
   verisimEndpoint: "http://localhost:8200",
   echidnaEndpoint: "http://localhost:8000",
   typellEndpoint: "http://localhost:7800",

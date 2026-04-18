@@ -286,9 +286,9 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
         {...model, verisim: newDb},
         Tea_Cmd.batch(list{
           queryCmd,
-          TypeLLService.checkVqlTypes(query, result => VeriSimDB(VqlTypeCheckResult(result))),
+          TypeLLService.checkVclTypes(query, result => VeriSimDB(VclTypeCheckResult(result))),
           antiCrashCmd,
-          Tea_Cmd.msg(Vexometer(RecordVqlQuery)),
+          Tea_Cmd.msg(Vexometer(RecordVclQuery)),
         }),
       )
     }
@@ -478,11 +478,11 @@ let updateVeriSimDB = (model: model, msg: verisimdbMsg): (model, Tea_Cmd.t<msg>)
         Tea_Cmd.none,
       )
     }
-  | VqlTypeCheckResult(Ok(json)) => {
+  | VclTypeCheckResult(Ok(json)) => {
       let newTypell = {...model.typell, queriesServed: model.typell.queriesServed + 1}
       ({...model, verisim: {...db, lastTypeCheck: Some(json)}, typell: newTypell}, Tea_Cmd.none)
     }
-  | VqlTypeCheckResult(Error(_)) => {
+  | VclTypeCheckResult(Error(_)) => {
       UpdateHelpers.logDegradedService(
         "TypeLL",
         "VCL type check failed — VCL workflow continues unblocked",

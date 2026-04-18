@@ -121,7 +121,7 @@ module Commands = {
 let moduleConfig = {
   "id": "system-update",
   "name": "System Update",
-  "description": "Component update management — asdf, rpm-ostree, flatpak, cargo, and more",
+  "description": "Component update management — opsm, rpm-ostree, flatpak, cargo, and more",
   "clade": "infrastructure/system-maintenance",
   "icon": "system-software-update",
   "capabilities": [
@@ -130,7 +130,7 @@ let moduleConfig = {
     "update-execution", // Apply updates
     "log-history", // View past update logs
     "category-management", // Group and filter by category
-    "asdf-integration", // Deep asdf plugin management
+    "opsm-integration", // Deep opsm plugin management
   ],
 }
 
@@ -139,7 +139,7 @@ let categoryLabel = (cat: componentCategory) => {
   switch cat {
   | BaseOS => "Base OS (rpm-ostree)"
   | Desktop => "Desktop Apps (Flatpak)"
-  | Toolchain => "Toolchains (asdf)"
+  | Toolchain => "Toolchains (opsm)"
   | PackageManager => "Package Managers"
   | Runtime => "Runtimes"
   | Firmware => "Firmware"
