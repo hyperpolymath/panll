@@ -71,7 +71,7 @@ MAINTENANCE-CHECKLIST.a2ml, or SOFTWARE-DEVELOPMENT-APPROACH.a2ml in the reposit
 
 ## Build System
 
-Use `just` (justfile) for all build, test, lint, and format tasks.
+Use `just` (Justfile) for all build, test, lint, and format tasks.
 
 ## References
 
