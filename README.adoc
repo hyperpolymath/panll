@@ -236,6 +236,7 @@ deno task dev
 === Planning
 
 * **link:docs/ROADMAP.adoc[Roadmap]** — Version-by-version feature plan
+* **link:https://github.com/users/hyperpolymath/projects/33[GitHub Project Board]** — Live tracking of past, present, and future milestones
 * **link:docs/TODO.md[TODO]** — Active task list with triaxial scoring
 * **link:docs/EXPLAINME.adoc[EXPLAINME]** — Backs up README claims for sceptics
 
