@@ -401,6 +401,7 @@ type model = {
   paneL: paneLState,
   paneN: paneNState,
   paneW: paneWState,
+  paneA: paneAState,
   // Cognitive governance
   antiCrash: antiCrashState,
   vexometer: vexometerState,
@@ -853,6 +854,14 @@ let init = (): model => {
     securityDialogOpen: false,
     securityDialogTool: None,
     securityViewActive: false,
+  },
+  paneA: {
+    vexationIndex: 0.0,
+    antiInflammatoryActive: false,
+    humidity: High,
+    recentCancellations: 0,
+    recentCorrections: 0,
+    expanded: false,
   },
   antiCrash: {
     enabled: true,

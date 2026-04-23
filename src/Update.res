@@ -30,6 +30,7 @@ open UpdateHelpers
 open UpdatePaneL
 open UpdatePaneN
 open UpdatePaneW
+open UpdatePaneA
 
 // Major subsystems
 open UpdateVeriSimDB
@@ -143,6 +144,7 @@ let update = (model: model, msg: msg): (model, Tea_Cmd.t<msg>) => {
   | PaneL(subMsg) => updatePaneL(model, subMsg)
   | PaneN(subMsg) => (updatePaneN(model, subMsg), Tea_Cmd.none)
   | PaneW(subMsg) => updatePaneW(model, subMsg)
+  | PaneA(subMsg) => UpdatePaneA.update(model, subMsg)
   // Major subsystems
   | VeriSimDB(subMsg) => updateVeriSimDB(model, subMsg)
   | Echidna(subMsg) => updateEchidna(model, subMsg)

@@ -23,6 +23,9 @@ include PaneNMsg
 /// Re-export Pane-W (World/Barycentre) messages.
 include PaneWMsg
 
+/// Re-export Pane-A (Ambient) messages.
+include PaneAMsg
+
 // -- Cognitive governance messages ---------------------------------------
 
 /// Re-export Vexometer messages.
@@ -401,6 +404,7 @@ type msg =
   | PaneL(paneLMsg)
   | PaneN(paneNMsg)
   | PaneW(paneWMsg)
+  | PaneA(paneAMsg)
   | VeriSimDB(verisimdbMsg)
   | Echidna(echidnaMsg)
   | Vexometer(vexometerMsg)

@@ -80,6 +80,17 @@ let renderPaneW = (
   }
 }
 
+/// Render Pane-A (Ambient Substrate) - the ergonomic control layer.
+/// This pane is always visible when active, providing high-level sensory
+/// feedback and cognitive relief adjustments for the co-orbit.
+let renderPaneA = (paneA: paneAState, visible: bool): Tea_Vdom.t<msg> => {
+  if !visible {
+    noNode
+  } else {
+    div(list{Attrs.class_("w-72 border-r border-gray-900")}, list{PaneA.view(paneA)})
+  }
+}
+
 /// Render the Dark Start architecture manifold
 /// Render a quick-access panel card for the DarkStart grid.
 let renderQuickPanel = (panel: panelMeta): Tea_Vdom.t<msg> => {
@@ -747,6 +758,29 @@ let view = (model: model): Tea_Vdom.t<msg> => {
               model.paneLVisible,
               model.paneNVisible,
               model.paneWVisible,
+            ),
+            // Pane-A: Ambient Substrate (Ergonomics)
+            div(
+              list{
+                Attrs.id("pane-a"),
+                Attrs.class_(
+                  `w-72 overflow-auto relative border-r border-gray-900 transition-all duration-500 ${FocusDimmingEngine.panelOpacityClass(
+                      model.focusDimming,
+                      "paneA",
+                    )}`,
+                ),
+                Attrs.role("region"),
+                Attrs.ariaLabel("Panel-A — Ambient substrate and cognitive ergonomics"),
+                Events.onClick(FocusDimming(RecordInteraction("paneA"))),
+              },
+              list{
+                renderPaneA(model.paneA, true),
+                CaptureBar.view(
+                  "paneA",
+                  false,
+                  model.capture.captureBarVisible,
+                ),
+              },
             ),
             // Pane-L with capture bar and focus dimming
             div(

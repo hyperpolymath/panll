@@ -264,3 +264,20 @@ type paneWState = {
   /// Whether the security results view is currently displayed.
   securityViewActive: bool,
 }
+
+/// Pane-A: Ambient Substrate (Ergonomics)
+/// This pane is the deep-reaching ambient interface layer that manages
+/// cognitive relief and information ergonomics across the entire co-orbit.
+type paneAState = {
+  /// Current Vexation index (0.0 - 1.0)
+  vexationIndex: float,
+  /// Whether anti-inflammatory UI adjustments are active
+  antiInflammatoryActive: bool,
+  /// Current information humidity level (Low | Medium | High)
+  humidity: humidityLevel,
+  /// Vexometer recent stats for trend analysis
+  recentCancellations: int,
+  recentCorrections: int,
+  /// Whether the ambient layer is fully expanded/detailed
+  expanded: bool,
+}
