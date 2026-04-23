@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Jewell"
+    given-names: "Jonathan D.A."
+    email: "j.d.a.jewell@open.ac.uk"
+    affiliation: "The Open University"
+title: "PanLL eNSAID: Environment for NeSy-Agentic Integrated Development"
+version: 0.2.0-beta
+date-released: 2026-03-29
+url: "https://github.com/hyperpolymath/panll"
+repository-code: "https://github.com/hyperpolymath/panll"
+license: "PMPL-1.0-or-later"
+abstract: >-
+  PanLL is a practical cognitive-relief layer: a set of tools and mechanisms
+  designed to reduce friction, lower cognitive overhead, and make difficult
+  work more manageable in neurosymbolic agentic environments.
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Jewell"
+      given-names: "Jonathan D.A."
+  title: "Binary Star: A Neurosymbolic Co-Orbit Model for Cognitive Relief"
+  year: 2026
+  journal: "Draft/Preprint"

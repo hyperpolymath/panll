@@ -1,0 +1,33 @@
+# PanLL TODO List
+
+This list summarizes active tasks and is synchronized with the [GitHub Project Boards](https://github.com/users/hyperpolymath/projects).
+
+## 🔴 Release-Blocking (v0.2.0)
+* [ ] Implement `http_client` module in `src-gossamer/src/service_registry.rs`
+* [ ] Fix command result type mismatches in `src-gossamer/src/main.rs`
+* [ ] Finalize Reposystem event chain integration in Panel-W
+* [ ] Resolve `cargo build` errors in `src-gossamer/` (281 errors remaining)
+
+## 🟡 High Priority
+* [ ] Implement `settings` module for user configuration
+* [ ] Re-enable `groove` module for discovery
+* [ ] Complete `llm_coding` session management implementation
+* [ ] Replace localStorage with VeriSimDB-backed persistence
+
+## 🔵 Medium Priority
+* [ ] Dark/Light theme support following system preferences
+* [ ] Onboarding tutorial for first-run experience
+* [ ] Increase test coverage to 95%+
+* [ ] Performance benchmarks for startup and query latency
+
+## 🟢 Documentation & Maintenance
+* [ ] Complete `0-AI-MANIFEST.a2ml` audit
+* [ ] Standardize `.adoc` vs `.md` for documentation
+* [ ] Generate API reference documentation
+* [ ] Finalize "Binary Star" paper draft
+
+---
+**Track live progress:**
+* [PanLL Roadmap (33)](https://github.com/users/hyperpolymath/projects/33)
+* [PanLL Kanban (26)](https://github.com/users/hyperpolymath/projects/26)
+* [PanLL Bug Tracker (17)](https://github.com/users/hyperpolymath/projects/17)

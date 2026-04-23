@@ -25,8 +25,8 @@ impl SystemTrayState {
     }
 }
 
-/// Global system tray state
 lazy_static::lazy_static! {
+    /// Global system tray state
     static ref SYSTEM_TRAY_STATE: Arc<Mutex<SystemTrayState>> = {
         Arc::new(Mutex::new(SystemTrayState::new()))
     };
@@ -94,9 +94,13 @@ pub fn get_gossamer_status() -> bool {
 }
 
 /// Clean up system tray
-pub fn cleanup(app: &gossamer_rs::App) {
+pub fn cleanup() {
     let state = SYSTEM_TRAY_STATE.lock().unwrap();
     if let Some(tray_handle) = state.tray_handle {
-        let _ = app.tray_destroy(tray_handle);
+        // SAFETY: Gossamer tray destroy is a static FFI call
+        extern "C" {
+            fn gossamer_tray_destroy(tray: u64);
+        }
+        unsafe { gossamer_tray_destroy(tray_handle) };
     }
 }

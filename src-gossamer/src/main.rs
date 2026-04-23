@@ -30,19 +30,22 @@ use std::env;
 mod llm_coding;
 
 /// Groove — Gossamer groove discovery endpoint (port 8000).
-// mod groove;
+mod groove;
 
 /// Service Registry — centralized lifecycle management for backend services (v0.2.0).
 mod service_registry;
 
-// Settings — user configuration persistence and management (v0.2.0).
-// mod settings;
+/// Settings — user configuration persistence and management (v0.2.0).
+mod settings;
 
 /// Identity — named identity snapshots and team replication (v0.2.0).
 mod identity;
 
 /// System Tray — system tray integration and service toggling (v0.2.0).
 mod system_tray;
+
+/// HTTP Client — shared HTTP client for backend service connections.
+pub mod http_client;
 
 // Constants and helpers (moved from old Tauri main.rs)
 // ===========================================================================
@@ -69,10 +72,10 @@ fn get_str(payload: &serde_json::Value, key: &str) -> Result<String, String> {
         .ok_or_else(|| format!("Missing or invalid key: {}", key))
 }
 
-fn result_to_json<T: serde::Serialize>(result: Result<T, String>) -> String {
+fn result_to_json<T: serde::Serialize>(result: Result<T, String>) -> Result<serde_json::Value, String> {
     match result {
-        Ok(val) => json!({"ok": true, "result": val}).to_string(),
-        Err(err) => json!({"ok": false, "error": err}).to_string(),
+        Ok(val) => Ok(json!({"ok": true, "result": val})),
+        Err(err) => Ok(json!({"ok": false, "error": err})),
     }
 }
 
@@ -121,14 +124,14 @@ fn blocking_post_empty(url: &str, timeout_secs: u64) -> Result<String, String> {
 
 fn main() {
     // Initialize Gossamer app
-    let mut app = App::new("PanLL", 1280, 800);
+    let app = App::new("PanLL", 1280, 800);
 
     // Register all commands
-    if let Ok(ref mut app_ok) = app {
-        register_commands(app_ok);
-        system_tray::init(app_ok);
+    if let Ok(mut app_ok) = app {
+        register_commands(&mut app_ok);
+        let _ = system_tray::init(&app_ok);
         app_ok.run();
-        system_tray::cleanup(app_ok);
+        system_tray::cleanup();
     }
 }
 
@@ -250,10 +253,6 @@ fn register_commands(app: &mut gossamer_rs::App) {
     // System Tray commands (Connected Workbench v0.2.0)
     // -----------------------------------------------------------------------
 
-    app.command("system_tray_init", |_payload| {
-        result_to_json(Ok(system_tray::init(&app)))
-    });
-
     app.command("system_tray_toggle_burble", |_payload| {
         result_to_json(Ok(system_tray::toggle_burble()))
     });
@@ -270,10 +269,6 @@ fn register_commands(app: &mut gossamer_rs::App) {
         result_to_json(Ok(system_tray::get_gossamer_status()))
     });
 
-    app.command("system_tray_cleanup", |_payload| {
-        result_to_json(Ok(system_tray::cleanup(&app)))
-    });
-
     // -----------------------------------------------------------------------
     // VeriSimDB commands (Connected Workbench v0.2.0)
     // -----------------------------------------------------------------------
@@ -288,7 +283,7 @@ fn register_commands(app: &mut gossamer_rs::App) {
         result_to_json(blocking_post(&url, &json!({"vcl": vcl}), 10))
     });
 
-    app.command("verisim_octads_list", |payload: &serde_json::Value| {
+    app.command("verisim_octads_list", |payload: serde_json::Value| {
         let limit = payload.get("limit").and_then(|v| v.as_u64()).unwrap_or(100) as usize;
         let offset = payload.get("offset").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
         result_to_json(blocking_get(&format!("{}/octads?limit={}&offset={}", verisim_url(), limit, offset), 10))
@@ -321,7 +316,7 @@ fn register_commands(app: &mut gossamer_rs::App) {
         let result = blocking_post(&url, &json!({"state": state}), 10);
         match result {
             Ok(s) => result_to_json(Ok(serde_json::from_str::<serde_json::Value>(&s).unwrap_or(serde_json::Value::Null))),
-            Err(e) => result_to_json(Err(e)),
+            Err(e) => result_to_json::<serde_json::Value>(Err(e)),
         }
     });
 
@@ -331,7 +326,7 @@ fn register_commands(app: &mut gossamer_rs::App) {
         let result = blocking_get(&url, 10);
         match result {
             Ok(s) => result_to_json(Ok(serde_json::from_str::<serde_json::Value>(&s).unwrap_or(serde_json::Value::Null))),
-            Err(e) => result_to_json(Err(e)),
+            Err(e) => result_to_json::<serde_json::Value>(Err(e)),
         }
     });
 }

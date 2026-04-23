@@ -58,7 +58,7 @@ clean:
     @echo "🧹 Cleaning build artifacts..."
     deno task res:clean
     rm -f public/styles.css
-    rm -rf src-tauri/target/
+    rm -rf target/
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # RUNTIME & CONTAINERS
@@ -81,10 +81,12 @@ runtime-down:
 # Lint and format
 lint:
     deno task lint
+    cargo clippy --all-targets --all-features -- -D warnings
     deno task fmt --check
 
 fmt:
     deno task fmt
+    cargo fmt
 
 # Run panic-attacker pre-commit scan
 assail:
