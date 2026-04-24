@@ -133,6 +133,25 @@
       (step "Update .machine_readable/STATE.scm if changes were made")
       (step "Summarise outcomes for session continuity")))
 
+  ;; ===================================================================
+  ;; CALLING ECHIDNA VIA BOJ
+  ;; ===================================================================
+  ;; All ECHIDNA calls go through the echidna-llm-mcp BoJ cartridge.
+  ;; Never call ECHIDNA directly.
+  ;;
+  ;; Tools:
+  ;;   echidna_list_provers  — discovery: 105 provers with tier/category
+  ;;   echidna_prove         — invoke prover on a file path
+  ;;   echidna_verify        — verify inline proof content
+  ;;   echidna_search        — keyword search over proof corpus
+  ;;   echidna_suggest_tactics — advisory tactic suggestions
+  ;;   echidna_rank_provers  — advisory prover ranking
+  ;;
+  ;; Example:
+  ;;   { "tool": "echidna_prove", "args": { "file": "/path/proof.lean", "prover": "Lean" } }
+  ;;
+  ;; Full protocol: boj-server/cartridges/echidna-llm-mcp/docs/CALL-PROTOCOL.adoc
+
   (format-meta
     (version "2.1.0")
     (media-type "application/a2ml")
