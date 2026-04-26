@@ -10,17 +10,22 @@
 type syncEvent = Model.syncEvent
 type syncState = Model.syncState
 
-/// Simple hash function for change detection
+/// FNV-1a change-detection hash — consistent with ProvenanceEngine pattern.
+/// Replaces the broken length+first+last approach that collided on any two
+/// strings differing only in middle characters (e.g. "abc" ≡ "axc").
 let simpleHash = (content: string): string => {
-  // Simple hash based on content length and first/last chars
-  // In production, use a proper hash function
-  let len = String.length(content)
-  if len === 0 {
+  if String.length(content) === 0 {
     "empty"
   } else {
-    let first = String.charAt(content, 0)
-    let last = String.charAt(content, len - 1)
-    `${Int.toString(len)}-${first}-${last}`
+    %raw(`
+      (function(s) {
+        var h = 0x811c9dc5;
+        for (var i = 0; i < s.length; i++) {
+          h = ((h ^ s.charCodeAt(i)) * 0x01000193) >>> 0;
+        }
+        return h.toString(16);
+      })(content)
+    `)
   }
 }
 
