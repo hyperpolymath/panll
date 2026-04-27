@@ -252,19 +252,19 @@ fn register_commands(app: &mut gossamer_rs::App) {
     // Settings commands (Connected Workbench v0.2.0)
     // -----------------------------------------------------------------------
 
-    // app.command("settings_get", |_payload| {
-    //     result_to_json(settings::get_settings())
-    // });
+    app.command("settings_get", |_payload| {
+        result_to_json(settings::settings_get())
+    });
 
-    // app.command("settings_set", |payload| {
-    //     let key = get_str(&payload, "key").unwrap_or_default();
-    //     let value = get_str(&payload, "value").unwrap_or_default();
-    //     result_to_json(settings::set_setting(key, value))
-    // });
+    app.command("settings_set", |payload| {
+        let key = get_str(&payload, "key").unwrap_or_default();
+        let value = get_str(&payload, "value").unwrap_or_default();
+        result_to_json(settings::settings_set(&key, &value))
+    });
 
-    // app.command("settings_reset", |_payload| {
-    //     result_to_json(settings::reset_settings())
-    // });
+    app.command("settings_reset", |_payload| {
+        result_to_json(settings::settings_reset())
+    });
 
     // -----------------------------------------------------------------------
     // Identity commands (Connected Workbench v0.2.0)
@@ -322,38 +322,50 @@ fn register_commands(app: &mut gossamer_rs::App) {
     // -----------------------------------------------------------------------
 
     app.command("verisim_health", |_payload| {
-        result_to_json(blocking_get(&format!("{}/health", verisim_url()), 5))
+        result_str_to_json(blocking_get(&format!("{}/health", verisim_url()), 5))
     });
 
     app.command("verisim_vcl_execute", |payload| {
         let vcl = get_str(&payload, "vcl").unwrap_or_default();
         let url = format!("{}/vcl/execute", verisim_url());
-        result_to_json(blocking_post(&url, &json!({"vcl": vcl}), 10))
+        result_str_to_json(blocking_post(&url, &json!({"vcl": vcl}), 10))
     });
 
     app.command("verisim_octads_list", |payload: serde_json::Value| {
         let limit = payload.get("limit").and_then(|v| v.as_u64()).unwrap_or(100) as usize;
         let offset = payload.get("offset").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-        result_to_json(blocking_get(&format!("{}/octads?limit={}&offset={}", verisim_url(), limit, offset), 10))
+        result_str_to_json(blocking_get(
+            &format!("{}/octads?limit={}&offset={}", verisim_url(), limit, offset),
+            10,
+        ))
     });
 
     app.command("verisim_drift_entity", |payload| {
         let entity_id = get_str(&payload, "entity_id").unwrap_or_default();
-        result_to_json(blocking_get(&format!("{}/drift/entity/{}", verisim_url(), entity_id), 10))
+        result_str_to_json(blocking_get(
+            &format!("{}/drift/entity/{}", verisim_url(), entity_id),
+            10,
+        ))
     });
 
     app.command("verisim_normalizer_trigger", |payload| {
         let entity_id = get_str(&payload, "entity_id").unwrap_or_default();
-        result_to_json(blocking_post_empty(&format!("{}/normalizer/trigger/{}", verisim_url(), entity_id), 30))
+        result_str_to_json(blocking_post_empty(
+            &format!("{}/normalizer/trigger/{}", verisim_url(), entity_id),
+            30,
+        ))
     });
 
     app.command("verisim_octads_get", |payload| {
         let entity_id = get_str(&payload, "entity_id").unwrap_or_default();
-        result_to_json(blocking_get(&format!("{}/octads/{}", verisim_url(), entity_id), 10))
+        result_str_to_json(blocking_get(
+            &format!("{}/octads/{}", verisim_url(), entity_id),
+            10,
+        ))
     });
 
     app.command("verisim_orch_status", |_payload| {
-        result_to_json(blocking_get(&format!("{}/status", verisim_orch_url()), 5))
+        result_str_to_json(blocking_get(&format!("{}/status", verisim_orch_url()), 5))
     });
 
     // VeriSimDB state persistence (Connected Workbench v0.2.0)
@@ -361,20 +373,12 @@ fn register_commands(app: &mut gossamer_rs::App) {
         let key = get_str(&payload, "key").unwrap_or_default();
         let state = get_str(&payload, "state").unwrap_or_default();
         let url = format!("{}/state/{}", verisim_url(), key);
-        let result = blocking_post(&url, &json!({"state": state}), 10);
-        match result {
-            Ok(s) => result_to_json(Ok(serde_json::from_str::<serde_json::Value>(&s).unwrap_or(serde_json::Value::Null))),
-            Err(e) => result_to_json::<serde_json::Value>(Err(e)),
-        }
+        result_str_to_json(blocking_post(&url, &json!({"state": state}), 10))
     });
 
     app.command("verisim_load_state", |payload| {
         let key = get_str(&payload, "key").unwrap_or_default();
         let url = format!("{}/state/{}", verisim_url(), key);
-        let result = blocking_get(&url, 10);
-        match result {
-            Ok(s) => result_to_json(Ok(serde_json::from_str::<serde_json::Value>(&s).unwrap_or(serde_json::Value::Null))),
-            Err(e) => result_to_json::<serde_json::Value>(Err(e)),
-        }
+        result_str_to_json(blocking_get(&url, 10))
     });
 }

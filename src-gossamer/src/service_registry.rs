@@ -115,68 +115,46 @@ static REGISTRY: Lazy<Mutex<HashMap<String, ServiceEntry>>> = Lazy::new(|| {
 
 /// Check health of all registered services and update their status.
 ///
-/// Probes each service endpoint in sequence (5-second timeout per service
-/// via `http_client::check_health`). Returns the full registry as JSON.
-pub fn check_all_services() -> Result<String, String> {
+/// Probes each service endpoint via `http_client::blocking` (5-second timeout).
+/// Returns the full registry as a JSON Value.
+pub fn check_all_services() -> Result<serde_json::Value, String> {
     let mut reg = REGISTRY.lock().map_err(|e| format!("Registry lock: {}", e))?;
 
     for (_key, entry) in reg.iter_mut() {
-        let endpoint = http_client::ServiceEndpoint::new(&entry.url);
-        // Use blocking reqwest since Gossamer command handlers are synchronous
-        let client = reqwest::blocking::Client::builder()
-            .timeout(std::time::Duration::from_secs(5))
-            .build()
-            .map_err(|e| format!("HTTP client error: {}", e))?;
-
-        let url = format!("{}{}", endpoint.base_url, entry.health_path);
-        entry.status = match client.get(&url).send() {
-            Ok(resp) if resp.status().is_success() => ServiceStatus::Running,
-            Ok(resp) => ServiceStatus::Error {
-                message: format!("HTTP {}", resp.status()),
-            },
-            Err(e) => ServiceStatus::Error {
-                message: format!("{}", e),
-            },
+        let endpoint = http_client::ServiceEndpoint::new(&entry.url).with_timeout(5);
+        entry.status = match http_client::blocking::get_raw(&endpoint, &entry.health_path) {
+            Ok(_) => ServiceStatus::Running,
+            Err(msg) => ServiceStatus::Error { message: msg },
         };
     }
 
     let snapshot: HashMap<String, ServiceEntry> = reg.clone();
-    serde_json::to_string(&snapshot).map_err(|e| format!("JSON serialise error: {}", e))
+    serde_json::to_value(&snapshot).map_err(|e| format!("JSON serialise error: {}", e))
 }
 
 /// Check health of a single service by key and update its status.
 ///
-/// Returns the updated entry as JSON, or an error if the key is unknown.
-pub fn check_service(service_key: &str) -> Result<String, String> {
+/// Returns the updated entry as a JSON Value, or an error if the key is unknown.
+pub fn check_service(service_key: &str) -> Result<serde_json::Value, String> {
     let mut reg = REGISTRY.lock().map_err(|e| format!("Registry lock: {}", e))?;
 
     let entry = reg
         .get_mut(service_key)
         .ok_or_else(|| format!("Unknown service: {}", service_key))?;
 
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(5))
-        .build()
-        .map_err(|e| format!("HTTP client error: {}", e))?;
-
-    let url = format!("{}{}", entry.url.trim_end_matches('/'), entry.health_path);
-    entry.status = match client.get(&url).send() {
-        Ok(resp) if resp.status().is_success() => ServiceStatus::Running,
-        Ok(resp) => ServiceStatus::Error {
-            message: format!("HTTP {}", resp.status()),
-        },
-        Err(e) => ServiceStatus::Error {
-            message: format!("{}", e),
-        },
+    let endpoint = http_client::ServiceEndpoint::new(&entry.url).with_timeout(5);
+    entry.status = match http_client::blocking::get_raw(&endpoint, &entry.health_path) {
+        Ok(_) => ServiceStatus::Running,
+        Err(msg) => ServiceStatus::Error { message: msg },
     };
 
-    serde_json::to_string(entry).map_err(|e| format!("JSON serialise error: {}", e))
+    serde_json::to_value(entry.clone()).map_err(|e| format!("JSON serialise error: {}", e))
 }
 
 /// Update the URL of a registered service.
 ///
 /// Resets the service status to `Stopped` after URL change (requires re-check).
-pub fn update_service_url(service_key: &str, new_url: &str) -> Result<String, String> {
+pub fn update_service_url(service_key: &str, new_url: &str) -> Result<serde_json::Value, String> {
     let mut reg = REGISTRY.lock().map_err(|e| format!("Registry lock: {}", e))?;
 
     let entry = reg
@@ -186,12 +164,12 @@ pub fn update_service_url(service_key: &str, new_url: &str) -> Result<String, St
     entry.url = new_url.trim_end_matches('/').to_string();
     entry.status = ServiceStatus::Stopped;
 
-    serde_json::to_string(entry).map_err(|e| format!("JSON serialise error: {}", e))
+    serde_json::to_value(entry.clone()).map_err(|e| format!("JSON serialise error: {}", e))
 }
 
-/// Get the full registry as JSON.
-pub fn get_registry() -> Result<String, String> {
+/// Get the full registry as a JSON Value.
+pub fn get_registry() -> Result<serde_json::Value, String> {
     let reg = REGISTRY.lock().map_err(|e| format!("Registry lock: {}", e))?;
     let snapshot: HashMap<String, ServiceEntry> = reg.clone();
-    serde_json::to_string(&snapshot).map_err(|e| format!("JSON serialise error: {}", e))
+    serde_json::to_value(&snapshot).map_err(|e| format!("JSON serialise error: {}", e))
 }

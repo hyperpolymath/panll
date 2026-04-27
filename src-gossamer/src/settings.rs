@@ -95,14 +95,14 @@ fn persist_to_disk(settings: &PanllSettings) -> Result<(), String> {
         .map_err(|e| format!("Failed to write config: {}", e))
 }
 
-/// Get all settings as a JSON string.
-pub fn settings_get() -> Result<String, String> {
+/// Get all settings as a JSON Value.
+pub fn settings_get() -> Result<serde_json::Value, String> {
     let settings = SETTINGS.lock().map_err(|e| format!("Settings lock: {}", e))?;
-    serde_json::to_string(&*settings).map_err(|e| format!("JSON serialise error: {}", e))
+    serde_json::to_value(&*settings).map_err(|e| format!("JSON serialise error: {}", e))
 }
 
 /// Set a single setting by key. Persists to disk immediately.
-pub fn settings_set(key: &str, value: &str) -> Result<String, String> {
+pub fn settings_set(key: &str, value: &str) -> Result<serde_json::Value, String> {
     let mut settings = SETTINGS.lock().map_err(|e| format!("Settings lock: {}", e))?;
 
     match key {
@@ -113,26 +113,36 @@ pub fn settings_set(key: &str, value: &str) -> Result<String, String> {
         "typell_url" => settings.typell_url = value.to_string(),
         "theme" => settings.theme = value.to_string(),
         "auto_save_interval_ms" => {
-            settings.auto_save_interval_ms = value.parse::<u64>()
+            settings.auto_save_interval_ms = value
+                .parse::<u64>()
                 .map_err(|e| format!("Invalid integer: {}", e))?;
         }
         "auto_connect_services" => {
-            settings.auto_connect_services = value.parse::<bool>()
+            settings.auto_connect_services = value
+                .parse::<bool>()
                 .map_err(|e| format!("Invalid boolean: {}", e))?;
         }
         _ => return Err(format!("Unknown setting: {}", key)),
     }
 
     persist_to_disk(&settings)?;
-    serde_json::to_string(&*settings).map_err(|e| format!("JSON serialise error: {}", e))
+    serde_json::to_value(&*settings).map_err(|e| format!("JSON serialise error: {}", e))
 }
 
 /// Replace all settings from a JSON string. Persists to disk immediately.
-pub fn settings_save(settings_json: &str) -> Result<String, String> {
+pub fn settings_save(settings_json: &str) -> Result<serde_json::Value, String> {
     let new_settings: PanllSettings = serde_json::from_str(settings_json)
         .map_err(|e| format!("Invalid settings JSON: {}", e))?;
     let mut settings = SETTINGS.lock().map_err(|e| format!("Settings lock: {}", e))?;
     *settings = new_settings;
     persist_to_disk(&settings)?;
-    serde_json::to_string(&*settings).map_err(|e| format!("JSON serialise error: {}", e))
+    serde_json::to_value(&*settings).map_err(|e| format!("JSON serialise error: {}", e))
+}
+
+/// Reset all settings to defaults. Persists to disk immediately.
+pub fn settings_reset() -> Result<serde_json::Value, String> {
+    let mut settings = SETTINGS.lock().map_err(|e| format!("Settings lock: {}", e))?;
+    *settings = PanllSettings::default();
+    persist_to_disk(&settings)?;
+    serde_json::to_value(&*settings).map_err(|e| format!("JSON serialise error: {}", e))
 }

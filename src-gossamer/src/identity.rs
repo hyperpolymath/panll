@@ -12,6 +12,7 @@
 //!
 //! Part of Connected Workbench v0.2.0.
 
+use crate::http_client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fs;
@@ -76,8 +77,8 @@ fn iso_now() -> String {
 ///
 /// Primary storage: VeriSimDB (POST /api/identity).
 /// Fallback: `~/.panll/identities/<id>.json`.
-/// Returns the full snapshot as JSON.
-pub fn identity_save(name: &str, panll_state: &str, settings: &str, service_urls: &str) -> Result<String, String> {
+/// Returns the full snapshot as a JSON Value.
+pub fn identity_save(name: &str, panll_state: &str, settings: &str, service_urls: &str) -> Result<serde_json::Value, String> {
     ensure_identities_dir()?;
 
     let snapshot = IdentitySnapshot {
@@ -89,69 +90,46 @@ pub fn identity_save(name: &str, panll_state: &str, settings: &str, service_urls
         service_urls: service_urls.to_string(),
     };
 
-    let json = serde_json::to_string_pretty(&snapshot)
+    let json_str = serde_json::to_string_pretty(&snapshot)
         .map_err(|e| format!("JSON serialise error: {}", e))?;
 
-    // Primary: VeriSimDB
+    // Primary: VeriSimDB; fallback to filesystem on any error.
     let verisim_url = std::env::var("VERISIMDB_URL")
         .unwrap_or_else(|_| "http://localhost:8080/api/v1".into());
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("HTTP client error: {}", e))?;
-
-    let url = format!("{}/state/{}", verisim_url.trim_end_matches('/'), snapshot.id);
-    match client.post(&url).json(&json!({"state": json})).send() {
-        Ok(resp) => {
-            if !resp.status().is_success() {
-                // Fallback to filesystem
-                let path = identities_dir().join(format!("{}.json", snapshot.id));
-                fs::write(&path, &json)
-                    .map_err(|e| format!("Failed to write snapshot: {}", e))?;
-            }
-        }
-        Err(_) => {
-            // Fallback to filesystem
-            let path = identities_dir().join(format!("{}.json", snapshot.id));
-            fs::write(&path, &json)
-                .map_err(|e| format!("Failed to write snapshot: {}", e))?;
-        }
+    let endpoint = http_client::ServiceEndpoint::new(&verisim_url);
+    let path = format!("/state/{}", snapshot.id);
+    if http_client::blocking::post_raw(&endpoint, &path, &json!({"state": json_str})).is_err() {
+        let local_path = identities_dir().join(format!("{}.json", snapshot.id));
+        fs::write(&local_path, &json_str)
+            .map_err(|e| format!("Failed to write snapshot: {}", e))?;
     }
 
-    Ok(json)
+    serde_json::to_value(&snapshot).map_err(|e| format!("JSON serialise error: {}", e))
 }
 
 /// Load an identity snapshot by ID.
 ///
 /// Primary source: VeriSimDB (GET /state/<id>).
 /// Fallback: `~/.panll/identities/<id>.json`.
-pub fn identity_load(id: &str) -> Result<String, String> {
-    // Primary: VeriSimDB
+pub fn identity_load(id: &str) -> Result<serde_json::Value, String> {
     let verisim_url = std::env::var("VERISIMDB_URL")
         .unwrap_or_else(|_| "http://localhost:8080/api/v1".into());
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("HTTP client error: {}", e))?;
-
-    let url = format!("{}/state/{}", verisim_url.trim_end_matches('/'), id);
-    match client.get(&url).send() {
-        Ok(resp) => {
-            if resp.status().is_success() {
-                return resp.text().map_err(|e| format!("Failed to read response: {}", e));
-            }
+    let endpoint = http_client::ServiceEndpoint::new(&verisim_url);
+    if let Ok(body) = http_client::blocking::get_raw(&endpoint, &format!("/state/{}", id)) {
+        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&body) {
+            return Ok(val);
         }
-        Err(_) => {}
     }
 
-    // Fallback to filesystem
     let path = identities_dir().join(format!("{}.json", id));
-    fs::read_to_string(&path)
-        .map_err(|e| format!("Snapshot not found: {}", e))
+    let contents = fs::read_to_string(&path)
+        .map_err(|e| format!("Snapshot not found: {}", e))?;
+    serde_json::from_str::<serde_json::Value>(&contents)
+        .map_err(|e| format!("JSON parse error: {}", e))
 }
 
 /// List all identity snapshots (metadata only).
-pub fn identity_list() -> Result<String, String> {
+pub fn identity_list() -> Result<serde_json::Value, String> {
     ensure_identities_dir()?;
 
     let dir = identities_dir();
@@ -178,16 +156,16 @@ pub fn identity_list() -> Result<String, String> {
     // Sort by creation time (newest first)
     metas.sort_by(|a, b| b.created_at.cmp(&a.created_at));
 
-    serde_json::to_string(&metas).map_err(|e| format!("JSON serialise error: {}", e))
+    serde_json::to_value(&metas).map_err(|e| format!("JSON serialise error: {}", e))
 }
 
 /// Delete an identity snapshot by ID.
-pub fn identity_delete(id: &str) -> Result<String, String> {
+pub fn identity_delete(id: &str) -> Result<serde_json::Value, String> {
     let path = identities_dir().join(format!("{}.json", id));
     if path.exists() {
         fs::remove_file(&path)
             .map_err(|e| format!("Failed to delete snapshot: {}", e))?;
-        Ok(format!("{{\"deleted\":\"{}\"}}", id))
+        Ok(json!({"deleted": id}))
     } else {
         Err(format!("Snapshot not found: {}", id))
     }
@@ -201,31 +179,15 @@ pub fn identity_delete(id: &str) -> Result<String, String> {
 ///
 /// POST to the Burble server's broadcast endpoint. Team members receive
 /// the snapshot and can choose to apply it.
-pub fn team_broadcast_state(snapshot_json: &str) -> Result<String, String> {
+pub fn team_broadcast_state(snapshot_json: &str) -> Result<serde_json::Value, String> {
     let burble_url = std::env::var("BURBLE_URL")
         .unwrap_or_else(|_| "http://localhost:6473".into());
-    let url = format!("{}/api/v1/broadcast", burble_url.trim_end_matches('/'));
-
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("HTTP client error: {}", e))?;
-
-    let payload = serde_json::json!({
+    let endpoint = http_client::ServiceEndpoint::new(&burble_url);
+    let body = json!({
         "type": "identity_snapshot",
         "payload": snapshot_json
     });
-
-    match client.post(&url).json(&payload).send() {
-        Ok(resp) => {
-            let status = resp.status();
-            let body = resp.text().unwrap_or_default();
-            if status.is_success() {
-                Ok(body)
-            } else {
-                Err(format!("Broadcast failed: HTTP {} — {}", status, body))
-            }
-        }
-        Err(e) => Err(format!("Broadcast request failed: {}", e)),
-    }
+    let response = http_client::blocking::post_raw(&endpoint, "/api/v1/broadcast", &body)?;
+    Ok(serde_json::from_str::<serde_json::Value>(&response)
+        .unwrap_or_else(|_| json!({"response": response})))
 }

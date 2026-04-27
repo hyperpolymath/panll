@@ -201,3 +201,72 @@ pub async fn check_health(
         Err(_) => Ok(false),
     }
 }
+
+/// Blocking (synchronous) HTTP helpers for use in Gossamer command handlers.
+///
+/// Gossamer command closures are synchronous; the async functions above cannot
+/// be used there. This module provides thin blocking wrappers around
+/// `reqwest::blocking` that share the same `ServiceEndpoint` configuration.
+pub mod blocking {
+    use super::ServiceEndpoint;
+    use serde::Serialize;
+    use std::time::Duration;
+
+    /// GET a service path and return the raw response body.
+    pub fn get_raw(endpoint: &ServiceEndpoint, path: &str) -> Result<String, String> {
+        let url = format!("{}{}", endpoint.base_url, path);
+        let client = reqwest::blocking::Client::builder()
+            .timeout(endpoint.timeout)
+            .build()
+            .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        let resp = client
+            .get(&url)
+            .send()
+            .map_err(|e| format!("Request to {} failed: {}", url, e))?;
+        if !resp.status().is_success() {
+            return Err(format!("HTTP {} from {}", resp.status(), url));
+        }
+        resp.text()
+            .map_err(|e| format!("Failed to read response from {}: {}", url, e))
+    }
+
+    /// POST a JSON body to a service path and return the raw response body.
+    pub fn post_raw<B: Serialize>(
+        endpoint: &ServiceEndpoint,
+        path: &str,
+        body: &B,
+    ) -> Result<String, String> {
+        let url = format!("{}{}", endpoint.base_url, path);
+        let client = reqwest::blocking::Client::builder()
+            .timeout(endpoint.timeout)
+            .build()
+            .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        let resp = client
+            .post(&url)
+            .json(body)
+            .send()
+            .map_err(|e| format!("Request to {} failed: {}", url, e))?;
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body_text = resp.text().unwrap_or_default();
+            return Err(format!("HTTP {} from {}: {}", status, url, body_text));
+        }
+        resp.text()
+            .map_err(|e| format!("Failed to read response from {}: {}", url, e))
+    }
+
+    /// Probe a health endpoint; returns `true` on 2xx, `false` on any failure.
+    ///
+    /// Uses a fixed 5-second timeout — health probes should be fast.
+    pub fn check_health(endpoint: &ServiceEndpoint, health_path: &str) -> bool {
+        let url = format!("{}{}", endpoint.base_url, health_path);
+        let client = match reqwest::blocking::Client::builder()
+            .timeout(Duration::from_secs(5))
+            .build()
+        {
+            Ok(c) => c,
+            Err(_) => return false,
+        };
+        matches!(client.get(&url).send(), Ok(resp) if resp.status().is_success())
+    }
+}
