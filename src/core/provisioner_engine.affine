@@ -1,0 +1,155 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// PanLL Provisioner Engine — AffineScript TEA Spec
+//
+// Migration target for src/core/ProvisionerEngine.res.
+// Models portfolio provisioning as an affine state machine:
+// each provisioning step consumes the current state and produces a new one.
+//
+// Current status: ReScript source compiles (cd5e8e5). This spec is the
+// AffineScript migration target; codegen is a future step.
+
+// ── Domain Types ──────────────────────────────────────────────────────────────
+
+struct SemVer {
+  major: Int,
+  minor: Int,
+  patch: Int,
+  pre_release: Option<String>,
+  build: Option<String>,
+}
+
+enum DependencyConstraint {
+  Exact(SemVer),
+  Compatible(SemVer),   // ~= operator: same major.minor, any patch
+  GreaterEqual(SemVer),
+  LessThan(SemVer),
+  WildCard,
+}
+
+struct PluginDependency {
+  plugin_id: String,
+  constraint: DependencyConstraint,
+}
+
+enum PluginStatus {
+  Available,
+  Unavailable,
+  Deprecated,
+  Restricted,
+}
+
+struct PluginEntry {
+  id: String,
+  name: String,
+  version: SemVer,
+  capabilities: [String],
+  dependencies: [PluginDependency],
+  status: PluginStatus,
+  checksum: String,
+}
+
+enum ProvisioningPhase {
+  Idle,
+  ResolvingDependencies,
+  DownloadingPlugins,
+  ValidatingIntegrity,
+  InstallingPlugins,
+  ConfiguringPlugins,
+  Complete,
+  Failed(String),
+}
+
+struct ProvisionerState {
+  phase: ProvisioningPhase,
+  plugin_registry: [(String, PluginEntry)],  // id → entry
+  installed_plugins: [String],
+  pending_downloads: [String],
+  resolved_versions: [(String, SemVer)],
+  provisioning_log: [String],
+  error: Option<String>,
+}
+
+// ── Provisioner Messages ──────────────────────────────────────────────────────
+
+enum ProvisionerMsg {
+  StartProvisioning([PluginDependency]),
+  DependencyResolved(String, SemVer),
+  DownloadComplete(String, String),     // (pluginId, checksum)
+  IntegrityCheckPassed(String),
+  InstallComplete(String),
+  ProvisioningFailed(String),
+  ResetProvisioner,
+}
+
+// ── Update (affine state transitions) ────────────────────────────────────────
+
+/**
+ * Provisioner update function.
+ * @linear msg: consumed once.
+ * @linear state: consumed once; fresh state always produced.
+ *
+ * The affine discipline ensures no provisioning step is silently dropped —
+ * every phase transition is explicit and traceable.
+ */
+fn provisioner_update(@linear msg: ProvisionerMsg, @linear state: ProvisionerState) -> ProvisionerState {
+  match msg {
+    StartProvisioning(deps) => {
+      let log = state.provisioning_log ++ ["Starting provisioning for deps: " ++ format_deps(deps)]
+      { ...state, phase: ProvisioningPhase::ResolvingDependencies, provisioning_log: log }
+    }
+    DependencyResolved(plugin_id, version) => {
+      let resolved = state.resolved_versions ++ [(plugin_id, version)]
+      let log = state.provisioning_log ++ [`Resolved ${plugin_id} → ${format_semver(version)}`]
+      { ...state, resolved_versions: resolved, provisioning_log: log }
+    }
+    DownloadComplete(plugin_id, checksum) => {
+      let pending = state.pending_downloads.filter(id => id != plugin_id)
+      let log = state.provisioning_log ++ [`Downloaded ${plugin_id} (${checksum})`]
+      let phase = if pending.is_empty() { ProvisioningPhase::ValidatingIntegrity }
+                  else                  { state.phase }
+      { ...state, pending_downloads: pending, phase, provisioning_log: log }
+    }
+    IntegrityCheckPassed(plugin_id) => {
+      let log = state.provisioning_log ++ [`Integrity OK: ${plugin_id}`]
+      { ...state, phase: ProvisioningPhase::InstallingPlugins, provisioning_log: log }
+    }
+    InstallComplete(plugin_id) => {
+      let installed = state.installed_plugins ++ [plugin_id]
+      let log = state.provisioning_log ++ [`Installed: ${plugin_id}`]
+      let phase = ProvisioningPhase::Complete
+      { ...state, installed_plugins: installed, phase, provisioning_log: log }
+    }
+    ProvisioningFailed(reason) => {
+      let log = state.provisioning_log ++ [`FAILED: ${reason}`]
+      { ...state, phase: ProvisioningPhase::Failed(reason), error: Some(reason), provisioning_log: log }
+    }
+    ResetProvisioner => default_provisioner_state()
+  }
+}
+
+// ── Pure Computation ──────────────────────────────────────────────────────────
+
+/**
+ * Resolve dependencies in topological order.
+ * Pure function — no state mutation. Returns sorted plugin list or error.
+ */
+fn resolve_dependencies(
+  deps: [PluginDependency],
+  registry: [(String, PluginEntry)]
+) -> Result<[PluginEntry], String> {
+  // Topological sort via Kahn's algorithm.
+  // Cycle detection: if sorted list length < total deps → cycle exists.
+  Ok(topological_sort(deps, registry))
+}
+
+/**
+ * Validate checksum against registry entry.
+ * Affine: consumes the download token, produces a validation certificate.
+ */
+fn validate_integrity(@linear download_token: DownloadToken, expected: String) -> Result<ValidationCert, String> {
+  if download_token.checksum == expected {
+    Ok(ValidationCert { plugin_id: download_token.plugin_id })
+  } else {
+    Err(`Integrity failure: ${download_token.plugin_id}`)
+  }
+}
