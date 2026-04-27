@@ -4,6 +4,7 @@
 
 open Model
 open Msg
+open SystemUpdateMsg
 
 let updateSystemUpdate = (model: model, subMsg: systemUpdateMsg): (model, Tea_Cmd.t<msg>) => {
   let su = model.systemUpdate

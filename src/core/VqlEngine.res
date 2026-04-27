@@ -11,7 +11,7 @@
 //
 // Zero side effects — all I/O goes through VclCmd.res.
 
-open VclModel
+open VqlModel
 
 // ============================================================
 // SECTION 1: Safety Level Metadata

@@ -171,7 +171,7 @@ let updateMinter = (model: model, msg: minterMsg): (model, Tea_Cmd.t<msg>) => {
         envVars: [],
         enabled: true,
       }
-      let configs = Array.concat(model.provisioner.configs, [newPanelConfig])
+      let configs = Array.concat(model.provisioner.panelConfigs, [newPanelConfig])
       let preview = EnsaidConfigEngine.generate(
         ~repoName="(current repo)",
         ~workspace=model.workspace,

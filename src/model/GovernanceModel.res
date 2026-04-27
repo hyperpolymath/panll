@@ -94,14 +94,9 @@ type tourState = {
   completed: bool,
 }
 
-/// Information Humidity level
-type humidityLevel =
-  /// Low stress environment: show more detail and visual richness.
-  | High
-  /// Moderate stress: balanced information density.
-  | Medium
-  /// High stress: shed visual noise, show only essentials.
-  | Low
+/// Information Humidity level — defined in PaneModel to avoid circular dependency.
+/// Re-exported via Model.res include chain. Use humidityLevel directly when
+/// Model is open; use PaneModel.humidityLevel for standalone references.
 
 /// View mode for the environment
 type viewMode =

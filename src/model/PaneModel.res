@@ -265,6 +265,16 @@ type paneWState = {
   securityViewActive: bool,
 }
 
+/// Information Humidity level — mirrors GovernanceModel.humidityLevel
+/// (defined here to avoid circular dependency; GovernanceModel re-exports it)
+type humidityLevel =
+  /// Low stress environment: show more detail and visual richness.
+  | High
+  /// Moderate stress: balanced information density.
+  | Medium
+  /// High stress: shed visual noise, show only essentials.
+  | Low
+
 /// Pane-A: Ambient Substrate (Ergonomics)
 /// This pane is the deep-reaching ambient interface layer that manages
 /// cognitive relief and information ergonomics across the entire co-orbit.

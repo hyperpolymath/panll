@@ -27,6 +27,8 @@ type panelId =
   | PanelPlaza
   | PanelMinter
   | PanelProvisioner
+  /// Wizard — plugin and panel creation wizard.
+  | PanelWizard
   | PanelVoiceTag
   | PanelAi
   | PanelRepoLoader

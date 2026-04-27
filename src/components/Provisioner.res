@@ -274,7 +274,7 @@ let view = (prov: provisionerState): Tea_Vdom.t<msg> => {
                 list{
                   text(
                     `${Int.toString(
-                        ProvisionerEngine.countInstalled(prov.installStatus),
+                        ProvisionerEngine.countInstalled(prov.panelInstallStatus),
                       )} panels installed`,
                   ),
                 },
@@ -318,7 +318,7 @@ let view = (prov: provisionerState): Tea_Vdom.t<msg> => {
                   div(
                     list{Attrs.class_("grid gap-4 grid-cols-1 lg:grid-cols-2")},
                     filtered
-                    ->Array.map(p => renderPortfolioCard(p, prov.installStatus))
+                    ->Array.map(p => renderPortfolioCard(p, prov.panelInstallStatus))
                     ->List.fromArray,
                   ),
                 },
@@ -328,7 +328,7 @@ let view = (prov: provisionerState): Tea_Vdom.t<msg> => {
             div(
               list{Attrs.class_("space-y-2")},
               list{
-                renderIsolationSummary(prov.configs),
+                renderIsolationSummary(prov.panelConfigs),
                 // Column headers
                 div(
                   list{Attrs.class_("flex items-center gap-3 px-3 py-1 text-xs text-gray-600")},
@@ -343,21 +343,21 @@ let view = (prov: provisionerState): Tea_Vdom.t<msg> => {
                 ),
                 div(
                   list{Attrs.class_("space-y-1")},
-                  prov.configs->Array.map(c => renderConfigRow(c))->List.fromArray,
+                  prov.panelConfigs->Array.map(c => renderConfigRow(c))->List.fromArray,
                 ),
               },
             )
           | Installed => {
-              let installed = prov.installStatus->Array.filter(((_, s)) => s === Installed)
+              let installed = prov.panelInstallStatus->Array.filter(((_, s)) => s === Installed)
               div(
                 list{Attrs.class_("space-y-2")},
                 list{
-                  renderIsolationSummary(prov.configs),
+                  renderIsolationSummary(prov.panelConfigs),
                   div(
                     list{Attrs.class_("space-y-1")},
                     installed
                     ->Array.map(((name, _status)) => {
-                      let config = prov.configs->Array.find(c => c.panelName === name)
+                      let config = prov.panelConfigs->Array.find(c => c.panelName === name)
                       let tierColour = switch config {
                       | Some(c) => ProvisionerEngine.isolationColour(c.isolation)
                       | None => "text-gray-500"
@@ -422,7 +422,7 @@ let view = (prov: provisionerState): Tea_Vdom.t<msg> => {
                 // Available panels as toggleable chips
                 div(
                   list{Attrs.class_("flex flex-wrap gap-2 mt-3")},
-                  prov.configs
+                  prov.panelConfigs
                   ->Array.map(c => {
                     let selected = prov.customPanels->Array.some(p => p === c.panelName)
                     button(
@@ -465,6 +465,11 @@ let view = (prov: provisionerState): Tea_Vdom.t<msg> => {
                   noNode
                 },
               },
+            )
+          | PluginBundles | CustomPluginBundle | DeploymentBundles =>
+            div(
+              list{Attrs.class_("p-6 text-center text-gray-500")},
+              list{text("Coming soon")},
             )
           },
           // Error display

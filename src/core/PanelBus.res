@@ -117,7 +117,7 @@ type governanceEvent =
   /// Inference was resumed by governance.
   | InferenceResumed
   /// Humidity level was adjusted.
-  | HumidityAdjusted(GovernanceModel.humidityLevel)
+  | HumidityAdjusted(PaneModel.humidityLevel)
 
 /// Convert a governance event to a panel event for bus routing.
 let governanceToPanel = (evt: governanceEvent): panelEvent => {

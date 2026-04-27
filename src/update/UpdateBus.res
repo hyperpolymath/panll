@@ -4,8 +4,9 @@
 
 open Model
 open Msg
+open PanelBusMsg
 
-let updateBus = (model: model, busMsg: busMsg): (model, Tea_Cmd.t<msg>) => {
+let updateBus = (model: model, busMsg: panelBusMsg): (model, Tea_Cmd.t<msg>) => {
   switch busMsg {
   | BusSubscribe(cladeId, topics) =>
     let busRegistry = PanelBus.subscribe(model.busRegistry, cladeId, topics)

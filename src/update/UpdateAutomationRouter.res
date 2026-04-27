@@ -298,7 +298,7 @@ let updateAutomationRouter = (model: model, msg: automationRouterMsg): (model, T
         ~repoName="(current repo)",
         ~workspace=model.workspace,
         ~humidity=humidityStr,
-        ~panelConfigs=model.provisioner.configs,
+        ~panelConfigs=model.provisioner.panelConfigs,
         ~portfolios=model.provisioner.portfolios,
         ~automationRules=ar.rules,
         (),

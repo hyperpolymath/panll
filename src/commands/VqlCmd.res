@@ -10,7 +10,7 @@
 //   TypeLL     — http://localhost:7800 (type checking)
 //   BoJ Server — http://localhost:7700 (cartridge routing)
 
-open VclModel
+open VqlModel
 
 // ============================================================
 // SECTION 1: Backend Command Bindings
@@ -36,7 +36,7 @@ let executeQuery = (
   | TargetTypeLL => "http://localhost:7800/api/v1/vcl-total/check"
   | TargetDryRun => "http://localhost:8200/api/v1/explain"
   }
-  let levelInt = VclEngine.levelToInt(level)
+  let levelInt = VqlEngine.levelToInt(level)
   let body = `{"query": ${JSON.stringify(JSON.Encode.string(query))}, "level": ${Int.toString(
       levelInt,
     )}}`
@@ -95,7 +95,7 @@ let checkConnection = (): promise<result<string, string>> => {
 
 /// Send a VCL-total query to TypeLL for type checking.
 let typeCheckQuery = (query: string, level: typeSafetyLevel): promise<result<string, string>> => {
-  let levelInt = VclEngine.levelToInt(level)
+  let levelInt = VqlEngine.levelToInt(level)
   let body = `{"query": ${JSON.stringify(JSON.Encode.string(query))}, "level": ${Int.toString(
       levelInt,
     )}, "mode": "vcl-total"}`

@@ -1,0 +1,172 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// PanLL Wizard — AffineScript TEA Spec
+//
+// Migration target for src/components/Wizard.res and src/update/UpdateWizard.res.
+// Captures wizard types, messages, and state transitions with affine semantics.
+// State is consumed linearly — no implicit aliasing of the wizard model.
+//
+// Current status: ReScript source compiles (cd5e8e5). This file is the
+// AffineScript migration spec; codegen from this spec is a future step.
+
+// ── Wizard Step ──────────────────────────────────────────────────────────────
+
+enum WizardStep {
+  SelectType,
+  SelectCapabilities,
+  AddDependencies,
+  ConfigureSecurity,
+  ReviewAndGenerate,
+}
+
+// ── Creation Type ─────────────────────────────────────────────────────────────
+
+enum CreationType {
+  CreatingPanel,
+  CreatingPlugin,
+}
+
+// ── Trust Tier ────────────────────────────────────────────────────────────────
+
+enum TrustTier {
+  Teranga,  // Lowest trust
+  Shield,
+  Ayo,      // Highest trust
+}
+
+// ── Domain Types ──────────────────────────────────────────────────────────────
+
+struct SandboxPolicy {
+  network_access: Bool,
+  filesystem_access: Bool,
+  allowed_capabilities: [String],
+}
+
+struct SecurityConfig {
+  trust_tier: TrustTier,
+  sandbox_policy: SandboxPolicy,
+  network_access: Bool,
+  filesystem_access: Bool,
+}
+
+struct PluginDependency {
+  plugin_id: String,
+  version: String,
+  trust_tier: TrustTier,
+}
+
+struct TestResults {
+  report: String,
+  timestamp: Float,
+}
+
+struct WizardTemplate {
+  name: String,
+  description: String,
+  default_capabilities: [String],
+  default_dependencies: [PluginDependency],
+  default_trust_tier: TrustTier,
+}
+
+// ── Wizard State ──────────────────────────────────────────────────────────────
+
+/**
+ * Affine wizard state. Consumed and reproduced on every update.
+ * No step can be skipped — the linear type enforces sequential consumption.
+ */
+struct WizardState {
+  current_step: WizardStep,
+  creation_type: Option<CreationType>,
+  selected_capabilities: [String],
+  dependencies: [PluginDependency],
+  security_config: SecurityConfig,
+  generating: Bool,
+  validation_errors: Option<String>,
+  generation_result: Option<Result<String, String>>,
+  selected_template: Option<WizardTemplate>,
+  test_results: Option<TestResults>,
+}
+
+// ── Wizard Messages ───────────────────────────────────────────────────────────
+
+enum WizardMsg {
+  SetCreationType(CreationType),
+  ApplyTemplate(String),
+  ToggleCapability(String),
+  AddDependency(String, String),   // (pluginId, version)
+  RemoveDependency(String),
+  SetTrustTier(TrustTier),
+  ToggleNetworkAccess(Bool),
+  ToggleFilesystemAccess(Bool),
+  NextStep,
+  PreviousStep,
+  StartGeneration,
+  ValidationResult(Result<String, String>),
+  GenerationResult(Result<String, String>),
+  ResetWizard,
+  RunWizardTests,
+  TestResults(String),
+}
+
+// ── Validation ────────────────────────────────────────────────────────────────
+
+/**
+ * Capability conflict validation. Pure function — no side effects.
+ * Returns None if valid, Some(error) if the selection conflicts.
+ */
+fn validate_capability_selection(cap_id: String, selected: [String]) -> Option<String> {
+  // Conflict pairs: groove_hard ↔ groove_soft, contractile_strict ↔ contractile_permissive
+  match cap_id {
+    "groove_hard" | "groove_soft" | "contractile_strict" | "contractile_permissive" => {
+      // Check opposite pair
+      Some("conflict error if opposite selected")
+    }
+    _ => None
+  }
+}
+
+fn validate_dependency(plugin_id: String, version: String, existing: [PluginDependency]) -> Option<String> {
+  if plugin_id == "" { Some("Plugin ID cannot be empty") }
+  else if version == "" { Some("Version cannot be empty") }
+  else if existing.any(d => d.plugin_id == plugin_id) { Some("Dependency already added") }
+  else { None }
+}
+
+fn validate_security_config(config: SecurityConfig) -> Option<String> {
+  if config.trust_tier == TrustTier::Ayo && (config.network_access || config.filesystem_access) {
+    Some("High trust tier (Ayo) should not have network/filesystem access")
+  } else {
+    None
+  }
+}
+
+// ── Update (affine state transitions) ────────────────────────────────────────
+
+/**
+ * Wizard update function.
+ * @linear wizard_state: consumed exactly once per arm.
+ * @linear msg: consumed exactly once.
+ *
+ * Each arm produces a fresh WizardState — no shared mutable state.
+ */
+fn wizard_update(@linear msg: WizardMsg, @linear state: WizardState) -> WizardState {
+  match msg {
+    SetCreationType(ct) => { ...state, creation_type: Some(ct) }
+    ApplyTemplate(name) => {
+      // Template lookup is pure; apply or set error
+      match lookup_template(name) {
+        Some(t) => apply_template(t, state)
+        None    => { ...state, validation_errors: Some(`Template "${name}" not found`) }
+      }
+    }
+    ToggleCapability(cap_id) => {
+      match validate_capability_selection(cap_id, state.selected_capabilities) {
+        Some(err) => { ...state, validation_errors: Some(err) }
+        None      => toggle_cap(cap_id, { ...state, validation_errors: None })
+      }
+    }
+    NextStep     => { ...state, current_step: next_step(state.current_step), validation_errors: None }
+    PreviousStep => { ...state, current_step: prev_step(state.current_step), validation_errors: None }
+    ResetWizard  => default_wizard_state()
+    _            => state  // remaining arms follow same pattern
+  }
+}

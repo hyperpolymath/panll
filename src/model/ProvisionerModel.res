@@ -199,6 +199,13 @@ type pluginBundle = {
   audience: string,
 }
 
+/// Source type for Groove services
+type sourceType =
+  /// Service provided by a panel
+  | PanelSource(string)  // panelId
+  /// Service provided by a plugin
+  | PluginSource(string)  // pluginId
+
 /// Groove service descriptor for unified discovery
 type grooveService = {
   /// Service identifier
@@ -213,33 +220,6 @@ type grooveService = {
   sourceType: sourceType,
   /// Trust tier (for plugins)
   trustTier: option<pluginTrustTier>,
-}
-
-/// Source type for Groove services
-type sourceType =
-  /// Service provided by a panel
-  | PanelSource(string)  // panelId
-  /// Service provided by a plugin
-  | PluginSource(string)  // pluginId
-
-/// Deployment bundle - mixed panels and plugins
-type deploymentBundle = {
-  /// Bundle identifier
-  id: string,
-  /// Bundle name
-  name: string,
-  /// Panels in this deployment
-  panels: array<string>,
-  /// Plugins in this deployment
-  plugins: array<string>,
-  /// Unified Groove services
-  grooveServices: array<grooveService>,
-  /// Dependency graph
-  dependencies: array<dependency>,
-  /// Configuration graph
-  configuration: configurationGraph,
-  /// Installation status
-  installStatus: bundleInstallStatus,
 }
 
 /// Bundle installation status
@@ -271,6 +251,26 @@ type dependency =
   | PanelDependency(string)  // panelId
   /// Plugin dependency
   | PluginDependency(pluginDependency)
+
+/// Deployment bundle - mixed panels and plugins
+type deploymentBundle = {
+  /// Bundle identifier
+  id: string,
+  /// Bundle name
+  name: string,
+  /// Panels in this deployment
+  panels: array<string>,
+  /// Plugins in this deployment
+  plugins: array<string>,
+  /// Unified Groove services
+  grooveServices: array<grooveService>,
+  /// Dependency graph
+  dependencies: array<dependency>,
+  /// Configuration graph
+  configuration: configurationGraph,
+  /// Installation status
+  installStatus: bundleInstallStatus,
+}
 
 /// The complete Provisioner state.
 type provisionerState = {

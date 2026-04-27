@@ -368,7 +368,7 @@ let updateWorkspace = (model: model, msg: workspaceMsg): (model, Tea_Cmd.t<msg>)
         ~repoName="(current repo)",
         ~workspace=model.workspace,
         ~humidity=humidityStr,
-        ~panelConfigs=model.provisioner.configs,
+        ~panelConfigs=model.provisioner.panelConfigs,
         ~portfolios=model.provisioner.portfolios,
         ~automationRules=model.automationRouter.rules,
         (),
