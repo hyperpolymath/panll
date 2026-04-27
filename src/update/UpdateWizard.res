@@ -2,13 +2,12 @@
 open Model
 open Msg
 open WizardCmd
-open WizardTest
 open WizardMinter
 
 /// Client-side validation rules for immediate feedback
 let validateCapabilitySelection = (capId: string, selectedCaps: array<string>): option<string> => {
   // Define capability conflicts
-  let conflicts: dict<string, array<string>> = Dict.fromArray(list{
+  let conflicts: dict<array<string>> = Dict.fromArray(list{
     ("groove_hard", ["groove_soft"]), // Hard groove conflicts with soft groove
     ("groove_soft", ["groove_hard"]),
     ("contractile_strict", ["contractile_permissive"]),
@@ -18,8 +17,8 @@ let validateCapabilitySelection = (capId: string, selectedCaps: array<string>): 
   switch Dict.get(conflicts, capId) {
   | Some(conflictingCaps) => {
       // Check if any conflicting capabilities are already selected
-      let hasConflict = conflictingCaps->Array.exists(conflictCap => 
-        selectedCaps->Array.exists(selected => selected === conflictCap)
+      let hasConflict = conflictingCaps->Array.some(conflictCap => 
+        selectedCaps->Array.some(selected => selected === conflictCap)
       )
       if hasConflict {
         Some(`Cannot select ${capId}: conflicts with ${conflictingCaps->Array.join(", ")}`)
@@ -33,7 +32,7 @@ let validateCapabilitySelection = (capId: string, selectedCaps: array<string>): 
 
 let validateDependency = (pluginId: string, version: string, dependencies: array<pluginDependency>): option<string> => {
   // Check for duplicate dependencies
-  let hasDuplicate = dependencies->Array.exists(dep => dep.pluginId === pluginId)
+  let hasDuplicate = dependencies->Array.some(dep => dep.pluginId === pluginId)
   if hasDuplicate {
     Some(`Dependency ${pluginId} already added`)
   } else if String.length(pluginId) === 0 {
@@ -87,37 +86,7 @@ let serializeWizardConfig = (wizard: wizardState) => {
     dependencies: dependenciesJson,
     securityConfig: securityJson,
   }
-  let creationTypeStr = switch wizard.creationType {
-    | Some(CreatingPanel) => "panel"
-    | Some(CreatingPlugin) => "plugin"
-    | None => "unknown"
-  }
-  
-  let capabilitiesJson = 
-    wizard.selectedCapabilities
-    ->Array.map(cap => `"${cap}"`)
-    ->Array.join(",")
-    ->str => `[${str}]`
-  
-  let dependenciesJson = 
-    wizard.dependencies
-    ->Array.map(dep => `{"id":"${dep.pluginId}","version":"${dep.version}"}`)
-    ->Array.join(",")
-    ->str => `[${str}]`
-  
-  let securityJson = `{
-    "trustTier":"${wizard.securityConfig.trustTier->pluginTrustTierToString}",
-    "sandboxPolicy":"${wizard.securityConfig.sandboxPolicy->sandboxPolicyToString}",
-    "networkAccess":${Belt.Bool.toString(wizard.securityConfig.networkAccess)},
-    "filesystemAccess":${Belt.Bool.toString(wizard.securityConfig.filesystemAccess)}
-  }`
-  
-  {
-    creationType: creationTypeStr,
-    capabilities: capabilitiesJson,
-    dependencies: dependenciesJson,
-    securityConfig: securityJson,
-  }
+}
 
 module UpdateWizard = {
   let update = (model: model, msg: wizardMsg): (model, Tea_Cmd.t<msg>) => {
@@ -311,7 +280,11 @@ module UpdateWizard = {
         ({...model, wizard: WizardModel.defaultWizardState}, Tea_Cmd.none)
     
     | RunWizardTests => {
-        let cmd = WizardTest.runTests(result => Wizard(TestResults(result)))
+        // Run via `deno task test` — calling WizardTest from here creates a
+        // circular dependency (WizardTest opens UpdateWizard for integration tests).
+        let cmd = Tea_Cmd.call(callbacks => {
+          callbacks.enqueue(Wizard(TestResults("Run `deno task test` for wizard test results")))
+        })
         (model, cmd)
       }
     
