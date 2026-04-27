@@ -30,18 +30,14 @@ module WizardTest = {
       validationErrors: None,
       generationResult: None,
       selectedTemplate: None,
+      testResults: None,
     }
   }
 
   /// Test fixture: Create a test model with wizard
   let createTestModel = (wizardState: wizardState): model => {
-    // This would be a minimal model with just the wizard state
-    // In practice, this would include all required model fields
-    {
-      // ... other model fields would be here
-      wizard: wizardState,
-      // ... other model fields
-    }
+    let (baseModel, _) = App.init()
+    {...baseModel, wizard: wizardState}
   }
 
   // ===========================================================================
@@ -77,7 +73,7 @@ module WizardTest = {
     let validationResult = validateCapabilitySelection("groove-soft", stateWithHard.selectedCapabilities)
     
     switch validationResult {
-    | Some(errorMsg) => String.contains(errorMsg, "conflict")
+    | Some(errorMsg) => errorMsg->String.includes("conflict")
     | None => false
     }
   }
@@ -90,7 +86,7 @@ module WizardTest = {
     let dependency: pluginDependency = {
       pluginId: "test-plugin",
       version: "1.0.0",
-      trustTier: Trusted,
+      tier: Ayo,
     }
     
     let stateWithDep = {
@@ -101,7 +97,7 @@ module WizardTest = {
     let validationResult = validateDependency("test-plugin", "1.0.0", stateWithDep.dependencies)
     
     switch validationResult {
-    | Some(errorMsg) => String.contains(errorMsg, "already added")
+    | Some(errorMsg) => errorMsg->String.includes("already added")
     | None => false
     }
   }
@@ -122,7 +118,7 @@ module WizardTest = {
     let validationResult = validateSecurityConfig(highTrustConfig)
     
     switch validationResult {
-    | Some(errorMsg) => String.contains(errorMsg, "should not have")
+    | Some(errorMsg) => errorMsg->String.includes("should not have")
     | None => false
     }
   }
@@ -162,7 +158,7 @@ module WizardTest = {
     
     // Verify error state
     switch modelAfterError.wizard.validationErrors {
-    | Some(errorMsg) => String.contains(errorMsg, "not found")
+    | Some(errorMsg) => errorMsg->String.includes("not found")
     | None => false
     }
   }
@@ -185,7 +181,7 @@ module WizardTest = {
     }
     
     let endTime = Date.now()
-    endTime - startTime // Return total time in ms
+    Float.toInt(endTime -. startTime) // Return total time in ms
   }
 
   /// Benchmark validation performance
@@ -193,7 +189,7 @@ module WizardTest = {
     let startTime = Date.now()
     
     // Test capability validation with many capabilities
-    let capabilities = Array.range(0, 50)->Array.map(i => `cap-${i}`)
+    let capabilities = Array.fromInitializer(~length=50, i => `cap-${Int.toString(i)}`)
     
     for _ in 1 to 100 {
       let baseState = createTestWizardState()
@@ -206,7 +202,7 @@ module WizardTest = {
     }
     
     let endTime = Date.now()
-    endTime - startTime // Return total time in ms
+    Float.toInt(endTime -. startTime) // Return total time in ms
   }
 
   // ===========================================================================
@@ -231,27 +227,16 @@ module WizardTest = {
   // TEST SUITE RUNNER
   // ===========================================================================
 
+  type timedTestResult = {name: string, passed: bool, timeMs: int}
+  type perfBenchmark = {name: string, timeMs: int, iterations: int}
+  type accessibilityResult = {name: string, passed: bool}
+
   /// Run all tests and return results
   type testResults = {
-    unitTests: array<{
-      name: string,
-      passed: bool,
-      timeMs: int,
-    }>,
-    integrationTests: array<{
-      name: string,
-      passed: bool,
-      timeMs: int,
-    }>,
-    performanceBenchmarks: array<{
-      name: string,
-      timeMs: int,
-      iterations: int,
-    }>,
-    accessibilityTests: array<{
-      name: string,
-      passed: bool,
-    }>,
+    unitTests: array<timedTestResult>,
+    integrationTests: array<timedTestResult>,
+    performanceBenchmarks: array<perfBenchmark>,
+    accessibilityTests: array<accessibilityResult>,
   }
   
   let runAllTests = (): testResults => {
@@ -268,7 +253,8 @@ module WizardTest = {
       ("Security Validation", testSecurityValidation),
     ]
     
-    unitTests->Array.forEach((name, testFunc) => {
+    unitTests->Array.forEach(item => {
+      let (name, testFunc) = item
       let startTime = Date.now()
       let passed = testFunc()
       let endTime = Date.now()
@@ -276,7 +262,7 @@ module WizardTest = {
       unitTestResults->Array.push({
         name,
         passed,
-        timeMs: endTime - startTime,
+        timeMs: Float.toInt(endTime -. startTime),
       })
     })
     
@@ -286,7 +272,8 @@ module WizardTest = {
       ("Error Handling Flow", testErrorHandlingFlow),
     ]
     
-    integrationTests->Array.forEach((name, testFunc) => {
+    integrationTests->Array.forEach(item => {
+      let (name, testFunc) = item
       let startTime = Date.now()
       let passed = testFunc()
       let endTime = Date.now()
@@ -294,7 +281,7 @@ module WizardTest = {
       integrationTestResults->Array.push({
         name,
         passed,
-        timeMs: endTime - startTime,
+        timeMs: Float.toInt(endTime -. startTime),
       })
     })
     
@@ -329,13 +316,7 @@ module WizardTest = {
   }
 
   /// Calculate test suite pass rate
-  type passRateResults = {
-    unitTests: array<{passed: bool}>,
-    integrationTests: array<{passed: bool}>,
-    accessibilityTests: array<{passed: bool}>,
-  }
-  
-  let calculatePassRate = (results: passRateResults): float => {
+  let calculatePassRate = (results: testResults): float => {
     let totalTests = 
       results.unitTests->Array.length +
       results.integrationTests->Array.length +
@@ -345,47 +326,40 @@ module WizardTest = {
       0.0
     } else {
       let passedTests = 
-        results.unitTests->Array.filter(.passed)->Array.length +
-        results.integrationTests->Array.filter(.passed)->Array.length +
-        results.accessibilityTests->Array.filter(.passed)->Array.length
+        results.unitTests->Array.filter(t => t.passed)->Array.length +
+        results.integrationTests->Array.filter(t => t.passed)->Array.length +
+        results.accessibilityTests->Array.filter(t => t.passed)->Array.length
       
-      float_of_int(passedTests) /. float_of_int(totalTests)
+      Int.toFloat(passedTests) /. Int.toFloat(totalTests)
     }
   }
 
   /// Generate test report
-  type reportResults = {
-    unitTests: array<{name: string, passed: bool, timeMs: int}>,
-    integrationTests: array<{name: string, passed: bool, timeMs: int}>,
-    performanceBenchmarks: array<{name: string, timeMs: int, iterations: int}>,
-    accessibilityTests: array<{name: string, passed: bool}>,
-  }
-  
-  let generateTestReport = (results: reportResults): string => {
+  let generateTestReport = (results: testResults): string => {
     let reportLines = []
     
     reportLines->Array.push("=== PanLL Wizard Test Report ===")
-    reportLines->Array.push(`Generated: ${Date.now()->Date.toISOString}`)
+    reportLines->Array.push(`Generated: ${Date.make()->Date.toISOString}`)
     
     // Unit test results
     reportLines->Array.push("\n🧪 UNIT TESTS:")
     results.unitTests->Array.forEach(test => {
       let status = test.passed ? "✅ PASS" : "❌ FAIL"
-      reportLines->Array.push(`  ${status} ${test.name} (${test.timeMs}ms)`)
+      reportLines->Array.push(`  ${status} ${test.name} (${test.timeMs->Int.toString}ms)`)
     })
     
     // Integration test results
     reportLines->Array.push("\n🔗 INTEGRATION TESTS:")
     results.integrationTests->Array.forEach(test => {
       let status = test.passed ? "✅ PASS" : "❌ FAIL"
-      reportLines->Array.push(`  ${status} ${test.name} (${test.timeMs}ms)`)
+      reportLines->Array.push(`  ${status} ${test.name} (${test.timeMs->Int.toString}ms)`)
     })
     
     // Performance benchmarks
     reportLines->Array.push("\n⚡ PERFORMANCE BENCHMARKS:")
     results.performanceBenchmarks->Array.forEach(benchmark => {
       let avgTime = benchmark.timeMs / benchmark.iterations
-      reportLines->Array.push(`  ${benchmark.name}: ${benchmark.timeMs}ms total (${avgTime}ms avg)`)
+      reportLines->Array.push(`  ${benchmark.name}: ${benchmark.timeMs->Int.toString}ms total (${avgTime->Int.toString}ms avg)`)
     })
     
     // Accessibility tests
@@ -397,7 +371,8 @@ module WizardTest = {
     
     // Summary
     let passRate = calculatePassRate(results)
-    let summary = `\n📊 SUMMARY: ${passRate * 100.0}% pass rate`
+    let pctStr = Js.Float.toString(passRate *. 100.0)
+    let summary = `\n📊 SUMMARY: ${pctStr}% pass rate`
     reportLines->Array.push(summary)
     
     reportLines->Array.join("\n")

@@ -3,6 +3,7 @@
 /// PanLL Wizard Messages — User actions for the plugin/panel creation wizard.
 
 open Model
+open WizardModel
 
 type wizardMsg =
   /// Set creation type (panel or plugin)

@@ -17,7 +17,7 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
       switch portfolio {
       | Some(p) => {
           // Mark all panels as Installing.
-          let newStatuses = prov.installStatus->Array.map(((name, status)) =>
+          let newStatuses = prov.panelInstallStatus->Array.map(((name, status)) =>
             if p.panels->Array.some(pn => pn === name) {
               (name, (Installing: panelInstallStatus))
             } else {
@@ -29,7 +29,7 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
               ...model,
               provisioner: {
                 ...prov,
-                installStatus: newStatuses,
+                panelInstallStatus: newStatuses,
                 installProgress: Some({
                   portfolioId,
                   totalPanels: Array.length(p.panels),
@@ -50,27 +50,27 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
       }
     }
   | InstallPanel(panelName) => {
-      let newStatuses = prov.installStatus->Array.map(((name, status)) =>
+      let newStatuses = prov.panelInstallStatus->Array.map(((name, status)) =>
         if name === panelName {
           (name, (Installing: panelInstallStatus))
         } else {
           (name, status)
         }
       )
-      let config = prov.configs->Array.find(c => c.panelName === panelName)
+      let config = prov.panelConfigs->Array.find(c => c.panelName === panelName)
       let isoLabel = switch config {
       | Some(c) => ProvisionerEngine.isolationShortLabel(c.isolation)
       | None => "Native"
       }
       (
-        {...model, provisioner: {...prov, installStatus: newStatuses}},
+        {...model, provisioner: {...prov, panelInstallStatus: newStatuses}},
         ProvisionerCmd.installPanel(panelName, isoLabel, result => Provisioner(
           InstallResult(panelName, result),
         )),
       )
     }
   | RemovePanel(panelName) => {
-      let newStatuses = prov.installStatus->Array.map(((name, status)) =>
+      let newStatuses = prov.panelInstallStatus->Array.map(((name, status)) =>
         if name === panelName {
           (name, (Removing: panelInstallStatus))
         } else {
@@ -78,7 +78,7 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
         }
       )
       (
-        {...model, provisioner: {...prov, installStatus: newStatuses}},
+        {...model, provisioner: {...prov, panelInstallStatus: newStatuses}},
         ProvisionerCmd.removePanel(panelName, result => Provisioner(
           RemoveResult(panelName, result),
         )),
@@ -89,50 +89,50 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
       | Ok(_) => (Installed: panelInstallStatus)
       | Error(e) => (InstallFailed(e): panelInstallStatus)
       }
-      let newStatuses = prov.installStatus->Array.map(((name, status)) =>
+      let newStatuses = prov.panelInstallStatus->Array.map(((name, status)) =>
         if name === panelName {
           (name, newStatus)
         } else {
           (name, status)
         }
       )
-      ({...model, provisioner: {...prov, installStatus: newStatuses}}, Tea_Cmd.none)
+      ({...model, provisioner: {...prov, panelInstallStatus: newStatuses}}, Tea_Cmd.none)
     }
   | RemoveResult(panelName, result) => {
       let newStatus = switch result {
       | Ok(_) => (NotInstalled: panelInstallStatus)
       | Error(e) => (InstallFailed(e): panelInstallStatus)
       }
-      let newStatuses = prov.installStatus->Array.map(((name, status)) =>
+      let newStatuses = prov.panelInstallStatus->Array.map(((name, status)) =>
         if name === panelName {
           (name, newStatus)
         } else {
           (name, status)
         }
       )
-      ({...model, provisioner: {...prov, installStatus: newStatuses}}, Tea_Cmd.none)
+      ({...model, provisioner: {...prov, panelInstallStatus: newStatuses}}, Tea_Cmd.none)
     }
   | TogglePanelEnabled(panelName) => {
-      let newConfigs = prov.configs->Array.map(c =>
+      let newConfigs = prov.panelConfigs->Array.map(c =>
         if c.panelName === panelName {
           {...c, enabled: !c.enabled}
         } else {
           c
         }
       )
-      ({...model, provisioner: {...prov, configs: newConfigs}}, Tea_Cmd.none)
+      ({...model, provisioner: {...prov, panelConfigs: newConfigs}}, Tea_Cmd.none)
     }
   | SetPanelIsolation(panelName, tier) => {
-      let newConfigs = prov.configs->Array.map(c =>
+      let newConfigs = prov.panelConfigs->Array.map(c =>
         if c.panelName === panelName {
           {...c, isolation: tier}
         } else {
           c
         }
       )
-      ({...model, provisioner: {...prov, configs: newConfigs}}, Tea_Cmd.none)
+      ({...model, provisioner: {...prov, panelConfigs: newConfigs}}, Tea_Cmd.none)
     }
-  | SetCustomName(name) => ({...model, provisioner: {...prov, customName: name}}, Tea_Cmd.none)
+  | SetCustomName(name) =>({...model, provisioner: {...prov, customName: name}}, Tea_Cmd.none)
   | ToggleCustomPanel(panelName) => {
       let exists = prov.customPanels->Array.some(p => p === panelName)
       let newPanels = if exists {
@@ -187,7 +187,7 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
         ~repoName="(current repo)",
         ~workspace=model.workspace,
         ~humidity=humidityStr,
-        ~panelConfigs=prov.configs,
+        ~panelConfigs=prov.panelConfigs,
         ~portfolios=prov.portfolios,
         ~automationRules=model.automationRouter.rules,
         (),
@@ -205,6 +205,18 @@ let updateProvisioner = (model: model, msg: provisionerMsg): (model, Tea_Cmd.t<m
       ({...model, typell: newTypell}, Tea_Cmd.none)
     }
   | TypeCheckResult(Error(_)) => // TypeLL unavailable — degrade gracefully
+    (model, Tea_Cmd.none)
+  | SaveCustomPluginBundle
+  | TogglePlugin(_, _)
+  | InstallPluginBundle(_)
+  | InstallPlugin(_)
+  | RemovePlugin(_)
+  | PluginInstallResult(_, _)
+  | PluginRemoveResult(_, _)
+  | SetCustomPluginBundleName(_)
+  | ToggleCustomPluginBundle(_)
+  | CreateDeploymentBundle(_) =>
+    // Plugin bundle variants — not yet implemented
     (model, Tea_Cmd.none)
   }
 }

@@ -81,10 +81,8 @@ let trustTierColour = (tier: pluginTrustTier): string => {
 
 /// Compose Groove services from a deployment bundle.
 let composeGrooveServices = (bundle: deploymentBundle): array<grooveService> => {
-  let services: array<grooveService> = []
-  
   // Add services from panels
-  services->Array.concat(bundle.panels->Array.map(panelId => {
+  let panelServices = bundle.panels->Array.map(panelId => {
     // In real implementation, look up panel capabilities
     // For now, create a basic UI service
     {
@@ -95,10 +93,10 @@ let composeGrooveServices = (bundle: deploymentBundle): array<grooveService> => 
       sourceType: PanelSource(panelId),
       trustTier: None,
     }
-  }))
-  
+  })
+
   // Add services from plugins
-  services->Array.concat(bundle.plugins->Array.flatMap(pluginId => {
+  let pluginServices = bundle.plugins->Array.flatMap(pluginId => {
     // In real implementation, look up plugin capabilities
     // For now, create services for common capabilities
     [
@@ -111,9 +109,9 @@ let composeGrooveServices = (bundle: deploymentBundle): array<grooveService> => 
         trustTier: Some(Ayo), // Default to community tier
       }
     ]
-  }))
-  
-  services
+  })
+
+  panelServices->Array.concat(pluginServices)
 }
 
 /// Create a configuration graph from panel and plugin configs.
@@ -139,7 +137,7 @@ let isPluginBundleInstalled = (
   installStatuses: array<(string, panelInstallStatus)>,
 ): bool => {
   bundle.plugins->Array.every(pluginId => {
-    installStatuses->Array.exists((id, status) => {
+    installStatuses->Array.some(((id, status)) => {
       id === pluginId && status === Installed
     })
   })
@@ -150,9 +148,9 @@ let getPluginInstallStatus = (
   installStatuses: array<(string, panelInstallStatus)>,
   pluginId: string,
 ): panelInstallStatus => {
-  installStatuses->Array.find((id, status) => id === pluginId)
-  ->Option.map(tuple => tuple[1])
-  ->Option.withDefault(NotInstalled)
+  installStatuses->Array.find(((id, _status)) => id === pluginId)
+  ->Option.map(((_, status)) => status)
+  ->Option.getOr(NotInstalled)
 }
 
 // ============================================================================
@@ -168,7 +166,7 @@ let createDeploymentBundle = (
   pluginConfigs: array<pluginConfig>,
 ): deploymentBundle => {
   {
-    id: name->String.to_lowercase()->String.replace(" ", "-"),
+    id: name->String.toLowerCase->String.replace(" ", "-"),
     name: name,
     panels: panels,
     plugins: plugins,
@@ -206,8 +204,8 @@ let findPanelsRequiringPlugin = (
   state: provisionerState,
 ): array<string> => {
   state.portfolios
-  ->Array.filter(portfolio => 
-    portfolio.panels->Array.exists(panelId => {
+  ->Array.filter(portfolio =>
+    portfolio.panels->Array.some(panelId => {
       // In real implementation, check panel metadata
       // For now, simulate with some hardcoded dependencies
       (panelId === "Minter" && pluginId === "minter-plugin") ||
@@ -216,7 +214,9 @@ let findPanelsRequiringPlugin = (
     })
   )
   ->Array.flatMap(portfolio => portfolio.panels)
-  ->Array.uniq
+  ->Array.reduce([], (acc, id) =>
+    if acc->Array.includes(id) { acc } else { acc->Array.concat([id]) }
+  )
 }
 
 /// Check if a plugin is safe to disable (not required by any panels).
@@ -252,7 +252,7 @@ let shouldAutoLoadPlugin = (
   // 2. It's configured to auto-start
   // 3. It's required by any active panels
   isCorePlugin(pluginId) ||
-  (getPluginConfig(pluginId, state)->Option.map(c => c.autoStart)->Option.withDefault(false)) ||
+  (getPluginConfig(pluginId, state)->Option.map(c => c.autoStart)->Option.getOr(false)) ||
   (findPanelsRequiringPlugin(pluginId, state)->Array.length > 0)
 }
 
@@ -261,32 +261,35 @@ let shouldAutoLoadPlugin = (
 // ============================================================================
 
 /// Get all dependencies (direct + transitive) for a plugin.
+/// Uses iterative BFS via ref cells to avoid while-loop shadowing issues.
 let getAllDependencies = (
   pluginId: string,
   state: provisionerState,
 ): array<string> => {
-  let allDeps: array<string> = []
-  let visited: array<string> = []
-  let queue: array<string> = [pluginId]
+  let allDeps: ref<array<string>> = ref([])
+  let visited: ref<array<string>> = ref([])
+  let queue: ref<array<string>> = ref([pluginId])
 
-  while (queue->Array.length > 0) {
-    let current = queue->Array.pop()->Belt.Option.getWithDefault("")
-    if (visited->Array.includes(current)) {
-      continue
+  while (queue.contents->Array.length > 0) {
+    let current = queue.contents->Array.getUnsafe(0)
+    queue := queue.contents->Array.sliceToEnd(~start=1)
+    if !(visited.contents->Array.includes(current)) {
+      visited := visited.contents->Array.concat([current])
+
+      // Find direct dependencies of current plugin
+      let directDeps = state.pluginBundles
+        ->Array.flatMap(bundle => bundle.dependencies)
+        ->Array.filter(dep => dep.pluginId === current)
+        ->Array.map(dep => dep.pluginId)
+
+      allDeps := allDeps.contents->Array.concat(directDeps)
+      queue := queue.contents->Array.concat(directDeps)
     }
-    let visited = visited->Array.concat([current])
-
-    // Find direct dependencies of current plugin
-    let directDeps = state.pluginBundles
-      ->Array.flatMap(bundle => bundle.dependencies)
-      ->Array.filter(dep => dep.pluginId === current)
-      ->Array.map(dep => dep.pluginId)
-
-  let allDeps = allDeps->Array.concat(directDeps)
-  let queue = queue->Array.concat(directDeps)
   }
 
-  allDeps->Array.uniq
+  allDeps.contents->Array.reduce([], (acc, id) =>
+    if acc->Array.includes(id) { acc } else { acc->Array.concat([id]) }
+  )
 }
 
 /// Check for circular dependencies.
@@ -294,28 +297,27 @@ let hasCircularDependencies = (
   pluginId: string,
   state: provisionerState,
 ): bool => {
-  let visited: array<string> = []
-  let recursionStack: array<string> = []
+  let visited: ref<array<string>> = ref([])
+  let recursionStack: ref<array<string>> = ref([])
 
   let rec checkCircular = (id: string): bool => {
-    if (recursionStack->Array.includes(id)) {
-      return true  // Circular dependency found
+    if (recursionStack.contents->Array.includes(id)) {
+      true  // Circular dependency found
+    } else if (visited.contents->Array.includes(id)) {
+      false  // Already checked, no circle
+    } else {
+      visited := visited.contents->Array.concat([id])
+      recursionStack := recursionStack.contents->Array.concat([id])
+
+      // Get direct dependencies
+      let directDeps = state.pluginBundles
+        ->Array.flatMap(bundle => bundle.dependencies)
+        ->Array.filter(dep => dep.pluginId === id)
+        ->Array.map(dep => dep.pluginId)
+
+      // Check each dependency
+      directDeps->Array.some(depId => checkCircular(depId))
     }
-    if (visited->Array.includes(id)) {
-      return false  // Already checked, no circle
-    }
-
-    visited = visited->Array.concat([id])
-    recursionStack = recursionStack->Array.concat([id])
-
-    // Get direct dependencies
-    let directDeps = state.pluginBundles
-      ->Array.flatMap(bundle => bundle.dependencies)
-      ->Array.filter(dep => dep.pluginId === id)
-      ->Array.map(dep => dep.pluginId)
-
-    // Check each dependency
-    directDeps->Array.exists(depId => checkCircular(depId))
   }
 
   checkCircular(pluginId)
@@ -336,12 +338,14 @@ let getImpactOfDisablingPlugin = (
   let directUsers = findPanelsRequiringPlugin(pluginId, state)
   let transitiveUsers = state.portfolios
     ->Array.filter(portfolio =>
-      portfolio.panels->Array.exists(panelId =>
+      portfolio.panels->Array.some(panelId =>
         getAllDependencies(panelId, state)->Array.includes(pluginId)
       )
     )
     ->Array.flatMap(portfolio => portfolio.panels)
-    ->Array.uniq
+    ->Array.reduce([], (acc, id) =>
+      if acc->Array.includes(id) { acc } else { acc->Array.concat([id]) }
+    )
 
   {
     directUsers: directUsers,
@@ -366,7 +370,9 @@ let buildDependencyGraph = (
   let allPlugins = state.pluginBundles
     ->Array.flatMap(bundle => bundle.plugins)
     ->Array.concat(state.pluginConfigs->Array.map(c => c.pluginId))
-    ->Array.uniq
+    ->Array.reduce([], (acc, id) =>
+      if acc->Array.includes(id) { acc } else { acc->Array.concat([id]) }
+    )
 
   allPlugins->Array.map(pluginId => {
     let directDeps = state.pluginBundles
@@ -406,21 +412,26 @@ type semver = {
 let parseSemver = (version: string): option<semver> => {
   // Simple parser - would use regex in real implementation
   try {
-    let parts = version->String.split("-")[0]->String.split("+")[0]->String.split(".")
-    
+    let parts = version
+      ->String.split("-")
+      ->Array.getUnsafe(0)
+      ->String.split("+")
+      ->Array.getUnsafe(0)
+      ->String.split(".")
+
     if (parts->Array.length < 3) {
       None
     } else {
       Some({
-        major: int_of_string(parts[0]),
-        minor: int_of_string(parts[1]),
-        patch: int_of_string(parts[2]),
-        preRelease: parts->Array.length > 3 ? Some(parts[3]) : None,
+        major: int_of_string(parts->Array.getUnsafe(0)),
+        minor: int_of_string(parts->Array.getUnsafe(1)),
+        patch: int_of_string(parts->Array.getUnsafe(2)),
+        preRelease: parts->Array.length > 3 ? Some(parts->Array.getUnsafe(3)) : None,
         build: None,
       })
     }
-  } catch (_) {
-    None
+  } catch {
+  | _ => None
   }
 }
 
@@ -453,34 +464,34 @@ let satisfiesSemver = (version: string, requirement: string): bool => {
     let r = r->Option.getExn
     
     // Exact match
-    if (requirement->String.starts_with("=")) {
+    if (requirement->String.startsWith("=")) {
       compareSemver(v, r) === 0
     }
     // Greater than or equal
-    else if (requirement->String.starts_with(">=")) {
+    else if (requirement->String.startsWith(">=")) {
       compareSemver(v, r) >= 0
     }
     // Greater than
-    else if (requirement->String.starts_with(">")) {
+    else if (requirement->String.startsWith(">")) {
       compareSemver(v, r) > 0
     }
     // Less than or equal
-    else if (requirement->String.starts_with("<=")) {
+    else if (requirement->String.startsWith("<=")) {
       compareSemver(v, r) <= 0
     }
     // Less than
-    else if (requirement->String.starts_with("<")) {
+    else if (requirement->String.startsWith("<")) {
       compareSemver(v, r) < 0
     }
     // Caret (^1.2.3 = >=1.2.3 <2.0.0)
-    else if (requirement->String.starts_with("^")) {
-      let reqParts = requirement->String.slice(1)->String.split(".")
+    else if (requirement->String.startsWith("^")) {
+      let reqParts = requirement->String.slice(~start=1, ~end=String.length(requirement))->String.split(".")
       compareSemver(v, r) >= 0 &&
       (v.major === r.major || (reqParts->Array.length === 1))
     }
     // Tilde (~1.2.3 = >=1.2.3 <1.3.0)
-    else if (requirement->String.starts_with("~")) {
-      let reqParts = requirement->String.slice(1)->String.split(".")
+    else if (requirement->String.startsWith("~")) {
+      let reqParts = requirement->String.slice(~start=1, ~end=String.length(requirement))->String.split(".")
       compareSemver(v, r) >= 0 &&
       v.major === r.major &&
       (reqParts->Array.length <= 2 || v.minor === r.minor)
@@ -502,14 +513,13 @@ let getLatestSatisfyingVersion = (
   // For now, simulate with some mock versions
   let mockVersions = ["1.0.0", "1.2.0", "1.2.3", "2.0.0", "2.1.0"]
   
-  mockVersions
-    ->Array.filter(version => satisfiesSemver(version, requirement))
-    ->Array.sort((a, b) => {
-      let aParsed = parseSemver(a)->Option.getExn
-      let bParsed = parseSemver(b)->Option.getExn
-      -compareSemver(aParsed, bParsed)  // Descending
-    })
-    ->Array.head()
+  let filtered = mockVersions->Array.filter(version => satisfiesSemver(version, requirement))
+  filtered->Array.sort((a, b) => {
+    let aParsed = parseSemver(a)->Option.getExn
+    let bParsed = parseSemver(b)->Option.getExn
+    Int.toFloat(-compareSemver(aParsed, bParsed))  // Descending
+  })
+  filtered->Array.get(0)
 }
 
 /// Resolve plugin version from multiple requirements
@@ -521,24 +531,22 @@ let resolvePluginVersion = (
   // If no requirements, use latest
   if (requirements->Array.length === 0) {
     getLatestSatisfyingVersion(pluginId, ">=0.0.0", state)
+  } else if (requirements->Array.length === 1) {
+    // If single requirement, use that
+    getLatestSatisfyingVersion(pluginId, requirements->Array.getUnsafe(0), state)
+  } else {
+    // Multiple requirements - find common version
+    let mockVersions = ["1.0.0", "1.2.0", "1.2.3", "2.0.0", "2.1.0"]
+    let satisfying = mockVersions->Array.filter(version =>
+      requirements->Array.every(req => satisfiesSemver(version, req))
+    )
+    satisfying->Array.sort((a, b) => {
+      let aParsed = parseSemver(a)->Option.getExn
+      let bParsed = parseSemver(b)->Option.getExn
+      Int.toFloat(-compareSemver(aParsed, bParsed))  // Descending
+    })
+    satisfying->Array.get(0)
   }
-  
-  // If single requirement, use that
-  if (requirements->Array.length === 1) {
-    getLatestSatisfyingVersion(pluginId, requirements[0], state)
-  }
-  
-  // Multiple requirements - find common version
-  let mockVersions = ["1.0.0", "1.2.0", "1.2.3", "2.0.0", "2.1.0"]
-  let satisfying = mockVersions->Array.filter(version =>
-    requirements->Array.every(req => satisfiesSemver(version, req))
-  )
-  
-  satisfying->Array.sort((a, b) => {
-    let aParsed = parseSemver(a)->Option.getExn
-    let bParsed = parseSemver(b)->Option.getExn
-    -compareSemver(aParsed, bParsed)  // Descending
-  })->Array.head()
 }
 
 /// Check if all plugin dependencies can be satisfied
@@ -576,35 +584,27 @@ let resolveAllDependencies = (
   // Get all transitive dependencies
   let allDeps = getAllDependencies(pluginId, state)
   
-  // Group by plugin
-  let depsByPlugin = allDeps->Array.reduce((acc, depId) => {
-    let existing = acc->Option.getWithDefault([])
-    if (!existing->Array.includes(depId)) {
-      Some(existing->Array.concat([depId]))
-    } else {
-      Some(existing)
-    }
-  }, None)->Option.getWithDefault([])
-  
+  // Deduplicate dependency list
+  let depsByPlugin = allDeps->Array.reduce([], (acc, depId) =>
+    if acc->Array.includes(depId) { acc } else { acc->Array.concat([depId]) }
+  )
+
   // For each plugin, get requirements and resolve
   let results = depsByPlugin->Array.map(depId => {
     let requirements = state.pluginBundles
       ->Array.flatMap(bundle => bundle.dependencies)
       ->Array.filter(dep => dep.pluginId === depId)
       ->Array.map(dep => dep.version)
-    
-    resolveWithOpsmFallback(depId, requirements, state)
+    (depId, resolveWithOpsmFallback(depId, requirements, state))
   })
-  
+
   // Check for failures
-  let failures = results->Array.filter(result => result->Option.isNone)
-  
+  let failures = results->Array.filter(((_, result)) => result->Option.isNone)
+
   if (failures->Array.length > 0) {
-    NotFound(failures->Array.map(f => "Unknown"))
+    NotFound(failures->Array.map(((depId, _)) => depId))
   } else {
-    Resolved(results->Array.map((result, index) => {
-      (depsByPlugin[index], result->Option.getExn)
-    }))
+    Resolved(results->Array.map(((depId, result)) => (depId, result->Option.getExn)))
   }
 }
 
@@ -776,7 +776,7 @@ let countByIsolation = (configs: array<panelConfig>, tier: panelIsolation): int 
 /// Default provisioner state with built-in portfolios and core panel configs.
 let defaultState: provisionerState = {
   portfolios: builtInPortfolios,
-  configs: [
+  panelConfigs: [
     defaultConfig("VAB"),
     defaultConfig("CloudGuard"),
     defaultConfig("Farm"),
@@ -790,7 +790,7 @@ let defaultState: provisionerState = {
     defaultConfig("Interfaces"),
     defaultConfig("Playgrounds"),
   ],
-  installStatus: [
+  panelInstallStatus: [
     ("VAB", Installed),
     ("CloudGuard", Installed),
     ("Farm", Installed),

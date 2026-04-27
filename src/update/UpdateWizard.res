@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 open Model
 open Msg
+open WizardModel
 open WizardCmd
 open WizardMinter
 
 /// Client-side validation rules for immediate feedback
 let validateCapabilitySelection = (capId: string, selectedCaps: array<string>): option<string> => {
   // Define capability conflicts
-  let conflicts: dict<array<string>> = Dict.fromArray(list{
-    ("groove_hard", ["groove_soft"]), // Hard groove conflicts with soft groove
+  let conflicts: dict<array<string>> = Dict.fromArray([
+    ("groove_hard", ["groove_soft"]),
     ("groove_soft", ["groove_hard"]),
     ("contractile_strict", ["contractile_permissive"]),
     ("contractile_permissive", ["contractile_strict"]),
-  })
+  ])
   
   switch Dict.get(conflicts, capId) {
   | Some(conflictingCaps) => {
@@ -53,33 +54,30 @@ let validateSecurityConfig = (config: securityConfig): option<string> => {
   }
 }
 
+type serializedConfig = {
+  creationType: string,
+  capabilities: string,
+  dependencies: string,
+  securityConfig: string,
+}
+
 /// Convert wizard state to JSON strings for backend communication
-let serializeWizardConfig = (wizard: wizardState) => {
+let serializeWizardConfig = (wizard: wizardState): serializedConfig => {
   let creationTypeStr = switch wizard.creationType {
     | Some(CreatingPanel) => "panel"
     | Some(CreatingPlugin) => "plugin"
     | None => "unknown"
   }
-  
-  let capabilitiesJson = 
-    wizard.selectedCapabilities
-    ->Array.map(cap => `"${cap}"`)
-    ->Array.join(",")
-    ->str => `[${str}]`
-  
-  let dependenciesJson = 
-    wizard.dependencies
-    ->Array.map(dep => `{"id":"${dep.pluginId}","version":"${dep.version}"}`)
-    ->Array.join(",")
-    ->str => `[${str}]`
-  
-  let securityJson = `{
-    "trustTier":"${wizard.securityConfig.trustTier->pluginTrustTierToString}",
-    "sandboxPolicy":"${wizard.securityConfig.sandboxPolicy->sandboxPolicyToString}",
-    "networkAccess":${Belt.Bool.toString(wizard.securityConfig.networkAccess)},
-    "filesystemAccess":${Belt.Bool.toString(wizard.securityConfig.filesystemAccess)}
-  }`
-  
+  let capsStr = wizard.selectedCapabilities->Array.map(cap => `"${cap}"`)->Array.join(",")
+  let capabilitiesJson = `[${capsStr}]`
+  let depsStr = wizard.dependencies->Array.map(dep => `{"id":"${dep.pluginId}","version":"${dep.version}"}`)->Array.join(",")
+  let dependenciesJson = `[${depsStr}]`
+  let tierStr = switch wizard.securityConfig.trustTier {
+    | Teranga => "Teranga" | Shield => "Shield" | Ayo => "Ayo"
+  }
+  let netStr = wizard.securityConfig.networkAccess ? "true" : "false"
+  let fsStr = wizard.securityConfig.filesystemAccess ? "true" : "false"
+  let securityJson = `{"trustTier":"${tierStr}","networkAccess":${netStr},"filesystemAccess":${fsStr}}`
   {
     creationType: creationTypeStr,
     capabilities: capabilitiesJson,
@@ -260,18 +258,22 @@ module UpdateWizard = {
 
     | GenerationResult(result) =>
         switch result {
-        | Ok(generationJson) =>
+        | Ok(_generationJson) =>
             let newWizardState = {
               ...model.wizard,
               generating: false,
-              generationResult: Some(Ok(generationJson)),
+              generationResult: Some(GenerationSuccess({
+                filesCreated: [],
+                filesPatched: [],
+                warnings: [],
+              })),
             }
             ({...model, wizard: newWizardState}, Tea_Cmd.none)
         | Error(errorMsg) =>
             let newWizardState = {
               ...model.wizard,
               generating: false,
-              generationResult: Some(Error(errorMsg)),
+              generationResult: Some(GenerationFailed(errorMsg)),
             }
             ({...model, wizard: newWizardState}, Tea_Cmd.none)
         }

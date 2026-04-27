@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
 /// PanLL Wizard Model — State for the plugin/panel creation wizard.
+/// Depends on ProvisionerModel for pluginDependency, securityConfig, etc.
+open ProvisionerModel
 
 /// Wizard step
 type wizardStep =
@@ -14,6 +16,51 @@ type wizardStep =
   | SetupSecurity
   /// Review and generate
   | ReviewAndGenerate
+
+/// What are we creating?
+type creationType =
+  | CreatingPanel
+  | CreatingPlugin
+
+/// Security configuration
+type securityConfig = {
+  /// Trust tier
+  trustTier: pluginTrustTier,
+  /// Sandbox policy
+  sandboxPolicy: sandboxPolicy,
+  /// Network access
+  networkAccess: bool,
+  /// Filesystem access
+  filesystemAccess: bool,
+}
+
+/// Generation result
+type generationResult =
+  | GenerationSuccess({
+      filesCreated: array<string>,
+      filesPatched: array<string>,
+      warnings: array<string>,
+    })
+  | GenerationFailed(string)
+
+/// Template for quick-start configurations
+type wizardTemplate = {
+  /// Template name
+  name: string,
+  /// Template description
+  description: string,
+  /// Category/organization
+  category: string,
+  /// Capabilities to auto-select
+  capabilities: array<string>,
+  /// Dependencies to auto-add
+  dependencies: array<{
+    pluginId: string,
+    version: string,
+  }>,
+  /// Recommended security settings
+  securityConfig: securityConfig,
+}
 
 /// Wizard state
 type wizardState = {
@@ -41,51 +88,6 @@ type wizardState = {
     timestamp: float,
   }>,
 }
-
-/// What are we creating?
-type creationType =
-  | CreatingPanel
-  | CreatingPlugin
-
-/// Template for quick-start configurations
-type wizardTemplate = {
-  /// Template name
-  name: string,
-  /// Template description
-  description: string,
-  /// Category/organization
-  category: string,
-  /// Capabilities to auto-select
-  capabilities: array<string>,
-  /// Dependencies to auto-add
-  dependencies: array<{
-    pluginId: string,
-    version: string,
-  }>,
-  /// Recommended security settings
-  securityConfig: securityConfig,
-}
-
-/// Security configuration
-type securityConfig = {
-  /// Trust tier
-  trustTier: pluginTrustTier,
-  /// Sandbox policy
-  sandboxPolicy: sandboxPolicy,
-  /// Network access
-  networkAccess: bool,
-  /// Filesystem access
-  filesystemAccess: bool,
-}
-
-/// Generation result
-type generationResult =
-  | GenerationSuccess({
-      filesCreated: array<string>,
-      filesPatched: array<string>,
-      warnings: array<string>,
-    })
-  | GenerationFailed(string)
 
 /// Default wizard state
 let defaultWizardState: wizardState = {
@@ -188,7 +190,9 @@ let getCapabilitiesByCategory = (category: string): array<capability> => {
 let getCapabilityCategories = (): array<string> => {
   capabilityRegistry
   ->Array.map(cap => cap.category)
-  ->Array.uniq()
+  ->Array.reduce([], (acc, cat) =>
+    if acc->Array.includes(cat) { acc } else { acc->Array.concat([cat]) }
+  )
 }
 
 /// Check if capability is selected
@@ -221,9 +225,11 @@ let getRequiredDependencies = (state: wizardState): array<string> => {
     capabilityRegistry
     ->Array.find(cap => cap.id === capId)
     ->Option.map(cap => cap.requiredDependencies)
-    ->Option.withDefault([])
+    ->Option.getOr([])
   })
-  ->Array.uniq()
+  ->Array.reduce([], (acc, item) =>
+    if acc->Array.includes(item) { acc } else { Array.concat(acc, [item]) }
+  )
 }
 
 /// Check if all required dependencies are satisfied
@@ -265,24 +271,21 @@ let addDependency = (pluginId: string, version: string, state: wizardState): wiz
 
 /// Validate wizard configuration
 let validateWizardConfig = (state: wizardState): array<string> => {
-  let errors: array<string> = []
-  
-  // Check creation type selected
-  if (state.creationType->Option.isNone) {
-    errors->Array.concat(["Please select what to create"])
+  let errors = ref([]: array<string>)
+
+  if state.creationType->Option.isNone {
+    errors := errors.contents->Array.concat(["Please select what to create"])
   }
-  
-  // Check at least one capability selected
-  if (state.selectedCapabilities->Array.length === 0) {
-    errors->Array.concat(["Please select at least one capability"])
+
+  if state.selectedCapabilities->Array.length === 0 {
+    errors := errors.contents->Array.concat(["Please select at least one capability"])
   }
-  
-  // Check dependencies satisfied
-  if (!areDependenciesSatisfied(state)) {
-    errors->Array.concat(["Some required dependencies are not satisfied"])
+
+  if !areDependenciesSatisfied(state) {
+    errors := errors.contents->Array.concat(["Some required dependencies are not satisfied"])
   }
-  
-  errors
+
+  errors.contents
 }
 
 /// Can proceed to next step?
@@ -387,7 +390,7 @@ let templateRegistry: array<wizardTemplate> = [
       },
     ],
     securityConfig: {
-      trustTier: Trusted,
+      trustTier: Ayo,
       sandboxPolicy: {
         networkAccess: true,
         filesystemAccess: false,
@@ -409,7 +412,7 @@ let templateRegistry: array<wizardTemplate> = [
       },
     ],
     securityConfig: {
-      trustTier: Trusted,
+      trustTier: Ayo,
       sandboxPolicy: {
         networkAccess: false,
         filesystemAccess: false,
@@ -431,7 +434,7 @@ let templateRegistry: array<wizardTemplate> = [
       },
     ],
     securityConfig: {
-      trustTier: HighAssurance,
+      trustTier: Shield,
       sandboxPolicy: {
         networkAccess: false,
         filesystemAccess: true,
@@ -458,10 +461,10 @@ let applyTemplate = (template: wizardTemplate, wizard: wizardState): wizardState
   {
     ...wizard,
     selectedCapabilities: template.capabilities,
-    dependencies: template.dependencies->Array.map(dep => ({
+    dependencies: template.dependencies->Array.map((dep): pluginDependency => ({
       pluginId: dep.pluginId,
       version: dep.version,
-      trustTier: Trusted, // Default trust tier for template dependencies
+      tier: Ayo,
     })),
     securityConfig: template.securityConfig,
     selectedTemplate: Some(template),
