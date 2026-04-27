@@ -79,6 +79,18 @@ fn result_to_json<T: serde::Serialize>(result: Result<T, String>) -> Result<serd
     }
 }
 
+// Wrap a Result whose Ok variant is itself a JSON-encoded string,
+// so the response is `{"ok": true, "result": <object>}` instead of a
+// string-wrapped string the client would have to parse twice.
+fn result_str_to_json(result: Result<String, String>) -> Result<serde_json::Value, String> {
+    match result {
+        Ok(s) => result_to_json(Ok(
+            serde_json::from_str::<serde_json::Value>(&s).unwrap_or(serde_json::Value::Null),
+        )),
+        Err(e) => result_to_json::<serde_json::Value>(Err(e)),
+    }
+}
+
 fn blocking_get(url: &str, timeout_secs: u64) -> Result<String, String> {
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(timeout_secs))
@@ -123,6 +135,13 @@ fn blocking_post_empty(url: &str, timeout_secs: u64) -> Result<String, String> {
 // -----------------------------------------------------------------------
 
 fn main() {
+    // Spawn the groove discovery server (HTTP on 127.0.0.1:8000) on its own
+    // thread before the webview starts. This lets peers in the mesh
+    // (Burble, Vext, Hypatia, VeriSimDB) probe `/.well-known/groove` and
+    // discover PanLL's panel-ui capability for the entire app lifetime.
+    // `spawn()` also starts the mesh-monitor thread internally.
+    groove::spawn();
+
     // Initialize Gossamer app
     let app = App::new("PanLL", 1280, 800);
 
@@ -140,37 +159,66 @@ fn register_commands(app: &mut gossamer_rs::App) {
     // LLM Coding commands
     // -----------------------------------------------------------------------
 
-    // app.command("llm_coding_start", |payload| {
-    //     let session_id = get_str(&payload, "session_id").unwrap_or_default();
-    //     let prompt = get_str(&payload, "prompt").unwrap_or_default();
-    //     result_to_json(llm_coding::start_session(session_id, prompt))
-    // });
+    app.command("llm_coding_init", |_payload| {
+        result_str_to_json(llm_coding::commands::llm_coding_init())
+    });
 
-    // app.command("llm_coding_stop", |payload| {
-    //     let session_id = get_str(&payload, "session_id").unwrap_or_default();
-    //     result_to_json(llm_coding::stop_session(session_id))
-    // });
+    app.command("llm_coding_spawn", |payload: serde_json::Value| {
+        match serde_json::from_value::<llm_coding::types::SpawnRequest>(payload) {
+            Ok(request) => result_str_to_json(llm_coding::commands::llm_coding_spawn(request)),
+            Err(e) => result_to_json::<serde_json::Value>(Err(format!(
+                "Invalid SpawnRequest payload: {}",
+                e
+            ))),
+        }
+    });
 
-    // app.command("llm_coding_status", |payload| {
-    //     let session_id = get_str(&payload, "session_id").unwrap_or_default();
-    //     result_to_json(llm_coding::session_status(session_id))
-    // });
+    app.command("llm_coding_freeze", |payload| {
+        let session_id = get_str(&payload, "session_id").unwrap_or_default();
+        result_str_to_json(llm_coding::commands::llm_coding_freeze(session_id))
+    });
 
-    // app.command("llm_coding_list", |_payload| {
-    //     result_to_json(llm_coding::list_sessions())
-    // });
+    app.command("llm_coding_thaw", |payload| {
+        let session_id = get_str(&payload, "session_id").unwrap_or_default();
+        result_str_to_json(llm_coding::commands::llm_coding_thaw(session_id))
+    });
+
+    app.command("llm_coding_terminate", |payload| {
+        let session_id = get_str(&payload, "session_id").unwrap_or_default();
+        result_str_to_json(llm_coding::commands::llm_coding_terminate(session_id))
+    });
+
+    app.command("llm_coding_list_sessions", |_payload| {
+        result_str_to_json(llm_coding::commands::llm_coding_list_sessions())
+    });
+
+    app.command("llm_coding_session_status", |payload| {
+        let session_id = get_str(&payload, "session_id").unwrap_or_default();
+        result_str_to_json(llm_coding::commands::llm_coding_session_status(session_id))
+    });
+
+    app.command("llm_coding_append_message", |payload| {
+        let session_id = get_str(&payload, "session_id").unwrap_or_default();
+        let content = get_str(&payload, "content").unwrap_or_default();
+        result_str_to_json(llm_coding::commands::llm_coding_append_message(
+            session_id, content,
+        ))
+    });
+
+    app.command("llm_coding_get_messages", |payload| {
+        let session_id = get_str(&payload, "session_id").unwrap_or_default();
+        result_str_to_json(llm_coding::commands::llm_coding_get_messages(session_id))
+    });
 
     // -----------------------------------------------------------------------
-    // Groove commands
+    // Groove discovery — no commands.
+    //
+    // Groove is an external discovery surface: peers probe
+    // `GET /.well-known/groove` on port 8000 to find PanLL's panel-ui
+    // capability. The server is launched in `main()` via `groove::spawn()`,
+    // which also starts the mesh monitor. There is nothing for the webview
+    // to call locally.
     // -----------------------------------------------------------------------
-
-    // app.command("groove_discover", |_payload| {
-    //     result_to_json(groove::discover())
-    // });
-
-    // app.command("groove_status", |_payload| {
-    //     result_to_json(groove::status())
-    // });
 
     // -----------------------------------------------------------------------
     // Service Registry commands (Connected Workbench v0.2.0)
