@@ -41,7 +41,7 @@ let allEntries = (): array<HelpModel.helpEntry> => {
     {
       id: "welcome",
       title: "Welcome to PanLL",
-      body: "PanLL (formally eNSAID: Environment for NeSy-Agentic Integrated Development) is a neurosymbolic mission control interface. It combines symbolic reasoning (formal proofs, type systems, constraints) with neural computation (language models, learned heuristics) in a unified three-panel workspace. PanLL is designed for accessibility-first interaction, putting the operator in control of both symbolic and neural subsystems at all times.",
+      body: "PanLL (formally eNSAID: Environment for NeSy-Agentic Integrated Development) is a neurosymbolic mission control interface. It combines symbolic reasoning (formal proofs, type systems, constraints) with neural computation (language models, learned heuristics) in a unified four-panel workspace (Panel-A ambient substrate, Panel-L logic/symbolic, Panel-N neural, Panel-W world/barycentre). PanLL is designed for accessibility-first interaction, putting the operator in control of both symbolic and neural subsystems at all times.",
       category: GettingStarted,
       panelId: None,
       keywords: [
@@ -53,14 +53,14 @@ let allEntries = (): array<HelpModel.helpEntry> => {
         "getting started",
       ],
     },
-    /// Explains the fundamental three-panel layout.
+    /// Explains the fundamental four-panel layout.
     {
-      id: "three-panel-layout",
-      title: "Understanding the Three-Panel Layout",
-      body: "PanLL organises work into three panels. Panel-L (left) displays constraints, formal structure, and symbolic state — it is where you define what must be true. Panel-N (centre) hosts agent reasoning, OODA loops, and decision-making processes — it is where thinking happens. Panel-W (right) shows results, output, and verification status — it is where you see outcomes. This left-to-right flow mirrors the progression from specification through reasoning to results.",
+      id: "four-panel-layout",
+      title: "Understanding the Four-Panel Layout",
+      body: "PanLL organises work into four panels. Panel-A (Ambient) provides persistent context and ergonomic substrate around the workspace. Panel-L (Logic) displays constraints, formal structure, and symbolic state — it is where you define what must be true. Panel-N (Neural) hosts agent reasoning, OODA loops, and decision-making processes — it is where thinking happens. Panel-W (World/Barycentre) shows results, output, and verification status — it is where you see outcomes. The L + N orbiting W relationship is the Binary Star core; Panel-A surrounds as ambient substrate. Position is design intuition rather than architectural — the relationship is by flow and viewing perspective.",
       category: GettingStarted,
       panelId: None,
-      keywords: ["panels", "layout", "three-panel", "panel-l", "panel-n", "panel-w", "workspace"],
+      keywords: ["panels", "layout", "four-panel", "three-panel", "panel-a", "panel-l", "panel-n", "panel-w", "ambient", "binary star", "workspace"],
     },
     /// How to use the panel switcher to navigate between tools.
     {

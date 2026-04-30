@@ -158,9 +158,9 @@ These choices may look unusual but are intentional:
 
 ### binary-star
 
-**Decision:** Three panel types: Panel-L (symbolic/human), Panel-N (neural/machine), Panel-W (world/shared)
+**Decision:** Four panel types: Panel-A (ambient/substrate), Panel-L (logic/symbolic), Panel-N (neural/machine), Panel-W (world/shared)
 
-**Why:** Neurosymbolic architecture requires clear separation of human reasoning, machine inference, and shared world state
+**Why:** L + N orbit W in the Binary Star core (clear separation of human reasoning, machine inference, and shared world state); Panel-A surrounds as ambient substrate for persistent context and ergonomic support.
 
 ### vexometer-cognitive-load
 

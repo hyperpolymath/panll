@@ -21,7 +21,9 @@ context = """Traditional IDEs treat AI as tool or assistant (Human-as-primary, M
 Need architecture that enables genuine co-working without subordination."""
 decision = """Model Human and Machine as Binary Star system — two gravitationally bound entities
 orbiting a shared Barycentre (the task/artifact). Neither is primary.
-Three panels: Panel-L (Symbolic/Human), Panel-N (Neural/Machine), Panel-W (World/Barycentre)."""
+Four panels (three orbital + one ambient): Panel-L (Symbolic/Human), Panel-N (Neural/Machine),
+Panel-W (World/Barycentre), Panel-A (Ambient substrate). The L + N orbiting W relationship is
+the Binary Star core; Panel-A surrounds as ambient substrate for persistent context."""
 consequences-positive = [
   "Enables sustained co-working without constant context switching",
   "Operator can see Machine reasoning stream in real-time (Panel-N)",
@@ -105,8 +107,10 @@ license-policy = "All original code PMPL-1.0-or-later. Third-party dependencies 
 # --- Design Rationale ---
 
 [design-rationale]
-three-pane-layout = """Parallel layout (L/N/W side-by-side) emphasises simultaneity.
-Panel-L (left) = Symbolic, Panel-N (middle) = Neural, Panel-W (right) = World.
+four-pane-layout = """Parallel layout (A/L/N/W) emphasises simultaneity.
+Panel-A = Ambient substrate, Panel-L = Logic (role: Symbolic), Panel-N = Neural,
+Panel-W = World/Barycentre. Position is design intuition (L on the left, W central)
+not architectural; the architectural relationship is by flow + viewing perspective.
 Layout inspired by music production DAWs (multiple simultaneous views)."""
 binary-star-metaphor = """Metaphor from astrophysics: two stars orbiting shared centre of mass.
 Human = symbolic star, Machine = neural star. Barycentre = task/artifact.
