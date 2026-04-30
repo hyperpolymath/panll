@@ -89,7 +89,7 @@ It is:
 
 == Architecture
 
-=== The Three-Pane Parallel Layout
+=== The Four-Pane Parallel Layout
 
 [cols="1,3"]
 

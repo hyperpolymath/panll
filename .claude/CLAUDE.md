@@ -48,7 +48,7 @@ deno task test:coverage
 - **TEA (The Elm Architecture)** in ReScript — Model/Msg/Update/View/Subscriptions
 - **Gossamer** (Zig + WebKitGTK) backend — migrated from Tauri 2.0
 - **Elixir/BEAM** optional middleware (`beam/panll_beam`)
-- **106 panels** across three panes: Panel-L (Symbolic), Panel-N (Neural), Panel-W (World)
+- **106 panels** across four panes: Panel-A (Ambient), Panel-L (Logic, role: Symbolic), Panel-N (Neural), Panel-W (World). Panel-L + Panel-N orbit Panel-W in the Binary Star core; Panel-A surrounds as ambient substrate.
 
 ## Key Files
 
