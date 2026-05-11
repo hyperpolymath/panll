@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (2026-05-11 — Harness schema: Binary Star architecture declaration)
+- **`binary_star` object in panll-harness-v2 schema** — panels can now declare
+  their relationship to the Binary Star architecture (panes A/L/N/W) via
+  four optional fields:
+  - `spans` — panes the panel inhabits (primary state or computation)
+  - `flow` — ordered sequence describing data/control movement
+  - `surfaces_in` — panes where outputs become visible to other panels
+  - `perspective` — vantage point (canonical: observer, meta-observer, actor,
+    sensor, transformer)
+
+  Backward compatible: all fields optional, existing valid v2 manifests remain
+  valid. Unblocks `hyperpolymath/hypatia#197` and `hyperpolymath/hypatia#177`.
+
 ### Fixed (2024-04-15 — v0.2.0 Panic Attack Remediation)
 - **Critical Build Issues** — Resolved 37 compilation errors and warnings during panic attack:
   - Fixed `http_client` import syntax in `service_registry.rs`
