@@ -119,6 +119,43 @@
       "type": "string",
       "description": "Clade taxonomy path for topic-based event routing"
     },
+    "binary_star": {
+      "type": "object",
+      "description": "Declares this panel's relationship to the Binary Star architecture. Panels do not belong to a single pane — they span, flow between, and surface in panes by role. Pane letters: A (Ambient), L (Logic / symbolic), N (Neural), W (World).",
+      "properties": {
+        "spans": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["A", "L", "N", "W"]
+          },
+          "uniqueItems": true,
+          "description": "Panes this panel inhabits (i.e. holds primary state or computation in). A panel may span multiple panes; e.g. a meta-observer that holds both a rules engine (L) and neural models (N) declares spans = [\"L\", \"N\"]."
+        },
+        "flow": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["A", "L", "N", "W"]
+          },
+          "description": "Ordered sequence of pane letters describing how data or control moves through the panel's pipeline. Order matters; repeats are allowed (a loop returning to L is flow = [\"L\", \"N\", \"L\"])."
+        },
+        "surfaces_in": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["A", "L", "N", "W"]
+          },
+          "uniqueItems": true,
+          "description": "Panes where this panel's outputs (findings, dispatches, view updates) become visible to other panels. Typically a subset of, or disjoint from, spans — e.g. a panel that spans [L, N] may surface its dispatches in W."
+        },
+        "perspective": {
+          "type": "string",
+          "description": "Vantage point or role within the Binary Star architecture. Canonical values: \"observer\" (reads/displays state), \"meta-observer\" (observes other panels' state), \"actor\" (takes actions on the world), \"sensor\" (raw data ingestion), \"transformer\" (converts data between panes). Other values permitted but should be added to this enum over time."
+        }
+      },
+      "additionalProperties": false
+    },
     "integrations": {
       "type": "object",
       "description": "Connections to other PanLL services",
