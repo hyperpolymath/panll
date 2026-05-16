@@ -168,7 +168,7 @@ jobs:
       - name: Check for tsconfig
         run: |
           if [ -f "tsconfig.json" ]; then
-            echo "❌ tsconfig.json detected - use ReScript instead"
+            echo "❌ tsconfig.json detected - use AffineScript instead"
             exit 1
           fi
           echo "✅ No tsconfig.json"

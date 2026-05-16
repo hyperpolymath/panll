@@ -122,7 +122,7 @@ These are hard requirements — CI and pre-commit hooks fail if any check fails.
 - severity: warning
 
 ### no-python
-- description: No Python files (use Julia/Rust/ReScript)
+- description: No Python files (use Julia/Rust/AffineScript)
 - run: test -z "$(find . -name '*.py' -not -path '*/deps/*' -not -path '*/node_modules/*' 2>/dev/null)"
 - severity: warning
 

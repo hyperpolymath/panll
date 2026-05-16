@@ -84,7 +84,7 @@ It is not needed for local development where all services are started manually.
 === Purpose
 
 The Julia middleware layer handles numeric analysis, calibration, and batch processing
-tasks that are impractical in the Rust/ReScript stack. This includes metrics computation
+tasks that are impractical in the Rust/AffineScript stack. This includes metrics computation
 (e.g., proof complexity statistics, type-check latency distributions), statistical
 hypothesis testing over telemetry data, and data pipeline processing for research
 workflows built on PanLL's proof-carrying data.
