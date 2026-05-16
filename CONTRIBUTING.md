@@ -8,7 +8,7 @@ Before you dive in, it helps to understand _why_ PanLL uses the stack it does.
 These aren't arbitrary preferences — they're lessons learned from building a
 14-panel stateful application.
 
-**ReScript instead of TypeScript** — PanLL has 26,000+ lines of state management
+**AffineScript instead of TypeScript** — PanLL has 26,000+ lines of state management
 across 14 panels. TypeScript's structural type system means `any` leaks are
 always one cast away, and discriminated unions require manual type guards that
 are easy to forget. ReScript's sound type system means if it compiles, the types
