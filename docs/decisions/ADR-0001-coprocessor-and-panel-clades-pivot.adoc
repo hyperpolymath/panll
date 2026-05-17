@@ -62,7 +62,16 @@ divergence ("rot"):
   mode this ADR exists to prevent.
 * Do **not** delete the 38 legacy Rust panel dirs — they are port-reference
   until clade parity, then removed (git history preserves them regardless).
-* Do **not** follow `oo7`/`jtv` patterns anywhere in the standard route.
+* Do **not** look at `oo7-toolchain` ("007") or `jtv` at all — they are
+  done separately, are substantially different, and will confuse the
+  standard route.
+* **Trust only the Axiom.jl general form.** Any coprocessor/backend code
+  in the estate that does *not* resemble the Axiom.jl general form
+  (including `src-gossamer/src/coprocessor/`, panel-clades clade drafts,
+  and the 38 legacy panel dirs) is presumed bot-generated mess, third-party
+  interference, a major failure, or nowhere near complete. It is **not**
+  reference material and must not be used to infer the design. When in
+  doubt, defer to the re-validated Axiom.jl approach, not to in-repo code.
 
 == Consequences
 
