@@ -26,26 +26,12 @@ use std::env;
 // Module imports
 // -----------------------------------------------------------------------
 
-/// LLM Coding — multi-session Claude/LLM coordinator.
-mod llm_coding;
-
-/// Groove — Gossamer groove discovery endpoint (port 8000).
-mod groove;
-
-/// Service Registry — centralized lifecycle management for backend services (v0.2.0).
-mod service_registry;
-
-/// Settings — user configuration persistence and management (v0.2.0).
-mod settings;
-
-/// Identity — named identity snapshots and team replication (v0.2.0).
-mod identity;
+// Backend logic lives in the `panll` library crate (GTK-free, unit-tested).
+use panll::{groove, identity, llm_coding, service_registry, settings};
 
 /// System Tray — system tray integration and service toggling (v0.2.0).
+/// Stays in the binary: it depends on `gossamer_rs` (GTK/WebKit).
 mod system_tray;
-
-/// HTTP Client — shared HTTP client for backend service connections.
-pub mod http_client;
 
 // Constants and helpers (moved from old Tauri main.rs)
 // ===========================================================================

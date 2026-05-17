@@ -44,6 +44,12 @@ pub enum CoproBackend {
 
 impl CoproBackend {
     /// Parse a backend name string into a `CoproBackend`.
+    ///
+    /// Inherent (not `std::str::FromStr`) on purpose: it returns `Option`
+    /// for ergonomic call sites and accepts short aliases ("vec", "gfx").
+    /// `FromStr` would force a `Result` with an error type and ripple
+    /// through every caller for no behavioural gain.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "maths" | "math" => Some(Self::Maths),

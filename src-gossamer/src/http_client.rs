@@ -270,3 +270,52 @@ pub mod blocking {
         matches!(client.get(&url).send(), Ok(resp) if resp.status().is_success())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn endpoint_strips_trailing_slash() {
+        let e = ServiceEndpoint::new("http://localhost:8080/");
+        assert_eq!(e.base_url, "http://localhost:8080");
+        // Multiple trailing slashes are all stripped.
+        let e2 = ServiceEndpoint::new("http://localhost:8080///");
+        assert_eq!(e2.base_url, "http://localhost:8080");
+    }
+
+    #[test]
+    fn endpoint_preserves_path_without_trailing_slash() {
+        let e = ServiceEndpoint::new("http://localhost:8080/api");
+        assert_eq!(e.base_url, "http://localhost:8080/api");
+    }
+
+    #[test]
+    fn endpoint_default_timeout_is_ten_seconds() {
+        let e = ServiceEndpoint::new("http://x");
+        assert_eq!(e.timeout, Duration::from_secs(DEFAULT_TIMEOUT_SECS));
+        assert_eq!(e.timeout, Duration::from_secs(10));
+    }
+
+    #[test]
+    fn with_timeout_overrides_default() {
+        let e = ServiceEndpoint::new("http://x").with_timeout(3);
+        assert_eq!(e.timeout, Duration::from_secs(3));
+    }
+
+    #[test]
+    fn blocking_get_raw_errors_on_unreachable_host() {
+        // 127.0.0.1:1 is reserved/closed — connection is refused fast, so this
+        // exercises the error path deterministically without a live server.
+        let e = ServiceEndpoint::new("http://127.0.0.1:1").with_timeout(2);
+        let result = blocking::get_raw(&e, "/health");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("127.0.0.1:1"));
+    }
+
+    #[test]
+    fn blocking_check_health_false_on_unreachable_host() {
+        let e = ServiceEndpoint::new("http://127.0.0.1:1").with_timeout(2);
+        assert!(!blocking::check_health(&e, "/health"));
+    }
+}

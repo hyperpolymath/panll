@@ -109,7 +109,6 @@ fn ffi_so_path() -> std::path::PathBuf {
 /// - "axiom": Queries Axiom.jl at localhost:7780/api/compute
 /// - "boj": Queries BoJ server at localhost:7800/invoke
 /// - "local": Dispatches through Zig FFI if loaded, else returns stub
-
 pub async fn query_compute_engine(
     engine_id: String,
     operation: String,
@@ -163,7 +162,6 @@ pub async fn query_compute_engine(
 ///
 /// Probes Axiom.jl and BoJ endpoints, includes FFI-backed local backends
 /// if the Zig library is loaded.
-
 pub async fn discover_compute_devices() -> Result<String, String> {
     let mut devices: Vec<ComputeDevice> = Vec::new();
 
@@ -222,7 +220,6 @@ pub async fn discover_compute_devices() -> Result<String, String> {
 ///   - `copro_free(ptr: *mut u8)`
 ///
 /// If `lib_path` is empty, uses runtime discovery via `ffi_so_path()`.
-
 pub async fn coprocessor_load_ffi(lib_path: String) -> Result<String, String> {
     let path = if lib_path.is_empty() {
         ffi_so_path().to_string_lossy().to_string()
@@ -289,7 +286,6 @@ pub async fn coprocessor_load_ffi(lib_path: String) -> Result<String, String> {
 /// - `backend` — Backend name (e.g. "maths", "vector", "tensor")
 /// - `operation` — Operation string (e.g. "matrix_multiply", "fft")
 /// - `payload` — JSON-encoded payload for the operation
-
 pub async fn coprocessor_ffi_dispatch(
     backend: String,
     operation: String,
@@ -384,7 +380,6 @@ pub async fn coprocessor_ffi_dispatch(
 
 /// Return the current FFI status — whether the library is loaded, which
 /// backends are available locally, and system resource information.
-
 pub async fn coprocessor_ffi_status() -> Result<String, String> {
     // Extract FFI state in a tight scope — no MutexGuard across async boundary.
     let (ffi_loaded, ffi_lib_path, available_backends) = {
@@ -429,7 +424,6 @@ pub async fn coprocessor_ffi_status() -> Result<String, String> {
 ///
 /// Checks if the .so exists and calls it. Falls back to a status message
 /// if the FFI is not loaded.
-
 pub async fn coprocessor_dispatch_local(
     operation: String,
     input: String,
@@ -469,7 +463,6 @@ pub async fn coprocessor_dispatch_local(
 /// Check if the Zig FFI shared library is available (Phase 2).
 ///
 /// Returns JSON with FFI status, CPU core count, and GPU availability.
-
 pub async fn coprocessor_check_ffi() -> Result<String, String> {
     // Delegate to the new status command for consistency.
     coprocessor_ffi_status().await
@@ -480,7 +473,6 @@ pub async fn coprocessor_check_ffi() -> Result<String, String> {
 /// Returns mock benchmark results (MFLOPS, memory bandwidth, latency).
 /// When the Zig FFI is built, this will run actual compute benchmarks
 /// via `copro_dispatch` with a "benchmark" operation.
-
 pub async fn coprocessor_benchmark() -> Result<String, String> {
     let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
     let ffi_available = guard.loaded;
@@ -508,7 +500,6 @@ pub async fn coprocessor_benchmark() -> Result<String, String> {
 /// Query local system resources — CPU utilisation, GPU memory (Phase 2).
 ///
 /// Returns JSON with cpu_utilisation (0.0–1.0) and gpu_memory_mb.
-
 pub async fn coprocessor_local_resources() -> Result<String, String> {
     let cpu_utilisation = super::read_cpu_utilisation();
     let gpu_memory_mb = super::estimate_gpu_memory_mb();
@@ -531,7 +522,6 @@ pub async fn coprocessor_local_resources() -> Result<String, String> {
 ///   1. If Zig FFI loaded and operation is math/vector/tensor -> local FFI
 ///   2. If Axiom.jl is reachable -> remote HTTP
 ///   3. Fallback to BoJ cartridge
-
 pub async fn coprocessor_smart_dispatch(
     operation: String,
     payload: String,

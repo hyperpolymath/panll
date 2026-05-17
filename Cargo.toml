@@ -20,6 +20,12 @@ edition = "2021"
 license = "PMPL-1.0-or-later"
 repository = "https://github.com/hyperpolymath/panll"
 
+# Testable logic library — GTK/WebKit-free. `cargo test --lib` runs without
+# linking libgossamer or the GTK/WebKit stack. The bin depends on this lib.
+[lib]
+name = "panll"
+path = "src-gossamer/src/lib.rs"
+
 [[bin]]
 name = "panll-gossamer"
 path = "src-gossamer/src/main.rs"
