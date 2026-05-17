@@ -1,0 +1,111 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= ADR-0001: Panel backend source-of-truth, coprocessor model, and the panel-clades pivot
+:toc: left
+:sectnums:
+
+[cols="1,3"]
+|===
+| Status   | Accepted (2026-05-17)
+| Deciders | Jonathan Jewell (owner)
+| Context  | PanLL tech-debt remediation surfaced two divergent panel backends and an unverified coprocessor story
+|===
+
+== Context
+
+A tech-debt remediation pass on `src-gossamer/` (D1–D5, lib/bin split,
+coprocessor FFI — see `docs/TECHNICAL_DEBT.md`, PR #37) uncovered structural
+divergence ("rot"):
+
+. **Two parallel panel backends.** `src-gossamer/` is a pure-Rust monolith
+  (112 `.rs`, raw C ABI) — it is what the binary builds. `panel-clades/` is
+  the estate-conformant design (Idris2 ABI with safety proofs + Zig FFI +
+  131 `.a2ml` clade specs). They have diverged; `src-gossamer/` had ~38
+  panel backends orphaned (declared by no crate root → never compiled).
+. **`panel-clades/` is spec-complete but implementation-incomplete.** Its
+  container/, `ffi/zig/`, `.devcontainer/` are uninstantiated rsr-template
+  shells (`{{PROJECT_NAME}}`/`{{project}}` placeholders, `just init` never
+  run). The a2ml clade specs and Idris2 ABI declarations are real; the Zig
+  FFI implementation and concrete build/container are not.
+. **Coprocessor support is mostly unverified.** Across the estate, coprocessor
+  support was attempted via a "standard approach"; *only Axiom.jl actually
+  completed it*. `oo7-toolchain` ("007") and `jtv` are experimental designs
+  that diverge substantially and are **not** reusable as the model.
+
+== Decision
+
+. **Source of truth = `panel-clades/`** (Idris2 ABI + Zig FFI + a2ml clades).
+  This is the estate-conformant target (API=Zig, FFI=Zig, ABI=Idris2).
+. **`src-gossamer/` (Rust) is frozen legacy.** No new feature work. PR #37 is
+  *interim legacy-stabilisation only* (keeps the legacy buildable during
+  migration); it is not the go-forward.
+. **Reference = Axiom.jl's _architectural approach_, not its code.** We adopt
+  the *pattern* Axiom.jl uses to make use of many heterogeneous processors
+  and organise the compute backend — not its coprocessor implementation.
+  It is the single estate instance where the standard approach reached
+  completion. `oo7-toolchain` ("007") and `jtv` are explicitly **out of
+  scope** for reuse (too experimental; substantial design change) and are
+  tracked separately, untouched by the standard pattern.
+. **Axiom.jl's approach must be re-characterised before it is treated as
+  the reference.** "Only Axiom.jl made it to the end, and it likely needs
+  looking at again." No downstream clade/backend implementation proceeds
+  until that approach is documented and re-validated.
+. **Coprocessor clade backend set (11):** FPGA, DSP, math, physics, tensor,
+  vector, I/O, audio, neural, crypto, **quantum**. (Supersedes the legacy
+  Rust enum, which lacked FPGA/DSP; Graphics dropped.)
+
+== Anti-goals (explicit "do not get excited")
+
+* Do **not** instantiate the `panel-clades/` template, write Zig FFI, or
+  build speculative containers/coprocessor code **before** Axiom.jl is
+  obtained and re-audited. Building on an unverified model is the failure
+  mode this ADR exists to prevent.
+* Do **not** delete the 38 legacy Rust panel dirs — they are port-reference
+  until clade parity, then removed (git history preserves them regardless).
+* Do **not** look at `oo7-toolchain` ("007") or `jtv` at all — they are
+  done separately, are substantially different, and will confuse the
+  standard route.
+* **Trust only the Axiom.jl general form.** Any coprocessor/backend code
+  in the estate that does *not* resemble the Axiom.jl general form
+  (including `src-gossamer/src/coprocessor/`, panel-clades clade drafts,
+  and the 38 legacy panel dirs) is presumed bot-generated mess, third-party
+  interference, a major failure, or nowhere near complete. It is **not**
+  reference material and must not be used to infer the design. When in
+  doubt, defer to the re-validated Axiom.jl approach, not to in-repo code.
+
+== Consequences
+
+* The F1 plan in `docs/TECHNICAL_DEBT.md` ("wire the 38 Rust panels") is
+  **void** — replaced by: regenerate panels as clades, modelled on the
+  re-audited Axiom.jl standard route.
+* Critical path is gated on **characterising + re-validating Axiom.jl's
+  backend-organisation approach** (the pattern, not the code). Axiom.jl is
+  not present in `~/dev/repos`; obtaining it (or an authoritative write-up
+  of its approach) is the unblock. `jtv` is unlocated and off the standard
+  route anyway.
+* Phasing: P0 record+freeze (this ADR) → **GATE: characterise + re-validate
+  Axiom.jl's approach** → P1 minimal non-speculative dev-env/`/dev/tools`
+  provisioning → P2 coprocessor clade exemplar (Axiom.jl-pattern, 11
+  backends) → P3 bulk panel→clade.
+
+== Gate outcome (2026-05-17)
+
+Axiom.jl cloned to `~/dev/repos/Axiom.jl`; approach characterised in
+`docs/architecture/AXIOM-GENERAL-FORM.adoc`. Re-validation:
+
+* Idris2 ABI (`src/Abi/*.idr`) — **typechecks clean** (Idris2 0.8.0).
+* Zig FFI (`ffi/zig/src/main.zig`) — **fails to build**: 17 `Axiom.jl_*`
+  invalid identifiers from a bad token substitution (bot/interference
+  mess, per the anti-goals above). Header/tests/README are clean; design
+  is sound; trivial `s/Axiom\.jl_/axiom_/` repair in the Axiom.jl repo.
+* Same corruption class also present in `panel-clades/ffi/zig/`.
+
+**Verdict: gate PASSED with caveat.** Pattern + formal contract trusted →
+P2 *design* may proceed. P2 *build* is gated on the Axiom.jl `main.zig`
+de-corruption landing (separate repo; owner decision pending).
+
+== Status of related artefacts
+
+* PR #37 (`fix/tech-debt-remediation`): merge as legacy-stabilisation or shelve.
+* `feat/panel-clades-pivot`: carries this ADR + legacy freeze marker only.
+* `docs/TECHNICAL_DEBT.md`: F1 section superseded by this ADR.

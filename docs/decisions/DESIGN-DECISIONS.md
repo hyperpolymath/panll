@@ -477,3 +477,7 @@ PMPL (based on MPL) requires source attribution. Blake3 provenance chains auto-g
 ---
 
 *Design decisions are numbered sequentially. DD-019 through DD-021 and DD-023 are reserved (not yet assigned). Superseded decisions retain their number with status changed to "Superseded by DD-XXX".*
+
+## ADR-0001 (2026-05-17): panel-clades pivot
+
+SoT = `panel-clades/` (Idris2 ABI + Zig FFI + a2ml clades). `src-gossamer/` Rust = frozen legacy. Coprocessor = Axiom.jl 's organising **approach** (not code); backends: FPGA, DSP, math, physics, tensor, vector, I/O, audio, neural, crypto, quantum. oo7/jtv experimental, out of scope. See `docs/decisions/ADR-0001-coprocessor-and-panel-clades-pivot.adoc`.
