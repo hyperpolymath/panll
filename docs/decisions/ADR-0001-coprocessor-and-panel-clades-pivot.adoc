@@ -88,6 +88,22 @@ divergence ("rot"):
   provisioning → P2 coprocessor clade exemplar (Axiom.jl-pattern, 11
   backends) → P3 bulk panel→clade.
 
+== Gate outcome (2026-05-17)
+
+Axiom.jl cloned to `~/dev/repos/Axiom.jl`; approach characterised in
+`docs/architecture/AXIOM-GENERAL-FORM.adoc`. Re-validation:
+
+* Idris2 ABI (`src/Abi/*.idr`) — **typechecks clean** (Idris2 0.8.0).
+* Zig FFI (`ffi/zig/src/main.zig`) — **fails to build**: 17 `Axiom.jl_*`
+  invalid identifiers from a bad token substitution (bot/interference
+  mess, per the anti-goals above). Header/tests/README are clean; design
+  is sound; trivial `s/Axiom\.jl_/axiom_/` repair in the Axiom.jl repo.
+* Same corruption class also present in `panel-clades/ffi/zig/`.
+
+**Verdict: gate PASSED with caveat.** Pattern + formal contract trusted →
+P2 *design* may proceed. P2 *build* is gated on the Axiom.jl `main.zig`
+de-corruption landing (separate repo; owner decision pending).
+
 == Status of related artefacts
 
 * PR #37 (`fix/tech-debt-remediation`): merge as legacy-stabilisation or shelve.

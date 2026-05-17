@@ -1,0 +1,109 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= The Axiom.jl General Form — reference for PanLL coprocessor / backend organisation
+:toc: left
+:sectnums:
+
+Characterised 2026-05-17 from `hyperpolymath/Axiom.jl` @ HEAD (cloned to
+`~/dev/repos/Axiom.jl`). This is the *approach* PanLL's `panel-clades`
+coprocessor must follow (per ADR-0001) — the pattern, not Axiom.jl's code.
+
+NOTE: Axiom.jl is the single estate instance where the standard route
+reached completion. Treat **only** code resembling this form as reference;
+everything else (incl. `src-gossamer/src/coprocessor/`) is presumed mess.
+
+== The seven elements of the general form
+
+. **One abstract supertype.** `abstract type AbstractBackend end`
+  (`src/backends/abstract.jl`). Every processor class is a concrete subtype.
+
+. **One concrete backend struct per processor class.** Observed taxonomy:
++
+[cols="1,3"]
+|===
+| Reference / impl | `JuliaBackend` (default, debug/reference), `ZigBackend{lib_path}` (high-perf native)
+| GPU              | `CUDABackend`, `MetalBackend`, `ROCmBackend` — each `{device::Int}`
+| Accelerators     | `TPUBackend` (tensor), `NPUBackend` (neural), `DSPBackend`, `PPUBackend` (physics), `MathBackend`, `FPGABackend`, `VPUBackend` (vector/vision), `QPUBackend` (quantum), `CryptoBackend` — each `{device::Int}`
+|===
++
+Maps to PanLL's 11-backend set: FPGA→FPGA, DSP→DSP, math→Math, physics→PPU,
+tensor→TPU, vector→VPU, neural→NPU, crypto→Crypto, quantum→QPU. *Gap to
+close:* Axiom.jl has no explicit `I/O` or `audio` backend — the form is
+extended by adding subtypes following the identical pattern.
+
+. **A `SmartBackend` per-operation dispatcher.** Routes each kernel to its
+  fastest backend from *recorded benchmark data*, with **graceful fallback
+  to the Julia/reference backend** when the preferred native backend is
+  unavailable. Holds references to candidate backends; dispatch is
+  per-operation (e.g. matmul→BLAS/Julia, gelu→Zig-SIMD), not global.
+
+. **Device selection delegated to `AcceleratorGate`.** Not inline:
+  `select_backend`, `fits_on_device`, `estimate_cost`, `device_capabilities`,
+  `detect_platform`, `DeviceCapabilities`, `PlatformInfo`. Capability- and
+  cost-based selection + platform detection live in a separate registered
+  package (`hyperpolymath/AcceleratorGate`, already in the Julia
+  registration chain). PanLL should consume this, not reinvent it.
+
+. **ABI/FFI split = the estate language architecture.**
+  * **Idris2 ABI = formal spec/scaffold:** `src/Abi/{Types,Layout,Foreign}.idr`,
+    concrete `axiom_*` symbols (no template placeholders), typechecks via
+    `idris2 --source-dir src --check`.
+  * **Zig FFI = authoritative production runtime:**
+    `ffi/zig/{src/main.zig,build.zig,include/axiom.h,test/integration_test.zig}`,
+    exports concrete `axiom_*` C ABI symbols. *"For release/readiness
+    decisions, treat the Zig FFI path as authoritative."*
+  * **Host bridge:** `src/backends/zig_ffi.jl`. Bidirectional —
+    host→runtime (`axiom_process`, `axiom_process_array`) and runtime→host
+    callbacks (`axiom_register_callback`, `axiom_invoke_callback`).
+
+. **Concrete symbol naming.** C ABI symbols are `<project>_*` (here
+  `axiom_*`) — concrete, no `{{placeholders}}`. PanLL clades use a concrete
+  `panll_*` / clade-scoped scheme; placeholder-only files are not done.
+
+. **Honest status precedence.** Julia = reference/fallback; Idris2 ABI =
+  formal scaffold (must typecheck); Zig FFI = authoritative for release.
+  Plus CI: backend-parity + runtime-smoke checks gate readiness.
+
+== Re-validation status (the ADR-0001 gate)
+
+* **Characterised:** ✅ (this document, from the cloned repo).
+* **Self-attested validation (per `Axiom.jl/ABI-FFI-README.md`):** Idris2
+  ABI typechecks; `cd ffi/zig && zig build test` passes; Julia↔Zig path is
+  CI-covered (backend parity + runtime smoke). The repo's `EXPLAINME.adoc`
+  is explicit about caveats (e.g. `@axiom` shape-check is macro-expansion
+  time, not dependent-type).
+* **Independent re-validation (done 2026-05-17):**
+  ** **Idris2 ABI: ✅ PASSES.** `src/Abi/{Types,Layout,Foreign}.idr` all
+     typecheck clean with Idris2 0.8.0 (`/dev/tools/provers/idris2/0.8.0`).
+     The formal contract is sound.
+  ** **Zig FFI: ❌ FAILS — mechanical bot corruption.**
+     `ffi/zig/src/main.zig` has **17** invalid identifiers of the form
+     `Axiom.jl_init`, `Axiom.jl_process`, … — a bad token substitution put
+     the *repo name with the `.jl` extension* where the project token
+     belongs (should be `axiom_init`, `axiom_process`, …). `.` is illegal
+     in a Zig identifier, so `zig build test` (Zig 0.15.2) does not compile.
+  ** **Damage is localised:** `ffi/zig/include/axiom.h`, the integration
+     test, and `ABI-FFI-README.md` are **clean** and correctly use
+     `axiom_*`. Only the implementation file `main.zig` was mangled. The
+     *design* is intact; this is exactly the "bot/interference mess" class
+     ADR-0001 warns about, and is a trivial `s/Axiom\.jl_/axiom_/` repair.
+  ** **Estate spread:** the same corruption/placeholder class is present in
+     `panll/panel-clades/ffi/zig/{build.zig,test/integration_test.zig}`.
+
+=== Gate verdict
+
+**PASSED with caveat.** The architectural general form is characterised and
+the formal Idris2 contract re-validates clean — this document is a
+trustworthy reference for P2 *design*. The reference *Zig implementation*
+needs a trivial de-corruption (Axiom.jl repo, separate from this work)
+before it is a runnable exemplar. P2 build (not design) is gated on that
+repair landing.
+
+== Implication for PanLL panel-clades
+
+`panel-clades/` already mirrors this skeleton (Idris2 `src/abi/*.idr`, Zig
+`ffi/zig/`, a2ml clade specs) but is an *uninstantiated template*. The work
+is to instantiate it *to this exact form*: AbstractBackend supertype + 11
+backend subtypes + Smart dispatcher + AcceleratorGate consumption + concrete
+Idris2 ABI + authoritative Zig FFI + bidirectional host bridge + parity/smoke
+CI. No deviation from the Axiom.jl form.
