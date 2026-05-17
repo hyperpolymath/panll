@@ -55,6 +55,9 @@ libc = "0.2"
 which = "7"
 uuid = { version = "1.22.0", features = ["v4"] }
 
+# Dynamic loading of the Zig coprocessor FFI shared library (Phase 2 data plane)
+libloading = "0.8"
+
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt"] }
 

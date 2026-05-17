@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
-//! Tauri commands for the coprocessor control plane and data plane.
+//! Gossamer commands for the coprocessor control plane and data plane.
 //!
 //! Phase 1: Query external compute engines over IPC/HTTP.
 //!   - Axiom.jl: Unix socket at /tmp/axiom.sock or HTTP at localhost:7780
@@ -13,12 +13,9 @@
 //!     through loaded FFI, falling back to HTTP Axiom.jl if FFI not loaded
 //!   - `coprocessor_ffi_status()` — Report FFI load state and available backends
 
-// TODO: add libloading = "0.8" to Cargo.toml
-// TODO: add once_cell = "1" to Cargo.toml (or use std::sync::LazyLock on Rust 1.80+)
-
 use serde::{Deserialize, Serialize};
 
-use super::{CoproBackend, FFI_STATE};
+use super::{CoproBackend, CoproDispatchFn, CoproFreeFn, CoproInitFn, FFI_STATE};
 
 // ============================================================================
 // Shared types
@@ -241,28 +238,23 @@ pub async fn coprocessor_load_ffi(lib_path: String) -> Result<String, String> {
         ));
     }
 
-    // TODO: Once libloading is in Cargo.toml, replace this block with:
-    //
-    //   let lib = unsafe { libloading::Library::new(&path) }
-    //       .map_err(|e| format!("Failed to load FFI library: {}", e))?;
-    //
-    //   // Resolve copro_init and call it.
-    //   let init: libloading::Symbol<super::CoproInitFn> = unsafe { lib.get(b"copro_init\0") }
-    //       .map_err(|e| format!("Symbol copro_init not found: {}", e))?;
-    //   let rc = unsafe { init() };
-    //   if rc != 0 {
-    //       return Err(format!("copro_init returned error code: {}", rc));
-    //   }
-    //
-    //   // Store library in global state.
-    //   let mut guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
-    //   guard.library = Some(lib);
-    //   guard.loaded = true;
-    //   guard.lib_path = path.clone();
-    //   guard.available_backends = CoproBackend::all().to_vec();
+    // dlopen the library and call its `copro_init` entry point. Loading a
+    // shared object and invoking a foreign symbol are inherently unsafe; the
+    // contract is documented above (the library must export the PanLL ABI).
+    let lib = unsafe { libloading::Library::new(&path) }
+        .map_err(|e| format!("Failed to load FFI library '{}': {}", path, e))?;
 
-    // --- Stub implementation until libloading is added ---
+    {
+        let init: libloading::Symbol<CoproInitFn> = unsafe { lib.get(b"copro_init\0") }
+            .map_err(|e| format!("Symbol copro_init not found: {}", e))?;
+        let rc = unsafe { init() };
+        if rc != 0 {
+            return Err(format!("copro_init returned error code: {}", rc));
+        }
+    }
+
     let mut guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
+    guard.library = Some(lib);
     guard.loaded = true;
     guard.lib_path = path.clone();
     guard.available_backends = CoproBackend::all().to_vec();
@@ -280,7 +272,7 @@ pub async fn coprocessor_load_ffi(lib_path: String) -> Result<String, String> {
             .collect::<Vec<_>>(),
         "cpu_cores": cpu_cores,
         "gpu_memory_mb": gpu_memory_mb,
-        "message": "FFI library registered (stub — actual dlopen pending libloading dep)"
+        "message": "FFI library loaded and copro_init succeeded"
     });
 
     Ok(result.to_string())
@@ -318,38 +310,56 @@ pub async fn coprocessor_ffi_dispatch(
     };
 
     let (route, result_str, success) = if ffi_available {
-        // Dispatch via Zig FFI (C ABI call).
-        //
-        // TODO: Once libloading is in Cargo.toml, replace this with actual symbol call:
-        //
-        //   let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
-        //   let lib = guard.library.as_ref().unwrap();
-        //   let dispatch: libloading::Symbol<super::CoproDispatchFn> =
-        //       unsafe { lib.get(b"copro_dispatch\0") }
-        //           .map_err(|e| format!("Symbol not found: {}", e))?;
-        //   let free: libloading::Symbol<super::CoproFreeFn> =
-        //       unsafe { lib.get(b"copro_free\0") }
-        //           .map_err(|e| format!("Symbol not found: {}", e))?;
-        //
-        //   let backend_u8 = copro_backend.unwrap() as u8;
-        //   let op_cstr = std::ffi::CString::new(operation.as_str())
-        //       .map_err(|e| e.to_string())?;
-        //   let payload_cstr = std::ffi::CString::new(payload.as_str())
-        //       .map_err(|e| e.to_string())?;
-        //
-        //   let result_ptr = unsafe {
-        //       dispatch(backend_u8, op_cstr.as_ptr() as *const u8, payload_cstr.as_ptr() as *const u8)
-        //   };
-        //   let result_cstr = unsafe { std::ffi::CStr::from_ptr(result_ptr as *const i8) };
-        //   let result_string = result_cstr.to_string_lossy().to_string();
-        //   unsafe { free(result_ptr) };
+        // Dispatch via Zig FFI (C ABI call). The guard is held only for the
+        // synchronous duration of the call — there is no `.await` here, so it
+        // never crosses an async boundary.
+        let outcome: Result<String, String> = (|| {
+            let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
+            let lib = guard
+                .library
+                .as_ref()
+                .ok_or_else(|| "FFI reported available but library handle is missing".to_string())?;
 
-        // --- Stub: simulate FFI dispatch ---
-        let stub_result = format!(
-            "{{\"backend\":\"{}\",\"operation\":\"{}\",\"result\":\"FFI stub result\",\"ffi\":true}}",
-            backend, operation
-        );
-        ("ffi", stub_result, true)
+            let backend_u8 = copro_backend.map(|b| b as u8).ok_or_else(|| {
+                format!("Unknown backend: {}", backend)
+            })?;
+            let op_c = std::ffi::CString::new(operation.as_str())
+                .map_err(|e| format!("Invalid operation string: {}", e))?;
+            let payload_c = std::ffi::CString::new(payload.as_str())
+                .map_err(|e| format!("Invalid payload string: {}", e))?;
+
+            // SAFETY: symbols resolved from the live `Library` handle held in
+            // `guard`; pointers passed are valid for the call duration; the
+            // returned pointer is owned by the library and freed via
+            // `copro_free` before the guard drops.
+            unsafe {
+                let dispatch: libloading::Symbol<CoproDispatchFn> = lib
+                    .get(b"copro_dispatch\0")
+                    .map_err(|e| format!("Symbol copro_dispatch not found: {}", e))?;
+                let free: libloading::Symbol<CoproFreeFn> = lib
+                    .get(b"copro_free\0")
+                    .map_err(|e| format!("Symbol copro_free not found: {}", e))?;
+
+                let ptr = dispatch(
+                    backend_u8,
+                    op_c.as_ptr() as *const u8,
+                    payload_c.as_ptr() as *const u8,
+                );
+                if ptr.is_null() {
+                    return Err("copro_dispatch returned a null pointer".to_string());
+                }
+                let s = std::ffi::CStr::from_ptr(ptr as *const std::os::raw::c_char)
+                    .to_string_lossy()
+                    .into_owned();
+                free(ptr);
+                Ok(s)
+            }
+        })();
+
+        match outcome {
+            Ok(r) => ("ffi", r, true),
+            Err(e) => ("ffi", e, false),
+        }
     } else {
         // Fallback: dispatch via HTTP to Axiom.jl.
         match dispatch_via_ffi(&backend, &operation, &payload).await {
