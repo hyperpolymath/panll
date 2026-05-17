@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= src-gossamer — FROZEN LEGACY
+
+*Status: FROZEN LEGACY (2026-05-17).* Do not add features here.
+
+This pure-Rust Gossamer backend is the *legacy* panel backend. The
+source of truth going forward is `panel-clades/` (Idris2 ABI + Zig FFI +
+a2ml clades) — see `docs/decisions/ADR-0001-coprocessor-and-panel-clades-pivot.adoc`.
+
+Permitted changes: security fixes and build-keep-alive only (interim
+legacy-stabilisation, e.g. PR #37). All new panel/coprocessor work
+happens in `panel-clades/`, modelled on Axiom.jl's standard
+backend-organisation approach. The ~38 panel dirs here are
+port-reference until clade parity, then removed.
