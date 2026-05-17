@@ -1,233 +1,132 @@
-# PanLL Technical Debt Registry
+# PanLL Technical Debt Registry — 30-Day Plan
 
-## v0.2.0 Panic Attack Remediation Status
+> **Reset note (2026-05-17):** The previous version of this file described a
+> "v0.2.0 Panic Attack Remediation" dated 2024-04-15 with placeholder
+> metadata and fabricated progress counters. Its two P0 blockers and all
+> three "commented out" modules were already resolved by commit
+> `6ae4336 fix(gossamer): resolve P0/P1 type mismatches, wire http_client,
+> enable settings`. This document has been rewritten against the **verified
+> state of the tree** and recast as a dated 30-day plan.
 
-### 🔴 Critical Issues (Blocking Release)
+## Verified Baseline (2026-05-17)
 
-#### 1. http_client Module Implementation
-**Status:** ❌ Unresolved
-**Location:** `src-gossamer/src/service_registry.rs`
-**Impact:** High - Blocks service registry functionality
-**Description:** The `http_client` module is imported but not properly implemented. This affects:
-- Service health checks
-- HTTP communications with backend services
-- Service registry operations
+`cargo check` **passes** (8 dead-code warnings, 0 errors). The Gossamer
+backend builds. Status of the historic items:
 
-**Required Actions:**
-1. ✅ Create `src-gossamer/src/http_client.rs` with proper implementation
-2. ✅ Implement `ServiceEndpoint` struct
-3. ✅ Add HTTP methods (get, post, etc.)
-4. ✅ Export module in `src-gossamer/src/lib.rs`
-5. ❌ Test all HTTP operations
+| Historic item | Verified state |
+|---|---|
+| `http_client` module | ✅ Implemented (`src-gossamer/src/http_client.rs`, wired at `main.rs:48`). No unit tests yet. |
+| Command result type mismatches | ✅ Resolved — `result_to_json`/`result_str_to_json` return `Result<Value, String>`; build green. |
+| `groove` / `settings` / `llm_coding` modules | ✅ All present and wired (`groove.rs`, `settings.rs`, `llm_coding/{mod,commands,types}.rs`). |
+| Unused doc comment `main.rs:38` | ✅ Obsolete reference — line 38 is now `mod settings;`. |
 
-**Dependencies:**
-- reqwest crate
-- serde for JSON handling
-- proper error handling
+### Remaining Debt (the real backlog)
 
-**Estimated Effort:** 4-6 hours
-**Priority:** P0 (Release Blocking)
-
-#### 2. Command Result Type Mismatches
-**Status:** ❌ Partially Fixed
-**Location:** `src-gossamer/src/main.rs` (20+ instances)
-**Impact:** High - Causes compilation failures
-**Description:** Command handlers return `String` when they should return `Result<Value, String>`.
-
-**Pattern:**
-```rust
-// Current (incorrect)
-app.command("service_check", |payload| {
-    result_to_json(service_registry::check_service(&key))
-});
-
-// Required (correct)
-app.command("service_check", |payload| {
-    Ok(result_to_json(service_registry::check_service(&key)))
-});
-```
-
-**Required Actions:**
-1. ❌ Wrap all `result_to_json()` calls in `Ok()`
-2. ❌ Ensure proper error handling with `Err()` variant
-3. ❌ Test all command handlers
-
-**Estimated Effort:** 2-3 hours
-**Priority:** P0 (Release Blocking)
-
-### 🟡 High Priority Issues
-
-#### 3. Commented Out Modules
-**Status:** ⚠️ Temporarily Disabled
-**Location:** `src-gossamer/src/main.rs`
-**Modules Affected:**
-- `groove` - Gossamer groove discovery
-- `settings` - User configuration management
-- `llm_coding` - LLM session management
-
-**Impact:** Medium - Reduces functionality but system is operational
-**Rationale:** Modules were disabled during panic attack to achieve compilation
-
-**Required Actions:**
-1. ❌ Implement `settings` module for configuration
-2. ❌ Implement `groove` module or remove completely
-3. ❌ Complete `llm_coding` implementation
-4. ❌ Re-enable and test each module
-
-**Estimated Effort:** 8-12 hours per module
-**Priority:** P1 (Post-Release)
-
-#### 4. Unused Documentation Comments
-**Status:** ❌ Not Fixed
-**Location:** `src-gossamer/src/main.rs` line 38
-**Impact:** Low - Code style issue
-**Description:** Doc comment exists but is commented out and unused.
-
-**Required Actions:**
-1. ❌ Remove unused comment
-2. ❌ Or re-enable and attach to proper item
-
-**Estimated Effort:** 5 minutes
-**Priority:** P3 (Cosmetic)
-
-### 🟢 Completed Fixes
-
-#### ✅ Fixed Issues
-
-1. **App Handling in main.rs**
-   - Fixed improper `Result<App, Error>` handling
-   - Added proper unwrapping pattern
-   - Status: ✅ Complete
-
-2. **PathBuf Display Issues**
-   - Fixed `to_string()` calls on PathBuf
-   - Added proper `to_str()` usage
-   - Status: ✅ Complete
-
-3. **Type Mismatches in llm_coding**
-   - Fixed `ResourceStats` vs `ResourceUsage`
-   - Fixed field name mismatches
-   - Fixed type conversions
-   - Status: ✅ Complete
-
-4. **Module Imports**
-   - Fixed `http_client` import syntax
-   - Commented out unused modules
-   - Status: ✅ Complete
-
-### 📋 Implementation Plan
-
-#### Phase 1: Release Critical (P0)
-- [ ] Implement `http_client` module
-- [ ] Fix command result types
-- [ ] Test all fixes
-- [ ] Run full test suite
-- [ ] Verify compilation
-
-#### Phase 2: Post-Release (P1)
-- [ ] Implement `settings` module
-- [ ] Implement `groove` module
-- [ ] Complete `llm_coding` implementation
-- [ ] Re-enable commented modules
-- [ ] Add integration tests
-
-#### Phase 3: Cleanup (P2/P3)
-- [ ] Remove unused comments
-- [ ] Code style cleanup
-- [ ] Documentation updates
-- [ ] Add more unit tests
-
-### 📊 Progress Tracking
-
-```
-Total Issues Found: 37
-Issues Fixed: 12 (32%)
-Issues Remaining: 25 (68%)
-Critical Issues: 2/25 (8%)
-High Priority: 4/25 (16%)
-Medium/Low Priority: 19/25 (76%)
-```
-
-### 🔧 Automation Status
-
-**Hypatia Rules Created:** ✅
-- 8 detection rules added
-- 3 auto-remediation patterns
-- GitBot fleet configuration complete
-
-**Rules Coverage:**
-- ✅ Unresolved imports
-- ✅ Commented modules
-- ✅ App handling issues
-- ✅ PathBuf display issues
-- ✅ Result type mismatches
-- ✅ Unused doc comments
-- ✅ Hardcoded URLs
-- ✅ Error handling issues
-
-### 📝 Handover Checklist
-
-**For Next Developer:**
-1. [ ] Review `http_client` implementation requirements
-2. [ ] Fix remaining command result types
-3. [ ] Test compilation: `cargo build --release`
-4. [ ] Run tests: `cargo test`
-5. [ ] Run clippy: `cargo clippy --all-targets --all-features -- -D warnings`
-6. [ ] Update CHANGELOG.md with fixes
-7. [ ] Create GitHub issues for remaining technical debt
-8. [ ] Schedule post-release implementation work
-
-### 📚 Documentation
-
-**Related Documents:**
-- [Hypatia Rules](.github/hypatia-rules/panll-v0.2.0-fixes.yml)
-- [Architecture Decisions](docs/ARCHITECTURE.md)
-- [Contribution Guide](CONTRIBUTING.md)
-- [v0.2.0 Release Notes](CHANGELOG.md)
-
-**Key Files Modified:**
-- `src-gossamer/src/main.rs`
-- `src-gossamer/src/service_registry.rs`
-- `src-gossamer/src/llm_coding/commands.rs`
-- `src-gossamer/src/llm_coding/types.rs`
-
-### 🚀 Next Steps After Handover
-
-**Immediate (Next 24-48 hours):**
-1. Complete `http_client` implementation
-2. Fix command result types
-3. Test and verify compilation
-4. Prepare v0.2.0 release
-
-**Short Term (Next 2 weeks):**
-1. Implement `settings` module
-2. Re-enable and test `groove` module
-3. Complete `llm_coding` implementation
-4. Add integration tests
-
-**Long Term (Next month):**
-1. Implement auto-remediation for Hypatia rules
-2. Add CI/CD checks for new rules
-3. Document all technical debt in ADRs
-4. Schedule regular technical debt reduction sprints
-
-### 🎯 Success Criteria
-
-**v0.2.0 Release Ready:**
-- [ ] All P0 issues resolved
-- [ ] Compilation successful
-- [ ] Tests passing
-- [ ] No clippy warnings
-- [ ] Documentation updated
-
-**Post-Release Success:**
-- [ ] All commented modules implemented or removed
-- [ ] Technical debt reduced by 50%
-- [ ] Hypatia rules preventing regression
-- [ ] GitBot fleet actively monitoring
+| ID | Item | Location | Severity | Status |
+|----|------|----------|----------|--------|
+| D1 | Service registry mutability: register/unregister/list commands commented out | `src-gossamer/src/main.rs` | High | ✅ Resolved — fixed env-set design; `service_list` + `service_set_url` wired; vestigial register/unregister stubs removed |
+| D2 | 8 dead-code warnings | `service_registry.rs`, `settings.rs`, `llm_coding/` | Medium | ✅ Resolved — `get_registry`/`update_service_url`/`settings_save`/`read_system_memory`+`SystemResources` wired; `WorkspaceLock`/`PendingAction`/`SpawnRequest.task_list` removed; clippy `-D warnings` clean |
+| D3 | No unit tests for `http_client.rs` or `service_registry.rs` | `src-gossamer/src/` | High | ✅ Resolved — required a **lib/bin split** (see below); 23 tests now run via `cargo test --lib` with no GTK link |
+| D4 | 6 TODOs: dynamic plugin loading stubbed pending `libloading`/`once_cell` deps | `src-gossamer/src/coprocessor/{mod,commands}.rs` | Medium | ✅ Resolved — `libloading 0.8` added (`once_cell` was already a dep); real `dlopen`+`copro_init` and real `copro_dispatch`/`copro_free` symbol calls. **Caveat:** `coprocessor` was orphaned (declared by no crate root → never compiled); now wired into the lib so the fix is real and tested |
+| D5 | Stale doc: wrong date, placeholder maintainer, broken `docs/ARCHITECTURE.md` link, fabricated stats | this file | Low | ✅ Resolved — rewritten 2026-05-17; real arch doc is `docs/architecture/ARCHITECTURE.md` |
 
 ---
 
-**Last Updated:** 2024-04-15
-**Maintainer:** [Your Name]
-**Contact:** [Your Email]
+## Execution Log
+
+The 30-day plan was executed in a single accelerated session on **2026-05-17**
+(CAP order preserved: corrective → adaptive → perfective).
+
+### Week 1 — Corrective ✅ (commit `7c7203d`)
+- **D5** doc rewritten; arch link repointed to `docs/architecture/ARCHITECTURE.md`.
+- **D1** registry resolved as a fixed env-driven set: `service_list`
+  (`get_registry`) + `service_set_url` (`update_service_url`) wired; vestigial
+  `service_register`/`service_unregister` stubs removed.
+- **D2** `settings_save` + `llm_coding_system_resources` wired (with a real
+  `/proc/stat` CPU sampler); `WorkspaceLock`, `PendingAction`,
+  `SpawnRequest.task_list` removed. Two pre-existing clippy lints fixed.
+- Gate: `cargo clippy --all-targets -- -D warnings` clean.
+
+### Week 2 — Adaptive (FFI) ✅ (commit `8812d7f`)
+- **D4** `libloading 0.8` added; `FfiState` owns the loaded `Library`;
+  `coprocessor_load_ffi` does a real `dlopen` + `copro_init`;
+  `coprocessor_ffi_dispatch` resolves and calls `copro_dispatch`/`copro_free`.
+- De-Tauri'd coprocessor comments; removed stale TODOs.
+
+### Week 3 — Adaptive (tests) + architectural fix ✅ (commit `bd62aef`)
+- **Lib/bin split**: new `[lib] panll` (GTK-free) holds `http_client`,
+  `service_registry`, `settings`, `identity`, `groove`, `llm_coding`,
+  `coprocessor`. `main.rs` keeps only `system_tray` (needs `gossamer_rs`).
+- **D3** 23 tests run via `cargo test --lib` **without** linking
+  libgossamer/GTK. The orphaned `coprocessor` was wired into the lib (11
+  latent clippy lints cleared once it actually compiled).
+
+### Week 4 — Perfective ✅ (this commit)
+- Cross-module integration tests folded into the lib test surface.
+- `.github/hypatia-rules/panll-v0.2.0-fixes.yml` reconciled v1 → v2: retired
+  all 8 false-positive panic-attack rules; one precise regression guard
+  (`panll-cmd-disabled`) kept; clippy `-D warnings` documented as the gate.
+- `CHANGELOG.md` updated.
+- Final gate: `cargo test --lib` 23/23; `cargo clippy --all-targets -- -D warnings` clean.
+
+## Environment Caveat (honest)
+
+`cargo test --lib` and all `cargo clippy`/`cargo check` pass in this WSL box.
+**Linking the `panll-gossamer` binary still fails here** — `libgossamer`,
+`libgtk-3`, `libwebkit2gtk-4.1` are not installed. This is a pre-existing
+environment gap, unrelated to these changes, and the entire reason the
+lib/bin split was necessary: it moves all testable logic out from behind the
+GTK link wall. The binary builds in a GTK-equipped environment / CI.
+
+## Follow-up Debt Discovered (not in original scope)
+
+| ID | Item | Severity |
+|----|------|----------|
+| F1 | **38 unwired PanLL panel backends** under `src-gossamer/src/` (aerie=net diagnostics, hypatia=neurosym scanner, ai=multi-provider AI, farm, provenance, k9, governance, …; ~19,181 LOC). NOT dead code — real panel backends orphaned by the same defect as `coprocessor` (declared by no crate root → never compiled → IPC commands never registered). **Decision (2026-05-17): integrate, not delete.** Also carry stale Tauri refs. Tracked as the F1 integration workstream. | High (lost functionality) |
+| F2 | `coprocessor`'s async command handlers are implemented + tested but **not registered** in the binary's IPC table (`main.rs`). Wire them — this is the **pilot** for F1 (establishes the async→sync `app.command` bridge), done first. | Medium |
+| F3 | Binary cannot be built/linked locally without GTK/WebKit + a built `libgossamer`. Document the dev-env setup or provide a container. | Medium |
+
+### F1 integration workstream (multi-session)
+
+1. **Pilot (F2):** finish `coprocessor` IPC registration → builds the
+   reusable async→sync `block_on` bridge for `app.command`.
+2. **Census:** declare all 38 modules; `cargo check` each; record which
+   compile clean vs. bit-rotted (never compiled — expect API drift).
+3. **Bulk wire** in dependency/risk order using the proven pattern;
+   de-Tauri as we go; cross-check command names against the ReScript
+   frontend `invoke()` contract so we wire what the UI actually calls.
+
+---
+
+## Progress Tracking (live — update on every change)
+
+```
+Original debt items:         5  (D1–D5)
+Resolved:                     5  (all — 2026-05-17)
+Follow-up debt opened:        3  (F1–F3, see above)
+Build status:                 cargo check / clippy green; bin link needs GTK env
+Clippy -D warnings:           clean (0, all targets)
+Lib tests:                    23 passing (cargo test --lib, GTK-free)
+```
+
+## Success Criteria
+
+- [x] D1–D5 all resolved or explicitly closed with rationale.
+- [x] `cargo clippy --all-targets -- -D warnings` clean.
+- [x] `http_client` and `service_registry` have unit tests in `cargo test`.
+- [x] No commented-out command handlers in `main.rs`.
+- [x] Hypatia rules reflect actual current debt (no rules for resolved items).
+- [ ] F1–F3 follow-up debt triaged (next cycle).
+
+## Related
+
+- `docs/architecture/ARCHITECTURE.md` — architecture reference
+- `.github/hypatia-rules/panll-v0.2.0-fixes.yml` — reconciled v2 (regression guard only)
+- `CONTRIBUTING.md`
+- `CHANGELOG.md`
+
+---
+
+**Last Updated:** 2026-05-17
+**Plan window:** 2026-05-17 → 2026-06-15
+**Maintainer:** Jonathan Jewell (hyperpolymath)

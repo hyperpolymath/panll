@@ -20,6 +20,12 @@ edition = "2021"
 license = "PMPL-1.0-or-later"
 repository = "https://github.com/hyperpolymath/panll"
 
+# Testable logic library — GTK/WebKit-free. `cargo test --lib` runs without
+# linking libgossamer or the GTK/WebKit stack. The bin depends on this lib.
+[lib]
+name = "panll"
+path = "src-gossamer/src/lib.rs"
+
 [[bin]]
 name = "panll-gossamer"
 path = "src-gossamer/src/main.rs"
@@ -54,6 +60,9 @@ regex = "1"
 libc = "0.2"
 which = "7"
 uuid = { version = "1.22.0", features = ["v4"] }
+
+# Dynamic loading of the Zig coprocessor FFI shared library (Phase 2 data plane)
+libloading = "0.8"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt"] }

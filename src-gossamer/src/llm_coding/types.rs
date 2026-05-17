@@ -60,34 +60,6 @@ impl Default for ResourceLimits {
     }
 }
 
-/// A workspace lock preventing concurrent access to a path.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WorkspaceLock {
-    /// Path being locked.
-    pub path: String,
-    /// Session ID holding the lock.
-    pub held_by: String,
-    /// When the lock was acquired (ISO 8601).
-    pub acquired_at: String,
-    /// Whether this is an exclusive (write) lock.
-    pub exclusive: bool,
-}
-
-/// A pending destructive action requiring supervisor approval.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PendingAction {
-    /// Unique action ID.
-    pub id: String,
-    /// Session requesting the action.
-    pub session_id: String,
-    /// Human-readable description.
-    pub description: String,
-    /// Action category.
-    pub category: String,
-    /// When the request was made (ISO 8601).
-    pub requested_at: String,
-}
-
 /// A cross-session message.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionMessage {
@@ -131,8 +103,6 @@ pub struct SpawnRequest {
     pub name: String,
     /// Working directory.
     pub work_dir: String,
-    /// Newline-separated task list.
-    pub task_list: String,
     /// Task description.
     pub task: String,
     /// Constraints for the task.

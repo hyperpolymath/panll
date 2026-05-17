@@ -7,18 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added (2026-05-11 — Harness schema: Binary Star architecture declaration)
-- **`binary_star` object in panll-harness-v2 schema** — panels can now declare
-  their relationship to the Binary Star architecture (panes A/L/N/W) via
-  four optional fields:
-  - `spans` — panes the panel inhabits (primary state or computation)
-  - `flow` — ordered sequence describing data/control movement
-  - `surfaces_in` — panes where outputs become visible to other panels
-  - `perspective` — vantage point (canonical: observer, meta-observer, actor,
-    sensor, transformer)
+### Changed (2026-05-17 — Tech-debt remediation: lib/bin split)
+- **`[lib] panll` crate extracted** — all GTK-free backend logic
+  (`http_client`, `service_registry`, `settings`, `identity`, `groove`,
+  `llm_coding`, `coprocessor`) moved into a library crate. `main.rs` keeps
+  only `system_tray` (depends on `gossamer_rs`). `cargo test --lib` now runs
+  the unit suite (23 tests) without linking libgossamer/GTK/WebKit.
+- **`coprocessor` wired into the build** — it was orphaned (declared by no
+  crate root, never compiled). Now part of the lib, with real Zig FFI
+  dynamic loading via `libloading 0.8` (`dlopen` + `copro_init`,
+  `copro_dispatch`/`copro_free`), replacing the previous no-op stubs.
 
-  Backward compatible: all fields optional, existing valid v2 manifests remain
-  valid. Unblocks `hyperpolymath/hypatia#197` and `hyperpolymath/hypatia#177`.
+### Added (2026-05-17)
+- Service-registry runtime reconfiguration: `service_list` and
+  `service_set_url` IPC commands; `settings_save` (bulk replace);
+  `llm_coding_system_resources` (host memory + `/proc/stat` CPU sampler).
+- Unit + integration tests for `http_client`, `service_registry`,
+  `llm_coding`, `coprocessor`.
+
+### Removed (2026-05-17)
+- Speculative, never-referenced scaffolding: `WorkspaceLock`,
+  `PendingAction`, `SpawnRequest.task_list`, and the vestigial
+  `service_register`/`service_unregister` command stubs.
+- Stale Tauri references in `coprocessor`/`llm_coding` comments.
+
+### Fixed (2026-05-17)
+- `docs/TECHNICAL_DEBT.md` rewritten from a stale 2024-dated placeholder
+  document into a verified, executed plan; broken `docs/ARCHITECTURE.md`
+  link repointed to `docs/architecture/ARCHITECTURE.md`.
+- `.github/hypatia-rules/panll-v0.2.0-fixes.yml` reconciled (v1 → v2):
+  retired 8 false-positive panic-attack rules, kept one precise regression
+  guard for disabled IPC commands.
 
 ### Fixed (2024-04-15 — v0.2.0 Panic Attack Remediation)
 - **Critical Build Issues** — Resolved 37 compilation errors and warnings during panic attack:

@@ -7,8 +7,6 @@
 //! Phase 2: Data plane — local Zig FFI dispatch via shared library loading,
 //!          eliminating HTTP round-trips for supported backends.
 
-// TODO: add libloading = "0.8" to Cargo.toml
-
 pub mod commands;
 
 use serde::{Deserialize, Serialize};
@@ -46,6 +44,12 @@ pub enum CoproBackend {
 
 impl CoproBackend {
     /// Parse a backend name string into a `CoproBackend`.
+    ///
+    /// Inherent (not `std::str::FromStr`) on purpose: it returns `Option`
+    /// for ergonomic call sites and accepts short aliases ("vec", "gfx").
+    /// `FromStr` would force a `Result` with an error type and ripple
+    /// through every caller for no behavioural gain.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "maths" | "math" => Some(Self::Maths),
@@ -120,8 +124,9 @@ pub type CoproDeinitFn = unsafe extern "C" fn();
 
 /// Runtime state for the loaded Zig FFI shared library.
 ///
-/// Wrapped in a `Mutex` and stored as a global static so that Tauri commands
-/// (which are async and may run on different threads) can safely access it.
+/// Wrapped in a `Mutex` and stored as a global static so that Gossamer command
+/// handlers (which are async and may run on different threads) can safely
+/// access it.
 pub struct FfiState {
     /// Whether a library has been successfully loaded and initialised.
     pub loaded: bool,
@@ -133,15 +138,11 @@ pub struct FfiState {
     /// Populated after calling `copro_init`.
     pub available_backends: Vec<CoproBackend>,
 
-    // NOTE: In a real implementation with libloading, we would store:
-    //   pub library: Option<libloading::Library>,
-    // The Library keeps the .so mapped and symbols valid.
-    // We use a bool flag for now since libloading is not yet in Cargo.toml.
-    //
-    // TODO: Once libloading is added to Cargo.toml, replace this with:
-    //   library: Option<libloading::Library>,
-    //   dispatch_sym: Option<libloading::Symbol<'static, CoproDispatchFn>>,
-    //   free_sym: Option<libloading::Symbol<'static, CoproFreeFn>>,
+    /// The dynamically loaded library. Keeping it here keeps the `.so`
+    /// mapped and its symbols valid for the lifetime of the process.
+    /// Symbols are resolved per-call from this handle (the safe pattern —
+    /// no self-referential `'static` symbol storage).
+    pub library: Option<libloading::Library>,
 }
 
 impl FfiState {
@@ -151,6 +152,7 @@ impl FfiState {
             loaded: false,
             lib_path: String::new(),
             available_backends: Vec::new(),
+            library: None,
         }
     }
 }
@@ -161,7 +163,7 @@ impl Default for FfiState {
     }
 }
 
-/// Global FFI state, protected by a Mutex for thread-safe access from Tauri
+/// Global FFI state, protected by a Mutex for thread-safe access from Gossamer
 /// command handlers.
 ///
 /// Usage from commands:

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 //
-// LLM Coding Tauri commands — process spawning, resource monitoring,
-// workspace locking, and session coordination.
+// LLM Coding Gossamer commands — process spawning, resource monitoring,
+// and session coordination.
 //
-// These commands are invoked by the ReScript frontend via Tauri's invoke
-// bridge. They manage the lifecycle of Claude/LLM coding sessions.
+// These commands are invoked by the ReScript frontend via the Gossamer
+// command bridge. They manage the lifecycle of Claude/LLM coding sessions.
 //
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
@@ -110,7 +110,7 @@ pub fn llm_coding_spawn(request: SpawnRequest) -> Result<String, String> {
     let session_id = Uuid::new_v4().to_string();
 
     // Build the task instruction file
-    let task_file = coord_dir().join(&format!("{}.task", session_id));
+    let task_file = coord_dir().join(format!("{}.task", session_id));
     let task_content = format!(
         "{}\n\n---\n\nConstraints:\n{}\n\n---\n\nContext:\n{}",
         request.task,
@@ -301,7 +301,7 @@ pub fn llm_coding_get_messages(session_id: String) -> Result<String, String> {
         Some(session) => {
             let mut messages = session.messages.clone();
             // Sort by sent_at (newest last)
-            messages.sort_by(|a, b| a.sent_at.cmp(&b.sent_at));
+            messages.sort_by_key(|m| m.sent_at);
             // Keep only last 50
             if messages.len() > 50 {
                 messages = messages.split_off(messages.len() - 50);
@@ -310,4 +310,45 @@ pub fn llm_coding_get_messages(session_id: String) -> Result<String, String> {
         }
         None => Ok(json!({"status": "error", "message": "not found"}).to_string()),
     }
+}
+
+/// Sum of busy + idle jiffies from the aggregate `cpu` line of /proc/stat.
+/// Returns `(busy, total)`.
+fn read_cpu_jiffies() -> (u64, u64) {
+    let stat = fs::read_to_string("/proc/stat").unwrap_or_default();
+    let line = stat.lines().next().unwrap_or("");
+    let vals: Vec<u64> = line
+        .split_whitespace()
+        .skip(1)
+        .filter_map(|s| s.parse().ok())
+        .collect();
+    let total: u64 = vals.iter().sum();
+    // idle = field 3 (idle) + field 4 (iowait), 0-indexed in `vals`.
+    let idle = vals.get(3).copied().unwrap_or(0) + vals.get(4).copied().unwrap_or(0);
+    (total.saturating_sub(idle), total)
+}
+
+/// Overall host CPU utilisation percentage, sampled over a 100ms window.
+fn read_overall_cpu() -> f64 {
+    let (busy1, total1) = read_cpu_jiffies();
+    std::thread::sleep(std::time::Duration::from_millis(100));
+    let (busy2, total2) = read_cpu_jiffies();
+    let total_delta = total2.saturating_sub(total1);
+    if total_delta == 0 {
+        return 0.0;
+    }
+    let busy_delta = busy2.saturating_sub(busy1);
+    (busy_delta as f64 / total_delta as f64) * 100.0
+}
+
+/// Host-wide resource snapshot, used by the panel to decide whether the
+/// system has headroom to spawn additional sessions/sub-agents.
+pub fn llm_coding_system_resources() -> Result<String, String> {
+    let (memory_available_mb, memory_total_mb) = read_system_memory();
+    let snapshot = SystemResources {
+        memory_available_mb,
+        memory_total_mb,
+        cpu_percent: read_overall_cpu(),
+    };
+    serde_json::to_string(&snapshot).map_err(|e| e.to_string())
 }

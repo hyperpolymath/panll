@@ -173,3 +173,42 @@ pub fn get_registry() -> Result<serde_json::Value, String> {
     let snapshot: HashMap<String, ServiceEntry> = reg.clone();
     serde_json::to_value(&snapshot).map_err(|e| format!("JSON serialise error: {}", e))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn registry_contains_all_known_services() {
+        let json = get_registry().expect("get_registry should succeed");
+        let obj = json.as_object().expect("registry should be a JSON object");
+        for key in ["verisim", "echidna", "burble", "boj", "typell"] {
+            assert!(obj.contains_key(key), "registry missing service '{}'", key);
+        }
+    }
+
+    #[test]
+    fn check_service_unknown_key_errors() {
+        let err = check_service("does-not-exist").unwrap_err();
+        assert!(err.contains("Unknown service"), "got: {}", err);
+    }
+
+    #[test]
+    fn update_service_url_unknown_key_errors() {
+        let err = update_service_url("does-not-exist", "http://x").unwrap_err();
+        assert!(err.contains("Unknown service"), "got: {}", err);
+    }
+
+    #[test]
+    fn update_service_url_sets_url_and_resets_status() {
+        // Assert on the returned entry (not a shared global re-read) so the
+        // test is robust under parallel execution.
+        let updated =
+            update_service_url("typell", "http://example.test:9999/").expect("update ok");
+        assert_eq!(updated["url"], "http://example.test:9999");
+        // Status resets to Stopped after a URL change. ServiceStatus is
+        // `#[serde(tag = "status")]`, so the unit variant serialises as the
+        // nested object {"status":"Stopped"}.
+        assert_eq!(updated["status"]["status"], "Stopped");
+    }
+}
