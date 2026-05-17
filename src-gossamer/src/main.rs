@@ -210,6 +210,10 @@ fn register_commands(app: &mut gossamer_rs::App) {
         result_str_to_json(llm_coding::commands::llm_coding_get_messages(session_id))
     });
 
+    app.command("llm_coding_system_resources", |_payload| {
+        result_str_to_json(llm_coding::commands::llm_coding_system_resources())
+    });
+
     // -----------------------------------------------------------------------
     // Groove discovery — no commands.
     //
@@ -224,20 +228,19 @@ fn register_commands(app: &mut gossamer_rs::App) {
     // Service Registry commands (Connected Workbench v0.2.0)
     // -----------------------------------------------------------------------
 
-    // app.command("service_register", |payload| {
-    //     let key = get_str(&payload, "service_key").unwrap_or_default();
-    //     let url = get_str(&payload, "url").unwrap_or_default();
-    //     result_to_json(service_registry::register_service(key, url))
-    // });
+    // The registry is a fixed env-driven set (verisim, echidna, burble, boj,
+    // typell) — there is no dynamic register/unregister. The Settings panel
+    // reconfigures URLs at runtime via `service_set_url`.
 
-    // app.command("service_unregister", |payload| {
-    //     let key = get_str(&payload, "service_key").unwrap_or_default();
-    //     result_to_json(service_registry::unregister_service(&key))
-    // });
+    app.command("service_list", |_payload| {
+        result_to_json(service_registry::get_registry())
+    });
 
-    // app.command("service_list", |_payload| {
-    //     result_to_json(service_registry::list_services())
-    // });
+    app.command("service_set_url", |payload| {
+        let key = get_str(&payload, "service_key").unwrap_or_default();
+        let url = get_str(&payload, "url").unwrap_or_default();
+        result_to_json(service_registry::update_service_url(&key, &url))
+    });
 
     app.command("service_status_all", |_payload| {
         result_to_json(service_registry::check_all_services())
@@ -264,6 +267,11 @@ fn register_commands(app: &mut gossamer_rs::App) {
 
     app.command("settings_reset", |_payload| {
         result_to_json(settings::settings_reset())
+    });
+
+    app.command("settings_save", |payload| {
+        let settings_json = get_str(&payload, "settings_json").unwrap_or_default();
+        result_to_json(settings::settings_save(&settings_json))
     });
 
     // -----------------------------------------------------------------------
