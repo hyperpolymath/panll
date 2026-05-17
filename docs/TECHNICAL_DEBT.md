@@ -82,9 +82,19 @@ GTK link wall. The binary builds in a GTK-equipped environment / CI.
 
 | ID | Item | Severity |
 |----|------|----------|
-| F1 | ~40 directories under `src-gossamer/src/` (a2ml, ai, boj, capture, …) are **orphaned** — declared by no crate root, never compiled. Either integrate or remove. | High (hidden dead code) |
-| F2 | `coprocessor`'s async command handlers are implemented + tested but **not registered** in the binary's IPC table (`main.rs`). Wire them (needs an async→sync bridge for `app.command`). | Medium |
+| F1 | **38 unwired PanLL panel backends** under `src-gossamer/src/` (aerie=net diagnostics, hypatia=neurosym scanner, ai=multi-provider AI, farm, provenance, k9, governance, …; ~19,181 LOC). NOT dead code — real panel backends orphaned by the same defect as `coprocessor` (declared by no crate root → never compiled → IPC commands never registered). **Decision (2026-05-17): integrate, not delete.** Also carry stale Tauri refs. Tracked as the F1 integration workstream. | High (lost functionality) |
+| F2 | `coprocessor`'s async command handlers are implemented + tested but **not registered** in the binary's IPC table (`main.rs`). Wire them — this is the **pilot** for F1 (establishes the async→sync `app.command` bridge), done first. | Medium |
 | F3 | Binary cannot be built/linked locally without GTK/WebKit + a built `libgossamer`. Document the dev-env setup or provide a container. | Medium |
+
+### F1 integration workstream (multi-session)
+
+1. **Pilot (F2):** finish `coprocessor` IPC registration → builds the
+   reusable async→sync `block_on` bridge for `app.command`.
+2. **Census:** declare all 38 modules; `cargo check` each; record which
+   compile clean vs. bit-rotted (never compiled — expect API drift).
+3. **Bulk wire** in dependency/risk order using the proven pattern;
+   de-Tauri as we go; cross-check command names against the ReScript
+   frontend `invoke()` contract so we wire what the UI actually calls.
 
 ---
 
