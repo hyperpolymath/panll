@@ -37,3 +37,94 @@ pub mod llm_coding;
 /// async command handlers are not yet registered in the binary's IPC table —
 /// that integration is tracked as follow-up debt (see TECHNICAL_DEBT.md).
 pub mod coprocessor;
+
+/// Cross-module integration tests. These exercise the public command-backed
+/// functions end-to-end. They live in the lib (not `tests/`) so they run via
+/// `cargo test --lib` without cargo also force-building the GTK-linked
+/// binary. No disk/home-dir side effects (the settings disk path is excluded
+/// deliberately).
+#[cfg(test)]
+mod integration_tests {
+    use crate::{coprocessor, llm_coding, service_registry};
+
+    #[test]
+    fn service_registry_lifecycle() {
+        let reg = service_registry::get_registry().expect("get_registry");
+        let obj = reg.as_object().expect("object");
+        assert_eq!(obj.len(), 5);
+        for k in ["verisim", "echidna", "burble", "boj", "typell"] {
+            assert!(obj.contains_key(k), "missing {k}");
+        }
+        let updated =
+            service_registry::update_service_url("boj", "http://boj.test:7700/")
+                .expect("update_service_url");
+        assert_eq!(updated["url"], "http://boj.test:7700");
+        assert!(service_registry::check_service("nope").is_err());
+        assert!(service_registry::update_service_url("nope", "http://x").is_err());
+    }
+
+    #[test]
+    fn llm_coding_system_resources_reports_real_host() {
+        let json = llm_coding::commands::llm_coding_system_resources()
+            .expect("system_resources");
+        let v: serde_json::Value = serde_json::from_str(&json).expect("parse");
+        assert!(
+            v["memory_total_mb"].as_u64().unwrap_or(0) > 0,
+            "memory_total_mb should be positive, got {json}"
+        );
+        let cpu = v["cpu_percent"].as_f64().unwrap_or(-1.0);
+        assert!((0.0..=100.0).contains(&cpu), "cpu_percent out of range: {cpu}");
+    }
+
+    #[test]
+    fn coprocessor_backend_parsing_round_trips() {
+        use coprocessor::CoproBackend::*;
+        // Canonical parse names (note: `label()` is intentionally NOT the
+        // inverse of `from_str` — e.g. Io's label is "I/O").
+        let cases = [
+            ("maths", Maths),
+            ("vector", Vector),
+            ("tensor", Tensor),
+            ("physics", Physics),
+            ("crypto", Crypto),
+            ("neural", Neural),
+            ("quantum", Quantum),
+            ("audio", Audio),
+            ("graphics", Graphics),
+            ("io", Io),
+        ];
+        for (name, expected) in cases {
+            assert_eq!(
+                coprocessor::CoproBackend::from_str(name),
+                Some(expected),
+                "round-trip failed for {name}"
+            );
+        }
+        // Short aliases also resolve.
+        assert_eq!(coprocessor::CoproBackend::from_str("gfx"), Some(Graphics));
+        assert_eq!(coprocessor::CoproBackend::from_str("not-a-backend"), None);
+    }
+
+    #[tokio::test]
+    async fn coprocessor_load_ffi_rejects_missing_library() {
+        let err = coprocessor::commands::coprocessor_load_ffi(
+            "/definitely/not/a/real/libpanll_copro.so".to_string(),
+        )
+        .await
+        .expect_err("loading a missing library must fail");
+        assert!(
+            err.contains("not found") || err.contains("Failed to load"),
+            "got: {err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn coprocessor_ffi_status_is_well_formed() {
+        let json = coprocessor::commands::coprocessor_ffi_status()
+            .await
+            .expect("ffi_status");
+        let v: serde_json::Value = serde_json::from_str(&json).expect("parse");
+        assert_eq!(v["ffi_loaded"], false);
+        assert!(v["cpu_cores"].as_u64().unwrap_or(0) >= 1);
+    }
+}

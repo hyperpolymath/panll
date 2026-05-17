@@ -1,197 +1,58 @@
-# Hypatia Scanner Rules for PanLL v0.2.0 Fixes
-# 
-# These rules detect and remediate common issues found during the v0.2.0 panic attack
-# Rules are designed to work with the gitbot fleet for automated repository maintenance
+# Hypatia Scanner Rules for PanLL — tech-debt regression guards
+#
+# Reconciled 2026-05-17 against the verified tree (see docs/TECHNICAL_DEBT.md).
+#
+# The original v0.2.0 "panic attack" rule set (panll-001..008) was retired:
+# every issue it described is resolved, and its patterns generate false
+# positives against now-correct code — e.g. it flagged the valid
+# `use crate::http_client;`, every `-> String` function, and every
+# `unwrap_or_else(|_| "http://localhost:…")` env fallback. Detecting
+# resolved problems against correct code is worse than no rule.
+#
+# What replaces it: a single, precise regression guard for the one failure
+# mode that actually recurred (commands disabled by commenting them out to
+# force compilation), plus clippy `-D warnings` in CI for everything the
+# old rules tried to approximate (PathBuf misuse, unused doc comments,
+# result-type shape, error handling).
 
-version: "1.0"
+version: "2.0"
+
 rules:
-  # Rule 1: Detect unresolved http_client imports
-  - id: "panll-001"
-    name: "Unresolved http_client Import"
-    description: "Detects unresolved crate::http_client imports that need proper module implementation"
+  # Regression guard for D1: during the panic attack, IPC command handlers
+  # were commented out wholesale to make the crate compile. That is the
+  # specific, recurring pattern worth catching — not "any commented code".
+  - id: "panll-cmd-disabled"
+    name: "Commented-out IPC command registration"
+    description: >
+      A `app.command("…")` registration that has been commented out.
+      This is how functionality was silently dropped to force a build;
+      re-enable it or delete the dead handler and its backing fn.
     severity: "high"
     patterns:
-      - pattern: "use crate::http_client;"
-      - pattern: "use crate::http_client::"
-    remediation:
-      action: "comment"
-      message: "Unresolved http_client import detected. Ensure http_client module exists or implement proper HTTP client infrastructure."
-      suggestions:
-        - "Create http_client.rs module with reqwest-based implementation"
-        - "Add proper ServiceEndpoint struct and HTTP methods"
-        - "Ensure module is properly exported in lib.rs"
-    tags: ["import", "module", "http"]
-
-  # Rule 2: Detect commented-out modules that should be implemented
-  - id: "panll-002"
-    name: "Commented Out Modules"
-    description: "Identifies modules commented out during panic attack that need implementation"
-    severity: "medium"
-    patterns:
-      - pattern: "// mod (\w+);"
-      - pattern: "// \w+::"
+      - pattern: '^\s*//\s*app\.command\('
     remediation:
       action: "ticket"
-      message: "Commented out module detected. This module was disabled during panic attack and needs implementation."
+      message: >
+        Disabled IPC command detected. Either re-enable it (and its backing
+        function) or remove both plus any now-dead support code. Do not leave
+        commented command handlers in tree.
       suggestions:
-        - "Implement the module or remove references completely"
-        - "Update documentation to reflect module status"
-        - "Add to technical debt backlog"
-    tags: ["module", "technical-debt", "implementation"]
+        - "Re-enable the command and wire its backing function"
+        - "If intentionally removed, delete the handler AND the dead backing fn"
+        - "Record the decision in docs/TECHNICAL_DEBT.md"
+    tags: ["command", "regression", "technical-debt"]
 
-  # Rule 3: Detect improper App handling in Gossamer
-  - id: "panll-003"
-    name: "Improper Gossamer App Handling"
-    description: "Detects incorrect handling of Result<App, Error> types in Gossamer commands"
-    severity: "high"
-    patterns:
-      - pattern: "register_commands(&mut app);"
-      - pattern: "system_tray::init(&app);"
-      - pattern: "app\.run\(\);"
-    context:
-      - "where app is Result<App, Error>"
-    remediation:
-      action: "suggest"
-      message: "Improper App handling detected. App should be unwrapped or handled as Result before use."
-      suggestions:
-        - "Use if let Ok(ref mut app_ok) = app { ... } pattern"
-        - "Properly handle the Result type before passing to functions"
-        - "Add error handling for App initialization failures"
-    tags: ["gossamer", "error-handling", "app"]
+# Everything the retired rules approximated is now enforced by the compiler
+# and clippy in CI, which is precise where regex patterns were not:
+quality_gate:
+  command: "cargo clippy --all-targets --all-features -- -D warnings"
+  covers:
+    - "PathBuf/Display misuse (was panll-004) — rustc type errors"
+    - "unused / detached doc comments (was panll-006) — clippy::empty_line_after_doc_comments"
+    - "command result-type shape (was panll-005) — rustc type checking of result_to_json"
+    - "error handling (was panll-008) — clippy lints, reviewed per-call"
+  unit_tests: "cargo test --lib   # GTK-free; see lib/bin split"
 
-  # Rule 4: Detect PathBuf Display trait issues
-  - id: "panll-004"
-    name: "PathBuf Display Trait Misuse"
-    description: "Identifies incorrect usage of PathBuf with Display trait"
-    severity: "high"
-    patterns:
-      - pattern: "\.to_string\(\)"
-      - pattern: "format!\("{}", .*\)"
-    context:
-      - "where type is PathBuf or Path"
-    remediation:
-      action: "replace"
-      message: "PathBuf cannot be directly converted to String. Use to_str() or display() method."
-      suggestions:
-        - "Use path.to_str().unwrap_or(\"\") for string conversion"
-        - "Use path.display() for display formatting"
-        - "Handle potential invalid Unicode paths"
-    tags: ["path", "filesystem", "display"]
-
-  # Rule 5: Detect result type mismatches in commands
-  - id: "panll-005"
-    name: "Command Result Type Mismatch"
-    description: "Detects functions returning String when Result<Value, String> is expected"
-    severity: "high"
-    patterns:
-      - pattern: "result_to_json\(.*\)"
-      - pattern: "-> String"
-    context:
-      - "in command handlers"
-      - "where return type should be Result<Value, String>"
-    remediation:
-      action: "replace"
-      message: "Command should return Result<Value, String> but returns String. Wrap in proper Result type."
-      suggestions:
-        - "Wrap return value in Ok(): Ok(result_to_json(...))"
-        - "Handle errors properly with Err() variant"
-        - "Ensure all command handlers follow consistent return type pattern"
-    tags: ["command", "result", "type-safety"]
-
-  # Rule 6: Detect unused doc comments
-  - id: "panll-006"
-    name: "Unused Documentation Comments"
-    description: "Identifies doc comments that are not attached to any item"
-    severity: "low"
-    patterns:
-      - pattern: "///.*"
-      - pattern: "/\*\*.*\*\/"
-    context:
-      - "not followed by item declaration"
-      - "in commented out sections"
-    remediation:
-      action: "cleanup"
-      message: "Unused documentation comment detected. Either attach to item or remove."
-      suggestions:
-        - "Remove comment if no longer relevant"
-        - "Attach to proper item if documentation is needed"
-        - "Update comment to reflect current code state"
-    tags: ["documentation", "cleanup", "style"]
-
-  # Rule 7: Detect hardcoded service URLs
-  - id: "panll-007"
-    name: "Hardcoded Service URLs"
-    description: "Identifies hardcoded service URLs that should use configuration"
-    severity: "medium"
-    patterns:
-      - pattern: "http://localhost:[0-9]+"
-      - pattern: "localhost:[0-9]+"
-    remediation:
-      action: "configurize"
-      message: "Hardcoded service URL detected. Should use configuration or environment variables."
-      suggestions:
-        - "Use std::env::var() with fallback"
-        - "Add to service registry configuration"
-        - "Make configurable via settings panel"
-    tags: ["configuration", "hardcoding", "best-practice"]
-
-  # Rule 8: Detect improper error handling in commands
-  - id: "panll-008"
-    name: "Improper Command Error Handling"
-    description: "Identifies command handlers that don't properly handle errors"
-    severity: "high"
-    patterns:
-      - pattern: "\.map_err\(.*\)\?"
-      - pattern: "\.unwrap\(\)"
-      - pattern: "\.expect\("""
-    context:
-      - "in command handler functions"
-    remediation:
-      action: "refactor"
-      message: "Improper error handling in command. Should use proper Result propagation."
-      suggestions:
-        - "Use ? operator for proper error propagation"
-        - "Return Err(e.to_string()) for command failures"
-        - "Avoid unwrap() and expect() in production code"
-    tags: ["error-handling", "command", "robustness"]
-
-# Remediation Patterns
-remediation_patterns:
-  - id: "result-wrapper"
-    name: "Wrap in Result"
-    description: "Standard pattern for wrapping command results"
-    pattern: |
-      // Before
-      result_to_json(function_call())
-      
-      // After
-      Ok(result_to_json(function_call()))
-    
-  - id: "path-conversion"
-    name: "Safe Path Conversion"
-    description: "Standard pattern for PathBuf to string conversion"
-    pattern: |
-      // Before
-      let path_str = path.to_string();
-      
-      // After
-      let path_str = path.to_str().unwrap_or("");
-    
-  - id: "app-handling"
-    name: "Proper App Handling"
-    description: "Standard pattern for handling Result<App, Error>"
-    pattern: |
-      // Before
-      register_commands(&mut app);
-      app.run();
-      
-      // After
-      if let Ok(ref mut app_ok) = app {
-          register_commands(app_ok);
-          app_ok.run();
-      }
-
-# Scanner Configuration
 scanner:
   exclude:
     - "**/tests/*"
@@ -199,32 +60,18 @@ scanner:
     - "**/examples/*"
     - "**/target/*"
     - "**/node_modules/*"
-  
   include:
-    - "**/src/**/*.rs"
     - "**/src-gossamer/**/*.rs"
 
-# GitBot Fleet Configuration
 gitbot:
-  auto_remediate:
-    - "panll-004"  # PathBuf Display issues
-    - "panll-006"  # Unused doc comments
-    - "panll-007"  # Hardcoded URLs
-  
   create_ticket:
-    - "panll-001"  # http_client implementation needed
-    - "panll-002"  # Commented out modules
-    - "panll-003"  # App handling issues
-    - "panll-005"  # Result type mismatches
-    - "panll-008"  # Error handling issues
-  
+    - "panll-cmd-disabled"
   notification:
-    teams: ["backend", "devops", "qa"]
-    severity_threshold: "medium"
+    teams: ["backend"]
+    severity_threshold: "high"
 
-# Documentation References
 documentation:
   technical_debt: "docs/TECHNICAL_DEBT.md"
-  architecture: "docs/ARCHITECTURE.md"
+  architecture: "docs/architecture/ARCHITECTURE.md"
   contribution: "CONTRIBUTING.md"
   code_of_conduct: "CODE_OF_CONDUCT.md"
