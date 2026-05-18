@@ -85,12 +85,55 @@ and a high-performance native backend (Axiom's `ZigBackend` role).
 
 == Gates (build blocked until all clear)
 
-* **G1** `AcceleratorGate` registered in Julia General (#155654, ETA
-  ~2026-05-20) — needed to inspect its real API for Q1.
-* **G2** `panel-clades/` template instantiated (rsr `{{tokens}}` resolved;
-  same corruption class found in `panel-clades/ffi/zig/` must be cleaned —
-  cf. the Axiom.jl bot-mess).
+* **G1** Dissolved. `AcceleratorGate` need not be registered: Axiom.jl was
+  decoupled by vendoring it (precedent set); `AcceleratorGate.jl` is cloned
+  locally for Q1 analysis. Julia-registry timing is OFF this critical path.
+* **G2** `panel-clades/` template instantiation — *partially done*; see
+  triage below.
 * **G3** Q1–Q3 resolved by the owner.
+
+== G2 status & remaining-placeholder triage (handoff — do not re-derive)
+
+**Done (2026-05-18, on `feat/panel-clades-pivot`):** `panel-clades/ffi/zig/`
+fully instantiated + migrated to Zig 0.15 — `{{project}}` → `panel_clades`
+(matches `main.zig` exports + `Foreign.idr` `C:panel_clades_*,
+libpanel_clades`); `build.zig` ported (addLibrary/linkage, root_module,
+addInstallFileWithDir, `.link_libc`); `main.zig` opaque→struct,
+callconv(.C)→.c. `zig build test` → **6/6 green**.
+
+**Remaining** = the ~50 non-FFI `{{TOKEN}}` placeholders across ~45 files.
+The template's intended instantiator is its own interactive `just init`
+(see `panel-clades/PLACEHOLDERS.md`). Hand-sed is hazardous: the literal
+`panel-clades` is overloaded across 3 roles (dir name, uppercase ident,
+one-line description) — blind replace = the Axiom corruption class.
+Triage of the remaining tokens:
+
+[cols="1,3"]
+|===
+| Mechanically derivable (safe to auto-fill)
+| `{{AUTHOR}}`=Jonathan D.A. Jewell, `{{AUTHOR_EMAIL}}`=j.d.a.jewell@open.ac.uk,
+  `{{OWNER}}`=hyperpolymath, `{{FORGE}}`=github.com, `{{REPO}}`=panll,
+  `{{CURRENT_YEAR}}`=2026, `{{CURRENT_DATE}}`/`{{GENERATED_AT}}`=instantiation date,
+  `{{VERSION}}`=0.1.0, `{{PASCAL_NAME}}`=PanelClades, `{{PROJECT}}`=PANEL_CLADES,
+  `{{project}}`=panel_clades (FFI already done)
+
+| Owner decisions (do NOT guess)
+| `{{LICENSE}}` (internal pkg — estate PMPL vs MPL-2.0), `{{PORT}}`,
+  `{{PROTOCOL}}`, `{{PROJECT_KIND}}`, `{{DOMAIN}}`/`{{PROJECT_DOMAIN}}`/`{{WEBSITE}}`,
+  `{{CLADE_ID}}`, `{{CLADE_NAME}}`, `{{SHORT}}`, `{{ICON}}`,
+  `{{ONE_LINE_DESCRIPTION}}`/`{{PROJECT_DESCRIPTION}}`/`{{PROJECT_PURPOSE}}`,
+  `{{REGISTRY}}`, `{{SECURITY_EMAIL}}`/`{{CONDUCT_EMAIL}}`/`{{CONDUCT_TEAM}}`,
+  `{{RESPONSE_TIME}}`, `{{EXPIRES_AT}}`, `{{ON_INIT_HANDLER}}`/`{{ON_DISPOSE_HANDLER}}`
+
+| Real cryptographic material (MUST come from estate key inventory — never fabricate)
+| `{{SPHINCS_PLUS_PUBLIC_KEY}}`, `{{PRIMARY_SIGNATURE}}`,
+  `{{FALLBACK_SIGNATURE}}`, `{{PGP_KEY_URL}}`, `{{ZONEMD}}`,
+  `{{TRUSTFILE_PATH}}`, `{{TRUSTFILE_VERSION}}`
+|===
+
+Resume path: owner provides the decision values + points at real estate
+keys → run/emulate `just init` with that value-set (NOT blind sed). Paused
+pending the suite audit, which may reprioritise the whole estate first.
 
 == Anti-goals (per ADR-0001)
 
