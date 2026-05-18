@@ -1,0 +1,98 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= P2 — Coprocessor panel-clade design (the exemplar)
+:toc: left
+:sectnums:
+
+Status: DESIGN ONLY (2026-05-18). No build until the gates below clear.
+Authority: models the *validated* Axiom general form
+(`docs/architecture/AXIOM-GENERAL-FORM.adoc`, re-validated against
+`Axiom.jl` PR #17 — 9/9 green) under ADR-0001. This clade is the
+exemplar every other PanLL panel-clade will follow.
+
+== Goal
+
+Instantiate `panel-clades/` (today an uninstantiated rsr template) into a
+*concrete* coprocessor panel-clade that organises heterogeneous compute
+backends exactly as Axiom.jl does, exposing it through the estate language
+architecture (ABI = Idris2, FFI = Zig).
+
+== Backend set (11) → Axiom taxonomy mapping
+
+[cols="1,1,2"]
+|===
+| PanLL backend | Axiom struct | Notes
+
+| math    | `MathBackend`   | math coprocessor
+| physics | `PPUBackend`    | physics processing unit
+| tensor  | `TPUBackend`    | tensor processing unit
+| vector  | `VPUBackend`    | vector/vision processing unit
+| neural  | `NPUBackend`    | neural processing unit
+| crypto  | `CryptoBackend` | crypto coprocessor
+| quantum | `QPUBackend`    | quantum processing unit
+| FPGA    | `FPGABackend`   | FPGA accelerator
+| DSP     | `DSPBackend`    | digital signal processor
+| I/O     | (new) `IOBackend`    | *no Axiom precedent* — add following the identical pattern
+| audio   | (new) `AudioBackend` | *no Axiom precedent* — add following the identical pattern
+|===
+
+Plus the two *implementation* backends from the general form: a reference
+backend (Axiom's `JuliaBackend` role — pure, always-correct, the fallback)
+and a high-performance native backend (Axiom's `ZigBackend` role).
+
+== Structure (Axiom element → panel-clades artefact)
+
+. **Abstract supertype + per-class subtypes** → the a2ml clade spec
+  `panel-clades/clades/coprocessors/Coprocessors.a2ml` declares the 11
+  backends + the reference/native impl pair + the dispatch policy.
+. **`SmartBackend` per-operation dispatcher** → a clade-level dispatch
+  table (operation → preferred backend) with **graceful fallback to the
+  reference backend** when the preferred one is absent. Benchmark-driven,
+  per-operation, never global.
+. **Device selection delegated** → consume capability/cost selection rather
+  than reinventing it (Axiom uses `AcceleratorGate`). *See open question.*
+. **Idris2 ABI = formal spec** → `panel-clades/src/abi/{Types,Layout,Foreign}.idr`,
+  concrete `panll_copro_*` symbols (no `{{placeholders}}`), must typecheck
+  (`idris2 --check`), mirroring Axiom's `src/Abi/*.idr` (which we verified
+  typecheck clean).
+. **Zig FFI = authoritative runtime** → instantiate
+  `panel-clades/ffi/zig/` (template today): concrete `panll_copro_*` C ABI,
+  `include/`, `build.zig`, `test/integration_test.zig`. Authoritative for
+  release per the general form.
+. **Bidirectional host bridge** → host→runtime + runtime→host callback
+  (the pattern just implemented & tested in Axiom.jl PR #17:
+  `register_callback(u64 ptr)` + `invoke_callback`).
+. **Honest-status precedence** → reference backend = fallback; Idris2 ABI =
+  must-typecheck scaffold; Zig FFI = authoritative; CI = backend-parity +
+  runtime-smoke.
+
+== Open design questions (resolve before build — do NOT guess)
+
+. **AcceleratorGate consumption boundary.** Axiom.jl is Julia and consumes
+  `AcceleratorGate` (a Julia package) directly. PanLL's coprocessor clade
+  is Idris2-ABI / Zig. Options: (a) the clade calls AcceleratorGate across
+  a bridge; (b) AcceleratorGate's capability/cost-selection logic is
+  reimplemented in the Zig FFI; (c) a thin Julia sidecar. This is the
+  single biggest design decision and depends on AcceleratorGate's public
+  surface — which is not inspectable until it is registered/cloned.
+. **Reference backend language.** Axiom's fallback is `JuliaBackend`. The
+  PanLL clade's reference backend should be the always-available, provably
+  correct path — candidate: a pure-Zig reference, keeping the clade free of
+  a Julia runtime dependency. Confirm.
+. **I/O & audio backends** have no Axiom precedent — define their operation
+  vocabulary from the PanLL panel requirements, following the identical
+  subtype pattern.
+
+== Gates (build blocked until all clear)
+
+* **G1** `AcceleratorGate` registered in Julia General (#155654, ETA
+  ~2026-05-20) — needed to inspect its real API for Q1.
+* **G2** `panel-clades/` template instantiated (rsr `{{tokens}}` resolved;
+  same corruption class found in `panel-clades/ffi/zig/` must be cleaned —
+  cf. the Axiom.jl bot-mess).
+* **G3** Q1–Q3 resolved by the owner.
+
+== Anti-goals (per ADR-0001)
+
+Do not look at `oo7`/`jtv`. Trust only the Axiom general form. Do not
+instantiate/build before G1–G3. `src-gossamer` stays frozen.
