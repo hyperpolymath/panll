@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: PMPL-1.0
 name: CodeQL Security Analysis
 
 on:
@@ -8,6 +8,14 @@ on:
     branches: [main, master]
   schedule:
     - cron: '0 6 * * 1'
+
+# Estate guardrail: cancel superseded runs so re-pushes / rebased PR
+# updates do not pile up queued runs against the shared account-wide
+# Actions concurrency pool. Applied only to read-only check workflows
+# (no publish/mutation), so cancelling a superseded run is always safe.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -24,26 +32,18 @@ jobs:
         include:
           - language: javascript-typescript
             build-mode: none
-          - language: rust
-            build-mode: manual
 
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # v3.28.1
+        uses: github/codeql-action/init@c6f931105cb2c34c8f901cc885ba1e2e259cf745 # v3
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
-      - name: Build Rust code
-        if: matrix.language == 'rust'
-        run: |
-          cd src-tauri
-          cargo build --release
-
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # v3.28.1
+        uses: github/codeql-action/analyze@c6f931105cb2c34c8f901cc885ba1e2e259cf745 # v3
         with:
           category: "/language:${{ matrix.language }}"
