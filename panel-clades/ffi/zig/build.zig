@@ -7,41 +7,49 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // Shared library (.so, .dylib, .dll)
-    const lib = b.addSharedLibrary(.{
-        .name = "{{project}}",
+    // Root module shared by the library/test artifacts (Zig 0.15 API).
+    const root_mod = b.createModule(.{
+            .link_libc = true,
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
 
-    // Set version
-    lib.version = .{ .major = 0, .minor = 1, .patch = 0 };
+    // Shared library (.so, .dylib, .dll)
+    const lib = b.addLibrary(.{
+        .name = "panel_clades",
+        .linkage = .dynamic,
+        .root_module = root_mod,
+        .version = .{ .major = 0, .minor = 1, .patch = 0 },
+    });
 
     // Static library (.a)
-    const lib_static = b.addStaticLibrary(.{
-        .name = "{{project}}",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+    const lib_static = b.addLibrary(.{
+        .name = "panel_clades",
+        .linkage = .static,
+        .root_module = root_mod,
     });
 
     // Install artifacts
     b.installArtifact(lib);
     b.installArtifact(lib_static);
 
-    // Generate header file for C compatibility
-    const header = b.addInstallHeader(
-        b.path("include/{{project}}.h"),
-        "{{project}}.h",
+    // Install the C header (Zig 0.15 API).
+    const header = b.addInstallFileWithDir(
+        b.path("include/panel_clades.h"),
+        .header,
+        "panel_clades.h",
     );
     b.getInstallStep().dependOn(&header.step);
 
     // Unit tests
     const lib_tests = b.addTest(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .link_libc = true,
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     const run_lib_tests = b.addRunArtifact(lib_tests);
@@ -51,9 +59,12 @@ pub fn build(b: *std.Build) void {
 
     // Integration tests
     const integration_tests = b.addTest(.{
-        .root_source_file = b.path("test/integration_test.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .link_libc = true,
+            .root_source_file = b.path("test/integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     integration_tests.linkLibrary(lib);
@@ -65,9 +76,12 @@ pub fn build(b: *std.Build) void {
 
     // Documentation
     const docs = b.addTest(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = .Debug,
+        .root_module = b.createModule(.{
+            .link_libc = true,
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = .Debug,
+        }),
     });
 
     const docs_step = b.step("docs", "Generate documentation");
@@ -79,10 +93,13 @@ pub fn build(b: *std.Build) void {
 
     // Benchmark (if needed)
     const bench = b.addExecutable(.{
-        .name = "{{project}}-bench",
-        .root_source_file = b.path("bench/bench.zig"),
-        .target = target,
-        .optimize = .ReleaseFast,
+        .name = "panel_clades-bench",
+        .root_module = b.createModule(.{
+            .link_libc = true,
+            .root_source_file = b.path("bench/bench.zig"),
+            .target = target,
+            .optimize = .ReleaseFast,
+        }),
     });
 
     bench.linkLibrary(lib);

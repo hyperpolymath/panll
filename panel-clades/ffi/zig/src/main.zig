@@ -59,12 +59,13 @@ pub const CladeKind = enum(u32) {
     terminal = 12,
 };
 
-/// Library handle (opaque to prevent direct access)
-pub const Handle = opaque {
+/// Library handle. A real struct internally; exposed across the C ABI as
+/// an opaque pointer (the header forward-declares it). `opaque{}` cannot
+/// have fields or be `create`d, so this must be a `struct`.
+pub const Handle = struct {
     // Internal state hidden from C
     allocator: std.mem.Allocator,
     initialized: bool,
-    // Add your fields here
 };
 
 //==============================================================================
@@ -154,8 +155,7 @@ export fn panel_clades_load_clade(handle: ?*Handle, clade_id: ?[*:0]const u8) Re
         return .invalid_param;
     }
 
-    // TODO: store clade definition internally
-    _ = id_str;
+    // TODO: store clade definition internally (id_str validated above)
 
     clearError();
     return .ok;
@@ -318,7 +318,7 @@ export fn panel_clades_build_info() [*:0]const u8 {
 //==============================================================================
 
 /// Callback function type (C ABI)
-pub const Callback = *const fn (u64, u32) callconv(.C) u32;
+pub const Callback = *const fn (u64, u32) callconv(.c) u32;
 
 /// Register a callback
 export fn panel_clades_register_callback(
