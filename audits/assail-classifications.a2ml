@@ -1,0 +1,51 @@
+;; SPDX-License-Identifier: MPL-2.0
+;; Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+;;
+;; Assail Classifications — panll
+;; See panic-attack/.claude/CLAUDE.md § "User-Classification Registry".
+
+(assail-classifications
+  (metadata
+    (version "1.0.0")
+    (project "panll")
+    (last-updated "2026-05-26")
+    (entries 6)
+    (status "active"))
+
+  (classification
+    (file "ffi/zig/src/coprocessor.zig")
+    (category "UnsafeCode")
+    (classification "legitimate-ffi")
+    (audit "audits/audit-ffi-2026-05-26.md")
+    (rationale "panll is a panel-clades language with a Tauri-style desktop wrapper. ffi/zig/src is the Zig FFI bridge to the Idris2 core; src-gossamer/src is the (frozen, see ADR-0001) Rust desktop shell using OS-FFI for system_tray destroy, sysinfo workspace probing, and coprocessor/llm_coding command pipes. All unsafe at the C-ABI / OS-FFI boundary."))
+  (classification
+    (file "src-gossamer/src/coprocessor/commands.rs")
+    (category "UnsafeCode")
+    (classification "legitimate-ffi")
+    (audit "audits/audit-ffi-2026-05-26.md")
+    (rationale "panll is a panel-clades language with a Tauri-style desktop wrapper. ffi/zig/src is the Zig FFI bridge to the Idris2 core; src-gossamer/src is the (frozen, see ADR-0001) Rust desktop shell using OS-FFI for system_tray destroy, sysinfo workspace probing, and coprocessor/llm_coding command pipes. All unsafe at the C-ABI / OS-FFI boundary."))
+  (classification
+    (file "src-gossamer/src/coprocessor/commands.rs")
+    (category "UnsafeCode")
+    (classification "legitimate-ffi")
+    (audit "audits/audit-ffi-2026-05-26.md")
+    (rationale "panll is a panel-clades language with a Tauri-style desktop wrapper. ffi/zig/src is the Zig FFI bridge to the Idris2 core; src-gossamer/src is the (frozen, see ADR-0001) Rust desktop shell using OS-FFI for system_tray destroy, sysinfo workspace probing, and coprocessor/llm_coding command pipes. All unsafe at the C-ABI / OS-FFI boundary."))
+  (classification
+    (file "src-gossamer/src/system_tray/mod.rs")
+    (category "UnsafeCode")
+    (classification "legitimate-ffi")
+    (audit "audits/audit-ffi-2026-05-26.md")
+    (rationale "panll is a panel-clades language with a Tauri-style desktop wrapper. ffi/zig/src is the Zig FFI bridge to the Idris2 core; src-gossamer/src is the (frozen, see ADR-0001) Rust desktop shell using OS-FFI for system_tray destroy, sysinfo workspace probing, and coprocessor/llm_coding command pipes. All unsafe at the C-ABI / OS-FFI boundary."))
+  (classification
+    (file "src-gossamer/src/workspace/sysinfo.rs")
+    (category "UnsafeCode")
+    (classification "legitimate-ffi")
+    (audit "audits/audit-ffi-2026-05-26.md")
+    (rationale "panll is a panel-clades language with a Tauri-style desktop wrapper. ffi/zig/src is the Zig FFI bridge to the Idris2 core; src-gossamer/src is the (frozen, see ADR-0001) Rust desktop shell using OS-FFI for system_tray destroy, sysinfo workspace probing, and coprocessor/llm_coding command pipes. All unsafe at the C-ABI / OS-FFI boundary."))
+  (classification
+    (file "src-gossamer/src/llm_coding/commands.rs")
+    (category "UnsafeCode")
+    (classification "legitimate-ffi")
+    (audit "audits/audit-ffi-2026-05-26.md")
+    (rationale "panll is a panel-clades language with a Tauri-style desktop wrapper. ffi/zig/src is the Zig FFI bridge to the Idris2 core; src-gossamer/src is the (frozen, see ADR-0001) Rust desktop shell using OS-FFI for system_tray destroy, sysinfo workspace probing, and coprocessor/llm_coding command pipes. All unsafe at the C-ABI / OS-FFI boundary."))
+)
