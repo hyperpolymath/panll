@@ -4,11 +4,11 @@
 [project]
 name = "panel-clades"
 
-[[functions]]
-name = "mountApp"
-source = "examples/SafeDOMExample.res"
-energy-budget-mj = 10.0
-carbon-budget-mg = 2.0
+# [[functions]] mountApp block removed 2026-05-26: its `source` pointed
+# at examples/SafeDOMExample.res, which is being deleted estate-wide
+# (gitbot-fleet#208 SafeDOM sweep — stale over-propagated ReScript
+# fixture). Restore (with `source = "examples/SafeDOMExample.affine"`
+# or similar) once affinescript#56 lands a canonical .affine equivalent.
 
 [carbon]
 provider = "static"
