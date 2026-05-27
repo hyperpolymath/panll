@@ -115,3 +115,5 @@ Containerfile  text eol=lf
 # Lock files
 Cargo.lock  text eol=lf -diff
 flake.lock  text eol=lf -diff
+# Pending estate-wide policy: hide ReScript from primary-language detection.
+**/*.res linguist-detectable=false
