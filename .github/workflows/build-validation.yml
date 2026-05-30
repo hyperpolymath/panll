@@ -53,7 +53,7 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: ReScript build gate
-        run: npm run res:build
+        run: npx --no-install rescript build
 
       - name: Deno test gate
         run: deno task test
