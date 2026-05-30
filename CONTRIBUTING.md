@@ -26,7 +26,8 @@ container support and tighter integration with the hyperpolymath stack.
 
 **Deno instead of npm/Node** — No `node_modules` directory (1,200+ transitive
 deps for a typical Node project). Built-in test runner. Secure-by-default
-permissions. npm is only used for the ReScript compiler itself.
+permissions. ReScript and Tailwind run via `npm:` specifiers in `deno.json`;
+there is no `package.json` and no npm CLI is invoked.
 
 **Elixir/BEAM for middleware** — BEAM's supervision trees mean a crashing backend
 connection restarts itself without taking down the whole panel surface. Pattern

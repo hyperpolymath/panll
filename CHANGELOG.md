@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (2026-05-30 — npm → Deno migration)
+- **`package.json` + `package-lock.json` deleted.** ReScript and Tailwind now
+  run via `npm:` specifiers in `deno.json`:
+  - ReScript: `deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0 build`
+    (exposed as `deno task res:build`)
+  - Tailwind: `deno run -A npm:tailwindcss` (transitional — no Deno-native
+    drop-in yet)
+- **`setup-node` removed from CI** in `.github/workflows/build-validation.yml`
+  and `.github/workflows/e2e.yml`; supersedes the `panll#62` `npm install`
+  band-aid. See `panll#65` for the migration PR.
+
 ### Changed (2026-05-17 — Tech-debt remediation: lib/bin split)
 - **`[lib] panll` crate extracted** — all GTK-free backend logic
   (`http_client`, `service_registry`, `settings`, `identity`, `groove`,

@@ -68,7 +68,7 @@ Optional: Elixir >= 1.16 (for beam/ middleware).
 ## Rules
 
 - No TypeScript. ReScript only.
-- No npm/bun. Deno only (npm only for ReScript compiler).
+- No npm/bun. Deno only (ReScript + Tailwind run via `npm:` specifiers in `deno.json`).
 - Panels, not panes.
 - TEA pattern only. All state in Model.model.
 - Anti-Crash validates ALL neural tokens.
