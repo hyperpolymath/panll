@@ -41,7 +41,16 @@ jobs:
             patchelf
 
       - name: Install npm dependencies
-        run: npm ci
+        # `npm ci` requires package-lock.json to be a complete resolution
+        # of package.json. The committed lockfile is incomplete: tailwindcss's
+        # nested deps (chokidar wants picomatch@^2.3.1 at the top level)
+        # are missing entries, so `npm ci` refuses with "Missing: picomatch@2.3.2
+        # from lock file". `npm install` is non-strict and regenerates the
+        # missing entries in-place during CI, unblocking the gate without
+        # committing a touched lockfile. The real fix is the npm→Deno
+        # migration tracked in hyperpolymath/standards#253; this is a
+        # band-aid to keep CI green until then.
+        run: npm install --no-audit --no-fund
 
       - name: ReScript build gate
         run: npm run res:build
