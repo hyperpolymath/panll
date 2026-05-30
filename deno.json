@@ -4,16 +4,17 @@
   "license": "AGPL-3.0-or-later",
   "description": "Panel workspace framework — TEA (The Elm Architecture) for ReScript with tiling layout, smart routing, keyboard navigation, undo engine, and security-hardened DOM. Build panel-based UIs for desktop and web.",
   "exports": "./mod.js",
+  "nodeModulesDir": "auto",
   "tasks": {
     "dev": "cargo build && cargo run --bin panll-gossamer & deno task bundle && deno task serve:dev",
     "build": "cargo build --release && deno task bundle && deno task css:build",
     "gossamer:dev": "cargo build && cargo run --bin panll-gossamer & deno task bundle && deno task serve:dev",
     "gossamer:build": "cargo build --release && deno task bundle && deno task css:build",
     "gossamer:run": "cargo run --bin panll-gossamer",
-    "bundle": "DENO_NO_PACKAGE_JSON=1 deno run -A scripts/bundle.ts",
-    "bundle:watch": "DENO_NO_PACKAGE_JSON=1 deno run -A scripts/bundle.ts --watch",
-    "css:build": "deno run -A npm:tailwindcss -i ./src/styles/input.css -o ./public/styles.css --minify",
-    "css:watch": "deno run -A npm:tailwindcss -i ./src/styles/input.css -o ./public/styles.css --watch",
+    "bundle": "deno run -A scripts/bundle.ts",
+    "bundle:watch": "deno run -A scripts/bundle.ts --watch",
+    "css:build": "deno run -A --allow-scripts=npm:tailwindcss npm:tailwindcss@^3.4.19 -i ./src/styles/input.css -o ./public/styles.css --minify",
+    "css:watch": "deno run -A --allow-scripts=npm:tailwindcss npm:tailwindcss@^3.4.19 -i ./src/styles/input.css -o ./public/styles.css --watch",
     "serve:dev": "deno run --allow-net=127.0.0.1:8000 --allow-read=. scripts/dev-server.ts",
     "test": "deno test --no-check --allow-read --allow-env tests/",
     "test:watch": "deno test --no-check --watch --allow-read --allow-env tests/",
@@ -23,16 +24,19 @@
     "lint": "deno lint scripts/",
     "fmt": "deno fmt scripts/",
     "mock:echidna": "deno run --allow-net=127.0.0.1:9000 scripts/mock-echidna.ts",
-    "res:build": "deno run -A npm:rescript build",
-    "res:clean": "deno run -A npm:rescript clean",
-    "res:watch": "deno run -A npm:rescript watch"
+    "res:build": "deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0 build",
+    "res:clean": "deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0 clean",
+    "res:watch": "deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0 watch"
   },
   "imports": {
     "@std/": "jsr:@std/",
     "@gossamer/api": "./src-gossamer/bindings/rescript/src/Gossamer.res.js",
     "rescript": "npm:rescript@^12.0.0",
-    "@rescript/core/": "npm:@rescript/core@1.6.1/",
-    "@rescript/runtime/": "npm:@rescript/runtime@12.2.0/"
+    "@rescript/core": "npm:@rescript/core@^1.6.1",
+    "@rescript/core/": "npm:/@rescript/core@1.6.1/",
+    "@rescript/runtime": "npm:@rescript/runtime@^12.2.0",
+    "@rescript/runtime/": "npm:/@rescript/runtime@12.2.0/",
+    "tailwindcss": "npm:tailwindcss@^3.4.19"
   },
   "publish": {
     "include": [

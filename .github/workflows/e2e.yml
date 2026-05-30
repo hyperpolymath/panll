@@ -46,10 +46,10 @@ jobs:
           deno-version: v2.x
 
       - name: Install dependencies
-        run: deno install --node-modules-dir=auto
+        run: deno install
 
       - name: Build ReScript
-        run: npx rescript build || echo "ReScript build attempted"
+        run: deno task res:build || echo "ReScript build attempted"
 
       - name: Run E2E tests
         run: deno test tests/e2e_*.js tests/cross_panel_integration_test.js tests/update_integration_test.js --allow-read --allow-env
@@ -69,10 +69,10 @@ jobs:
           deno-version: v2.x
 
       - name: Install dependencies
-        run: deno install --node-modules-dir=auto
+        run: deno install
 
       - name: Build ReScript
-        run: npx rescript build || echo "ReScript build attempted"
+        run: deno task res:build || echo "ReScript build attempted"
 
       - name: Run crosscutting aspect tests
         run: deno test tests/*_crosscutting_test.js tests/panelbus_propagation_test.js --allow-read --allow-env
@@ -92,10 +92,10 @@ jobs:
           deno-version: v2.x
 
       - name: Install dependencies
-        run: deno install --node-modules-dir=auto
+        run: deno install
 
       - name: Build ReScript
-        run: npx rescript build || echo "ReScript build attempted"
+        run: deno task res:build || echo "ReScript build attempted"
 
       - name: Run benchmarks
         run: deno test tests/*_bench_test.js --allow-read --allow-env 2>&1 | tee /tmp/bench-results.txt
