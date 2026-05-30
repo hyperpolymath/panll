@@ -91,10 +91,9 @@ source $HOME/.cargo/env
 curl -fsSL https://deno.land/x/install/install.sh | sh
 export DENO_INSTALL="/home/$USER/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
-
-# Install ReScript
-npm install -g rescript
 ```
+
+ReScript is pinned in `deno.json` (`npm:rescript@^12.0.0`) and resolved on first `deno task res:build` — no global install required.
 
 ### Clone and Build
 
