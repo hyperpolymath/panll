@@ -20,17 +20,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4.4.0
-        with:
-          node-version: "20"
-
       - name: Setup Deno
         uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2
         with:
           deno-version: "2.x"
 
-      - name: Install Linux dependencies for Tauri
+      - name: Install Linux dependencies for Gossamer
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -40,29 +35,20 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: Install npm dependencies
-        # `npm ci` requires package-lock.json to be a complete resolution
-        # of package.json. The committed lockfile is incomplete: tailwindcss's
-        # nested deps (chokidar wants picomatch@^2.3.1 at the top level)
-        # are missing entries, so `npm ci` refuses with "Missing: picomatch@2.3.2
-        # from lock file". `npm install` is non-strict and regenerates the
-        # missing entries in-place during CI, unblocking the gate without
-        # committing a touched lockfile. The real fix is the npm→Deno
-        # migration tracked in hyperpolymath/standards#253; this is a
-        # band-aid to keep CI green until then.
-        run: npm install --no-audit --no-fund
+      - name: Warm Deno cache (npm + jsr specifiers)
+        run: deno install
 
       - name: ReScript build gate
-        run: npx --no-install rescript build
+        run: deno task res:build
 
       - name: Deno test gate
         run: deno task test
 
       - name: Rust cargo check gate
-        run: cargo check --manifest-path src-tauri/Cargo.toml
+        run: cargo check
 
       - name: Rust test gate
-        run: cargo test --manifest-path src-tauri/Cargo.toml -- --test-threads=1
+        run: cargo test --lib -- --test-threads=1
 
       - name: Setup Rust toolchain for PCC
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
@@ -74,4 +60,3 @@ jobs:
 
       - name: Panel wiring verification gate
         run: ./tools/pcc/target/release/panll panel verify --repo-root .
-
