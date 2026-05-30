@@ -165,7 +165,7 @@ Files: TypeLLModel.res, TypeLLEngine.res, TypeLLCmd.res, TypeLLService.res, Type
 |---------|------|
 | ECHIDNA | Theorem prover dispatch |
 | VeriSimDB | 8-modality versioned database |
-| panic-attacker | Security analysis |
+| panic-attack | Security analysis |
 | BoJ server | Cartridge server, protocol gateway |
 | TypeLL | Type verification kernel |
 | contractiles | Elastic contract framework |
@@ -182,5 +182,5 @@ deno test --no-check --allow-read --allow-env tests/
 ## Pre-commit
 
 ```bash
-just assail    # panic-attacker scan
+just assail    # panic-attack scan
 ```
