@@ -16,7 +16,7 @@ On top of these, there are **overlay panels** you can open from the panel bar (v
 cd ~/Documents/hyperpolymath-repos/panll
 
 # Terminal 1: Start the ReScript compiler (watches for changes)
-npx rescript-legacy -w
+deno task res:watch
 
 # Terminal 2: Bundle the JS and serve
 just bundle && just serve:dev
