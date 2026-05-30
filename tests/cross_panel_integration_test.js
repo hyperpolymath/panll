@@ -239,7 +239,7 @@ Deno.test("Integration — SeamEngine fullScan with realistic file list", () => 
     "src/core/AntiCrashEngine.res",
     "src/core/SeamEngine.res",
     "src/Model.res",
-    "package.json",
+    "deno.json",
     "rescript.json",
     "TOPOLOGY.md",
     "CHANGELOG.md",

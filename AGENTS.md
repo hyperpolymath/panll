@@ -70,7 +70,7 @@ or contradict deliberate architectural decisions.
 
 **Rule:** No npm, Bun, pnpm, or yarn — Deno is the orchestrator
 
-**Why:** npm is used ONLY for the ReScript compiler (which requires it). All other tooling uses Deno. Do not add npm dependencies.
+**Why:** Deno-only build (post panll#65). ReScript and Tailwind run via `npm:` specifiers in `deno.json` — there is no `package.json` and no npm CLI is invoked. Do not reintroduce npm/bun/yarn/pnpm tooling.
 
 ### [CRITICAL] anticrash-validates-all
 
@@ -150,11 +150,11 @@ These choices may look unusual but are intentional:
 
 **Rejected alternatives:** rescript-tea, Redux, MobX, React hooks pattern
 
-### deno-npm-hybrid
+### deno-only-with-npm-specifiers
 
-**Decision:** Deno orchestrates everything, but npm is used solely for the ReScript compiler
+**Decision:** Deno orchestrates everything; ReScript and Tailwind run via `npm:` specifiers in `deno.json`
 
-**Why:** ReScript compiler requires npm — this is the ONLY permitted npm usage. Do not extend npm's role.
+**Why:** Post panll#65: `package.json` + `package-lock.json` deleted; ReScript compiles via `deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0 build`, Tailwind via `deno run -A npm:tailwindcss`. No npm CLI invocation. Do not extend npm's role.
 
 ### binary-star
 

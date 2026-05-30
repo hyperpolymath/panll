@@ -26,4 +26,4 @@ Contains all domain-specific type definitions for PanLL's TEA architecture. Each
 2. Add `include NewDomainModel` to `src/Model.res`
 3. Add any new fields to the `model` record in `Model.res`
 4. Add init values in the `init()` function in `Model.res`
-5. Run `npx rescript build` — compiler errors show every place needing updates
+5. Run `deno task res:build` — compiler errors show every place needing updates

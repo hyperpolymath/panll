@@ -145,7 +145,7 @@ PanLL components aim to:
 
 |Runtime
 |Deno (tests, build orchestration)
-|No `node_modules` black hole — URL imports, built-in TypeScript support for glue code, secure-by-default permissions model. npm is only used for the ReScript compiler itself (pending upstream Deno support). See https://deno.com[Deno].
+|No `node_modules` black hole — URL imports, built-in TypeScript support for glue code, secure-by-default permissions model. Deno-only build: ReScript and Tailwind run through `npm:` specifiers in `deno.json`, no `package.json` or npm CLI invocation. See https://deno.com[Deno].
 
 |Testing
 |Deno.test (97 JS) + cargo test (12 Rust)
@@ -170,15 +170,15 @@ PanLL components aim to:
 
 == Development
 
-PanLL uses Deno for runtime, testing, and build orchestration. ReScript compilation uses the symlinked compiler in `node_modules`.
+PanLL uses Deno for runtime, testing, and build orchestration. ReScript compilation runs through `deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0` (no `package.json` or npm CLI).
 
 [source,bash]
 ----
 # Compile ReScript modules
-npx rescript build
+deno task res:build
 
 # Watch ReScript sources during development
-npx rescript build -w
+deno task res:watch
 
 # Run tests (97 JS tests + 12 Rust tests)
 deno task test
@@ -201,7 +201,7 @@ deno task build
 [source,bash]
 ----
 # 1. Compile ReScript
-npx rescript build
+deno task res:build
 
 # 2. Run tests to verify
 deno task test

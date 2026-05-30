@@ -16,9 +16,10 @@ const ctx = await esbuild.context({
   format: "esm",
   outfile: "public/app.bundle.js",
   sourcemap: true,
-  // Tauri JS APIs are thin wrappers around window.__TAURI_INTERNALS__ IPC —
-  // bundling them is the standard approach and avoids bare-specifier issues
-  // in WebKitGTK which lacks import map support.
+  // Gossamer IPC bindings are thin wrappers around the WebKitGTK message
+  // handlers exposed by the Rust backend — bundling them is the standard
+  // approach and avoids bare-specifier issues in WebKitGTK which lacks
+  // import map support.
   nodePaths: ["node_modules"],
   logLevel: "info",
 });

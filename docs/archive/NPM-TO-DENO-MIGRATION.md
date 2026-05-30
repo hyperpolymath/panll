@@ -1,6 +1,13 @@
 # npm → Deno Migration Plan for PanLL
 
-**Status:** Planning phase
+> **STATUS: CLOSED (2026-05-30).** Closed by panll#65 — `package.json` and
+> `package-lock.json` deleted; ReScript + Tailwind now run through `npm:`
+> specifiers in `deno.json`. See the `deno.json` task table and
+> `.github/workflows/build-validation.yml` for the shipped state. The text
+> below is preserved as the original planning document for historical context;
+> details may not reflect what actually shipped.
+
+**Status:** Planning phase (superseded)
 **Priority:** Medium (blocks full hyperpolymath policy compliance)
 **Timeline:** 1-2 weeks implementation
 **Blocker:** ReScript compiler requires Node.js/npm (no Deno support yet)

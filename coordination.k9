@@ -71,7 +71,7 @@ invariants:
 
   - id: no-npm-bun
     rule: "No npm, Bun, pnpm, or yarn — Deno is the orchestrator"
-    reason: "npm is used ONLY for the ReScript compiler (which requires it). All other tooling uses Deno. Do not add npm dependencies."
+    reason: "Deno-only build (post panll#65). ReScript and Tailwind run via `npm:` specifiers in deno.json — there is no `package.json` and no npm CLI is invoked. Do not reintroduce npm/bun/yarn/pnpm tooling."
     severity: critical
 
   - id: anticrash-validates-all
@@ -154,9 +154,9 @@ architecture:
       - MobX
       - React hooks pattern
 
-  - id: deno-npm-hybrid
-    decision: "Deno orchestrates everything, but npm is used solely for the ReScript compiler"
-    reason: "ReScript compiler requires npm — this is the ONLY permitted npm usage. Do not extend npm's role."
+  - id: deno-only-with-npm-specifiers
+    decision: "Deno orchestrates everything; ReScript and Tailwind run via `npm:` specifiers in deno.json"
+    reason: "Post panll#65: package.json + package-lock.json deleted; ReScript compiles via `deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0 build`, Tailwind via `deno run -A npm:tailwindcss`. No npm CLI invocation. Do not extend npm's role."
 
   - id: binary-star
     decision: "Three panel types: Panel-L (symbolic/human), Panel-N (neural/machine), Panel-W (world/shared)"
