@@ -45,7 +45,7 @@ deno task test:coverage
 
 ## Architecture
 
-- **TEA (The Elm Architecture)** in ReScript — Model/Msg/Update/View/Subscriptions
+- **TEA (The Elm Architecture)** in ReScript (migrating to AffineScript per `hyperpolymath/standards#252`) — Model/Msg/Update/View/Subscriptions
 - **Gossamer** (Zig + WebKitGTK) backend — migrated from Tauri 2.0
 - **Elixir/BEAM** optional middleware (`beam/panll_beam`)
 - **106 panels** across four panes: Panel-A (Ambient), Panel-L (Logic, role: Symbolic), Panel-N (Neural), Panel-W (World). Panel-L + Panel-N orbit Panel-W in the Binary Star core; Panel-A surrounds as ambient substrate.
@@ -71,14 +71,16 @@ deno task test:coverage
 ## Critical Rules
 
 - **NEVER use Tauri** — project migrated to Gossamer. All backend refs use `src-gossamer/`
-- **NEVER use TypeScript** — ReScript only
-- **NEVER use npm/bun** — Deno only (npm used only for ReScript compiler)
+- **NEVER use TypeScript** — current source is ReScript; **new modules MUST be AffineScript** per `hyperpolymath/standards#252` (ReScript→AffineScript estate umbrella). Don't introduce new `.res`/`.resi` files in new feature work.
+- **NEVER use npm/bun** — Deno only (npm used only for the legacy ReScript compiler invocation; estate target is `deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0` per `hyperpolymath/standards#253`)
 - **Panels, not panes** — PanLL uses "panels" terminology
 - **TEA pattern only** — no MVC, no Redux, no hooks. Model -> Msg -> Update -> View
 - **All state in Model.model** — no global mutable state
 - **Anti-Crash validates ALL neural tokens** — no inference bypasses the circuit breaker
 
-## ReScript Conventions
+## ReScript Conventions (legacy — apply when touching existing `.res`/`.resi`)
+
+> New modules should be AffineScript per `hyperpolymath/standards#252`. These conventions remain authoritative for edits to the existing ReScript surface until migration completes.
 
 - Use `list{}` for vdom children: `Tea_Html.div(list{}, list{...})`
 - Use `Events.onClick` / `Events.onInput` for event handlers
