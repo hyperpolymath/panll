@@ -31,7 +31,7 @@ just help-me   # see available commands
 
 [source,bash]
 ----
-just assail    # run panic-attacker security scan
+just assail    # run panic-attack security scan
 ----
 
 == Contributing

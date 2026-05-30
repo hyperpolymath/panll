@@ -75,5 +75,5 @@ Optional: Elixir >= 1.16 (for beam/ middleware).
 
 ## Related Projects
 
-ECHIDNA (prover), VeriSimDB (database), panic-attacker (security),
+ECHIDNA (prover), VeriSimDB (database), panic-attack (security),
 BoJ server (protocol gateway), TypeLL (type verification).

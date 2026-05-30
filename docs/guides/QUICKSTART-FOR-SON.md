@@ -24,8 +24,8 @@ just bundle && just serve:dev
 # Terminal 3: Build Tailwind CSS
 just css:build
 
-# Terminal 4: Start the Tauri backend
-cd src-tauri && cargo run
+# Terminal 4: Start the Gossamer backend
+cargo run --bin panll-gossamer
 ```
 
 Or for the full dev experience:
@@ -34,7 +34,7 @@ Or for the full dev experience:
 just dev
 ```
 
-The app opens at `http://localhost:8000/public/` (Tauri wraps this).
+The app opens at `http://localhost:8000/public/` (Gossamer wraps this).
 
 ## First Thing You See
 
