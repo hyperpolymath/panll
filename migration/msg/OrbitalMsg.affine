@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// OrbitalMsg.affine — orbital stability messages (stability, divergence,
+// drift aura).
+//
+// Translation of src/msg/OrbitalMsg.res (8 LoC). Pure sum-type module
+// — no cross-module deps, no Tea_/Promise/FFI surface. The cleanest
+// possible Mode-A port in panll's src/msg/ tree.
+//
+// Refs: standards#279 (megaport STEP 8).
+
+module OrbitalMsg;
+
+type OrbitalMsg =
+  | UpdateStability(Float)
+  | UpdateDivergence(Float)
+  | SetDriftAura(String)

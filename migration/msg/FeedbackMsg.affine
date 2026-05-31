@@ -1,0 +1,23 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// FeedbackMsg.affine — Feedback-O-Tron messages (user feedback submission
+// lifecycle).
+//
+// Translation of src/msg/FeedbackMsg.res (11 LoC). Pure sum-type module
+// using `Result<String, String>` from prelude. No cross-module msg/model
+// dep.
+//
+// Refs: standards#279 (megaport STEP 8).
+
+module FeedbackMsg;
+
+use prelude::{Result, Ok, Err};
+
+type FeedbackMsg =
+  | OpenFeedback
+  | SubmitFeedback(String)
+  | CancelFeedback
+  | SetReportType(String)
+  | FeedbackSubmitted
+  | FeedbackSubmissionResult(Result<String, String>)
