@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// FarmModule.affine — capability registration for the Git-Private-Farm panel.
+//
+// Translation of src/modules/FarmModule.res (66 LoC). Same capability-
+// declaration shape as the other panll module files: sum-type capability,
+// config record, hasCapability + capabilityLabel helpers. Pure data +
+// pure functions — no FFI / Tea_/ Pixi / Gossamer surface.
+//
+// Refs: standards#279 (megaport step), standards#252 (campaign umbrella).
+
+module FarmModule;
+
+use prelude::{Option, Some, None, contains};
+
+/// Capabilities that the Farm panel exposes.
+type FarmCapability =
+  | RepoInventory
+  | EnrollmentDashboard
+  | HealthDashboard
+  | GroupAnalysis
+  | ForgeCoverage
+
+type FarmModuleConfig = {
+  id: String,
+  name: String,
+  version: String,
+  description: String,
+  manifestPath: String,
+  capabilities: [FarmCapability],
+  icon: Option<String>,
+}
+
+const config: FarmModuleConfig = #{
+  id: "farm",
+  name: "Git-Private-Farm",
+  version: "0.1.0",
+  description: "Repository admin registry and maintenance hub for ~265 repos across 6 forges",
+  manifestPath: "~/.git-private-farm/farm-manifest.json",
+  capabilities: [RepoInventory, EnrollmentDashboard, HealthDashboard, GroupAnalysis, ForgeCoverage],
+  icon: Some("barn"),
+};
+
+fn hasCapability(cap: FarmCapability) -> Bool {
+  contains(config.capabilities, cap)
+}
+
+fn capabilityLabel(cap: FarmCapability) -> String {
+  match cap {
+    RepoInventory => "Repo Inventory",
+    EnrollmentDashboard => "Enrollment Dashboard",
+    HealthDashboard => "Health Dashboard",
+    GroupAnalysis => "Group Analysis",
+    ForgeCoverage => "Forge Coverage",
+  }
+}

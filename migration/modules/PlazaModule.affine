@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// PlazaModule.affine — capability registration for the PMPL licensing
+// adoption and governance panel.
+//
+// Translation of src/modules/PlazaModule.res (79 LoC). Same shape.
+//
+// Refs: standards#279, standards#252.
+
+module PlazaModule;
+
+use prelude::{Option, Some, None, contains};
+
+type PlazaCapability =
+  | AdoptionDashboard
+  | ComplianceAudit
+  | ProvenanceVerification
+  | CompatibilityChecker
+  | EthicalUseGuide
+  | GovernanceView
+  | AdoptionWizard
+
+type PlazaModuleConfig = {
+  id: String,
+  name: String,
+  version: String,
+  description: String,
+  capabilities: [PlazaCapability],
+  icon: Option<String>,
+}
+
+const config: PlazaModuleConfig = #{
+  id: "plaza",
+  name: "Palimpsest Plaza",
+  version: "0.1.0",
+  description: "PMPL license adoption, compliance, and governance hub for the FOSS community",
+  capabilities: [
+    AdoptionDashboard,
+    ComplianceAudit,
+    ProvenanceVerification,
+    CompatibilityChecker,
+    EthicalUseGuide,
+    GovernanceView,
+    AdoptionWizard,
+  ],
+  icon: Some("scroll"),
+};
+
+fn hasCapability(cap: PlazaCapability) -> Bool {
+  contains(config.capabilities, cap)
+}
+
+fn capabilityLabel(cap: PlazaCapability) -> String {
+  match cap {
+    AdoptionDashboard => "Adoption Dashboard",
+    ComplianceAudit => "Compliance Audit",
+    ProvenanceVerification => "Provenance Verification",
+    CompatibilityChecker => "Compatibility Checker",
+    EthicalUseGuide => "Ethical Use Guide",
+    GovernanceView => "Governance",
+    AdoptionWizard => "Adopt PMPL",
+  }
+}

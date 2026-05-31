@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// MassPanicModule.affine — capability declarations for the
+// organisation-scale batch scanning panel.
+//
+// Translation of src/modules/MassPanicModule.res (66 LoC). Same shape.
+//
+// Refs: standards#279, standards#252.
+
+module MassPanicModule;
+
+use prelude::{Option, Some, None, contains};
+
+type MassPanicCapability =
+  | AssemblylineScanning
+  | IncrementalBlake3
+  | VerisimDBPersistence
+  | DeltaReporting
+  | NotificationPipeline
+  | RepoDiscovery
+  | CacheManagement
+  | SystemImaging
+  | TemporalNavigation
+
+type MassPanicModuleConfig = {
+  id: String,
+  name: String,
+  version: String,
+  description: String,
+  binaryName: String,
+  capabilities: [MassPanicCapability],
+  icon: Option<String>,
+}
+
+const config: MassPanicModuleConfig = #{
+  id: "mass-panic",
+  name: "Mass Panic",
+  version: "2.1.0",
+  description: "Organisation-scale batch scanning — assemblyline + BLAKE3 + imaging + temporal + verisim",
+  binaryName: "panic-attack",
+  icon: Some("zap-off"),
+  capabilities: [
+    AssemblylineScanning,
+    IncrementalBlake3,
+    VerisimDBPersistence,
+    DeltaReporting,
+    NotificationPipeline,
+    RepoDiscovery,
+    CacheManagement,
+    SystemImaging,
+    TemporalNavigation,
+  ],
+};
+
+fn hasCapability(cap: MassPanicCapability) -> Bool {
+  contains(config.capabilities, cap)
+}
+
+fn capabilityLabel(cap: MassPanicCapability) -> String {
+  match cap {
+    AssemblylineScanning => "Assemblyline Scanning (rayon parallelism)",
+    IncrementalBlake3 => "Incremental BLAKE3 Fingerprinting",
+    VerisimDBPersistence => "VerisimDB Octad Persistence",
+    DeltaReporting => "Delta Reporting (diff between runs)",
+    NotificationPipeline => "Notification Pipeline (markdown + GitHub)",
+    RepoDiscovery => "Repository Discovery (.git detection)",
+    CacheManagement => "Fingerprint Cache Management",
+    SystemImaging => "System Health Imaging (fNIRS-style spatial risk map)",
+    TemporalNavigation => "Temporal Navigation (time-series diff + trend detection)",
+  }
+}
