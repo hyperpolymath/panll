@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0-or-later
 name: CodeQL Security Analysis
 
 on:
@@ -8,6 +8,7 @@ on:
     branches: [main, master]
   schedule:
     - cron: '0 6 * * 1'
+
 
 permissions: read-all
 
