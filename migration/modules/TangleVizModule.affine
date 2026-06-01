@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// TangleVizModule.affine — capability registration for the Tangle
+// topology panel.
+//
+// Translation of src/modules/TangleVizModule.res (57 LoC). Same shape.
+//
+// Refs: standards#279, standards#252.
+
+module TangleVizModule;
+
+use prelude::{Option, Some, None, contains};
+
+type TangleVizCapability =
+  | BraidVisualization
+  | InvariantComputation
+  | SourceParsing
+
+type TangleVizModuleConfig = {
+  id: String,
+  name: String,
+  version: String,
+  description: String,
+  capabilities: [TangleVizCapability],
+  icon: Option<String>,
+}
+
+const config: TangleVizModuleConfig = #{
+  id: "tangle-viz",
+  name: "Tangle Viz",
+  version: "0.1.0",
+  description: "Topological programming visualizer — braid diagrams, knot invariants, Tangle source parsing",
+  capabilities: [BraidVisualization, InvariantComputation, SourceParsing],
+  icon: Some("knot"),
+};
+
+fn hasCapability(cap: TangleVizCapability) -> Bool {
+  contains(config.capabilities, cap)
+}
+
+fn capabilityLabel(cap: TangleVizCapability) -> String {
+  match cap {
+    BraidVisualization => "Braid Visualization",
+    InvariantComputation => "Invariant Computation",
+    SourceParsing => "Source Parsing",
+  }
+}

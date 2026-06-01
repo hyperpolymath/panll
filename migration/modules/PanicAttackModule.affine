@@ -1,0 +1,69 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// PanicAttackModule.affine — capability declarations for the stress
+// testing and weak point analysis panel.
+//
+// Translation of src/modules/PanicAttackModule.res (63 LoC). Same shape.
+//
+// Refs: standards#279, standards#252.
+
+module PanicAttackModule;
+
+use prelude::{Option, Some, None, contains};
+
+type PanicAttackCapability =
+  | StaticAnalysis
+  | StressTesting
+  | BugSignatureDetection
+  | ReportGeneration
+  | ReportComparison
+  | BatchScanning
+  | SarifExport
+  | EventChainExport
+
+type PanicAttackModuleConfig = {
+  id: String,
+  name: String,
+  version: String,
+  description: String,
+  binaryName: String,
+  capabilities: [PanicAttackCapability],
+  icon: Option<String>,
+}
+
+const config: PanicAttackModuleConfig = #{
+  id: "panic-attack",
+  name: "panic-attack",
+  version: "2.0.0",
+  description: "Universal stress testing and logic-based bug signature detection",
+  binaryName: "panic-attack",
+  icon: Some("zap"),
+  capabilities: [
+    StaticAnalysis,
+    StressTesting,
+    BugSignatureDetection,
+    ReportGeneration,
+    ReportComparison,
+    BatchScanning,
+    SarifExport,
+    EventChainExport,
+  ],
+};
+
+fn hasCapability(cap: PanicAttackCapability) -> Bool {
+  contains(config.capabilities, cap)
+}
+
+fn capabilityLabel(cap: PanicAttackCapability) -> String {
+  match cap {
+    StaticAnalysis => "Static Analysis (assail)",
+    StressTesting => "Stress Testing (attack/assault)",
+    BugSignatureDetection => "Bug Signature Detection (kanren)",
+    ReportGeneration => "Report Generation (JSON/YAML/SARIF)",
+    ReportComparison => "Report Comparison (diff)",
+    BatchScanning => "Batch Scanning (assemblyline)",
+    SarifExport => "SARIF Export (GitHub Security)",
+    EventChainExport => "Event Chain Export (PanLL)",
+  }
+}

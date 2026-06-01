@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// ServiceEndpoints.affine — centralised default URLs for all backend services.
+//
+// Translation of src/modules/ServiceEndpoints.res (39 LoC, 9 const decls,
+// 0 functions). Pure constants — no FFI, no Tea_*, no Promise / Pixi /
+// Gossamer. The cleanest possible Mode-A AffineScript port surface in
+// panll today.
+//
+// Translation choices:
+//   `let x = "..."` → `const x: String = "...";`  (semicolons + explicit
+//     type — AffineScript requires both at module-top-level constants).
+//   The `panic-attack:allow insecure-protocol` annotation is preserved as
+//   a comment; the .affine surface inherits the same scanner-policy
+//   semantics from the file's existence under migration/modules/.
+//
+// What this PR is NOT
+//   It does NOT replace src/modules/ServiceEndpoints.res in the build.
+//   The .res still owns the runtime contract (it compiles to
+//   src/modules/ServiceEndpoints.res.mjs, which consumers import).
+//   Replacement requires .affine→.mjs codegen + consumer migration —
+//   separate work, tracked under standards#279 STEP 8.
+//
+// Refs: standards#279 (megaport step), standards#252 (campaign umbrella).
+//
+// panic-attack:allow insecure-protocol — all URLs are localhost/loopback
+// development endpoints. Local services do not run TLS. Production
+// deployments override these via environment variables or config files.
+
+module ServiceEndpoints;
+
+/// VeriSimDB octad multimodal database.
+const verisim: String = "http://localhost:8080/api/v1";
+
+/// QuandleDB algebraic query database.
+const quandledb: String = "http://localhost:8081/api/v1";
+
+/// LithoGlyph graph pattern database.
+const lithoglyph: String = "http://localhost:8082/api/v1";
+
+/// BoJ (Bundle of Joy) cartridge gateway server.
+const bojServer: String = "http://localhost:7700";
+
+/// ECHIDNA proof assistant / multi-solver dispatch.
+const echidna: String = "http://localhost:9000/api/v1";
+
+/// Gitbot-Fleet Axum dashboard API.
+const fleet: String = "http://localhost:8090/api/v1";
+
+/// Multiplayer Monitor WebSocket server.
+const multiplayerMonitor: String = "ws://localhost:4000/socket/websocket";
+
+/// Game Preview Vite dev server.
+const gamePreviewDev: String = "http://localhost:8080";
+
+/// Migration backend (VeriSimDB-backed).
+const migrationBackend: String = "http://localhost:8080/api/v1";

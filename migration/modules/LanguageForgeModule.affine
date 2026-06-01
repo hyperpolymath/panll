@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// LanguageForgeModule.affine — capability registration for the
+// nextgen-languages panel.
+//
+// Translation of src/modules/LanguageForgeModule.res (60 LoC). Same shape
+// as the other module files.
+//
+// Refs: standards#279, standards#252.
+
+module LanguageForgeModule;
+
+use prelude::{Option, Some, None, contains};
+
+type LanguageForgeCapability =
+  | LanguageDashboard
+  | CompilationStatus
+  | MoscowView
+  | WasmTargetTracker
+
+type LanguageForgeModuleConfig = {
+  id: String,
+  name: String,
+  version: String,
+  description: String,
+  capabilities: [LanguageForgeCapability],
+  icon: Option<String>,
+}
+
+const config: LanguageForgeModuleConfig = #{
+  id: "language-forge",
+  name: "Language Forge",
+  version: "0.1.0",
+  description: "Monitor and develop the 14 nextgen-languages portfolio — scores, phases, WASM readiness",
+  capabilities: [LanguageDashboard, CompilationStatus, MoscowView, WasmTargetTracker],
+  icon: Some("hammer"),
+};
+
+fn hasCapability(cap: LanguageForgeCapability) -> Bool {
+  contains(config.capabilities, cap)
+}
+
+fn capabilityLabel(cap: LanguageForgeCapability) -> String {
+  match cap {
+    LanguageDashboard => "Language Dashboard",
+    CompilationStatus => "Compilation Status",
+    MoscowView => "MoSCoW View",
+    WasmTargetTracker => "WASM Target Tracker",
+  }
+}

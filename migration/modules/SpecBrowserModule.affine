@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// SpecBrowserModule.affine — capability registration for the language
+// spec browser.
+//
+// Translation of src/modules/SpecBrowserModule.res (68 LoC). Same shape.
+//
+// Refs: standards#279, standards#252.
+
+module SpecBrowserModule;
+
+use prelude::{Option, Some, None, contains};
+
+type SpecBrowserCapability =
+  | TaxonomyOverview
+  | SpecComparison
+  | GrammarViewer
+  | TypingRulesViewer
+  | VerificationStatus
+
+type SpecBrowserModuleConfig = {
+  id: String,
+  name: String,
+  version: String,
+  description: String,
+  capabilities: [SpecBrowserCapability],
+  icon: Option<String>,
+}
+
+const config: SpecBrowserModuleConfig = #{
+  id: "spec-browser",
+  name: "Spec Browser",
+  version: "0.1.0",
+  description: "Browse all 16 language specs, grammars, typing rules — side-by-side comparison and taxonomy completeness",
+  capabilities: [
+    TaxonomyOverview,
+    SpecComparison,
+    GrammarViewer,
+    TypingRulesViewer,
+    VerificationStatus,
+  ],
+  icon: Some("book-open"),
+};
+
+fn hasCapability(cap: SpecBrowserCapability) -> Bool {
+  contains(config.capabilities, cap)
+}
+
+fn capabilityLabel(cap: SpecBrowserCapability) -> String {
+  match cap {
+    TaxonomyOverview => "Taxonomy Overview",
+    SpecComparison => "Spec Comparison",
+    GrammarViewer => "Grammar Viewer",
+    TypingRulesViewer => "Typing Rules Viewer",
+    VerificationStatus => "Verification Status",
+  }
+}

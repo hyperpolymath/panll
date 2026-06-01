@@ -1,0 +1,84 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// TsdmModule.affine — capability declarations for the Triaxial Software
+// Development Methodology directive panel.
+//
+// Translation of src/modules/TsdmModule.res (57 LoC). Module-shape: a
+// capability sum, a config record, the config value, and two helpers
+// (hasCapability + capabilityLabel). All purely functional — no Tea_/
+// Pixi / Gossamer / Promise / FFI surface — so this is one of the
+// cleaner Mode-A ports panll has.
+//
+// Translation choices:
+//   `type x = | A | B`                 → unchanged shape (semicolons added)
+//   `type t = { f: T, ... }`           → unchanged + closing `}` no comma
+//   `option<string>`                   → `Option<String>` (prelude type)
+//   `array<T>`                         → `[T]`
+//   `{ field: value, ... }`            → `#{ field: value, ... }` (AS
+//     record-literal syntax; bare `{...}` is a block).
+//   `Array.includes(arr, x)`           → `contains(arr, x)` (prelude::contains).
+//   `switch cap { ... }`               → `match cap { ... }` with `=>` arms
+//     and commas, no leading `|`.
+//
+// What this PR is NOT
+//   Does NOT replace src/modules/TsdmModule.res in the build. The .res
+//   still owns the runtime contract. Replacement requires .affine→.mjs
+//   codegen + consumer migration. See migration/modules/STATUS.md.
+//
+// Refs: standards#279 (megaport step), standards#252 (campaign umbrella).
+
+module TsdmModule;
+
+use prelude::{Option, Some, None, contains};
+
+type TsdmCapability =
+  | AxisReordering
+  | TierCustomisation
+  | CleanupConfiguration
+  | WorkItemAggregation
+  | DirectivePersistence
+  | DirectiveLocking
+  | ConsumerBroadcast
+
+type TsdmModuleConfig = {
+  id: String,
+  name: String,
+  version: String,
+  description: String,
+  capabilities: [TsdmCapability],
+  icon: Option<String>,
+}
+
+const config: TsdmModuleConfig = #{
+  id: "tsdm",
+  name: "TSDM",
+  version: "1.0.0",
+  description: "Triaxial Software Development Methodology — directive panel for priority ordering across all panels",
+  icon: Some("compass"),
+  capabilities: [
+    AxisReordering,
+    TierCustomisation,
+    CleanupConfiguration,
+    WorkItemAggregation,
+    DirectivePersistence,
+    DirectiveLocking,
+    ConsumerBroadcast,
+  ],
+};
+
+fn hasCapability(cap: TsdmCapability) -> Bool {
+  contains(config.capabilities, cap)
+}
+
+fn capabilityLabel(cap: TsdmCapability) -> String {
+  match cap {
+    AxisReordering => "Axis Reordering (Scope, Maintenance, Audit)",
+    TierCustomisation => "Tier Customisation (priority within each axis)",
+    CleanupConfiguration => "Cleanup/Finish-Off Configuration",
+    WorkItemAggregation => "Work Item Aggregation (from consumer panels)",
+    DirectivePersistence => "Directive Persistence (localStorage + verisim)",
+    DirectiveLocking => "Directive Locking (prevent mid-session changes)",
+    ConsumerBroadcast => "Consumer Broadcast (notify panels of ordering changes)",
+  }
+}

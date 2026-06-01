@@ -1,0 +1,59 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// VerificationDashboardModule.affine — capability registration for the
+// verification panel.
+//
+// Translation of src/modules/VerificationDashboardModule.res (67 LoC).
+// Same shape.
+//
+// Refs: standards#279, standards#252.
+
+module VerificationDashboardModule;
+
+use prelude::{Option, Some, None, contains};
+
+type VerificationDashboardCapability =
+  | VerificationSummary
+  | LanguageBreakdown
+  | ProofTracking
+  | BenchmarkResults
+  | FuzzingReport
+
+type VerificationDashboardModuleConfig = {
+  id: String,
+  name: String,
+  version: String,
+  description: String,
+  capabilities: [VerificationDashboardCapability],
+  icon: Option<String>,
+}
+
+const config: VerificationDashboardModuleConfig = #{
+  id: "verification-dashboard",
+  name: "Verification Dashboard",
+  version: "0.1.0",
+  description: "Proof, test, benchmark, and fuzzing status across all nextgen-languages repos",
+  capabilities: [
+    VerificationSummary,
+    LanguageBreakdown,
+    ProofTracking,
+    BenchmarkResults,
+    FuzzingReport,
+  ],
+  icon: Some("check-circle"),
+};
+
+fn hasCapability(cap: VerificationDashboardCapability) -> Bool {
+  contains(config.capabilities, cap)
+}
+
+fn capabilityLabel(cap: VerificationDashboardCapability) -> String {
+  match cap {
+    VerificationSummary => "Verification Summary",
+    LanguageBreakdown => "Language Breakdown",
+    ProofTracking => "Proof Tracking",
+    BenchmarkResults => "Benchmark Results",
+    FuzzingReport => "Fuzzing Report",
+  }
+}

@@ -1,0 +1,84 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// CloudGuardModule.affine — capability-driven registration for the
+// Cloudflare domain security management panel.
+//
+// Translation of src/modules/CloudGuardModule.res (93 LoC). Same shape
+// as the other module files plus an extra `capabilityDescription`
+// helper (CloudGuard tooltips include longer prose).
+//
+// Refs: standards#279, standards#252.
+
+module CloudGuardModule;
+
+use prelude::{Option, Some, None, contains};
+
+type CloudguardCapability =
+  | DomainInventory
+  | SecurityHardening
+  | DnsManagement
+  | ComplianceAudit
+  | OfflineConfig
+  | BulkOperations
+  | PagesIntegration
+  | DnssecManagement
+
+type CloudguardModuleConfig = {
+  id: String,
+  name: String,
+  version: String,
+  description: String,
+  apiEndpoint: String,
+  capabilities: [CloudguardCapability],
+  icon: Option<String>,
+}
+
+const config: CloudguardModuleConfig = #{
+  id: "cloudguard",
+  name: "CloudGuard",
+  version: "0.1.0",
+  description: "Cloudflare domain security management. Automates SSL/TLS hardening, DNS security records, WAF configuration, DNSSEC, and compliance auditing across all domains.",
+  apiEndpoint: "https://api.cloudflare.com/client/v4",
+  capabilities: [
+    DomainInventory,
+    SecurityHardening,
+    DnsManagement,
+    ComplianceAudit,
+    OfflineConfig,
+    BulkOperations,
+    PagesIntegration,
+    DnssecManagement,
+  ],
+  icon: Some("shield"),
+};
+
+fn hasCapability(cap: CloudguardCapability) -> Bool {
+  contains(config.capabilities, cap)
+}
+
+fn capabilityLabel(cap: CloudguardCapability) -> String {
+  match cap {
+    DomainInventory => "Domain Inventory",
+    SecurityHardening => "Security Hardening",
+    DnsManagement => "DNS Management",
+    ComplianceAudit => "Compliance Audit",
+    OfflineConfig => "Offline Config",
+    BulkOperations => "Bulk Operations",
+    PagesIntegration => "Pages Integration",
+    DnssecManagement => "DNSSEC Management",
+  }
+}
+
+fn capabilityDescription(cap: CloudguardCapability) -> String {
+  match cap {
+    DomainInventory => "List and monitor all Cloudflare zones with plan tier, status, and nameserver info",
+    SecurityHardening => "Apply SSL Full (Strict), HSTS, min TLS 1.2, security headers, and other hardening defaults",
+    DnsManagement => "Create, update, and delete DNS records with templates for SPF, DMARC, DKIM, CAA, and TLSRPT",
+    ComplianceAudit => "Evaluate live Cloudflare settings against Trustfile/Nickel security policy constraints",
+    OfflineConfig => "Download zone configs as JSON, edit offline, upload with three-way diff and dry-run preview",
+    BulkOperations => "Apply hardening settings across all selected domains with real-time progress tracking",
+    PagesIntegration => "Set up Cloudflare Pages projects from GitHub repos with auto-detected SSG framework",
+    DnssecManagement => "Enable DNSSEC, verify DS records at registrar, monitor key rotation status",
+  }
+}
