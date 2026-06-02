@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell
+//
+// VideoCoordinationMsg.affine — messages for the VideoCoordination panel
+// (Drive-to-Photos batch transfers).
+//
+// Translation of src/msg/VideoCoordinationMsg.res (11 LoC). Pure sum-type
+// module using `Result<String, String>` from prelude.
+//
+// Refs: standards#279 (megaport STEP 8).
+
+module VideoCoordinationMsg;
+
+use prelude::{Result, Ok, Err};
+
+type VideoCoordinationMsg =
+  | StartTransfer(String, String)
+  | PauseTransfer(String)
+  | RefreshStatus
+  | StatusResult(Result<String, String>)
+  | TransferResult(Result<String, String>)
+  | ClearError
