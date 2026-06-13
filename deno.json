@@ -1,7 +1,7 @@
 {
   "name": "@hyperpolymath/panll",
   "version": "0.1.1",
-  "license": "AGPL-3.0-or-later",
+  "license": "MPL-2.0",
   "description": "Panel workspace framework — TEA (The Elm Architecture) for ReScript with tiling layout, smart routing, keyboard navigation, undo engine, and security-hardened DOM. Build panel-based UIs for desktop and web.",
   "exports": "./mod.js",
   "nodeModulesDir": "auto",
