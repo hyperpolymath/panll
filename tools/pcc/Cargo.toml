@@ -5,7 +5,7 @@ name = "panll-pcc"
 version = "0.1.0"
 edition = "2024"
 description = "PanLL Panel Contract Compiler — constraint verifier for panel wiring"
-license = "AGPL-3.0-or-later"
+license = "MPL-2.0"
 authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
 
 [[bin]]
