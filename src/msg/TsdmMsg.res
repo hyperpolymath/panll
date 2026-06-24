@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// TSDM directive panel messages -- axis reordering, tier customisation,
 /// cleanup configuration, work item aggregation, and directive persistence.

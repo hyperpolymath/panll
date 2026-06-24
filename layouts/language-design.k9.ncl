@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # language-design.k9.ncl — PanLL discipline layout for programming language work.
 #
 # Target audience: Language designers, compiler writers, people building or

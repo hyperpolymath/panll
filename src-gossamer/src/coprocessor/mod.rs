@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 //! PanLL Coprocessor Control Plane — queries external compute engines
 //! (Axiom.jl, BoJ cartridges) and discovers available devices.

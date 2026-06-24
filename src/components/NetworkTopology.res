@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Network Topology Component — view for the IDApTIK in-game
 /// network topology viewer. Force-directed graph of devices, zones,

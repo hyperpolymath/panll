@@ -1,5 +1,5 @@
 # K9 Kennel: Strategy Drift Panel Configuration
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 #
 # N3: Panel showing top-prover-per-class over time, with drift events
 # flagged. Data source: Verisim's /api/v1/proof_attempts/strategy and

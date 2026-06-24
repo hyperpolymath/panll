@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Feedback Commands — Backend command wrapper for saving Feedback-O-Tron reports.
 ///

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL VM Inspector Commands — Backend async bindings for the reversible
 /// VM debugger. Handles VM state reading, step execution, breakpoint

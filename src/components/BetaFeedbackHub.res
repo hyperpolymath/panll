@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL BetaFeedbackHub — feedback-o-tron integration and player feedback
 /// triage for IDApTIK beta testing programmes.

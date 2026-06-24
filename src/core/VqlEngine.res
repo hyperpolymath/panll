@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // VCL-total Engine — Pure computation layer for the VCL panel.
 //
 // This module contains ALL business logic for VCL query authoring:

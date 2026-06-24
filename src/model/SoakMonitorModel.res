@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Soak Monitor Model — long-running session tracking, memory leak
 /// detection, and trend analysis for IDApTIK extended play sessions.

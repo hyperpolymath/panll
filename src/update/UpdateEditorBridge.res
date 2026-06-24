@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // UpdateEditorBridge.res — Editor Bridge (external editor federation) sub-updater extracted from Update.res
 
 open Model

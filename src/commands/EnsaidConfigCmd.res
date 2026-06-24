@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL ENSAID_CONFIG Commands — backend invoke wrappers for reading and writing
 /// .machine_readable/ENSAID_CONFIG.a2ml files.

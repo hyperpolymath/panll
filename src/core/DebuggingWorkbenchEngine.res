@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Debugging Workbench Engine — pure computation and helpers for the
 /// Debugging Workbench panel. Provides default state, time-travel navigation,

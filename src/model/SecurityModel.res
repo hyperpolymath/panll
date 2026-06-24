@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Security Model — types for secrets redaction, vault integration,
 /// 2FA authentication, and Trustfile enforcement (DD-026, DD-027).

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * Engine Benchmarks — Deno.bench() performance tests for core engines

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # stapeln.toml — Layer-based container build for PanLL eNSAID
 #
 # stapeln builds containers as composable layers (German: "to stack").

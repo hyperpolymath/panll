@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Multiplayer Monitor Engine — pure computation and helpers for
 /// the IDApTIK multiplayer sync server monitoring panel.

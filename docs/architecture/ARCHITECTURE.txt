@@ -1,4 +1,4 @@
-SPDX-License-Identifier: PMPL-1.0-or-later
+SPDX-License-Identifier: MPL-2.0
 
 PanLL eNSAID — Systems Architecture (v0.3.0 Phase 1)
 =====================================================

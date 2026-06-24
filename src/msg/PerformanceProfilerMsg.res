@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Performance Profiler messages -- frame budget, GC pressure, memory flamegraphs.
 

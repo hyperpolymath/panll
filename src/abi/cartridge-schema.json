@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$comment": "SPDX-License-Identifier: PMPL-1.0-or-later — BoJ Cartridge ABI Schema. Auto-extracted from Idris2 ABI + Zig FFI + V-lang adapters. Source of truth for ppx_typell compile-time validation and CartridgeAbi.res generation.",
+  "$comment": "SPDX-License-Identifier: MPL-2.0 — BoJ Cartridge ABI Schema. Auto-extracted from Idris2 ABI + Zig FFI + V-lang adapters. Source of truth for ppx_typell compile-time validation and CartridgeAbi.res generation.",
   "version": "0.3.0",
   "generated": "2026-03-14",
   "protocols": ["MCP", "LSP", "DAP", "BSP", "NeSy", "Agentic", "Fleet", "GRPC", "REST"],

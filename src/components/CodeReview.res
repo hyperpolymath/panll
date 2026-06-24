@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL CodeReview — pull request review, inline comments, and approval gates.
 /// Scanner clade panel for team code review workflows.

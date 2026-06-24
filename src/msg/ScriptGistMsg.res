@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Script Gist messages -- portable computation gist lifecycle.
 /// Covers gist CRUD, execution, template expansion, MCP tool registration,

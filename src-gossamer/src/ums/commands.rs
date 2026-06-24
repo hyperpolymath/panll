@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 //! UMS Tauri commands — mod project CRUD, ABI validation, template
 //! instantiation, asset import, distribution, and API reference.

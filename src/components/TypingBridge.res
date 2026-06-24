@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Typing Bridge Component — TypeLL type constraints for IDApTIK game
 /// state. Displays constraint lists, inference results, a typed configuration

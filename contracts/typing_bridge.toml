@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for Typing Bridge — TypeLL type constraints for game state
 
 panel_id = "Typing Bridge"

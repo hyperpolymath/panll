@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 Contact: mailto:j.d.a.jewell@open.ac.uk
 Preferred-Languages: en
 Canonical: https://github.com/hyperpolymath/panll/.well-known/security.txt

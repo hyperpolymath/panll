@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Messages for the VideoCoordination panel -- Drive-to-Photos batch transfers.
 

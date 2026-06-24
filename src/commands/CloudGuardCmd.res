@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// CloudGuard Backend Command Wrappers — TEA commands for Cloudflare API operations.
 ///

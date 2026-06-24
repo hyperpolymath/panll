@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // Tests for SeamEngine — compliance seam detection and exception register.
 
 import { assertEquals, assert } from "jsr:@std/assert";
@@ -95,7 +95,7 @@ Deno.test("SeamEngine — isOverdue works correctly", () => {
 Deno.test("SeamEngine — generateA2mlRegister produces valid A2ML", () => {
   const register = buildRegister("2026-03-09");
   const a2ml = generateA2mlRegister(register);
-  assert(a2ml.includes("SPDX-License-Identifier: PMPL-1.0-or-later"));
+  assert(a2ml.includes("SPDX-License-Identifier: MPL-2.0"));
   assert(a2ml.includes("compliance-seams-check = true"));
   assert(a2ml.includes("[seam.SEAM-001]"));
   assert(a2ml.includes("acknowledged = true"));

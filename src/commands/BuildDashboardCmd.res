@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Build Dashboard Commands — backend invoke wrappers for triggering
 /// builds, reading build status, and running tests.

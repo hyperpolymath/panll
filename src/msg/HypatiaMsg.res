@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Hypatia neurosymbolic scanner messages -- network status, scan results,
 /// learning cycle, quarantine, and category navigation.

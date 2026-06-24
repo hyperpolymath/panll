@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Automation Bridge Component — CI/CD pipeline orchestration for game
 /// builds. Displays pipeline lists with step progress, trigger rules, build

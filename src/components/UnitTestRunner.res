@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL UnitTestRunner — interactive test execution dashboard with coverage
 /// heatmaps, run history, and diff-aware filtering for IDApTIK game testing.

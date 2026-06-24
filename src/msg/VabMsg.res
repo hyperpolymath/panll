@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// VAB (Verified Assembly Building) messages -- server component assembly,
 /// category navigation, dependency-driven recomputation, and assembly management.

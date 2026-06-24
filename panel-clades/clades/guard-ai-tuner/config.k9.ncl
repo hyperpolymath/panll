@@ -1,6 +1,6 @@
 # K9 Kennel: Guard AI Tuner Panel Configuration
 # Auto-generated from PanelRegistry — pure data, no execution
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 {
   pedigree = {
     name = "guard-ai-tuner-config",

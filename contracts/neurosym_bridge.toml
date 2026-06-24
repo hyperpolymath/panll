@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for Neurosymbolic Bridge — guard AI behaviour reasoning via ECHIDNA
 
 panel_id = "Neurosymbolic Bridge"

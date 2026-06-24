@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Minter Engine — pure template generation logic for the Panel Minter.
 ///
@@ -171,7 +171,7 @@ let canProceedFromStep = (form: minterForm, step: int): bool => {
 let generateModel = (form: minterForm): string => {
   let camel = toCamelCase(form.panelName)
 
-  `// SPDX-License-Identifier: PMPL-1.0-or-later
+  `// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL ${form.panelName} Model - state types for the ${form.panelName} panel.
 ///
@@ -223,7 +223,7 @@ let generateModule = (form: minterForm): string => {
     `${form.panelName}Base`
   }
 
-  `// SPDX-License-Identifier: PMPL-1.0-or-later
+  `// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL ${form.panelName} Module - capability registration.
 ///
@@ -283,7 +283,7 @@ let generateComponent = (form: minterForm): string => {
     : `
       Attrs.ariaLabel("${form.panelName} panel"),`
 
-  `// SPDX-License-Identifier: PMPL-1.0-or-later
+  `// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL ${form.panelName} Component - view layer for the ${form.panelName} panel.
 ///
@@ -445,7 +445,7 @@ let view = (state: ${camel}State): Tea_Vdom.t<msg> => {
 let generateEngine = (form: minterForm): string => {
   let camel = toCamelCase(form.panelName)
 
-  `// SPDX-License-Identifier: PMPL-1.0-or-later
+  `// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL ${form.panelName} Engine - pure computation for the ${form.panelName} panel.
 ///
@@ -477,7 +477,7 @@ let generateCmd = (form: minterForm): option<string> => {
   | NoBackend => None
   | _ =>
     Some(
-      `// SPDX-License-Identifier: PMPL-1.0-or-later
+      `// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL ${form.panelName} Commands - backend command wrappers.
 ///

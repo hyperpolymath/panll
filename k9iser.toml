@@ -1,5 +1,5 @@
 # k9iser manifest — wrap configs into self-validating K9 contracts
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 #
 # panll: multi-panel workspace (TEA/ReScript + Gossamer).
 # Safety-tier "yard" — application framework, moderate scrutiny.

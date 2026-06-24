@@ -1,6 +1,6 @@
 # K9 Kennel: Device Network Designer Panel Configuration
 # Auto-generated from PanelRegistry — pure data, no execution
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 {
   pedigree = {
     name = "device-network-designer-config",

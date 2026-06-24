@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Asset Manager Model — types for managing PixiJS sprites, sounds,
 /// level templates, and other game assets.

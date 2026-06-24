@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # logic-and-proofs.k9.ncl — PanLL discipline layout for formal methods work.
 #
 # Target audience: Mathematicians, logicians, formal methods researchers,

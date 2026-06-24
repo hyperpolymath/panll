@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // Deno static file server for PanLL dev mode — replaces python3 http.server
 //
 // Serves the project root on port 8000 so that public/index.html can resolve

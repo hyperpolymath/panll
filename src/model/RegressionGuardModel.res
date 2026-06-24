@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Regression Guard Model — snapshot comparison and golden-file testing
 /// for IDApTIK game state, render output, and API responses.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Multiplayer Monitor Model — types for monitoring the IDApTIK
 /// Elixir/Phoenix sync server. WebSocket status, channel subscriptions,

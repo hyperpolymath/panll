@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // esbuild bundler for PanLL — resolves bare npm specifiers that WebKitGTK
 // cannot handle via import maps.
 //

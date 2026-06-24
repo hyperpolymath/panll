@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Code MRI — Attribution-to-Licensing Engine (Layer 4)
 ///
@@ -132,7 +132,7 @@ let checkFile = (
       MissingSpdxHeader,
       LicenseWarning,
       "File has no SPDX-License-Identifier header",
-      "Add '// SPDX-License-Identifier: PMPL-1.0-or-later' to the first line",
+      "Add '// SPDX-License-Identifier: MPL-2.0' to the first line",
     )
   | Malformed(reason) =>
     addIssue(

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL TeamDashboard — team member presence, activity feed, and progress overview.
 /// Viewer clade panel for team collaboration visibility.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Team Dashboard Model — team member presence, activity feed, and
 /// progress overview for collaborative IDApTIK development.

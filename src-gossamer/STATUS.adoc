@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 = src-gossamer — FROZEN LEGACY
 
 *Status: FROZEN LEGACY (2026-05-17).* Do not add features here.

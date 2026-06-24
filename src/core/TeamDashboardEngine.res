@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Team Dashboard Engine — pure computation and helpers for the
 /// Team Dashboard panel. Provides default state, presence counting,

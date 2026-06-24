@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Agentic Bridge Model — connects AI agent orchestration to IDApTIK
 /// game development. Bridges PanLL's agentic testing framework with game

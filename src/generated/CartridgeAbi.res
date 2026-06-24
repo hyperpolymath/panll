@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // Generated from src/abi/cartridge-schema.json — DO NOT EDIT MANUALLY.
 // Regenerate with: deno task gen:cartridge-abi
 // Seam-validated against BoJ server ABI at compile time via ppx_typell.

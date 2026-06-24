@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Architect Mode Component — PixiJS fine-grained level editor.
 /// Displays tool palette, canvas placeholder, property inspector for

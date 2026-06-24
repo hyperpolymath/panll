@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Release Manager Commands — backend invoke wrappers for versioning,
 /// changelog generation, artifact building, and distribution.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL ENSAID_CONFIG Engine — generates well-annotated .machine_readable/ENSAID_CONFIG.a2ml
 /// files from the combined state of Minter, Provisioner, Workspace, and Automation Router.
@@ -95,7 +95,7 @@ let languageLockExtensions = (prot: sessionProtection): option<array<string>> =>
 
 /// Generate the file header with SPDX and explanatory comments.
 let generateHeader = (repoName: string): string => {
-  `# SPDX-License-Identifier: PMPL-1.0-or-later
+  `# SPDX-License-Identifier: MPL-2.0
 #
 # ENSAID_CONFIG.a2ml — eNSAID Environment Configuration for ${repoName}
 #

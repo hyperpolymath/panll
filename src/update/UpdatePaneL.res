@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Extracted sub-updater for Pane-L (Logical Constraints).
 /// Manages the set of formal constraints applied to the current inference session.

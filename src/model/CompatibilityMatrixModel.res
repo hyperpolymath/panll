@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Compatibility Matrix Model — browser/device/resolution cross-testing
 /// matrix with pass/fail/untested cell colouring and failure detail drill-down.

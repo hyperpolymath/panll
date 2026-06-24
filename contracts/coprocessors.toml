@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for Coprocessors — monitor IDApTIK's 10 coprocessor backends
 
 panel_id = "Coprocessors"

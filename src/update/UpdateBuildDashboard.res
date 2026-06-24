@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // UpdateBuildDashboard.res — Build Dashboard (build monitoring) sub-updater extracted from Update.res
 
 open Model

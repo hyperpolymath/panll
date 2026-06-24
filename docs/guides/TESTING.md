@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 <!-- TESTING.md — Testing guide for PanLL -->
 <!-- Last updated: 2026-03-09 -->
 

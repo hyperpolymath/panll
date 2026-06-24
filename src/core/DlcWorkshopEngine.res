@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL DLC Workshop Engine — pure computation and helpers for the
 /// IDApTIK DLC puzzle pack creation and testing panel.

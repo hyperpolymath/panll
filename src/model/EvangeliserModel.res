@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Evangeliser Model Types — JS-to-ReScript code transformation teaching tool.
 ///

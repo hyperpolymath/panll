@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Database Bridge Model — connects VeriSimDB verified database layer to
 /// IDApTIK game development. Bridges formal schema verification with game

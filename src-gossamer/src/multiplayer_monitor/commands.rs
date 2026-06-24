@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 //! Multiplayer Monitor Tauri commands — Phoenix sync server connectivity,
 //! player state inspection, state diff analysis, ETS cache, and reconnection.

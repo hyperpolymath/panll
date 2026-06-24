@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Palimpsest Plaza Module — capability registration for the
 /// PMPL licensing adoption and governance panel.

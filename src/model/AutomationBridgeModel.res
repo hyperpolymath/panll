@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Automation Bridge Model — connects CI/CD pipeline automation to
 /// IDApTIK game development. Bridges PanLL's build orchestration with game

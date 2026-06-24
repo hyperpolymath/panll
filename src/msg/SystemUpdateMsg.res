@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// System Update panel messages — component listing, update checking,
 /// update application, asdf details, log viewing.

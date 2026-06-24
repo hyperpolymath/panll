@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Database Bridge Component — VeriSimDB game state persistence.
 /// Displays schema tree, query history, game state snapshot viewer, and

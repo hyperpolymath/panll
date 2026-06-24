@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL K9 Engine — pure functions for parsing, validating, and querying K9
 /// contractile files (.k9.ncl). K9 files are Nickel configuration components
@@ -416,7 +416,7 @@ let generateKennelSchema = (
 
   `# K9 Kennel Schema — auto-generated from ${moduleName} module config
 # Security: Kennel (data-only, no contracts, no execution)
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 
 K9!
 
@@ -475,7 +475,7 @@ let generateYardContract = (
 
   `# K9 Yard Contract — auto-generated from BoJ cartridge "${cartridgeName}"
 # Security: Yard (validated config with Nickel contracts, no execution)
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 
 K9!
 

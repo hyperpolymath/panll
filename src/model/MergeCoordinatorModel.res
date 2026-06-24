@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Merge Coordinator Model — branch management, conflict resolution,
 /// and merge queue for coordinated IDApTIK development workflows.

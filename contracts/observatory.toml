@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for Observatory — integrative dashboard, cross-panel health, service status
 
 panel_id = "Observatory"

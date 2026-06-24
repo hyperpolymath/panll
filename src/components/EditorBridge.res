@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Editor Bridge Component — view for federating with external
 /// code editors. Shows diagnostics, open files, symbols, and activity

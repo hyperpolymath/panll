@@ -98,7 +98,7 @@ ls node_modules/rescript-tea/src/*.res
 #### Step 1.1: Create `src/subscriptions/KeyboardV2.res`
 
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // Custom keyboard subscription for rescript-tea
 
 module KeyboardV2 = {
@@ -197,7 +197,7 @@ import { test, expect } from 'vitest';
 #### Step 2.1: Create `src/commands/TauriCmdV2.res`
 
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // Tauri commands wrapped for rescript-tea
 
 module TauriCmdV2 = {

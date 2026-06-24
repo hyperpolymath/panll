@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Repo Loader messages -- repository scanning, panel configuration,
 /// directory picking, and recent repo management.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// VM Inspector messages -- VM state reading, step execution, breakpoint
 /// management, timeline navigation, and state export for the reversible

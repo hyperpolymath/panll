@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Regression Guard Engine — pure computation and helpers for the
 /// Regression Guard panel. Provides default state, snapshot counting,

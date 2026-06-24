@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Palimpsest Plaza Component — view layer for the PMPL licensing panel.
 ///
@@ -342,7 +342,7 @@ let renderAdoptionWizard = (_plaza: plazaState): Tea_Vdom.t<msg> => {
               ),
               div(
                 list{Attrs.class_("text-xs text-gray-500 font-mono bg-gray-900 rounded p-2")},
-                list{text("// SPDX-License-Identifier: PMPL-1.0-or-later")},
+                list{text("// SPDX-License-Identifier: MPL-2.0")},
               ),
             },
           ),

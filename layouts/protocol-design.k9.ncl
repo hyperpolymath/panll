@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # protocol-design.k9.ncl — PanLL discipline layout for protocol work.
 #
 # Target audience: Network protocol designers, distributed systems engineers,

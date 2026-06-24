@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Playtest Recorder Component — record, replay, and annotate gameplay
 /// sessions. Displays Record/Stop/Play buttons, session timeline, annotation

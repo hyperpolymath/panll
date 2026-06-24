@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Security Panel — redaction, vault, 2FA, Trustfile, shoulder-safe (DD-026/027).
 ///

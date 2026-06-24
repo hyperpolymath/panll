@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Automation Router Commands — backend invoke wrappers for loading,
 /// saving, and executing automation workflow rules.

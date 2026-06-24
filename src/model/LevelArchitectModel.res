@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Level Architect Model — types for the IDApTIK visual level
 /// design tool. Device placement, guard patrols, defence flags, asset

@@ -1,6 +1,6 @@
 # src/abi/ — ABI Schema Definitions
 
-SPDX-License-Identifier: PMPL-1.0-or-later
+SPDX-License-Identifier: CC-BY-SA-4.0
 
 This directory contains the **source-of-truth ABI schemas** that define the
 contract between PanLL and external systems (primarily the BoJ cartridge server).

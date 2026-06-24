@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 <!-- Design Document: Feedback-o-Tron Evolution -->
 <!-- Date: 2026-03-16 -->
 <!-- Author: Jonathan D.A. Jewell / Claude Opus 4.6 -->

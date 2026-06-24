@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Code Review Engine — pure computation and helpers for the
 /// Code Review panel. Provides default state, PR counting, comment

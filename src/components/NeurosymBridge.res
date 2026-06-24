@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Neurosymbolic Bridge Component — ECHIDNA guard AI behaviour reasoning.
 /// Displays guard rule lists, behaviour tree viewers, simulation controls, and

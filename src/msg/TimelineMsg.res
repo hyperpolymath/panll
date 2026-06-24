@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Code MRI Timeline messages (Layer 2) -- VeriSimDB-backed development timeline.
 /// Handles database connection, snapshot capture, history loading, scrubber

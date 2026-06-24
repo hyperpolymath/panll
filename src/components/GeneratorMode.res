@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Generator Mode Component — parametric procedural world builder.
 /// Displays district list builder, slider controls for global parameters,

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 //! Network Topology Tauri commands — topology graph, DNS table, packet flow,
 //! and SVG export for the IDApTIK in-game network viewer.

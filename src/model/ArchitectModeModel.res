@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Architect Mode Model — types for the fine-grained PixiJS level
 /// editor with Layout / Nodes / Wiring three-panel architecture.
