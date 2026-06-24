@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Git-Private-Farm panel messages -- repo inventory loading, filtering,
 /// and category navigation. The farm backend reads local JSON, no HTTP.

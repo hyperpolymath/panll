@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Gitbot-Fleet panel messages -- bot status, findings queue, dispatch,
 /// and safety triangle navigation.

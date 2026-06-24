@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Mass-panic panel messages -- assemblyline batch scanning, repo discovery,
 /// incremental BLAKE3, verisim persistence, delta reporting, notifications.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Universal Modding Studio messages -- project CRUD, ABI validation,
 /// template management, asset pipeline, mod distribution, and API reference

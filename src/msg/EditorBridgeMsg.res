@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Editor Bridge messages -- editor detection, LSP lifecycle, diagnostics,
 /// symbols, open files, jump-to-line, and settings for the external code

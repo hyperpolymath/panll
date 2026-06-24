@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // VCL-total Panel Model — The flagship PanLL panel for type-safe query authoring.
 //
 // This model defines the complete state for the VCL panel, including:

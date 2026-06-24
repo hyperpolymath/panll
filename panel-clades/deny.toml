@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # cargo-deny configuration for RSR-compliant repositories
 # Run: cargo deny check
 # Docs: https://embarkstudios.github.io/cargo-deny/

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for DLC Workshop — create, test, and package DLC puzzle packs
 
 panel_id = "DLC Workshop"

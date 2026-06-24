@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Valence Shell messages -- terminal PTY lifecycle, input handling,
 /// session recording, checkpoint management, approval gate, and Claude

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Proofs Bridge Model — connects the proven repo's formally verified
 /// libraries to IDApTIK game development. Bridges ECHIDNA verification with

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Code MRI VoiceTag messages -- tag CRUD, voice input lifecycle, file I/O,
 /// and filter controls. VoiceTag is an ambient annotation system (Layer 0)

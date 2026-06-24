@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Network Topology Commands — backend invoke wrappers for reading
 /// the in-game network topology from the running IDApTIK instance.

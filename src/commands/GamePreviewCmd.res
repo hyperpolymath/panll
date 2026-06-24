@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Game Preview Commands — Backend async bindings for the live game
 /// preview panel. Handles dev server health checks, game loop control,

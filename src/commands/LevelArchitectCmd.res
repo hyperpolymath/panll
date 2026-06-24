@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Level Architect Commands — backend invoke wrappers for level
 /// file I/O, asset browsing, level validation, and LevelConfig export.

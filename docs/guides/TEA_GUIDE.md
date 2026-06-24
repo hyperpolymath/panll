@@ -144,7 +144,7 @@ Commands represent side effects to be executed after an update.
 #### API
 
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 
 type t<'msg>  // Opaque command type
 
@@ -199,7 +199,7 @@ let (model, Tea_Cmd.batch(list{
 Commands are easily testable:
 
 ```javascript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 import { assertEquals } from "@std/assert";
 import { msg, execute } from '../src/tea/Tea_Cmd.res.js';
 
@@ -223,7 +223,7 @@ Subscriptions represent ongoing event sources (WebSocket, timers, keyboard).
 #### API
 
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 
 type t<'msg>  // Opaque subscription type
 
@@ -313,7 +313,7 @@ Tea_Sub.registration("timer", dispatch => {
 #### Testing
 
 ```javascript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 import { assertEquals } from "@std/assert";
 
 Deno.test('prevents memory leaks with timers', async () => {
@@ -347,7 +347,7 @@ Virtual DOM types and constructors for building UIs.
 #### API
 
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 
 type node<'msg>
 type property<'msg>
@@ -421,7 +421,7 @@ Main entry point for running TEA applications.
 #### API
 
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 
 type program<'flags, 'model, 'msg>
 
@@ -449,7 +449,7 @@ let standardProgram: {
 ### Complete Application Structure
 
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 
 // Model.res
 type model = {
@@ -550,7 +550,7 @@ cd src-tauri && cargo test
 Tests use Deno.test with @std/assert:
 
 ```javascript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 import { assertEquals } from "@std/assert";
 import { update } from '../src/Update.res.js';
 
@@ -669,7 +669,7 @@ See [Architecture Guide](#architecture-guide) above.
 ### Example 2: Form with Validation
 
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 
 type model = {
   email: string,
@@ -717,7 +717,7 @@ let update = (model, msg) => {
 ### Example 3: Real-Time Updates
 
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 
 type model = {
   messages: array<string>,

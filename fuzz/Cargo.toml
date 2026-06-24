@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 #
 # Cargo-fuzz manifest for PanLL Gossamer backend.
 # Run: cargo +nightly fuzz run fuzz_json_command

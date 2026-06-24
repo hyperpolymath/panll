@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for Performance Profiler — frame budget, GC pressure, memory flamegraphs
 
 panel_id = "Performance Profiler"

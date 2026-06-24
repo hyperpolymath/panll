@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// ENSAID_CONFIG messages -- cross-panel config generation and I/O.
 /// Any panel can trigger a full ENSAID_CONFIG export; the engine assembles

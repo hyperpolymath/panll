@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 
 = PanLL eNSAID
 :toc:
@@ -8,7 +8,7 @@
 image:https://img.shields.io/badge/OpenSSF-Best_Practices-green?logo=opensourcesecurity[OpenSSF Best Practices,link="https://www.bestpractices.dev/en/projects/new?repo_url=https://github.com/hyperpolymath/panll"]
 image:https://img.shields.io/badge/version-v0.2.0--beta-blue[Version]
 image:https://img.shields.io/badge/completion-68%25-orange[Completion]
-image:https://img.shields.io/badge/License-PMPL--1.0-indigo.svg[PMPL-1.0-or-later,link="LICENSE"]
+image:https://img.shields.io/badge/License-MPL--2.0-indigo.svg[PMPL-1.0-or-later,link="LICENSE"]
 image:https://img.shields.io/badge/Tests-109%20passing-brightgreen[Tests]
 image:https://img.shields.io/badge/RSR-compliant-blue[RSR Compliant]
 image:https://img.shields.io/badge/Technical_Debt-25%20issues-red[Technical Debt,link="docs/TECHNICAL_DEBT.md"]

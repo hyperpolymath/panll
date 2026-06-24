@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL StrategyDrift Component — visualises the learning loop's
 /// top-prover-per-class recommendations, the PROVEN/SANCTIFY certificate

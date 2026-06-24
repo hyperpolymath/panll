@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Code Review Model — pull request review, inline comments, and
 /// approval gates for collaborative IDApTIK development.

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 #
 # Clade Definition: BoJ (Bundle of Joy)
 # Unified cartridge server — 17 domains, 3-layer ABI/FFI/Adapter, Umoja federation.

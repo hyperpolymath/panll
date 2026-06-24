@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Health Check Command — generic backend command for checking if an
 /// HTTP service is reachable. Used by all panels with backend services.

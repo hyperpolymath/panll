@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // PanLL Wizard — AffineScript TEA Spec
 //
 // Migration target for src/components/Wizard.res and src/update/UpdateWizard.res.

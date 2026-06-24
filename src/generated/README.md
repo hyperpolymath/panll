@@ -1,6 +1,6 @@
 # src/generated/ — Auto-Generated Modules
 
-SPDX-License-Identifier: PMPL-1.0-or-later
+SPDX-License-Identifier: CC-BY-SA-4.0
 
 **DO NOT EDIT FILES IN THIS DIRECTORY MANUALLY.**
 

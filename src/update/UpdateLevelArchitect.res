@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Extracted sub-updater for the Level Architect panel.
 /// Manages the IDApTIK level editor — grid interaction, entity placement/erasure,

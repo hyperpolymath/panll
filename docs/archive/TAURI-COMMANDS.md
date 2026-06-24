@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 <!-- TAURI-COMMANDS.md — Complete catalog of Tauri invoke_handler commands -->
 <!-- Last updated: 2026-03-09 -->
 

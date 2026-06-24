@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # pedigree-layout.ncl — Contract schema for PanLL discipline layout presets.
 #
 # Every .k9.ncl layout preset in this directory must satisfy these contracts.

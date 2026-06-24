@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Stapeln Commands — backend invoke wrappers for the container
 /// assembly pipeline. These call into the Rust backend which proxies

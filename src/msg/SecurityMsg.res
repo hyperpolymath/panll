@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Security messages -- redaction, vault, 2FA, Trustfile (DD-026/027).
 

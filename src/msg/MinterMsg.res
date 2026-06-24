@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Panel Minter messages -- wizard state transitions for creating new panel
 /// modules with accessibility and proof hooks baked in by default.

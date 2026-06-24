@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Multiplayer Monitor Commands — backend invoke wrappers for
 /// connecting to the IDApTIK Phoenix sync server and reading

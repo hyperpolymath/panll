@@ -6,7 +6,7 @@
 
 # PART 1: eNSAID DESIGN DECISIONS (DD-001 to DD-018)
 
-<!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 **Last updated: 2026-03-02**
 **Living document — updated as decisions are made or revised**

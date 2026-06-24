@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
 //! A2ML Tauri commands — filesystem operations for A2ML manifest files.
@@ -266,7 +266,7 @@ mod tests {
         let tmp = std::env::temp_dir().join("panll-a2ml-validate-test.a2ml");
         std::fs::write(
             &tmp,
-            "; SPDX-License-Identifier: PMPL-1.0-or-later\n(manifest (identity (name \"test\")))",
+            "; SPDX-License-Identifier: MPL-2.0\n(manifest (identity (name \"test\")))",
         )
         .unwrap();
         let result = a2ml_validate(tmp.to_string_lossy().to_string());

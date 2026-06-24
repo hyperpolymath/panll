@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Universal Modding Studio Commands — backend invoke wrappers for
 /// mod project management, ABI validation, template instantiation,

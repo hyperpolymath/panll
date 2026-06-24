@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for 7-Tentacles — compiler agent orchestra with OODA reasoning
 
 panel_id = "7-Tentacles"

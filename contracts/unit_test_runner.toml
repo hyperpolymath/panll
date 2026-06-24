@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for Unit Test Runner — ReScript test execution, coverage heatmap
 
 panel_id = "Unit Test Runner"

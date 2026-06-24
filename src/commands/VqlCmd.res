@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // VCL-total Commands — backend command bridge for VCL panel I/O.
 //
 // All side effects (HTTP calls, file I/O, clipboard) route through here.

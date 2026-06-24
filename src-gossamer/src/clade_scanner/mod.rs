@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 //! PanLL Clade Scanner Module — reads `.a2ml` clade definition files from
 //! `panel-clades/clades/` and returns them as JSON for the ReScript frontend.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Editor Bridge Model — types for federating with external code
 /// editors (VSCodium, Zed, Helix, Neovim, Emacs) via LSP, editor

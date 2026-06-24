@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL DLC Workshop Commands — backend invoke wrappers for DLC puzzle
 /// pack creation, testing, and packaging operations.

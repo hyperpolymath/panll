@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 <!-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk> -->
 
 # AI Conventions (Authoritative Source)
@@ -22,7 +22,7 @@ Per-tool config files (.cursorrules, .clinerules, etc.) reference this document.
 - Fallback (platform-required only): MPL-2.0 with comment explaining why.
 - NEVER use AGPL-3.0.
 - Preserve third-party licenses verbatim.
-- Every source file needs `# SPDX-License-Identifier: PMPL-1.0-or-later`.
+- Every source file needs `# SPDX-License-Identifier: CC-BY-SA-4.0`.
 
 ## Author Attribution
 

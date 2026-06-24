@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Coprocessors Model — types for monitoring IDApTIK's coprocessor
 /// backends (Compute, Security, I/O). Call log, heatmap, performance

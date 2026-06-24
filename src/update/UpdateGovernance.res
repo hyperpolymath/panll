@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Extracted sub-updaters for Cognitive Governance.
 /// Contains: updateVexometer, updateOrbital, updateView, updateFeedback,

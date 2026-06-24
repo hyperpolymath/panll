@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for Soak Monitor — long-running session memory trend and leak detection
 
 panel_id = "Soak Monitor"

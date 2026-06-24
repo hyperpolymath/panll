@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Scripting Bridge Model — connects VM scripting to IDApTIK game
 /// development. Bridges PanLL's VM inspector with a scripting REPL,

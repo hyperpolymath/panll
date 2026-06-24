@@ -1,5 +1,5 @@
 # PanLL Feature Build Script — Ordered Smallest → Largest
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: CC-BY-SA-4.0
 #
 # INSTRUCTIONS: Copy everything below the line into Claude Code as a single message.
 # Claude will build each feature in order, asking questions where needed.
@@ -53,7 +53,7 @@ Add tooltip and contextual help to every panel in PanLL.
 
 Create `src/model/HelpModel.res`:
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // HelpModel — tooltip and contextual help data for all panels
 
 type tooltipPosition =
@@ -135,7 +135,7 @@ Create an integrated documentation wiki inside PanLL.
 
 Create `src/model/WikiModel.res`:
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // WikiModel — integrated documentation wiki
 
 type wikiPage = {
@@ -209,7 +209,7 @@ Build an interactive guided tour system — like those "click here, then here" s
 
 Create `src/model/TourModel.res`:
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // TourModel — interactive guided tour / software induction
 
 type tourHighlight =
@@ -393,7 +393,7 @@ Build a system where users create named chains of little agents that run in sequ
 
 Create `src/model/AgentQueueModel.res`:
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // AgentQueueModel — user-defined agent chains
 
 type agentStep = {
@@ -502,7 +502,7 @@ This is the adaptive mode that watches how the user works and suggests panel arr
 
 Create `src/model/StyleLearnerModel.res`:
 ```rescript
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // StyleLearnerModel — observes IDE usage patterns to suggest panels & workflows
 
 type usageEvent = {

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 //! Palimpsest Plaza Tauri commands — scan repos for PMPL compliance,
 //! compute adoption statistics, and check license compatibility.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Coprocessors Engine — pure computation and helpers for the
 /// IDApTIK coprocessor monitoring dashboard.

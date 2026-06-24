@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// System Update model state — tracks component list, update summary,
 /// loading state, and log visibility.

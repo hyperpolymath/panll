@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Network Topology messages -- topology reading, device selection,
 /// packet flow animation, DNS browsing, and display toggles for the

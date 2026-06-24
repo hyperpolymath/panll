@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Palimpsest Plaza panel messages -- PMPL licensing adoption, compliance
 /// scanning, and governance. The plaza backend scans local filesystem.

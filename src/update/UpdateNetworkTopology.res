@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Extracted sub-updater for the Network Topology panel.
 /// Manages the IDApTIK network topology visualisation — device/connection parsing,

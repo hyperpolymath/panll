@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 #
 # install-desktop.sh — Install Stapeln desktop entry, icon, and launcher on Linux.
 #
@@ -60,7 +60,7 @@ fi
 # Create launcher wrapper
 cat > "$LAUNCHER" << LAUNCHER_EOF
 #!/usr/bin/env bash
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # ${APP_DISPLAY} Launcher
 set -euo pipefail
 

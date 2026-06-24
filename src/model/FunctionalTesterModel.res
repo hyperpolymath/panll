@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Functional Tester Model — end-to-end game workflow simulation and
 /// validation for IDApTIK game testing.

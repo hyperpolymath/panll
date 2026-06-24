@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Typing Bridge Model — connects TypeLL type system to IDApTIK game
 /// development. Bridges PanLL's formal type reasoning with practical game

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Release Manager messages -- version bumping, changelog generation,
 /// artifact building, signing, publishing, and channel management for

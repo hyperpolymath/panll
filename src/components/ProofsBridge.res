@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Proofs Bridge Component — proven repo formal verification integration.
 /// Displays proven module list with proof coverage bars, verification result

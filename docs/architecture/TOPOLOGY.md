@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 <!-- TOPOLOGY.md — Project architecture map and completion dashboard -->
 <!-- Last updated: 2026-03-29 (108 panels, Obj.magic eliminated, CRG dogfood checklist, Gossamer verified) -->
 

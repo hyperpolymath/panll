@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for Device Network Designer — wire devices, configure security levels
 
 panel_id = "Device Network Designer"

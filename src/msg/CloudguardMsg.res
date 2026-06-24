@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// CloudGuard Cloudflare domain security management messages -- connection
 /// lifecycle, zone listing, settings read/write, DNS records, DNSSEC,

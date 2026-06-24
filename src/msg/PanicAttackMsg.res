@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// panic-attack panel messages -- scanning, report management, filtering,
 /// comparison, and capability probing for the stress testing panel.

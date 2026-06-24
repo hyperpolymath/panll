@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Watcher messages -- filesystem observation infrastructure.
 /// The watcher runs in a Rust background thread and emits events via the

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // UpdateTentacles.res — 7Tentacles (agent orchestration) sub-updater extracted from Update.res
 
 open Model

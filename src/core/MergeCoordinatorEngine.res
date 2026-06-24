@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Merge Coordinator Engine — pure computation and helpers for the
 /// Merge Coordinator panel. Provides default state, branch counting,

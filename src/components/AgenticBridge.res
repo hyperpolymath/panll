@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Agentic Bridge Component — automated playtesting agents with OODA loop
 /// phases. Displays agent lists with phase badges, configuration panel,

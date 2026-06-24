@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Scripting Bridge Component — VM instruction scripting REPL.
 /// Displays REPL with input/output history, instruction reference table,

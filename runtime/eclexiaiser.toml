@@ -1,5 +1,5 @@
 # eclexiaiser manifest — energy/carbon resource budgets
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 
 [project]
 name = "runtime"

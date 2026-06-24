@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Automation Router Component — view for cross-panel workflow
 /// orchestration with event-driven rules and hybrid approval gates.

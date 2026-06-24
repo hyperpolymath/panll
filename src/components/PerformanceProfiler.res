@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL PerformanceProfiler — frame budget monitoring, GC pressure tracking,
 /// memory snapshots, and performance alert display for IDApTIK game profiling.

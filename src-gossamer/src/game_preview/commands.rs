@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 //! Game Preview Tauri commands — dev-server lifecycle, engine control, recording,
 //! screenshots, render stats, and clip management.

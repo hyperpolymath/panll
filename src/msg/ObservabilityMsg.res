@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Observability messages -- SARIF export and OpenTelemetry trace collection
 /// via the observe-mcp BoJ cartridge.

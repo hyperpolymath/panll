@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Automation Router messages -- rule management, execution, approval gates,
 /// history, and configuration for the hybrid cross-panel workflow orchestrator.

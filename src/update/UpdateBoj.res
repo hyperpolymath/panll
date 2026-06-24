@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // UpdateBoj.res — BoJ (Bundle of Joy) cartridge server sub-updater extracted from Update.res
 
 open Model

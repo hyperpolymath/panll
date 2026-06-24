@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Device Network Designer Engine — pure computation and helpers for
 /// wiring devices, configuring security levels, and validating topology.

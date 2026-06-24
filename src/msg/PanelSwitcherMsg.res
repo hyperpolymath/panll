@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Panel switcher messages -- unified panel navigation replacing ad-hoc
 /// `visible: bool` toggles on individual overlays.

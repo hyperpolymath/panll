@@ -13,7 +13,7 @@
 
 | Requirement | Status | Evidence |
 |-------------|--------|----------|
-| SPDX License Headers | ✅ PASS | All files have `SPDX-License-Identifier: PMPL-1.0-or-later` |
+| SPDX License Headers | ✅ PASS | All files have `SPDX-License-Identifier: CC-BY-SA-4.0` |
 | CHANGELOG.md | ✅ PASS | Updated with wizard features |
 | CODE_OF_CONDUCT.md | ✅ PASS | Existing, unchanged |
 | CONTRIBUTING.md | ✅ PASS | Existing, unchanged |

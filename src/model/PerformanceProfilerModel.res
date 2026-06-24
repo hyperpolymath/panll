@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Performance Profiler Model — frame budget tracking, GC pressure
 /// gauging, and memory flamegraphs for IDApTIK's PixiJS render loop.

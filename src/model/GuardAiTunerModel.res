@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Guard AI Tuner Model — types for tuning guard patrol behaviour,
 /// alert thresholds, spawn rates, and detection parameters.

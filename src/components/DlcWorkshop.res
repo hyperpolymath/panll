@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL DLC Workshop Component — view for creating, testing, and
 /// packaging IDApTIK DLC puzzle packs. Puzzle browser, VM instruction

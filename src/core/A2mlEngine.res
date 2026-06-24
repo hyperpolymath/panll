@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL A2ML Engine — pure functions for parsing, validating, and querying A2ML
 /// manifest files (both S-expression style like 0-AI-MANIFEST.a2ml and sectioned

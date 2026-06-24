@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Wizard Tests — Comprehensive test suite for wizard functionality.
 /// Follows PanLL testing standards: unit, integration, performance, and accessibility.

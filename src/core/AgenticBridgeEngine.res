@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Agentic Bridge Engine — pure computation and helpers for the
 /// Agentic Bridge panel. Provides default state, tab metadata, agent

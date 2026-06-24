@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Extracted sub-updater for the Game Preview panel.
 /// Manages the live IDApTIK game preview — dev server connection, game loop control

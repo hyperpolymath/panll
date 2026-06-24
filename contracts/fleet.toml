@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Panel contract for Fleet — gitbot fleet orchestration and dispatch
 
 panel_id = "Fleet"

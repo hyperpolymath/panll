@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// Extracted sub-updater for VideoCoordination panel.
 /// Manages batch transfer lifecycle, status polling, and error handling.

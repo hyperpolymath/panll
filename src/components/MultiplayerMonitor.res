@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /// PanLL Multiplayer Monitor Component — view for monitoring the IDApTIK
 /// Phoenix sync server. Dashboard, channels, state diffs, latency, locks.

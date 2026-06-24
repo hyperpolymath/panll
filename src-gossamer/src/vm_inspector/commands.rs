@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 //! VM Inspector Tauri commands — in-process virtual machine with stepping,
 //! reverse execution, program loading, and state export.

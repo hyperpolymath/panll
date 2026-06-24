@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 //! PanLL Script Gist Commands — Tauri command handlers for gist persistence,
 //! execution dispatch, and diachronic snapshot management.
