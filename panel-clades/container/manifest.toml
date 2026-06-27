@@ -15,7 +15,7 @@ container — containerised service packaged as a verified
 cerro-torre .ctp bundle with Ed25519 signing and full provenance
 tracking.
 """
-license = "PMPL-1.0-or-later"
+license = "MPL-2.0"
 homepage = "https://github.com/hyperpolymath/container"
 maintainer = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
 

@@ -22,7 +22,7 @@ metadata:
 project:
   name: "PanLL"
   description: "Neurosymbolic IDE built on the Binary Star model — human (symbolic, Panel-L) and machine (neural, Panel-N) orbiting a shared world state (Panel-W). 106 panels, custom TEA runtime, Gossamer desktop backend."
-  license: PMPL-1.0-or-later
+  license: MPL-2.0
   repo: "hyperpolymath/panll"
   languages:
     - ReScript

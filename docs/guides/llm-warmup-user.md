@@ -3,7 +3,7 @@
 ## What This Is
 
 PanLL (eNSAID) is a three-panel neurosymbolic AI development environment.
-License: PMPL-1.0-or-later. Author: Jonathan D.A. Jewell.
+License: MPL-2.0. Author: Jonathan D.A. Jewell.
 
 ## Architecture (30-second version)
 

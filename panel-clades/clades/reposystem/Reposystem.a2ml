@@ -39,7 +39,7 @@ capabilities = [
   "TemplateComparison",         # Compare repo against rsr-template-repo
   "FilePresenceCheck",          # Verify required files (STATE.scm, SECURITY.md, etc.)
   "WorkflowValidation",         # Check GitHub Actions workflows
-  "LicenseVerification",        # Verify PMPL-1.0-or-later headers
+  "LicenseVerification",        # Verify MPL-2.0 headers
 ]
 
 [clade-panel-mapping]

@@ -1275,7 +1275,7 @@ impl IdentityMetrics {
 
 ## License
 
-By contributing, you agree to license your contributions under the PMPL-1.0-or-later.
+By contributing, you agree to license your contributions under the MPL-2.0.
 ```
 
 ### Development Workflow

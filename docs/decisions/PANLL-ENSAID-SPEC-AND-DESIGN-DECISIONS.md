@@ -216,7 +216,7 @@ Combined score: must+corrective+systems = 15 (do immediately), like+perfective+e
 **Date:** 2026-03-02
 **Status:** Accepted
 
-Everything is PMPL-1.0-or-later. Funding buys acceleration, not access. "Is it really worth trying to compete with a crazy academic, or just give him the money?"
+Everything is MPL-2.0. Funding buys acceleration, not access. "Is it really worth trying to compete with a crazy academic, or just give him the money?"
 
 ---
 

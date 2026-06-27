@@ -1,6 +1,6 @@
 {
   "$schema": "https://panll.dev/schemas/panel/v1.json",
-  "spdx": "PMPL-1.0-or-later",
+  "spdx": "MPL-2.0",
   "id": "system-update",
   "title": "System Update",
   "description": "Component update management panel — tracks versions, checks for updates, and applies upgrades across rpm-ostree, Flatpak, asdf (33 plugins), Cargo, Deno, GHCup, opam, mix, Julia, pipx, and firmware.",

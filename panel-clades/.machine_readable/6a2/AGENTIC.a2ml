@@ -21,7 +21,7 @@ can-create-files = true
 # - Never commit secrets or credentials
 # - Never use banned languages (TypeScript, Python, Go, etc.)
 # - Never place state files in repository root (must be in .machine_readable/)
-# - Never use AGPL license (use PMPL-1.0-or-later)
+# - Never use AGPL license (use MPL-2.0)
 
 [maintenance-integrity]
 fail-closed = true

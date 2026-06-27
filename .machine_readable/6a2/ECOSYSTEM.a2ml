@@ -138,11 +138,11 @@ nodejs = { version = "18.x+", purpose = "ReScript compiler runtime (temporary)",
 [dependencies.build-time]
 rescript = { version = "11.1.4", purpose = "Type-safe frontend compilation", license = "MIT", criticality = "critical" }
 tailwind = { version = "4.1.18", purpose = "Styling framework", license = "MIT", criticality = "medium" }
-gossamer = { version = "0.1.0", purpose = "Desktop webview shell (Zig + WebKitGTK)", license = "PMPL-1.0-or-later", criticality = "critical" }
+gossamer = { version = "0.1.0", purpose = "Desktop webview shell (Zig + WebKitGTK)", license = "MPL-2.0", criticality = "critical" }
 
 [dependencies.libraries]
 rescript-core = { version = "1.6.1", purpose = "ReScript standard library", license = "MIT" }
-custom-tea = { version = "internal", purpose = "Custom TEA — 18 modules, VDOM diffing, ARIA", license = "PMPL-1.0-or-later", criticality = "critical", note = "Permanent. rescript-tea@0.16.0 rejected." }
+custom-tea = { version = "internal", purpose = "Custom TEA — 18 modules, VDOM diffing, ARIA", license = "MPL-2.0", criticality = "critical", note = "Permanent. rescript-tea@0.16.0 rejected." }
 
 # --- Governance ---
 
@@ -151,7 +151,7 @@ maintainer = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
 maintainer-github = "hyperpolymath"
 contribution-model = "open-source"
 decision-making = "BDFL with community input"
-license = "PMPL-1.0-or-later"
+license = "MPL-2.0"
 
 # --- Roadmap ---
 

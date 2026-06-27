@@ -37,7 +37,7 @@ must = [
   "app.security.sandbox.enabled == true",
   "app.ipc.timeout > 0",
   "app.ipc.maxMessageSize > 0",
-  "bundle.license == 'PMPL-1.0-or-later'",
+  "bundle.license == 'MPL-2.0'",
   "ephapax.linearVerification == true",
 ]
 trust = ["signed-by: ci-pipeline"]

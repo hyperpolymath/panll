@@ -98,4 +98,14 @@ deno task test:coverage
 
 ## License
 
-PMPL-1.0-or-later on all original source files.
+- **Code** (all original source files): `MPL-2.0`
+- **Documentation** (prose `.adoc` / `.md`): `CC-BY-SA-4.0`
+- Licence texts live in `LICENSES/`; GitHub detects the repo as MPL-2.0 from the root `LICENSE`.
+- Quantum-Safe Provenance specification: `EXHIBIT-B-QUANTUM-SAFE.txt` (additive supplement, MPL-2.0).
+
+(Estate policy: sole-owner repos are MPL-2.0; the prior `PMPL-1.0-or-later`
+declaration is superseded. NOTE for agents: the **Palimpsest Plaza** panel
+(`panel-clades/clades/plaza/`, `src/**/Plaza*`, `src-gossamer/src/plaza/`)
+references PMPL as a *feature subject* — a PMPL-adoption/compliance hub. Those
+PMPL strings are intentional product content, NOT this repo's licence; do not
+sweep them.)
