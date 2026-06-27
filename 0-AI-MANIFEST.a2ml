@@ -12,7 +12,7 @@
     (full-name "PanLL eNSAID — Neurosymbolic AI Development Environment")
     (version "0.1.0-alpha")
     (repo "https://github.com/hyperpolymath/panll")
-    (license "PMPL-1.0-or-later")
+    (license "MPL-2.0")
     (author "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"))
 
   (purpose
@@ -97,7 +97,7 @@
     ; Code policy
     (rule "No TypeScript — ReScript only")
     (rule "No npm/bun — Deno only")
-    (rule "PMPL-1.0-or-later on all source files"))
+    (rule "MPL-2.0 on all source files"))
 
   ;; ===================================================================
   ;; STRUCTURE OVERVIEW (detail in CLAUDE.md)

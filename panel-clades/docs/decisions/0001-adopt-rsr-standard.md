@@ -44,7 +44,7 @@ The RSR template provides:
 - **Standardized workflows** (16+ GitHub Actions workflows, all SHA-pinned)
 - **Justfile automation** with standard recipes for common tasks
 - **Security and governance files**: SECURITY.md, CONTRIBUTING.md,
-  CODE_OF_CONDUCT.md, LICENSE (PMPL-1.0-or-later)
+  CODE_OF_CONDUCT.md, LICENSE (MPL-2.0)
 - **Architecture Decision Records** in `docs/decisions/`
 
 New repositories are created by cloning the template:

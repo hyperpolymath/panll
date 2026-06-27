@@ -9,7 +9,7 @@ display      = "PanLL"
 description  = "PanLL — panels framework (TEA + workspace layer + Stapeln integration)"
 categories   = ["Development", "Utility"]
 version      = "0.2.0"
-license      = "PMPL-1.0-or-later"
+license      = "MPL-2.0"
 
 [repo]
 path = "/var/mnt/eclipse/repos/panll"

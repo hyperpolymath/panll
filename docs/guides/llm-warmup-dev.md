@@ -3,7 +3,7 @@
 ## Identity
 
 - **Name**: PanLL eNSAID (Neurosymbolic AI Development Environment)
-- **License**: PMPL-1.0-or-later
+- **License**: MPL-2.0
 - **Author**: Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 - **Repo**: https://github.com/hyperpolymath/panll
 
@@ -157,7 +157,7 @@ Files: TypeLLModel.res, TypeLLEngine.res, TypeLLCmd.res, TypeLLService.res, Type
 6. No TypeScript -- ReScript only
 7. No npm/bun -- Deno only (npm only for ReScript compiler via Deno)
 8. WCAG 2.3 A minimum, AA target
-9. License: PMPL-1.0-or-later on all source files
+9. License: MPL-2.0 on all source files
 
 ## Related Projects
 

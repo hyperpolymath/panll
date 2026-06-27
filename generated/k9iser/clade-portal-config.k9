@@ -5,7 +5,7 @@
 app.security.sandbox.enabled : string { == true }
 app.ipc.timeout : string { > 0 }
 app.ipc.maxMessageSize : string { > 0 }
-bundle.license : string { == 'PMPL-1.0-or-later' }
+bundle.license : string { == 'MPL-2.0' }
 ephapax.linearVerification : string { == true }
 
 [trust]

@@ -2,7 +2,7 @@
 
 **Version:** 2.0.0
 **Status:** Production Ready — Permanent Custom Implementation
-**License:** PMPL-1.0-or-later
+**License:** MPL-2.0
 **Author:** Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 ## Table of Contents
@@ -760,6 +760,6 @@ let subscriptions = (model) => {
 
 ## License
 
-This documentation is licensed under PMPL-1.0-or-later.
+This documentation is licensed under MPL-2.0.
 
 Copyright (c) 2026 Jonathan D.A. Jewell

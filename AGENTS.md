@@ -13,7 +13,7 @@
 Neurosymbolic IDE built on the Binary Star model — human (symbolic, Panel-L) and machine (neural, Panel-N) orbiting a shared world state (Panel-W). 106 panels, custom TEA runtime, Gossamer desktop backend.
 
 **Languages:** ReScript, Rust, Elixir, JavaScript
-**License:** PMPL-1.0-or-later
+**License:** MPL-2.0
 **Build system:** just
 **Runtime:** deno
 

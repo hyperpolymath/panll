@@ -18,7 +18,7 @@ Per-tool config files (.cursorrules, .clinerules, etc.) reference this document.
 
 ## License
 
-- All original code: **PMPL-1.0-or-later**
+- All original code: **MPL-2.0**
 - Fallback (platform-required only): MPL-2.0 with comment explaining why.
 - NEVER use AGPL-3.0.
 - Preserve third-party licenses verbatim.

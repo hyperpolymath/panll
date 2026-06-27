@@ -85,7 +85,7 @@ sed -i "s/2026-03-16/$(date +%Y-%m-%d)/g" $(grep -rl '2026-03-16' .)
 
 | Placeholder | Description | Example | Files |
 |---|---|---|---|
-| `PMPL-1.0-or-later` | License name | `PMPL-1.0-or-later` | ABI-FFI-README.md |
+| `MPL-2.0` | License name | `MPL-2.0` | ABI-FFI-README.md |
 | `panel-clades` | One-line project description | `FFI bridges between languages` | STATE.a2ml |
 
 ### AI Manifest

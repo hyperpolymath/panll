@@ -7,7 +7,7 @@ version = "1.0.0"
 last-updated = "2026-03-15"
 project = "panll"
 author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
-license = "PMPL-1.0-or-later"
+license = "MPL-2.0"
 standard = "RSR 2026"
 format-spec = "hyperpolymath/rsr-template-repo/spec/META-FORMAT-SPEC.adoc"
 
@@ -102,7 +102,7 @@ testing-strategy = """Test-driven development for core logic (Model, Update, Com
 Deno.test for JavaScript unit tests; cargo test for Rust backend tests.
 Integration tests for Gossamer backend commands. Manual testing for UI/UX flows."""
 versioning-scheme = "Semantic versioning. v0.x.y = pre-1.0 (breaking changes allowed)."
-license-policy = "All original code PMPL-1.0-or-later. Third-party dependencies respect original licenses."
+license-policy = "All original code MPL-2.0. Third-party dependencies respect original licenses."
 
 # --- Design Rationale ---
 

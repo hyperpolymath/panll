@@ -171,4 +171,4 @@ are the governance layer that mandates TSDM usage across all repos.
 
 == License
 
-PMPL-1.0-or-later
+MPL-2.0

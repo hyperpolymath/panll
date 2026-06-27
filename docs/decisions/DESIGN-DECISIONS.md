@@ -260,7 +260,7 @@ Combined score guides priority: must+corrective+systems = 15 (do immediately), l
 **Status:** Accepted
 **Context:** Need sustainable funding without compromising open source.
 
-**Decision:** Everything is PMPL-1.0-or-later. Funding buys acceleration, not access. The pitch: "Is it really worth trying to compete with a crazy academic, or just give him the money?" The ecosystem is so far along it's cheaper to fund than to fork.
+**Decision:** Everything is MPL-2.0. Funding buys acceleration, not access. The pitch: "Is it really worth trying to compete with a crazy academic, or just give him the money?" The ecosystem is so far along it's cheaper to fund than to fork.
 
 ---
 
@@ -304,7 +304,7 @@ Development-as-time-series database. Stores snapshots of: lines of code, danglin
 Derive development patterns from timeline data: "this developer writes boilerplate manually — slower but zero FIXMEs", "this AI session left 12 unresolved tags — bullshit detector", "velocity increased 40% after switching to ReScript." Victory conditions: all TODOs resolved, zero panic-attack findings, Vexometer below threshold. Badges, streaks, diagnostic not patronising. Admin enforcement mode for education (universities can require attribution tracking on all submissions).
 
 **Layer 4 — Attribution-to-Licensing Link**
-PMPL (based on MPL) requires source attribution. Blake3 provenance chains auto-generate license attribution sections: "Lines 1-50: Jonathan D.A. Jewell. Lines 51-80: Claude Opus 4.6 (AI-assisted, human-reviewed). Lines 81-120: imported from proven-servers (PMPL-1.0-or-later)." Makes source-available requirements trivially verifiable.
+PMPL (based on MPL) requires source attribution. Blake3 provenance chains auto-generate license attribution sections: "Lines 1-50: Jonathan D.A. Jewell. Lines 51-80: Claude Opus 4.6 (AI-assisted, human-reviewed). Lines 81-120: imported from proven-servers (MPL-2.0)." Makes source-available requirements trivially verifiable.
 
 **The MRI Metaphor:**
 - Sees inside without being invasive (reads blame/tags, doesn't change code)

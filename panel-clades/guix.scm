@@ -67,5 +67,5 @@
   (synopsis "panel-clades")
   (description "RSR-compliant project. See README.adoc for details.")
   (license (list
-            ;; PMPL-1.0-or-later extends MPL-2.0
+            ;; MPL-2.0 extends MPL-2.0
             mpl2.0)))
