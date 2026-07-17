@@ -1,0 +1,211 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+//
+// Groove Discovery Panel — AffineScript TEA Interface (groove SPEC §8.1)
+//
+// Purpose: the discovery UI the groove spec asks PanLL to provide —
+// currently discovered groove systems, active connections with their lease
+// modes, mesh topology, and heartbeat health — driven through the Gossamer
+// runtime bridge (`groove_discover` / `groove_status` / `groove_attest`
+// invoke commands; the same surface groove/harness/groove-harness.js
+// exercises in the browser).
+//
+// Nature: AffineScript TEA where Model and Msg are consumed linearly, in
+// the idiom of panll_gui.affine. AUTHORED-CANONICAL, AWAITING TOOLCHAIN:
+// like the other .affine modules in this tree, this module activates when
+// PanLL's AffineScript build path lands (or panel-clades, whichever first)
+// — the ReScript TEA chain deliberately gains no new panel wiring (estate
+// ruling 2026-07-09: new panels are AffineScript, not ReScript). The
+// runnable form of this panel today is groove/harness/
+// groove-panel-template/panel.html against a live provider.
+
+// ── Domain ──────────────────────────────────────────────────────────────────
+
+/**
+ * Lease mode on a connection (groove SPEC §4.6): the wire-observable
+ * shadow of cleave RC-6 — Soft expires to a zero-residue wipe, Hard
+ * refreshes on heartbeat. NoLease = legacy §4.3 connection.
+ */
+enum LeaseMode {
+  Soft,
+  Hard,
+  NoLease
+}
+
+/**
+ * Heartbeat health of a peer, as the mesh sees it.
+ */
+enum PeerHealth {
+  Up,
+  Degraded,
+  Down
+}
+
+/**
+ * One discovered groove system (a row of the discovery table).
+ */
+struct Peer {
+  service_id: String,
+  port: Int,
+  health: PeerHealth,
+  capability_count: Int
+}
+
+/**
+ * One active connection (a row of the connections table).
+ */
+struct Connection {
+  handle: String,
+  peer: String,
+  lease: LeaseMode,
+  // Milliseconds until the lease is due absent refresh; 0 for NoLease.
+  ttl_remaining_ms: Int
+}
+
+// ── Model ───────────────────────────────────────────────────────────────────
+
+enum Tab {
+  Discovered,
+  Connections,
+  Mesh,
+  Attestations
+}
+
+/**
+ * Groove Discovery Model. Lists are owned linearly by the model; every
+ * refresh consumes the old lists (no stale rows can survive a transition).
+ */
+struct Model {
+  tab: Tab,
+  peers: List<Peer>,
+  connections: List<Connection>,
+  // Newest-last attestation event names, as served by /attestations.
+  attestation_events: List<String>,
+  probing: Bool
+}
+
+// ── Msg ──────────────────────────────────────────────────────────────────────
+
+enum Msg {
+  SelectTab(Tab),
+  // groove_discover completed with the peers found.
+  Discovered(List<Peer>),
+  // groove_status refresh for the live connections.
+  ConnectionsRefreshed(List<Connection>),
+  // Attestation chain fetched (event names, newest-last).
+  AttestationsFetched(List<String>),
+  // A heartbeat cycle marked a peer degraded/up/down.
+  PeerHealthChanged(String, PeerHealth),
+  StartProbe,
+  ProbeFinished
+}
+
+// ── TEA Logic ────────────────────────────────────────────────────────────────
+
+/**
+ * Initial state: nothing discovered yet, Discovered tab focused.
+ */
+fn groove_discovery_init() -> Model {
+  #{
+    tab: Tab::Discovered,
+    peers: [],
+    connections: [],
+    attestation_events: [],
+    probing: false
+  }
+}
+
+/**
+ * Affine TEA update. Every arm consumes (msg, model) exactly once and
+ * yields the successor model — refreshes REPLACE the owned lists, so a
+ * dropped peer cannot linger in the view (the UI-level echo of the
+ * zero-residue discipline).
+ */
+fn groove_discovery_update(@linear msg: Msg, @linear model: Model) -> Model {
+  match model {
+    { tab: t, peers: ps, connections: cs, attestation_events: evs, probing: pr } => {
+      match msg {
+        SelectTab(new_tab) => {
+          #{ tab: new_tab, peers: ps, connections: cs, attestation_events: evs, probing: pr }
+        }
+
+        Discovered(found) => {
+          // Old peer list is consumed here; only the fresh probe survives.
+          #{ tab: t, peers: found, connections: cs, attestation_events: evs, probing: false }
+        }
+
+        ConnectionsRefreshed(fresh) => {
+          #{ tab: t, peers: ps, connections: fresh, attestation_events: evs, probing: pr }
+        }
+
+        AttestationsFetched(chain) => {
+          #{ tab: t, peers: ps, connections: cs, attestation_events: chain, probing: pr }
+        }
+
+        PeerHealthChanged(id, health) => {
+          #{
+            tab: t,
+            peers: update_peer_health(ps, id, health),
+            connections: cs,
+            attestation_events: evs,
+            probing: pr
+          }
+        }
+
+        StartProbe => {
+          #{ tab: t, peers: ps, connections: cs, attestation_events: evs, probing: true }
+        }
+
+        ProbeFinished => {
+          #{ tab: t, peers: ps, connections: cs, attestation_events: evs, probing: false }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Replace one peer's health, consuming the list.
+ */
+fn update_peer_health(@linear peers: List<Peer>, id: String, health: PeerHealth) -> List<Peer> {
+  match peers {
+    [] => [],
+    [p, ...rest] => {
+      match p {
+        { service_id: sid, port: pt, health: old_health, capability_count: cc } => {
+          if sid == id {
+            [#{ service_id: sid, port: pt, health: health, capability_count: cc },
+             ...update_peer_health(rest, id, health)]
+          } else {
+            [#{ service_id: sid, port: pt, health: old_health, capability_count: cc },
+             ...update_peer_health(rest, id, health)]
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * View: header line per tab (the panel body renders the owned lists).
+ */
+fn groove_discovery_view(model: Model) -> String {
+  match model.tab {
+    Discovered   => "GROOVE: DISCOVERED SYSTEMS (probe band + registry surfaces)",
+    Connections  => "GROOVE: ACTIVE CONNECTIONS (soft expires / hard refreshes — SPEC §4.6)",
+    Mesh         => "GROOVE: MESH TOPOLOGY (who feeds whom)",
+    Attestations => "GROOVE: ATTESTATION CHAIN (hash-linked, newest-last)"
+  }
+}
+
+/**
+ * Subscriptions: the heartbeat/probe interval drives Discovered /
+ * PeerHealthChanged messages via the runtime bridge.
+ */
+fn groove_discovery_subs(model: Model) -> String {
+  if model.probing {
+    "interval: groove_discover (500ms probe window)"
+  } else {
+    "interval: groove_status heartbeat (5000ms, SPEC §4.3)"
+  }
+}

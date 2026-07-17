@@ -8,7 +8,11 @@ source of truth going forward is `panel-clades/` (Idris2 ABI + Zig FFI +
 a2ml clades) — see `docs/decisions/ADR-0001-coprocessor-and-panel-clades-pivot.adoc`.
 
 Permitted changes: security fixes and build-keep-alive only (interim
-legacy-stabilisation, e.g. PR #37). All new panel/coprocessor work
+legacy-stabilisation, e.g. PR #37). *Wire-dialect keep-alive is included*
+(owner decision 2026-07-09, recorded after a PMI review): constants and
+manifest-string corrections needed to stay conformant with the current
+groove SPEC/registry — never features — may land here, so this question
+does not need re-litigating at every dialect bump. All new panel/coprocessor work
 happens in `panel-clades/`, modelled on Axiom.jl's standard
 backend-organisation approach. The ~38 panel dirs here are
 port-reference until clade parity, then removed.
