@@ -40,9 +40,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use once_cell::sync::Lazy;
 
-/// Known groove peers for health mesh probing.
+/// Known groove peers for health mesh probing — groove-DISCOVERY surfaces
+/// per groove-registry.json (ADR 0006; two-plane rule: app ports differ).
+/// groove-ref 6465, gossamer 6470, burble 6473, verisimdb 6475, vext 6480,
+/// echidna 9000, hypatia 9090.
 /// PanLL probes these ports to discover neighbouring services.
-const MESH_PROBE_PORTS: &[u16] = &[6473, 8080, 8081, 8091, 8092, 8093];
+const MESH_PROBE_PORTS: &[u16] = &[6465, 6470, 6473, 6475, 6480, 9000, 9090];
 
 /// Cached mesh health state: peer service_id -> status.
 static MESH_STATE: Lazy<Mutex<Vec<PeerHealth>>> = Lazy::new(|| Mutex::new(Vec::new()));
@@ -66,6 +69,7 @@ const MANIFEST: &str = r#"{
   "groove_version": "1",
   "service_id": "panll",
   "service_version": "0.1.0",
+  "mode": "active",
   "capabilities": {
     "panel_ui": {
       "type": "panel-ui",
@@ -76,7 +80,7 @@ const MANIFEST: &str = r#"{
       "panel_compatible": true
     },
     "feedback": {
-      "type": "feedback",
+      "type": "dogfood-feedback",
       "description": "Groove-routed feedback collector — accepts and routes feedback to any mesh service",
       "protocol": "http",
       "endpoint": "/.well-known/groove/feedback",
@@ -107,9 +111,8 @@ const MAX_REQUEST_SIZE: usize = 16 * 1024;
 /// Spawn the groove discovery HTTP server on port 8000 in a background thread.
 ///
 /// This is a minimal blocking HTTP server that handles only the groove protocol
-/// endpoints. It runs alongside the main Tauri application, spawned from
-/// the `.setup()` hook on a dedicated OS thread (Tauri manages its own
-/// async runtime, so we use std::net to avoid tokio dependency conflicts).
+/// endpoints. It runs alongside the main Gossamer application on a dedicated OS
+/// thread (std::net, no async-runtime dependency).
 ///
 /// The Tauri app is the real PanLL — this server exists solely for groove
 /// discovery by other services in the mesh.

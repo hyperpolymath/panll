@@ -1,5 +1,17 @@
 # Groove Protocol & PanLL Research Summary
 
+> **HISTORICAL (2024, Mistral-Vibe era) — SUPERSEDED.** Kept for provenance;
+> do not implement from this document. The groove dialect described here
+> (port 9000, `groove_version` probing, capabilities-as-shown) predates the
+> canonical protocol, and the five-mode "transmutation spectrum" was the
+> precursor intuition of what is now the cleave dial. Current canon:
+> the joinery naming ADR (groove `docs/decisions/0009`), groove
+> `spec/SPEC.adoc` (v0.3: leases §4.6, signed manifests §2.1.5),
+> `cleave/docs/KERNEL.adoc` + `RANKED-OWNERSHIP-CLEAVE.adoc` v0.3 (the
+> dial, soft/hard as lease modes, posture TS-1..7), and
+> `cleave/docs/architecture/THE-JOINERY.adoc` (orientation).
+
+
 **Date:** 2024-04-14
 **Researcher:** Mistral Vibe
 **Purpose:** Understand Groove Protocol and PanLL panel/plugin development for eNSAID integration
