@@ -1,0 +1,9 @@
+# Code Owners
+
+# Default: All contributors with write access are code owners
+* @metadatastician
+
+# For specific paths, add explicit owners below
+# Example:
+# /src/* @team-lead
+# /docs/* @docs-maintainer
