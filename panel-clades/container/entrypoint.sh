@@ -1,6 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: MPL-2.0
-# {{PROJECT_NAME}} container entrypoint
+# PanLL eNSAID container entrypoint
 #
 # Handles signal propagation, startup logging, and health check
 # preparation before exec-ing into the main application process.

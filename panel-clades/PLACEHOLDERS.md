@@ -71,7 +71,7 @@ sed -i "s/2026-03-16/$(date +%Y-%m-%d)/g" $(grep -rl '2026-03-16' .)
 | `[PGP fingerprint not set]` | 40-char PGP fingerprint | `ABCD 1234 ...` | SECURITY.md |
 | `{{PGP_KEY_URL}}` | URL to public PGP key | `https://keys.openpgp.org/...` | SECURITY.md |
 | `{{WEBSITE}}` | Project website | `https://example.org` | SECURITY.md |
-| `{{CONDUCT_EMAIL}}` | Conduct reports email | `conduct@example.org` | CODE_OF_CONDUCT.md |
+| `j.d.a.jewell@open.ac.uk` | Conduct reports email | `conduct@example.org` | CODE_OF_CONDUCT.md |
 | `{{CONDUCT_TEAM}}` | Conduct committee name | `Code of Conduct Committee` | CODE_OF_CONDUCT.md |
 | `{{RESPONSE_TIME}}` | SLA for initial response | `48 hours` | CODE_OF_CONDUCT.md |
 

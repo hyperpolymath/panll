@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 # Mustfile - declarative state contract (template)
-# See: https://github.com/{{OWNER}}/mustfile
+# See: https://github.com/hyperpolymath/mustfile
 
 version: 1
 

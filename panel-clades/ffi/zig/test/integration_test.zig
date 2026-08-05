@@ -1,4 +1,4 @@
-// {{PROJECT}} Integration Tests
+// PANLL Integration Tests
 // SPDX-License-Identifier: MPL-2.0
 //
 // These tests verify that the Zig FFI correctly implements the Idris2 ABI

@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: MPL-2.0
-# Copyright (c) {{CURRENT_YEAR}} {{AUTHOR}} ({{OWNER}}) <{{AUTHOR_EMAIL}}>
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # ANCHOR.a2ml - authoritative anchor for this repository
 
 [metadata]
 version = "1.0.0"
-last-updated = "{{CURRENT_DATE}}"
+last-updated = "2026-08-05"
 
 [anchor]
 schema = "hyperpolymath.anchor/1"
-repo = "{{OWNER}}/{{REPO}}"
+repo = "hyperpolymath/panll"
 authority = "upstream-canonical"
 
 purpose = [
@@ -19,7 +19,7 @@ purpose = [
 ]
 
 [identity]
-project = "{{PROJECT_NAME}}"
+project = "PanLL eNSAID"
 kind = "{{PROJECT_KIND}}"                # language | library | service | tool
 one-sentence = "{{PROJECT_PURPOSE}}"
 domain = "{{PROJECT_DOMAIN}}"

@@ -19,7 +19,7 @@ K9!
       name = "project-metadata",
       version = "1.0.0",
       description = "Pure data configuration for project metadata",
-      author = "{{AUTHOR}} <{{AUTHOR_EMAIL}}>",
+      author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
     },
   },
 
@@ -35,8 +35,8 @@ K9!
     },
 
     author = {
-      name = "{{AUTHOR}}",
-      email = "{{AUTHOR_EMAIL}}",
+      name = "Jonathan D.A. Jewell",
+      email = "j.d.a.jewell@open.ac.uk",
       organization = "{{AUTHOR_ORG}}",
     },
 

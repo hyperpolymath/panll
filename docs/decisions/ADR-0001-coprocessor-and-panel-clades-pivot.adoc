@@ -24,7 +24,7 @@ divergence ("rot"):
   panel backends orphaned (declared by no crate root → never compiled).
 . **`panel-clades/` is spec-complete but implementation-incomplete.** Its
   container/, `ffi/zig/`, `.devcontainer/` are uninstantiated rsr-template
-  shells (`{{PROJECT_NAME}}`/`{{project}}` placeholders, `just init` never
+  shells (`PanLL eNSAID`/`{{project}}` placeholders, `just init` never
   run). The a2ml clade specs and Idris2 ABI declarations are real; the Zig
   FFI implementation and concrete build/container are not.
 . **Coprocessor support is mostly unverified.** Across the estate, coprocessor
