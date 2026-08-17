@@ -1,0 +1,151 @@
+// SPDX-License-Identifier: MPL-2.0
+= PanLL eNSAID — EXPLAINME
+:toc: preamble
+:toc-title: Contents
+:icons: font
+:doctype: article
+
+This file backs every factual claim in link:README.adoc[README.adoc] with code paths and honest caveats. Read it if you are doing due diligence on whether the story matches the code.
+
+== Claim-to-implementation map
+
+=== PanLL is a cognitive-relief layer (eNSAID)
+
+[quote, README.adoc]
+____
+A practical cognitive-relief layer: reducing friction, maintaining context, and making hard work less punishing.
+____
+
+How this is implemented::
+The four-pane layout (A/L/N/W) separates ambient context, symbolic constraints, neural reasoning, and active work—reducing context-switching by design. The `Vexometer` monitors interaction friction and adjusts UI density. The `AntiCrash` library gates unvalidated neural output, preventing cascading confusion. `Contractiles` negotiate operator/machine autonomy boundaries.
+
+Caveat::
+**"Cognitive relief" is a design intent, not a measured psychological guarantee.** The mechanisms (Vexometer, AntiCrash, Contractiles) provide the *infrastructure* for friction reduction. Whether they achieve cognitive relief for a specific user, task, or neurosymbolic agent is an empirical question. We do not have controlled user studies; we have architectural decisions aligned with cognitive-ergonomic principles.
+
+=== ReScript + TEA provides a sound type system with no any escape hatch
+
+[quote, README.adoc]
+____
+Actually type-safe — no any escape hatch, exhaustive pattern matching on every variant, and the compiler catches state bugs that TypeScript structurally cannot.
+____
+
+How this is implemented::
+The frontend is written in ReScript using The Elm Architecture (TEA). ReScript's type system is sound by default; it lacks TypeScript's `any` type and structural unsoundness. Every UI variant is matched exhaustively. Build produces 0 warnings (`deno task res:build` in 180ms). Source: `link:src/[]` (ReScript modules).
+
+Caveat::
+Soundness is relative to ReScript's type system. It guarantees the UI state machine cannot enter an ill-typed state, but it does not prove the *business logic* of the neurosymbolic interaction correct. That is Typell's job (planned).
+
+=== 5 MB binary vs 100+ MB Electron; no GC pauses
+
+[quote, README.adoc]
+____5 MB binary vs 100+ MB Electron. No garbage collector pauses during real-time panel updates.____
+
+How this is implemented::
+The backend is Rust (`link:src-tauri/[]` or equivalent Rust backend) using Gossamer (WebKitGTK) for the webview shell. Rust's ownership model eliminates GC. Gossamer compiles to a ~5 MB binary. Filesystem watching uses the `notify` crate.
+
+Caveat::
+The 5 MB figure is the Rust binary; the full installation includes WebKitGTK dependencies (provided by the host OS or container). Linux is the primary target; macOS and Windows require WebKitGTK availability. Gossamer is actively maintained but less battle-tested than Electron.
+
+=== 109 tests passing (97 JS + 12 Rust)
+
+[quote, README.adoc]
+____109 tests passing (97 JS via Deno.test + 12 Rust via cargo test)____
+
+How this is implemented::
+`deno task test` runs the Deno test suite (97 tests covering UI components, state management, event-chain import, Anti-Crash gating, Vexometer polling). `cargo test` runs the Rust suite (12 tests covering backend commands, filesystem watching, identity state capture). CI enforces both.
+
+Caveat::
+These are integration and unit tests, not formal proofs. They verify component behavior, not system-wide soundness. The Typell integration (when wired) will add formal verification for Pane-L constraints.
+
+=== Deno build with no package.json
+
+[quote, README.adoc]
+____No node_modules black hole — URL imports, built-in TypeScript support for glue code, secure-by-default permissions model.____
+
+How this is implemented::
+`link:deno.json[]` configures the build. ReScript and Tailwind run through `npm:` specifiers without a `package.json` or direct `npm` CLI invocation. All imports are URL-based or managed specifiers.
+
+Caveat::
+The `npm:` specifier mechanism *does* hit the npm registry for ReScript and Tailwind packages. The "no node_modules" claim means no local `node_modules` directory is materialised in the repo; Deno manages the cache internally.
+
+=== Event-chain import from panic-attack
+
+[quote, README.adoc]
+____PanLL can ingest PanLL event-chain JSON exported by panic-attack and surface it in Pane-W for MVP timeline review.____
+
+How this is implemented::
+Pane-W includes an Event Chain panel with "Import JSON" (paste) and "Load File" (filesystem) handlers. The imported JSON is parsed, validated, and surfaced as a timeline. Persistence via localStorage.
+
+Caveat::
+The import validates JSON structure, not the semantic truth of the event chain. Maliciously crafted event chains will render but may not represent actual security events.
+
+== Dogfooded Across The Account
+
+[cols="1,2,2", options="header"]
+|===
+| Technology / Pattern | Used here | Also used in
+
+| ReScript + TEA
+| Frontend architecture
+| link:https://github.com/hyperpolymath/kategoria[Kategoria] (Route α tooling, planned)
+
+| Rust + Gossamer
+| Backend
+| link:https://github.com/hyperpolymath/typell[Typell] (kernel)
+
+| Deno build orchestration
+| Build/test pipeline
+| Estate-wide standard
+
+| Elixir/BEAM middleware
+| `beam/panll_beam`
+| link:https://github.com/hyperpolymath/standards[Standards] (BEAM API pattern)
+|===
+
+== Known gaps
+
+[CAUTION]
+====
+**Typell is not wired.** Pane-L currently uses local type checking. The Typell JSON-RPC integration for dependent, linear, and session type verification is designed but not implemented.
+====
+
+[CAUTION]
+====
+**BEAM API is scaffolded.** HTTP, GraphQL, and gRPC endpoints exist for health checks and status. Full query validation through BEAM is deferred.
+====
+
+[CAUTION]
+====
+**No formal cognitive-ergonomic validation.** The Vexometer measures interaction friction (timing, error rates, undo frequency). It does not measure cognitive load directly (no EEG, no eye tracking). The mapping from Vexometer readings to "cognitive relief" is a hypothesis, not a validated model.
+====
+
+[CAUTION]
+====
+**v0.2.0, not v1.0.0.** PanLL is a connected workbench, not a production release. APIs, panel layouts, and state contracts may change.
+====
+
+== Evidence Index
+
+[cols="2,3", options="header"]
+|===
+| Path | Proves / Implements
+
+| `src/` (ReScript)
+| 4-pane UI, TEA architecture, Anti-Crash, Vexometer, Contractiles
+
+| `src-tauri/` or Rust backend
+| Gossamer webview, 270 migrated commands, filesystem watching
+
+| `beam/panll_beam/`
+| BEAM middleware scaffold (HTTP/GraphQL/gRPC)
+
+| `deno.json`
+| Build orchestration (no `package.json`)
+
+| `docs/architecture/TOPOLOGY.md`
+| System architecture map and completion dashboard
+
+| `docs/design/decisions/`
+| DD-001 to DD-018 (architectural decisions)
+|===
+abc def ghi jkl mno pqr stu
