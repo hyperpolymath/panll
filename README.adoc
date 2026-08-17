@@ -1,320 +1,197 @@
-// SPDX-License-Identifier: CC-BY-SA-4.0
-
-= PanLL eNSAID
-:toc:
-:toc-placement: preamble
+// SPDX-License-Identifier: MPL-2.0
+= PanLL eNSAID — The Human-Things Interface
+:toc: preamble
+:toc-title: Contents
 :icons: font
+:doctype: article
 
-image:https://img.shields.io/badge/OpenSSF-Best_Practices-green?logo=opensourcesecurity[OpenSSF Best Practices,link="https://www.bestpractices.dev/en/projects/new?repo_url=https://github.com/hyperpolymath/panll"]
-image:https://img.shields.io/badge/version-v0.2.0--beta-blue[Version]
-image:https://img.shields.io/badge/completion-68%25-orange[Completion]
-image:https://img.shields.io/badge/License-MPL--2.0-indigo.svg[License MPL-2.0,link="LICENSE"]
-image:https://img.shields.io/badge/Docs-CC--BY--SA--4.0-lightgrey.svg[Docs CC-BY-SA-4.0,link="LICENSES/CC-BY-SA-4.0.txt"]
-image:https://img.shields.io/badge/Quantum--Safe-Provenance-blueviolet.svg[Quantum-Safe Provenance,link="EXHIBIT-B-QUANTUM-SAFE.txt"]
-image:https://img.shields.io/badge/Tests-109%20passing-brightgreen[Tests]
-image:https://img.shields.io/badge/RSR-compliant-blue[RSR Compliant]
-image:https://img.shields.io/badge/Technical_Debt-25%20issues-red[Technical Debt,link="docs/TECHNICAL_DEBT.md"]
-image:https://img.shields.io/badge/Hypatia-Rules_Added-blue[Hypatia Rules,link=".github/hypatia-rules/panll-v0.2.0-fixes.yml"]
-image:https://api.thegreenwebfoundation.org/greencheckimage/jewell.nexus[Green Hosting,link="https://www.thegreenwebfoundation.org/green-web-check/?url=jewell.nexus"]
+image:https://img.shields.io/badge/OpenSSF-BestPractices-green[link="https://www.bestpractices.dev/projects/XXXX"]
 
-**PanLL** is a practical cognitive-relief layer: a set of tools and mechanisms designed to reduce friction, lower cognitive overhead, and make difficult work more manageable.
+A four-pane neurosymbolic development environment designed as a cognitive-relief layer: reducing friction, maintaining context, and making hard work less punishing. Built on ReScript, Rust, and Deno.
 
-It is not the whole ambient environment.
+== Overview
 
-It is the part that helps.
+PanLL (pronounced "parallel") is an Environment for NeSy-Agentic Integrated Development (eNSAID). It is a Human-Things Interface (HTI) built to support a tighter, calmer co-orbit between a human operator and a neurosymbolic machine.
 
-PanLL is the **eNSAID** in the broader vision: not a complete cure, not the entire world, but a real reduction in pain, drag, and inertia so movement becomes possible again.
+PanLL is the eNSAID in the broader vision: not a complete cure for cognitive overload, not the total ambient environment, but a practical support layer—the friction reducer, the context keeper, the anti-inertia mechanism. It does not solve every underlying problem; it reduces pain, drag, and strain so movement becomes possible again.
 
-== What PanLL is
+Its purpose is straightforward: reduce the amount of unnecessary thinking required to make progress.
 
-PanLL (pronounced "parallel") is a Human-Things Interface (HTI) built to support a tighter, calmer, more effective co-orbit between a human operator and a neurosymbolic machine.
+== The four-pane parallel layout
 
-Its purpose is straightforward:
+[cols="1,2,2", options="header"]
+|===
+| Pane | Role | Analogy
 
-____
-Reduce the amount of unnecessary thinking required to make progress.
-____
+| Pane-A (Ambient)
+| Persistent context and environmental support. Maintains continuity, absorbs state, reduces active cognitive management.
+| The background
 
-PanLL is for cases where the user is already carrying too much:
+| Pane-L (Symbolic)
+| Strict logic, types, and constraints. The contractual layer governing inference and action. Powered by Typell.
+| The law
 
-- too many decisions
-- too much context-switching
-- too much explicit control
-- too much interface friction
+| Pane-N (Neural)
+| Streaming inference manifold. Agent's internal monologue, reasoning traces, OODA-style movement.
+| The mind
 
-It aims to make work feel smoother, more recoverable, and less cognitively expensive.
-
-== What PanLL is not
-
-PanLL is not:
-
-- the full ambient-computing vision
-- the total philosophy of a serene environment
-- a finished answer to cognitive overload
-
-That broader work belongs elsewhere.
-
-PanLL is the **practical support layer**:
-
-- the friction reducer
-- the context keeper
-- the anti-inertia mechanism
-- the thing that makes hard work less punishing
-
-== Why eNSAID
-
-PanLL is described as an **eNSAID** because it plays a similar role to an anti-inflammatory:
-
-- it does not solve every underlying problem
-- it does reduce pain, friction, and strain
-- it helps keep movement possible
-- it prevents avoidable overload from becoming the whole experience
-
-That is the role here.
-
-PanLL does useful work now, while larger questions about ambient computing, serenity, and environment-first design continue to be explored elsewhere.
-
-== Vision
-
-This is not a passive text editor.
-
-It is an active, synchronous environment for reducing friction and managing cognitive ergonomics in real time.
-
-The ambition is not simply “more powerful tooling”.
-
-It is:
-
-- less drag
-- less interruption
-- less inertia
-- more continuity between intention and action
-
-== Architecture
-
-=== The Four-Pane Parallel Layout
-
-[cols="1,3"]
-
-
+| Pane-W (World)
+| Central shared canvas. The task barycentre where results, actions, artefacts, and state become visible.
+| The workbench
 |===
 
-|Pane-A (Ambient)
-|Persistent context and environmental support. The background layer that maintains continuity, absorbs state, and reduces the need for active cognitive management.
+== Core systems
 
-|Pane-L (Symbolic)
-|Strict logic, types, and constraints. The symbolic and contractual layer — “the law” governing inference and action.
+These are not decorative features. They exist to reduce avoidable breakage, ambiguity, and strain:
 
-|Pane-N (Neural)
-|Streaming inference manifold showing the agent’s internal monologue, reasoning traces, and OODA-style movement.
+Anti-Crash Library::
+  Logical circuit breaker preventing unvalidated neural output from reaching the task barycentre (Pane-W).
 
-|Pane-W (World)
-|Central shared canvas — the task barycentre — where results, actions, artefacts, and state become visible.
+Vexometer::
+  Real-time friction and cognitive-load monitoring with anti-inflammatory UI adjustments. Measures what hurts; adjusts to reduce it.
+
+Contractiles::
+  Adaptive state contracts between operator and machine. Negotiated boundaries for autonomy and intervention.
+
+Feedback-O-Tron::
+  Community-driven performance reporting and constraint suggestions.
+
+== What is standard and what is ours
+
+[cols="1,2,2", options="header"]
 |===
+| Concept | Status | Home
 
-=== Core Systems
+| The Elm Architecture (TEA) in ReScript
+| Standard (Elm/TEA pattern)
+| Frontend architecture
 
-* **Anti-Crash Library**: Logical circuit breaker preventing unvalidated neural output from reaching the barycentre
-* **Vexometer**: Real-time friction / cognitive-load monitoring with anti-inflammatory UI adjustments
-* **Contractiles**: Adaptive state contracts between operator and machine
-* **Feedback-O-Tron**: Community-driven performance reporting and constraint suggestions
+| Rust + WebKitGTK backend
+| Standard (Tauri-adjacent pattern)
+| Gossamer backend
 
-These are not decorative features. They exist to reduce avoidable breakage, ambiguity, and strain.
+| Deno build orchestration
+| Standard
+| Build pipeline
+
+| BEAM supervision for backend connections
+| Standard (Elixir/OTP)
+| `beam/panll_beam`
+
+| Four-pane cognitive layout (A/L/N/W)
+| **Novel UI architecture**
+| Core design
+
+| Vexometer (friction monitoring + adaptive UI)
+| **Novel mechanism**
+| `Vexometer` module
+
+| Anti-Crash Library (neural output gating)
+| **Novel mechanism**
+| `AntiCrash` module
+
+| Contractiles (adaptive state contracts)
+| **Novel concept**
+| `Contractiles` module
+
+| eNSAID framing (cognitive-relief metaphor)
+| **Novel vocabulary**
+| Design philosophy
+|===
 
 == Design principles
 
-PanLL components aim to:
+* Minimise explicit prompting.
+* Reduce unnecessary interruption.
+* Preserve reversibility (easy undo, refinement, recovery).
+* Maintain context so the user does not have to keep re-establishing it.
+* Help without constantly demanding attention.
+* Make progress easier under real cognitive conditions, not ideal ones.
 
-- minimise explicit prompting
-- reduce unnecessary interruption
-- preserve reversibility (easy undo, refinement, recovery)
-- maintain context so the user does not have to keep re-establishing it
-- help without constantly demanding attention
-- make progress easier under real cognitive conditions, not ideal ones
+== Technical stack
 
-== Technical Stack
-
-[cols="1,2,2"]
+[cols="1,2,2", options="header"]
 |===
-|Layer|Choice|Why This
+| Layer | Choice | Rationale
 
-|Frontend
-|ReScript + TEA (The Elm Architecture)
-|Actually type-safe — no `any` escape hatch, exhaustive pattern matching on every variant, and the compiler catches state bugs that TypeScript structurally cannot. We tried TypeScript early on; the `as` casts and `Partial<T>` workarounds in a 14-panel stateful app were untenable. See https://rescript-lang.org/docs/manual/latest/overview[ReScript docs] for the sound type system that made this possible.
+| Frontend
+| ReScript + TEA
+| Sound type system. Exhaustive pattern matching. No `any` escape hatch. The compiler catches state bugs that TypeScript structurally cannot.
 
-|Backend
-|Rust + Gossamer (WebKitGTK)
-|5 MB binary vs 100+ MB Electron. No garbage collector pauses during real-time panel updates. The `notify` crate handles filesystem watching across Linux/macOS/Windows without the cross-platform pain that Go's `fsnotify` brings. Gossamer uses Zig + WebKitGTK for a lightweight, container-friendly webview shell.
+| Backend
+| Rust + Gossamer (WebKitGTK)
+| 5 MB binary vs 100+ MB Electron. No GC pauses during real-time panel updates. Cross-platform filesystem watching via `notify`.
 
-|Runtime
-|Deno (tests, build orchestration)
-|No `node_modules` black hole — URL imports, built-in TypeScript support for glue code, secure-by-default permissions model. Deno-only build: ReScript and Tailwind run through `npm:` specifiers in `deno.json`, no `package.json` or npm CLI invocation. See https://deno.com[Deno].
+| Runtime
+| Deno
+| No `node_modules`. URL imports. Secure-by-default permissions. ReScript/Tailwind run through `npm:` specifiers; no `package.json`.
 
-|Testing
-|Deno.test (97 JS) + cargo test (12 Rust)
-|Built into the runtime, no extra test framework dependency to manage. Jest/Vitest config files are their own maintenance burden; Deno.test just works.
+| Testing
+| `Deno.test` (97 JS) + `cargo test` (12 Rust)
+| Built into the runtime. No extra framework.
 
-|Styling
-|Tailwind CSS 4.x
-|Utility-first, purged in production. Keeps panel styling consistent across a large panel surface without CSS specificity wars.
+| Styling
+| Tailwind CSS 4.x
+| Utility-first, purged in production. Consistent panel styling without specificity wars.
 
-|Middleware
-|Elixir/BEAM (`beam/panll_beam`)
-|BEAM’s supervision model is a good fit for a multi-panel environment where individual backend connections can fail without taking down the whole surface.
+| Middleware
+| Elixir/BEAM
+| Supervision model fits multi-panel environment where connections fail independently.
 
-|Verification
-|Idris2 ABI (planned) + Echidna
-|High-assurance interface verification and trust checking for places where “probably correct” is not enough.
+| Verification
+| Idris 2 ABI (planned) + Echidna
+| High-assurance interface verification for Pane-L. Powered by Typell.
 
-|Data Processing
-|Julia (batch scripts, analysis)
-|Useful for numeric analysis, calibration, and batch processing without fighting Python’s runtime limitations.
+| Data Processing
+| Julia
+| Numeric analysis, calibration, batch processing without Python runtime limitations.
 |===
 
-== Development
+== Known scope boundaries
 
-PanLL uses Deno for runtime, testing, and build orchestration. ReScript compilation runs through `deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0` (no `package.json` or npm CLI).
+[CAUTION]
+====
+**Typell integration is planned, not yet wired.** Pane-L (Symbolic) is designed to consume the Typell verification kernel via JSON-RPC. The current Pane-L implementation uses local type-checking. The full Idris 2 ABI + Echidna verification pipeline is a future milestone.
+====
+
+[CAUTION]
+====
+**BEAM API is scaffolded.** The Elixir/BEAM middleware supports HTTP, GraphQL, and gRPC endpoints, but these are currently health-check and status endpoints. Full protocol verification through BEAM is deferred.
+====
+
+[CAUTION**
+====
+**"Cognitive relief" is a design intent, not a measured guarantee.** We provide the mechanisms (Vexometer, Anti-Crash, Contractiles) to monitor and reduce friction. Whether these achieve cognitive relief for a given user and task is an empirical question, not a theorem.
+====
+
+== Build
 
 [source,bash]
 ----
-# Compile ReScript modules
+# Compile ReScript
 deno task res:build
 
-# Watch ReScript sources during development
-deno task res:watch
-
-# Run tests (97 JS tests + 12 Rust tests)
+# Run tests (97 JS + 12 Rust)
 deno task test
 
-# Watch mode for tests
-deno task test:watch
-
-# Development mode (Tailwind + static dev server + Gossamer dev mode)
+# Development mode (Tailwind + static server + Gossamer)
 deno task dev
-
-# Build Tailwind CSS
-deno task css:build
 
 # Full production build
 deno task build
 ----
 
-=== Quick Start
-
-[source,bash]
-----
-# 1. Compile ReScript
-deno task res:build
-
-# 2. Run tests to verify
-deno task test
-
-# 3. Start development server
-deno task dev
-----
-
 == Documentation
 
-=== Philosophy & Design
+* link:EXPLAINME.adoc[EXPLAINME] — claim-by-claim receipts and known gaps
+* link:Glossary.adoc[Glossary] — terminology reference
+* `docs/design/eNSAID-specification.adoc` — core cognitive governance model
+* `docs/design/decisions/` — ADR-style design decisions (DD-001 to DD-018)
+* `docs/architecture/TOPOLOGY.md` — system architecture map and completion dashboard
+* link:https://github.com/hyperpolymath/typell[Typell] — verification kernel powering Pane-L
 
-* **link:docs/ENSAID.adoc[eNSAID Specification]** — The core PanLL model, cognitive governance, and what makes this different from a conventional IDE
-* **link:docs/decisions/PANLL-ENSAID-SPEC-AND-DESIGN-DECISIONS.md[Design Decisions (DD-001 to DD-018)]** — Architectural decisions with context, rationale, and consequences
-* **link:docs/research/binary-star-neurosymbolic-ide.tex[Binary Star Paper]** — Academic draft formalising the neurosymbolic co-orbit model
+== License
 
-=== Architecture
+SPDX-License-Identifier: MPL-2.0 — see link:LICENSE[LICENSE].
 
-* **link:docs/architecture/TOPOLOGY.md[Topology]** — System architecture map and completion dashboard
-* **link:docs/architecture/ARCHITECTURE.md[Architecture Reference]** — TEA modules, engine pattern, clade system, BoJ gateway, cognitive governance
-* **link:docs/architecture/ARCHITECTURE.txt[System Diagrams]** — ASCII-art architecture diagrams (frontend, Pane-N, data flow, trust hierarchy)
-* **link:docs/architecture/PANEL-INVENTORY.md[Panel Inventory]** — Complete inventory of all panels
-
-=== Guides
-
-* **link:docs/guides/TEA_GUIDE.md[TEA Architecture Guide]** — The Elm Architecture implementation: Tea_Cmd, Tea_Sub, Tea_Vdom, Tea_App
-* **link:docs/guides/QUICKSTART-USER.adoc[Quick Start (Users)]** — Getting started with PanLL
-* **link:docs/guides/QUICKSTART-FOR-SON.md[Quick Start (Developers)]** — Developer-focused onboarding
-* **link:docs/guides/TESTING.md[Testing Guide]** — Test strategy and conventions
-* **link:docs/guides/llm-warmup-dev.md[LLM Warmup (Dev)]** — Context for AI-assisted development
-* **link:docs/guides/llm-warmup-user.md[LLM Warmup (User)]** — User-facing LLM context
-
-=== Planning
-
-* **link:docs/ROADMAP.adoc[Roadmap]** — Version-by-version feature plan
-* **link:https://github.com/users/hyperpolymath/projects/33[GitHub Project Board]** — Live tracking of past, present, and future milestones
-* **link:docs/TODO.md[TODO]** — Active task list with triaxial scoring
-* **link:docs/EXPLAINME.adoc[EXPLAINME]** — Backs up README claims for sceptics
-
-== Event-Chain Import (panic-attack)
-
-PanLL can ingest PanLL event-chain JSON exported by `panic-attack` and surface it in Pane-W for MVP timeline review.
-
-Paste the JSON export into the Event Chain panel and click **Import JSON**, or use **Load File** to open a saved export.
-
-== BEAM API Modes
-
-The optional BEAM service (`beam/panll_beam`) supports all three API styles as runtime-selectable options:
-
-* **HTTP** via Bandit/Plug (`/healthz`, `/v1/status`)
-* **GraphQL** via Absinthe (`/graphql`, `/graphiql`)
-* **gRPC** via `panll.v1.StatusService/GetStatus`
-
-Select protocols with `PANLL_BEAM_APIS`:
-
-[source,bash]
-----
-# defaults to all in non-test env
-export PANLL_BEAM_APIS="http,graphql,grpc"
-----
-
-For containerized runtime orchestration (Chainguard base + Cerro Torre pack/verify + selur-compose stack), see `runtime/README.adoc`.
-
-== Local Dev Server
-
-`deno task dev` starts a static server for `public/` on `http://localhost:8000` to satisfy the Gossamer webview.
-
-== Keyboard Shortcuts
-
-[cols="1,2"]
-|===
-|`Ctrl+Shift+L`|Toggle Pane-L (Symbolic Mass)
-|`Ctrl+Shift+N`|Toggle Pane-N (Neural Stream)
-|`Ctrl+Shift+B`|Toggle Pane-W (Task Barycentre)
-|`Ctrl+Shift+W`|Toggle Pane-W (alternate binding)
-|===
-
-== Status
-
-**v0.2.0 "Connected Workbench"** (100% complete, 106 panels defined)
-
-✅ Complete TEA implementation (Model-Update-View) +
-✅ All UI components functional (PaneL, PaneN, PaneW, Vexometer, FeedbackOTron) +
-✅ Gossamer backend with 270 migrated commands +
-✅ 109 tests passing (97 JS via Deno.test + 12 Rust via cargo test) +
-✅ npm→Deno migration complete +
-✅ System tray integration with menu operations +
-✅ Burble/Gossamer switchable services (individual, network, on/off) +
-✅ Identity state capture (VeriSimDB + filesystem fallback) +
-✅ Team replication via Burble broadcast +
-✅ Full ReScript compilation (180ms, 0 warnings) +
-✅ Anti-Crash token gating + backend validation hooks +
-✅ Event-chain import from panic-attack (paste + file) with persistence +
-✅ Security tool integration (panic-attack ambush, timeline import) +
-✅ Feedback report types wired to backend +
-✅ State persistence (localStorage auto-save) +
-✅ ARIA accessibility attributes across all components +
-✅ Keyboard shortcuts wired (Ctrl+Shift+L/N/B/W + vexation polling) +
-✅ Tailwind CSS 4.x build pipeline (Deno) +
-✅ BEAM API scaffold (HTTP/GraphQL/gRPC) +
-✅ System Tray integration with service toggling (Burble/Gossamer) +
-✅ Burble/Gossamer switchable services (individual, network, on/off) +
-✅ Identity state capture (serialize user config) +
-✅ Team replication (broadcast identity state)
-
-**Next:** v0.1.0 release preparation
-
-== Licence
-
-MPL-2.0
-
-== Architecture
-
-See link:docs/architecture/TOPOLOGY.md[TOPOLOGY.md] for a visual architecture map and completion dashboard.
+Prose documentation is licensed under CC-BY-SA-4.0; see `LICENSE-docs`.
