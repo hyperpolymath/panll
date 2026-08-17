@@ -7,11 +7,11 @@
 
 image:https://img.shields.io/badge/OpenSSF-BestPractices-green[link="https://www.bestpractices.dev/projects/XXXX"]
 
-A four-pane neurosymbolic development environment designed as a cognitive-relief layer: reducing friction, maintaining context, and making hard work less punishing. Built on ReScript, Rust, and Deno.
+Four kinds of pane, contribute to a neurosymbolic development environment designed as a cognitive-relief layer: reducing friction, maintaining context, and making hard work less punishing. Built on AffineScript, Rust, and Bun.
 
 == Overview
 
-PanLL (pronounced "parallel") is an Environment for NeSy-Agentic Integrated Development (eNSAID). It is a Human-Things Interface (HTI) built to support a tighter, calmer co-orbit between a human operator and a neurosymbolic machine.
+PanLL (pronounced "panel") is an Environment for NeSy-Agentic Integrated Development (eNSAID). It is a Human-Things Interface (HTI) built to support a tighter, calmer co-orbit between a human operator and a neurosymbolic machine.()()()
 
 PanLL is the eNSAID in the broader vision: not a complete cure for cognitive overload, not the total ambient environment, but a practical support layer—the friction reducer, the context keeper, the anti-inertia mechanism. It does not solve every underlying problem; it reduces pain, drag, and strain so movement becomes possible again.
 
@@ -23,19 +23,19 @@ Its purpose is straightforward: reduce the amount of unnecessary thinking requir
 |===
 | Pane | Role | Analogy
 
-| Pane-A (Ambient)
+| Pane-A (Ambient)()
 | Persistent context and environmental support. Maintains continuity, absorbs state, reduces active cognitive management.
 | The background
 
-| Pane-L (Symbolic)
+| Pane-L (Symbolic)()
 | Strict logic, types, and constraints. The contractual layer governing inference and action. Powered by Typell.
 | The law
 
-| Pane-N (Neural)
+| Pane-N (Neural)()
 | Streaming inference manifold. Agent's internal monologue, reasoning traces, OODA-style movement.
 | The mind
 
-| Pane-W (World)
+| Pane-W (World)()
 | Central shared canvas. The task barycentre where results, actions, artefacts, and state become visible.
 | The workbench
 |===
@@ -62,7 +62,7 @@ Feedback-O-Tron::
 |===
 | Concept | Status | Home
 
-| The Elm Architecture (TEA) in ReScript
+| The Elm Architecture (TEA) in AffineScript (canonical)
 | Standard (Elm/TEA pattern)
 | Frontend architecture
 
@@ -70,7 +70,7 @@ Feedback-O-Tron::
 | Standard (Tauri-adjacent pattern)
 | Gossamer backend
 
-| Deno build orchestration
+| Bun build orchestration
 | Standard
 | Build pipeline
 
@@ -115,7 +115,7 @@ Feedback-O-Tron::
 | Layer | Choice | Rationale
 
 | Frontend
-| ReScript + TEA
+| AffineScript + TEA
 | Sound type system. Exhaustive pattern matching. No `any` escape hatch. The compiler catches state bugs that TypeScript structurally cannot.
 
 | Backend
@@ -123,18 +123,18 @@ Feedback-O-Tron::
 | 5 MB binary vs 100+ MB Electron. No GC pauses during real-time panel updates. Cross-platform filesystem watching via `notify`.
 
 | Runtime
-| Deno
-| No `node_modules`. URL imports. Secure-by-default permissions. ReScript/Tailwind run through `npm:` specifiers; no `package.json`.
+| Bun
+| No `node_modules`. URL imports. Secure-by-default permissions. AffineScript/Tailwind run through `npm:` specifiers; no `package.json`.
 
 | Testing
-| `Deno.test` (97 JS) + `cargo test` (12 Rust)
+| `Bun.test` (97 JS) + `cargo test` (12 Rust)
 | Built into the runtime. No extra framework.
 
 | Styling
 | Tailwind CSS 4.x
 | Utility-first, purged in production. Consistent panel styling without specificity wars.
 
-| Middleware
+| Middlewarere
 | Elixir/BEAM
 | Supervision model fits multi-panel environment where connections fail independently.
 
@@ -161,30 +161,30 @@ Feedback-O-Tron::
 
 [CAUTION**
 ====
-**"Cognitive relief" is a design intent, not a measured guarantee.** We provide the mechanisms (Vexometer, Anti-Crash, Contractiles) to monitor and reduce friction. Whether these achieve cognitive relief for a given user and task is an empirical question, not a theorem.
+**"Cognitive relief" is a design intent, not a measured guarantee.** We provide the mechanisms (Vexometer, Anti-Crash, Contractiles) to monitor and reduce friction. Whether these achieve cognitive relief for a given user and task is an empirical question, not a theorem.re
 ====
 
-== Build
+== BuildBu
 
 [source,bash]
 ----
-# Compile ReScript
-deno task res:build
+# Compile AffineScript
+bun task res:buildbures
 
 # Run tests (97 JS + 12 Rust)
-deno task test
+bun task test
 
 # Development mode (Tailwind + static server + Gossamer)
-deno task dev
+bun task dev
 
-# Full production build
-deno task build
+# Full production buildbu
+bun task buildbu
 ----
 
 == Documentation
 
-* link:EXPLAINME.adoc[EXPLAINME] — claim-by-claim receipts and known gaps
-* link:Glossary.adoc[Glossary] — terminology reference
+* link:EXPLAINME.adoc[EXPLAINME] — claim-by-claim receipts and known gapsre
+* link:Glossary.adoc[Glossary] — terminology referencere
 * `docs/design/eNSAID-specification.adoc` — core cognitive governance model
 * `docs/design/decisions/` — ADR-style design decisions (DD-001 to DD-018)
 * `docs/architecture/TOPOLOGY.md` — system architecture map and completion dashboard
