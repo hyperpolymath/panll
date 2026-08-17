@@ -1,0 +1,105 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= PanLL eNSAID — Glossary
+:toc: preamble
+:toc-title: Contents
+:icons: font
+:doctype: article
+
+Cross-reference glossary for link:README.adoc[README.adoc], link:EXPLAINME.adoc[EXPLAINME.adoc], and the PanLL wiki.
+
+== Core concepts
+
+[[ensaid]]
+eNSAID::
+  Environment for NeSy-Agentic Integrated Development. Also a deliberate play on NSAID (non-steroidal anti-inflammatory drug): PanLL reduces friction, pain, and strain without curing the underlying condition (complexity).
+  *Classification:* **project-specific** (vocabulary).
+
+[[hti]]
+Human-Things Interface (HTI)::
+  An interface designed for the co-orbit between a human operator and a neurosymbolic machine, as opposed to a Human-Computer Interface (HCI) for humans and deterministic machines.
+  *Classification:* **project-specific** (vocabulary).
+
+[[cognitive-relief]]
+Cognitive relief::
+  The design intent of reducing unnecessary cognitive overhead (context-switching, explicit prompting, interface friction). PanLL provides mechanisms (Vexometer, Anti-Crash, Contractiles) targeting this intent; it is not a measured psychological guarantee.
+  *Classification:* **project-specific** (design intent).
+
+== The four panes
+
+[[pane-a]]
+Pane-A (Ambient)::
+  Persistent context and environmental support. Maintains continuity, absorbs state, reduces active cognitive management. The background layer.
+  *Classification:* **project-specific**.
+
+[[pane-l]]
+Pane-L (Symbolic)::
+  Strict logic, types, and constraints. The contractual layer governing inference and action. Designed to consume the Typell verification kernel. "The law."
+  *Classification:* **project-specific**.
+
+[[pane-n]]
+Pane-N (Neural)::
+  Streaming inference manifold. The agent's internal monologue, reasoning traces, and OODA-style movement. "The mind."
+  *Classification:* **project-specific**.
+
+[[pane-w]]
+Pane-W (World)::
+  Central shared canvas. The task barycentre where results, actions, artefacts, and state become visible. "The workbench."
+  *Classification:* **project-specific**.
+
+== Core systems
+
+[[anti-crash]]
+Anti-Crash Library::
+  Logical circuit breaker preventing unvalidated neural output from reaching the task barycentre (Pane-W). Gates tokens and requires backend validation before neural suggestions mutate shared state.
+  *Classification:* **project-specific**.
+
+[[vexometer]]
+Vexometer::
+  Real-time friction and cognitive-load monitoring system. Measures interaction timing, error rates, and undo frequency. Adjusts UI density and prompting frequency to reduce strain.
+  *Classification:* **project-specific**.
+
+[[contractiles]]
+Contractiles::
+  Adaptive state contracts between operator and machine. Negotiated boundaries for autonomy, intervention, and resource usage. Inspired by biological contractility (adaptive tension).
+  *Classification:* **project-specific**.
+
+[[feedback-o-tron]]
+Feedback-O-Tron::
+  Community-driven performance reporting and constraint suggestion system.
+  *Classification:* **project-specific**.
+
+== Architecture
+
+[[tea]]
+TEA (The Elm Architecture)::
+  Model-Update-View pattern implemented in ReScript. Provides strict unidirectional data flow and exhaustive pattern matching across all UI variants.
+  *Classification:* **standard** (Elm pattern).
+
+[[gossamer]]
+Gossamer::
+  Rust + WebKitGTK webview shell. Provides a lightweight, container-friendly alternative to Electron (~5 MB binary).
+  *Classification:* **standard** (Tauri-adjacent technology).
+
+[[task-barycentre]]
+Task barycentre::
+  The central gravitational point of work in PanLL: Pane-W, where artefacts, results, and state converge.
+  *Classification:* **project-specific** (vocabulary). Borrowed from physics/astrophysics.
+
+== Pronunciation guide
+
+[cols="1,2", options="header"]
+|===
+| Written | Spoken
+
+| PanLL
+| "parallel"
+
+| eNSAID
+| "enn-said" (like NSAID with an e-)
+
+| Vexometer
+| "vex-ometer"
+
+| Contractiles
+| "con-tract-iles"
+|===abc def ghi jkl mno pqr stu
