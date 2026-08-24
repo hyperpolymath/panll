@@ -1,0 +1,458 @@
+== PanLL Identity Management Tutorial Video Script
+
+=== Video Title
+
+*"`PanLL v0.2.0: Mastering Identity Management - Capture, Share, and
+Restore Your Workbench`"*
+
+=== Video Duration
+
+*12-15 minutes*
+
+=== Target Audience
+
+* PanLL users upgrading from v0.1.x
+* New users exploring v0.2.0 features
+* Team leads managing collaborative workbenches
+* Developers interested in extending identity management
+
+=== Video Outline
+
+==== 1. Introduction (0:00 - 1:30)
+
+*Visual*: Screen recording of PanLL interface with animated callouts
+
+*Narration*:
+
+....
+"Welcome to this comprehensive tutorial on PanLL v0.2.0's Identity Management system. 
+In this video, we'll explore how to capture your complete workbench configuration, 
+share it with your team, and restore it whenever needed. 
+
+By the end of this tutorial, you'll be able to:
+- Create and manage identity snapshots
+- Share configurations with your team via Burble
+- Restore previous setups with one click
+- Automate your workflow with identity management
+
+Let's get started!"
+....
+
+*On-screen text*: - "`PanLL v0.2.0 Identity Management`" - "`Capture.
+Share. Restore.`" - "`Your workbench, preserved`"
+
+==== 2. Understanding Identity Snapshots (1:30 - 4:00)
+
+*Visual*: Diagram showing snapshot components with animations
+
+*Narration*:
+
+....
+"First, let's understand what an identity snapshot is. 
+
+An identity snapshot in PanLL captures your complete workbench configuration:
+
+1. **Panel State**: The positions, sizes, and visibility of all your panels
+2. **Settings**: All your configuration preferences and customizations
+3. **Service URLs**: Your registered service endpoints and connections
+4. **Metadata**: Additional information like tags and timestamps
+
+Think of it as a photograph of your entire workspace that you can restore later, 
+or share with teammates to ensure everyone has the same setup.
+
+This is especially useful for:
+- Onboarding new team members
+- Switching between different projects
+- Recovering from configuration errors
+- Standardizing setups across your organization"
+....
+
+*Demo*: 1. Show current panel layout 2. Show settings configuration 3.
+Show service registry 4. Explain how all these are captured in a
+snapshot
+
+==== 3. Creating Your First Snapshot (4:00 - 7:30)
+
+*Visual*: Screen recording of snapshot creation process
+
+*Narration*:
+
+....
+"Now let's create our first identity snapshot. 
+There are several ways to do this in PanLL v0.2.0.
+
+**Method 1: Using the System Tray**
+
+The easiest way is through the system tray icon:
+1. Right-click the PanLL icon in your system tray
+2. Hover over 'Identity Management'
+3. Click 'Save Current Identity'
+4. Enter a descriptive name like 'Project Alpha Setup'
+5. Click Save
+
+**Method 2: Using the Command Palette**
+
+You can also use the command palette:
+1. Press Ctrl+K or Cmd+K to open the command palette
+2. Type 'identity save' and select the command
+3. Fill in the details and save
+
+**Method 3: Using the CLI**
+
+For automation, use the command line:
+```bash
+panll identity save --name "My Setup" --description "Main project configuration"
+....
+
+Let me demonstrate all three methods so you can choose what works best
+for you.”
+
+....
+
+**Demo**:
+1. Show system tray method (slow, with annotations)
+2. Show command palette method (normal speed)
+3. Show CLI method in terminal
+4. Verify snapshot was created in the identity manager
+
+**Pro Tip**:
+....
+
+"`Notice how each snapshot gets a unique ID and timestamp. This makes it
+easy to manage multiple configurations and track when they were
+created.`"
+
+....
+
+### 4. Managing Snapshots (7:30 - 10:00)
+
+**Visual**: Identity manager interface walkthrough
+
+**Narration**:
+....
+
+“Now that we’ve created a snapshot, let’s explore how to manage it.
+
+*Viewing Snapshots*: 1. Open the Identity Manager from the system tray
+or main menu 2. Here you’ll see all your saved snapshots with their
+names and creation dates 3. Click on any snapshot to see its details
+
+*Renaming and Updating*: 1. Select a snapshot 2. Click the edit button
+3. Update the name or description 4. Save your changes
+
+*Deleting Snapshots*: 1. Select the snapshot you want to remove 2. Click
+the delete button 3. Confirm the deletion
+
+*Best Practices for Snapshot Management*: - Use descriptive names like
+'`Project X - UI Research Phase`' - Include dates for time-sensitive
+configurations - Regularly clean up old snapshots you no longer need -
+Consider using tags to categorize related snapshots
+
+Let me show you how to perform these management tasks.”
+
+....
+
+**Demo**:
+1. Open Identity Manager
+2. Show list of snapshots
+3. Rename a snapshot
+4. Delete a snapshot
+5. Show snapshot details
+
+### 5. Team Broadcasting (10:00 - 13:00)
+
+**Visual**: Team broadcasting workflow with multiple team members
+
+**Narration**:
+....
+
+“One of the most powerful features in v0.2.0 is team broadcasting. This
+allows you to share your identity snapshots with your entire team
+instantly.
+
+*How Team Broadcasting Works*: 1. Save your current identity as a
+snapshot 2. Open the system tray menu 3. Hover over '`Team`' 4. Click
+'`Broadcast Current Identity`' 5. Select the snapshot you want to share
+6. Add an optional message for your team 7. Click Broadcast
+
+Your team members will receive a notification and can choose to apply
+the snapshot to their own workbench.
+
+*Use Cases for Team Broadcasting*: - Onboarding new team members with
+standardized setups - Sharing project-specific configurations -
+Distributing updates to service endpoints - Synchronizing team workflows
+
+*Security Considerations*: - Only broadcast to trusted team members -
+Review snapshot contents before sharing - Be cautious with sensitive
+configuration data - Use Burble’s access controls to limit who can
+receive broadcasts
+
+Let me demonstrate the broadcasting process and show what it looks like
+from the receiver’s perspective.”
+
+....
+
+**Demo**:
+1. Create a test snapshot
+2. Broadcast it to the team
+3. Show receiver's notification
+4. Show how to apply the broadcasted snapshot
+5. Show broadcast history
+
+### 6. Advanced Features (13:00 - 16:00)
+
+**Visual**: Advanced features with code examples
+
+**Narration**:
+....
+
+“Now that you’ve mastered the basics, let’s explore some advanced
+features.
+
+*Automatic Snapshots*: You can configure PanLL to automatically save
+snapshots: - On a schedule (e.g., every hour) - When closing the
+application - When specific events occur
+
+*Snapshot Diffing*: Compare two snapshots to see what’s changed:
+
+[source,bash]
+----
+panll identity diff <snapshot1-id> <snapshot2-id>
+----
+
+*Batch Operations*: Perform operations on multiple snapshots:
+
+[source,bash]
+----
+# Export all snapshots
+panll identity export --all
+
+# Delete snapshots older than 30 days
+panll identity cleanup --older-than 30d
+----
+
+*Programmatic Access*: Access identity functions from your own scripts:
+
+[source,javascript]
+----
+// Save current state
+const snapshot = await invoke("identity_save", {
+  name: "Programmatic Snapshot",
+  panll_state: JSON.stringify(storage.serialize()),
+  settings: JSON.stringify(await settings_get()),
+  service_urls: JSON.stringify(await service_registry_get())
+});
+
+// Load a snapshot
+const loaded = await invoke("identity_load", { id: snapshot.id });
+----
+
+*Custom Storage Backends*: Extend PanLL with your own storage solutions:
+- S3-compatible storage - PostgreSQL database - Custom enterprise
+solutions
+
+These advanced features give you even more control over your identity
+management workflow.”
+
+....
+
+**Demo**:
+1. Show automatic snapshot configuration
+2. Demonstrate snapshot diffing
+3. Show batch export/import
+4. Show simple programmatic example
+
+### 7. Troubleshooting (16:00 - 18:00)
+
+**Visual**: Common issues and solutions
+
+**Narration**:
+....
+
+“Let’s cover some common issues and how to resolve them.
+
+*Issue 1: Snapshots not appearing* - Check VeriSimDB connection - Verify
+filesystem permissions - Review PanLL logs: journalctl -u panll
+
+*Issue 2: Broadcast failures* - Check Burble service status - Verify
+network connectivity - Test with smaller snapshots first
+
+*Issue 3: Performance issues* - Check cache configuration - Monitor
+resource usage with htop - Review snapshot sizes
+
+*Issue 4: Permission errors* - Verify directory permissions: ls -la
+/var/panll - Check user ownership: sudo chown -R panll:panll /var/panll
+- Review SELinux settings if applicable
+
+For more troubleshooting tips, check out our comprehensive guide at
+panll.hyperpolymath.dev/docs/troubleshooting.”
+
+....
+
+**Demo**:
+1. Simulate a connection issue
+2. Show how to diagnose
+3. Demonstrate resolution
+4. Show log inspection
+
+### 8. Best Practices (18:00 - 20:00)
+
+**Visual**: Best practices checklist
+
+**Narration**:
+....
+
+“To wrap up, let’s review some best practices for identity management:
+
+*Naming Conventions*: - Be descriptive: "`Project X - UI Research`" not
+"`Snapshot 1`" - Include dates for time-sensitive configurations - Use
+consistent naming schemes across your team
+
+*Regular Maintenance*: - Clean up old snapshots monthly - Verify backup
+integrity - Test restore procedures
+
+*Team Workflows*: - Broadcast team configurations at project start -
+Share specialized setups for specific tasks - Use snapshots for
+onboarding new members
+
+*Security*: - Review snapshot contents before sharing - Use VeriSimDB
+access controls - Be cautious with sensitive data
+
+*Performance*: - Keep snapshots under 10MB when possible - Use
+compression for large configurations - Monitor cache hit rates
+
+By following these best practices, you’ll get the most out of PanLL’s
+identity management system.”
+
+....
+
+**Demo**:
+1. Show well-organized snapshot list
+2. Demonstrate good naming
+3. Show cleanup process
+4. Show team workflow
+
+### 9. Conclusion & Next Steps (20:00 - 22:00)
+
+**Visual**: Summary with call-to-action
+
+**Narration**:
+....
+
+“Congratulations! You’ve now mastered PanLL’s identity management
+system.
+
+*What We’ve Covered*: ✅ Understanding identity snapshots ✅ Creating
+and managing snapshots ✅ Team broadcasting and collaboration ✅
+Advanced features and automation ✅ Troubleshooting and best practices
+
+*Next Steps*: 1. Start using identity snapshots in your daily workflow
+2. Explore team broadcasting with your colleagues 3. Automate repetitive
+configurations 4. Check out our developer guide to extend the system
+
+*Resources*: - Documentation: panll.hyperpolymath.dev/docs - Community:
+github.com/hyperpolymath/panll/discussions - Support:
+support@hyperpolymath.dev
+
+*Upcoming Workshop*: Join our community workshop on June 5th where we’ll
+dive even deeper into identity management and show you advanced
+techniques. Register at: panll.hyperpolymath.dev/workshop
+
+Thank you for watching! If you found this tutorial helpful, please like
+and subscribe. Leave your questions in the comments below, and we’ll be
+happy to help.
+
+Happy paneling!”
+
+....
+
+**On-screen text**:
+- "You're now a PanLL Identity Management expert!"
+- "Questions? Ask in the comments"
+- "Subscribe for more tutorials"
+- "panll.hyperpolymath.dev/workshop - June 5th"
+
+### 10. Outro (22:00 - 22:30)
+
+**Visual**: End screen with social links and call-to-action
+
+**Narration**:
+....
+
+“Don’t forget to: - Subscribe for more PanLL tutorials - Star us on
+GitHub: github.com/hyperpolymath/panll - Join our community discussions
+- Follow us on social media for updates
+
+See you in the next video where we’ll explore PanLL’s plugin system!
+
+Bye for now!” ```
+
+*On-screen text*: - GitHub: github.com/hyperpolymath/panll - Docs:
+panll.hyperpolymath.dev/docs - Community:
+github.com/hyperpolymath/panll/discussions - Workshop:
+panll.hyperpolymath.dev/workshop
+
+=== Production Notes
+
+==== Equipment
+
+* Screen recording: OBS Studio
+* Microphone: Blue Yeti or equivalent
+* Camera: 1080p webcam
+* Editing: Kdenlive or Adobe Premiere
+
+==== Style Guide
+
+* *Font*: Fira Code for code, Inter for text
+* *Colors*: PanLL brand colors (#4F46E5, #10B981, #F59E0B)
+* *Transitions*: Clean cuts, no fancy transitions
+* *Pacing*: 120-150 words per minute
+* *Tone*: Friendly, professional, enthusiastic
+
+==== Post-Production
+
+[arabic]
+. Add captions for accessibility
+. Create chapters for easy navigation
+. Add end screen with subscription prompt
+. Optimize for YouTube (1080p, 30fps)
+. Create thumbnail with title and key visuals
+
+==== Thumbnail Ideas
+
+[arabic]
+. PanLL interface with "`Identity Management`" overlay
+. Before/after comparison of workbench states
+. Team collaboration visual with broadcasting concept
+. Snapshot icon with "`New in v0.2.0`" badge
+
+=== Script Variations
+
+==== Short Version (5-7 minutes)
+
+Focus on: - What are identity snapshots? (1 min) - Creating and loading
+snapshots (2 min) - Team broadcasting basics (2 min) - Quick demo and
+wrap-up
+
+==== Developer Version (15-20 minutes)
+
+Add sections on: - Extending identity management - Custom storage
+backends - Programmatic access - Plugin development
+
+==== Team Version (10-12 minutes)
+
+Focus on: - Team broadcasting workflows - Onboarding new members -
+Standardizing configurations - Collaboration best practices
+
+=== Additional Resources
+
+* Blog post: https://panll.hyperpolymath.dev/blog/v0.2.0-release[v0.2.0
+Release Announcement]
+* Documentation:
+https://panll.hyperpolymath.dev/docs/identity-user-guide[Identity User
+Guide]
+* API Reference:
+https://panll.hyperpolymath.dev/docs/api-reference[Identity Management
+API]
+* Migration Guide:
+https://panll.hyperpolymath.dev/docs/migration[Upgrading from v0.1.x]

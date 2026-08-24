@@ -1,0 +1,590 @@
+== DESIGN: PanLL Strategic Assessment — Dogfooding, Ordering, Competitors, and Hard Problems
+
+*Date:* 2026-02-28 *Repo:* panll *Author:* Jonathan D.A. Jewell
+*Status:* Honest assessment (not aspirational — what actually is)
+
+=== Design Questions (from session dialogue)
+
+____
+"`Can you tell me from this integration point what you can see of the
+dogfooded designs — how they are working, how they are failing, how they
+can be bettered or if we need to rethink them?`"
+____
+
+____
+"`Can you give me oversight of the BIG plan and ordering as you see
+it?`"
+____
+
+____
+"`What is the most readily comparable technology out there?`"
+____
+
+____
+"`What have you made to put back into the other repos with all of
+this?`"
+____
+
+____
+"`What is there that you have looked at and thought damn, this is a HUGE
+leap from what is out there — I just have no idea how it can be
+achieved?`"
+____
+
+'''''
+
+=== A. Dogfooding Assessment — What’s Working, What’s Failing
+
+==== What’s Working Well
+
+*1. The Elm Architecture (Tea) in ReScript is rock-solid.* Model →
+Update → View with immutable state updates. Every message is typed.
+Every state transition is explicit. You can read Model.res and
+understand the entire app state. This is the right architecture for a
+tool this complex.
+
+*2. The type system documents the design.* 373 lines of types in
+Model.res that read like a specification. `+echidnaTrustLevel+`,
+`+axiomDangerLevel+`, `+portfolioConfidence+` — these aren’t just types,
+they’re design decisions encoded in the compiler. A new contributor
+reads Model.res and understands the domain.
+
+*3. ECHIDNA integration types match the API exactly.* The parsers handle
+both success and failure paths. The mock server was trivial to write
+because the types told me exactly what JSON shapes were needed. This is
+what type-driven design gets you: the mock basically wrote itself from
+the type defs.
+
+*4. Test coverage is genuine.* 121 Deno + 19 Rust tests. Not inflated —
+they test real behaviour (tactic parsing, session lifecycle, trust level
+mapping, axiom danger classification). When I changed the init data,
+exactly the right tests broke.
+
+*5. Tauri separation of concerns.* Rust handles system operations (file
+I/O, process spawning, HTTP requests). ReScript handles UI state. They
+communicate through typed commands. Neither side does the other’s job.
+
+==== What’s Failing or Weak
+
+*1. ARIA gap — the most serious current problem.* The Tea_Vdom library
+has 10 ARIA functions. The components barely use them. The README claims
+"`ARIA accessibility across all components`" — this is false. The gap
+between documentation claims and reality is a credibility risk.
+
+*2. Model.res is monolithic.* 557 lines in one file. The ECHIDNA types
+alone (lines 263-373) could be their own module. The VeriSimDB types
+could be their own module. Right now, every change to any type requires
+reading through the entire file. Not a problem today, but will become
+one as discipline layouts add more state.
+
+*3. UI state mixed into domain state.* `+menuExpanded+`, `+proofInput+`,
+`+tacticInput+`, `+securityMenuExpanded+`, `+securityDialogOpen+` —
+these are view/interaction state, not domain state. They’re mixed into
+the same types as `+trustLevel+`, `+axiomReport+`, `+proofObligations+`.
+This means: - Saving/loading state includes ephemeral UI state - The
+model is larger than it needs to be - Testing domain logic requires
+constructing UI state
+
+*4. Persistence should use VeriSimDB, not raw localStorage.*
+localStorage saves the full model as JSON with no schema versioning.
+When Model.res types change, old saved state breaks silently. But
+VeriSimDB — which PanLL already integrates — is literally a versioned,
+temporal, multi-modal database. PanLL should eat its own dog food: use
+VeriSimDB for state persistence (versioned entities, temporal queries,
+drift detection on its own state, proof provenance). localStorage
+becomes an offline fallback cache, not the source of truth.
+
+*5. Unbounded growth.* `+paneN.tokens+` grows with every token added.
+`+eventChain+` grows with every import. No pruning, no windowing, no
+archival. Eventually this hits localStorage limits (typically 5-10 MB)
+or causes UI jank from rendering thousands of tokens.
+
+*6. Error cascading.* A parse failure in ECHIDNA response handling
+doesn’t have an error boundary. If `+parseEchidnaSession+` receives
+malformed JSON, it returns defaults — but the defaults may be
+semantically wrong (empty session ID). There should be explicit error
+states, not silent defaults.
+
+==== What Should Be Rethought
+
+*1. The three-pane model is too rigid for discipline layouts.* Currently
+Pane-L, Pane-N, Pane-W are hardcoded with fixed content types. The
+discipline layouts design asks these panes to hold completely different
+content depending on the layout (Pane-L is "`Proof Pipeline`" in Logic
+mode but "`Schema Editor`" in Database mode). This needs either: -
+Generic pane containers that host pluggable content components, or - A
+pane registry where discipline layouts declare what component fills each
+slot
+
+*2. The monologue is a string; it should be structured.*
+`+paneN.monologue: string+` is a flat text field. For collaboration,
+i18n, and screen readers, it should be a structured log with entries
+that have timestamps, severity, and translatable message keys.
+
+*3. VeriSimDB and ECHIDNA follow the same pattern but aren’t
+abstracted.* Both have: `+connected+`, `+endpoint+`, health check, list
+items, CRUD operations, loading states, error states, menu expansion. A
+shared `+backendService+` type would reduce duplication and make adding
+new backends (QuandleDB, LithoGlyph) trivial.
+
+'''''
+
+=== B. The Big Plan and Ordering
+
+==== Ordering Principles
+
+[arabic]
+. *Fix what’s broken before building what’s new* (accessibility before
+features)
+. *Infrastructure before features* (i18n framework before translations)
+. *Each phase delivers usable value* (no phase is pure plumbing)
+. *Dependencies flow forward* (later phases build on earlier ones)
+
+==== Phase Map
+
+....
+Phase 0: Foundation (THIS SESSION — DONE)
+├── ✅ Mock ECHIDNA server on port 9000
+├── ✅ Demo neural tokens in Pane-N
+├── ✅ All tests passing (19 Rust, 121 Deno, ReScript clean)
+└── ✅ 5 design documents written
+
+Phase 1: Accessibility + Honesty Pass (NEXT — P0)
+├── Close ARIA gap in all components
+├── Add prefers-reduced-motion, prefers-contrast CSS
+├── Keyboard navigation audit + fixes
+├── Fix README claims to match reality
+├── Add axe-core to CI
+└── Deliverable: WCAG 2.3 A conformance (genuine)
+
+Phase 2: Model Refactoring (needed before features)
+├── Split Model.res into domain modules
+├── Separate UI state from domain state
+├── Add schema versioning to persistence
+├── Add token/event pruning with configurable limits
+├── Abstract shared backend service pattern
+└── Deliverable: Clean architecture for feature work
+
+Phase 3: Core Interoperability (P1)
+├── Fuzzy search (pure ReScript, ~30 lines)
+├── Pandoc export (AST JSON → multiple formats)
+├── Zotero local API integration
+├── Trustfile creation (from rsr-template-repo example)
+└── Deliverable: Export proofs to papers, cite references
+
+Phase 4: Visual Proof Builder (P1)
+├── Pipeline canvas component
+├── Block palette with keyboard navigation
+├── Proof state → pipeline graph conversion
+├── Gap detection (constraint propagation)
+├── How/why query hover popups
+└── Deliverable: Blockly-style proof interaction
+
+Phase 5: Switchable Syntax + Linter (P1)
+├── Syntax mode selector (Coq/Lean/SMT-LIB/Agda/Universal)
+├── Per-prover syntax highlighting
+├── Error → suggested correction engine
+├── PanLL-Universal notation specification
+└── Deliverable: Multi-prover text editing with corrections
+
+Phase 6: Discipline Layouts (P2)
+├── Layout preset system (data model + switching)
+├── 4 built-in presets (Logic, Database, Language, Protocol)
+├── Custom layout save/load
+├── Pane content registry (pluggable content per slot)
+└── Deliverable: Adobe Connect-style viewshift
+
+Phase 7: Internationalisation (P2)
+├── polyglot-i18n + LOL setup + en locale
+├── Extract all hardcoded strings
+├── RTL layout support (CSS logical properties)
+├── Math notation screen reader localisation
+└── Deliverable: Framework ready for translation contributions
+
+Phase 8: Collaboration (P2)
+├── Elixir/Phoenix collaboration server
+├── Shared proof state via Phoenix Channels
+├── Contextual chat (on goals, entities, states)
+├── WebRTC voice (ambient, Opus codec)
+└── Deliverable: Real-time collaborative proof sessions
+
+Phase 9: SLM Integration (P3)
+├── Local SLM hosting (Tauri sidecar or WASM)
+├── NL → tactic translation
+├── Proof state → plain English explainer
+├── Guardrails (SLM output always validated by ECHIDNA)
+└── Deliverable: Natural language proof interaction
+
+Phase 10: SLM Heutagogy (P3)
+├── Proof trace collection and training data formatting
+├── LoRA adapter training loop
+├── Self-directed curriculum (weakness detection)
+├── Overnight training scheduler
+├── DeepProbLog integration (logical training constraints)
+└── Deliverable: SLM that improves from proof experience
+
+Phase 11: OCR + Advanced Input (P3)
+├── Tesseract for prose OCR
+├── Nougat for mathematical OCR
+├── Image/PDF drag-drop import
+├── Handwritten math → proof goal conversion
+└── Deliverable: Import proofs from papers and whiteboards
+
+Phase 12: Logical Notation Page (P3)
+├── Symbol palettes (propositional → modal → temporal)
+├── Multi-logic rendering
+├── Notation ↔ prover translation layer
+├── Ontology browser integration
+└── Deliverable: The hard bridge (see section E)
+....
+
+==== Critical Path
+
+....
+Phase 1 (accessibility) ──▶ Phase 2 (refactor) ──▶ Phase 4 (visual builder)
+                                                 ──▶ Phase 5 (syntax linter)
+                                                 ──▶ Phase 6 (layouts)
+Phase 3 (interop) can run in parallel with Phase 2
+Phase 7 (i18n) depends on Phase 2 (string extraction needs clean modules)
+Phase 8 (collaboration) depends on Phase 6 (shared layout state)
+Phase 9-10 (SLM) depend on Phase 4+5 (need the interaction patterns first)
+Phase 12 (notation) depends on Phase 5 (builds on the syntax switching)
+....
+
+'''''
+
+=== C. Most Comparable Technology
+
+==== Direct Competitors (none are close)
+
+[width="100%",cols="24%,38%,38%",options="header",]
+|===
+|Tool |What it does |What PanLL adds
+|*Why3* |Multi-prover dispatch |Visual pipeline, collaboration,
+accessibility, database integration
+
+|*Rodin (Event-B)* |Formal methods workbench |Modern UI, multi-prover,
+neural component, not Eclipse-based
+
+|*Isabelle/jEdit* |ITP with IDE |Multi-prover, visual builder,
+discipline layouts, collaboration
+
+|*Lean 4 + VS Code* |Modern ITP in editor |Multi-prover dispatch,
+database, protocol, visual pipeline
+
+|*CoqIDE / VSCoq* |Coq-specific IDE |Multi-prover, visual builder,
+everything else
+
+|*Wolfram* |Computation + notation |Formal _verification_ (not
+computation), open-source, multi-prover
+
+|*Jupyter* |Computational notebooks |Proof-focused, pane model, formal
+verification, typed state
+|===
+
+*Why3 is the closest ancestor* for the proof dispatch part. It
+dispatches goals to multiple solvers (Z3, CVC5, Alt-Ergo, Coq,
+Isabelle). But Why3 is: - Text-only (no visual pipeline) - Single-user
+(no collaboration) - No database/protocol integration - No accessibility
+focus - No neural/SLM component - Expert-only (no progressive
+sophistication)
+
+*Wolfram is the closest _experience_ ancestor* — unified notation, mixed
+computation and visualization, notebook-style interaction. But Wolfram:
+- Does computation, not formal verification ("`simplify`" is not
+"`prove`") - Proprietary and expensive - No multi-prover dispatch - No
+collaboration - No accessibility standards - Sidesteps the hard problem
+entirely by not doing proofs
+
+*The honest summary:* Nothing out there combines multi-prover dispatch +
+visual proof pipeline + database integration + protocol verification +
+discipline layouts + collaboration + accessibility + i18n + SLM. Each
+piece exists individually. PanLL is an integration play, not an
+invention play.
+
+'''''
+
+=== D. Feedback to Other Repos
+
+==== Concrete Insights That Feed Back
+
+*1. ReScript Evangeliser ← Progressive sophistication model* The 4-level
+model (Visual → Syntax → Logic → REPL) directly maps to the
+Evangeliser’s view layers (RAW → FOLDED → GLYPHED → WYSIWYG). The
+switchable linter infrastructure could be a shared ReScript library used
+by both. The confidence-scored suggestions and celebrate-don’t-shame
+feedback patterns are identical.
+
+_Specific change:_ The Evangeliser’s WYSIWYG layer (Phase 4, not yet
+implemented) should be designed as a Blockly-style visual editor, not a
+rich text editor. This session’s proof pipeline design proves the
+pattern works for code transformation.
+
+*2. ECHIDNA ← Mock server defines the API contract* The mock server
+(`+scripts/mock-echidna.ts+`) is the clearest documentation of what
+ECHIDNA’s API should return. The JSON shapes, field names, and response
+semantics are all tested against PanLL’s actual parsers. This should be
+extracted as an OpenAPI spec and committed to the ECHIDNA repo.
+
+*3. VeriSimDB ← Discipline layout reveals the query UX gap* The Database
+Design layout shows that VeriSimDB’s query interface needs a visual
+query builder (not just text VCL-DT input). The drift heatmap and
+telemetry dashboard are genuinely useful UI patterns that should be
+designed as standalone components reusable outside PanLL.
+
+*4. rsr-template-repo ← Trustfile needs WCAG section* The Trustfile
+template should include an accessibility declaration section. Every RSR
+repo that has a UI component should declare its WCAG conformance level.
+This is a new template addition.
+
+*5. Proven repo ← Trust levels map to axiom audit* ECHIDNA’s
+`+axiomDangerLevel+` (Safe → Noted → Warning → Reject) and
+`+echidnaTrustLevel+` (1-5) are exactly the classification system needed
+for the Proven repo audit. The 4,566 `+believe_me+` instances in Proven
+would all be `+Reject+` level, giving a Trust Level of 1. This could be
+automated: run ECHIDNA’s axiom scanner across Proven’s Idris2 code and
+generate the trust report automatically.
+
+*6. Echidnabot ← Axiom danger levels should use ECHIDNA’s
+classification* Echidnabot currently flags `+believe_me+`, `+Admitted+`,
+`+sorry+` as CRITICAL. ECHIDNA’s 4-level classification
+(Safe/Noted/Warning/Reject) is more nuanced. Echidnabot should adopt it,
+making the bot’s output directly consumable by PanLL’s trust display.
+
+*7. IDApTIK Level Architect ← VeriSimDB persistence pattern* The level
+data model uses VeriSimDB for persistence. The Database Design layout in
+PanLL would let level designers browse, query, and verify level data
+directly. The cross-domain proofs (InRegistry, GuardsInZones, etc.)
+could be verified through ECHIDNA’s dispatch.
+
+*8. DeepProbLog / Neural-symbolic ← Idris2 ABI as training constraints*
+The ABI/FFI standard (Idris2 for ABI definitions) could provide the
+logical constraints for SLM training. Dependent types in Idris2 proving
+interface correctness → these become the DeepProbLog rules that
+constrain what the SLM can learn. Formal types as training guardrails.
+
+*9. Fuzzy search ← Publishable standalone module* The
+Levenshtein/BK-tree fuzzy search is useful in: NQC web UI (keyword
+search), ReScript Evangeliser (pattern matching), any tool with a
+command palette. Should be a shared package in
+`+developer-ecosystem/rescript-ecosystem/packages/+`.
+
+*10. Pandoc export ← Universal for all hyperpolymath docs* If PanLL gets
+Pandoc AST JSON export, the same infrastructure can be used by any repo
+that needs multi-format documentation. The custom Pandoc filters for
+proof rendering could be shared.
+
+'''''
+
+=== E. The Hardest Leap — And What I Don’t Know How to Solve
+
+==== The User’s Instinct Is Correct
+
+____
+"`In my head the hardest thing looks like the bridge between the logical
+notation mode and what fits around it in terms of the provers and
+ontologies. I have not seen that done properly anywhere else — most
+things being really very focused on either hard very concrete stuff or
+abstract theoretical stuff.`"
+____
+
+This is exactly right, and it’s the fundamental unsolved problem in
+formal methods tooling.
+
+==== The Problem, Precisely
+
+When someone writes `+∀ n : ℕ, n + 0 = n+` in PanLL-Universal notation,
+they mean one thing. But the provers mean different things:
+
+[width="100%",cols="14%,57%,29%",options="header",]
+|===
+|Prover |Syntax |Semantics
+|Coq |`+forall n : nat, n + 0 = n+` |Dependent type (CIC)
+
+|Lean 4 |`+∀ n : Nat, n + 0 = n+` |Dependent type (CIC variant)
+
+|Isabelle |`+∀n::nat. n + 0 = n+` |Higher-order logic (HOL)
+
+|Z3 |`+(assert (forall ((n Int)) (= (+ n 0) n)))+` |First-order +
+theories (SMT)
+
+|Agda |`+∀ n → n + 0 ≡ n+` |Dependent type (MLTT)
+|===
+
+These are NOT syntactic differences. They are *semantic* differences:
+
+* Coq’s `+forall+` is a Π-type in the Calculus of Inductive
+Constructions
+* Z3’s `+forall+` is first-order quantification over a decided theory
+* Isabelle’s `+∀+` is higher-order logic quantification
+* Agda’s `+∀+` is a dependent function type in Martin-Löf Type Theory
+
+The same symbol means different things. A proof that works in Coq
+doesn’t automatically work in Lean (despite both being CIC-based)
+because their standard libraries define `+nat+` and `+++` differently. A
+proof in Isabelle uses completely different foundations.
+
+==== Why This Is Hard (Not Just Engineering)
+
+*The translation is not syntactic — it’s semantic.* You can write a
+regex to convert `+forall+` to `+∀+`. You cannot write a regex to
+convert CIC to HOL. These are different mathematical foundations with
+different notions of: - What counts as a valid proof - What axioms are
+available - How induction works - Whether classical or constructive
+logic applies - How universe levels interact
+
+*Ontologies make it worse.* OWL/MOF/SKOS formalise domain knowledge ("`a
+Vehicle is a subclass of PhysicalObject`") but don’t connect to provers.
+You can express the ontology but you can’t prove properties about it
+without manual translation into a prover’s language. And different
+ontology languages have different expressiveness (OWL-DL is decidable,
+OWL-Full is not).
+
+==== What Exists (Partial Solutions)
+
+[width="100%",cols="21%,42%,37%",options="header",]
+|===
+|Tool/Framework |What it does |Why it’s not enough
+|*Dedukti/Lambdapi* |Logical framework encoding multiple logics
+|Expert-only, no UI, no ontologies
+
+|*MMT* |Universal framework for formal systems |Academic, not
+user-facing
+
+|*TPTP* |Standard syntax for ATP |First-order only
+
+|*OpenTheory* |Proof sharing between HOL systems |HOL family only
+
+|*Logipedia* |Library of proofs across systems |Catalogue, not
+interactive
+
+|*Hets* |Heterogeneous specification |Multi-logic but no visual UX
+
+|*DOL (Distributed Ontology Language)* |Links ontologies to logics
+|Specification-stage, no tooling
+|===
+
+==== What Wolfram Actually Does (And Doesn’t)
+
+Wolfram has beautiful unified notation and handles everything from
+arithmetic to differential equations to graph theory in one environment.
+But it *does not do formal verification*. When Wolfram says
+`+Simplify[x^2 - 1] = (x-1)(x+1)+`, that is a _computation_, not a
+_proof_. The result might be wrong for edge cases (complex numbers,
+special values) and Wolfram provides no certificate.
+
+Wolfram sidesteps the entire hard problem by operating in the "`concrete
+computation`" world, not the "`formal proof`" world. PanLL can’t do that
+— the whole point is verified proofs with trust levels.
+
+==== How PanLL Might Bridge the Gap
+
+*Layer 1: Semantic type classes*
+
+Instead of translating syntax, define semantic interfaces that provers
+implement:
+
+....
+-- PanLL-Universal semantic interface
+typeclass NaturalNumber T where
+  zero : T
+  succ : T → T
+  induction : (P : T → Prop) → P zero → (∀ n, P n → P (succ n)) → ∀ n, P n
+
+-- Coq implementation: nat with Peano axioms
+-- Lean implementation: Nat with Mathlib
+-- Isabelle implementation: nat with HOL-Library
+-- Z3 implementation: Int with (>= 0) constraint (approximate)
+....
+
+The PanLL-Universal statement `+∀ n : Nat, n + 0 = n+` maps to the
+`+NaturalNumber+` typeclass, and each prover backend provides its own
+implementation. The translation is at the typeclass boundary, not the
+syntax level.
+
+*Layer 2: The SLM as semantic translator*
+
+This is where the SLM earns its keep. Instead of rule-based translation
+(which requires encoding every prover’s semantics manually), train the
+SLM on parallel corpora: - Coq’s Mathlib proofs - Lean’s Mathlib proofs
+(which share many theorems) - Isabelle’s AFP proofs
+
+The SLM learns the semantic mapping between systems. When a user writes
+a goal in PanLL-Universal, the SLM translates to each target prover —
+and crucially, the prover validates the translation. Bad translations
+are caught by the type checker.
+
+This is where the heutagogic training loop becomes essential: the SLM
+gets better at cross-system translation over time, learning from its own
+failures.
+
+*Layer 3: Ontology grounding via Description Logic provers*
+
+For the ontology side, use Description Logic reasoners (HermiT, ELK,
+Konclude) as a bridge: - User defines domain ontology in a visual editor
+(part of the proof pipeline) - Ontology is checked by a DL reasoner for
+consistency - Relevant ontological facts are extracted and encoded as
+prover axioms - ECHIDNA dispatches the proof with these axioms available
+
+This doesn’t solve the full problem but it handles the common case: "`I
+have a domain model, I want to prove properties about it.`"
+
+==== The Honest Assessment
+
+*I don’t know how to fully solve this.* The semantic gap between logics
+is a research problem, not an engineering problem. Dedukti/Lambdapi
+comes closest but it requires users to understand logical frameworks —
+which defeats the progressive sophistication goal.
+
+The most promising path is the combination of: 1. Semantic typeclasses
+(narrow the problem to common mathematical structures) 2. SLM
+translation (handle the cases typeclasses don’t cover) 3. Prover
+validation (catch translation errors) 4. Honest degradation (tell the
+user when a goal can’t be faithfully translated to a particular prover,
+rather than silently producing something wrong)
+
+This is Phase 12 for a reason. It’s the hardest, it depends on
+everything else working, and it may require research breakthroughs — not
+just engineering.
+
+'''''
+
+=== F. Summary
+
+[width="100%",cols="56%,44%",options="header",]
+|===
+|Question |Answer
+|What’s working? |Elm architecture, typed domain model, test coverage,
+Tauri separation
+
+|What’s failing? |ARIA gap, monolithic model, mixed UI/domain state, no
+schema versioning
+
+|What needs rethinking? |Rigid pane model, flat monologue, duplicated
+backend patterns
+
+|Big plan ordering? |Accessibility → Refactor → Interop → Visual →
+Syntax → Layouts → i18n → Collab → SLM → Notation
+
+|Closest competitor? |Why3 (dispatch) + Wolfram (experience) — but
+nothing combines all pieces
+
+|Feedback to other repos? |10 concrete insights (Evangeliser, ECHIDNA
+API, VeriSimDB UX, Trustfile, Proven audit, Echidnabot, IDApTIK,
+DeepProbLog, fuzzy search, Pandoc)
+
+|Hardest unsolved problem? |Semantic translation between logics +
+ontology grounding — the bridge between notation and provers
+|===
+
+'''''
+
+=== References
+
+* Why3: https://why3.lri.fr/
+* Dedukti: https://deducteam.github.io/
+* MMT: https://uniformal.github.io/
+* DOL: https://dol-omg.github.io/
+* Logipedia: https://logipedia.inria.fr/
+* Wolfram Language: https://www.wolfram.com/language/
+* Companion design documents in this directory

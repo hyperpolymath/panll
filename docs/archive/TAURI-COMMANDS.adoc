@@ -1,0 +1,731 @@
+== Tauri Commands
+
+All commands registered in `+src-tauri/src/main.rs+` via
+`+tauri::generate_handler![]+`. Frontend code calls these with
+`+invoke("command_name", { params })+` from `+@tauri-apps/api+`.
+
+=== Top-Level Commands (main.rs)
+
+Commands defined directly in `+main.rs+`, not in a sub-module.
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+health_check+` |`+endpoint: String+` |`+Result<String, String>+`
+|Panel Switcher (connection dots)
+
+|`+validate_inference+` |inference payload |`+Result<String, String>+`
+|Anti-Crash Gate
+
+|`+record_vexation_event+` |event type |`+Result<(), String>+`
+|Vexometer
+
+|`+get_vexation_index+` |(none) |`+Result<f64, String>+` |Vexometer
+
+|`+submit_feedback+` |feedback payload |`+Result<String, String>+`
+|Feedback-O-Tron
+
+|`+import_panic_attacker_report+` |file path |`+Result<Value, String>+`
+|panic-attack panel
+
+|`+import_latest_panic_attacker_report+` |(none)
+|`+Result<Value, String>+` |panic-attack panel
+
+|`+get_panic_attacker_capability+` |(none) |`+Result<Value, String>+`
+|panic-attack panel
+
+|`+run_panic_attack_ambush+` |`+AmbushOptions+`
+|`+Result<Value, String>+` |panic-attack panel
+
+|`+protocol_squisher_check+` |(none) |`+Result<Value, String>+`
+|Protocol-Squisher
+
+|`+protocol_squisher_analyze+` |schema input |`+Result<Value, String>+`
+|Protocol-Squisher
+
+|`+protocol_squisher_compare+` |two schemas |`+Result<Value, String>+`
+|Protocol-Squisher
+
+|`+mylang_check+` |(none) |`+Result<Value, String>+` |My-Lang
+
+|`+mylang_compile+` |source code |`+Result<Value, String>+` |My-Lang
+
+|`+mylang_repl+` |expression |`+Result<Value, String>+` |My-Lang
+
+|`+mylang_lsp_connect+` |server config |`+Result<Value, String>+`
+|My-Lang
+
+|`+mylang_lsp_diagnostics+` |file path |`+Result<Value, String>+`
+|My-Lang
+|===
+
+==== VeriSimDB Commands (main.rs)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+verisim_health+` |(none) |`+Result<Value, String>+` |Databases panel
+
+|`+verisim_query+` |VCL query string |`+Result<Value, String>+`
+|Databases, Panel-W
+
+|`+verisim_list_hexads+` |(none) |`+Result<Value, String>+` |Databases
+panel
+
+|`+verisim_get_drift+` |hexad ID |`+Result<Value, String>+` |Databases
+panel
+
+|`+verisim_normalise+` |entity data |`+Result<Value, String>+`
+|Databases panel
+
+|`+verisim_get_entity+` |entity ID |`+Result<Value, String>+` |Databases
+panel
+
+|`+verisim_telemetry+` |(none) |`+Result<Value, String>+` |Databases
+panel
+
+|`+verisim_orch_status+` |(none) |`+Result<Value, String>+` |Databases
+panel
+|===
+
+==== ECHIDNA Commands (main.rs)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+echidna_health+` |(none) |`+Result<Value, String>+` |Panel-N
+
+|`+echidna_list_provers+` |(none) |`+Result<Value, String>+` |Panel-N
+
+|`+echidna_prove+` |proposition |`+Result<Value, String>+` |Panel-N
+
+|`+echidna_verify+` |proof |`+Result<Value, String>+` |Panel-N
+
+|`+echidna_search_theorems+` |query |`+Result<Value, String>+` |Panel-N
+
+|`+echidna_create_session+` |session params |`+Result<Value, String>+`
+|Panel-N
+
+|`+echidna_get_session+` |session ID |`+Result<Value, String>+` |Panel-N
+
+|`+echidna_apply_tactic+` |tactic + session |`+Result<Value, String>+`
+|Panel-N
+
+|`+echidna_suggest_tactics+` |goal state |`+Result<Value, String>+`
+|Panel-N
+|===
+
+=== cloudguard (14 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+cloudguard_verify_token+` |API token |`+Result<Value, String>+`
+|CloudGuard
+
+|`+cloudguard_list_zones+` |(none) |`+Result<Value, String>+`
+|CloudGuard
+
+|`+cloudguard_get_zone+` |zone ID |`+Result<Value, String>+` |CloudGuard
+
+|`+cloudguard_get_settings+` |zone ID |`+Result<Value, String>+`
+|CloudGuard
+
+|`+cloudguard_update_setting+` |zone, key, value
+|`+Result<Value, String>+` |CloudGuard
+
+|`+cloudguard_update_settings_batch+` |zone, settings
+|`+Result<Value, String>+` |CloudGuard
+
+|`+cloudguard_list_dns_records+` |zone ID |`+Result<Value, String>+`
+|CloudGuard
+
+|`+cloudguard_create_dns_record+` |zone, record
+|`+Result<Value, String>+` |CloudGuard
+
+|`+cloudguard_update_dns_record+` |zone, record ID, data
+|`+Result<Value, String>+` |CloudGuard
+
+|`+cloudguard_delete_dns_record+` |zone, record ID
+|`+Result<Value, String>+` |CloudGuard
+
+|`+cloudguard_get_dnssec+` |zone ID |`+Result<Value, String>+`
+|CloudGuard
+
+|`+cloudguard_enable_dnssec+` |zone ID |`+Result<Value, String>+`
+|CloudGuard
+
+|`+cloudguard_harden_zone+` |zone ID |`+Result<Value, String>+`
+|CloudGuard
+
+|`+cloudguard_download_config+` |zone ID |`+Result<String, String>+`
+|CloudGuard
+|===
+
+=== farm (3 commands)
+
+[cols=",,,",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+farm_list_repos+` |(none) |`+Result<Value, String>+` |Farm
+|`+farm_get_repo+` |repo name |`+Result<Value, String>+` |Farm
+|`+farm_get_stats+` |(none) |`+Result<Value, String>+` |Farm
+|===
+
+=== vm_inspector (7 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+vm_inspector_read_state+` |(none) |`+Result<Value, String>+` |VM
+Inspector
+
+|`+vm_inspector_step_forward+` |(none) |`+Result<Value, String>+` |VM
+Inspector
+
+|`+vm_inspector_step_backward+` |(none) |`+Result<Value, String>+` |VM
+Inspector
+
+|`+vm_inspector_run+` |(none) |`+Result<Value, String>+` |VM Inspector
+
+|`+vm_inspector_load_program+` |bytecode |`+Result<Value, String>+` |VM
+Inspector
+
+|`+vm_inspector_export_snapshot+` |(none) |`+Result<Value, String>+` |VM
+Inspector
+
+|`+vm_inspector_read_file+` |file path |`+Result<Value, String>+` |VM
+Inspector
+|===
+
+=== plaza (3 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+plaza_scan_repo+` |repo path |`+Result<Value, String>+` |Palimpsest
+Plaza
+
+|`+plaza_adoption_stats+` |(none) |`+Result<Value, String>+` |Palimpsest
+Plaza
+
+|`+plaza_check_compatibility+` |license ID |`+Result<Value, String>+`
+|Palimpsest Plaza
+|===
+
+=== minter (2 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+minter_validate_name+` |panel name |`+Result<Value, String>+` |Minter
+|`+minter_mint_panel+` |panel config |`+Result<Value, String>+` |Minter
+|===
+
+=== voicetag (4 commands)
+
+[cols=",,,",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+voicetag_load+` |file path |`+Result<Value, String>+` |Code MRI
+|`+voicetag_save+` |file path, tags |`+Result<(), String>+` |Code MRI
+|`+voicetag_delete+` |file path |`+Result<(), String>+` |Code MRI
+|`+voicetag_scan+` |directory |`+Result<Value, String>+` |Code MRI
+|===
+
+=== watcher (5 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+watcher_start+` |(none) |`+Result<(), String>+` |Filesystem Watcher
+
+|`+watcher_stop+` |(none) |`+Result<(), String>+` |Filesystem Watcher
+
+|`+watcher_add_path+` |path |`+Result<(), String>+` |Filesystem Watcher
+
+|`+watcher_remove_path+` |path |`+Result<(), String>+` |Filesystem
+Watcher
+
+|`+watcher_status+` |(none) |`+Result<Value, String>+` |Filesystem
+Watcher
+|===
+
+=== ai (8 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+ai_send_message+` |message, provider |`+Result<Value, String>+` |AI
+panel
+
+|`+ai_check_provider+` |provider name |`+Result<Value, String>+` |AI
+panel
+
+|`+ai_set_model+` |provider, model |`+Result<(), String>+` |AI panel
+
+|`+ai_set_priority+` |provider list |`+Result<(), String>+` |AI panel
+
+|`+ai_toggle_provider+` |provider, enabled |`+Result<(), String>+` |AI
+panel
+
+|`+ai_clear_history+` |(none) |`+Result<(), String>+` |AI panel
+
+|`+ai_build_context+` |panel state |`+Result<Value, String>+` |AI panel
+
+|`+ai_get_state+` |(none) |`+Result<Value, String>+` |AI panel
+|===
+
+=== repoloader (4 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+repoloader_scan+` |repo path |`+Result<Value, String>+` |Repo Loader
+
+|`+repoloader_save_panels+` |repo, panel list |`+Result<(), String>+`
+|Repo Loader
+
+|`+repoloader_list_recent+` |(none) |`+Result<Value, String>+` |Repo
+Loader
+
+|`+repoloader_search_farm+` |query |`+Result<Value, String>+` |Repo
+Loader
+|===
+
+=== workspace (7 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+save_arrangement+` |arrangement data |`+Result<(), String>+`
+|Workspace
+
+|`+load_arrangements+` |(none) |`+Result<Value, String>+` |Workspace
+
+|`+delete_arrangement+` |arrangement ID |`+Result<(), String>+`
+|Workspace
+
+|`+save_session+` |session data |`+Result<(), String>+` |Workspace
+
+|`+load_sessions+` |(none) |`+Result<Value, String>+` |Workspace
+
+|`+delete_session+` |session ID |`+Result<(), String>+` |Workspace
+
+|`+get_system_info+` |(none) |`+Result<Value, String>+` |Workspace
+|===
+
+=== capture (5 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+save_screenshot+` |panel ID, data |`+Result<String, String>+`
+|Capture
+
+|`+print_panel+` |panel ID |`+Result<String, String>+` |Capture
+
+|`+save_demo+` |demo data |`+Result<(), String>+` |Capture
+
+|`+load_demos+` |(none) |`+Result<Value, String>+` |Capture
+
+|`+delete_demo+` |demo ID |`+Result<(), String>+` |Capture
+|===
+
+=== security (5 commands)
+
+[cols=",,,",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+redact_text+` |text, patterns |`+Result<String, String>+` |Security
+|`+vault_store+` |key, value |`+Result<(), String>+` |Security
+|`+vault_retrieve+` |key |`+Result<String, String>+` |Security
+|`+vault_list+` |(none) |`+Result<Value, String>+` |Security
+|`+load_trustfile+` |path |`+Result<Value, String>+` |Security
+|===
+
+=== overlay (21 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+overlay_status+` |(none) |`+Result<Value, String>+` |Aerie
+
+|`+overlay_health+` |(none) |`+Result<Value, String>+` |Aerie
+
+|`+overlay_tor_connect+` |config |`+Result<Value, String>+` |Aerie
+
+|`+overlay_tor_disconnect+` |(none) |`+Result<(), String>+` |Aerie
+
+|`+overlay_tor_status+` |(none) |`+Result<Value, String>+` |Aerie
+
+|`+overlay_tor_create_hidden_service+` |service config
+|`+Result<Value, String>+` |Aerie
+
+|`+overlay_tor_destroy_hidden_service+` |service ID
+|`+Result<(), String>+` |Aerie
+
+|`+overlay_tor_list_circuits+` |(none) |`+Result<Value, String>+` |Aerie
+
+|`+overlay_tor_get_circuit+` |circuit ID |`+Result<Value, String>+`
+|Aerie
+
+|`+overlay_tor_resolve+` |hostname |`+Result<Value, String>+` |Aerie
+
+|`+overlay_ipfs_connect+` |config |`+Result<Value, String>+` |Aerie
+
+|`+overlay_ipfs_disconnect+` |(none) |`+Result<(), String>+` |Aerie
+
+|`+overlay_ipfs_status+` |(none) |`+Result<Value, String>+` |Aerie
+
+|`+overlay_ipfs_add+` |data |`+Result<Value, String>+` |Aerie
+
+|`+overlay_ipfs_cat+` |CID |`+Result<Value, String>+` |Aerie
+
+|`+overlay_ipfs_pin+` |CID |`+Result<(), String>+` |Aerie
+
+|`+overlay_ipfs_unpin+` |CID |`+Result<(), String>+` |Aerie
+
+|`+overlay_ipfs_dag_get+` |CID |`+Result<Value, String>+` |Aerie
+
+|`+overlay_eth_connect+` |config |`+Result<Value, String>+` |Aerie
+
+|`+overlay_eth_disconnect+` |(none) |`+Result<(), String>+` |Aerie
+
+|`+overlay_eth_status+` |(none) |`+Result<Value, String>+` |Aerie
+
+|`+overlay_eth_timestamp_proof+` |data hash |`+Result<Value, String>+`
+|Aerie
+
+|`+overlay_eth_verify_timestamp+` |proof |`+Result<Value, String>+`
+|Aerie
+|===
+
+=== boj (8 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+boj_health+` |(none) |`+Result<Value, String>+` |BoJ
+|`+boj_list_cartridges+` |(none) |`+Result<Value, String>+` |BoJ
+|`+boj_get_cartridge+` |cartridge ID |`+Result<Value, String>+` |BoJ
+|`+boj_load_cartridge+` |cartridge ID |`+Result<Value, String>+` |BoJ
+|`+boj_unload_cartridge+` |cartridge ID |`+Result<Value, String>+` |BoJ
+|`+boj_topology+` |(none) |`+Result<Value, String>+` |BoJ
+|`+boj_invoke+` |cartridge, method, args |`+Result<Value, String>+` |BoJ
+|`+boj_umoja_status+` |(none) |`+Result<Value, String>+` |BoJ
+|===
+
+=== typell (7 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+typell_health+` |(none) |`+Result<Value, String>+` |TypeLL
+|`+typell_check+` |type expression |`+Result<Value, String>+` |TypeLL
+|`+typell_infer+` |expression |`+Result<Value, String>+` |TypeLL
+|`+typell_refine+` |type + refinement |`+Result<Value, String>+` |TypeLL
+|`+typell_compute+` |computation |`+Result<Value, String>+` |TypeLL
+|`+typell_list_signatures+` |(none) |`+Result<Value, String>+` |TypeLL
+|`+typell_universes+` |(none) |`+Result<Value, String>+` |TypeLL
+|===
+
+=== clade_scanner (1 command)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+scan_clade_files+` |(none) |`+Result<Value, String>+` |Clade Browser
+|===
+
+=== governance (3 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+governance_nesy_query+` |query |`+Result<Value, String>+` |Cognitive
+Governance
+
+|`+governance_nesy_validate+` |validation input
+|`+Result<Value, String>+` |Cognitive Governance
+
+|`+governance_nesy_probe+` |probe target |`+Result<Value, String>+`
+|Cognitive Governance
+|===
+
+=== coprocessor (8 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+query_compute_engine+` |engine query |`+Result<Value, String>+`
+|Coprocessors
+
+|`+discover_compute_devices+` |(none) |`+Result<Value, String>+`
+|Coprocessors
+
+|`+coprocessor_dispatch_local+` |task |`+Result<Value, String>+`
+|Coprocessors
+
+|`+coprocessor_check_ffi+` |FFI target |`+Result<Value, String>+`
+|Coprocessors
+
+|`+coprocessor_benchmark+` |benchmark config |`+Result<Value, String>+`
+|Coprocessors
+
+|`+coprocessor_load_ffi+` |FFI module |`+Result<Value, String>+`
+|Coprocessors
+
+|`+coprocessor_local_resources+` |(none) |`+Result<Value, String>+`
+|Coprocessors
+
+|`+coprocessor_smart_dispatch+` |task + routing
+|`+Result<Value, String>+` |Coprocessors
+|===
+
+=== game_preview (8 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+game_preview_check_server+` |(none) |`+Result<Value, String>+` |Game
+Preview
+
+|`+game_preview_control+` |control action |`+Result<Value, String>+`
+|Game Preview
+
+|`+game_preview_record_start+` |(none) |`+Result<(), String>+` |Game
+Preview
+
+|`+game_preview_record_stop+` |(none) |`+Result<Value, String>+` |Game
+Preview
+
+|`+game_preview_screenshot+` |(none) |`+Result<String, String>+` |Game
+Preview
+
+|`+game_preview_stats+` |(none) |`+Result<Value, String>+` |Game Preview
+
+|`+game_preview_clips_list+` |(none) |`+Result<Value, String>+` |Game
+Preview
+
+|`+game_preview_clip_delete+` |clip ID |`+Result<(), String>+` |Game
+Preview
+|===
+
+=== network_topology (4 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+read_network_topology+` |(none) |`+Result<Value, String>+` |Network
+Topology
+
+|`+read_dns_table+` |(none) |`+Result<Value, String>+` |Network Topology
+
+|`+read_packet_flow+` |(none) |`+Result<Value, String>+` |Network
+Topology
+
+|`+export_topology_svg+` |(none) |`+Result<String, String>+` |Network
+Topology
+|===
+
+=== level_architect (5 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+load_level+` |level path |`+Result<Value, String>+` |Level Architect
+
+|`+save_level+` |level data |`+Result<(), String>+` |Level Architect
+
+|`+export_level_config+` |level ID |`+Result<String, String>+` |Level
+Architect
+
+|`+browse_level_assets+` |asset type |`+Result<Value, String>+` |Level
+Architect
+
+|`+validate_level+` |level data |`+Result<Value, String>+` |Level
+Architect
+|===
+
+=== valence_shell (12 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+valence_shell_check+` |(none) |`+Result<Value, String>+` |Valence
+Shell
+
+|`+valence_shell_spawn+` |shell config |`+Result<Value, String>+`
+|Valence Shell
+
+|`+valence_shell_input+` |session, input |`+Result<(), String>+`
+|Valence Shell
+
+|`+valence_shell_record_start+` |session |`+Result<(), String>+`
+|Valence Shell
+
+|`+valence_shell_record_stop+` |session |`+Result<Value, String>+`
+|Valence Shell
+
+|`+valence_shell_recordings_list+` |(none) |`+Result<Value, String>+`
+|Valence Shell
+
+|`+valence_shell_recording_delete+` |recording ID
+|`+Result<(), String>+` |Valence Shell
+
+|`+valence_shell_checkpoint_create+` |session |`+Result<Value, String>+`
+|Valence Shell
+
+|`+valence_shell_checkpoint_restore+` |checkpoint ID
+|`+Result<Value, String>+` |Valence Shell
+
+|`+valence_shell_checkpoints_list+` |session |`+Result<Value, String>+`
+|Valence Shell
+
+|`+valence_shell_screenshot+` |session |`+Result<String, String>+`
+|Valence Shell
+
+|`+valence_shell_recording_export+` |recording, format
+|`+Result<String, String>+` |Valence Shell
+|===
+
+=== multiplayer_monitor (6 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+multiplayer_connect+` |server URL |`+Result<Value, String>+`
+|Multiplayer Monitor
+
+|`+multiplayer_disconnect+` |(none) |`+Result<(), String>+` |Multiplayer
+Monitor
+
+|`+multiplayer_read_state+` |(none) |`+Result<Value, String>+`
+|Multiplayer Monitor
+
+|`+multiplayer_read_diffs+` |(none) |`+Result<Value, String>+`
+|Multiplayer Monitor
+
+|`+multiplayer_read_ets+` |(none) |`+Result<Value, String>+`
+|Multiplayer Monitor
+
+|`+multiplayer_reconnection_test+` |(none) |`+Result<Value, String>+`
+|Multiplayer Monitor
+|===
+
+=== dlc_workshop (8 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+dlc_load_puzzles+` |pack path |`+Result<Value, String>+` |DLC
+Workshop
+
+|`+dlc_save_puzzle+` |puzzle data |`+Result<(), String>+` |DLC Workshop
+
+|`+dlc_run_test+` |puzzle ID |`+Result<Value, String>+` |DLC Workshop
+
+|`+dlc_run_all_tests+` |pack path |`+Result<Value, String>+` |DLC
+Workshop
+
+|`+dlc_browse_assets+` |asset type |`+Result<Value, String>+` |DLC
+Workshop
+
+|`+dlc_package+` |pack config |`+Result<String, String>+` |DLC Workshop
+
+|`+dlc_import_puzzle+` |file path |`+Result<Value, String>+` |DLC
+Workshop
+
+|`+dlc_export_puzzle+` |puzzle ID |`+Result<String, String>+` |DLC
+Workshop
+|===
+
+=== release_manager (5 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+release_generate_changelog+` |version range
+|`+Result<String, String>+` |Release Manager
+
+|`+release_build_artifacts+` |build config |`+Result<Value, String>+`
+|Release Manager
+
+|`+release_publish+` |release config |`+Result<Value, String>+` |Release
+Manager
+
+|`+release_read_history+` |(none) |`+Result<Value, String>+` |Release
+Manager
+
+|`+release_bump_version+` |bump type |`+Result<String, String>+`
+|Release Manager
+|===
+
+=== umoja (5 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+umoja_add_peer+` |peer address |`+Result<Value, String>+` |BoJ
+(federation)
+
+|`+umoja_disconnect_peer+` |peer ID |`+Result<(), String>+` |BoJ
+(federation)
+
+|`+umoja_trigger_gossip+` |(none) |`+Result<Value, String>+` |BoJ
+(federation)
+
+|`+umoja_sync_catalogue+` |peer ID |`+Result<Value, String>+` |BoJ
+(federation)
+
+|`+umoja_peer_metrics+` |(none) |`+Result<Value, String>+` |BoJ
+(federation)
+|===
+
+=== observability (3 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+observe_export_sarif+` |scan results |`+Result<String, String>+`
+|Observability
+
+|`+observe_export_traces+` |trace config |`+Result<Value, String>+`
+|Observability
+
+|`+observe_summary+` |(none) |`+Result<Value, String>+` |Observability
+|===
+
+=== a2ml (3 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+a2ml_load_manifest+` |file path |`+Result<Value, String>+` |A2ML
+integration
+
+|`+a2ml_validate+` |manifest data |`+Result<Value, String>+` |A2ML
+integration
+
+|`+a2ml_list+` |directory |`+Result<Value, String>+` |A2ML integration
+|===
+
+=== k9 (3 commands)
+
+[width="99%",cols="26%,28%,23%,23%",options="header",]
+|===
+|Command |Parameters |Returns |Used By
+|`+k9_load_contractile+` |file path |`+Result<Value, String>+` |K9
+integration
+
+|`+k9_validate+` |contractile data |`+Result<Value, String>+` |K9
+integration
+
+|`+k9_apply_layout+` |layout config |`+Result<Value, String>+` |K9
+integration
+|===
+
+'''''
+
+*Total: 246 Tauri commands* across 26 modules + top-level.

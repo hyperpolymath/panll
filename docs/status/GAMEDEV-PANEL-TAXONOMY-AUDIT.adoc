@@ -1,0 +1,497 @@
+== PanLL Game Dev Panel Taxonomy Audit
+
+*Author:* Jonathan D.A. Jewell *Date:* 2026-03-14 *Scope:* Map all 48
+existing PanLL panels against IDApTIK game dev requirements, identify
+gaps, propose 28 new panels with clade assignments.
+
+'''''
+
+=== Table of Contents
+
+[arabic]
+. link:#overview[Overview]
+. link:#existing-panel-classification[Existing Panel Classification]
+* link:#already-game-dev-relevant-13-panels[Already Game-Dev Relevant
+(13)]
+* link:#supporting-game-dev-10-panels[Supporting Game Dev (10)]
+* link:#not-game-dev-specific-25-panels[Not Game-Dev Specific (25)]
+. link:#idaptik-required-categories[IDApTIK Required Categories]
+. link:#gap-analysis[Gap Analysis]
+. link:#proposed-new-panels-28[Proposed New Panels (28)]
+* link:#game-testing-panels-10[Game Testing Panels (10)]
+* link:#bridge-panels-8[Bridge Panels (8)]
+* link:#game-specific-panels-6[Game-Specific Panels (6)]
+* link:#teamcollaboration-panels-4[Team/Collaboration Panels (4)]
+. link:#clade-assignments-summary[Clade Assignments Summary]
+. link:#clade-kind-coverage[Clade Kind Coverage]
+. link:#implementation-priority[Implementation Priority]
+
+'''''
+
+=== Overview
+
+PanLL currently ships 48 panels registered in `+PanelRegistry.res+`.
+IDApTIK requires comprehensive game development tooling across six
+categories:
+
+[arabic]
+. *Building* — Level design, asset creation, world generation
+. *Testing* — Unit, functional, regression, load, soak, compatibility
+. *Bridging* — Core PanLL services federated into IDApTIK context
+. *Monitoring* — Performance, network, health, multiplayer
+. *Collaboration* — Code review, merge coordination, team awareness
+. *Debugging* — VM inspection, time-travel, state replay
+
+Of the existing 48 panels, *13 are directly game-dev relevant*, *10
+support game dev*, and *25 are general-purpose*. This audit identifies
+*28 new panels* needed to close the gap.
+
+'''''
+
+=== Existing Panel Classification
+
+==== Already Game-Dev Relevant (13 panels)
+
+These panels directly serve IDApTIK game development workflows.
+
+[width="100%",cols="37%,42%,21%",options="header",]
+|===
+|Panel ID |Clade Kind |Role
+|`+PanelGamePreview+` |Viewer |Live game preview rendering via PixiJS
+
+|`+PanelVmInspector+` |Viewer / Inspector |VM debugger for IDApTIK’s
+custom bytecode
+
+|`+PanelNetworkTopology+` |Viewer |In-game device network graph
+visualisation
+
+|`+PanelLevelArchitect+` |Builder |Visual level design tool (grid/tile
+editor)
+
+|`+PanelCoprocessors+` |Viewer |Compute backend monitoring (Zig FFI,
+WASM)
+
+|`+PanelMultiplayerMonitor+` |Viewer |Phoenix channel sync monitoring
+
+|`+PanelDlcWorkshop+` |Builder |DLC content creation and packaging
+
+|`+PanelUms+` |Builder |Universal Modding Studio hub
+
+|`+PanelEditorBridge+` |Bridge |External editor federation (VS Code,
+Zed)
+
+|`+PanelBuildDashboard+` |Scanner |Build pipeline monitoring and status
+
+|`+PanelReleaseManager+` |Builder |Release pipeline orchestration
+
+|`+PanelPanicAttack+` |Scanner |Stress testing via panic-attack
+framework
+
+|`+PanelObservatory+` |Viewer |System health dashboard
+|===
+
+==== Supporting Game Dev (10 panels)
+
+These panels provide infrastructure that game dev panels depend on.
+
+[width="99%",cols="25%,28%,47%",options="header",]
+|===
+|Panel ID |Clade Kind |Game Dev Relevance
+|`+PanelTypeLL+` |Service |Type checking for game state schemas
+
+|`+PanelEchidna+` |Service |Proof verification for Idris2 ABI modules
+
+|`+PanelBoj+` |Service |Cartridge server (database-mcp, observe-mcp)
+
+|`+PanelDatabases+` |Database |VeriSimDB for game persistence and save
+states
+
+|`+PanelAi+` |AI |AI provider for guard behaviour analysis
+
+|`+PanelMigration+` |Viewer |ReScript migration health tracking
+
+|`+PanelAutomationRouter+` |Directive |Workflow orchestration for
+build/deploy
+
+|`+PanelValenceShell+` |Terminal |Developer terminal for ad-hoc commands
+
+|`+PanelPlaygrounds+` |Terminal |Code sandbox for prototyping game logic
+
+|`+PanelCapture+` |Meta |Screenshots and recordings for playtesting
+|===
+
+==== Not Game-Dev Specific (25 panels)
+
+These panels serve general PanLL ecosystem functions and are not
+directly relevant to IDApTIK game development.
+
+[cols=",,",options="header",]
+|===
+|Panel ID |Clade Kind |Purpose
+|`+PanelCloudGuard+` |Scanner |Cloud security posture
+|`+PanelVab+` |Builder |Visual Application Builder
+|`+PanelFarm+` |Service |Distributed compute farm
+|`+PanelFleet+` |Service |gitbot-fleet management
+|`+PanelHypatia+` |Service |Neurosymbolic CI intelligence
+|`+PanelReposystem+` |Viewer |Repository system overview
+|`+PanelAerie+` |Viewer |High-level project dashboard
+|`+PanelInterfaces+` |Builder |API interface designer
+|`+PanelPlaza+` |Bridge |Community hub
+|`+PanelMinter+` |Builder |Token/credential minting
+|`+PanelProvisioner+` |Directive |Infrastructure provisioning
+|`+PanelVoiceTag+` |Service |Voice annotation
+|`+PanelSecurity+` |Scanner |Security audit dashboard
+|`+PanelMassPanic+` |Scanner |Mass vulnerability scanning
+|`+PanelTsdm+` |Viewer |TSDM methodology tracker
+|`+PanelScriptGist+` |Terminal |Script snippet manager
+|`+PanelCladeBrowser+` |Viewer |Clade taxonomy browser
+|`+PanelTentacles+` |Service |7Tentacles integration
+|`+PanelProtocolSquisher+` |Builder |Protocol compression tool
+|`+PanelMyLang+` |Builder |Language playground
+|`+PanelEvangeliser+` |Service |Outreach automation
+|`+PanelHelp+` |Meta |Help and documentation
+|`+PanelAmbientOps+` |Directive |AmbientOps orchestration
+|`+PanelLanguageForge+` |Builder |Language tooling forge
+|`+PanelTangleViz+` |Viewer |Dependency tangle visualisation
+|`+PanelSpecBrowser+` |Viewer |Specification browser
+|`+PanelVerificationDashboard+` |Viewer |Formal verification status
+|===
+
+'''''
+
+=== IDApTIK Required Categories
+
+IDApTIK needs coverage across six game dev categories. Current state:
+
+[width="100%",cols="26%,23%,40%,11%",options="header",]
+|===
+|Category |Required |Existing Panels |Gap
+|*Building* |Level design, world gen, assets, devices |4
+(LevelArchitect, DlcWorkshop, Ums, ReleaseManager) |Parametric gen,
+fine-grained editor, asset management, device wiring
+
+|*Testing* |Unit, functional, regression, load, soak, compat, balance |1
+(PanicAttack — stress only) |All structured testing panels missing
+
+|*Bridging* |Core PanLL ↔ IDApTIK federation |1 (EditorBridge) |Type,
+neurosym, agentic, automation, database, protocol, proofs, scripting
+
+|*Monitoring* |Perf, network, health, multiplayer |4 (GamePreview,
+Coprocessors, MultiplayerMonitor, Observatory) |Perf profiler, soak
+monitor, balance analysis
+
+|*Collaboration* |Code review, merge, team awareness |0 |All
+collaboration panels missing
+
+|*Debugging* |VM debug, time-travel, state inspect |1 (VmInspector)
+|Tea_Debug frontend, time-travel, replay
+|===
+
+*Total gaps: 28 panels needed.*
+
+'''''
+
+=== Proposed New Panels (28)
+
+==== Game Testing Panels (10)
+
+All new. IDApTIK currently has no structured testing panels beyond
+PanicAttack stress tests.
+
+[width="100%",cols="27%,21%,25%,27%",options="header",]
+|===
+|Panel Name |Panel ID |Clade Kind |Description
+|Unit Test Runner |`+PanelUnitTestRunner+` |Scanner |Runs ReScript tests
+with coverage heatmap and diff-aware testing. Shows per-module pass/fail
+with line-level coverage overlay.
+
+|Functional Tester |`+PanelFunctionalTester+` |Scanner |Scriptable game
+workflow simulation (start → hack → win). Defines test scenarios as
+composable steps.
+
+|Regression Guard |`+PanelRegressionGuard+` |Scanner |Snapshot and
+golden-file comparison. Answers "`did this change break X?`" with visual
+diffs for level output.
+
+|Performance Profiler |`+PanelPerformanceProfiler+` |Viewer |Frame
+budget tracker, GC pressure gauge, memory flamegraphs. Integrates with
+PixiJS render loop metrics.
+
+|Load Tester |`+PanelLoadTester+` |Scanner |Phoenix channel stress
+testing and concurrent player simulation. Ramps virtual players to find
+breakpoints.
+
+|Soak Monitor |`+PanelSoakMonitor+` |Viewer |Long-running memory trends
+and leak detection. Runs overnight, flags monotonic growth.
+
+|Compatibility Matrix |`+PanelCompatibilityMatrix+` |Scanner
+|Browser/device/resolution test matrix via Playwright. Green/red grid of
+target environments.
+
+|Exploratory Workbench |`+PanelExploratoryWorkbench+` |Viewer |Freeform
+play recorder with anomaly flagging. Records player actions and
+highlights unexpected states.
+
+|Beta Feedback Hub |`+PanelBetaFeedbackHub+` |Bridge |Feedback-o-tron
+integration with sentiment analysis and triage queues. Connects external
+testers to dev workflow.
+
+|Balance Analyser |`+PanelBalanceAnalyser+` |Viewer |Guard spawn
+distributions, Monte Carlo win-rate simulation, difficulty curves.
+Validates game balance statistically.
+|===
+
+==== Bridge Panels (8)
+
+These federate core PanLL services into IDApTIK context using the L/N/W
+(Logic/Neurosymbolic/Widget) pattern.
+
+[width="100%",cols="15%,10%,12%,17%,26%,20%",options="header",]
+|===
+|Panel Name |Panel ID |Clade Kind |L Panel (Logic) |N Panel
+(Neurosymbolic) |W Panel (Widget)
+|Typing Bridge |`+PanelTypingBridge+` |Bridge |Type constraints for game
+state schemas |TypeLL reasoning over constraint satisfaction |Type-safe
+config editor with validation
+
+|Neurosymbolic Bridge |`+PanelNeurosymBridge+` |Bridge |Guard behaviour
+rules (Idris2 specs) |ECHIDNA reasoning over behaviour trees |Behaviour
+tree visualisation and editing
+
+|Agentic Bridge |`+PanelAgenticBridge+` |Bridge |Test agent parameters
+and bounds |AI agent OODA loop execution |Agent execution results and
+replay
+
+|Automation Bridge |`+PanelAutomationBridge+` |Bridge |CI/CD pipeline
+rules and triggers |Pipeline reasoning and optimisation |Build/deploy
+status with drill-down
+
+|Database Bridge |`+PanelDatabaseBridge+` |Bridge |VeriSimDB schema
+constraints |Query optimisation suggestions |Game state persistence
+viewer
+
+|Protocol Bridge |`+PanelProtocolBridge+` |Bridge |Sync protocol rules
+(Phoenix channels) |Protocol analysis and anomaly detection |Channel
+status and latency gauges
+
+|Proofs Bridge |`+PanelProofsBridge+` |Bridge |Proven repo interface
+specifications |ECHIDNA formal verification |Proof status badges and
+progress
+
+|Scripting Bridge |`+PanelScriptingBridge+` |Bridge |VM instruction
+constraints and limits |Script analysis (dead code, complexity) |VM
+scripting REPL with autocomplete
+|===
+
+==== Game-Specific Panels (6)
+
+[width="100%",cols="27%,21%,25%,27%",options="header",]
+|===
+|Panel Name |Panel ID |Clade Kind |Description
+|Generator Mode |`+PanelGeneratorMode+` |Builder |Parametric world
+builder with sliders and toggles. Generates level templates from
+constraint parameters (room count, difficulty, device density).
+
+|Architect Mode |`+PanelArchitectMode+` |Builder |PixiJS fine-grained
+editor with L/N/W integration. Tile-by-tile placement, layer management,
+object properties. Extends PanelLevelArchitect with precision tools.
+
+|Guard AI Tuner |`+PanelGuardAiTuner+` |Viewer |Guard patrol path
+editor, alert threshold sliders, spawn rate curves. Visualises guard FOV
+cones and patrol timing.
+
+|Device Network Designer |`+PanelDeviceNetworkDesigner+` |Builder |Wire
+devices together, configure security levels, set network topology.
+Drag-and-drop device placement with logical connection validation.
+
+|Asset Manager |`+PanelAssetManager+` |Loader |PixiJS sprite sheets,
+sound files, level templates. Search, tag, preview, and version game
+assets. Tracks asset usage across levels.
+
+|Playtest Recorder |`+PanelPlaytestRecorder+` |Viewer |Record and replay
+game sessions. Annotate key moments, flag bugs, export clips. Integrates
+with Capture panel for screenshots.
+|===
+
+==== Team/Collaboration Panels (4)
+
+[width="100%",cols="27%,21%,25%,27%",options="header",]
+|===
+|Panel Name |Panel ID |Clade Kind |Description
+|Code Review |`+PanelCodeReview+` |Scanner |PR review with inline
+comments, approval gates, and diff viewer. Integrates with GitHub/GitLab
+MCP.
+
+|Merge Coordinator |`+PanelMergeCoordinator+` |Directive |Branch
+management, conflict resolution assistant, merge queue. Prevents broken
+merges with pre-merge checks.
+
+|Team Dashboard |`+PanelTeamDashboard+` |Viewer |Who is working on what,
+activity feed, contributor stats. Shows panel usage patterns across
+team.
+
+|Debugging Workbench |`+PanelDebuggingWorkbench+` |Inspector |Tea_Debug
+frontend with time-travel debugging, state inspection, and message
+replay. Steps through TEA update cycles.
+|===
+
+'''''
+
+=== Clade Assignments Summary
+
+==== New Panels by Clade Kind
+
+[width="100%",cols="46%,25%,29%",options="header",]
+|===
+|Clade Kind |Count |Panels
+|*Scanner* |6 |UnitTestRunner, FunctionalTester, RegressionGuard,
+LoadTester, CompatibilityMatrix, CodeReview
+
+|*Viewer* |7 |PerformanceProfiler, SoakMonitor, ExploratoryWorkbench,
+BalanceAnalyser, GuardAiTuner, PlaytestRecorder, TeamDashboard
+
+|*Bridge* |9 |BetaFeedbackHub, TypingBridge, NeurosymBridge,
+AgenticBridge, AutomationBridge, DatabaseBridge, ProtocolBridge,
+ProofsBridge, ScriptingBridge
+
+|*Builder* |3 |GeneratorMode, ArchitectMode, DeviceNetworkDesigner
+
+|*Directive* |1 |MergeCoordinator
+
+|*Inspector* |1 |DebuggingWorkbench
+
+|*Loader* |1 |AssetManager
+
+|*Total* |*28* |
+|===
+
+==== Full Panel Count After Implementation
+
+[cols=",,,",options="header",]
+|===
+|Category |Existing |New |Total
+|All panels |48 |28 |*76*
+|Game-dev relevant |13 |28 |*41*
+|Game-dev supporting |10 |0 |*10*
+|General-purpose |25 |0 |*25*
+|===
+
+'''''
+
+=== Clade Kind Coverage
+
+The existing 13 clade kinds cover all 28 proposed panels. *No new clade
+kind is needed.*
+
+[cols=",,,,",options="header",]
+|===
+|Tag |Clade Kind |Existing Uses |New Uses |Total
+|1 |Viewer |12 |7 |19
+|2 |Builder |8 |3 |11
+|3 |Scanner |5 |6 |11
+|4 |Service |7 |0 |7
+|5 |Terminal |3 |0 |3
+|6 |Bridge |2 |9 |11
+|7 |Database |1 |0 |1
+|8 |AI |1 |0 |1
+|9 |Directive |2 |1 |3
+|10 |Inspector |0 |1 |1
+|11 |Meta |2 |0 |2
+|12 |Loader |0 |1 |1
+|13 |Config |0 |0 |0
+|===
+
+*Note:* Inspector (tag 10) and Loader (tag 12) are used for the first
+time by new panels. AssetManager is assigned Loader because its primary
+function is asset retrieval and indexing rather than asset creation. If
+asset creation becomes its dominant use case, reclassify to Builder.
+
+'''''
+
+=== Implementation Priority
+
+==== Phase 1 — Immediate (Game dev panels, highest priority)
+
+These are required before IDApTIK can move beyond prototype-level
+tooling.
+
+*Testing panels (10):*
+
+[cols=",,",options="header",]
+|===
+|Panel |Depends On |Estimated Effort
+|`+PanelUnitTestRunner+` |ReScript test framework |Medium
+|`+PanelFunctionalTester+` |Game workflow API |Medium
+|`+PanelRegressionGuard+` |Snapshot infrastructure |Medium
+|`+PanelPerformanceProfiler+` |PixiJS metrics hooks |High
+|`+PanelLoadTester+` |Phoenix channel API |High
+|`+PanelSoakMonitor+` |Long-running process support |Medium
+|`+PanelCompatibilityMatrix+` |Playwright MCP |High
+|`+PanelExploratoryWorkbench+` |Game session recording |Medium
+|`+PanelBetaFeedbackHub+` |Feedback-o-tron API |Low
+|`+PanelBalanceAnalyser+` |Game state statistics API |High
+|===
+
+*Bridge panels (8):*
+
+[cols=",,",options="header",]
+|===
+|Panel |Depends On |Estimated Effort
+|`+PanelTypingBridge+` |PanelTypeLL service API |Medium
+|`+PanelNeurosymBridge+` |PanelEchidna service API |High
+|`+PanelAgenticBridge+` |PanelAi service API |Medium
+|`+PanelAutomationBridge+` |PanelAutomationRouter API |Low
+|`+PanelDatabaseBridge+` |PanelDatabases / VeriSimDB |Medium
+|`+PanelProtocolBridge+` |Phoenix channel introspection |High
+|`+PanelProofsBridge+` |proven repo + ECHIDNA |High
+|`+PanelScriptingBridge+` |PanelVmInspector + VM API |Medium
+|===
+
+*Core game panels (2):*
+
+[cols=",,",options="header",]
+|===
+|Panel |Depends On |Estimated Effort
+|`+PanelGeneratorMode+` |Level constraint schema |High
+|`+PanelArchitectMode+` |PixiJS editor framework |High
+|===
+
+==== Phase 2 — Next
+
+[cols=",,",options="header",]
+|===
+|Panel |Depends On |Estimated Effort
+|`+PanelGuardAiTuner+` |Guard AI API |Medium
+|`+PanelDeviceNetworkDesigner+` |Device graph model |Medium
+|`+PanelAssetManager+` |Asset pipeline |Medium
+|`+PanelPlaytestRecorder+` |Session recording infra |Medium
+|`+PanelDebuggingWorkbench+` |Tea_Debug protocol |High
+|===
+
+==== Phase 3 — Later
+
+[cols=",,",options="header",]
+|===
+|Panel |Depends On |Estimated Effort
+|`+PanelCodeReview+` |GitHub/GitLab MCP |Medium
+|`+PanelMergeCoordinator+` |Git branch API |Medium
+|`+PanelTeamDashboard+` |Activity tracking |Low
+|===
+
+'''''
+
+=== Notes
+
+* *Panel naming:* All panel IDs use the `+Panel+` prefix per PanLL
+convention in `+PanelRegistry.res+`.
+* *L/N/W pattern:* Bridge panels follow the Logic/Neurosymbolic/Widget
+triple established in the PanLL architecture. Each bridge panel exposes
+three sub-panels (L, N, W) that can be arranged independently in the
+workspace.
+* *Clade kind assignment:* Based on primary function. Some panels have
+secondary roles (e.g., AssetManager is Loader but has Builder aspects).
+The primary clade determines placement in the clade browser.
+* *No new clade kinds:* The existing 13 kinds (Viewer, Builder, Scanner,
+Service, Terminal, Bridge, Database, AI, Directive, Inspector, Meta,
+Loader, Config) are sufficient. Inspector and Loader see their first use
+with these new panels.
