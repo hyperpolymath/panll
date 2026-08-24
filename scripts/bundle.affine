@@ -1,4 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
+// Ported via Harvard Engine mechanical processor
+
+module bundle;
+
+// TODO: Complete semantic implementation
+
+/* === ORIGINAL TYPESCRIPT CONTEXT ===
+// SPDX-License-Identifier: MPL-2.0
 // esbuild bundler for PanLL — resolves bare npm specifiers that WebKitGTK
 // cannot handle via import maps.
 //
@@ -31,3 +39,5 @@ if (watch) {
   await ctx.rebuild();
   await ctx.dispose();
 }
+
+==================================== */
