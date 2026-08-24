@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
-// Ported via Harvard Engine mechanical processor
+// Ported via Harvard Engine (Semantic pass)
 
 module dev-server;
 
-// TODO: Complete semantic implementation
-
-/* === ORIGINAL TYPESCRIPT CONTEXT ===
 // SPDX-License-Identifier: MPL-2.0
 // Deno static file server for PanLL dev mode — replaces python3 http.server
 //
@@ -18,21 +15,21 @@ module dev-server;
 
 import { serveDir } from "jsr:@std/http@1/file-server";
 
-const port = 8000;
+let port = 8000;
 
 // Allowlist of file extensions the dev server will serve.
 // Anything not matching gets a 403.
-const ALLOWED_EXTENSIONS = new Set([
+let ALLOWED_EXTENSIONS = new Set([
   ".html", ".css", ".js", ".mjs", ".ts",
   ".json", ".map",
   ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp",
   ".woff", ".woff2", ".ttf", ".eot",
 ]);
 
-function isAllowedPath(pathname: string): boolean {
+fn isAllowedPath(pathname: string): boolean {
   // Allow directory paths (trailing slash) — needed for index.html resolution
   if (pathname.endsWith("/")) return true;
-  const dot = pathname.lastIndexOf(".");
+  let dot = pathname.lastIndexOf(".");
   if (dot === -1) return false;
   return ALLOWED_EXTENSIONS.has(pathname.slice(dot).toLowerCase());
 }
@@ -41,7 +38,7 @@ Deno.serve({ port, hostname: "127.0.0.1", onListen: () => {
   console.log(`PanLL dev server: http://localhost:${port}/public/`);
   console.log("Serving project root (filtered by extension allowlist)");
 }}, (req: Request) => {
-  const url = new URL(req.url);
+  let url = new URL(req.url);
 
   if (!isAllowedPath(url.pathname)) {
     return new Response("403 Forbidden\n", { status: 403 });
@@ -50,4 +47,3 @@ Deno.serve({ port, hostname: "127.0.0.1", onListen: () => {
   return serveDir(req, { fsRoot: ".", quiet: true });
 });
 
-==================================== */

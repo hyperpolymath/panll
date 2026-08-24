@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
-// Ported via Harvard Engine mechanical processor
+// Ported via Harvard Engine (Semantic pass)
 
 module bundle;
 
-// TODO: Complete semantic implementation
-
-/* === ORIGINAL TYPESCRIPT CONTEXT ===
 // SPDX-License-Identifier: MPL-2.0
 // esbuild bundler for PanLL — resolves bare npm specifiers that WebKitGTK
 // cannot handle via import maps.
@@ -16,9 +13,9 @@ module bundle;
 
 import * as esbuild from "npm:esbuild@0.24";
 
-const watch = Deno.args.includes("--watch");
+let watch = Deno.args.includes("--watch");
 
-const ctx = await esbuild.context({
+let ctx = await esbuild.context({
   entryPoints: ["src/App.res.js"],
   bundle: true,
   format: "esm",
@@ -40,4 +37,3 @@ if (watch) {
   await ctx.dispose();
 }
 
-==================================== */

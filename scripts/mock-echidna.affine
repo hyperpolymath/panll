@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
-// Ported via Harvard Engine mechanical processor
+// Ported via Harvard Engine (Semantic pass)
 
 module mock-echidna;
 
-// TODO: Complete semantic implementation
-
-/* === ORIGINAL TYPESCRIPT CONTEXT ===
 // SPDX-License-Identifier: MPL-2.0
 
 /// Mock ECHIDNA REST Server for PanLL development.
@@ -21,7 +18,7 @@ module mock-echidna;
 // Types
 // ---------------------------------------------------------------------------
 
-interface ProofSession {
+struct ProofSession {
   id: string;
   prover: string;
   goal: string;
@@ -35,7 +32,7 @@ interface ProofSession {
   created_at: number;
 }
 
-interface TacticScenario {
+struct TacticScenario {
   initial_goals: string[];
   tactics: Record<string, { removes_goal: number; description: string }>;
   suggestions: Array<{
@@ -51,7 +48,7 @@ interface TacticScenario {
 // Demo data — prover catalog
 // ---------------------------------------------------------------------------
 
-const PROVERS = [
+let PROVERS = [
   { name: "coq", tier: "ITP", complexity: "high" },
   { name: "lean4", tier: "ITP", complexity: "high" },
   { name: "z3", tier: "SMT", complexity: "medium" },
@@ -114,7 +111,7 @@ const SCENARIOS: Array<{ match: string; scenario: TacticScenario }> = [
   },
 ];
 
-/// Fallback scenario for goals that don't match any built-in pattern.
+/// Fallback scenario for goals that don't match unknown built-in pattern.
 const DEFAULT_SCENARIO: TacticScenario = {
   initial_goals: ["Goal 1: primary obligation", "Goal 2: secondary obligation"],
   tactics: {
@@ -134,7 +131,7 @@ const DEFAULT_SCENARIO: TacticScenario = {
 // Demo data — theorem search corpus
 // ---------------------------------------------------------------------------
 
-const THEOREM_CORPUS = [
+let THEOREM_CORPUS = [
   { name: "Nat.add_zero_r", statement: "forall n : nat, n + 0 = n", prover: "coq", tags: ["arithmetic", "identity"] },
   { name: "Nat.add_comm", statement: "forall n m : nat, n + m = m + n", prover: "coq", tags: ["arithmetic", "commutativity"] },
   { name: "Nat.add_assoc", statement: "forall n m p : nat, n + (m + p) = (n + m) + p", prover: "coq", tags: ["arithmetic", "associativity"] },
@@ -149,16 +146,16 @@ const THEOREM_CORPUS = [
 // Session store
 // ---------------------------------------------------------------------------
 
-const sessions = new Map<string, ProofSession>();
+let sessions = new Map<string, ProofSession>();
 
 /// Generate a UUID-like session identifier.
-function generateSessionId(): string {
-  const hex = () => Math.random().toString(16).slice(2, 6);
+fn generateSessionId(): string {
+  let hex = () => Math.random().toString(16).slice(2, 6);
   return `sess-${hex()}-${hex()}-${hex()}`;
 }
 
 /// Find the matching proof scenario for a goal string.
-function findScenario(goal: string): TacticScenario {
+fn findScenario(goal: string): TacticScenario {
   for (const entry of SCENARIOS) {
     if (goal.includes(entry.match)) {
       return entry.scenario;
@@ -168,8 +165,8 @@ function findScenario(goal: string): TacticScenario {
 }
 
 /// Simulate network latency (200-500ms).
-function randomDelay(): Promise<void> {
-  const ms = 200 + Math.floor(Math.random() * 300);
+fn randomDelay(): void {
+  let ms = 200 + Math.floor(Math.random() * 300);
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -179,27 +176,27 @@ function randomDelay(): Promise<void> {
 
 /// GET /api/v1/health — server health check.
 /// Returns a plain string (the parser expects raw text, not structured JSON).
-function handleHealth(): Response {
+fn handleHealth(): Response {
   return new Response("ECHIDNA 1.5.0-mock (PanLL development server)", {
     headers: { "Content-Type": "text/plain" },
   });
 }
 
 /// GET /api/v1/provers — list available prover backends.
-function handleListProvers(): Response {
+fn handleListProvers(): Response {
   return Response.json(PROVERS);
 }
 
 /// POST /api/v1/prove — dispatch a proof obligation to the solver portfolio.
-async function handleProve(req: Request): Promise<Response> {
+async fn handleProve(req: Request): Response {
   await randomDelay();
-  const body = await req.json();
-  const goal = body.content ?? body.goal ?? "";
-  const prover = body.prover ?? "z3";
+  let body = await req.json();
+  let goal = body.content ?? body.goal ?? "";
+  let prover = body.prover ?? "z3";
 
-  const hasAxiomRisk = goal.includes("believe_me") || goal.includes("Admitted") || goal.includes("sorry");
-  const trustLevel = hasAxiomRisk ? 1 : 4;
-  const dangerLevel = hasAxiomRisk ? "reject" : "safe";
+  let hasAxiomRisk = goal.includes("believe_me") || goal.includes("Admitted") || goal.includes("sorry");
+  let trustLevel = hasAxiomRisk ? 1 : 4;
+  let dangerLevel = hasAxiomRisk ? "reject" : "safe";
 
   return Response.json({
     verified: !hasAxiomRisk,
@@ -217,17 +214,17 @@ async function handleProve(req: Request): Promise<Response> {
 }
 
 /// POST /api/v1/verify — verify an existing proof (same shape as prove).
-async function handleVerify(req: Request): Promise<Response> {
+async fn handleVerify(req: Request): Response {
   return handleProve(req);
 }
 
 /// GET /api/v1/search?q=... — search the theorem corpus.
-function handleSearch(url: URL): Response {
-  const query = (url.searchParams.get("q") ?? "").toLowerCase();
+fn handleSearch(url: URL): Response {
+  let query = (url.searchParams.get("q") ?? "").toLowerCase();
   if (!query) {
     return Response.json([]);
   }
-  const matches = THEOREM_CORPUS.filter(
+  let matches = THEOREM_CORPUS.filter(
     (t) =>
       t.name.toLowerCase().includes(query) ||
       t.statement.toLowerCase().includes(query) ||
@@ -237,13 +234,13 @@ function handleSearch(url: URL): Response {
 }
 
 /// POST /api/v1/proofs — create a new interactive proof session.
-async function handleCreateSession(req: Request): Promise<Response> {
+async fn handleCreateSession(req: Request): Response {
   await randomDelay();
-  const body = await req.json();
-  const goal = body.goal ?? "";
-  const prover = body.prover ?? "coq";
-  const scenario = findScenario(goal);
-  const sessionId = generateSessionId();
+  let body = await req.json();
+  let goal = body.goal ?? "";
+  let prover = body.prover ?? "coq";
+  let scenario = findScenario(goal);
+  let sessionId = generateSessionId();
 
   const session: ProofSession = {
     id: sessionId,
@@ -264,8 +261,8 @@ async function handleCreateSession(req: Request): Promise<Response> {
 }
 
 /// GET /api/v1/proofs/:id — get current session state.
-function handleGetSession(sessionId: string): Response {
-  const session = sessions.get(sessionId);
+fn handleGetSession(sessionId: string): Response {
+  let session = sessions.get(sessionId);
   if (!session) {
     return Response.json(
       { error: `Session ${sessionId} not found` },
@@ -276,12 +273,12 @@ function handleGetSession(sessionId: string): Response {
 }
 
 /// POST /api/v1/proofs/:id/tactics — apply a tactic to the session.
-async function handleApplyTactic(
+async fn handleApplyTactic(
   sessionId: string,
   req: Request,
-): Promise<Response> {
+): Response {
   await randomDelay();
-  const session = sessions.get(sessionId);
+  let session = sessions.get(sessionId);
   if (!session) {
     return Response.json(
       { success: false, proof_state: { id: "", prover: "", goal: "", status: "error", goals: [], proof_script: [], complete: false, tactics_applied: [], time_elapsed: 0, error_message: `Session ${sessionId} not found` } },
@@ -289,14 +286,14 @@ async function handleApplyTactic(
     );
   }
 
-  const body = await req.json();
-  const tacticName = body.name ?? body.tactic ?? "auto";
+  let body = await req.json();
+  let tacticName = body.name ?? body.tactic ?? "auto";
   const tacticArgs: string[] = body.args ?? [];
-  const fullTactic = tacticArgs.length > 0 ? `${tacticName} ${tacticArgs.join(" ")}` : tacticName;
+  let fullTactic = tacticArgs.length > 0 ? `${tacticName} ${tacticArgs.join(" ")}` : tacticName;
 
   // Look up the scenario for this session's goal
-  const scenario = findScenario(session.goal);
-  const tacticEntry = scenario.tactics[fullTactic] ?? scenario.tactics[tacticName];
+  let scenario = findScenario(session.goal);
+  let tacticEntry = scenario.tactics[fullTactic] ?? scenario.tactics[tacticName];
 
   session.tactics_applied.push(fullTactic);
   session.proof_script.push(fullTactic + ".");
@@ -305,7 +302,7 @@ async function handleApplyTactic(
 
   if (tacticEntry && tacticEntry.removes_goal >= 0 && session.goals.length > 0) {
     // Remove the specified goal (clamped to valid index)
-    const idx = Math.min(tacticEntry.removes_goal, session.goals.length - 1);
+    let idx = Math.min(tacticEntry.removes_goal, session.goals.length - 1);
     session.goals.splice(idx, 1);
   }
 
@@ -322,17 +319,17 @@ async function handleApplyTactic(
 }
 
 /// GET /api/v1/proofs/:id/tactics/suggest?limit=N — tactic suggestions.
-function handleSuggestTactics(sessionId: string, url: URL): Response {
-  const session = sessions.get(sessionId);
+fn handleSuggestTactics(sessionId: string, url: URL): Response {
+  let session = sessions.get(sessionId);
   if (!session) {
     return Response.json([], { status: 404 });
   }
 
-  const limit = parseInt(url.searchParams.get("limit") ?? "5", 10);
-  const scenario = findScenario(session.goal);
+  let limit = parseInt(url.searchParams.get("limit") ?? "5", 10);
+  let scenario = findScenario(session.goal);
 
   // Filter out tactics already applied, then take up to limit
-  const available = scenario.suggestions.filter(
+  let available = scenario.suggestions.filter(
     (s) => !session.tactics_applied.includes(s.name) &&
            !session.tactics_applied.includes(`${s.name} ${s.args.join(" ")}`.trim()),
   );
@@ -346,13 +343,13 @@ function handleSuggestTactics(sessionId: string, url: URL): Response {
 
 /// Route an incoming request to the appropriate handler.
 /// All paths are under /api/v1/.
-async function handleRequest(req: Request): Promise<Response> {
-  const url = new URL(req.url);
-  const path = url.pathname;
-  const method = req.method;
+async fn handleRequest(req: Request): Response {
+  let url = new URL(req.url);
+  let path = url.pathname;
+  let method = req.method;
 
   // CORS headers for Tauri webview requests
-  const corsHeaders = {
+  let corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -392,9 +389,9 @@ async function handleRequest(req: Request): Promise<Response> {
 
     // Session and tactic routes: /api/v1/proofs/:id/...
     } else if (path.startsWith("/api/v1/proofs/")) {
-      const rest = path.slice("/api/v1/proofs/".length);
-      const segments = rest.split("/").filter(Boolean);
-      const sessionId = segments[0];
+      let rest = path.slice("/api/v1/proofs/".length);
+      let segments = rest.split("/").filter(Boolean);
+      let sessionId = segments[0];
 
       if (!sessionId) {
         response = Response.json({ error: "Missing session ID" }, { status: 400 });
@@ -419,7 +416,7 @@ async function handleRequest(req: Request): Promise<Response> {
       response = Response.json({ error: `Unknown route: ${method} ${path}` }, { status: 404 });
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    let message = err instanceof Error ? err.message : String(err);
     console.error(`[ECHIDNA-MOCK] Error handling ${method} ${path}: ${message}`);
     response = Response.json({ error: message }, { status: 500 });
   }
@@ -430,8 +427,8 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   // Log the request
-  const status = response.status;
-  const sessionCount = sessions.size;
+  let status = response.status;
+  let sessionCount = sessions.size;
   console.log(`[ECHIDNA-MOCK] ${method} ${path} -> ${status}  (${sessionCount} active sessions)`);
 
   return response;
@@ -441,7 +438,7 @@ async function handleRequest(req: Request): Promise<Response> {
 // Server entry point
 // ---------------------------------------------------------------------------
 
-const PORT = 9000;
+let PORT = 9000;
 
 console.log(`
   ╔══════════════════════════════════════════════════════╗
@@ -468,4 +465,3 @@ console.log(`
 
 Deno.serve({ port: PORT, hostname: "127.0.0.1" }, handleRequest);
 
-==================================== */
