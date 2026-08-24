@@ -1,0 +1,604 @@
+== DESIGN: Prover-Directed SLM Heutagogy — Learning to Reason from Formal Verification
+
+*Date:* 2026-02-28 *Repo:* panll *Author:* Jonathan D.A. Jewell
+*Status:* Research design (theoretical + practical exploration)
+
+=== Context
+
+PanLL’s ECHIDNA integration provides a formal proof engine that can
+unambiguously judge whether a proof step is correct. Most ML training
+signals are noisy — human labels disagree, reward functions are
+approximate, loss landscapes are deceptive. But a proof either
+type-checks or it doesn’t. This is a _perfect_ training signal.
+
+The question is: can we use this perfect signal to teach an SLM to
+reason better, not just about proofs, but about reasoning itself?
+
+=== Design Questions (from session dialogue)
+
+____
+"`Imagine that I decided to use my SLM with the proofer… could I get the
+proofer to actually train the SLM by SLM-directed heutagogy? Does this
+exist, and does what I am saying make sense?`"
+____
+
+____
+"`It would literally learn from the logic and the proofs the rights and
+wrongs of its reasoning, in the same way we would see it.`"
+____
+
+____
+"`As an SLM it would not be '`state locked`' as an entity. If we can
+find a way to tether part of it, in maybe a two layer system, could we
+additionally get it to develop its understanding overnight, etc. for
+particular domains?`"
+____
+
+____
+"`Perhaps with support from things like DeepProbLog.`"
+____
+
+'''''
+
+=== Why This Works (The Core Insight)
+
+The user’s insight is precise: *formal verification provides a lossless
+supervision signal for training a reasoning system.*
+
+Compare to other ML training regimes:
+
+[width="100%",cols="36%,32%,32%",options="header",]
+|===
+|Training regime |Signal quality |Signal source
+|Human labelling (RLHF) |Noisy, subjective, expensive |Annotators
+disagree
+
+|Self-supervised (next token) |Abundant but indirect |Correlation ≠
+reasoning
+
+|Reward models |Approximate, can be gamed |Learned proxy of human
+preference
+
+|Unit tests (code gen) |Binary but incomplete |Tests don’t cover all
+cases
+
+|*Formal proof checking* |*Perfect, complete, unforgeable*
+|*Mathematical truth*
+|===
+
+When the SLM suggests `+induction n+` and Coq says "`proof complete`",
+that is an absolute ground truth. When it suggests `+ring+` and Coq says
+"`this tactic failed`", that is an absolute ground truth. There is no
+label noise. There is no reward hacking. The prover is an incorruptible
+teacher.
+
+This is the cleanest reinforcement signal in all of machine learning.
+
+'''''
+
+=== What Exists Today
+
+==== Close Predecessors
+
+*AlphaProof (DeepMind, 2024):* - Reinforcement learning + formal
+verification (Lean 4) for competition mathematics - Solved 4/6 IMO 2024
+problems at silver medal level - Uses a large model, not an SLM; not
+self-directed - Proves the concept: prover-as-training-signal works at
+the frontier
+
+*HTPS — Hyper-Tree Proof Search (Meta, 2022):* - Online learning during
+proof search — the model improves as it searches - Each
+successful/failed proof branch updates the policy - Closest to
+"`learning from the prover in real-time`" - But not self-directed; fixed
+curriculum
+
+*ReProver / LeanDojo (2023):* - Retrieval-augmented theorem proving in
+Lean - Trains on Mathlib proofs, retrieves relevant premises - Shows
+that small specialised models can outperform large general ones on
+proofs
+
+*Draft, Sketch, Prove (2023):* - LLM drafts informal proof → translator
+converts to formal → verifier checks - Failed proofs are discarded, not
+learned from - Missing the heutagogic loop
+
+*LEGO-Prover (2024):* - LLM grows a verified lemma library over time -
+Each proved lemma becomes available for future proofs - Closest to
+"`developing understanding over time`" - But the model weights don’t
+update; only the lemma library grows
+
+==== Neural-Symbolic Integration
+
+*DeepProbLog (KU Leuven, 2018-present):* - Integrates neural networks
+with ProbLog (probabilistic logic programming) - Neural predicates:
+neural network outputs become logic atoms - Training: backpropagates
+through the logic program into the neural network - *Key capability:*
+The logic constrains what the neural network can learn - Directly
+relevant: could provide the "`tethered`" logical layer
+
+*NeurASP (2020):* - Answer Set Programming + neural networks - Logic
+rules constrain neural network training - Can learn from logical
+inconsistencies (not just proof success/failure)
+
+*Logic Tensor Networks (LTN, 2022):* - First-order logic with
+real-valued semantics - Logical axioms become differentiable loss
+functions - "`Satisfying the axioms`" = training the neural network
+
+*Scallop (2023):* - Differentiable Datalog — backpropagates through
+logical reasoning - Provenance tracking enables gradient computation
+through logical inference - Could provide the "`how did this proof step
+contribute?`" signal
+
+==== What Does NOT Exist (The Gap)
+
+No system currently combines all of these:
+
+[arabic]
+. ✅ Prover as training signal (AlphaProof, HTPS)
+. ✅ Small model that continues training (LoRA fine-tuning is routine)
+. ✅ Neural-symbolic integration (DeepProbLog, NeurASP, LTN)
+. ❌ *Self-directed curriculum* (the SLM chooses what to learn next)
+. ❌ *Two-layer tethered architecture* (stable reasoning + plastic
+adaptation)
+. ❌ *Overnight autonomous training* against a prover
+. ❌ *Domain-specific specialisation* that accumulates across sessions
+
+The user’s proposal fills this gap. It is novel but entirely feasible
+given existing components.
+
+'''''
+
+=== Architecture: Two-Layer Tethered SLM
+
+==== The Problem with Vanilla Fine-Tuning
+
+If you fine-tune an SLM on proof data naively, you get catastrophic
+forgetting — it learns new tactics but forgets how to parse goals. If
+you freeze it entirely, it can’t learn at all. The user’s intuition
+about a "`two-layer system where part is tethered`" maps precisely to a
+known solution.
+
+==== Complementary Learning Systems (CLS) Architecture
+
+Inspired by how the human brain learns: the hippocampus learns quickly
+(one-shot, today’s proofs) while the neocortex consolidates slowly
+(overnight, generalised patterns). This maps to:
+
+....
+┌─────────────────────────────────────────────────────────┐
+│                    SLM Architecture                     │
+│                                                         │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Layer 1: TETHERED BASE (frozen weights)          │  │
+│  │                                                   │  │
+│  │  • Pre-trained language understanding             │  │
+│  │  • Syntax parsing for Coq/Lean/SMT-LIB/etc.      │  │
+│  │  • Basic logical reasoning patterns               │  │
+│  │  • Natural language comprehension                 │  │
+│  │                                                   │  │
+│  │  This layer NEVER changes. It provides stable     │  │
+│  │  foundations that domain learning builds upon.     │  │
+│  │                                                   │  │
+│  │  Implementation: frozen base model weights        │  │
+│  └───────────────────────────┬───────────────────────┘  │
+│                              │                          │
+│  ┌───────────────────────────▼───────────────────────┐  │
+│  │  Layer 2: PLASTIC ADAPTER (trainable LoRA)        │  │
+│  │                                                   │  │
+│  │  • Domain-specific tactic preferences             │  │
+│  │  • Proof pattern recognition for THIS domain      │  │
+│  │  • Learned heuristics from past proof attempts    │  │
+│  │  • User-specific style adaptation                 │  │
+│  │                                                   │  │
+│  │  This layer updates continuously from proof       │  │
+│  │  feedback. Multiple adapters can coexist for      │  │
+│  │  different domains (one for algebra, one for      │  │
+│  │  protocol verification, one for type theory).     │  │
+│  │                                                   │  │
+│  │  Implementation: LoRA adapters (rank 8-16)        │  │
+│  │  Storage: ~10-50 MB per domain adapter            │  │
+│  └──────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+....
+
+*Why LoRA is the right mechanism:* - Adapter weights are small (10-50 MB
+vs. gigabytes for full model) - Multiple adapters can be swapped in/out
+for different domains - Training is fast (minutes, not hours) - The base
+model is never modified — stability is guaranteed - Well-understood,
+battle-tested technique
+
+==== The Heutagogic Loop
+
+Heutagogy = self-determined learning. The SLM doesn’t just learn from
+proofs it’s asked to do — it decides what to learn next, based on where
+it’s weakest.
+
+....
+┌──────────────────────────────────────────────────────────────┐
+│                   Heutagogic Training Loop                   │
+│                                                              │
+│   1. SLM examines its own performance history                │
+│      "I failed 7/10 induction proofs on lists but           │
+│       succeeded 9/10 on natural numbers"                     │
+│                                                              │
+│   2. SLM selects training curriculum                         │
+│      "I should practice list induction tonight"              │
+│      → Generates or selects proof goals from a library       │
+│                                                              │
+│   3. SLM attempts proofs against ECHIDNA                     │
+│      → Tries tactics on the selected goals                   │
+│      → ECHIDNA returns success/failure for each step         │
+│                                                              │
+│   4. SLM trains on results                                   │
+│      → Successful proof traces become positive examples      │
+│      → Failed attempts with prover diagnostics become        │
+│        negative examples with correction signal              │
+│                                                              │
+│   5. SLM evaluates improvement                               │
+│      → Re-attempts previously failed proofs                  │
+│      → If improved, moves to next weakness                   │
+│      → If stuck, escalates difficulty or tries new approach  │
+│                                                              │
+│   6. Loop continues until budget exhausted (time/compute)    │
+│      or target proficiency reached                           │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+....
+
+*The curriculum is self-directed because:* - The SLM tracks its own
+success/failure rates per tactic, per domain, per goal type - It
+prioritises areas where it’s weakest (exploration) or where small gains
+would unlock the most downstream proofs (exploitation) - It can generate
+its own training goals by mutating existing theorems (e.g., "`if I
+proved n + 0 = n, can I prove n * 1 = n?`") - It can request harder
+variants of goals it’s already mastered
+
+==== Overnight Training Protocol
+
+....
+┌──────────────────────────────────────────────────────────────┐
+│  OVERNIGHT TRAINING SCHEDULE (example)                       │
+│                                                              │
+│  22:00  SLM reviews today's proof sessions                   │
+│         → Identifies 12 failed tactic applications           │
+│         → Clusters failures by type (3 induction, 4 rewrite, │
+│           2 automation, 3 unfolding)                         │
+│                                                              │
+│  22:15  SLM generates training curriculum                    │
+│         → Selects 50 list induction goals from Mathlib       │
+│         → Selects 40 rewriting exercises                     │
+│         → Generates 20 novel goals by mutation               │
+│                                                              │
+│  22:30  Training loop begins                                 │
+│  -      SLM attempts goals → ECHIDNA validates               │
+│  05:30  → LoRA adapter weights updated after each batch      │
+│         → ~110 goals attempted, ~70 eventually proved        │
+│         → Progress logged to training journal                │
+│                                                              │
+│  05:30  Evaluation checkpoint                                │
+│         → Re-attempt today's 12 failures                     │
+│         → 8/12 now succeed (67% recovery rate)               │
+│         → Adapter saved as domain-v{N+1}                     │
+│                                                              │
+│  06:00  Training report ready for user                       │
+│         "Overnight: +15% on list induction,                  │
+│          +8% on rewriting, 2 goals still stuck               │
+│          (suggest manual inspection)"                        │
+└──────────────────────────────────────────────────────────────┘
+....
+
+*Resource budget:* An SLM (1-3B params) with LoRA training on a modern
+GPU uses ~4-8 GB VRAM and can process ~100 proof attempts per hour.
+Overnight (8 hours) = ~800 proof attempts, which is substantial
+curriculum coverage.
+
+*Without GPU:* CPU-only LoRA training is slower (~10-20 attempts/hour)
+but still useful for focused domain training. A Threadripper or M-series
+Mac can handle this comfortably overnight.
+
+'''''
+
+=== DeepProbLog Integration
+
+DeepProbLog provides something the pure LoRA approach doesn’t: *logical
+constraints on what the SLM can learn.*
+
+==== How DeepProbLog Fits
+
+....
+┌──────────────────────────────────────────────────────────┐
+│                                                          │
+│  ┌────────────┐                                          │
+│  │   SLM      │──── tactic prediction ────┐              │
+│  │  (neural)  │                           │              │
+│  └────────────┘                           ▼              │
+│       ▲                          ┌─────────────────┐     │
+│       │                          │  DeepProbLog    │     │
+│       │                          │  Logic Program  │     │
+│  gradient                        │                 │     │
+│  from logic                      │  • Type rules   │     │
+│       │                          │  • Tactic pre/  │     │
+│       │                          │    postconditions│    │
+│       │                          │  • Domain axioms │    │
+│       │                          └────────┬────────┘     │
+│       │                                   │              │
+│       └───────────────────────────────────┘              │
+│                                                          │
+│       Logic program constrains SLM training:             │
+│       "If goal is ∀-quantified, intro is always valid"   │
+│       "If goal is an equation, rewrite is relevant"      │
+│       "induction requires a recursive type"              │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+....
+
+*What DeepProbLog adds:*
+
+[arabic]
+. *Logical pre/postconditions as training constraints:* Instead of just
+"`this tactic succeeded/failed`", DeepProbLog encodes WHY a tactic is
+applicable. The gradient flows through the logical rules into the SLM,
+teaching it not just what works but the structure of why.
+. *Probabilistic reasoning about tactic choice:* DeepProbLog naturally
+handles uncertainty. "`induction is 80% likely to be the right tactic
+here`" is a probabilistic logic statement, not just a neural confidence
+score.
+. *Compositional learning:* Logical rules compose. If the SLM learns
+that "`intro works on ∀-goals`" and "`induction works on nat-typed
+variables`", it can compose these to predict "`intro then induction`" on
+"`∀ n : nat, …`" without having seen that specific combination.
+. *Explainability:* The logical program provides a human-readable
+explanation of why the SLM made a prediction. "`I chose induction
+because: (a) the goal contains a recursive type (nat), (b) the goal is
+universally quantified, (c) my experience with similar goals shows 87%
+success rate.`"
+
+==== ProbLog Rules (Example)
+
+[source,prolog]
+----
+% Neural predicate: SLM predicts tactic relevance
+nn(tactic_net, [GoalType, GoalShape, Context], Tactic) :: tactic_relevant(Goal, Tactic).
+
+% Logical constraints (these constrain what the SLM can learn)
+valid_tactic(Goal, intro) :-
+    goal_has_forall(Goal).
+
+valid_tactic(Goal, induction(Var)) :-
+    goal_has_forall(Goal),
+    variable_has_recursive_type(Var).
+
+valid_tactic(Goal, rewrite(Lemma)) :-
+    goal_is_equation(Goal),
+    lemma_matches_lhs(Lemma, Goal).
+
+% Combined: SLM prediction + logical validity
+suggested_tactic(Goal, Tactic) :-
+    tactic_relevant(Goal, Tactic),
+    valid_tactic(Goal, Tactic).
+
+% Training signal: prover confirms or denies
+proof_step_correct(Goal, Tactic) :-
+    suggested_tactic(Goal, Tactic),
+    echidna_validates(Goal, Tactic).
+----
+
+The key: `+tactic_relevant+` is a neural predicate (the SLM’s output),
+but `+valid_tactic+` is a logical constraint. DeepProbLog trains the SLM
+to satisfy BOTH — it must predict tactics that are both neurally
+relevant AND logically valid. This prevents the SLM from learning
+spurious correlations.
+
+'''''
+
+=== Risks and Mitigations
+
+[width="100%",cols="23%,35%,42%",options="header",]
+|===
+|Risk |Severity |Mitigation
+|SLM overfits to training domain |Medium |Multiple LoRA adapters per
+domain; regularly evaluate on out-of-domain goals
+
+|Catastrophic forgetting in adapter |Low |LoRA rank is small; forgetting
+is bounded. Periodic adapter checkpoints allow rollback
+
+|Overnight training runs up compute costs |Low |SLM is small (1-3B);
+LoRA training is efficient; runs on local hardware
+
+|SLM learns wrong generalisations from limited proofs |Medium
+|DeepProbLog’s logical constraints prevent logically invalid
+generalisations
+
+|Training loop diverges (gets worse, not better) |Medium |Evaluation
+checkpoints every N goals; auto-stop if accuracy drops below baseline
+
+|User trusts SLM too much after overnight improvement |Medium |Trust
+display always shows ECHIDNA’s verification, not SLM’s confidence; SLM
+is advisor, not oracle
+
+|Security: SLM training data leakage |Low |Training is local, no data
+leaves the machine; adapters can be encrypted at rest
+|===
+
+==== The Fundamental Safety Property
+
+*The prover is always the final authority.* No matter how much the SLM
+learns, its output is always validated against ECHIDNA before being
+presented to the user as correct. The SLM can become arbitrarily good at
+suggesting tactics, but it can never claim a proof is valid — only the
+prover can do that.
+
+This is structurally different from LLM code generation, where the
+model’s output is executed directly. Here, the model’s output is checked
+against mathematical truth before execution. The worst case of a
+badly-trained SLM is bad suggestions, not incorrect proofs.
+
+'''''
+
+=== Beyond Proofs: Reasoning Transfer
+
+The most speculative but most exciting possibility: *an SLM trained on
+formal proofs might reason better about everything.*
+
+Formal proofs teach: - *Logical structure:* Premises → conclusions, case
+analysis, contradiction - *Precision:* Every step must be justified; no
+hand-waving - *Abstraction:* Recognising when two problems have the same
+structure - *Strategy:* When to try induction vs. case split
+vs. automation
+
+These are not proof-specific skills. They are general reasoning skills.
+An SLM that has internalised "`when I see a recursive structure,
+consider induction`" from thousands of proof attempts may apply that
+pattern to non-proof reasoning: "`this data structure is recursive, so
+the algorithm should be recursive too.`"
+
+This is speculative but testable. A concrete experiment: train an SLM on
+10,000 Coq proofs overnight, then evaluate it on non-proof reasoning
+benchmarks (ARC, GSM8K, LogiQA). If scores improve, the proof training
+is teaching general reasoning. If scores don’t change, the learning is
+domain-specific (still valuable, just narrower).
+
+'''''
+
+=== Comparison to Existing Approaches
+
+[width="100%",cols="12%,^24%,^18%,^13%,^13%,^20%",options="header",]
+|===
+|System |Learns from proofs? |Self-directed? |Two-layer? |Overnight?
+|Neural-symbolic?
+|AlphaProof |Yes |No (fixed curriculum) |No |No (massive cluster) |No
+
+|HTPS |Yes (online) |No |No |No |No
+
+|ReProver |Yes (offline) |No |No |No |No
+
+|LEGO-Prover |Yes (library only) |Partially |No |No |No
+
+|DeepProbLog |Not proofs specifically |No |Partially |No |Yes
+
+|*PanLL SLM* |*Yes* |*Yes (heutagogy)* |*Yes (LoRA)* |*Yes* |*Yes
+(DeepProbLog)*
+|===
+
+Each component exists in isolation and is well-established. PanLL’s
+contribution is not invention but integration — pulling these into a
+single coherent workspace so the user doesn’t need 30 windows open. The
+combination is uncommon, but every individual piece is proven
+technology. The value is the unified experience, not any single
+component.
+
+'''''
+
+=== Implementation Phases
+
+==== Phase A: Proof Replay Training (batch, no heutagogy)
+
+* [ ] Collect proof traces from ECHIDNA sessions (successful and failed)
+* [ ] Format as SLM training data (goal, context, tactic, outcome)
+* [ ] LoRA fine-tune on collected traces
+* [ ] Evaluate: does the adapter improve tactic suggestion accuracy?
+
+==== Phase B: Online Learning (real-time, no self-direction)
+
+* [ ] After each ECHIDNA validation, update adapter weights
+* [ ] Implement replay buffer to prevent catastrophic forgetting
+* [ ] Checkpoint adapter after each session
+
+==== Phase C: Self-Directed Curriculum (heutagogy)
+
+* [ ] SLM tracks success/failure rates per tactic + domain
+* [ ] Curriculum selector: choose goals that target weakest areas
+* [ ] Goal mutation: generate new goals from proved theorems
+* [ ] Overnight training scheduler with evaluation checkpoints
+
+==== Phase D: DeepProbLog Integration
+
+* [ ] Define logical tactic preconditions in ProbLog
+* [ ] Wire SLM as neural predicate in DeepProbLog
+* [ ] Train through combined neural-symbolic pipeline
+* [ ] Evaluate: does logical constraint improve learning efficiency?
+
+==== Phase E: Multi-Domain Adapters
+
+* [ ] Separate LoRA adapters per domain (algebra, lists, protocols,
+types)
+* [ ] Adapter registry with metadata (domain, training history,
+accuracy)
+* [ ] Auto-select adapter based on current proof context
+* [ ] Cross-domain transfer experiments
+
+'''''
+
+=== Open Questions
+
+[arabic]
+. *Which SLM base model?* Candidates: Phi-3-mini (3.8B), Gemma-2-2B,
+Qwen2.5-1.5B, CodeGemma-2B. Need: good code understanding, small enough
+for local LoRA training, permissive license.
+. *How much proof data is needed for meaningful adapter improvement?*
+Hypothesis: 50-100 successful proofs per domain gives measurable
+improvement. Testable.
+. *Should the SLM train on the full proof trace or just tactic-outcome
+pairs?* Full traces give richer signal but are more expensive to
+process.
+. *Can the heutagogic curriculum be itself learned?* Meta-learning:
+train a small policy network that decides what the SLM should study
+next, based on improvement rates across domains.
+. *What is the right LoRA rank for proof domain adaptation?* Too low
+(2-4) may underfit; too high (32-64) may overfit. Likely sweet spot:
+8-16.
+. *How does this interact with PanLL’s trust display?* The trust level
+should distinguish "`SLM suggested this`" (advisory) from "`ECHIDNA
+verified this`" (ground truth). The SLM’s confidence and the prover’s
+verdict are independent signals.
+. *Is DeepProbLog the right neural-symbolic framework?* Alternatives:
+NeurASP (answer set programming), Scallop (differentiable Datalog), LTN
+(logic tensor networks). DeepProbLog has the best probabilistic
+semantics but Scallop may be faster for large-scale training.
+
+'''''
+
+=== References
+
+==== Theorem Proving with ML
+
+* Lample et al. (2022). "`HyperTree Proof Search for Neural Theorem
+Proving.`" NeurIPS.
+* Yang et al. (2023). "`LeanDojo: Theorem Proving with
+Retrieval-Augmented Language Models.`"
+* Jiang et al. (2023). "`Draft, Sketch, and Prove: Guiding Formal
+Theorem Provers with Informal Proofs.`"
+* Wang et al. (2024). "`LEGO-Prover: Neural Theorem Proving with Growing
+Libraries.`"
+* AlphaProof team (2024). "`AI achieves silver-medal standard solving
+International Mathematical Olympiad problems.`"
+
+==== Neural-Symbolic Learning
+
+* Manhaeve et al. (2018). "`DeepProbLog: Neural Probabilistic Logic
+Programming.`" NeurIPS.
+* Yang et al. (2020). "`NeurASP: Embracing Neural Networks into Answer
+Set Programming.`"
+* Li et al. (2023). "`Scallop: A Language for Neurosymbolic
+Programming.`" PLDI.
+* Badreddine et al. (2022). "`Logic Tensor Networks.`" Artificial
+Intelligence.
+
+==== Continual Learning
+
+* Hu et al. (2022). "`LoRA: Low-Rank Adaptation of Large Language
+Models.`" ICLR.
+* Kumaran et al. (2016). "`What Learning Systems do Intelligent Agents
+Need? Complementary Learning Systems Theory Updated.`" Trends in
+Cognitive Sciences.
+
+==== Self-Directed Learning
+
+* Hase & Kenyon (2000). "`From Andragogy to Heutagogy.`" UltiBASE.
+* Schmidhuber (1991). "`Curious Model-Building Control Systems.`" IJCNN.
+
+==== Companion Design Documents
+
+* `+DESIGN-2026-02-28-echidna-proof-ux.md+` — Proof UX and SLM advisory
+role
+* `+DESIGN-2026-02-28-discipline-layouts.md+` — Domain-specific layouts
+* `+DESIGN-2026-02-28-collaboration.md+` — Collaborative proof sessions

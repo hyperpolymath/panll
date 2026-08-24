@@ -1,0 +1,69 @@
+== Quickstart
+
+Get up and running in 60 seconds.
+
+=== Prerequisites
+
+* https://git-scm.com/[Git] 2.40+
+* https://github.com/casey/just[just] (command runner)
+* Your language toolchain (see `+Justfile+` for details)
+
+=== From Template (New Project)
+
+[source,bash]
+----
+git clone https://github.com/hyperpolymath/rsr-template-repo my-project
+cd my-project
+rm -rf .git && git init -b main
+just init       # interactive placeholder replacement
+----
+
+=== Clone and Setup (Existing Project)
+
+[source,bash]
+----
+git clone https://github.com/hyperpolymath/panll.git
+cd panll
+just deps
+----
+
+=== Build and Test
+
+[source,bash]
+----
+just build
+just test
+----
+
+=== Verify Everything Works
+
+[source,bash]
+----
+just check
+----
+
+=== Project Structure
+
+....
+src/         # Source code
+tests/       # Test suite
+benches/     # Benchmarks
+docs/        # Documentation
+.github/     # CI/CD workflows
+....
+
+=== What Next?
+
+* Browse the link:.[docs/] for architecture and conventions
+* Run `+just --list+` to see all available commands
+* Read link:../CONTRIBUTING.md[CONTRIBUTING.md] when you are ready to
+contribute
+
+=== Troubleshooting
+
+If `+just deps+` fails, ensure your toolchain version matches the
+project requirements listed in the `+Justfile+` or
+`+.machine_readable/ECOSYSTEM.a2ml+`.
+
+Open a https://github.com/hyperpolymath/panll/discussions[Discussion] if
+you get stuck.

@@ -1,0 +1,358 @@
+== VeriSimDB Integration API Reference
+
+=== Overview
+
+PanLL integrates with VeriSimDB for persistent storage of identity
+snapshots and other state data. This document describes the available
+API endpoints and their usage.
+
+=== Base Configuration
+
+* *Default VeriSimDB URL*: `+http://localhost:8080/api/v1+`
+* *Environment Variable*: `+VERISIMDB_URL+` (override default)
+* *Timeout*: 10 seconds for all operations
+
+=== Identity Management Endpoints
+
+==== Save Identity Snapshot
+
+*Command*: `+verisim_save_state+`
+
+*Parameters*:
+
+[source,json]
+----
+{
+  "key": "string",      // Snapshot ID (UUID)
+  "state": "string"     // JSON string of IdentitySnapshot
+}
+----
+
+*Returns*:
+
+[source,json]
+----
+{
+  "ok": true,
+  "result": "string"    // Success message or VeriSimDB response
+}
+----
+
+*Example*:
+
+[source,javascript]
+----
+const result = await invoke("verisim_save_state", {
+  key: "abc123-def456",
+  state: JSON.stringify(snapshotData)
+});
+----
+
+==== Load Identity Snapshot
+
+*Command*: `+verisim_load_state+`
+
+*Parameters*:
+
+[source,json]
+----
+{
+  "key": "string"       // Snapshot ID to load
+}
+----
+
+*Returns*:
+
+[source,json]
+----
+{
+  "ok": true,
+  "result": {            // Parsed JSON object
+    "id": "string",
+    "name": "string",
+    "created_at": "string",
+    "panll_state": "string",
+    "settings": "string",
+    "service_urls": "string"
+  }
+}
+----
+
+*Example*:
+
+[source,javascript]
+----
+const snapshot = await invoke("verisim_load_state", {
+  key: "abc123-def456"
+});
+----
+
+=== VeriSimDB Direct Access
+
+==== Health Check
+
+*Command*: `+verisim_health+`
+
+*Parameters*: None
+
+*Returns*:
+
+[source,json]
+----
+{
+  "ok": true,
+  "result": "string"    // Health status JSON
+}
+----
+
+==== Execute VCL Query
+
+*Command*: `+verisim_vcl_execute+`
+
+*Parameters*:
+
+[source,json]
+----
+{
+  "vcl": "string"       // VCL query string
+}
+----
+
+*Returns*:
+
+[source,json]
+----
+{
+  "ok": true,
+  "result": "string"    // Query results JSON
+}
+----
+
+==== List Octads
+
+*Command*: `+verisim_octads_list+`
+
+*Parameters*:
+
+[source,json]
+----
+{
+  "limit": number,      // Max results (default: 100)
+  "offset": number       // Pagination offset (default: 0)
+}
+----
+
+*Returns*:
+
+[source,json]
+----
+{
+  "ok": true,
+  "result": "string"    // Octads list JSON
+}
+----
+
+==== Get Drift Entity
+
+*Command*: `+verisim_drift_entity+`
+
+*Parameters*:
+
+[source,json]
+----
+{
+  "entity_id": "string" // Entity ID to query
+}
+----
+
+*Returns*:
+
+[source,json]
+----
+{
+  "ok": true,
+  "result": "string"    // Entity data JSON
+}
+----
+
+==== Trigger Normalizer
+
+*Command*: `+verisim_normalizer_trigger+`
+
+*Parameters*:
+
+[source,json]
+----
+{
+  "entity_id": "string" // Entity ID to normalize
+}
+----
+
+*Returns*:
+
+[source,json]
+----
+{
+  "ok": true,
+  "result": "string"    // Normalization result
+}
+----
+
+==== Get Octads for Entity
+
+*Command*: `+verisim_octads_get+`
+
+*Parameters*:
+
+[source,json]
+----
+{
+  "entity_id": "string" // Entity ID
+}
+----
+
+*Returns*:
+
+[source,json]
+----
+{
+  "ok": true,
+  "result": "string"    // Octads data JSON
+}
+----
+
+=== Orchestrator Endpoints
+
+==== Orchestrator Status
+
+*Command*: `+verisim_orch_status+`
+
+*Parameters*: None
+
+*Returns*:
+
+[source,json]
+----
+{
+  "ok": true,
+  "result": "string"    // Orchestrator status JSON
+}
+----
+
+=== Error Handling
+
+All commands return a consistent error format:
+
+[source,json]
+----
+{
+  "ok": false,
+  "error": "string"       // Error message
+}
+----
+
+==== Common Error Scenarios
+
+*VeriSimDB Unavailable*: - Automatic fallback to local filesystem
+storage - Operations continue normally - Data syncs when connection
+restored
+
+*Invalid Snapshot ID*:
+
+[source,json]
+----
+{
+  "ok": false,
+  "error": "Snapshot not found: abc123"
+}
+----
+
+*Network Timeout*:
+
+[source,json]
+----
+{
+  "ok": false,
+  "error": "GET failed: operation timed out"
+}
+----
+
+=== Storage Fallback Mechanism
+
+==== Primary → Fallback Flow
+
+[arabic]
+. Attempt VeriSimDB operation
+. On success: Return VeriSimDB response
+. On failure: Fall back to local filesystem
+. On filesystem success: Return local data
+. On complete failure: Return error
+
+==== Fallback → Primary Sync
+
+When VeriSimDB connection is restored: 1. System automatically detects
+connection 2. Local snapshots are synced to VeriSimDB 3. No manual
+intervention required 4. System tray shows sync completion notification
+
+=== Performance Characteristics
+
+* *Save Operation*: ~50-150ms (VeriSimDB) / ~10-30ms (filesystem)
+* *Load Operation*: ~60-200ms (VeriSimDB) / ~15-40ms (filesystem)
+* *List Operation*: ~80-250ms (VeriSimDB) / ~20-50ms (filesystem)
+
+=== Rate Limiting
+
+* No explicit rate limiting from PanLL
+* VeriSimDB may impose limits (configurable server-side)
+* Recommended: ≤ 10 operations/second for bulk operations
+
+=== Authentication
+
+* VeriSimDB authentication handled at server level
+* PanLL passes through configured credentials
+* Set `+VERISIMDB_AUTH_TOKEN+` environment variable if required
+
+=== Best Practices
+
+==== Connection Management
+
+[source,javascript]
+----
+// Check VeriSimDB health before operations
+const health = await invoke("verisim_health");
+if (!health.ok) {
+  console.warn("VeriSimDB unavailable, using fallback storage");
+}
+----
+
+==== Error Handling
+
+[source,javascript]
+----
+try {
+  const result = await invoke("verisim_load_state", { key: snapshotId });
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+  // Process result
+} catch (error) {
+  console.error("Failed to load snapshot:", error.message);
+  // Fallback to local storage or alternative
+}
+----
+
+==== Batch Operations
+
+[source,javascript]
+----
+// Process multiple snapshots efficiently
+const snapshotIds = ["id1", "id2", "id3"];
+const results = await Promise.all(
+  snapshotIds.map(id => invoke("verisim_load_state", { key: id }))
+);
+----
+
+=== Troubleshooting
+
+For common issues and solutions, see the
+link:troubleshooting.md[Troubleshooting Guide].

@@ -1,0 +1,92 @@
+== PanLL Dogfooding Opportunities
+
+Guinea pig fooding candidates — places where PanLL can use hyperpolymath
+ecosystem projects instead of generic dependencies, to test interactions
+and build evidence for those projects.
+
+=== C → Zig Swap Candidates
+
+[width="100%",cols="37%,18%,31%,14%",options="header",]
+|===
+|Current (C/libc) |Location |Zig Replacement |Effort
+|`+libc::statvfs+` disk stats |`+workspace/sysinfo.rs:107+` |Zig NIF for
+system info (like Burble coprocessors) |Small
+
+|`+libc::kill+` process signals |`+game_preview/commands.rs:209,212+`
+|Zig process management module |Small
+
+|`+libc::kill+` SIGSTOP/CONT/TERM |`+llm_coding/commands.rs+` (3 calls)
+|Same Zig module |Small
+
+|Coprocessor C FFI types |`+coprocessor/mod.rs:109-119+` |Already
+Zig-shaped (C calling convention = Zig native) |None needed
+|===
+
+=== V-lang API Candidates
+
+[width="99%",cols="34%,20%,30%,16%",options="header",]
+|===
+|Current (Rust) |Location |V Replacement |Effort
+|HTTP client to services |`+http_client.rs+` |V adapter layer (BoJ
+cartridge pattern) |Medium
+
+|Settings serialisation |various |V API surface for config |Medium
+|===
+
+=== Proven Library Integration Candidates
+
+[width="100%",cols="23%,23%,35%,19%",options="header",]
+|===
+|Current |Location |Proven Module |Status
+|reqwest URL construction |`+http_client.rs+` |`+proven/SafeHTTP+`,
+`+proven/SafeUrl+` |0 believe_me
+
+|File path handling |`+workspace/*.rs+` |`+proven/SafeString+` |0
+believe_me
+
+|Version strings |config files |`+proven/SafeSemVer+` |0 believe_me
+
+|Any crypto/hashing |future VeriSimDB integration |`+proven/SafeHash+`
+|0 believe_me
+|===
+
+=== VeriSimDB Integration (everything-first approach)
+
+[width="100%",cols="37%,39%,24%",options="header",]
+|===
+|Data Category |What to persist |Priority
+|Panel state |Open/closed, position, size, scroll position per panel |P0
+
+|Workspace layouts |Named layout snapshots, auto-save current layout |P0
+
+|User settings |Preferences, theme, keybindings, accessibility |P0
+
+|Multiuser perspectives |Full workspace snapshot per team member — "`see
+the world from their view`" |P1
+
+|Session recordings |Command history, panel interactions, timestamps |P1
+
+|Undo history |Full undo/redo stack with branching |P1
+
+|Panel usage analytics |Which panels used most, interaction patterns |P2
+
+|Collaboration state |Shared cursors, live presence, team annotations
+|P2
+
+|Build/test results |CI output, test traces, build metrics |P2
+
+|ECHIDNA proof traces |Tactic predictions, premise rankings, proof
+search paths |P2
+
+|Keystroke heatmaps |Input frequency per panel (accessibility + UX
+research) |P3
+|===
+
+=== Notes
+
+* This is guinea pig fooding — we’re testing ecosystem interactions, not
+optimising
+* Some of these will prove not valuable — that’s fine, strip them back
+later
+* The portfolio of VeriSimDB use cases IS the evidence for the project
+* Every integration is a potential paper example or demo

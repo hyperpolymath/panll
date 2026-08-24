@@ -1,47 +1,42 @@
-// SPDX-License-Identifier: CC-BY-SA-4.0
-= Maintainers
-:toc: preamble
+== Maintainers
 
-This document lists the maintainers of this project and their responsibilities.
+This document lists the current and former maintainers of *Panll*.
 
-== Current Maintainers
+'''''
 
-[cols="2,3,2",options="header"]
+=== Current Maintainers
+
+[width="100%",cols="24%,29%,22%,25%",options="header",]
 |===
-| Name | Role | Contact
-
-| Jonathan D.A. Jewell
-| Lead Maintainer
-| https://github.com/hyperpolymath[@hyperpolymath]
+|Name |GitHub |Role |Since
+|Jonathan D.A. Jewell |https://github.com/hyperpolymath[@hyperpolymath]
+|BDFL |2026-03-16
 |===
 
-== Responsibilities
+'''''
 
-Maintainers are responsible for:
+=== How to Become a Maintainer
 
-* Reviewing and merging pull requests
-* Triaging issues and feature requests
-* Ensuring code quality and security standards
-* Managing releases and versioning
-* Upholding the project's code of conduct
+Contributors who demonstrate sustained, high-quality contributions and a
+solid understanding of the project’s standards and goals may be
+nominated to become maintainers. The full criteria and process are
+described in GOVERNANCE.md. If you are interested, the best path is to
+start contributing consistently and engage constructively in issues and
+code reviews.
 
-== Becoming a Maintainer
+'''''
 
-Contributors who demonstrate:
+=== Emeritus
 
-* Consistent, high-quality contributions
-* Understanding of the project's goals and standards
-* Constructive participation in discussions
-* Commitment to the project's long-term health
+Former maintainers who have stepped back from active maintenance. We are
+grateful for their contributions.
 
-May be invited to become maintainers at the discretion of existing maintainers.
+[cols=",,,",options="header",]
+|===
+|Name |GitHub |Role |Active
+|_None yet_ | | |
+|===
 
-== Decision Making
+'''''
 
-* Routine decisions (bug fixes, minor improvements) can be made by any maintainer
-* Significant changes require discussion and consensus among maintainers
-* Breaking changes or major features should be discussed in issues before implementation
-
-== Contact
-
-For questions about project governance, open an issue or contact the maintainers listed above.
+Copyright (c) 2026 hyperpolymath. Licensed under MPL-2.0.

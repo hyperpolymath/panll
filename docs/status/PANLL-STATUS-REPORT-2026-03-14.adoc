@@ -1,0 +1,548 @@
+== PanLL Comprehensive Status Report
+
+*Generated: 2026-03-14* *Author: Claude Opus 4.6 for Jonathan D.A.
+Jewell*
+
+'''''
+
+=== Executive Summary
+
+PanLL is a *304K LOC, 52-panel neurosymbolic IDE* that is
+architecturally complete but operationally stubbed. The UI, state
+management, message routing, and test infrastructure are
+production-quality (2090+ tests, 0 build errors). The gap is almost
+entirely in live backend connections — every Tauri command returns mock
+JSON.
+
+*Overall: ~95% UI-complete, ~15% operationally end-to-end.*
+
+'''''
+
+=== 1. Document TODOs & Loose Items
+
+==== In-Code TODOs: 59 remaining
+
+* Down from 90+ (28 genuinely blocked on missing backends)
+* All 81 Update.res TODOs resolved (JSON deserialisation complete)
+* All 3 main.rs TODOs resolved (Echidna validation, vexation tracking,
+feedback persistence)
+
+==== Planning Documents with Outstanding Items
+
+[width="100%",cols="34%,33%,33%",options="header",]
+|===
+|Document |Location |Contents
+|*docs/TODO.md* |`+panll/docs/TODO.md+` |6 TSDM-scored sprints, 60+
+items, ~40% still open
+
+|*ROADMAP.adoc* |`+panll/ROADMAP.adoc+` |v0.1.0→v1.0.0 milestones (412
+lines)
+
+|*STATE.scm* |`+panll/.machine_readable/STATE.scm+` |3
+critical-next-actions, 5% gap analysis
+
+|*WORKSPACE-LAYER-PROGRESS.md* |`+panll/.machine_readable/+` |Skeleton
+done, flesh-out pending
+
+|*CHANGELOG.md* |`+panll/CHANGELOG.md+` |34 entries, latest 2026-03-14
+|===
+
+==== docs/TODO.md Sprint Status
+
+[cols=",,",options="header",]
+|===
+|Sprint |Theme |Status
+|1. "`Make It Breathe`" |Core panels alive |Mostly done
+|2. "`Make It Real`" |Backend connections |Partially done
+|3. "`Make It Complete`" |Test coverage |Mostly done
+|4. "`Make It Extensible`" |Clade system |Mostly done
+|5. "`Code MRI`" |Corrective maintenance |Partially done
+|6. "`Dogfood Mode`" |CRG promotion |Barely started
+|===
+
+==== Infrastructure Debt (from TODO.md)
+
+* TOPOLOGY.md sync
+* STATE.scm updates
+* Float deprecation fixes
+* 6 total items
+
+'''''
+
+=== 2. Roadmap Status
+
+[width="100%",cols="25%,17%,17%,41%",options="header",]
+|===
+|Milestone |Target |Status |Key Missing Pieces
+|*v0.1.0* |2026-02-28 |*92%* |CRG D→C promotion (needs dogfooding)
+
+|*v0.2.0* (MVP) |TBD |*~30%* |Real VeriSimDB persistence, real
+reposystem connection, real BoJ backend wiring
+
+|*v0.3.0* |TBD |*~15%* |ECHIDNA live proving, proven library
+integration, neurosymbolic core
+
+|*v0.4.0* |TBD |*~5%* |Stapeln containers for backends, Eclexia, full
+multi-agent
+
+|*v0.5.0* |TBD |*~0%* |Pane Studio scaffolder, dev workflows
+
+|*v1.0.0* |TBD |*~0%* |Security audit, stable API, production hardening
+|===
+
+*The v0.2.0 gap is the biggest blocker* — everything is wired with
+mock/stub backends but almost nothing talks to live services yet.
+
+'''''
+
+=== 3. TypeLL Integration Completeness
+
+==== What’s Done (100% UI coverage)
+
+* All 52 panels fire `+TypeCheckResult+`
+* `+TypeLLService.res+` cross-cutting helpers available to any panel
+* Progressive disclosure (4 view layers: Raw → Folded → Glyphed →
+WYSIWYG)
+* Kernel: 221 tests, 0 failures, 5 resolved kernel gaps
+* `+panelTypeChecks+` Dict tracks type checking state per panel
+* Graceful degradation — TypeLL errors don’t block panel workflows
+
+==== What Remains
+
+[width="100%",cols="27%,34%,39%",options="header",]
+|===
+|Item |Status |Blocker
+|Runtime type checking (all panels) |*Done* |—
+
+|TypeLLService cross-cutting helpers |*Done* |—
+
+|Progressive disclosure (4 view layers) |*Done* |—
+
+|Compile-time checking via ReScript PPX |*Not started* |Needs custom
+build plugin, long-term
+
+|TypeLL kernel as real dependency (not stubs) |*Not wired* |Need to
+connect to actual TypeLL binary/service
+
+|Idris2 ABI proof verification at runtime |*Not wired* |Need Idris2→Zig
+FFI pipeline
+|===
+
+*Assessment:* TypeLL is architecturally complete but operationally
+stubbed. UI and message routing are all there, but Tauri commands return
+mock data.
+
+'''''
+
+=== 4. Major Incomplete Core Elements
+
+[width="100%",cols="28%,32%,40%",options="header",]
+|===
+|Subsystem |Completeness |What’s Missing
+|*Contractiles* |*20%* |Only 1 Nickel file (safedom-enforcement.ncl). k9
+dir empty. Must/trust/dust/lust stubs only.
+
+|*ObservatoryEngine* |*75%* |ObservabilityEngine solid (275 lines) but
+ObservatoryEngine is 52-line stub
+
+|*Live backend connections* |*~5%* |Every panel has Tauri command stubs
+but almost none connect to real services
+
+|*CRG promotion* |*0%* |Cannot be automated — requires real dogfooding
+
+|*Pane Studio* (scaffolder v2) |*0%* |Minter exists for basic
+scaffolding, full "`Pane Studio`" from v0.5.0 doesn’t
+
+|*robot-repo-automaton* |*5%* |The executor bot barely exists
+
+|*cipherbot / accessibilitybot* |*Nascent* |Defined but not
+substantially implemented
+
+|*eNSAID as independent spec* |*0%* |Spec still lives inside PanLL, not
+its own repo
+|===
+
+==== Subsystem Completeness Matrix
+
+[width="100%",cols="30%,34%,18%,18%",options="header",]
+|===
+|Subsystem |Completeness |Lines |Notes
+|Core Panels (L/N/W) |*100%* |4,133 |PaneN and PaneW 1.9K each
+
+|TEA Framework |*100%* |3,959 |18 modules, production-ready
+
+|SafeDOM |*100%* |724+ |4-layer defence-in-depth + 75 tests
+
+|Workspace Management |*100%* |1,490 |Full MVC pattern
+
+|BoJ Integration |*100%* |1,854 |Full CRUD + Tauri dispatch
+
+|Accessibility |*100%* |882 |ARIA, keyboard nav, toolbar
+
+|Help System |*100%* |1,485 |Context-sensitive, searchable
+
+|Tiling/Multi-monitor |*100%* |411 |WindowBridge + BroadcastChannel
+
+|Panel Clades |*95%* |44 clades, 55 manifests |Some clades lack
+individual .a2ml
+
+|Rust Backend |*100%* |19,857 |39 modules, all with types.rs +
+commands.rs
+
+|Test Suite |*100%* |19,648 |98 test files, 2090+ tests
+
+|Build/CI |*100%* |17 workflows |All SHA-pinned, operational
+
+|Observability |*75%* |555 |ObservatoryEngine minimal
+
+|Contractiles |*20%* |~100 |Only SafeDOM enforcement
+|===
+
+'''''
+
+=== 5. eNSAID Vision Gap Analysis
+
+The eNSAID spec (DD-001) defines PanLL as the reference implementation.
+Here’s how close we are:
+
+[width="99%",cols="43%,20%,27%,10%",options="header",]
+|===
+|eNSAID Requirement |UI Done? |Operational? |Gap
+|Binary Star architecture (human-machine co-orbit) |Yes |No |No real
+ML/AI agent connected
+
+|Three-pane model (L/N/W) |Yes |Partial |Pane-N has no real neural
+stream
+
+|Anti-Crash Gate (circuit breaker N→W) |Yes |Mock |Validates against
+mock constraints
+
+|Vexometer (cognitive friction) |Yes |Partial |Tracks UI interactions,
+no backend ML
+
+|Orbital Sync (cross-pane drift) |Yes |Yes |Hash-based, working
+
+|Information Humidity (adaptive density) |Yes |Yes |Working
+
+|Contractiles (elastic state contracts) |Partial |No |20% complete
+
+|ECHIDNA theorem prover integration |Yes |No |No live prover connection
+
+|VeriSimDB persistence |Yes |No |No live database
+
+|Multi-agent orchestration (7-Tentacles) |Yes |No |No real agent
+dispatch
+
+|Code Provenance (DD-006) |Yes |No |No git blame wiring
+
+|Cognitive Governance Stack (DD-007) |Yes |Partial |Vexometer works,
+others mock
+
+|Panel Clades (DD-010) |Yes |Yes |Working, 44 clades
+
+|Code MRI (DD-016) |Yes |Partial |VoiceTag (L0), Blake3 provenance (L1),
+Timeline engine (L2) built; TimelineCmd + TimelineModel + dashboard
+wiring added 2026-03-21
+
+|Care-On/Eco-Mode (DD-017) |No |No |Not started
+
+|Dogfood Mode (DD-018) |No |No |Not started
+
+|eNSAID as independent spec |Yes |Yes |Separated to ensaid-spec repo;
+PanLL retains implementation code (EnsaidConfigEngine, EnsaidConfigCmd)
+|===
+
+*Honest assessment: ~60% of the eNSAID vision is implemented at UI
+level, ~15% is operational end-to-end.*
+
+'''''
+
+=== 6. The Multicolour Agent Family
+
+==== 11 Core Bots Across 4 Tiers
+
+[width="100%",cols="17%,13%,21%,15%,34%",options="header",]
+|===
+|Tier |Bot |Colour |Role |Completeness
+|*0 (Engine)* |hypatia |Deep Purple |Neurosymbolic CI/CD coordinator
+|70%
+
+|*1 (Verifier)* |rhodibot |Metallic Silver |RSR structural compliance
+|50%
+
+|*1 (Verifier)* |echidnabot |Indigo/Cyan |Formal verification + fuzzing
+|75%
+
+|*1 (Verifier)* |sustainabot |Green |Ecological/economic analysis |25%
+
+|*1 (Verifier)* |panicbot |Red |Static analysis (wraps panic-attack)
+|New
+
+|*2 (Finisher)* |glambot |Gold |Presentation quality, WCAG, SEO |60%
+
+|*2 (Finisher)* |seambot |Orange/Amber |Seam integrity, drift detection
+|55%
+
+|*2 (Finisher)* |finishbot |Purple |Release readiness gate |65%
+
+|*2 (Finisher)* |accessibilitybot |Blue |Deep WCAG 2.3 AAA |Nascent
+
+|*3 (Specialist)* |cipherbot |Purple |Crypto hygiene, post-quantum
+|Nascent
+
+|*4 (Executor)* |robot-repo-automaton |— |Applies approved fixes |5%
+|===
+
+==== Execution Hierarchy
+
+....
+Tier 0: ENGINE
+  └── hypatia (coordinates everything)
+       ▼
+Tier 1: VERIFIERS (produce findings, run parallel)
+  ├── rhodibot (no deps)
+  ├── echidnabot (no deps)
+  ├── sustainabot (no deps)
+  └── panicbot (depends: rhodibot)
+       ▼ verifiers_complete() gate
+Tier 2: FINISHERS (consume findings, run sequentially)
+  ├── glambot (depends: rhodibot)
+  ├── seambot (depends: rhodibot, echidnabot)
+  ├── finishbot (depends: rhodibot, glambot)
+  ├── accessibilitybot (depends: rhodibot, glambot)
+  └── cipherbot (depends: rhodibot, echidnabot)
+       ▼
+Tier 3: EXECUTOR
+  └── robot-repo-automaton (applies approved fixes)
+....
+
+==== Safety Triangle (gates all automated actions)
+
+* *Eliminate* (≥0.95 confidence) → Direct fix, no review
+* *Substitute* (≥0.85 confidence) → Proven module replacement, needs
+review
+* *Control* (<0.85 confidence) → Human review required
+
+'''''
+
+=== 7. Bot-Assisted Panel Lifecycle (THE GAP)
+
+==== What Exists Now
+
+* *Minter panel* — generates ReScript skeleton
+(Model/Engine/Cmd/Component)
+* *Provisioner panel* — manages isolation tiers and portfolios
+* *NO bot integration with either* — minting and provisioning are fully
+manual
+
+==== What We Need to Build
+
+[width="100%",cols="42%,20%,38%",options="header",]
+|===
+|Lifecycle Phase |Bot(s) |What They’d Do
+|*Minting* (scaffold) |glambot + rhodibot |Validate naming, generate
+A2ML clade manifest, ensure RSR structure, create bot_directives
+
+|*Provisioning* (configure) |seambot + finishbot |Verify panel
+seams/contracts, check isolation tier, validate deps
+
+|*Configuring* (integrate) |echidnabot + seambot |Type-check panel
+interfaces, verify BoJ routing config, validate Msg/Update wiring
+
+|*Wiring* (connect) |finishbot + rhodibot |Gate: all 8 files present,
+tests passing, clade registered, registry entry, Update.res routing
+|===
+
+==== Concrete Deliverables Needed
+
+[arabic]
+. *`+panel-directives.scm+`* — Per-panel bot rules (what each bot checks
+for each panel)
+. *`+minting-checklist.scm+`* — Pre-mint validation pipeline definition
+. *Panel-specific bot handlers* in gitbot-fleet (extend shared-context
+with panel awareness)
+. *Minter → fleet integration* — Minter calls fleet bots after
+generating skeleton
+. *Provisioner → fleet integration* — Provisioner asks finishbot before
+activating panel
+. *`+panel-branding.scm+`* — Visual identity per panel family (formalise
+colour registry)
+
+'''''
+
+=== 8. Existing Panel Inventory (52 Panels)
+
+==== Core (3)
+
+Panel-L (Symbolic Mass), Panel-N (Neural Stream), Panel-W
+(World/Barycentre)
+
+==== Overlay Panels (14)
+
+CloudGuard, VAB, Farm, Fleet, Hypatia, Reposystem, Aerie, Interfaces,
+Playgrounds, Palimpsest Plaza, Minter, Protocol-Squisher, My-Lang, BoJ
+
+==== IDApTIK eNSAID (11)
+
+Valence Shell, Game Preview, VM Inspector, Network Topology, Level
+Architect, Coprocessors, Multiplayer Monitor, DLC Workshop, Editor
+Bridge, Build Dashboard, Release Manager
+
+==== Cross-Cutting Services (4)
+
+TypeLL, 7-Tentacles, A2ML/K9, Coprocessor Engine
+
+==== Infrastructure (5)
+
+Panel Switcher, Provisioner, Code Provenance, Filesystem Watcher, Clade
+Browser
+
+==== Cognitive Governance (6)
+
+Vexometer, Anti-Crash Gate, Orbital Drift Aura, Feedback-O-Tron,
+Information Humidity, Dark Start
+
+==== Utility (9+)
+
+Databases, AI, Repo Loader, Workspace, Capture, Security, Migration,
+panic-attack, Mass Panic, TSDM, Automation Router, Observability, Umoja,
+UMS
+
+'''''
+
+=== 9. Checkpoint File Summary (.machine_readable/)
+
+[width="100%",cols="18%,17%,37%,28%",options="header",]
+|===
+|File |Size |Last Updated |Contents
+|STATE.scm |34.9 KB |2026-03-10 |95% completion, 361 source files, 8
+session histories
+
+|META.scm |14.4 KB |— |7 ADRs, dev practices, cross-cutting concerns
+
+|ECOSYSTEM.scm |14.2 KB |2026-03-14 |16 related projects, TypeLL + BoJ
+deps
+
+|AGENTIC.scm |8.9 KB |— |Agent interaction patterns, multi-agent
+coordination
+
+|NEUROSYM.scm |8.4 KB |— |Symbolic/neural/integration layers
+
+|PLAYBOOK.scm |12.9 KB |— |SOPs, workflows, automation patterns
+
+|SECURITY.scm |2.5 KB |— |Security policy
+|===
+
+'''''
+
+=== 10. Design Documents (for reference)
+
+[width="100%",cols="38%,37%,25%",options="header",]
+|===
+|Document |Location |Topic
+|DESIGN-DECISIONS.md |docs/ |18 DDs (DD-001 to DD-018), all accepted
+
+|DESIGN-2026-02-28-echidna-proof-ux.md |docs/design/ |Proof
+visualisation UX
+
+|DESIGN-2026-02-28-discipline-layouts.md |docs/design/ |Layout
+discipline system
+
+|DESIGN-2026-02-28-collaboration.md |docs/design/ |Human-Machine
+collaboration patterns
+
+|DESIGN-2026-02-28-slm-heutagogy.md |docs/design/ |Small language model
+pedagogy
+
+|DESIGN-2026-02-28-infrastructure-requirements.md |docs/design/
+|Infrastructure requirements
+
+|DESIGN-2026-02-28-strategic-assessment.md |docs/design/ |Strategic
+assessment
+
+|DESIGN-2026-03-01-vab-panel.md |docs/design/ |VAB (Verified Assembly
+Building) panel
+
+|DESIGN-2026-03-08-idaptik-ensaid.md |docs/design/ |IDApTIK game
+development environment
+
+|TEA_GUIDE.md |root |Custom TEA runtime documentation
+
+|ARCHITECTURE.txt |root |Full architecture overview (10.9 KB)
+
+|ARCHITECTURE.md |root |Simplified architecture doc
+
+|PANEL-INVENTORY.md |root |Catalog of panels across 6 categories
+
+|TAURI-COMMANDS.md |root |All Rust backend commands
+
+|TESTING.md |root |Test infrastructure and coverage
+|===
+
+'''''
+
+=== 11. Source Code Statistics
+
+* *Total lines:* 304,497 LOC
+* *Total files:* 1,186 source files
+* *ReScript:* 258 files (frontend)
+* *Rust:* 103 files (backend/Tauri, 39 modules)
+* *JavaScript tests:* 98 files (19,648 lines)
+* *Build status:* 0 errors, 7 warnings (unused vars)
+* *Tests:* 2,090+ (1,879 Deno + 211 Rust)
+
+'''''
+
+=== 12. Strategic Priorities
+
+==== Priority 1: v0.2.0 — Make It Real
+
+Connect 3-4 panels to live backends (BoJ, VeriSimDB, ECHIDNA) to prove
+the architecture works end-to-end. This is the difference between a demo
+and an MVP.
+
+==== Priority 2: Bot-Assisted Panel Lifecycle
+
+Wire the fleet into minting/provisioning so new panels get validated
+automatically. Highest leverage — makes every future panel creation
+faster and more reliable.
+
+==== Priority 3: Contractiles
+
+The 20% completeness is a risk. Contractiles are load-bearing for the
+Cognitive Governance Stack (DD-007). The k9 directory being empty means
+the security enforcement layer has no teeth.
+
+==== Priority 4: eNSAID Separation
+
+Extract the eNSAID spec into its own repo (DD-001’s V for Vendetta
+Principle). Currently the spec and implementation are entangled.
+
+==== Priority 5: Code MRI (DD-016)
+
+VoiceTag, Blake3 provenance, VeriSimDB timeline — none built yet. This
+is a differentiator.
+
+'''''
+
+=== 13. The 5% Gap (95% → 100% for v0.1.0)
+
+[width="100%",cols="22%,46%,32%",options="header",]
+|===
+|Item |Completeness |Blocker
+|CRG D→C promotion |0% |Requires author dogfooding (cannot automate)
+
+|Benchmark tests |60% |Need more performance baselines
+
+|Integration tests |80% |Need cross-panel integration scenarios
+
+|SeamEngine |80% |Need remaining compliance seam definitions
+
+|3 flaky Rust tests |— |Race conditions in multiplayer_monitor,
+valence_shell
+|===
+
+'''''
+
+_This document is a point-in-time snapshot. For live state, check
+`+panll/.machine_readable/STATE.scm+`._

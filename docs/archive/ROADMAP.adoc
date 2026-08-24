@@ -1,0 +1,357 @@
+== PanLL Roadmap
+
+*Last updated: 2026-03-02* *CRG Grade: D (Alpha Preview)*
+
+PanLL is the reference implementation of the eNSAID (embodied
+NeuroSymbolic Accessibility-first Interface Design) specification. It
+provides a unified mission control interface built on a three-panel
+model (Panel-L constraints, Panel-N agent reasoning, Panel-W results)
+with neurosymbolic intelligence behind each panel. This roadmap
+documents where PanLL stands today, where it is going, and the
+prioritised sprint plan to get there.
+
+'''''
+
+=== Current State
+
+* 14 panel UIs + 4 infrastructure layers, all compiling clean (0
+ReScript errors, 0 Rust errors)
+* 107 ReScript files (26,798 lines) + 20 Rust files (5,342 lines) = 127
+source files, 32,140 lines
+* Single TEA binary with unified panel switcher
+* Pushed to GitHub: `+hyperpolymath/panll+`
+
+==== Built Panels (14)
+
+[width="100%",cols="8%,14%,17%,27%,34%",options="header",]
+|===
+|# |Panel |Module |What It Does |Backend Status
+|1 |Panel-L (Symbolic Mass) |PaneL |Constraints, rules, formal
+specifications |Core (in-process)
+
+|2 |Panel-N (Neural Stream + ECHIDNA) |PaneN |AI reasoning, confidence,
+theorem proving |Core (in-process)
+
+|3 |Panel-W (World/Barycentre + VeriSimDB) |PaneW |Results, dashboards,
+live data, database tools |Core (in-process)
+
+|4 |VAB (Verified Assembly Building) |Vab |KSP-inspired server component
+composer (111 proven-servers components) |UI only (no HTTP)
+
+|5 |CloudGuard |CloudGuard |Cloudflare domain security management |UI
+only (needs Cloudflare API)
+
+|6 |Git-Private-Farm |Farm |Repo inventory (~265 repos), health scores,
+Dependabot queue |UI only (needs local JSON read)
+
+|7 |Palimpsest Plaza |Plaza |PMPL licensing adoption, compliance audits,
+signatures |UI only (needs filesystem scan)
+
+|8 |Reposystem |Reposystem |RSR compliance scores, template validation,
+language policy |UI only (needs filesystem scan)
+
+|9 |Aerie |Aerie |Network diagnostics, speed tests, BGP forensics, proof
+envelopes |UI only (needs V-lang API)
+
+|10 |Interfaces |Interfaces |Idris2 ABI inventory, Zig FFI build status,
+binding coverage |UI only (needs filesystem scan)
+
+|11 |Playgrounds |Playgrounds |Multi-language code sandbox, NQC database
+console, tutorials |UI only (needs NQC proxy)
+
+|12 |Hypatia |Hypatia |Neurosymbolic CI/CD: 5 neural nets, 298 repos,
+safety triangle |UI only (needs Elixir API)
+
+|13 |Fleet (Gitbot-Fleet) |Fleet |6-bot orchestration dashboard,
+findings, dispatch queue |UI only (needs Axum API)
+
+|14 |Minter (Panel Minter) |Minter |Create new panel modules with
+accessibility by default |UI only (Rust backend exists)
+|===
+
+==== Infrastructure Layers (4)
+
+[width="99%",cols="20%,22%,36%,22%",options="header",]
+|===
+|Layer |Module |What It Does |Status
+|Panel Switcher |PanelSwitcher + PanelRegistry |Unified navigation bar
+(replaces ad-hoc toggles) |Working
+
+|Provisioner |Provisioner + ProvisionerEngine |Portfolio bundles,
+per-panel config, isolation tiers (Native/StandardPod/HardenedPod) |UI
+complete, not wired to backends
+
+|Code Provenance Map |Provenance + ProvenanceEngine |Qubes-style trust
+surface (git blame to semantic colours), accessibility palettes, hostile
+UX |UI complete, needs git blame integration
+
+|Filesystem Watcher |Watcher + WatcherCmd |notify/inotify event feed
+into TEA loop, all panels subscribe |Rust backend complete, needs
+frontend event hookup
+|===
+
+==== Cognitive Governance (Always Present)
+
+These subsystems are embedded across the entire interface and are not
+standalone panels. They represent the neurosymbolic intelligence layer
+that makes PanLL more than a dashboard:
+
+* *Vexometer* – friction monitoring (cancellations, corrections, dwell
+time)
+* *Anti-Crash Gate* – circuit breaker between Panel-N and Panel-W
+* *Orbital Drift Aura* – ambient visual indicator of system stability
+* *Feedback-O-Tron* – feedback submission (expanding to opinion mining)
+* *Information Humidity* – UI density adapts to cognitive load
+(High/Medium/Low)
+* *Dark Start* – intentional entry (architecture manifold on launch)
+
+'''''
+
+=== Roadmap Sprints
+
+==== Sprint 1 – "`Make It Breathe`" (Polish + First Run)
+
+Priority scoring: *C* = Complexity (1–5), *E* = Effort (sessions), *V* =
+Value (1–5), *Score* = V / (C x E). Higher score means better return on
+investment.
+
+[width="100%",cols="12%,15%,7%,7%,7%,18%,34%",options="header",]
+|===
+|# |Item |C |E |V |Score |Description
+|1 |Dark Start first-run polish |1 |1 |4 |4.00 |Auto-detect installed
+backends, show connection status on launch, polish entry animation
+
+|2 |Tauri event wiring |2 |2 |5 |1.25 |Connect Watcher events to panel
+refresh, panel switcher to backend lifecycle. Makes the app feel alive.
+
+|3 |Accessibility pass |2 |2 |4 |1.00 |Full keyboard nav, screen reader
+testing, all 4 colour palettes verified. Essential before any public
+showing.
+|===
+
+==== Sprint 2 – "`Make It Real`" (Backend Connections)
+
+[width="100%",cols="12%,15%,7%,7%,7%,18%,34%",options="header",]
+|===
+|# |Item |C |E |V |Score |Description
+|4 |Rust backend: Farm |2 |1 |4 |2.00 |Read
+~/.git-private-farm/farm-manifest.json. Simplest backend – local JSON,
+no HTTP.
+
+|5 |Rust backend: Fleet |2 |2 |4 |1.00 |reqwest to existing gitbot-fleet
+Axum dashboard API (:8080). Has /api/health, /api/status, /api/findings.
+
+|6 |Provenance Map git-blame integration |3 |2 |4 |0.67 |Wire
+ProvenanceCmd to actual git blame output parsing. Makes trust surface
+real, not placeholder.
+
+|7 |Cross-panel bus (PanelBus) |2 |2 |3 |0.75 |Hypatia findings to Fleet
+dispatch, Farm inventory to Reposystem scanning. Panels communicate.
+
+|8 |Feedback-O-Tron opinion mining |2 |2 |4 |1.00 |Aggregate feedback
+signals across panels, sentiment tracking, friction heatmap. Feeds
+Vexometer.
+|===
+
+==== Sprint 3 – "`Make It Complete`" (Remaining Backends)
+
+[width="100%",cols="12%,15%,7%,7%,7%,18%,34%",options="header",]
+|===
+|# |Item |C |E |V |Score |Description
+|9 |Rust backend: Hypatia |3 |3 |5 |0.56 |reqwest to Hypatia Elixir API.
+Most important panel – 5 neural networks scanning 298 repos.
+
+|10 |Rust backend: Aerie |3 |2 |3 |0.50 |reqwest to V-lang API gateway
+(GraphQL:4000, REST:4000).
+
+|11 |NQC console in Playgrounds |2 |2 |3 |0.75 |Wire existing NQC web UI
+proxy (:4000) into Playgrounds panel.
+
+|12 |Rust backend: Reposystem + Plaza |2 |2 |3 |0.75 |Filesystem
+scanning for .machine_readable/, editorconfig, Justfile, TOPOLOGY.md,
+LICENSE.
+
+|13 |Provisioner install flow |3 |3 |4 |0.44 |Wire to Stapeln pod
+creation, binary downloads, config persistence.
+|===
+
+==== Sprint 4 – "`Make It Extensible`" (Community Features)
+
+[width="100%",cols="12%,15%,7%,7%,7%,18%,34%",options="header",]
+|===
+|# |Item |C |E |V |Score |Description
+|14 |Odds & Sods (Package Manager) |3 |3 |3 |0.33 |New panel #15.
+Unified Cargo/Gleam/Mix/Deno/asdf/Idris2/Zig view. The "`stuff that
+doesn’t fit`" tracker.
+
+|15 |Stapeln pod integration |4 |4 |3 |0.19 |Real container lifecycle
+for panel isolation tiers. Three defaults: no pod, Alpine+Podman,
+Stapeln+Chainguard.
+
+|16 |Wharf (WordPress) |3 |3 |4 |0.44 |WP Wharf panel – Nickel configs,
+Mooring Protocol, php-aegis. 43% of web runs WordPress.
+
+|17 |TypLL (Language Panel) |4 |5 |3 |0.15 |Core language development
+panel for Eclexia/AffineScript/Anvomidav/Ephapax.
+
+|18 |Valence Shell integration |3 |3 |2 |0.22 |CLI tool switchable with
+bash. Interesting for power users, not critical for Alpha.
+
+|19 |Micropatching + reversibility |4 |4 |2 |0.13 |Undo system for
+config changes. Important eventually, deferred.
+|===
+
+==== Sprint 5 — "`Code MRI`" (Mutual Recognition & Integrity)
+
+Code MRI is the development transparency system — Turnitin for code, but
+collaborative not adversarial. See DD-016 in DESIGN-DECISIONS.md.
+
+[width="100%",cols="12%,15%,7%,7%,7%,18%,34%",options="header",]
+|===
+|# |Item |C |E |V |Score |Description
+|20 |VoiceTag (Layer 0) |3 |2 |5 |0.83 |Voice/keyboard annotation on
+code regions. Numbered tags, attribution, simple grammar. Entry point to
+the full MRI system. (Also in Sprint 2 as it extends Provenance.)
+
+|21 |Blake3 Provenance Chain (Layer 1) |3 |3 |4 |0.44 |Tamper-resistant
+attribution hashes per code region. Import/export carry provenance.
+
+|22 |VeriSimDB Development Timeline (Layer 2) |4 |4 |5 |0.31
+|Development-as-time-series. Timeline scrubber, snapshot rollback, "`end
+credits`" documentary view. Dogfoods VeriSimDB.
+
+|23 |Pattern Diagnostics & Gamification (Layer 3) |3 |3 |4 |0.44 |AI
+bullshit detector, efficiency patterns, victory conditions, badges.
+Admin enforcement for education.
+
+|24 |Attribution-to-Licensing Link (Layer 4) |2 |2 |3 |0.75
+|Auto-generate PMPL/MPL attribution from provenance chains.
+Machine-verifiable license compliance.
+
+|25 |Metrics & Learning Panel |3 |3 |4 |0.44 |ML-driven pattern
+identification from Code MRI data. Recommends support for struggling
+developers, suggests task reassignment based on strengths. Connects to
+Hypatia’s neural networks for higher-order pattern detection.
+|===
+
+==== Future / Community Contributed
+
+* Game panels: Godot, Unity, Unreal Engine, IDApTIK level architect
+* IDE integration: VSCode/VSCodium extension (export core as extension)
+* Minecraft modding panel
+* Statistease analytics panel
+* eNSAID v1.0 specification publication
+
+'''''
+
+=== Version Milestones
+
+[width="100%",cols="31%,26%,23%,20%",options="header",]
+|===
+|Version |Target |Focus |Gate
+|v0.2.0-alpha |Q1 2026 |Sprint 1 complete, Dark Start polished,
+accessibility verified |All keyboard nav works, screen reader tested
+
+|v0.3.0-alpha |Q2 2026 |Sprint 2 complete, Farm + Fleet backends live,
+Provenance real |At least 2 backends return real data
+
+|v0.4.0-beta |Q3 2026 |Sprint 3 complete, Hypatia + Aerie live, NQC in
+Playgrounds |5+ backends connected, cross-panel bus working
+
+|v0.5.0-beta |Q4 2026 |Sprint 4 started, Odds & Sods, Wharf, Stapeln
+pods |Community contribution path documented
+
+|v0.6.0-beta |Q1 2027 |Sprint 5: Code MRI Layers 0-1 (VoiceTag + Blake3
+chain) |Voice annotation working, provenance tamper-resistant
+
+|v0.7.0-beta |Q2 2027 |Sprint 5: Code MRI Layers 2-4 (Timeline +
+Diagnostics + Licensing) |VeriSimDB timeline scrubber, admin enforcement
+mode
+
+|v1.0.0 |H2 2027 |eNSAID spec v1.0, all core panels CRG Grade B+, stable
+API |Field-proven with real users
+|===
+
+'''''
+
+=== Component Readiness Grades (CRG)
+
+CRG is PanLL’s internal quality rubric. Every panel, infrastructure
+layer, and cognitive governance subsystem receives a letter grade that
+reflects its maturity. The grading system is deliberately strict: most
+software would land at D or E on first release.
+
+[width="100%",cols="28%,34%,38%",options="header",]
+|===
+|Grade |Meaning |Criteria
+|X |Untested |No tests, no usage, unknown state
+
+|F |Harmful |Known bugs, security issues, actively dangerous
+
+|E |Minimal |Compiles, basic structure, stubs
+
+|D |Alpha |Feature-complete UI, compiles clean, not connected to real
+backends
+
+|C |Beta |Connected to real backends, dogfooded by author
+
+|B |RC |Broadly validated, community tested, documented
+
+|A |Stable |Field-proven, formally verified where applicable,
+production-ready
+|===
+
+*Current state:* All 14 panels are CRG Grade *D*. The four
+infrastructure layers range from D to E depending on backend wiring.
+Cognitive governance subsystems are Grade D (logic present, no
+real-world signal yet).
+
+*Target for public showing:* At least Farm + Fleet at Grade *C* (real
+data flowing, author-dogfooded).
+
+'''''
+
+=== Cross-Panel Communication Map
+
+The following data flows describe planned inter-panel communication via
+the PanelBus (Sprint 2, item 7). Each arrow represents a typed message
+channel. No panel directly imports another; all communication is
+mediated by the bus.
+
+[width="100%",cols="22%,31%,26%,21%",options="header",]
+|===
+|Source |Destination |Data Flow |Purpose
+|Hypatia |Fleet |Scan findings with confidence |Fleet dispatch queue
+receives prioritised work items
+
+|Farm |Reposystem |Repo inventory |Compliance scanning targets derived
+from known repos
+
+|Farm |Hypatia |Repo list |Scanning targets for neurosymbolic CI/CD
+
+|Reposystem |Interfaces |Language bridges |Interface inventory updated
+when language map changes
+
+|Databases |Playgrounds |Module configs |Playground gallery populated
+from database profiles
+
+|Hypatia |Panel-N (core) |Neural confidence |Main reasoning display
+reflects CI/CD scan confidence
+
+|Watcher |All panels |Filesystem events |Targeted refresh when monitored
+files change on disk
+
+|Feedback-O-Tron |Vexometer |Sentiment signals |Friction index updated
+from aggregated user feedback
+
+|Provenance |Anti-Crash Gate |Trust levels |Validation thresholds
+adjusted based on code provenance
+
+|Provisioner |All panels |Isolation tier |Startup mode selection (native
+vs. StandardPod vs. HardenedPod)
+|===
+
+'''''
+
+_This roadmap is maintained as a living document. Update as sprints
+complete._

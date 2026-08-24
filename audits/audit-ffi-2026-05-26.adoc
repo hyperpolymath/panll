@@ -1,0 +1,35 @@
+== Audit: FFI / systems `+unsafe+` blocks (panll)
+
+*Auditor*: Jonathan D.A. Jewell *Date*: 2026-05-26 *Scope*: panic-attack
+assail Critical/High `+UnsafeCode+` (PA001) and `+UnsafeFFI+` (PA007)
+findings located under: `+ffi/zig/src/, src-gossamer/src/+`.
+*Cross-reference*: campaign tracker
+https://github.com/hyperpolymath/picpath/issues/32[hyperpolymath/panic-attack#32].
+*Registry*: `+audits/assail-classifications.a2ml+`.
+
+=== Rationale
+
+panll is a panel-clades language with a Tauri-style desktop wrapper.
+ffi/zig/src is the Zig FFI bridge to the Idris2 core; src-gossamer/src
+is the (frozen, see ADR-0001) Rust desktop shell using OS-FFI for
+system_tray destroy, sysinfo workspace probing, and
+coprocessor/llm_coding command pipes. All unsafe at the C-ABI / OS-FFI
+boundary.
+
+The classification is scoped to the listed root(s). Any `+unsafe+` block
+outside those roots remains visible to assail.
+
+=== Anti-gameability
+
+The registry is a separate file from any source under scan; adding a new
+`+unsafe+` block inside a classified root requires a companion
+classification edit and an update to this audit doc, both of which are
+visible in the diff.
+
+=== Verification
+
+Locally on this branch: `+panic-attack assail . --headless+` reports the
+listed PA001/PA007 findings as `+suppressed: true+`. Any new `+unsafe+`
+outside the listed roots remains unsuppressed.
+
+Refs hyperpolymath/panic-attack#32.
