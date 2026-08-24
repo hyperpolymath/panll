@@ -1,0 +1,48 @@
+== src/commands/ — Gossamer Bridge Commands
+
+=== Purpose
+
+Contains TEA command wrappers that invoke backend operations through the
+Gossamer IPC bridge (`+RuntimeBridge.invoke+`). Each module provides
+functions that return `+Tea_Cmd.t<'msg>+` for use in sub-updaters.
+
+=== Boundary
+
+* *Imports*: `+RuntimeBridge+` (for `+invoke+`), domain-specific types
+* *Used by*: `+src/update/+` sub-updaters
+* *Dependency direction*: commands → RuntimeBridge → Gossamer backend
+
+=== Invariants
+
+* All commands follow the `+Tea_Cmd.call+` + `+invoke+` +
+`+Promise.then/catch+` pattern
+* Success routes through `+tagger(Ok(result))+`, failure through
+`+tagger(Error(message))+`
+* Never throw synchronously — always use `+Promise.catch+` for error
+handling
+* Use `+ErrorBoundary.invokeWithBoundary+` for new commands (v0.2.0+)
+
+=== Naming Convention
+
+`+{Domain}Cmd.res+` — e.g. `+ServiceCmd.res+`, `+SettingsCmd.res+`,
+`+GossamerCmd.res+`
+
+=== Standard Command Pattern
+
+[source,rescript]
+----
+let myCommand = (arg: string, tagger: result<string, string> => 'msg): Tea_Cmd.t<'msg> => {
+  Tea_Cmd.call(callbacks => {
+    RuntimeBridge.invoke("backend_command_name", {"arg": arg})
+    ->Promise.then(result => {
+      callbacks.enqueue(tagger(Ok(result)))
+      Promise.resolve()
+    })
+    ->Promise.catch(_err => {
+      callbacks.enqueue(tagger(Error("Human-readable error context")))
+      Promise.resolve()
+    })
+    ->ignore
+  })
+}
+----

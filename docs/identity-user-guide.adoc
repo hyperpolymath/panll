@@ -1,0 +1,182 @@
+== PanLL Identity Management User Guide
+
+=== Overview
+
+PanLL’s Identity Management system allows you to capture, save, load,
+and share your complete workbench configuration. This includes panel
+states, settings, and service URLs - everything needed to restore your
+exact working environment.
+
+=== Key Concepts
+
+==== Identity Snapshots
+
+An *Identity Snapshot* is a complete save of your PanLL configuration at
+a specific point in time. Each snapshot includes:
+
+* *Panel State*: Positions and sizes of all panels (PaneL, PaneN, PaneW,
+etc.)
+* *Settings*: All user configuration settings
+* *Service URLs*: Registered service endpoints
+* *Metadata*: Unique ID, name, and creation timestamp
+
+==== Storage Hierarchy
+
+[arabic]
+. *Primary Storage*: VeriSimDB (persistent, network-accessible)
+. *Fallback Storage*: Local filesystem (`+~/.panll/identities/+`)
+
+=== Using Identity Management
+
+==== Creating a Snapshot
+
+[arabic]
+. *Via UI*: Click the "`Save Identity`" button in the settings panel
+. *Via Command*: Use the `+identity_save+` command with a name for your
+snapshot
+
+[source,javascript]
+----
+// Example: Save current state as "Project Alpha Setup"
+await invoke("identity_save", {
+  name: "Project Alpha Setup",
+  panll_state: JSON.stringify(storage.serialize()),
+  settings: JSON.stringify(await settings_get()),
+  service_urls: JSON.stringify(await service_registry_get())
+});
+----
+
+==== Loading a Snapshot
+
+[arabic]
+. *Via UI*: Select a snapshot from the identity manager panel and click
+"`Load`"
+. *Via Command*: Use the `+identity_load+` command with a snapshot ID
+
+[source,javascript]
+----
+// Example: Load snapshot by ID
+await invoke("identity_load", { id: "snapshot-id-here" });
+----
+
+==== Managing Snapshots
+
+===== Listing All Snapshots
+
+[source,javascript]
+----
+const snapshots = await invoke("identity_list");
+console.log("Available snapshots:", snapshots);
+----
+
+===== Deleting a Snapshot
+
+[source,javascript]
+----
+await invoke("identity_delete", { id: "snapshot-id-to-delete" });
+----
+
+=== Team Collaboration
+
+==== Broadcasting Your Identity
+
+Share your current configuration with team members:
+
+[source,javascript]
+----
+// First save your current state
+const snapshot = await invoke("identity_save", {
+  name: "Team Setup",
+  panll_state: JSON.stringify(storage.serialize()),
+  settings: JSON.stringify(await settings_get()),
+  service_urls: JSON.stringify(await service_registry_get())
+});
+
+// Then broadcast to team
+await invoke("team_broadcast_state", {
+  snapshot_json: snapshot
+});
+----
+
+==== Receiving Team Broadcasts
+
+When a team member broadcasts their identity: 1. You’ll receive a
+notification in the system tray 2. Review the snapshot details 3. Choose
+to apply or discard the changes
+
+=== Best Practices
+
+==== Naming Conventions
+
+Use descriptive names for snapshots: - *Good*: "`Project X - UI Research
+Phase`" - *Good*: "`Production Setup - 2024-05-15`" - *Avoid*:
+"`Snapshot 1`", "`Backup`"
+
+==== Regular Backups
+
+* Save snapshots before major configuration changes
+* Create snapshots at the end of work sessions
+* Keep 3-5 recent snapshots for easy rollback
+
+==== Team Workflows
+
+* Broadcast team-wide configurations at project start
+* Share specialized setups for specific tasks
+* Use snapshots to onboard new team members quickly
+
+=== Advanced Usage
+
+==== Programmatic Access
+
+Access identity functions directly from your PanLL scripts:
+
+[source,javascript]
+----
+// Get all snapshots and process them
+const allSnapshots = await invoke("identity_list");
+const detailedInfo = await Promise.all(
+  allSnapshots.map(async (snapshot) => {
+    const data = await invoke("identity_load", { id: snapshot.id });
+    return { ...snapshot, data };
+  })
+);
+----
+
+==== VeriSimDB Integration
+
+Identity snapshots are stored in VeriSimDB by default. You can: - Access
+snapshots from any machine with VeriSimDB access - Share snapshots
+across your organization - Use VeriSimDB’s query capabilities to find
+specific configurations
+
+=== Troubleshooting
+
+==== Common Issues
+
+*Issue*: Snapshots not appearing in list - *Solution*: Check VeriSimDB
+connection and fallback to local storage
+
+*Issue*: Loading snapshot fails - *Solution*: Verify snapshot ID and
+check for corruption
+
+*Issue*: Team broadcast not received - *Solution*: Check Burble service
+status and network connectivity
+
+==== VeriSimDB Fallback
+
+If VeriSimDB is unavailable, PanLL automatically falls back to local
+filesystem storage. You can: - Continue working normally - Snapshots
+will sync to VeriSimDB when connection is restored - Check system tray
+for service status indicators
+
+=== Security Considerations
+
+* Identity snapshots may contain sensitive configuration data
+* Be cautious when broadcasting to teams
+* Review snapshot contents before sharing
+* Use VeriSimDB access controls to limit who can view your snapshots
+
+=== API Reference
+
+For complete API documentation, see the link:api-reference.md[VeriSimDB
+Integration API Reference].

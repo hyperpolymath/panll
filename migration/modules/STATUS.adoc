@@ -1,0 +1,132 @@
+== `+migration/modules/+` parity status
+
+Snapshot of the panll `+src/modules/+` ReScript → AffineScript port
+(Mode A — compiles). Filed 2026-05-31 as the first compilable migration
+batch for panll’s STEP 8 megaport (standards#279).
+
+=== Parity table
+
+[width="100%",cols="25%,25%,25%,25%",options="header",]
+|===
+|.affine file |`+affinescript check+` |Source .res LoC |Notes
+|`+ServiceEndpoints.affine+` |✅ passes |39 |Pure constants.
+
+|`+TsdmModule.affine+` |✅ passes |57 |Capability sum + config record +
+helpers.
+
+|`+TangleVizModule.affine+` |✅ passes |57 |Same shape.
+
+|`+LanguageForgeModule.affine+` |✅ passes |60 |Same shape.
+
+|`+PanicAttackModule.affine+` |✅ passes |63 |Same shape.
+
+|`+FarmModule.affine+` |✅ passes |66 |Same shape + manifestPath field.
+
+|`+MassPanicModule.affine+` |✅ passes |66 |Same shape + binaryName
+field.
+
+|`+VerificationDashboardModule.affine+` |✅ passes |67 |Same shape.
+
+|`+SpecBrowserModule.affine+` |✅ passes |68 |Same shape.
+
+|`+PlazaModule.affine+` |✅ passes |79 |Same shape.
+
+|`+CloudGuardModule.affine+` |✅ passes |93 |Same shape +
+capabilityDescription helper.
+|===
+
+*Score (2026-05-31): 11 / 11 compile.* Total LoC: 715 lines of source
+`+.res+` ported.
+
+=== What shape this batch was
+
+All 11 files share a single mechanical pattern:
+
+....
+type xxxCapability = | A | B | ...
+type xxxModuleConfig = { id: ..., name: ..., capabilities: ..., icon: ... }
+let config: xxxModuleConfig = { ... }
+let hasCapability = (cap) => config.capabilities->Array.includes(cap)
+let capabilityLabel = (cap) => switch cap { | A => "...", | B => "..." }
+....
+
+Mapping to AffineScript: - `+type x = | A | B+` — unchanged shape
+(semicolons added) - `+type t = { field: T, ... }+` — unchanged (no
+trailing comma) - `+option<string>+` → `+Option<String>+` - `+array<T>+`
+→ `+[T]+` - `+let config = { ... }+` → `+const config: T = #{ ... };+`
+(AS records need `+#{...}+`) - `+let f = (x: T): U => body+` →
+`+fn f(x: T) -> U { body }+` - `+arr->Array.includes(x)+` →
+`+contains(arr, x)+` (prelude::contains) - `+switch x { | A => "..." }+`
+→ `+match x { A => "...", }+` (no leading `+|+`, comma-separated arms,
+no `+=>+` change)
+
+=== What this PR is NOT
+
+This does *not* replace any `+src/modules/*.res+` file in the build. The
+.res files still own the runtime contract — they compile to
+`+src/modules/*.res.mjs+` via the root `+rescript.json+`, which the rest
+of panll imports. Replacement requires:
+
+[arabic]
+. AffineScript → ESM codegen for these modules.
+. Migration of (or compatibility shim for) the existing consumers —
+every place that does `+open FarmModule+`,
+`+let cap = TsdmModule.config.capabilities+`, etc.
+
+Both are separate slices, tracked under standards#279 STEP 8.
+
+=== What this PR IS
+
+The 11 `+.affine+` files are the *verified-correct future shape*. When
+AS gains source-to-ESM codegen (Deno target already supports this for
+stdlib; module-tree support is the gap), promoting these 11 files to
+in-build status becomes a one-PR cutover instead of an 11-PR rewrite —
+the design risk is already discharged here.
+
+=== What blocked the _other_ panll subsystems
+
+These 11 module files were the cleanest port surface in panll. Most of
+the other 715 remaining `+.res+` files block on:
+
+[width="100%",cols="34%,33%,33%",options="header",]
+|===
+|Blocker |Affected subsystem |Effect
+|*TEA framework bindings* (Tea_App, Tea_Cmd, Tea_Html, Tea_Sub,
+Tea_Vdom, …) |All of `+src/components/+` (126), `+src/update/+` (89),
+`+src/view/+`, `+src/App.res+`, `+src/View.res+` |Components / view /
+update use `+Tea_*+` modules. Need AffineScript-side TEA bindings before
+port.
+
+|*Gossamer IPC FFI* |`+src/subscriptions/GossamerEvents.res+`,
+`+clade-portal/+`, `+src/RuntimeBridge*+` |Need AS Gossamer IPC
+bindings.
+
+|*ReScript JSX* |`+src/components/*+` |View files use JSX. AS has a
+different view story; need port plan.
+
+|*`+Js.*+` interop* |`+src/storage/Storage.res+`,
+`+src/SubscriptionsFixed.res+`, `+clade-portal/src/CladeCmd.res+`
+(`+JsExn+`) |Need `+use deno::{...}+` equivalents or carve-outs.
+|===
+
+=== Replacement of `+src/modules/*.res+`
+
+Once .affine → .mjs codegen lands for non-stdlib modules, the swap is
+mechanical (per file):
+
+[arabic]
+. Compile `+.affine+` to `+.res.mjs+`-equivalent.
+. Verify consumer modules see identical export names (`+config+`,
+`+hasCapability+`, `+capabilityLabel+`, `+capabilityDescription+` where
+present).
+. Delete the `+.res+` source.
+. Run tests.
+
+The current batch sets up step 1 input (each file passes
+`+affinescript check+`); step 2 (consumer compat) needs
+naming-convention verification — capability sum names are PascalCase on
+both sides (`+FarmCapability+`), but the underlying ReScript convention
+used camelCase `+farmCapability+`. Consumers either pattern-match on the
+constructors (no problem) or use the type-name as a type annotation
+(might need a rename pass; tracked in STATUS as the only known
+consumer-port wart).

@@ -1,0 +1,721 @@
+== PanLL Feature Build Script — Ordered Smallest → Largest
+
+== SPDX-License-Identifier: CC-BY-SA-4.0
+
+== 
+
+== INSTRUCTIONS: Copy everything below the line into Claude Code as a single message.
+
+== Claude will build each feature in order, asking questions where needed.
+
+== Each phase completes and compiles before moving to the next.
+
+== 
+
+== PREREQUISITES: PanLL must already be cloned and building.
+
+== cd ~/Documents/hyperpolymath-repos/panll
+
+== just build
+
+== ─────────────────────────────────────────────────────────────────────
+
+I want you to build these PanLL features IN ORDER from smallest to
+largest. Before you start, read the AI manifest:
+
+....
+cat 0-AI-MANIFEST.a2ml
+....
+
+Then read the architecture:
+
+....
+cat ARCHITECTURE.txt
+cat TOPOLOGY.md
+....
+
+Then read the existing model, view, and update files to understand the
+TEA pattern:
+
+....
+cat src/Model.res
+cat src/View.res
+cat src/Update.res (first 200 lines)
+....
+
+PanLL uses: - *ReScript* (frontend, TEA pattern — Model → Msg → Update →
+View) - *Rust/Tauri 2.0* (backend, in src-tauri/) - *Deno* (runtime,
+testing, build) - *Tailwind CSS 4.x* (styling) - No JSX — uses Tea_Html
+functions (Tea_Html.div, Tea_Html.button, etc.) - No npm dependencies
+except ReScript compiler itself - All state lives in `+model+` — no
+global mutable state - SPDX header `+PMPL-1.0-or-later+` on ALL new
+files - Panels are "`panels`" NEVER "`panes`" - Detailed annotations on
+ALL code
+
+Work through each phase completely. Compile and test after each phase
+before moving on.
+
+'''''
+
+=== PHASE 1 — Context-Sensitive Help & Hover-Overs (SMALLEST)
+
+Add tooltip and contextual help to every panel in PanLL.
+
+==== 1a. Create the help data model
+
+Create `+src/model/HelpModel.res+`:
+
+[source,rescript]
+----
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// HelpModel — tooltip and contextual help data for all panels
+
+type tooltipPosition =
+  | Above
+  | Below
+  | Left
+  | Right
+
+type helpEntry = {
+  id: string,           // unique key, e.g. "panel-l.symbolic-mass"
+  title: string,        // short title shown in tooltip header
+  summary: string,      // one-line summary (shown on hover)
+  detail: string,       // full explanation (shown on click/expand)
+  relatedPanels: array<string>,  // IDs of related panels
+  keywords: array<string>,      // for search
+}
+
+type helpState = {
+  activeTooltip: option<string>,     // currently hovered help ID
+  expandedHelp: option<string>,      // currently expanded help entry
+  tooltipPosition: tooltipPosition,
+  searchQuery: string,
+  searchResults: array<helpEntry>,
+  helpDatabase: Map.t<string, helpEntry>,  // all help entries
+}
+----
+
+==== 1b. Create the help database
+
+Create `+src/core/HelpDatabase.res+` — populate with entries for every
+panel. Read `+panel-clades/clades/+` to discover all panels and write a
+`+helpEntry+` for each one. Include entries for: - All 3 core panels
+(Panel-L, Panel-N, Panel-W) - All overlay panels (VAB, CloudGuard, Farm,
+Fleet, Hypatia, etc.) - All cognitive governance concepts (Vexometer,
+Anti-Crash Gate, Orbital Drift Aura, Information Humidity) - All
+workspace modes (Rhodium, Everything, Code, Bespoke) - Key UI elements
+(Panel Switcher, Capture Bar, Status Bar, Ribbon) - Key concepts
+(eNSAID, TEA pattern, Binary Star Co-Orbit, Teranga, Umoja)
+
+==== 1c. Create the tooltip component
+
+Create `+src/components/Tooltip.res+`: - Renders a floating tooltip near
+the cursor/element - Shows `+summary+` on hover - Expands to show
+`+detail+` on click - Links to related panels - Dismisses on Escape or
+clicking elsewhere - Styled with Tailwind (dark background, rounded
+corners, subtle shadow) - Accessible: role="`tooltip`", aria-describedby
+
+==== 1d. Create the help overlay panel
+
+Create `+src/components/HelpOverlay.res+`: - Full-screen searchable help
+browser - Search box at top — filters helpDatabase by keywords and
+titles - Results shown as cards with title, summary, and click-to-expand
+detail - Keyboard shortcut: `+Ctrl+Shift+H+` to open/close - Add to
+panel switcher bar
+
+==== 1e. Wire help into existing panels
+
+For each existing panel component in `+src/components/+`: - Add
+`+Tooltip.make+` calls on key UI elements - Pass the relevant
+`+helpEntry.id+` so the correct tooltip appears - Don’t modify panel
+logic — only add tooltip wrappers around existing elements
+
+==== 1f. Compile and test
+
+[source,bash]
+----
+deno task res:build   # Must compile with 0 errors
+deno task test        # All existing tests must still pass
+----
+
+'''''
+
+=== PHASE 2 — Wiki & Full Manuals (SMALL-MEDIUM)
+
+Create an integrated documentation wiki inside PanLL.
+
+==== 2a. Create wiki data model
+
+Create `+src/model/WikiModel.res+`:
+
+[source,rescript]
+----
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// WikiModel — integrated documentation wiki
+
+type wikiPage = {
+  slug: string,              // URL-safe identifier
+  title: string,
+  content: string,           // Markdown/A2ML content
+  category: wikiCategory,
+  lastUpdated: string,       // ISO date
+  parentSlug: option<string>,
+  childSlugs: array<string>,
+  relatedHelpIds: array<string>,  // links to HelpDatabase entries
+}
+
+and wikiCategory =
+  | GettingStarted
+  | CoreConcepts
+  | PanelReference
+  | Tutorials
+  | Architecture
+  | Troubleshooting
+  | Glossary
+----
+
+==== 2b. Create wiki content generator
+
+Create `+src/core/WikiContent.res+`: - Auto-generate a wiki page for
+every panel from HelpDatabase entries + clade definitions - Include
+these manual sections: 1. *Getting Started* — what is PanLL, first
+launch, basic navigation 2. *Core Concepts* — eNSAID, Binary Star, TEA
+pattern, panels vs panes (panels!), cognitive governance 3. *Panel
+Reference* — one page per panel with purpose, keyboard shortcuts,
+configuration options 4. *Tutorials* — step-by-step guides for common
+tasks 5. *Architecture* — how PanLL is built, module map, data flow 6.
+*Troubleshooting* — common issues and fixes 7. *Glossary* — all terms
+defined
+
+==== 2c. Create wiki panel component
+
+Create `+src/components/Wiki.res+`: - Sidebar with category tree
+navigation (collapsible sections) - Main content area rendering wiki
+pages - Breadcrumb navigation at top - Search bar (reuses help search,
+extended to wiki content) - "`Edit this page`" link (opens source in
+editor via Editor Bridge panel) - Internal links between wiki pages
+(click panel name → goes to panel reference page) - Keyboard shortcut:
+`+Ctrl+Shift+W+` (W for wiki) — *ASK ME* if this conflicts with an
+existing shortcut
+
+==== 2d. Context-sensitive wiki links
+
+Enhance each panel’s help tooltip (from Phase 1): - Add a "`Learn more
+→`" link at the bottom of each expanded tooltip - Link goes directly to
+that panel’s wiki page - Right-click any panel header → "`Open in Wiki`"
+option
+
+==== 2e. Compile and test
+
+[source,bash]
+----
+deno task res:build
+deno task test
+----
+
+Write tests for wiki content generation (every panel must have a wiki
+page).
+
+'''''
+
+=== PHASE 3 — Software Induction Walkthrough (MEDIUM)
+
+Build an interactive guided tour system — like those "`click here, then
+here`" software onboarding experiences.
+
+==== 3a. Create tour data model
+
+Create `+src/model/TourModel.res+`:
+
+[source,rescript]
+----
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// TourModel — interactive guided tour / software induction
+
+type tourHighlight =
+  | PanelSwitcher
+  | StatusBar
+  | CaptureBar
+  | SpecificPanel(string)  // panel ID
+  | UIElement(string)      // CSS selector or element ID
+  | KeyboardShortcut(string)
+
+type tourStep = {
+  id: string,
+  title: string,
+  instruction: string,          // "Click on the Panel Switcher..."
+  highlight: tourHighlight,     // what to spotlight
+  expectedAction: option<tourAction>,  // what the user should do
+  completionCheck: option<string>,     // condition to auto-advance
+  tipText: option<string>,            // bonus tip shown small
+}
+
+and tourAction =
+  | ClickElement(string)
+  | PressKey(string)
+  | OpenPanel(string)
+  | ChangeMode(string)
+  | AnyAction            // just do anything to continue
+
+type tour = {
+  id: string,
+  name: string,
+  description: string,
+  steps: array<tourStep>,
+  estimatedMinutes: int,
+}
+
+type tourState = {
+  activeTour: option<string>,
+  currentStep: int,
+  completedTours: array<string>,
+  skipped: bool,
+}
+----
+
+==== 3b. Create the tour definitions
+
+Create `+src/core/Tours.res+` with these built-in tours:
+
+*Tour 1: "`Welcome to PanLL`" (5 min)* 1. Welcome message — explain
+eNSAID concept in 2 sentences 2. Highlight Panel-L → explain symbolic
+panel 3. Highlight Panel-N → explain neural panel + ECHIDNA 4. Highlight
+Panel-W → explain world/results panel 5. Highlight Panel Switcher → show
+how to open overlay panels 6. Highlight Status Bar → explain what each
+section shows 7. Try opening an overlay panel (VAB or Farm) 8. Try
+cycling workspace modes (Ctrl+Shift+M) 9. Congratulations — you’re ready
+
+*Tour 2: "`Panels Deep Dive`" (10 min)* - Walk through each panel
+category (governance, infra, game dev, etc.) - Open 3-4 representative
+panels, explain what each does
+
+*Tour 3: "`Keyboard Power User`" (5 min)* - All keyboard shortcuts with
+practice steps
+
+*Tour 4: "`Your First Custom Panel`" (15 min)* - Walk through the Minter
+to create a panel from scratch - Provision it, configure isolation tier,
+see it in the switcher
+
+*Tour 5: "`Game Development Setup`" (10 min)* - Walk through IDApTIK
+panels specifically - Set up a game dev workspace mode
+
+==== 3c. Create the tour overlay component
+
+Create `+src/components/TourOverlay.res+`: - *Spotlight effect*: dims
+everything except the highlighted element (CSS backdrop with cutout) -
+*Speech bubble*: positioned next to the highlighted element with the
+instruction text - *Progress bar*: shows step N of M - *Buttons*:
+"`Next`", "`Back`", "`Skip Tour`" - *Auto-advance*: if
+`+expectedAction+` is set, watch for it and advance automatically -
+*Persist completion*: mark tours as completed so they don’t re-trigger -
+First launch detection: if no tours completed, offer "`Welcome to
+PanLL`" automatically
+
+==== 3d. Add tour launcher to UI
+
+* Add "`Guided Tours`" button to the help overlay (Phase 2)
+* Add tour list to wiki Getting Started section
+* On first ever launch, show a gentle prompt: "`Welcome! Would you like
+a quick tour? (2 minutes)`"
+
+==== 3e. Compile and test
+
+[source,bash]
+----
+deno task res:build
+deno task test
+----
+
+Write tests for tour step sequencing and completion tracking.
+
+'''''
+
+=== PHASE 4 — Cognitive Ergonomics Modes (MEDIUM-LARGE)
+
+Add workspace focus modes that reshape PanLL based on what you’re doing.
+
+==== 4a. Extend workspace model
+
+In `+src/model/WorkspaceModel.res+`, add these new modes alongside the
+existing ones (Rhodium, Everything, Code, Bespoke):
+
+[source,rescript]
+----
+// New cognitive focus modes
+type focusMode =
+  | GameLoop       // game development focused
+  | DeepTheory     // logic, maths, formal verification
+  | General        // IDE support with neurosymbolic + agentic
+  | LearnStyle     // adaptive — learns from usage patterns (Phase 6)
+----
+
+==== 4b. Define mode configurations
+
+Create `+src/core/FocusModes.res+`:
+
+*Game Loop Mode:* - Visible panels: Game Preview, Level Architect, VM
+Inspector, Build Dashboard, Valence Shell, Coprocessors - Hidden:
+Palimpsest Plaza, Reposystem, CloudGuard, Aerie (not game-relevant) -
+Status bar shows: FPS, build status, test results, active players (if
+multiplayer) - Colour theme: darker, less visual noise - Information
+Humidity: Medium (balanced) - Panel-N advisor: game-dev focused prompts,
+performance tips
+
+*Deep Theory Mode:* - Visible panels: Panel-L (prominent), Playgrounds,
+Proof panel, Interfaces - Hidden: Fleet, CloudGuard, Farm, most infra
+panels - Panel-L takes 60% of screen width (enlarged symbolic view) -
+Panel-N advisor: proof tactics, type theory help, formal verification
+guidance - Information Humidity: High (show everything — user wants
+density) - Colour theme: high contrast, serif fonts for mathematical
+notation - Status bar shows: proof obligations remaining, type-check
+status
+
+*General Mode:* - Visible panels: all core panels balanced, Panel
+Switcher prominent - Panel-N advisor: general coding help, neurosymbolic
+suggestions - Information Humidity: Medium - Default keyboard shortcuts
+active - This is the "`normal`" mode — IDE-like with NeSy + agentic
+support
+
+==== 4c. Mode switching UI
+
+* Extend the workspace mode cycle (Ctrl+Shift+M) to include focus modes
+* Add a mode picker dropdown in the Status Bar (click mode name →
+dropdown with all modes)
+* Each mode has an icon and one-line description
+* Switching modes animates panels in/out (fade transition, 200ms)
+* Mode persists across sessions (saved to Tauri filesystem)
+
+==== 4d. Mode-specific panel arrangements
+
+When entering a mode: 1. Save current arrangement as "`Previous`" (can
+restore) 2. Apply mode’s panel visibility rules 3. Apply mode’s layout
+rules (panel sizing, prominence) 4. Update Panel-N advisor context 5.
+Update Information Humidity setting 6. Update Status Bar content
+
+==== 4e. Compile and test
+
+[source,bash]
+----
+deno task res:build
+deno task test
+----
+
+Write tests for mode switching, panel visibility rules, and state
+persistence.
+
+'''''
+
+=== PHASE 5 — Agent Queues (LARGE)
+
+Build a system where users create named chains of little agents that run
+in sequence with one click.
+
+==== 5a. Create agent queue model
+
+Create `+src/model/AgentQueueModel.res+`:
+
+[source,rescript]
+----
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// AgentQueueModel — user-defined agent chains
+
+type agentStep = {
+  id: string,
+  name: string,               // e.g. "tidyTasks", "documentIt", "gatherTodos"
+  description: string,        // what this agent does
+  prompt: string,             // the instruction sent to the agent
+  cartridgeId: option<string>,  // BoJ cartridge to invoke (if any)
+  panelId: option<string>,      // PanLL panel to use (if any)
+  timeout: int,                 // max seconds before moving on
+  continueOnError: bool,        // skip or abort on failure
+}
+
+type agentQueue = {
+  id: string,
+  name: string,                // user-chosen name, e.g. "Morning Standup"
+  description: string,
+  steps: array<agentStep>,
+  shortcutKey: option<string>,  // optional keyboard shortcut
+  ribbonIcon: option<string>,   // optional icon for quick access
+  lastRun: option<string>,      // ISO timestamp
+  runCount: int,
+}
+
+type queueExecution = {
+  queueId: string,
+  currentStep: int,
+  stepResults: array<stepResult>,
+  status: executionStatus,
+  startedAt: string,
+}
+
+and stepResult = {
+  stepId: string,
+  output: string,
+  success: bool,
+  durationMs: int,
+}
+
+and executionStatus =
+  | Running
+  | Paused
+  | Completed
+  | Failed(string)
+  | Cancelled
+----
+
+==== 5b. Built-in agent queue templates
+
+Create `+src/core/AgentQueues.res+` with starter templates the user can
+customise:
+
+[width="100%",cols="42%,25%,33%",options="header",]
+|===
+|Queue Name |Steps |Purpose
+|*tidyTasks* |scan TODOs → group by file → prioritise → update
+STATE.a2ml |Clean up task tracking
+
+|*documentIt* |scan undocumented functions → generate docstrings → write
+to files |Auto-document code
+
+|*gatherTodos* |grep TODOs/FIXMEs → format table → show in Panel-W
+|Collect all TODOs
+
+|*preCommit* |run linter → run tests → run panic-attack → format summary
+|Pre-commit checklist
+
+|*morningStandup* |check git log → check CI status → check open PRs →
+summarise |Daily status
+
+|*reviewCode* |diff HEAD~1 → analyse changes → suggest improvements →
+flag issues |Post-commit review
+
+|*securityScan* |run Hypatia → check dependencies → scan secrets →
+report |Security audit
+|===
+
+==== 5c. Agent queue runner (Rust backend)
+
+Create `+src-tauri/src/agent_queue.rs+`: - Execute agent steps
+sequentially - Stream output to Panel-W in real-time - Support
+pause/resume/cancel - Invoke BoJ cartridges via HTTP when
+`+cartridgeId+` is set - Log all runs to
+`+~/.panll/agent-queue-history.json+` - Tauri commands: `+queue_run+`,
+`+queue_pause+`, `+queue_cancel+`, `+queue_list+`, `+queue_save+`,
+`+queue_delete+`
+
+==== 5d. Agent queue panel UI
+
+Create `+src/components/AgentQueue.res+`: - *Queue Library*: list all
+saved queues as cards with name, description, step count, last run -
+*Queue Builder*: drag-and-drop step ordering, add/remove steps, edit
+each step’s prompt - *Queue Runner*: real-time execution view — current
+step highlighted, output streaming, progress bar - *Quick Access
+Ribbon*: horizontal strip at top of Panel-N with queue shortcut buttons
+(user’s pinned queues) - One-click run: click queue card or ribbon
+button → executes immediately - Keyboard shortcut assignment:
+right-click queue → "`Assign shortcut`" → press key combo
+
+==== 5e. Wire into Panel-N
+
+The agent queue ribbon should appear at the top of Panel-N (the
+neural/agentic panel): - Row of small icon buttons for pinned queues -
+"`+`" button to create new queue - Click = run, right-click =
+edit/configure - Running queue shows progress indicator on the ribbon
+button
+
+==== 5f. Compile and test
+
+[source,bash]
+----
+deno task res:build
+deno task test
+----
+
+Write tests for queue execution order, pause/resume, error handling, and
+step timeout.
+
+'''''
+
+=== PHASE 6 — "`Learn from my Style`" Mode (LARGEST)
+
+This is the adaptive mode that watches how the user works and suggests
+panel arrangements and agent queues.
+
+==== 6a. Create usage tracking model
+
+Create `+src/model/StyleLearnerModel.res+`:
+
+[source,rescript]
+----
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// StyleLearnerModel — observes IDE usage patterns to suggest panels & workflows
+
+type usageEvent = {
+  timestamp: string,
+  eventType: usageEventType,
+  context: string,          // what file/panel was active
+  metadata: Map.t<string, string>,
+}
+
+and usageEventType =
+  | PanelOpened(string)         // which panel
+  | PanelClosed(string)
+  | PanelDwellTime(string, int) // panel ID, milliseconds spent
+  | KeyboardShortcutUsed(string)
+  | ModeChanged(string)         // which mode
+  | AgentQueueRun(string)       // which queue
+  | FileEdited(string)          // file extension / language
+  | BoJCartridgeUsed(string)    // which cartridge
+  | SearchPerformed(string)     // help/wiki search query
+  | ErrorEncountered(string)    // type of error
+
+type usagePattern = {
+  name: string,
+  description: string,
+  confidence: float,           // 0.0 to 1.0
+  detectedAt: string,
+  evidence: array<string>,     // human-readable reasons
+}
+
+type styleSuggestion = {
+  id: string,
+  suggestionType: suggestionType,
+  title: string,
+  reason: string,              // "You opened the Build Dashboard 12 times today..."
+  confidence: float,
+  dismissed: bool,
+  accepted: bool,
+}
+
+and suggestionType =
+  | PinPanelToRibbon(string)       // suggest adding panel to quick access
+  | CreateAgentQueue(agentStep)    // suggest a new agent queue
+  | SuggestFocusMode(string)       // suggest switching to a mode
+  | SuggestKeyboardShortcut(string, string)  // action, suggested key
+  | SuggestPanelArrangement(array<string>)   // suggested visible panels
+  | RemoveUnusedPanel(string)      // suggest hiding rarely-used panel
+----
+
+==== 6b. Create the pattern detector
+
+Create `+src/core/StyleDetector.res+`:
+
+Detect these patterns from usage history:
+
+[width="100%",cols="26%,41%,33%",options="header",]
+|===
+|Pattern |Detection Rule |Suggestion
+|*Frequent panel* |Panel opened > 5 times/session, 3+ sessions |Pin to
+ribbon
+
+|*Unused panel* |Panel never opened in 5+ sessions |Offer to hide
+
+|*Repeated sequence* |Same 3+ panels opened in same order, 3+ times
+|Create agent queue
+
+|*Time-of-day habit* |Consistent panel usage at similar times |Suggest
+mode switch
+
+|*Language focus* |80%+ edits in one language for session |Suggest
+language-specific panels
+
+|*Error cluster* |Same error type > 3 times in session |Suggest
+troubleshooting panel
+
+|*Mode affinity* |User spends 80%+ time in one mode |Set as default mode
+
+|*Shortcut candidate* |Action performed > 10 times without shortcut
+|Suggest keyboard shortcut
+|===
+
+Rules: - Only suggest with confidence > 0.6 - Never suggest more than 3
+things at once (avoid overwhelm) - Respect dismissals — don’t re-suggest
+dismissed items for 7 days - All detection runs locally — no data leaves
+the machine
+
+==== 6c. Create the suggestion UI
+
+Create `+src/components/StyleSuggestions.res+`: - Subtle notification
+dot on Panel-N when suggestions are available - Click to see suggestion
+cards - Each card has: title, reason (evidence-based), Accept / Dismiss
+buttons - Accepted suggestions apply immediately (pin panel, create
+queue, etc.) - "`Style Insights`" section: shows detected patterns as a
+dashboard - "`You spend most time in Game Loop mode`" - "`Your most-used
+panels: Build Dashboard, Game Preview, Valence Shell`" - "`Suggested
+ribbon: [icons of top 5 panels]`"
+
+==== 6d. Usage data storage (Rust backend)
+
+Create `+src-tauri/src/style_learner.rs+`: - Store usage events in
+`+~/.panll/usage-history.json+` (rolling 30-day window) - Auto-prune
+events older than 30 days - Tauri commands: `+style_record_event+`,
+`+style_get_patterns+`, `+style_get_suggestions+`,
+`+style_dismiss_suggestion+`, `+style_accept_suggestion+` - Run pattern
+detection on session start and every 30 minutes - Maximum file size:
+10MB (auto-compact if exceeded)
+
+==== 6e. IDE observation bridge
+
+Enhance the Editor Bridge panel to emit `+usageEvent+` data: - File save
+events → `+FileEdited+` with language/extension - Error diagnostics →
+`+ErrorEncountered+` - Build results → relevant events - This connects
+to the user’s actual code editor (VS Code, Neovim, etc.) via LSP
+cartridge
+
+==== 6f. Wire "`Learn from my Style`" as a focus mode
+
+When the user selects "`Learn from my Style`" mode: - All panels visible
+(like Everything mode) BUT ordered by usage frequency - Ribbon
+auto-populated with most-used panels - Suggestions appear proactively
+(notification dot pulses gently) - Panel-N advisor context: "`Based on
+your patterns, here’s what might help…`" - After 2 weeks of learning,
+offer to "`Crystallise`" — create a permanent Bespoke mode from learned
+preferences
+
+==== 6g. Compile and test
+
+[source,bash]
+----
+deno task res:build
+deno task test
+----
+
+Write tests for: - Pattern detection accuracy (mock usage data →
+expected patterns) - Suggestion generation (patterns → correct
+suggestion types) - Dismissal/acceptance persistence - 30-day rolling
+window cleanup - File size auto-compaction
+
+'''''
+
+=== FINAL VERIFICATION
+
+After all 6 phases:
+
+[arabic]
+. `+deno task res:build+` — 0 errors, 0 warnings
+. `+deno task test+` — all tests pass (original + new)
+. Each new panel appears in the Panel Switcher
+. Help tooltips work on all panels
+. Wiki loads with pages for every panel
+. Welcome tour runs on simulated first launch
+. All 4 focus modes switch correctly
+. Agent queue runner executes a template queue
+. Style learner records events and generates patterns
+
+Show me a summary table:
+
+[cols=",,,",options="header",]
+|===
+|Feature |Files Added |Tests Added |Status
+|Context-Sensitive Help |? |? |✅/❌
+|Wiki & Manuals |? |? |✅/❌
+|Induction Walkthrough |? |? |✅/❌
+|Focus Modes |? |? |✅/❌
+|Agent Queues |? |? |✅/❌
+|Learn from my Style |? |? |✅/❌
+|===
+
+*Done!* Tell me: "`All 6 features are built. PanLL now has contextual
+help on every element, a searchable wiki, guided tours, 4 cognitive
+focus modes, customisable agent queues, and adaptive style learning.`"

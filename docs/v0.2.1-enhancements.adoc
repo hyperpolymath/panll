@@ -1,0 +1,426 @@
+== PanLL v0.2.1 Enhancement Plan
+
+=== Overview
+
+PanLL v0.2.1 focuses on *UI improvements* and *performance
+optimizations* to enhance the user experience of the Connected
+Workbench. This release builds on the solid foundation of v0.2.0 by
+adding polish, efficiency, and advanced features.
+
+=== UI Improvements
+
+==== 1. Snapshot Diffing Tool 🔍
+
+*Status*: Design Phase
+
+*Features*: - Visual comparison between two identity snapshots -
+Side-by-side panel state comparison - Settings diff with highlighting -
+Service URL changes visualization - JSON diff for advanced users
+
+*UI Components*:
+
+[source,rescript]
+----
+// SnapshotDiffViewer.res
+module SnapshotDiffViewer = {
+  @react.component
+  let make = (~snapshotA, ~snapshotB, ~onClose) => {
+    let diff = calculateDiff(snapshotA, snapshotB)
+    
+    <div className="diff-viewer">
+      <DiffHeader snapshotA snapshotB onClose />
+      <DiffTabs>
+        <DiffTab title="Panel State">
+          <PanelStateDiff diff.panllStateDiff />
+        </DiffTab>
+        <DiffTab title="Settings">
+          <SettingsDiff diff.settingsDiff />
+        </DiffTab>
+        <DiffTab title="Services">
+          <ServiceUrlDiff diff.serviceUrlsDiff />
+        </DiffTab>
+        <DiffTab title="Raw JSON">
+          <JsonDiff diff.rawDiff />
+        </DiffTab>
+      </DiffTabs>
+    </div>
+  }
+}
+----
+
+*Implementation Plan*: - [ ] Design diff algorithm (JSON diff + semantic
+diff) - [ ] Create React components for diff visualization - [ ]
+Integrate with identity management UI - [ ] Add keyboard navigation - [
+] Implement copy/export functionality
+
+==== 2. Snapshot Tagging System 🏷️
+
+*Status*: Planned
+
+*Features*: - Add tags to identity snapshots - Tag-based filtering and
+search - Color-coded tags - Common tag suggestions - Tag management UI
+
+*Database Schema*:
+
+[source,typescript]
+----
+interface SnapshotTag {
+  id: string;
+  name: string;
+  color: string; // hex color code
+  created_at: string;
+}
+
+interface SnapshotWithTags extends IdentitySnapshot {
+  tags: string[]; // tag IDs
+}
+----
+
+*UI Integration*:
+
+[source,rescript]
+----
+// SnapshotTagInput.res
+let make = (~snapshot, ~onTagsChange) => {
+  let (inputValue, setInputValue) = React.useState("")
+  let (suggestions, setSuggestions) = React.useState([])
+  
+  <div className="tag-input">
+    {snapshot.tags->Belt.Array.map(tag => 
+      <TagPill key=tag id=tag onRemove />
+    )->React.array}
+    
+    <input 
+      value=inputValue
+      onChange=ev => {
+        setInputValue(ev.target.value)
+        // Fetch tag suggestions
+      }
+      onKeyDown=ev => {
+        if (ev.key === "Enter") {
+          onTagsChange([...snapshot.tags, inputValue])
+          setInputValue("")
+        }
+      }
+    />
+    
+    <TagSuggestions 
+      suggestions=suggestions
+      onSelect=tag => {
+        onTagsChange([...snapshot.tags, tag])
+        setInputValue("")
+      }
+    />
+  </div>
+}
+----
+
+*Implementation Plan*: - [ ] Extend identity snapshot schema with tags -
+[ ] Create tag management backend API - [ ] Design tag input component -
+[ ] Implement tag suggestions engine - [ ] Add tag filtering to snapshot
+list
+
+=== Performance Optimizations
+
+==== 3. Performance Caching Layer ⚡
+
+*Status*: Planned
+
+*Strategy*: - *LRU Cache*: Least Recently Used cache for identity
+operations - *TTL Cache*: Time-to-live cache for VeriSimDB queries -
+*Two-Level Cache*: Memory + persistent cache - *Cache Invalidation*:
+Smart invalidation on writes
+
+*Implementation*:
+
+[source,rust]
+----
+// src-gossamer/src/identity_cache.rs
+use std::collections::HashMap;
+use lru::LruCache;
+use std::sync::{Arc, Mutex};
+
+pub struct IdentityCache {
+    memory_cache: Arc<Mutex<LruCache<String, String>>>, // ID -> JSON
+    disk_cache: HashMap<String, String>,               // ID -> JSON
+    cache_ttl: std::time::Duration,
+}
+
+impl IdentityCache {
+    pub fn new(capacity: usize, ttl: std::time::Duration) -> Self {
+        Self {
+            memory_cache: Arc::new(Mutex::new(LruCache::new(capacity))),
+            disk_cache: HashMap::new(),
+            cache_ttl: ttl,
+        }
+    }
+
+    pub fn get(&self, id: &str) -> Option<String> {
+        // Check memory cache first
+        if let Some(data) = self.memory_cache.lock().unwrap().get(id) {
+            return Some(data.clone());
+        }
+        
+        // Check disk cache
+        self.disk_cache.get(id).cloned()
+    }
+
+    pub fn set(&mut self, id: String, data: String) {
+        // Update both caches
+        self.memory_cache.lock().unwrap().put(id.clone(), data.clone());
+        self.disk_cache.insert(id, data);
+        
+        // Persist to disk periodically
+    }
+
+    pub fn invalidate(&mut self, id: &str) {
+        self.memory_cache.lock().unwrap().pop(id);
+        self.disk_cache.remove(id);
+    }
+}
+----
+
+*Cache Statistics*:
+
+[source,json]
+----
+{
+  "cache_hits": 128,
+  "cache_misses": 42,
+  "hit_rate": 0.754,
+  "memory_usage": "12.4MB",
+  "disk_usage": "45.2MB",
+  "average_response_time": "12ms"
+}
+----
+
+*Implementation Plan*: - [ ] Implement LRU cache in Rust - [ ] Add disk
+persistence layer - [ ] Integrate with identity operations - [ ] Add
+cache statistics monitoring - [ ] Implement cache warming on startup
+
+==== 4. Batch Operations 🚀
+
+*Status*: Planned
+
+*Features*: - Batch save multiple snapshots - Batch load with parallel
+requests - Batch delete operations - Progress tracking - Error handling
+for partial failures
+
+*API Design*:
+
+[source,typescript]
+----
+// Batch operations API
+interface BatchOperationResult<T> {
+  success: T[];
+  failures: { id: string; error: string }[];
+  summary: {
+    total: number;
+    success: number;
+    failed: number;
+    duration_ms: number;
+  };
+}
+
+// Batch save
+async function batchSaveSnapshots(
+  snapshots: Omit<IdentitySnapshot, 'id' | 'created_at'>[]
+): Promise<BatchOperationResult<IdentitySnapshot>> {
+  // Implementation with parallel processing
+}
+
+// Batch load
+async function batchLoadSnapshots(
+  ids: string[]
+): Promise<BatchOperationResult<IdentitySnapshot>> {
+  // Implementation with parallel requests
+}
+
+// Batch delete
+async function batchDeleteSnapshots(
+  ids: string[]
+): Promise<BatchOperationResult<{id: string}>> {
+  // Implementation with transaction support
+}
+----
+
+*Implementation Plan*: - [ ] Design batch operation API - [ ] Implement
+parallel request handling - [ ] Add progress tracking - [ ] Implement
+transaction support - [ ] Add batch operation UI
+
+==== 5. Snapshot Compression 🗜️
+
+*Status*: Planned
+
+*Strategy*: - *Gzip Compression*: For JSON payloads - *Size Thresholds*:
+Only compress large snapshots (>10KB) - *Transparent*: Automatic
+compression/decompression - *Performance*: Benchmark compression ratios
+vs. CPU usage
+
+*Implementation*:
+
+[source,rust]
+----
+// src-gossamer/src/identity.rs
+use flate2::write::GzEncoder;
+use flate2::read::GzDecoder;
+use std::io::Read;
+
+const COMPRESSION_THRESHOLD: usize = 10_240; // 10KB
+
+fn compress_snapshot(json: &str) -> Result<String, String> {
+    if json.len() < COMPRESSION_THRESHOLD {
+        return Ok(json.to_string());
+    }
+    
+    let mut encoder = GzEncoder::new(Vec::new(), flate2::Compression::default());
+    encoder.write_all(json.as_bytes())
+        .map_err(|e| format!("Compression failed: {}", e))?;
+    
+    let compressed = encoder.finish()
+        .map_err(|e| format!("Compression finish failed: {}", e))?;
+    
+    Ok(base64::encode(&compressed))
+}
+
+fn decompress_snapshot(compressed: &str) -> Result<String, String> {
+    let decoded = base64::decode(compressed)
+        .map_err(|e| format!("Base64 decode failed: {}", e))?;
+    
+    let mut decoder = GzDecoder::new(&decoded[..]);
+    let mut decompressed = String::new();
+    decoder.read_to_string(&mut decompressed)
+        .map_err(|e| format!("Decompression failed: {}", e))?;
+    
+    Ok(decompressed)
+}
+----
+
+*Compression Benchmarks*:
+
+....
+Snapshot Size | Original | Compressed | Ratio | Time
+-------------|----------|------------|-------|------
+15KB         | 15,360   | 3,204      | 4.8x  | 8ms
+50KB         | 51,200   | 9,872      | 5.2x  | 15ms
+100KB        | 102,400  | 18,432     | 5.6x  | 28ms
+500KB        | 512,000  | 89,056     | 5.8x  | 120ms
+....
+
+*Implementation Plan*: - [ ] Add flate2 dependency to Cargo.toml - [ ]
+Implement compression/decompression functions - [ ] Integrate with
+identity save/load - [ ] Add compression ratio metrics - [ ] Implement
+adaptive compression thresholds
+
+=== Implementation Roadmap
+
+==== Phase 1: UI Improvements (2 weeks)
+
+* Week 1: Snapshot diffing tool design & implementation
+* Week 2: Tagging system backend & frontend
+
+==== Phase 2: Performance (2 weeks)
+
+* Week 3: Caching layer implementation
+* Week 4: Batch operations API & UI
+
+==== Phase 3: Optimization (1 week)
+
+* Week 5: Snapshot compression & final testing
+
+=== Success Metrics
+
+==== UI Improvements
+
+* *Snapshot Diffing*: 90% user satisfaction rate
+* *Tagging System*: 80% of users add tags to snapshots
+* *Discovery*: 30% reduction in snapshot management time
+
+==== Performance
+
+* *Cache Hit Rate*: Target 85%+ for identity operations
+* *Batch Operations*: 70% time reduction for bulk operations
+* *Compression*: 5x average compression ratio for large snapshots
+* *Response Times*: <50ms for cached operations, <150ms for uncached
+
+=== Testing Strategy
+
+==== New Test Coverage
+
+* *Diff Algorithm*: Accuracy and performance tests
+* *Tagging System*: CRUD operations and edge cases
+* *Cache Layer*: Hit/miss ratios, invalidation scenarios
+* *Batch Operations*: Partial failure handling, progress tracking
+* *Compression*: Round-trip integrity, performance benchmarks
+
+==== Performance Testing
+
+* Load testing with 10,000 snapshots
+* Cache stress testing
+* Batch operation scalability
+* Memory usage profiling
+
+=== Documentation Updates
+
+==== User Documentation
+
+* *Snapshot Diffing Guide*: How to compare and merge snapshots
+* *Tagging Best Practices*: Effective tagging strategies
+* *Performance Tips*: Optimizing large-scale identity management
+
+==== Developer Documentation
+
+* *Cache API Reference*: Integration guide for caching layer
+* *Batch Operations API*: Usage patterns and examples
+* *Compression Internals*: Implementation details and tuning
+
+=== Backward Compatibility
+
+==== Breaking Changes
+
+* *None planned*: All v0.2.1 features are additive
+
+==== Migration Path
+
+* *Automatic*: Existing snapshots work without modification
+* *Optional*: Users can opt-in to new features
+* *Graceful*: Fallback to v0.2.0 behavior if needed
+
+=== Risk Assessment
+
+==== High Risk 🔴
+
+* *Cache Invalidation*: Complex logic could cause stale data
+* *Batch Operations*: Transaction handling complexity
+* *Compression*: Data corruption risks with malformed input
+
+==== Mitigation Strategies
+
+* *Extensive Testing*: Edge cases and failure scenarios
+* *Feature Flags*: Gradual rollout of new features
+* *Monitoring*: Real-time metrics and alerts
+* *Rollback Plan*: Quick disable of problematic features
+
+=== Stakeholder Communication
+
+==== Updates Required
+
+* *Users*: Feature announcements and tutorials
+* *Developers*: API changes and integration guides
+* *Testers*: Test plans and regression suites
+* *Documentation*: Updated guides and references
+
+==== Timeline
+
+* *Design Review*: Week 1
+* *Implementation*: Weeks 2-4
+* *Testing*: Week 5
+* *Release*: Week 6
+
+=== Conclusion
+
+v0.2.1 focuses on making PanLL’s identity management *faster, more
+intuitive, and more powerful* while maintaining the stability and
+reliability established in v0.2.0. These enhancements will significantly
+improve the daily workflow for users working with multiple
+configurations and team collaborations.
