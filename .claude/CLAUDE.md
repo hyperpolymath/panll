@@ -71,7 +71,7 @@ deno task test:coverage
 ## Critical Rules
 
 - **NEVER use Tauri** — project migrated to Gossamer. All backend refs use `src-gossamer/`
-- **NEVER use TypeScript** — ReScript only
+- **NEVER use TypeScript** — AffineScript only (ReScript is also banned; RS/TS/JS → AffineScript → typed-wasm)
 - **NEVER use npm/bun** — Deno only (npm used only for ReScript compiler)
 - **Panels, not panes** — PanLL uses "panels" terminology
 - **TEA pattern only** — no MVC, no Redux, no hooks. Model -> Msg -> Update -> View
