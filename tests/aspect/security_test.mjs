@@ -253,6 +253,10 @@ Deno.test("Aspect/Security: AntiCrash.checkSecurityConstraints flags eval() usag
 // 5. Redaction Engine — API keys and secrets must not leave the boundary
 // ============================================================================
 
+function syntheticToken(prefix, length) {
+  return prefix + "A".repeat(length);
+}
+
 Deno.test("Aspect/Security: redactText strips Anthropic API keys (sk-ant prefix)", () => {
   const text = "My API key is sk-ant-api03-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const result = redactText(text, builtInPatterns);
@@ -260,13 +264,13 @@ Deno.test("Aspect/Security: redactText strips Anthropic API keys (sk-ant prefix)
 });
 
 Deno.test("Aspect/Security: redactText strips OpenAI API keys (sk- prefix)", () => {
-  const text = "OpenAI key: sk-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef123456";
+  const text = `OpenAI key: ${syntheticToken("sk-", 38)}`;
   const result = redactText(text, builtInPatterns);
-  assert(!result.includes("sk-ABCDEFGHIJK"), "OpenAI key must be redacted");
+  assert(!result.includes(syntheticToken("sk-", 11)), "OpenAI key must be redacted");
 });
 
 Deno.test("Aspect/Security: redactText strips GitHub tokens (ghp_ prefix)", () => {
-  const text = "GitHub token: ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ12345";
+  const text = `GitHub token: ${syntheticToken("ghp_", 35)}`;
   const result = redactText(text, builtInPatterns);
   assert(!result.includes("ghp_"), "GitHub token must be redacted");
 });
