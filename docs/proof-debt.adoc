@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Proof Debt
+
+== (a) Discharged in this repository
+
+* None.
+
+== (b) Budgeted — tested with a refutation budget
+
+* None.
+
+== (c) Necessary axioms
+
+* None.
+
+== (d) Debt — actively to be closed
+
+* None.
+
+== Scanner signatures that are not proof debt
+
+`src-gossamer/src/provenance/commands.rs` contains the strings
+`unsafePerformIO` and `unsafeCoerce` as inert signatures for PanLL's provenance
+scanner. They are data used to detect unsound constructs in inspected source;
+PanLL does not execute or invoke either escape hatch.
