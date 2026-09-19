@@ -56,7 +56,7 @@ docs/        # Documentation
 
 * Browse the link:.[docs/] for architecture and conventions
 * Run `+just --list+` to see all available commands
-* Read link:../CONTRIBUTING.md[CONTRIBUTING.md] when you are ready to
+* Read link:../../.github/CONTRIBUTING.md[CONTRIBUTING.md] when you are ready to
 contribute
 
 === Troubleshooting

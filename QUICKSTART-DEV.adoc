@@ -36,4 +36,4 @@ just assail    # run panic-attack security scan
 
 == Contributing
 
-See link:CONTRIBUTING.md[CONTRIBUTING.md] for guidelines.
+See link:.github/CONTRIBUTING.md[CONTRIBUTING.md] for guidelines.
