@@ -410,7 +410,7 @@ When using Panll, we recommend:
 * https://github.com/hyperpolymath/panll/security/advisories[Security
 Advisories]
 * link:CHANGELOG.md[Changelog]
-* link:CONTRIBUTING.md[Contributing Guidelines]
+* link:../.github/CONTRIBUTING.md[Contributing Guidelines]
 * https://cve.mitre.org/[CVE Database]
 * https://www.first.org/cvss/calculator/3.1[CVSS Calculator]
 

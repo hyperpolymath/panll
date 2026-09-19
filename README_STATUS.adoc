@@ -312,7 +312,7 @@
 - link:docs/TECHNICAL_DEBT.md[Technical Debt Registry]
 - link:.github/hypatia-rules/panll-v0.2.0-fixes.yml[Hypatia Rules]
 - link:CHANGELOG.md[Changelog]
-- link:CONTRIBUTING.md[Contribution Guide]
+- link:.github/CONTRIBUTING.md[Contribution Guide]
 
 **Contact:**
 - **Maintainer:** [Your Name]
