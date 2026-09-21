@@ -1,43 +1,15 @@
-# Maintainers
+= MAINTAINERS
 
-This file lists the current maintainers of this project.
+Owner and maintainer of panll
+--------------------------------------------------
 
-## Active Maintainers
-
-| Name | GitHub | Role | Since |
-|------|--------|------|-------|
-| Metadatastician | @metadatastician | Primary | Project Start |
-
-## Emeritus Maintainers
-
-None at this time.
-
-## Becoming a Maintainer
-
-To become a maintainer:
-
-1. Demonstrate consistent, high-quality contributions
-2. Show understanding of the project's goals and architecture
-3. Be active in code reviews and community discussions
-4. Be nominated by an existing maintainer
-5. Be approved by consensus of existing maintainers
-
-## Maintainer Responsibilities
-
-- Reviewing and merging pull requests
-- Managing releases
-- Triaging issues
-- Enforcing code standards
-- Mentoring new contributors
-- Participating in decision-making
-
-## Maintainer Expectations
-
-- Respond to issues and PRs in a timely manner
-- Follow the code of conduct
-- Be transparent in decision-making
-- Communicate clearly and respectfully
-
----
-
-*Last updated: 2026-07-18*
+* Jonathan D.A. Jewell (@hyperpolymath) — repository owner and lead maintainer.
+* Every change to this repository is reviewed and merged by @hyperpolymath,
+  including dependency bumps and CI workflow edits.
+* Direct pushes to the default branch are limited to the owner; all other
+  changes arrive through pull requests and land via squash merge.
+* Security-relevant reports go to the owner account above rather than a
+  public issue.
+* This repository is part of the hyperpolymath estate and follows the
+  estate-wide governance, document-format and CI conventions enforced by
+  hyperpolymath/cicd-suite (the Central Estate CI/CD Audit).
