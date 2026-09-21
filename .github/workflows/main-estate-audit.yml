@@ -25,7 +25,7 @@ jobs:
         uses: hyperpolymath/cicd-suite/actions/idris2-abi-check@180b419825d238f8b606584c970a81dfa7cb6f81  # main
         
       - name: Zig UnifiedApiAdapter API Gate
-        uses: hyperpolymath/cicd-suite/actions/zig-unified-api-adapter-check@180b419825d238f8b606584c970a81dfa7cb6f81  # main
+        uses: hyperpolymath/cicd-suite/actions/zig-unified-api-adapter-check@b25f613c860823372a7ff2cb75c23f3606bee81f  # main
         
       - name: Contractile Validation Gate
         uses: hyperpolymath/cicd-suite/actions/contractile-validation-check@180b419825d238f8b606584c970a81dfa7cb6f81  # main
