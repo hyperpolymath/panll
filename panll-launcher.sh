@@ -407,7 +407,7 @@ desktop_escape() {
 
 desktop_exec_arg() {
  local value="$1"
- value="${value//\\/\\\\}"
+ value="${value//\\/\\\\\\\\}"
  value="${value//\"/\\\"}"
  value="${value//\`/\\\`}"
  value="${value//\$/\\\$}"
