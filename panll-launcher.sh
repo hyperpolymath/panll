@@ -118,6 +118,8 @@ is_gui_context() {
     [ ! -t 2 ] && { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; }
 }
 
+# Report title ($1) and body ($2) to stderr, and show a desktop alert when
+# a GUI context and a supported notification tool are available.
 gui_error() {
     local title="$1"
     local body="$2"
@@ -193,6 +195,8 @@ esac
 # PROCESS MANAGEMENT
 # ----------------------------------------------------------------------------
 
+# Succeed if the PID directory is absent or passes the ownership and
+# permission checks; reject an existing unsafe directory.
 pid_directory_is_safe() {
     local pid_dir
     pid_dir="$(dirname "$PID_FILE")"
@@ -200,6 +204,8 @@ pid_directory_is_safe() {
     check_private_state_dir "$pid_dir"
 }
 
+# Print the PID from PID_FILE without a newline; fail if unreadable or if
+# the value is not one to ten decimal digits representing a PID of at least 2.
 read_pid() {
     local pid
     IFS= read -r pid < "$PID_FILE" || return 1
@@ -210,6 +216,8 @@ read_pid() {
     printf '%s' "$pid"
 }
 
+# Succeed when PID_FILE is in a safe directory, contains a valid PID, and
+# kill -0 confirms that the process exists and is accessible to this user.
 is_running() {
     [ -f "$PID_FILE" ] || return 1
     pid_directory_is_safe || return 1
@@ -218,6 +226,8 @@ is_running() {
     kill -0 "$pid" 2>/dev/null
 }
 
+# Remove an existing PID file when is_running fails, logging a warning.
+# Call only after the state directory has been validated.
 clear_stale_pid() {
     if [ -f "$PID_FILE" ] && ! is_running; then
         warn "Removing stale or invalid PID file"
@@ -225,6 +235,8 @@ clear_stale_pid() {
     fi
 }
 
+# Poll URL with curl once per second for up to $1 seconds (default: 15).
+# Return success on a successful request, or failure when the wait expires.
 wait_for_url() {
     local max_wait=${1:-15}
     local waited=0
@@ -238,6 +250,9 @@ wait_for_url() {
     return 1
 }
 
+# Prepare private state directories and start START_COMMAND with nohup,
+# recording its PID and log. Reuse a running instance; fail on early exit
+# or URL readiness timeout (a timeout leaves the process running).
 start_server() {
     ensure_state_dirs || return 1
     clear_stale_pid
@@ -284,6 +299,8 @@ Check $LOG_FILE — and try: curl -v $URL"
     return 0
 }
 
+# Send SIGTERM to the validated, accessible PID and remove PID_FILE.
+# Do nothing if no running instance is found; do not wait for termination.
 stop_server() {
 if ! is_running; then
         log "No running instance found"
@@ -327,15 +344,20 @@ if ! is_running; then
 # SYSTEM INTEGRATION — --integ / --disinteg
 # ----------------------------------------------------------------------------
 
+# Succeed if path $1 exists, including when it is a dangling symlink.
 path_exists() {
     [ -e "$1" ] || [ -L "$1" ]
 }
 
+# Succeed if any configured integration target or icon ownership marker
+# exists, including a dangling symlink.
 already_integrated() {
     path_exists "$DESKTOP_FILE_TARGET" || path_exists "$DESKTOP_SHORTCUT_TARGET" || \
         path_exists "$ICON_TARGET" || path_exists "$ICON_MARKER_TARGET" || path_exists "$LAUNCHER_TARGET"
 }
 
+# Succeed only if at least one integration marker is found and all existing
+# integration targets satisfy the launch-scaffolder ownership marker checks.
 is_managed_install() {
     local found_marker="false" target
     local marker_targets=("$LAUNCHER_TARGET" "$DESKTOP_FILE_TARGET" "$DESKTOP_SHORTCUT_TARGET")
@@ -369,6 +391,8 @@ is_managed_install() {
     [ "$found_marker" = "true" ]
 }
 
+# Write the managed-icon marker beside ICON_MARKER_TARGET, set mode 0644,
+# and rename it into place; clean up the temporary file on failure.
 atomic_write_icon_marker() {
     local temp
     if ! temp="$(mktemp "${ICON_MARKER_TARGET}.tmp.XXXXXX")"; then
@@ -383,6 +407,8 @@ atomic_write_icon_marker() {
     fi
 }
 
+# Copy source $1 to a temporary file beside target $2, apply mode $3, and
+# rename it into place. Clean up the temporary file and fail on errors.
 atomic_copy() {
     local source="$1" target="$2" mode="$3" temp
     if ! temp="$(mktemp "${target}.tmp.XXXXXX")"; then
@@ -396,6 +422,8 @@ atomic_copy() {
     fi
 }
 
+# Print $1 with backslashes, newlines, carriage returns, and tabs escaped
+# for a desktop-entry string value, without adding a trailing newline.
 desktop_escape() {
     local value="$1"
     value="${value//\\/\\\\}"
@@ -405,6 +433,8 @@ desktop_escape() {
     printf '%s' "$value"
 }
 
+# Print $1 as a quoted desktop-entry Exec argument, escaping backslashes,
+# quotes, backticks, dollar signs, and percent field codes; append a newline.
 desktop_exec_arg() {
  local value="$1"
  value="${value//\\/\\\\\\\\}"
@@ -415,6 +445,8 @@ desktop_exec_arg() {
  printf '"%s"\n' "$value"
 }
 
+# Atomically write a managed desktop entry to $1 with mode 0644, using
+# keepopen.sh for GUI/TUI fallback and the custom icon or a generic icon.
 write_linux_desktop_file() {
     local target="$1" temp
     local icon_name
@@ -479,6 +511,8 @@ EOF
     fi
 }
 
+# Install the launcher, optional icon and marker, and Linux menu/desktop
+# entries in user directories; refresh desktop metadata when tools exist.
 do_integ_linux() {
     mkdir -p "$APPS_DIR" "$ICON_DIR" "$BIN_DIR" "$DESKTOP_SHORTCUT_DIR"
     # Declared and assigned separately (shellcheck SC2155). `local x="$(cmd)"`
@@ -527,6 +561,9 @@ do_integ_linux() {
     fi
 }
 
+# Delegate installation to launch-scaffolder when its source config exists;
+# otherwise use the Linux installer, refusing unmarked targets and prompting
+# before reinstalling a managed installation unless FORCE is true.
 do_integ() {
     # Fast path: delegate to `launch-scaffolder provision` when it's on
     # $PATH and the source config is still where it was at mint time.
@@ -559,6 +596,9 @@ do_integ() {
     log "✓ $APP_DISPLAY is now in your menu and on your Desktop."
 }
 
+# Validate state directories and stop a running server, then delegate removal
+# to launch-scaffolder when available. Otherwise refuse unmarked targets,
+# remove managed integration files and the PID file, and refresh the menu.
 do_disinteg() {
     ensure_state_dirs || return 1
     # Fast path: delegate to `launch-scaffolder provision --disinteg`
@@ -604,6 +644,7 @@ if is_running; then
     fi
 }
 
+# Print usage, supported modes, and the detected platform/runtime to stdout.
 show_help() {
     cat <<EOF
 $APP_DISPLAY launcher — $APP_DESC
@@ -638,6 +679,8 @@ EOF
 # MAIN SWITCH
 # ----------------------------------------------------------------------------
 
+# Print PLATFORM and the uname machine architecture joined by a hyphen,
+# without a trailing newline, for the version display.
 platform_id() {
     local arch
     arch="$(uname -m)"
