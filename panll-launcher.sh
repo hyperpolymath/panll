@@ -239,7 +239,7 @@ wait_for_url() {
 }
 
 start_server() {
-    ensure_state_dirs
+    ensure_state_dirs || return 1
     clear_stale_pid
 if is_running; then
         log "Already running (PID $(read_pid))"
@@ -427,6 +427,10 @@ write_linux_desktop_file() {
     # keepopen.sh implements the standard fallback ladder: GUI → TUI →
     # bash-at-repo-root. See launcher-standard.adoc §Fallback Ladder.
     local keepopen="/var/mnt/eclipse/repos/.desktop-tools/keepopen.sh"
+    if [ ! -f "$keepopen" ] || [ ! -x "$keepopen" ]; then
+        err "Required desktop helper is missing or not executable: $keepopen"
+        return 1
+    fi
     local gui_cmd tui_cmd quoted_launcher quoted_log
     printf -v quoted_launcher '%q' "$LAUNCHER_TARGET"
     printf -v quoted_log '%q' "$LOG_FILE"
@@ -499,9 +503,9 @@ do_integ_linux() {
         log "  · no custom icon — using system fallback (package-x-generic)"
     fi
 
-    write_linux_desktop_file "$DESKTOP_FILE_TARGET"
+    write_linux_desktop_file "$DESKTOP_FILE_TARGET" || return 1
     log "  + menu:     $DESKTOP_FILE_TARGET"
-    write_linux_desktop_file "$DESKTOP_SHORTCUT_TARGET"
+    write_linux_desktop_file "$DESKTOP_SHORTCUT_TARGET" || return 1
     log "  + desktop:  $DESKTOP_SHORTCUT_TARGET"
 
     command -v update-desktop-database >/dev/null 2>&1 && \
@@ -549,7 +553,7 @@ do_integ() {
     fi
     log "Integrating $APP_DISPLAY with the $PLATFORM desktop..."
     case "$PLATFORM" in
-        linux) do_integ_linux ;;
+        linux) do_integ_linux || return 1 ;;
         *)     err "Only Linux integration is implemented in the generated template so far."; return 1 ;;
     esac
     log "✓ $APP_DISPLAY is now in your menu and on your Desktop."
