@@ -19,8 +19,6 @@ kind    = "server-url"
 port    = 8000
 url     = "http://localhost:8000/public/"
 command = ["just", "serve"]
-pid-file = "/tmp/panll-server.pid"
-log-file = "/tmp/panll-server.log"
 
 [icon]
 source = "{repo-dir}/assets/icon-256.png"
