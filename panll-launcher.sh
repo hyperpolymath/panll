@@ -250,8 +250,9 @@ wait_for_url() {
     return 1
 }
 
-}
-
+# Prepare private state directories and start START_COMMAND with nohup,
+# recording its PID and log. Reuse a running instance; fail on early exit
+# or URL readiness timeout (a timeout leaves the process running).
 start_server() {
     ensure_state_dirs || return 1
     clear_stale_pid
