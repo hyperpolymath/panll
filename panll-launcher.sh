@@ -445,6 +445,18 @@ desktop_exec_arg() {
  printf '"%s"\n' "$value"
 }
 
+# Print the path of keepopen.sh, the standard GUI → TUI → shell fallback
+# helper, and fail if it is missing or not executable. Integration calls it
+# before writing anything, so a missing helper cannot leave a partial install.
+require_keepopen() {
+    local keepopen="/var/mnt/eclipse/repos/.desktop-tools/keepopen.sh"
+    if [ ! -f "$keepopen" ] || [ ! -x "$keepopen" ]; then
+        err "Required desktop helper is missing or not executable: $keepopen"
+        return 1
+    fi
+    printf '%s\n' "$keepopen"
+}
+
 # Atomically write a managed desktop entry to $1 with mode 0644, using
 # keepopen.sh for GUI/TUI fallback and the custom icon or a generic icon.
 write_linux_desktop_file() {
@@ -458,11 +470,8 @@ write_linux_desktop_file() {
 
     # keepopen.sh implements the standard fallback ladder: GUI → TUI →
     # bash-at-repo-root. See launcher-standard.adoc §Fallback Ladder.
-    local keepopen="/var/mnt/eclipse/repos/.desktop-tools/keepopen.sh"
-    if [ ! -f "$keepopen" ] || [ ! -x "$keepopen" ]; then
-        err "Required desktop helper is missing or not executable: $keepopen"
-        return 1
-    fi
+    local keepopen
+    keepopen="$(require_keepopen)" || return 1
     local gui_cmd tui_cmd quoted_launcher quoted_log
     printf -v quoted_launcher '%q' "$LAUNCHER_TARGET"
     printf -v quoted_log '%q' "$LOG_FILE"
@@ -514,6 +523,8 @@ EOF
 # Install the launcher, optional icon and marker, and Linux menu/desktop
 # entries in user directories; refresh desktop metadata when tools exist.
 do_integ_linux() {
+    # Check the desktop helper before any target is written (no partial install).
+    require_keepopen >/dev/null || return 1
     mkdir -p "$APPS_DIR" "$ICON_DIR" "$BIN_DIR" "$DESKTOP_SHORTCUT_DIR"
     # Declared and assigned separately (shellcheck SC2155). `local x="$(cmd)"`
     # takes its exit status from `local`, so a failed `cd` was swallowed and the
