@@ -3,6 +3,7 @@ message: "If you use this software, please cite it as below."
 authors:
   - family-names: "Jewell"
     given-names: "Jonathan D.A."
+    orcid: "https://orcid.org/0000-0002-3078-6652"
     email: "j.d.a.jewell@open.ac.uk"
     affiliation: "The Open University"
 title: "PanLL eNSAID: Environment for NeSy-Agentic Integrated Development"
@@ -20,6 +21,7 @@ preferred-citation:
   authors:
     - family-names: "Jewell"
       given-names: "Jonathan D.A."
+      orcid: "https://orcid.org/0000-0002-3078-6652"
   title: "Binary Star: A Neurosymbolic Co-Orbit Model for Cognitive Relief"
   year: 2026
   journal: "Draft/Preprint"
