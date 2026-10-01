@@ -1,25 +1,27 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# @a2ml-metadata begin
-# (
-#   id                   = "panll-launcher"
-#   type                 = "launcher"
-#   version              = "0.2.0"
-#   app-name             = "panll"
-#   app-display          = "PanLL"
-#   app-url              = "http://localhost:8000/public/"
-#   runtime-kind         = "server-url"
-#   standards-compliance = [
-#     "launcher-standard.adoc"
-#     "LM-LA-LIFECYCLE-STANDARD.adoc"
-#     "cross-platform-system-integration-modes"
-#   ]
-#   standard-spec-version = "0.1.0"
-#   generator             = "launch-scaffolder"
-# )
-# @a2ml-metadata end
+# @launcher-deed begin
+# ;; SPDX-License-Identifier: MPL-2.0
+# (praxis-deed
+#   :schema-version  "1.0.0"
+#   :canonical-name  "panll-launcher"
+#   :beholding-chora #u5"estate/chora"
+#   (artefact :type "launcher" :version "0.2.0"
+#             :generator "launch-scaffolder")
+#   (app :name "panll" :display "PanLL"
+#        :url "http://localhost:8000/public/" :runtime-kind "server-url")
+#   (compliance :standard-version "0.4.0"
+#               :standards ("launcher-standard.adoc"
+#                           "LM-LA-LIFECYCLE-STANDARD.adoc"
+#                           "cross-platform-system-integration-modes"))
+#   (modes :accepted ("--start" "--stop" "--status" "--browser" "--web" "--auto" "--integ" "--disinteg" "--help" "--version"))
+#   (platforms :supported ("linux" "macos" "windows"))
+#   (lifecycle-phases :covered ("start" "stop" "status" "integ" "disinteg")
+#                     :deferred ("install" "uninstall" "update" "backup" "restore" "migrate")))
+# @launcher-deed end
 #
 # ============================================================================
 # panll-launcher.sh — PanLL
@@ -36,31 +38,69 @@ set -euo pipefail
 # CONFIGURATION
 # ----------------------------------------------------------------------------
 
-APP_NAME="panll"
-APP_DISPLAY="PanLL"
-APP_DESC="PanLL — panels framework (TEA + workspace layer + Stapeln integration)"
-APP_CATEGORIES="Development;Utility;"
-APP_GENERIC_NAME="PanLL"
-RUNTIME_KIND="server-url"
+APP_NAME='panll'
+APP_DISPLAY='PanLL'
+APP_DESC='PanLL — panels framework (TEA + workspace layer + Stapeln integration)'
+APP_CATEGORIES='Development;Utility;'
+APP_GENERIC_NAME='PanLL'
+APP_VERSION='0.2.0'
+BUILD_SHA_SHORT='unknown'
+RUNTIME_KIND='server-url'
 
-REPO_DIR="/var/mnt/eclipse/repos/panll"
-ICON_SOURCE="/var/mnt/eclipse/repos/panll/assets/icon-256.png"
+REPO_DIR='/var/mnt/eclipse/repos/panll'
+ICON_SOURCE='/var/mnt/eclipse/repos/panll/assets/icon-256.png'
 
 # Absolute path back to the per-app `<app>.launcher.a2ml` config that
 # produced this script. Consumed by the --integ / --disinteg arms when
 # the `launch-scaffolder` binary is on $PATH, so they can delegate to
 # the Rust implementation instead of running the shell fallback.
-CONFIG_FILE="/var/mnt/eclipse/repos/panll/panll.launcher.a2ml"
+CONFIG_FILE='/var/mnt/eclipse/repos/panll/panll.launcher.a2ml'
 
-URL="http://localhost:8000/public/"
-APP_PORT="8000"
+URL='http://localhost:8000/public/'
 WAIT_SECONDS="15"
 
-PID_FILE="/tmp/panll-server.pid"
-LOG_FILE="/tmp/panll-server.log"
+PID_FILE="${XDG_RUNTIME_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}}/launch-scaffolder/panll/server.pid"
+LOG_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/launch-scaffolder/panll/server.log"
+
+# Both defaults live in per-app directories under per-user XDG state. Create
+# the default leaves as 0700 before
+# the first write: a predictable path inside a world-writable directory (the
+# old /tmp default) let any local user pre-create or symlink the pid file and
+# steer what this script later killed or removed (Hypatia 82/83, #48).
+# Default locations use unique per-app directories before chmod. Explicit
+# paths are never chmodded: a path such as /tmp must never have its parent
+# permissions changed. Every resolved parent is checked before PID/log I/O.
+ensure_state_dirs() {
+    local pid_dir log_dir
+    pid_dir="$(dirname "$PID_FILE")"
+    log_dir="$(dirname "$LOG_FILE")"
+    mkdir -p "$pid_dir" "$log_dir"
+chmod 0700 "$pid_dir"
+chmod 0700 "$log_dir"
+    check_private_state_dir "$pid_dir" || return 1
+    check_private_state_dir "$log_dir" || return 1
+}
+
+# Refuse shared or group-writable state locations. This also prevents a
+# custom /tmp path from causing chmod on /tmp or exposing a predictable PID
+# file to other local users.
+check_private_state_dir() {
+    local dir="$1" mode digits numeric
+    [[ -O "$dir" ]] || { err "State directory is not owned by this user: $dir"; return 1; }
+    mode="$(stat -c '%a' "$dir" 2>/dev/null || stat -f '%Lp' "$dir" 2>/dev/null)" || {
+        err "Cannot inspect state-directory permissions: $dir"; return 1;
+    }
+    digits="${mode: -3}"
+    [[ "$digits" =~ ^[0-7]{3}$ ]] || { err "Cannot inspect state-directory permissions: $dir"; return 1; }
+    numeric=$((8#$digits))
+    if (( numeric & 022 )); then
+        err "State directory is group/world-writable; choose a private location: $dir"
+        return 1
+    fi
+}
 
 # Explicit argv from [runtime].command
-START_COMMAND=(just serve )
+START_COMMAND=('just' 'serve')
 
 MODE="${1:---auto}"
 FORCE="false"
@@ -78,11 +118,16 @@ is_gui_context() {
     [ ! -t 2 ] && { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; }
 }
 
+# Report title ($1) and body ($2) to stderr, and show a desktop alert when
+# a GUI context and a supported notification tool are available.
 gui_error() {
     local title="$1"
     local body="$2"
     err "$title"
-    echo "$body" | sed 's/^/  /' >&2
+    # ${body//…} rather than `echo "$body" | sed 's/^/  /'` (shellcheck SC2001):
+    # the same two-space indent on every line, including empty ones, with no
+    # subprocess per call.
+    printf '  %s\n' "${body//$'\n'/$'\n  '}" >&2
     if is_gui_context; then
         if   command -v kdialog     >/dev/null 2>&1; then kdialog --title "$APP_DISPLAY: $title" --error "$body" 2>/dev/null &
         elif command -v zenity      >/dev/null 2>&1; then zenity --error --title="$APP_DISPLAY: $title" --text="$body" --width=500 2>/dev/null &
@@ -115,6 +160,7 @@ case "$PLATFORM" in
         DESKTOP_FILE_TARGET="$APPS_DIR/${APP_NAME}.desktop"
         DESKTOP_SHORTCUT_TARGET="$DESKTOP_SHORTCUT_DIR/${APP_NAME}.desktop"
         ICON_TARGET="$ICON_DIR/${APP_NAME}.png"
+        ICON_MARKER_TARGET="$ICON_TARGET.launch-scaffolder-managed"
         LAUNCHER_TARGET="$BIN_DIR/${APP_NAME}-launcher"
         ;;
     macos)
@@ -124,6 +170,7 @@ case "$PLATFORM" in
         DESKTOP_FILE_TARGET="$APPS_DIR/${APP_DISPLAY}.app"
         DESKTOP_SHORTCUT_TARGET="$DESKTOP_SHORTCUT_DIR/${APP_DISPLAY}.command"
         ICON_TARGET="$APPS_DIR/${APP_DISPLAY}.app/Contents/Resources/icon.png"
+        ICON_MARKER_TARGET="$ICON_TARGET.launch-scaffolder-managed"
         LAUNCHER_TARGET="$BIN_DIR/${APP_NAME}-launcher"
         ;;
     windows)
@@ -134,11 +181,12 @@ case "$PLATFORM" in
         DESKTOP_FILE_TARGET="$START_MENU_DIR/${APP_DISPLAY}.lnk"
         DESKTOP_SHORTCUT_TARGET="$DESKTOP_SHORTCUT_DIR/${APP_DISPLAY}.lnk"
         ICON_TARGET="$BIN_DIR/${APP_NAME}.ico"
+        ICON_MARKER_TARGET="$ICON_TARGET.launch-scaffolder-managed"
         LAUNCHER_TARGET="$BIN_DIR/${APP_NAME}-launcher.sh"
         ;;
     *)
         APPS_DIR=""; DESKTOP_SHORTCUT_DIR=""; BIN_DIR="$HOME/.local/bin"
-        DESKTOP_FILE_TARGET=""; DESKTOP_SHORTCUT_TARGET=""; ICON_TARGET=""
+        DESKTOP_FILE_TARGET=""; DESKTOP_SHORTCUT_TARGET=""; ICON_TARGET=""; ICON_MARKER_TARGET=""
         LAUNCHER_TARGET="$BIN_DIR/${APP_NAME}-launcher"
         ;;
 esac
@@ -147,16 +195,48 @@ esac
 # PROCESS MANAGEMENT
 # ----------------------------------------------------------------------------
 
-is_running() {
-    [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
+# Succeed if the PID directory is absent or passes the ownership and
+# permission checks; reject an existing unsafe directory.
+pid_directory_is_safe() {
+    local pid_dir
+    pid_dir="$(dirname "$PID_FILE")"
+    [ -d "$pid_dir" ] || return 0
+    check_private_state_dir "$pid_dir"
 }
 
+# Print the PID from PID_FILE without a newline; fail if unreadable or if
+# the value is not one to ten decimal digits representing a PID of at least 2.
+read_pid() {
+    local pid
+    IFS= read -r pid < "$PID_FILE" || return 1
+    if [[ ! "$pid" =~ ^[0-9]{1,10}$ ]] || (( 10#$pid < 2 )); then
+        err "Invalid PID value in $PID_FILE"
+        return 1
+    fi
+    printf '%s' "$pid"
+}
+
+# Succeed when PID_FILE is in a safe directory, contains a valid PID, and
+# kill -0 confirms that the process exists and is accessible to this user.
+is_running() {
+    [ -f "$PID_FILE" ] || return 1
+    pid_directory_is_safe || return 1
+    local pid
+    pid="$(read_pid)" || return 1
+    kill -0 "$pid" 2>/dev/null
+}
+
+# Remove an existing PID file when is_running fails, logging a warning.
+# Call only after the state directory has been validated.
 clear_stale_pid() {
-    if [ -f "$PID_FILE" ] && ! kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+    if [ -f "$PID_FILE" ] && ! is_running; then
+        warn "Removing stale or invalid PID file"
         rm -f "$PID_FILE"
     fi
 }
 
+# Poll URL with curl once per second for up to $1 seconds (default: 15).
+# Return success on a successful request, or failure when the wait expires.
 wait_for_url() {
     local max_wait=${1:-15}
     local waited=0
@@ -170,10 +250,14 @@ wait_for_url() {
     return 1
 }
 
+# Prepare private state directories and start START_COMMAND with nohup,
+# recording its PID and log. Reuse a running instance; fail on early exit
+# or URL readiness timeout (a timeout leaves the process running).
 start_server() {
+    ensure_state_dirs || return 1
     clear_stale_pid
 if is_running; then
-        log "Already running (PID $(cat "$PID_FILE"))"
+        log "Already running (PID $(read_pid))"
         return 0
     fi
 
@@ -192,7 +276,9 @@ nohup "${START_COMMAND[@]}" >"$LOG_FILE" 2>&1 &
     echo $! > "$PID_FILE"
 
     sleep 0.2
-    if ! kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+    local started_pid
+    started_pid="$(read_pid)" || { rm -f "$PID_FILE"; return 1; }
+    if ! kill -0 "$started_pid" 2>/dev/null; then
         gui_error "Process exited immediately" "Check $LOG_FILE"
         rm -f "$PID_FILE"
         return 1
@@ -209,17 +295,22 @@ Check $LOG_FILE — and try: curl -v $URL"
         fi
         return 1
     fi
-    log "Server started (PID $(cat "$PID_FILE")) — $URL"
+    log "Server started (PID $(read_pid)) — $URL"
     return 0
 }
 
+# Send SIGTERM to the validated, accessible PID and remove PID_FILE.
+# Do nothing if no running instance is found; do not wait for termination.
 stop_server() {
 if ! is_running; then
         log "No running instance found"
         return 0
     fi
     log "Stopping $APP_DISPLAY..."
-    kill "$(cat "$PID_FILE")" 2>/dev/null || true
+    pid_directory_is_safe || return 1
+    local pid
+    pid="$(read_pid)" || return 1
+    kill "$pid" 2>/dev/null || true
     rm -f "$PID_FILE"
     log "Stopped"
 }
@@ -253,28 +344,148 @@ if ! is_running; then
 # SYSTEM INTEGRATION — --integ / --disinteg
 # ----------------------------------------------------------------------------
 
-already_integrated() {
-    [ -f "$DESKTOP_FILE_TARGET" ] || [ -f "$LAUNCHER_TARGET" ]
+# Succeed if path $1 exists, including when it is a dangling symlink.
+path_exists() {
+    [ -e "$1" ] || [ -L "$1" ]
 }
 
+# Succeed if any configured integration target or icon ownership marker
+# exists, including a dangling symlink.
+already_integrated() {
+    path_exists "$DESKTOP_FILE_TARGET" || path_exists "$DESKTOP_SHORTCUT_TARGET" || \
+        path_exists "$ICON_TARGET" || path_exists "$ICON_MARKER_TARGET" || path_exists "$LAUNCHER_TARGET"
+}
+
+# Succeed only if at least one integration marker is found and all existing
+# integration targets satisfy the launch-scaffolder ownership marker checks.
+is_managed_install() {
+    local found_marker="false" target
+    local marker_targets=("$LAUNCHER_TARGET" "$DESKTOP_FILE_TARGET" "$DESKTOP_SHORTCUT_TARGET")
+    for target in "${marker_targets[@]}"; do
+        if ! path_exists "$target"; then
+            continue
+        fi
+        if [ "$target" = "$LAUNCHER_TARGET" ]; then
+            if [ ! -f "$target" ] || ! grep -Eq '^# GENERATED by launch-scaffolder from .+' "$target" 2>/dev/null; then
+                return 1
+            fi
+        else
+            if [ ! -f "$target" ] || ! grep -Fxq '# X-Launch-Scaffolder=launch-scaffolder' "$target" 2>/dev/null; then
+                return 1
+            fi
+        fi
+        found_marker="true"
+    done
+    if path_exists "$ICON_TARGET"; then
+        if [ ! -f "$ICON_MARKER_TARGET" ] || ! grep -Fxq 'launch-scaffolder managed icon' "$ICON_MARKER_TARGET" 2>/dev/null; then
+            return 1
+        fi
+        found_marker="true"
+    fi
+    if path_exists "$ICON_MARKER_TARGET"; then
+        if [ ! -f "$ICON_MARKER_TARGET" ] || ! grep -Fxq 'launch-scaffolder managed icon' "$ICON_MARKER_TARGET" 2>/dev/null; then
+            return 1
+        fi
+        found_marker="true"
+    fi
+    [ "$found_marker" = "true" ]
+}
+
+# Write the managed-icon marker beside ICON_MARKER_TARGET, set mode 0644,
+# and rename it into place; clean up the temporary file on failure.
+atomic_write_icon_marker() {
+    local temp
+    if ! temp="$(mktemp "${ICON_MARKER_TARGET}.tmp.XXXXXX")"; then
+        err "cannot create temporary icon ownership marker"
+        return 1
+    fi
+    if ! printf '%s\n' 'launch-scaffolder managed icon' >"$temp" || \
+       ! chmod 0644 "$temp" || ! mv -f "$temp" "$ICON_MARKER_TARGET"; then
+        rm -f "$temp"
+        err "cannot atomically write icon ownership marker"
+        return 1
+    fi
+}
+
+# Copy source $1 to a temporary file beside target $2, apply mode $3, and
+# rename it into place. Clean up the temporary file and fail on errors.
+atomic_copy() {
+    local source="$1" target="$2" mode="$3" temp
+    if ! temp="$(mktemp "${target}.tmp.XXXXXX")"; then
+        err "cannot create temporary file beside $target"
+        return 1
+    fi
+    if ! cp "$source" "$temp" || ! chmod "$mode" "$temp" || ! mv -f "$temp" "$target"; then
+        rm -f "$temp"
+        err "cannot atomically install $target"
+        return 1
+    fi
+}
+
+# Print $1 with backslashes, newlines, carriage returns, and tabs escaped
+# for a desktop-entry string value, without adding a trailing newline.
+desktop_escape() {
+    local value="$1"
+    value="${value//\\/\\\\}"
+    value="${value//$'\n'/\\n}"
+    value="${value//$'\r'/\\r}"
+    value="${value//$'\t'/\\t}"
+    printf '%s' "$value"
+}
+
+# Print $1 as a quoted desktop-entry Exec argument, escaping backslashes,
+# quotes, backticks, dollar signs, and percent field codes; append a newline.
+desktop_exec_arg() {
+ local value="$1"
+ value="${value//\\/\\\\\\\\}"
+ value="${value//\"/\\\"}"
+ value="${value//\`/\\\`}"
+ value="${value//\$/\\\$}"
+ value="${value//%/%%}"
+ printf '"%s"\n' "$value"
+}
+
+# Atomically write a managed desktop entry to $1 with mode 0644, using
+# keepopen.sh for GUI/TUI fallback and the custom icon or a generic icon.
 write_linux_desktop_file() {
-    local target="$1"
+    local target="$1" temp
     local icon_name
     if [ -f "$ICON_TARGET" ]; then
         icon_name="$APP_NAME"
     else
         icon_name="package-x-generic"
     fi
-    cat > "$target" <<EOF
+
+    # keepopen.sh implements the standard fallback ladder: GUI → TUI →
+    # bash-at-repo-root. See launcher-standard.adoc §Fallback Ladder.
+    local keepopen="/var/mnt/eclipse/repos/.desktop-tools/keepopen.sh"
+    if [ ! -f "$keepopen" ] || [ ! -x "$keepopen" ]; then
+        err "Required desktop helper is missing or not executable: $keepopen"
+        return 1
+    fi
+    local gui_cmd tui_cmd quoted_launcher quoted_log
+    printf -v quoted_launcher '%q' "$LAUNCHER_TARGET"
+    printf -v quoted_log '%q' "$LOG_FILE"
+# server-url: GUI = start server + open browser + tail log (so terminal
+    # stays open); TUI = start-only + follow log; Shell = repo root.
+    gui_cmd="$quoted_launcher --auto && tail -f $quoted_log"
+    tui_cmd="$quoted_launcher --start && tail -f $quoted_log"
+
+    if ! temp="$(mktemp "${target}.tmp.XXXXXX")"; then
+        err "cannot create temporary desktop file beside $target"
+        return 1
+    fi
+    if ! cat > "$temp" <<EOF
 [Desktop Entry]
+# X-Launch-Scaffolder=launch-scaffolder
 Type=Application
 Version=1.0
-Name=$APP_DISPLAY
-GenericName=$APP_GENERIC_NAME
-Comment=$APP_DESC
-Exec=$LAUNCHER_TARGET --auto
+Name=$(desktop_escape "$APP_DISPLAY")
+GenericName=$(desktop_escape "$APP_GENERIC_NAME")
+Comment=$(desktop_escape "$APP_DESC")
+Exec=$keepopen $(desktop_exec_arg "$APP_DISPLAY") $(desktop_exec_arg "$REPO_DIR") $(desktop_exec_arg "$gui_cmd") $(desktop_exec_arg "$tui_cmd") $(desktop_exec_arg "$LOG_FILE")
 Icon=$icon_name
-Terminal=false
+Terminal=true
 Categories=$APP_CATEGORIES
 StartupNotify=true
 StartupWMClass=$APP_NAME
@@ -282,32 +493,53 @@ Actions=stop;status;
 
 [Desktop Action stop]
 Name=Stop
-Exec=$LAUNCHER_TARGET --stop
+Exec=$(desktop_exec_arg "$LAUNCHER_TARGET") --stop
 
 [Desktop Action status]
 Name=Status
-Exec=$LAUNCHER_TARGET --status
+Exec=$(desktop_exec_arg "$LAUNCHER_TARGET") --status
 EOF
-    chmod 444 "$target"
+    then
+        rm -f "$temp"
+        err "cannot write desktop file $target"
+        return 1
+    fi
+    if ! chmod 0644 "$temp" || ! mv -f "$temp" "$target"; then
+        rm -f "$temp"
+        err "cannot atomically install desktop file $target"
+        return 1
+    fi
 }
 
+# Install the launcher, optional icon and marker, and Linux menu/desktop
+# entries in user directories; refresh desktop metadata when tools exist.
 do_integ_linux() {
     mkdir -p "$APPS_DIR" "$ICON_DIR" "$BIN_DIR" "$DESKTOP_SHORTCUT_DIR"
-    local script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
-    cp "$script_path" "$LAUNCHER_TARGET"
-    chmod +x "$LAUNCHER_TARGET"
+    # Declared and assigned separately (shellcheck SC2155). `local x="$(cmd)"`
+    # takes its exit status from `local`, so a failed `cd` was swallowed and the
+    # next line copied this script to $LAUNCHER_TARGET from a path assembled out
+    # of nothing — the one finding of the three with real failure-masking.
+    local script_dir
+    local script_path
+    if ! script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; then
+        err "cannot resolve this script's own directory"
+        return 1
+    fi
+    script_path="$script_dir/$(basename "${BASH_SOURCE[0]}")"
+    atomic_copy "$script_path" "$LAUNCHER_TARGET" 0755 || return 1
     log "  + launcher: $LAUNCHER_TARGET"
 
     if [ -n "$ICON_SOURCE" ] && [ -f "$ICON_SOURCE" ]; then
-        cp "$ICON_SOURCE" "$ICON_TARGET"
+        atomic_copy "$ICON_SOURCE" "$ICON_TARGET" 0644 || return 1
+        atomic_write_icon_marker || return 1
         log "  + icon:     $ICON_TARGET"
     else
         log "  · no custom icon — using system fallback (package-x-generic)"
     fi
 
-    write_linux_desktop_file "$DESKTOP_FILE_TARGET"
+    write_linux_desktop_file "$DESKTOP_FILE_TARGET" || return 1
     log "  + menu:     $DESKTOP_FILE_TARGET"
-    write_linux_desktop_file "$DESKTOP_SHORTCUT_TARGET"
+    write_linux_desktop_file "$DESKTOP_SHORTCUT_TARGET" || return 1
     log "  + desktop:  $DESKTOP_SHORTCUT_TARGET"
 
     command -v update-desktop-database >/dev/null 2>&1 && \
@@ -317,12 +549,21 @@ do_integ_linux() {
         gio set "$DESKTOP_SHORTCUT_TARGET" "metadata::trusted" true 2>/dev/null || true
     fi
     if [ -x "/var/mnt/eclipse/repos/.desktop-tools/verify-desktop-integrity.sh" ]; then
-        /var/mnt/eclipse/repos/.desktop-tools/verify-desktop-integrity.sh --generate 2>/dev/null \
-            && log "  + integrity hashes generated" \
-            || log "  · integrity hash generation failed (non-fatal)"
+        # if/else, not `cmd && log || log`: in that form a FAILING log on the
+        # success branch also fires the failure branch, so a run that worked
+        # reports both "generated" and "generation failed". The command's own
+        # status is what should choose the message.
+        if /var/mnt/eclipse/repos/.desktop-tools/verify-desktop-integrity.sh --generate 2>/dev/null; then
+            log "  + integrity hashes generated"
+        else
+            log "  · integrity hash generation failed (non-fatal)"
+        fi
     fi
 }
 
+# Delegate installation to launch-scaffolder when its source config exists;
+# otherwise use the Linux installer, refusing unmarked targets and prompting
+# before reinstalling a managed installation unless FORCE is true.
 do_integ() {
     # Fast path: delegate to `launch-scaffolder provision` when it's on
     # $PATH and the source config is still where it was at mint time.
@@ -336,20 +577,30 @@ do_integ() {
         exec "${forward[@]}"
     fi
 
-    if already_integrated && [ "$FORCE" != "true" ]; then
-        warn "$APP_DISPLAY is already integrated."
-        read -rp "Reinstall? [y/N] " confirm
-        [[ ! "$confirm" =~ ^[Yy]$ ]] && { log "Nothing changed."; return 0; }
+    if already_integrated; then
+        if ! is_managed_install; then
+            err "refusing to overwrite unmarked integration files for $APP_NAME"
+            return 1
+        fi
+        if [ "$FORCE" != "true" ]; then
+            warn "$APP_DISPLAY is already integrated."
+            read -rp "Reinstall? [y/N] " confirm
+            [[ ! "$confirm" =~ ^[Yy]$ ]] && { log "Nothing changed."; return 0; }
+        fi
     fi
     log "Integrating $APP_DISPLAY with the $PLATFORM desktop..."
     case "$PLATFORM" in
-        linux) do_integ_linux ;;
+        linux) do_integ_linux || return 1 ;;
         *)     err "Only Linux integration is implemented in the generated template so far."; return 1 ;;
     esac
     log "✓ $APP_DISPLAY is now in your menu and on your Desktop."
 }
 
+# Validate state directories and stop a running server, then delegate removal
+# to launch-scaffolder when available. Otherwise refuse unmarked targets,
+# remove managed integration files and the PID file, and refresh the menu.
 do_disinteg() {
+    ensure_state_dirs || return 1
     # Fast path: delegate to `launch-scaffolder provision --disinteg`
     # when available. Stop any running process first so the binary
     # doesn't have to re-implement the process-management arm.
@@ -362,18 +613,23 @@ if is_running; then
         exec launch-scaffolder provision --disinteg "$CONFIG_FILE" --no-confirm
     fi
 
+    if already_integrated && ! is_managed_install; then
+        err "refusing to remove unmarked integration files for $APP_NAME"
+        return 1
+    fi
     log "Removing $APP_DISPLAY system integration..."
     local removed_anything="false"
     local targets=(
         "$DESKTOP_FILE_TARGET"
         "$DESKTOP_SHORTCUT_TARGET"
         "$ICON_TARGET"
+        "$ICON_MARKER_TARGET"
         "$LAUNCHER_TARGET"
     )
     for t in "${targets[@]}"; do
         [ -z "$t" ] && continue
         if [ -e "$t" ] || [ -L "$t" ]; then
-            rm -rf "$t"
+            rm -f "$t"
             log "  - removed $t"
             removed_anything="true"
         fi
@@ -388,6 +644,7 @@ if is_running; then
     fi
 }
 
+# Print usage, supported modes, and the detected platform/runtime to stdout.
 show_help() {
     cat <<EOF
 $APP_DISPLAY launcher — $APP_DESC
@@ -400,7 +657,7 @@ Runtime modes:
   --start      Start the server only (no browser)
   --stop       Stop the running server
   --status     Show running status and URL
-  --browser    Open the browser (server must already be running)
+  --browser    Alias for --auto
 
 System integration:
   --integ      Install desktop entry + shortcut + icon (idempotent; --force to reinstall)
@@ -408,6 +665,9 @@ System integration:
 
 Misc:
   --help       This text
+  --version    Print the machine-readable launcher version
+  --browser   Alias for --auto
+  --web       Alias for --auto
 
 Detected platform: $PLATFORM
 Runtime kind:      $RUNTIME_KIND
@@ -418,6 +678,14 @@ EOF
 # ----------------------------------------------------------------------------
 # MAIN SWITCH
 # ----------------------------------------------------------------------------
+
+# Print PLATFORM and the uname machine architecture joined by a hyphen,
+# without a trailing newline, for the version display.
+platform_id() {
+    local arch
+    arch="$(uname -m)"
+    printf '%s-%s' "$PLATFORM" "$arch"
+}
 
 case "$MODE" in
     --start)          start_server ;;
@@ -430,7 +698,10 @@ case "$MODE" in
         fi
         ;;
     --browser|--web)
-open_browser
+start_server && open_browser
+        ;;
+    --version)
+        printf '%s %s (%s) [%s]\n' "$APP_NAME" "$APP_VERSION" "$BUILD_SHA_SHORT" "$(platform_id)"
         ;;
     --auto)
 start_server && open_browser

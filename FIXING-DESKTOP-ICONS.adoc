@@ -82,7 +82,7 @@ Opens browser automatically
 curl -v http://localhost:3000
 
 # Check logs
- tail -50 /tmp/panll-server.log
+ tail -50 "${XDG_STATE_HOME:-$HOME/.local/state}/launch-scaffolder/panll/server.log"
 
 # Check process
 ps aux | grep panll
