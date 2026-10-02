@@ -43,7 +43,7 @@ API endpoints and their usage.
 [source,javascript]
 ----
 const result = await invoke("verisim_save_state", {
-  key: "abc123-def456",
+  key: "snapshot-0001",
   state: JSON.stringify(snapshotData)
 });
 ----
@@ -83,7 +83,7 @@ const result = await invoke("verisim_save_state", {
 [source,javascript]
 ----
 const snapshot = await invoke("verisim_load_state", {
-  key: "abc123-def456"
+  key: "snapshot-0001"
 });
 ----
 
@@ -263,7 +263,7 @@ restored
 ----
 {
   "ok": false,
-  "error": "Snapshot not found: abc123"
+  "error": "Snapshot not found: snapshot-0001"
 }
 ----
 
