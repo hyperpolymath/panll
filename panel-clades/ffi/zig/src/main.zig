@@ -1,6 +1,6 @@
 // PanLL Panel-Clades FFI Implementation
 //
-// This module implements the C-compatible FFI declared in src/abi/Foreign.idr
+// This module implements the C-compatible FFI declared in src/abi/PanelClades/ABI/Foreign.idr
 // for the panel-clades subsystem.  All types and layouts must match the
 // Idris2 ABI definitions in PanelClades.ABI.Types.
 //
@@ -30,7 +30,7 @@ fn clearError() void {
 }
 
 //==============================================================================
-// Core Types (must match src/abi/Types.idr)
+// Core Types (must match src/abi/PanelClades/ABI/Types.idr)
 //==============================================================================
 
 /// Result codes (must match Idris2 Result type)

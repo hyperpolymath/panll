@@ -9,6 +9,31 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === https://github.com/hyperpolymath/panll/compare/v0.1.0...HEAD[Unreleased]
 
+==== Fixed (2026-10-14 — panel-clades Types/Layout/Foreign typecheck)
+
+* `+Types.idr+`, `+Layout.idr+` and `+Foreign.idr+` had never typechecked.
+They now live at their module paths under
+`+panel-clades/src/abi/PanelClades/ABI/+`, typecheck under Idris2 0.8.0,
+and are built by `+check-abi.sh+` and CI with `+Grades.idr+`.
+* Changes that alter meaning:
+** C sizes are a closed universe (`+CType+`), not a match on `+Type+`.
+** `+HasSize+` / `+HasAlignment+` admit only the true size.
+** `+DecEq+` goes through a retracted tag, not `+No absurd+`.
+** `+alignUp+` is units × alignment, so `+alignUpCorrect+` holds by
+construction.
+** Field alignment is decided by an equation (`+decDivides+`).
+** `+calcStructSize+` is the furthest field end, rounded up.
+** `+verifyAllPlatforms+` now checks every platform.
+** The `+verifySizes+` / `+verifyAlignments+` stubs, which only printed
+"verified", are replaced by checked facts.
+* Three more expected rejections: `+WasmPointerIsEightBytes+`,
+`+NullHandle+`, `+MisalignedField+`.
+* `+check-abi.sh+` now fails on a `+PanelClades/ABI+` module missing from the
+ipkg, and on `+believe_me+` / `+assert_total+` / `+assert_smaller+` /
+`+idris_crash+` / `+unsafePerformIO+`.
+* *Still open:* nothing checks that the Zig FFI agrees with these
+definitions (`+panel-clades/src/abi/README.adoc+`, Proof status).
+
 ==== Added (2026-10-14 — graded clade contracts over typed-wasm's grade kernel, PWL-01)
 
 * `+panel-clades/src/abi/PanelClades/ABI/Grades.idr+` grades a clade's

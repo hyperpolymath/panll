@@ -62,7 +62,7 @@ jobs:
       - name: Panel wiring verification gate
         run: ./tools/pcc/target/release/panll panel verify --repo-root .
 
-  # panel-clades grades ABI: PanelClades.ABI.Grades typechecks against
+  # panel-clades ABI: every PanelClades.ABI module typechecks against
   # typed-wasm's grade kernel at its pin, and the expected rejections are
   # refused.  Idris2 publishes no binaries, so 0.8.0 is built from source,
   # fetched by the commit its v0.8.0 tag names (a tag can move; the SHA
@@ -100,5 +100,5 @@ jobs:
             || { tail -60 "$RUNNER_TEMP/idris2-install.log"; exit 1; }
           echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
 
-      - name: panel-clades grades ABI
+      - name: panel-clades ABI
         run: bash panel-clades/scripts/check-abi.sh
