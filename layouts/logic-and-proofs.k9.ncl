@@ -53,6 +53,7 @@ let layout | LayoutPreset | PaneSizesSum100 = {
   pedigree = LayoutPedigree & {
     metadata = {
       name = "panll-layout-logic-and-proofs",
+      magic_number = "K9!",
       description = layout.description,
     },
   },

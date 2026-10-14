@@ -145,7 +145,7 @@ dependencies:
         repo_id: 1275650185
     'hyperpolymath/k9-ecosystem@main':
         ref: 'main'
-        commit: 'sha1-89f3c2702f4f650a92aa7411502f38da06abd562'
+        commit: 'sha1-20f6be5b5a14a48680b236955b5c4ad9033d00d4'
         owner_id: 6759885
         repo_id: 1275650185
     'hyperpolymath/smtp-notify-action@v0.5.0':
