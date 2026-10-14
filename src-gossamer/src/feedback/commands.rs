@@ -28,11 +28,9 @@ fn feedback_dir() -> Result<std::path::PathBuf, String> {
 ///
 /// Returns a JSON object with `path` (where the file was saved) and `id`
 /// (the timestamp-based identifier).
-
 pub async fn feedback_save_report(report_json: String) -> Result<String, String> {
     let dir = feedback_dir()?;
-    fs::create_dir_all(&dir)
-        .map_err(|e| format!("Failed to create feedback directory: {e}"))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Failed to create feedback directory: {e}"))?;
 
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -43,8 +41,8 @@ pub async fn feedback_save_report(report_json: String) -> Result<String, String>
     let filepath = dir.join(&filename);
 
     // Parse the incoming JSON to validate it, then wrap with metadata.
-    let parsed: serde_json::Value = serde_json::from_str(&report_json)
-        .map_err(|e| format!("Invalid JSON in report: {e}"))?;
+    let parsed: serde_json::Value =
+        serde_json::from_str(&report_json).map_err(|e| format!("Invalid JSON in report: {e}"))?;
 
     let wrapped = json!({
         "id": format!("feedback-{timestamp}"),
@@ -52,11 +50,10 @@ pub async fn feedback_save_report(report_json: String) -> Result<String, String>
         "report": parsed,
     });
 
-    let content = serde_json::to_string_pretty(&wrapped)
-        .map_err(|e| format!("Serialisation error: {e}"))?;
+    let content =
+        serde_json::to_string_pretty(&wrapped).map_err(|e| format!("Serialisation error: {e}"))?;
 
-    fs::write(&filepath, content)
-        .map_err(|e| format!("Failed to write report: {e}"))?;
+    fs::write(&filepath, content).map_err(|e| format!("Failed to write report: {e}"))?;
 
     Ok(json!({
         "path": filepath.to_string_lossy(),

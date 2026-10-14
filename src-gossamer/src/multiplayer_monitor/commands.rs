@@ -35,9 +35,8 @@ impl ConnectionState {
     }
 }
 
-static CONNECTION_STATE: Lazy<Mutex<ConnectionState>> = Lazy::new(|| {
-    Mutex::new(ConnectionState::new())
-});
+static CONNECTION_STATE: Lazy<Mutex<ConnectionState>> =
+    Lazy::new(|| Mutex::new(ConnectionState::new()));
 
 /// Serialises tests that share `CONNECTION_STATE` so they cannot race.
 #[cfg(test)]
@@ -56,13 +55,14 @@ fn now_secs() -> u64 {
 /// Validates the URL and records the connection in memory. Currently a stub
 /// that simulates a successful WebSocket handshake. When the real Phoenix
 /// bridge is implemented, this will open a persistent WebSocket connection.
-
 pub async fn multiplayer_connect(url: String) -> Result<String, String> {
     if url.is_empty() {
         return Err("Server URL cannot be empty".to_string());
     }
 
-    let mut state = CONNECTION_STATE.lock().map_err(|e| format!("Lock error: {e}"))?;
+    let mut state = CONNECTION_STATE
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
     state.connected = true;
     state.server_url = Some(url.clone());
     state.connected_at = Some(now_secs());
@@ -73,17 +73,17 @@ pub async fn multiplayer_connect(url: String) -> Result<String, String> {
         "wsState": "connected",
         "connectedAt": state.connected_at,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Disconnect from the sync server.
 ///
 /// Clears the in-memory connection state. When the real bridge is
 /// implemented, this will close the WebSocket and clean up channels.
-
 pub async fn multiplayer_disconnect() -> Result<String, String> {
-    let mut state = CONNECTION_STATE.lock().map_err(|e| format!("Lock error: {e}"))?;
+    let mut state = CONNECTION_STATE
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
     let was_connected = state.connected;
     state.connected = false;
     state.server_url = None;
@@ -94,8 +94,7 @@ pub async fn multiplayer_disconnect() -> Result<String, String> {
         "wasConnected": was_connected,
         "wsState": "disconnected",
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Read the current multiplayer state (players, channels, locks).
@@ -103,9 +102,10 @@ pub async fn multiplayer_disconnect() -> Result<String, String> {
 /// Returns stub data representing a typical multiplayer session with two
 /// players, two channels, and one device lock. When the real bridge is
 /// implemented, this will query the live Phoenix server state.
-
 pub async fn multiplayer_read_state() -> Result<String, String> {
-    let state = CONNECTION_STATE.lock().map_err(|e| format!("Lock error: {e}"))?;
+    let state = CONNECTION_STATE
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
     let ts = now_secs() as f64;
 
     let result = json!({
@@ -156,8 +156,7 @@ pub async fn multiplayer_read_state() -> Result<String, String> {
             },
         ],
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Read state diffs between local and remote.
@@ -165,7 +164,6 @@ pub async fn multiplayer_read_state() -> Result<String, String> {
 /// Returns stub diff entries showing typical sync divergence scenarios.
 /// When the real bridge is implemented, this will compare local ETS state
 /// against the server's authoritative state.
-
 pub async fn multiplayer_read_diffs() -> Result<String, String> {
     let ts = now_secs() as f64;
 
@@ -191,8 +189,7 @@ pub async fn multiplayer_read_diffs() -> Result<String, String> {
         "totalUnresolved": 1,
         "totalResolved": 1,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Read ETS cache entries for inspection.
@@ -200,7 +197,6 @@ pub async fn multiplayer_read_diffs() -> Result<String, String> {
 /// Returns stub ETS table entries representing typical Erlang Term Storage
 /// data from the Phoenix server. When the real bridge is implemented, this
 /// will query the server's ETS tables via the debug API.
-
 pub async fn multiplayer_read_ets() -> Result<String, String> {
     let result = json!({
         "entries": [
@@ -226,8 +222,7 @@ pub async fn multiplayer_read_ets() -> Result<String, String> {
         "tableCount": 2,
         "totalEntries": 3,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Trigger a reconnection test cycle.
@@ -236,9 +231,10 @@ pub async fn multiplayer_read_ets() -> Result<String, String> {
 /// When the real bridge is implemented, this will actually drop and
 /// re-establish the WebSocket connection, measuring reconnection latency
 /// and state recovery.
-
 pub async fn multiplayer_reconnection_test() -> Result<String, String> {
-    let state = CONNECTION_STATE.lock().map_err(|e| format!("Lock error: {e}"))?;
+    let state = CONNECTION_STATE
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
 
     if !state.connected {
         return Err("Cannot run reconnection test: not connected".to_string());
@@ -252,8 +248,7 @@ pub async fn multiplayer_reconnection_test() -> Result<String, String> {
         "channelsRejoined": 2,
         "messagesLost": 0,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 #[cfg(test)]

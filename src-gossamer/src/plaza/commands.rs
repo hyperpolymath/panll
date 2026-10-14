@@ -47,7 +47,9 @@ fn detect_license(repo_path: &Path) -> Option<String> {
                 return Some("PMPL-1.0-or-later".to_string());
             } else if lower.contains("mozilla public license") {
                 return Some("MPL-2.0".to_string());
-            } else if lower.contains("mit license") || lower.contains("permission is hereby granted") {
+            } else if lower.contains("mit license")
+                || lower.contains("permission is hereby granted")
+            {
                 return Some("MIT".to_string());
             } else if lower.contains("apache license") {
                 return Some("Apache-2.0".to_string());
@@ -66,11 +68,10 @@ fn detect_license(repo_path: &Path) -> Option<String> {
 
 /// Source file extensions to scan for SPDX headers.
 const SOURCE_EXTENSIONS: &[&str] = &[
-    "rs", "res", "resi", "gleam", "ex", "exs", "idr", "zig",
-    "ml", "mli", "hs", "adb", "ads", "jl", "sh", "bash",
-    "js", "mjs", "jsx", "ts", "tsx", "json", "toml", "yaml", "yml",
-    "nix", "scm", "ncl", "v", "go", "py", "rb", "java", "kt",
-    "c", "h", "cpp", "hpp", "swift", "lua", "dart", "php",
+    "rs", "res", "resi", "gleam", "ex", "exs", "idr", "zig", "ml", "mli", "hs", "adb", "ads", "jl",
+    "sh", "bash", "js", "mjs", "jsx", "ts", "tsx", "json", "toml", "yaml", "yml", "nix", "scm",
+    "ncl", "v", "go", "py", "rb", "java", "kt", "c", "h", "cpp", "hpp", "swift", "lua", "dart",
+    "php",
 ];
 
 /// Check if a path is a source file worth scanning.
@@ -94,16 +95,32 @@ fn scan_repo(repo_path: &Path) -> RepoScanResult {
 
     // Check for exhibits.
     let has_exhibit_a = repo_path.join("EXHIBIT-A-ETHICAL-USE.txt").exists()
-        || repo_path.join("legal").join("exhibits").join("EXHIBIT-A-ETHICAL-USE.txt").exists()
-        || repo_path.join("v1.0").join("exhibits").join("EXHIBIT-A-ETHICAL-USE.txt").exists();
+        || repo_path
+            .join("legal")
+            .join("exhibits")
+            .join("EXHIBIT-A-ETHICAL-USE.txt")
+            .exists()
+        || repo_path
+            .join("v1.0")
+            .join("exhibits")
+            .join("EXHIBIT-A-ETHICAL-USE.txt")
+            .exists();
 
     let has_exhibit_b = repo_path.join("EXHIBIT-B-QUANTUM-SAFE.txt").exists()
-        || repo_path.join("legal").join("exhibits").join("EXHIBIT-B-QUANTUM-SAFE.txt").exists()
-        || repo_path.join("v1.0").join("exhibits").join("EXHIBIT-B-QUANTUM-SAFE.txt").exists();
+        || repo_path
+            .join("legal")
+            .join("exhibits")
+            .join("EXHIBIT-B-QUANTUM-SAFE.txt")
+            .exists()
+        || repo_path
+            .join("v1.0")
+            .join("exhibits")
+            .join("EXHIBIT-B-QUANTUM-SAFE.txt")
+            .exists();
 
     // Check for provenance signatures.
-    let has_provenance_sig = repo_path.join(".provenance").exists()
-        || repo_path.join("PROVENANCE.sig").exists();
+    let has_provenance_sig =
+        repo_path.join(".provenance").exists() || repo_path.join("PROVENANCE.sig").exists();
 
     // Count source files and SPDX headers (limited depth for speed).
     let mut total_source = 0u32;
@@ -122,8 +139,12 @@ fn scan_repo(repo_path: &Path) -> RepoScanResult {
             if path.is_dir() {
                 let dirname = path.file_name().unwrap_or_default().to_string_lossy();
                 // Skip hidden dirs, node_modules, target, etc.
-                if dirname.starts_with('.') || dirname == "node_modules" || dirname == "target"
-                    || dirname == "_build" || dirname == "dist" || dirname == "build"
+                if dirname.starts_with('.')
+                    || dirname == "node_modules"
+                    || dirname == "target"
+                    || dirname == "_build"
+                    || dirname == "dist"
+                    || dirname == "build"
                 {
                     continue;
                 }
@@ -158,7 +179,6 @@ fn scan_repo(repo_path: &Path) -> RepoScanResult {
 ///
 /// Takes a repo name and scans its directory under the canonical repos path.
 /// Returns a JSON-serialised `RepoScanResult`.
-
 pub async fn plaza_scan_repo(repo_name: String) -> Result<String, String> {
     let repo_path = repos_dir().join(&repo_name);
     if !repo_path.exists() {
@@ -166,15 +186,13 @@ pub async fn plaza_scan_repo(repo_name: String) -> Result<String, String> {
     }
 
     let result = scan_repo(&repo_path);
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Compute adoption statistics across the entire ecosystem.
 ///
 /// Scans all directories under the canonical repos path and aggregates
 /// license detection results. Returns JSON-serialised `AdoptionStats`.
-
 pub async fn plaza_adoption_stats() -> Result<String, String> {
     let base = repos_dir();
     if !base.exists() {
@@ -188,8 +206,7 @@ pub async fn plaza_adoption_stats() -> Result<String, String> {
     let mut quantum_signed = 0u32;
     let mut by_license: HashMap<String, u32> = HashMap::new();
 
-    let entries = fs::read_dir(&base)
-        .map_err(|e| format!("Cannot read repos dir: {e}"))?;
+    let entries = fs::read_dir(&base).map_err(|e| format!("Cannot read repos dir: {e}"))?;
 
     for entry in entries.flatten() {
         let path = entry.path();
@@ -234,38 +251,59 @@ pub async fn plaza_adoption_stats() -> Result<String, String> {
         by_license,
     };
 
-    serde_json::to_string(&stats)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&stats).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Known compatibility matrix for PMPL with common licenses.
 /// PMPL-1.0 is file-level copyleft (like MPL-2.0), so it's compatible
 /// with most permissive and weak-copyleft licenses.
-
 pub async fn plaza_check_compatibility(license: String) -> Result<String, String> {
     let (compatible, notes) = match license.to_uppercase().as_str() {
-        "MIT" => (true, "Fully compatible. MIT files can coexist with PMPL files in the same project."),
-        "BSD-2-CLAUSE" | "BSD-3-CLAUSE" | "BSD" => (true, "Fully compatible. BSD files can coexist with PMPL files."),
-        "APACHE-2.0" => (true, "Compatible. Apache-2.0 patent grant complements PMPL."),
-        "MPL-2.0" => (true, "Fully compatible. PMPL is built on MPL-2.0 as its base layer."),
-        "LGPL-2.1" | "LGPL-2.1-OR-LATER" | "LGPL-3.0" | "LGPL-3.0-OR-LATER" => {
-            (true, "Compatible for library use. LGPL files may impose dynamic linking requirements.")
-        }
-        "GPL-2.0" | "GPL-2.0-OR-LATER" => {
-            (true, "Compatible per MPL-2.0 Section 3.3. GPL may apply to combined work.")
-        }
-        "GPL-3.0" | "GPL-3.0-OR-LATER" => {
-            (true, "Compatible per MPL-2.0 Section 3.3. GPL-3.0 applies to combined work.")
-        }
-        "AGPL-3.0" | "AGPL-3.0-OR-LATER" => {
-            (false, "Not directly compatible. AGPL network copyleft conflicts with PMPL file-level scope.")
-        }
-        "CC0-1.0" | "UNLICENSE" => {
-            (true, "Compatible. Public domain dedications can coexist with any license.")
-        }
-        "ISC" => (true, "Fully compatible. ISC is functionally equivalent to MIT."),
+        "MIT" => (
+            true,
+            "Fully compatible. MIT files can coexist with PMPL files in the same project.",
+        ),
+        "BSD-2-CLAUSE" | "BSD-3-CLAUSE" | "BSD" => (
+            true,
+            "Fully compatible. BSD files can coexist with PMPL files.",
+        ),
+        "APACHE-2.0" => (
+            true,
+            "Compatible. Apache-2.0 patent grant complements PMPL.",
+        ),
+        "MPL-2.0" => (
+            true,
+            "Fully compatible. PMPL is built on MPL-2.0 as its base layer.",
+        ),
+        "LGPL-2.1" | "LGPL-2.1-OR-LATER" | "LGPL-3.0" | "LGPL-3.0-OR-LATER" => (
+            true,
+            "Compatible for library use. LGPL files may impose dynamic linking requirements.",
+        ),
+        "GPL-2.0" | "GPL-2.0-OR-LATER" => (
+            true,
+            "Compatible per MPL-2.0 Section 3.3. GPL may apply to combined work.",
+        ),
+        "GPL-3.0" | "GPL-3.0-OR-LATER" => (
+            true,
+            "Compatible per MPL-2.0 Section 3.3. GPL-3.0 applies to combined work.",
+        ),
+        "AGPL-3.0" | "AGPL-3.0-OR-LATER" => (
+            false,
+            "Not directly compatible. AGPL network copyleft conflicts with PMPL file-level scope.",
+        ),
+        "CC0-1.0" | "UNLICENSE" => (
+            true,
+            "Compatible. Public domain dedications can coexist with any license.",
+        ),
+        "ISC" => (
+            true,
+            "Fully compatible. ISC is functionally equivalent to MIT.",
+        ),
         "WTFPL" => (true, "Compatible. Permissive license with no restrictions."),
-        _ => (false, "Unknown license. Manual compatibility review recommended."),
+        _ => (
+            false,
+            "Unknown license. Manual compatibility review recommended.",
+        ),
     };
 
     let result = serde_json::json!({
@@ -274,6 +312,5 @@ pub async fn plaza_check_compatibility(license: String) -> Result<String, String
         "notes": notes,
     });
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }

@@ -22,7 +22,6 @@ use serde_json::json;
 ///
 /// Mock implementation: returns a success acknowledgement with the report ID.
 /// Real implementation will POST to BoJ observe-mcp cartridge endpoint.
-
 pub async fn observe_export_sarif(report_id: String) -> Result<String, String> {
     if report_id.is_empty() {
         return Err("report_id must not be empty".to_string());
@@ -48,7 +47,6 @@ pub async fn observe_export_sarif(report_id: String) -> Result<String, String> {
 /// Mock implementation: parses the batch to count spans and returns
 /// an acceptance summary.  Real implementation will POST to the
 /// OTLP HTTP endpoint (typically :4318/v1/traces).
-
 pub async fn observe_export_traces(batch: String) -> Result<String, String> {
     if batch.is_empty() {
         return Err("batch must not be empty".to_string());
@@ -72,7 +70,6 @@ pub async fn observe_export_traces(batch: String) -> Result<String, String> {
 ///
 /// Mock implementation: returns static placeholder values.
 /// Real implementation will GET /cartridges/observe-mcp/tools/summary.
-
 pub async fn observe_summary() -> Result<String, String> {
     let response = json!({
         "status": "healthy",

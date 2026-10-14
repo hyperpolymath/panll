@@ -45,7 +45,6 @@ pub struct BojHealth {
 /// Check BoJ-server health (async).
 ///
 /// `GET /health` — returns the full health envelope as a JSON string.
-
 pub async fn boj_live_health() -> Result<String, String> {
     let endpoint = boj_endpoint();
     let health: BojHealth = http_client::get_json(&endpoint, "/health")
@@ -57,7 +56,6 @@ pub async fn boj_live_health() -> Result<String, String> {
 /// List available cartridges from BoJ-server (async).
 ///
 /// `GET /cartridges` — returns the cartridge array as a JSON string.
-
 pub async fn boj_live_cartridges() -> Result<String, String> {
     let endpoint = boj_endpoint();
     let cartridges: serde_json::Value = http_client::get_json(&endpoint, "/cartridges")
@@ -70,15 +68,13 @@ pub async fn boj_live_cartridges() -> Result<String, String> {
 ///
 /// `POST /cartridges/{cartridge}/invoke` — sends `{"tool": ..., "args": ...}`
 /// and returns the invocation result as a JSON string.
-
 pub async fn boj_live_invoke(
     cartridge: String,
     tool: String,
     params: String,
 ) -> Result<String, String> {
     let endpoint = boj_endpoint();
-    let parsed_params: serde_json::Value =
-        serde_json::from_str(&params).unwrap_or(json!({}));
+    let parsed_params: serde_json::Value = serde_json::from_str(&params).unwrap_or(json!({}));
     let body = json!({
         "tool": tool,
         "args": parsed_params,
@@ -96,7 +92,6 @@ pub async fn boj_live_invoke(
 /// Get BoJ topology / cartridge dependency graph (async).
 ///
 /// `GET /topology` — returns the topology matrix as a JSON string.
-
 pub async fn boj_live_topology() -> Result<String, String> {
     let endpoint = boj_endpoint();
     let topology: serde_json::Value = http_client::get_json(&endpoint, "/topology")
@@ -109,7 +104,6 @@ pub async fn boj_live_topology() -> Result<String, String> {
 ///
 /// Returns `{"reachable": bool, "endpoint": "..."}` as a JSON string.
 /// Panels use this for connection-dot indicators in the panel bar.
-
 pub async fn boj_live_check() -> Result<String, String> {
     let endpoint = boj_endpoint();
     let reachable = http_client::check_health(&endpoint, "/health").await?;

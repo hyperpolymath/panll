@@ -16,12 +16,10 @@ use walkdir::WalkDir;
 /// Returns the raw JSON content so the ReScript frontend can parse it with
 /// its own type-safe deserialiser. If the file does not exist, returns an
 /// empty MRI file structure so the frontend can initialise cleanly.
-
 pub async fn voicetag_load(path: String) -> Result<String, String> {
     let p = Path::new(&path);
     if p.exists() {
-        fs::read_to_string(p)
-            .map_err(|e| format!("Cannot read {}: {}", path, e))
+        fs::read_to_string(p).map_err(|e| format!("Cannot read {}: {}", path, e))
     } else {
         // File doesn't exist yet — return empty structure so the frontend
         // can initialise a new sidecar without special error handling.
@@ -33,7 +31,6 @@ pub async fn voicetag_load(path: String) -> Result<String, String> {
 ///
 /// The content is a pre-serialised JSON string from the ReScript frontend.
 /// Creates parent directories if they don't exist (handles nested source trees).
-
 pub async fn voicetag_save(path: String, content: String) -> Result<String, String> {
     let p = Path::new(&path);
 
@@ -45,8 +42,7 @@ pub async fn voicetag_save(path: String, content: String) -> Result<String, Stri
         }
     }
 
-    fs::write(p, &content)
-        .map_err(|e| format!("Cannot write {}: {}", path, e))?;
+    fs::write(p, &content).map_err(|e| format!("Cannot write {}: {}", path, e))?;
 
     Ok(format!("Saved {}", path))
 }
@@ -55,12 +51,10 @@ pub async fn voicetag_save(path: String, content: String) -> Result<String, Stri
 ///
 /// Called when all tags are removed from a file — no point keeping an empty
 /// sidecar around. Silently succeeds if the file doesn't exist (idempotent).
-
 pub async fn voicetag_delete(path: String) -> Result<String, String> {
     let p = Path::new(&path);
     if p.exists() {
-        fs::remove_file(p)
-            .map_err(|e| format!("Cannot delete {}: {}", path, e))?;
+        fs::remove_file(p).map_err(|e| format!("Cannot delete {}: {}", path, e))?;
         Ok(format!("Deleted {}", path))
     } else {
         Ok(format!("Already gone: {}", path))
@@ -80,7 +74,6 @@ pub async fn voicetag_delete(path: String) -> Result<String, String> {
 ///   {"sidecar": "src/Update.res.mri.json", "source": "src/Update.res"}
 /// ]
 /// ```
-
 pub async fn voicetag_scan(path: String) -> Result<String, String> {
     let root = Path::new(&path);
     if !root.is_dir() {
@@ -99,7 +92,8 @@ pub async fn voicetag_scan(path: String) -> Result<String, String> {
             if name.ends_with(".mri.json") {
                 let sidecar = file_path.to_string_lossy().to_string();
                 // Derive the source file path by stripping `.mri.json` suffix.
-                let source = sidecar.strip_suffix(".mri.json")
+                let source = sidecar
+                    .strip_suffix(".mri.json")
                     .unwrap_or(&sidecar)
                     .to_string();
                 results.push(serde_json::json!({
@@ -110,8 +104,7 @@ pub async fn voicetag_scan(path: String) -> Result<String, String> {
         }
     }
 
-    serde_json::to_string(&results)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&results).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 // ---------------------------------------------------------------------------
@@ -124,8 +117,8 @@ mod tests {
     #[test]
     fn smoke_empty_mri_json_is_valid() {
         let empty = r#"{"version":"1.0","sourceFile":"","tags":[],"lastModified":0}"#;
-        let parsed: serde_json::Value = serde_json::from_str(empty)
-            .expect("empty MRI JSON must be valid JSON");
+        let parsed: serde_json::Value =
+            serde_json::from_str(empty).expect("empty MRI JSON must be valid JSON");
         assert_eq!(parsed["version"], "1.0");
         assert!(parsed["tags"].as_array().unwrap().is_empty());
     }
@@ -148,8 +141,10 @@ mod tests {
             assert!(name.ends_with(".mri.json"), "{name} should match .mri.json");
         }
         for name in non_matching {
-            assert!(!name.ends_with(".mri.json") || name == ".mri.json.bak",
-                "{name} should NOT match .mri.json");
+            assert!(
+                !name.ends_with(".mri.json") || name == ".mri.json.bak",
+                "{name} should NOT match .mri.json"
+            );
         }
     }
 }

@@ -19,19 +19,18 @@ use serde_json::json;
 ///
 /// Reads the file, validates it as JSON, and returns the content.
 /// Returns an error if the file does not exist or contains invalid JSON.
-
 pub async fn load_level(path: String) -> Result<String, String> {
     let file_path = Path::new(&path);
     if !file_path.exists() {
         return Err(format!("Level file not found: {path}"));
     }
 
-    let content = fs::read_to_string(file_path)
-        .map_err(|e| format!("Cannot read level file: {e}"))?;
+    let content =
+        fs::read_to_string(file_path).map_err(|e| format!("Cannot read level file: {e}"))?;
 
     // Validate that the content is valid JSON.
-    let _parsed: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| format!("Invalid JSON in level file: {e}"))?;
+    let _parsed: serde_json::Value =
+        serde_json::from_str(&content).map_err(|e| format!("Invalid JSON in level file: {e}"))?;
 
     Ok(content)
 }
@@ -40,33 +39,29 @@ pub async fn load_level(path: String) -> Result<String, String> {
 ///
 /// Validates the data as JSON, pretty-prints it, and writes to disk.
 /// Creates parent directories if they do not exist.
-
 pub async fn save_level(path: String, data: String) -> Result<String, String> {
     let file_path = Path::new(&path);
 
     // Validate JSON before writing.
-    let parsed: serde_json::Value = serde_json::from_str(&data)
-        .map_err(|e| format!("Invalid JSON data: {e}"))?;
+    let parsed: serde_json::Value =
+        serde_json::from_str(&data).map_err(|e| format!("Invalid JSON data: {e}"))?;
 
     // Ensure parent directory exists.
     if let Some(parent) = file_path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("Cannot create directory: {e}"))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Cannot create directory: {e}"))?;
     }
 
-    let pretty = serde_json::to_string_pretty(&parsed)
-        .map_err(|e| format!("Serialisation error: {e}"))?;
+    let pretty =
+        serde_json::to_string_pretty(&parsed).map_err(|e| format!("Serialisation error: {e}"))?;
 
-    fs::write(file_path, &pretty)
-        .map_err(|e| format!("Cannot write level file: {e}"))?;
+    fs::write(file_path, &pretty).map_err(|e| format!("Cannot write level file: {e}"))?;
 
     let result = json!({
         "saved": true,
         "path": path,
         "bytes": pretty.len(),
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Export level data as a LevelConfig.res source file string.
@@ -75,29 +70,33 @@ pub async fn save_level(path: String, data: String) -> Result<String, String> {
 /// that can be pasted into the IDApTIK game source. Currently produces
 /// a stub template; future versions will fully translate entities,
 /// patrols, and defence flags into typed ReScript records.
-
 pub async fn export_level_config(data: String) -> Result<String, String> {
-    let parsed: serde_json::Value = serde_json::from_str(&data)
-        .map_err(|e| format!("Invalid JSON data: {e}"))?;
+    let parsed: serde_json::Value =
+        serde_json::from_str(&data).map_err(|e| format!("Invalid JSON data: {e}"))?;
 
-    let level_name = parsed.get("levelName")
+    let level_name = parsed
+        .get("levelName")
         .and_then(|v| v.as_str())
         .unwrap_or("Untitled");
 
-    let grid_width = parsed.get("gridWidth")
+    let grid_width = parsed
+        .get("gridWidth")
         .and_then(|v| v.as_i64())
         .unwrap_or(20);
 
-    let grid_height = parsed.get("gridHeight")
+    let grid_height = parsed
+        .get("gridHeight")
         .and_then(|v| v.as_i64())
         .unwrap_or(15);
 
-    let entity_count = parsed.get("entities")
+    let entity_count = parsed
+        .get("entities")
         .and_then(|v| v.as_array())
         .map(|a| a.len())
         .unwrap_or(0);
 
-    let patrol_count = parsed.get("patrols")
+    let patrol_count = parsed
+        .get("patrols")
         .and_then(|v| v.as_array())
         .map(|a| a.len())
         .unwrap_or(0);
@@ -123,8 +122,7 @@ let config = {{
         "entityCount": entity_count,
         "patrolCount": patrol_count,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Browse available game assets for level placement.
@@ -132,7 +130,6 @@ let config = {{
 /// Returns a JSON array of assets grouped by category (devices, guards,
 /// collectables, decorations, triggers). Currently returns stub data
 /// representing sample IDApTIK game assets.
-
 pub async fn browse_level_assets() -> Result<String, String> {
     let result = json!({
         "assets": [
@@ -201,8 +198,7 @@ pub async fn browse_level_assets() -> Result<String, String> {
             }
         ]
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Validate the current level design and return any issues.
@@ -211,16 +207,14 @@ pub async fn browse_level_assets() -> Result<String, String> {
 /// overlapping entities, missing patrol waypoints, and empty defence flags.
 /// Takes the level JSON data as input and returns a JSON object with a
 /// `valid` boolean and an `issues` array.
-
 pub async fn validate_level(data: String) -> Result<String, String> {
-    let parsed: serde_json::Value = serde_json::from_str(&data)
-        .map_err(|e| format!("Invalid JSON data: {e}"))?;
+    let parsed: serde_json::Value =
+        serde_json::from_str(&data).map_err(|e| format!("Invalid JSON data: {e}"))?;
 
     let mut issues: Vec<serde_json::Value> = Vec::new();
 
     // Check for entities array.
-    let entities = parsed.get("entities")
-        .and_then(|v| v.as_array());
+    let entities = parsed.get("entities").and_then(|v| v.as_array());
 
     match entities {
         None => {
@@ -244,9 +238,9 @@ pub async fn validate_level(data: String) -> Result<String, String> {
             }
 
             // Check for at least one spawn point.
-            let has_spawn = ents.iter().any(|e| {
-                e.get("kind").and_then(|k| k.as_str()) == Some("EntitySpawnPoint")
-            });
+            let has_spawn = ents
+                .iter()
+                .any(|e| e.get("kind").and_then(|k| k.as_str()) == Some("EntitySpawnPoint"));
             if !has_spawn {
                 issues.push(json!({
                     "severity": "error",
@@ -263,7 +257,11 @@ pub async fn validate_level(data: String) -> Result<String, String> {
             for entity in ents {
                 let x = entity.get("gridX").and_then(|v| v.as_i64()).unwrap_or(-1);
                 let y = entity.get("gridY").and_then(|v| v.as_i64()).unwrap_or(-1);
-                let id = entity.get("id").and_then(|v| v.as_str()).unwrap_or("?").to_string();
+                let id = entity
+                    .get("id")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("?")
+                    .to_string();
                 positions.entry((x, y)).or_default().push(id);
             }
             for ((x, y), ids) in &positions {
@@ -304,7 +302,10 @@ pub async fn validate_level(data: String) -> Result<String, String> {
             // Check for empty waypoints.
             if let Some(waypoints) = patrol.get("waypoints").and_then(|v| v.as_array()) {
                 if waypoints.len() < 2 {
-                    let gid = patrol.get("guardId").and_then(|v| v.as_str()).unwrap_or("?");
+                    let gid = patrol
+                        .get("guardId")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("?");
                     issues.push(json!({
                         "severity": "warning",
                         "message": format!("Patrol for {} has fewer than 2 waypoints", gid),
@@ -317,17 +318,16 @@ pub async fn validate_level(data: String) -> Result<String, String> {
         }
     }
 
-    let valid = !issues.iter().any(|i| {
-        i.get("severity").and_then(|s| s.as_str()) == Some("error")
-    });
+    let valid = !issues
+        .iter()
+        .any(|i| i.get("severity").and_then(|s| s.as_str()) == Some("error"));
 
     let result = json!({
         "valid": valid,
         "issueCount": issues.len(),
         "issues": issues,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 #[cfg(test)]
@@ -367,15 +367,13 @@ mod tests {
             // Save.
             let save_result = save_level(path.clone(), data_str).await;
             assert!(save_result.is_ok());
-            let save_json: serde_json::Value =
-                serde_json::from_str(&save_result.unwrap()).unwrap();
+            let save_json: serde_json::Value = serde_json::from_str(&save_result.unwrap()).unwrap();
             assert_eq!(save_json["saved"], true);
 
             // Load.
             let load_result = load_level(path.clone()).await;
             assert!(load_result.is_ok());
-            let loaded: serde_json::Value =
-                serde_json::from_str(&load_result.unwrap()).unwrap();
+            let loaded: serde_json::Value = serde_json::from_str(&load_result.unwrap()).unwrap();
             assert_eq!(loaded["levelName"], "Test Level");
             assert_eq!(loaded["gridWidth"], 20);
 
@@ -390,7 +388,8 @@ mod tests {
             let result = save_level(
                 "/tmp/panll/bad.json".to_string(),
                 "not valid json {{{".to_string(),
-            ).await;
+            )
+            .await;
             assert!(result.is_err());
             assert!(result.unwrap_err().contains("Invalid JSON"));
         });
@@ -480,9 +479,9 @@ mod tests {
             let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
             assert_eq!(json["valid"], false);
             let issues = json["issues"].as_array().unwrap();
-            assert!(issues.iter().any(|i| {
-                i["message"].as_str().unwrap().contains("spawn point")
-            }));
+            assert!(issues
+                .iter()
+                .any(|i| { i["message"].as_str().unwrap().contains("spawn point") }));
         });
     }
 
@@ -501,9 +500,9 @@ mod tests {
             assert!(result.is_ok());
             let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
             let issues = json["issues"].as_array().unwrap();
-            assert!(issues.iter().any(|i| {
-                i["message"].as_str().unwrap().contains("Overlapping")
-            }));
+            assert!(issues
+                .iter()
+                .any(|i| { i["message"].as_str().unwrap().contains("Overlapping") }));
         });
     }
 
@@ -537,7 +536,10 @@ mod tests {
             assert_eq!(json["valid"], false);
             let issues = json["issues"].as_array().unwrap();
             assert!(issues.iter().any(|i| {
-                i["message"].as_str().unwrap().contains("non-existent guard")
+                i["message"]
+                    .as_str()
+                    .unwrap()
+                    .contains("non-existent guard")
             }));
         });
     }

@@ -1,28 +1,26 @@
 // SPDX-License-Identifier: MPL-2.0
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 //
-//! Tauri compatibility shim for Gossamer migration.
+//! Backend → frontend event bus and async-spawn helpers.
 //!
-//! Provides `AppHandle` and `Emitter` replacements so that modules which
-//! previously relied on `tauri::AppHandle` for event emission can continue
-//! working with minimal changes. Events are delivered to the frontend via
-//! Gossamer's `gossamer_eval()` (injecting JS into the webview), which is
-//! functionally equivalent to Tauri's event system.
+//! Provides an `AppHandle` and an `Emitter` trait so backend modules can emit
+//! events without depending on the webview shell. Events are queued here and
+//! delivered to the frontend via Gossamer's `gossamer_eval()` (injecting JS
+//! into the webview).
 //!
-//! This shim is intentionally minimal — it covers only the patterns used
+//! This layer is intentionally minimal — it covers only the patterns used
 //! in the PanLL codebase (emit string events, spawn async tasks). Modules
 //! that need richer capabilities should be refactored to use gossamer-rs
 //! directly.
 
-use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
 use serde::Serialize;
+use std::sync::{Arc, Mutex};
 
 /// Global event bus — collects events that the main loop will flush to the webview.
 ///
-/// In the Tauri architecture, `app.emit("channel", payload)` pushes an event
-/// through Tauri's internal IPC. Here we queue events and the Gossamer main
-/// loop (or a dedicated flush thread) will deliver them via `gossamer_eval()`.
+/// `app.emit("channel", payload)` queues an event here; the Gossamer main
+/// loop (or a dedicated flush thread) delivers it via `gossamer_eval()`.
 static EVENT_BUS: Lazy<Arc<Mutex<Vec<PendingEvent>>>> =
     Lazy::new(|| Arc::new(Mutex::new(Vec::new())));
 
@@ -35,11 +33,11 @@ pub struct PendingEvent {
     pub payload: String,
 }
 
-/// Gossamer-compatible application handle.
+/// Application handle used to emit events to the frontend.
 ///
-/// Drop-in replacement for `tauri::AppHandle`. Cloneable and Send + Sync
-/// so it can be passed to background threads and async tasks.
-#[derive(Clone)]
+/// Cloneable and Send + Sync so it can be passed to background threads and
+/// async tasks.
+#[derive(Clone, Default)]
 pub struct AppHandle {
     // Reserved for future Gossamer handle reference.
     _phantom: (),
@@ -52,10 +50,10 @@ impl AppHandle {
     }
 }
 
-/// Emitter trait — mirrors `tauri::Emitter` for event emission.
+/// Emitter trait — event emission to the frontend.
 ///
-/// Modules that `use tauri::Emitter;` can instead `use crate::compat::Emitter;`
-/// and the `app_handle.emit(channel, payload)` calls compile unchanged.
+/// Modules `use crate::compat::Emitter;` and call
+/// `app_handle.emit(channel, payload)`.
 pub trait Emitter {
     /// Emit an event to the frontend.
     fn emit<S: Serialize>(&self, channel: &str, payload: &S) -> Result<(), String>;
@@ -91,8 +89,8 @@ pub fn drain_events() -> Vec<PendingEvent> {
 
 /// Spawn an async task on the Tokio runtime.
 ///
-/// Replaces `tauri::async_runtime::spawn()`. Uses the global Tokio runtime
-/// initialised in main.rs.
+/// Must be called from within a Tokio runtime context (`tokio::spawn` panics
+/// otherwise).
 pub fn spawn_async<F>(future: F)
 where
     F: std::future::Future<Output = ()> + Send + 'static,

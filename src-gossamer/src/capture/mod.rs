@@ -11,5 +11,5 @@
 //! and sent to Rust for file I/O. Recordings use ffmpeg as an external
 //! subprocess for screen capture.
 
-pub mod types;
 pub mod commands;
+pub mod types;

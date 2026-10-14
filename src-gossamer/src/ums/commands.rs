@@ -28,8 +28,7 @@ const UMS_DIR: &str = "/tmp/panll/ums-projects";
 /// Ensure the UMS projects directory exists, creating it lazily if needed.
 fn ensure_ums_dir() -> Result<PathBuf, String> {
     let path = PathBuf::from(UMS_DIR);
-    fs::create_dir_all(&path)
-        .map_err(|e| format!("Cannot create UMS directory {UMS_DIR}: {e}"))?;
+    fs::create_dir_all(&path).map_err(|e| format!("Cannot create UMS directory {UMS_DIR}: {e}"))?;
     Ok(path)
 }
 
@@ -45,7 +44,6 @@ fn now_ts() -> u64 {
 ///
 /// Scans for `.project.json` manifest files and returns their contents
 /// as a JSON array, sorted by project name.
-
 pub async fn ums_load_projects() -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
 
@@ -67,15 +65,13 @@ pub async fn ums_load_projects() -> Result<String, String> {
         name_a.cmp(name_b)
     });
 
-    serde_json::to_string(&projects)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&projects).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Create a new mod project with the given name and description.
 ///
 /// Creates a project directory under the UMS root and writes a
 /// `.project.json` manifest file with initial metadata.
-
 pub async fn ums_create_project(name: String, description: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
 
@@ -130,15 +126,13 @@ pub async fn ums_create_project(name: String, description: String) -> Result<Str
         "id": id,
         "path": project_dir.to_string_lossy(),
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Open an existing mod project by its ID.
 ///
 /// Reads the `.project.json` manifest from the project directory
 /// and returns its contents.
-
 pub async fn ums_open_project(project_id: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
     let manifest_path = ums_dir.join(&project_id).join(".project.json");
@@ -147,14 +141,12 @@ pub async fn ums_open_project(project_id: String) -> Result<String, String> {
         return Err(format!("Project not found: {project_id}"));
     }
 
-    fs::read_to_string(&manifest_path)
-        .map_err(|e| format!("Cannot read project manifest: {e}"))
+    fs::read_to_string(&manifest_path).map_err(|e| format!("Cannot read project manifest: {e}"))
 }
 
 /// Delete a mod project by its ID.
 ///
 /// Removes the entire project directory and all its contents.
-
 pub async fn ums_delete_project(project_id: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
     let project_dir = ums_dir.join(&project_id);
@@ -170,8 +162,7 @@ pub async fn ums_delete_project(project_id: String) -> Result<String, String> {
         "deleted": true,
         "id": project_id,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Run ABI validation on a level.
@@ -180,7 +171,6 @@ pub async fn ums_delete_project(project_id: String) -> Result<String, String> {
 /// guards-in-zones, defence-targets-valid, zones-ordered, pbx-consistent,
 /// and devices-exist. When the real Idris2 ABI harness is integrated,
 /// these checks will delegate to the formally verified proofs.
-
 pub async fn ums_validate_level(level_id: String) -> Result<String, String> {
     // Stub: all proofs pass. When the real ABI harness is integrated,
     // each proof obligation will be checked against the level data.
@@ -197,8 +187,7 @@ pub async fn ums_validate_level(level_id: String) -> Result<String, String> {
         "errors": [],
         "stub": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Load available mod templates.
@@ -206,7 +195,6 @@ pub async fn ums_validate_level(level_id: String) -> Result<String, String> {
 /// Returns a set of built-in templates for bootstrapping mod projects.
 /// When the template registry is implemented, this will scan the
 /// template directory for user-contributed templates as well.
-
 pub async fn ums_load_templates() -> Result<String, String> {
     let templates = json!([
         {
@@ -250,8 +238,7 @@ pub async fn ums_load_templates() -> Result<String, String> {
             "previewImagePath": "templates/tower-defence-preview.png",
         },
     ]);
-    serde_json::to_string(&templates)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&templates).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Instantiate a mod template to create a new project.
@@ -259,7 +246,6 @@ pub async fn ums_load_templates() -> Result<String, String> {
 /// Copies template files into a new project directory. Currently uses
 /// stub data; when the template registry is implemented, this will copy
 /// actual template files.
-
 pub async fn ums_instantiate_template(
     template_id: String,
     project_name: String,
@@ -282,8 +268,7 @@ pub async fn ums_instantiate_template(
         "projectId": project_id,
         "path": created.get("path"),
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Load assets for a project.
@@ -291,7 +276,6 @@ pub async fn ums_instantiate_template(
 /// Scans the project's `assets/` directory for known asset file types
 /// and returns metadata. When the full asset pipeline is implemented,
 /// this will also read asset manifests and usage tracking.
-
 pub async fn ums_load_assets(project_id: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
     let assets_dir = ums_dir.join(&project_id).join("assets");
@@ -331,22 +315,16 @@ pub async fn ums_load_assets(project_id: String) -> Result<String, String> {
         })
         .collect();
 
-    serde_json::to_string(&assets)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&assets).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Import an asset file into a project.
 ///
 /// Copies the file at `file_path` into the project's `assets/` directory.
-
-pub async fn ums_import_asset(
-    project_id: String,
-    file_path: String,
-) -> Result<String, String> {
+pub async fn ums_import_asset(project_id: String, file_path: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
     let assets_dir = ums_dir.join(&project_id).join("assets");
-    fs::create_dir_all(&assets_dir)
-        .map_err(|e| format!("Cannot create assets directory: {e}"))?;
+    fs::create_dir_all(&assets_dir).map_err(|e| format!("Cannot create assets directory: {e}"))?;
 
     let source = PathBuf::from(&file_path);
     if !source.exists() {
@@ -358,8 +336,7 @@ pub async fn ums_import_asset(
         .ok_or_else(|| "Cannot determine file name".to_string())?;
     let dest = assets_dir.join(file_name);
 
-    fs::copy(&source, &dest)
-        .map_err(|e| format!("Cannot copy asset file: {e}"))?;
+    fs::copy(&source, &dest).map_err(|e| format!("Cannot copy asset file: {e}"))?;
 
     let result = json!({
         "imported": true,
@@ -367,8 +344,7 @@ pub async fn ums_import_asset(
         "fileName": file_name.to_string_lossy(),
         "destPath": dest.to_string_lossy(),
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Publish a mod to a distribution target.
@@ -376,11 +352,7 @@ pub async fn ums_import_asset(
 /// Creates a distributable package in the project's `exports/` directory.
 /// When full distribution is implemented, this will upload to the
 /// specified platform (GitHub, Workshop, etc.).
-
-pub async fn ums_publish_mod(
-    project_id: String,
-    platform: String,
-) -> Result<String, String> {
+pub async fn ums_publish_mod(project_id: String, platform: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
     let project_dir = ums_dir.join(&project_id);
     let manifest_path = project_dir.join(".project.json");
@@ -426,8 +398,7 @@ pub async fn ums_publish_mod(
         "version": version,
         "exportPath": export_file.to_string_lossy(),
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Load the modding API reference documentation.
@@ -435,7 +406,6 @@ pub async fn ums_publish_mod(
 /// Returns built-in API entries for the IDApTIK modding API.
 /// When the full documentation system is implemented, this will
 /// load entries from doc-comment extraction and API manifests.
-
 pub async fn ums_load_api_reference() -> Result<String, String> {
     let entries = json!([
         {
@@ -503,8 +473,7 @@ pub async fn ums_load_api_reference() -> Result<String, String> {
             "since": "0.2.0",
         },
     ]);
-    serde_json::to_string(&entries)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&entries).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 #[cfg(test)]
@@ -536,9 +505,11 @@ mod tests {
     #[test]
     fn test_ums_create_and_load_project() {
         rt().block_on(async {
-            let create_result =
-                ums_create_project("Test Mod Alpha".to_string(), "A test mod project".to_string())
-                    .await;
+            let create_result = ums_create_project(
+                "Test Mod Alpha".to_string(),
+                "A test mod project".to_string(),
+            )
+            .await;
             assert!(create_result.is_ok());
             let create_json: serde_json::Value =
                 serde_json::from_str(&create_result.unwrap()).unwrap();
@@ -559,8 +530,7 @@ mod tests {
     #[test]
     fn test_ums_create_project_empty_name() {
         rt().block_on(async {
-            let result =
-                ums_create_project("!!!".to_string(), "Bad name".to_string()).await;
+            let result = ums_create_project("!!!".to_string(), "Bad name".to_string()).await;
             assert!(result.is_err());
             assert!(result
                 .unwrap_err()
@@ -590,11 +560,8 @@ mod tests {
     fn test_ums_create_and_delete_project() {
         rt().block_on(async {
             // Create a project.
-            let _ = ums_create_project(
-                "Delete Me".to_string(),
-                "Will be deleted".to_string(),
-            )
-            .await;
+            let _ =
+                ums_create_project("Delete Me".to_string(), "Will be deleted".to_string()).await;
 
             // Verify it exists.
             let open_result = ums_open_project("delete-me".to_string()).await;
@@ -618,8 +585,7 @@ mod tests {
         rt().block_on(async {
             let result = ums_validate_level("test-level-001".to_string()).await;
             assert!(result.is_ok());
-            let json: serde_json::Value =
-                serde_json::from_str(&result.unwrap()).unwrap();
+            let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
             assert_eq!(json["levelId"], "test-level-001");
             assert_eq!(json["allPassed"], true);
             assert_eq!(json["guardsInZones"], true);
@@ -635,8 +601,7 @@ mod tests {
         rt().block_on(async {
             let result = ums_load_templates().await;
             assert!(result.is_ok());
-            let templates: Vec<serde_json::Value> =
-                serde_json::from_str(&result.unwrap()).unwrap();
+            let templates: Vec<serde_json::Value> = serde_json::from_str(&result.unwrap()).unwrap();
             assert!(templates.len() >= 5);
             assert!(templates.iter().any(|t| t["id"] == "basic-level"));
             assert!(templates.iter().any(|t| t["id"] == "full-campaign"));
@@ -652,8 +617,7 @@ mod tests {
             )
             .await;
             assert!(result.is_ok());
-            let json: serde_json::Value =
-                serde_json::from_str(&result.unwrap()).unwrap();
+            let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
             assert_eq!(json["instantiated"], true);
             assert_eq!(json["templateId"], "basic-level");
 
@@ -665,16 +629,12 @@ mod tests {
     fn test_ums_load_assets_empty() {
         rt().block_on(async {
             // Create a project to have an assets directory.
-            let _ = ums_create_project(
-                "Asset Test".to_string(),
-                "For asset testing".to_string(),
-            )
-            .await;
+            let _ =
+                ums_create_project("Asset Test".to_string(), "For asset testing".to_string()).await;
 
             let result = ums_load_assets("asset-test".to_string()).await;
             assert!(result.is_ok());
-            let assets: Vec<serde_json::Value> =
-                serde_json::from_str(&result.unwrap()).unwrap();
+            let assets: Vec<serde_json::Value> = serde_json::from_str(&result.unwrap()).unwrap();
             assert_eq!(assets.len(), 0);
 
             cleanup_test_project("asset-test");
@@ -709,11 +669,8 @@ mod tests {
             fs::write(tmp_file, b"fake png data").unwrap();
 
             // Import the asset.
-            let import_result = ums_import_asset(
-                "import-asset-test".to_string(),
-                tmp_file.to_string(),
-            )
-            .await;
+            let import_result =
+                ums_import_asset("import-asset-test".to_string(), tmp_file.to_string()).await;
             assert!(import_result.is_ok());
             let import_json: serde_json::Value =
                 serde_json::from_str(&import_result.unwrap()).unwrap();
@@ -735,11 +692,8 @@ mod tests {
     #[test]
     fn test_ums_publish_mod_not_found() {
         rt().block_on(async {
-            let result = ums_publish_mod(
-                "nonexistent-project".to_string(),
-                "github".to_string(),
-            )
-            .await;
+            let result =
+                ums_publish_mod("nonexistent-project".to_string(), "github".to_string()).await;
             assert!(result.is_err());
             assert!(result.unwrap_err().contains("Project not found"));
         });
@@ -755,14 +709,9 @@ mod tests {
             )
             .await;
 
-            let result = ums_publish_mod(
-                "publish-test".to_string(),
-                "github".to_string(),
-            )
-            .await;
+            let result = ums_publish_mod("publish-test".to_string(), "github".to_string()).await;
             assert!(result.is_ok());
-            let json: serde_json::Value =
-                serde_json::from_str(&result.unwrap()).unwrap();
+            let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
             assert_eq!(json["published"], true);
             assert_eq!(json["platform"], "github");
 
@@ -775,8 +724,7 @@ mod tests {
         rt().block_on(async {
             let result = ums_load_api_reference().await;
             assert!(result.is_ok());
-            let entries: Vec<serde_json::Value> =
-                serde_json::from_str(&result.unwrap()).unwrap();
+            let entries: Vec<serde_json::Value> = serde_json::from_str(&result.unwrap()).unwrap();
             assert!(entries.len() >= 8);
             assert!(entries.iter().any(|e| e["name"] == "createLevel"));
             assert!(entries.iter().any(|e| e["name"] == "validateABI"));

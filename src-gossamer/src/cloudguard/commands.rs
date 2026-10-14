@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! CloudGuard Tauri command handlers.
+//! CloudGuard IPC command handlers.
 //!
-//! Each `#[tauri::command]` function is a thin wrapper around the API client
+//! Each command function is a thin wrapper around the API client
 //! (`super::api`) that serialises results to JSON strings for the frontend.
-//! This matches the PanLL pattern where Tauri commands return `Result<String, String>`
-//! and the ReScript frontend parses the JSON.
+//! This matches the PanLL pattern where IPC commands return
+//! `Result<String, String>` and the frontend parses the JSON.
 //!
 //! Commands:
 //!   - `cloudguard_verify_token` — verify CF API token (health check)
@@ -34,7 +34,6 @@ use super::types::*;
 
 /// Verify the Cloudflare API token. Returns a JSON string with token status.
 /// Frontend calls this on panel open and periodically to maintain connection state.
-
 pub fn cloudguard_verify_token() -> Result<String, String> {
     let status = api::verify_token()?;
     Ok(json!({ "status": "connected", "message": status }).to_string())
@@ -46,7 +45,6 @@ pub fn cloudguard_verify_token() -> Result<String, String> {
 
 /// List all zones (domains) in the Cloudflare account.
 /// Returns a JSON array of zone objects.
-
 pub fn cloudguard_list_zones() -> Result<String, String> {
     let zones = api::list_zones()?;
     serde_json::to_string(&zones).map_err(|e| format!("JSON serialisation error: {}", e))
@@ -54,7 +52,6 @@ pub fn cloudguard_list_zones() -> Result<String, String> {
 
 /// Get details for a single zone by ID.
 /// Returns a JSON zone object.
-
 pub fn cloudguard_get_zone(zone_id: String) -> Result<String, String> {
     let zone = api::get_zone(&zone_id)?;
     serde_json::to_string(&zone).map_err(|e| format!("JSON serialisation error: {}", e))
@@ -66,7 +63,6 @@ pub fn cloudguard_get_zone(zone_id: String) -> Result<String, String> {
 
 /// Get all settings for a zone.
 /// Returns a JSON array of setting objects with id, value, editable, modified_on.
-
 pub fn cloudguard_get_settings(zone_id: String) -> Result<String, String> {
     let settings = api::get_zone_settings(&zone_id)?;
     serde_json::to_string(&settings).map_err(|e| format!("JSON serialisation error: {}", e))
@@ -75,7 +71,6 @@ pub fn cloudguard_get_settings(zone_id: String) -> Result<String, String> {
 /// Update a single zone setting by ID.
 /// `value` is a JSON-encoded string that gets parsed to `serde_json::Value`.
 /// Returns the updated setting as JSON.
-
 pub fn cloudguard_update_setting(
     zone_id: String,
     setting_id: String,
@@ -90,7 +85,6 @@ pub fn cloudguard_update_setting(
 /// Batch-update multiple settings for a zone.
 /// `settings_json` is a JSON-encoded array of `[{"id": "...", "value": ...}]`.
 /// Returns the updated settings as JSON.
-
 pub fn cloudguard_update_settings_batch(
     zone_id: String,
     settings_json: String,
@@ -121,13 +115,12 @@ pub fn cloudguard_update_settings_batch(
 
 /// List all DNS records for a zone.
 /// Returns a JSON array of DNS record objects.
-
 pub fn cloudguard_list_dns_records(zone_id: String) -> Result<String, String> {
     let records = api::list_dns_records(&zone_id)?;
     serde_json::to_string(&records).map_err(|e| format!("JSON serialisation error: {}", e))
 }
 
-/// Deserialisable payload for creating a DNS record via Tauri command.
+/// Deserialisable payload for creating a DNS record via IPC command.
 #[derive(Deserialize)]
 pub struct CreateDnsRecordPayload {
     pub zone_id: String,
@@ -142,7 +135,6 @@ pub struct CreateDnsRecordPayload {
 
 /// Create a new DNS record in a zone.
 /// Returns the created record as JSON.
-
 pub fn cloudguard_create_dns_record(payload: CreateDnsRecordPayload) -> Result<String, String> {
     let record = CfDnsRecordCreate {
         record_type: payload.record_type,
@@ -157,7 +149,7 @@ pub fn cloudguard_create_dns_record(payload: CreateDnsRecordPayload) -> Result<S
     serde_json::to_string(&created).map_err(|e| format!("JSON serialisation error: {}", e))
 }
 
-/// Deserialisable payload for updating a DNS record via Tauri command.
+/// Deserialisable payload for updating a DNS record via IPC command.
 #[derive(Deserialize)]
 pub struct UpdateDnsRecordPayload {
     pub zone_id: String,
@@ -173,7 +165,6 @@ pub struct UpdateDnsRecordPayload {
 
 /// Update an existing DNS record.
 /// Returns the updated record as JSON.
-
 pub fn cloudguard_update_dns_record(payload: UpdateDnsRecordPayload) -> Result<String, String> {
     let patch = CfDnsRecordPatch {
         record_type: payload.record_type,
@@ -190,7 +181,6 @@ pub fn cloudguard_update_dns_record(payload: UpdateDnsRecordPayload) -> Result<S
 
 /// Delete a DNS record from a zone.
 /// Returns a success message.
-
 pub fn cloudguard_delete_dns_record(zone_id: String, record_id: String) -> Result<String, String> {
     api::delete_dns_record(&zone_id, &record_id)?;
     Ok(json!({ "status": "deleted", "record_id": record_id }).to_string())
@@ -202,7 +192,6 @@ pub fn cloudguard_delete_dns_record(zone_id: String, record_id: String) -> Resul
 
 /// Get DNSSEC status for a zone.
 /// Returns DNSSEC status JSON including DS record info.
-
 pub fn cloudguard_get_dnssec(zone_id: String) -> Result<String, String> {
     let status = api::get_dnssec_status(&zone_id)?;
     serde_json::to_string(&status).map_err(|e| format!("JSON serialisation error: {}", e))
@@ -210,7 +199,6 @@ pub fn cloudguard_get_dnssec(zone_id: String) -> Result<String, String> {
 
 /// Enable DNSSEC for a zone.
 /// Returns the updated DNSSEC status as JSON.
-
 pub fn cloudguard_enable_dnssec(zone_id: String) -> Result<String, String> {
     let status = api::enable_dnssec(&zone_id)?;
     serde_json::to_string(&status).map_err(|e| format!("JSON serialisation error: {}", e))
@@ -242,7 +230,6 @@ pub fn cloudguard_enable_dnssec(zone_id: String) -> Result<String, String> {
 ///   - 0rtt: "on"
 ///   - brotli: "on"
 ///   - early_hints: "on"
-
 pub fn cloudguard_harden_zone(zone_id: String) -> Result<String, String> {
     let hsts_value = json!({
         "strict_transport_security": {
@@ -286,7 +273,6 @@ pub fn cloudguard_harden_zone(zone_id: String) -> Result<String, String> {
 /// Download the offline configuration for a zone. Fetches settings and DNS
 /// records, saves them to `~/.config/cloudguard/configs/{domain}.json`,
 /// and returns the file path and metadata.
-
 pub fn cloudguard_download_config(zone_id: String) -> Result<String, String> {
     let path = super::config::download_zone_config(&zone_id)?;
     let result = json!({

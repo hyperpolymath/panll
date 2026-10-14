@@ -68,7 +68,8 @@ mod tests {
         let formats = [CaptureFormat::Png, CaptureFormat::Pdf, CaptureFormat::Svg];
         for fmt in formats {
             let json = serde_json::to_string(&fmt).expect("serialise CaptureFormat must succeed");
-            let _back: CaptureFormat = serde_json::from_str(&json).expect("deserialise must succeed");
+            let _back: CaptureFormat =
+                serde_json::from_str(&json).expect("deserialise must succeed");
         }
     }
 

@@ -79,7 +79,6 @@ fn generate_recording_id() -> String {
 /// Makes a GET request with a short timeout and returns connectivity status.
 /// The frontend uses this to show the connection indicator in the Game Preview
 /// panel header.
-
 pub async fn game_preview_check_server(url: String) -> Result<String, String> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
@@ -93,16 +92,14 @@ pub async fn game_preview_check_server(url: String) -> Result<String, String> {
                 "connected": resp.status().is_success(),
                 "status": status,
             });
-            serde_json::to_string(&result)
-                .map_err(|e| format!("Serialisation error: {e}"))
+            serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
         }
         Err(_) => {
             let result = json!({
                 "connected": false,
                 "status": 0,
             });
-            serde_json::to_string(&result)
-                .map_err(|e| format!("Serialisation error: {e}"))
+            serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
         }
     }
 }
@@ -118,7 +115,6 @@ pub async fn game_preview_check_server(url: String) -> Result<String, String> {
 ///   - `npx` (from Node/Deno) available on `$PATH`.
 ///
 /// Returns JSON with `pid`, `url`, and `projectDir` on success.
-
 pub async fn game_preview_start_server(
     project_dir: String,
     port: Option<u16>,
@@ -182,8 +178,7 @@ pub async fn game_preview_start_server(
         "projectDir": project_dir,
         "status": "started",
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Stop the running Vite dev-server.
@@ -191,7 +186,6 @@ pub async fn game_preview_start_server(
 /// Sends SIGTERM (Unix) or taskkill (Windows) to the tracked dev-server
 /// process. Clears the tracked state afterwards regardless of kill outcome
 /// so a new server can be started.
-
 pub async fn game_preview_stop_server() -> Result<String, String> {
     let (pid, url) = {
         let state = DEV_SERVER.lock().map_err(|e| format!("Lock error: {e}"))?;
@@ -233,8 +227,7 @@ pub async fn game_preview_stop_server() -> Result<String, String> {
         "pid": pid,
         "url": url,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Send a control command to the game engine.
@@ -246,7 +239,6 @@ pub async fn game_preview_stop_server() -> Result<String, String> {
 ///
 /// The engine control endpoint is expected to be provided by an IDApTIK
 /// Vite plugin that injects `/__engine/*` routes into the dev server.
-
 pub async fn game_preview_control(command: String) -> Result<String, String> {
     let valid_commands = ["pause", "resume", "step"];
     if !valid_commands.contains(&command.as_str()) {
@@ -289,15 +281,13 @@ pub async fn game_preview_control(command: String) -> Result<String, String> {
 
     // Fallback: echo the command state locally.
     let result = json!({ "state": command });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Start a named game recording session.
 ///
 /// Creates a marker file in `/tmp/panll/game-clips/` to track the recording.
 /// Returns the generated recording ID so the frontend can reference it later.
-
 pub async fn game_preview_record_start(name: String) -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
     let id = generate_recording_id();
@@ -313,23 +303,24 @@ pub async fn game_preview_record_start(name: String) -> Result<String, String> {
         "status": "recording",
     });
 
-    fs::write(&marker_path, serde_json::to_string_pretty(&metadata).unwrap_or_default())
-        .map_err(|e| format!("Cannot write recording marker: {e}"))?;
+    fs::write(
+        &marker_path,
+        serde_json::to_string_pretty(&metadata).unwrap_or_default(),
+    )
+    .map_err(|e| format!("Cannot write recording marker: {e}"))?;
 
     let result = json!({
         "id": id,
         "name": name,
         "status": "recording",
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Stop the current game recording session.
 ///
 /// Finds the active `.recording` marker, renames it to `.clip`, and returns
 /// clip metadata. If no active recording is found, returns an error.
-
 pub async fn game_preview_record_stop() -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
 
@@ -338,20 +329,19 @@ pub async fn game_preview_record_stop() -> Result<String, String> {
         .map_err(|e| format!("Cannot read clips directory: {e}"))?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
-            entry.path().extension()
+            entry
+                .path()
+                .extension()
                 .map(|ext| ext == "recording")
                 .unwrap_or(false)
         })
         .collect();
 
-    if recordings.is_empty() {
-        return Err("No active recording found".to_string());
-    }
-
     // Sort by name (timestamp-based) so we get the latest.
     recordings.sort_by_key(|e| e.file_name());
-    // SAFETY: `recordings` is guaranteed non-empty — checked at line 146.
-    let latest = recordings.last().expect("recordings: non-empty after is_empty guard");
+    let Some(latest) = recordings.last() else {
+        return Err("No active recording found".to_string());
+    };
     let recording_path = latest.path();
 
     // Read the recording metadata.
@@ -362,22 +352,21 @@ pub async fn game_preview_record_stop() -> Result<String, String> {
 
     // Update status and add end timestamp.
     metadata["status"] = json!("complete");
-    metadata["ended_at"] = json!(
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs()
-    );
+    metadata["ended_at"] = json!(SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs());
 
     // Rename .recording → .clip
     let clip_path = recording_path.with_extension("clip");
-    fs::write(&clip_path, serde_json::to_string_pretty(&metadata).unwrap_or_default())
-        .map_err(|e| format!("Cannot write clip file: {e}"))?;
-    fs::remove_file(&recording_path)
-        .map_err(|e| format!("Cannot remove recording marker: {e}"))?;
+    fs::write(
+        &clip_path,
+        serde_json::to_string_pretty(&metadata).unwrap_or_default(),
+    )
+    .map_err(|e| format!("Cannot write clip file: {e}"))?;
+    fs::remove_file(&recording_path).map_err(|e| format!("Cannot remove recording marker: {e}"))?;
 
-    serde_json::to_string(&metadata)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&metadata).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Capture the current game frame as a screenshot.
@@ -392,7 +381,6 @@ pub async fn game_preview_record_stop() -> Result<String, String> {
 /// Prerequisites:
 ///   - Dev server running (via `game_preview_start_server`).
 ///   - IDApTIK Vite plugin providing the `/__engine/screenshot` endpoint.
-
 pub async fn game_preview_screenshot() -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
     let ts = SystemTime::now()
@@ -442,8 +430,7 @@ pub async fn game_preview_screenshot() -> Result<String, String> {
         "filename": filename,
         "stub": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Return render statistics from the game engine.
@@ -460,7 +447,6 @@ pub async fn game_preview_screenshot() -> Result<String, String> {
 /// Prerequisites:
 ///   - Dev server running (via `game_preview_start_server`).
 ///   - IDApTIK Vite plugin providing the `/__engine/stats` endpoint.
-
 pub async fn game_preview_stats() -> Result<String, String> {
     // Try to fetch live stats from the running engine.
     let server_url = {
@@ -494,15 +480,13 @@ pub async fn game_preview_stats() -> Result<String, String> {
         "spriteCount": 342,
         "stub": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// List all saved clips from `/tmp/panll/game-clips/`.
 ///
 /// Reads `.clip` files from the clips directory and returns their metadata
 /// as a JSON array. Clips are sorted by ID (timestamp-based, newest first).
-
 pub async fn game_preview_clips_list() -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
 
@@ -510,7 +494,9 @@ pub async fn game_preview_clips_list() -> Result<String, String> {
         .map_err(|e| format!("Cannot read clips directory: {e}"))?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
-            entry.path().extension()
+            entry
+                .path()
+                .extension()
                 .map(|ext| ext == "clip")
                 .unwrap_or(false)
         })
@@ -527,15 +513,13 @@ pub async fn game_preview_clips_list() -> Result<String, String> {
         id_b.cmp(id_a)
     });
 
-    serde_json::to_string(&clips)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&clips).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Delete a clip by its ID.
 ///
 /// Removes the corresponding `.clip` file from the clips directory.
 /// Returns confirmation JSON on success.
-
 pub async fn game_preview_clip_delete(id: String) -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
     let clip_path = clips_dir.join(format!("{id}.clip"));
@@ -544,15 +528,13 @@ pub async fn game_preview_clip_delete(id: String) -> Result<String, String> {
         return Err(format!("Clip not found: {id}"));
     }
 
-    fs::remove_file(&clip_path)
-        .map_err(|e| format!("Cannot delete clip {id}: {e}"))?;
+    fs::remove_file(&clip_path).map_err(|e| format!("Cannot delete clip {id}: {e}"))?;
 
     let result = json!({
         "deleted": id,
         "success": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 #[cfg(test)]
@@ -572,7 +554,10 @@ mod tests {
     #[test]
     fn test_generate_recording_id() {
         let id = generate_recording_id();
-        assert!(id.starts_with("clip-"), "ID should start with 'clip-': {id}");
+        assert!(
+            id.starts_with("clip-"),
+            "ID should start with 'clip-': {id}"
+        );
         // ID should contain a numeric timestamp after the prefix.
         let timestamp_part = &id[5..];
         assert!(
@@ -630,7 +615,10 @@ mod tests {
             assert!(result.is_ok());
             let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
             assert!(json["stub"].as_bool().unwrap());
-            assert!(json["filename"].as_str().unwrap().starts_with("screenshot-"));
+            assert!(json["filename"]
+                .as_str()
+                .unwrap()
+                .starts_with("screenshot-"));
             assert!(json["filename"].as_str().unwrap().ends_with(".png"));
         });
     }
@@ -660,8 +648,7 @@ mod tests {
             // Stop the recording.
             let stop_result = game_preview_record_stop().await;
             assert!(stop_result.is_ok());
-            let stop_json: serde_json::Value =
-                serde_json::from_str(&stop_result.unwrap()).unwrap();
+            let stop_json: serde_json::Value = serde_json::from_str(&stop_result.unwrap()).unwrap();
             assert_eq!(stop_json["status"], "complete");
 
             // Clip should appear in the list.

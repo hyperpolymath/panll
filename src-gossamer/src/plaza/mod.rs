@@ -7,5 +7,5 @@
 //! Uses the local `pmpl-audit` CLI tool when available, with a built-in
 //! fallback scanner for basic checks.
 
-pub mod types;
 pub mod commands;
+pub mod types;

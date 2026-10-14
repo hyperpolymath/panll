@@ -9,5 +9,5 @@
 //! - TOTP-based 2FA (RFC 6238) using HMAC-SHA1
 //! - Trustfile.a2ml parsing and security policy loading
 
-pub mod types;
 pub mod commands;
+pub mod types;

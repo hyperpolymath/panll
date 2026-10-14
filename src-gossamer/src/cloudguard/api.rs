@@ -29,9 +29,8 @@ const CF_API_BASE: &str = "https://api.cloudflare.com/client/v4";
 const MIN_REQUEST_INTERVAL: Duration = Duration::from_millis(333);
 
 /// Thread-safe timestamp of the last API request, used for rate limiting.
-static LAST_REQUEST: Lazy<Mutex<Instant>> = Lazy::new(|| {
-    Mutex::new(Instant::now() - MIN_REQUEST_INTERVAL)
-});
+static LAST_REQUEST: Lazy<Mutex<Instant>> =
+    Lazy::new(|| Mutex::new(Instant::now() - MIN_REQUEST_INTERVAL));
 
 /// Returns the CF API base URL, respecting the `CLOUDFLARE_API_URL` override.
 fn cf_api_base() -> String {
@@ -42,8 +41,9 @@ fn cf_api_base() -> String {
 /// In the Tauri app, this is set from the OS keyring at startup.
 /// Returns an error if no token is configured.
 fn cf_api_token() -> Result<String, String> {
-    env::var("CLOUDFLARE_API_TOKEN")
-        .map_err(|_| "CLOUDFLARE_API_TOKEN not set. Configure your Cloudflare API token.".to_string())
+    env::var("CLOUDFLARE_API_TOKEN").map_err(|_| {
+        "CLOUDFLARE_API_TOKEN not set. Configure your Cloudflare API token.".to_string()
+    })
 }
 
 /// Waits if necessary to respect the rate limit, then updates the timestamp.
@@ -179,7 +179,8 @@ pub fn get_zone_settings(zone_id: &str) -> Result<Vec<CfZoneSetting>, String> {
         return Err(extract_cf_errors(&body));
     }
 
-    body.result.ok_or_else(|| "No settings returned".to_string())
+    body.result
+        .ok_or_else(|| "No settings returned".to_string())
 }
 
 /// Update a single zone setting by ID.
@@ -192,7 +193,12 @@ pub fn update_zone_setting(
     let client = http_client(10)?;
     rate_limit_wait();
 
-    let url = format!("{}/zones/{}/settings/{}", cf_api_base(), zone_id, setting_id);
+    let url = format!(
+        "{}/zones/{}/settings/{}",
+        cf_api_base(),
+        zone_id,
+        setting_id
+    );
     let patch = CfSettingPatch { value };
 
     let resp = client
@@ -210,7 +216,8 @@ pub fn update_zone_setting(
         return Err(extract_cf_errors(&body));
     }
 
-    body.result.ok_or_else(|| "Setting update returned no result".to_string())
+    body.result
+        .ok_or_else(|| "Setting update returned no result".to_string())
 }
 
 /// Batch-update multiple settings for a zone in a single API call.
@@ -244,7 +251,8 @@ pub fn update_zone_settings_batch(
         return Err(extract_cf_errors(&body));
     }
 
-    body.result.ok_or_else(|| "Batch settings update returned no result".to_string())
+    body.result
+        .ok_or_else(|| "Batch settings update returned no result".to_string())
 }
 
 // ============================================================================
@@ -299,10 +307,7 @@ pub fn list_dns_records(zone_id: &str) -> Result<Vec<CfDnsRecord>, String> {
 }
 
 /// Create a new DNS record in a zone.
-pub fn create_dns_record(
-    zone_id: &str,
-    record: &CfDnsRecordCreate,
-) -> Result<CfDnsRecord, String> {
+pub fn create_dns_record(zone_id: &str, record: &CfDnsRecordCreate) -> Result<CfDnsRecord, String> {
     let token = cf_api_token()?;
     let client = http_client(10)?;
     rate_limit_wait();
@@ -323,7 +328,8 @@ pub fn create_dns_record(
         return Err(extract_cf_errors(&body));
     }
 
-    body.result.ok_or_else(|| "DNS record creation returned no result".to_string())
+    body.result
+        .ok_or_else(|| "DNS record creation returned no result".to_string())
 }
 
 /// Update an existing DNS record.
@@ -357,7 +363,8 @@ pub fn update_dns_record(
         return Err(extract_cf_errors(&body));
     }
 
-    body.result.ok_or_else(|| "DNS record update returned no result".to_string())
+    body.result
+        .ok_or_else(|| "DNS record update returned no result".to_string())
 }
 
 /// Delete a DNS record by ID.
@@ -415,7 +422,8 @@ pub fn get_dnssec_status(zone_id: &str) -> Result<CfDnssecStatus, String> {
         return Err(extract_cf_errors(&body));
     }
 
-    body.result.ok_or_else(|| "No DNSSEC status returned".to_string())
+    body.result
+        .ok_or_else(|| "No DNSSEC status returned".to_string())
 }
 
 /// Enable DNSSEC for a zone via `PATCH /zones/{zone_id}/dnssec`.
@@ -440,7 +448,8 @@ pub fn enable_dnssec(zone_id: &str) -> Result<CfDnssecStatus, String> {
         return Err(extract_cf_errors(&body));
     }
 
-    body.result.ok_or_else(|| "DNSSEC enable returned no result".to_string())
+    body.result
+        .ok_or_else(|| "DNSSEC enable returned no result".to_string())
 }
 
 // ============================================================================

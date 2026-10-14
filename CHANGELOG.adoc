@@ -9,6 +9,26 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === https://github.com/hyperpolymath/panll/compare/v0.1.0...HEAD[Unreleased]
 
+==== Changed (2026-10-14 — orphaned Rust backend modules wired into the lib)
+
+* *43 orphaned modules under `+src-gossamer/src/+` now compile.* They were
+declared by no crate root, so they were never compiled, linted or tested.
+All are GTK/WebKit-free and are now `+pub mod+` in `+lib.rs+`;
+`+main.rs+` still adds only `+system_tray+`. `+cargo test --lib+` runs
+285 tests (was 23).
+* Clippy (`+-D warnings+`) and rustfmt fixes in the newly compiled code.
+Most were blank lines left where `+#[tauri::command]+` attributes had
+been deleted. `+minter_mint_panel+` now takes a `+MintRequest+` instead
+of 12 positional arguments.
+* Tauri leftovers removed from `+compat+`, `+error+`
+(`+to_tauri_result+` → `+to_command_result+`), `+cloudguard::commands+`
+and `+ums_cartridge::commands+`.
+* The handlers in these modules are *not yet registered* in
+`+register_commands+` (`+main.rs+`); that is follow-up work. The
+`+Cargo.toml+` header ("All 103 command handlers are registered") and
+`+EXPLAINME-new.adoc+` ("270 migrated commands") now state the real
+figure: 36 registered.
+
 ==== Fixed (2026-10-14 — panel-clades Types/Layout/Foreign typecheck)
 
 * `+Types.idr+`, `+Layout.idr+` and `+Foreign.idr+` had never typechecked.

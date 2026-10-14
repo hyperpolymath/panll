@@ -60,16 +60,14 @@ const BASE_DIR: &str = "/tmp/panll";
 /// Return the recordings directory, creating it lazily.
 fn recordings_dir() -> Result<PathBuf, String> {
     let dir = PathBuf::from(BASE_DIR).join("recordings");
-    fs::create_dir_all(&dir)
-        .map_err(|e| format!("Cannot create recordings dir: {e}"))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Cannot create recordings dir: {e}"))?;
     Ok(dir)
 }
 
 /// Return the checkpoints directory, creating it lazily.
 fn checkpoints_dir() -> Result<PathBuf, String> {
     let dir = PathBuf::from(BASE_DIR).join("checkpoints");
-    fs::create_dir_all(&dir)
-        .map_err(|e| format!("Cannot create checkpoints dir: {e}"))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Cannot create checkpoints dir: {e}"))?;
     Ok(dir)
 }
 
@@ -95,7 +93,6 @@ fn generate_id() -> String {
 /// Check if the `valence-shell` binary exists on PATH.
 ///
 /// Returns JSON: `{"available": bool, "version": "..."}`.
-
 pub async fn valence_shell_check() -> Result<String, String> {
     let available = which::which("valence-shell").is_ok();
     let version = if available {
@@ -116,8 +113,7 @@ pub async fn valence_shell_check() -> Result<String, String> {
         "version": version,
     });
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Spawn a shell process with piped stdin/stdout.
@@ -128,14 +124,12 @@ pub async fn valence_shell_check() -> Result<String, String> {
 /// Stderr is merged into stdout via `2>&1` shell invocation.
 ///
 /// Returns JSON with the session_id, shell, cwd, and status.
-
 pub async fn valence_shell_spawn(shell: String, cwd: String) -> Result<String, String> {
     let session_id = generate_id();
 
     // Resolve the shell binary. Fall back to /bin/sh if the requested
     // shell is not found on PATH.
-    let shell_bin = which::which(&shell)
-        .unwrap_or_else(|_| PathBuf::from("/bin/sh"));
+    let shell_bin = which::which(&shell).unwrap_or_else(|_| PathBuf::from("/bin/sh"));
 
     // Validate that the working directory exists.
     let cwd_path = PathBuf::from(&cwd);
@@ -152,15 +146,17 @@ pub async fn valence_shell_spawn(shell: String, cwd: String) -> Result<String, S
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .env("TERM", "dumb")          // suppress escape sequences
-        .env("PS1", "$ ")             // simple prompt for parsing
-        .env("LANG", "C.UTF-8")       // predictable locale
+        .env("TERM", "dumb") // suppress escape sequences
+        .env("PS1", "$ ") // simple prompt for parsing
+        .env("LANG", "C.UTF-8") // predictable locale
         .spawn()
         .map_err(|e| format!("Failed to spawn shell '{shell}': {e}"))?;
 
     // Extract the stdout pipe from the child, wrap in a BufReader for
     // line-by-line reading.
-    let stdout_pipe = child.stdout.take()
+    let stdout_pipe = child
+        .stdout
+        .take()
         .ok_or_else(|| "Failed to capture stdout pipe".to_string())?;
     let stdout_reader = BufReader::new(stdout_pipe);
 
@@ -185,8 +181,7 @@ pub async fn valence_shell_spawn(shell: String, cwd: String) -> Result<String, S
         "status": "spawned",
     });
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Send input to a shell session and read back available output.
@@ -201,7 +196,6 @@ pub async fn valence_shell_spawn(shell: String, cwd: String) -> Result<String, S
 ///
 /// Returns JSON with `output` (collected stdout text) and `exit_code`
 /// (null while the session is still alive).
-
 pub async fn valence_shell_input(
     session_id: Option<String>,
     input: String,
@@ -271,7 +265,7 @@ pub async fn valence_shell_input(
 
         let mut line = String::new();
         match session.stdout_reader.read_line(&mut line) {
-            Ok(0) => break,     // EOF
+            Ok(0) => break, // EOF
             Ok(_) => {
                 collected.push_str(&line);
                 // Append to the ring buffer, evicting oldest if full.
@@ -295,8 +289,7 @@ pub async fn valence_shell_input(
         "exit_code": exit_code,
     });
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Run a command as a one-shot execution (no persistent session).
@@ -324,14 +317,12 @@ async fn run_oneshot(input: &str) -> Result<String, String> {
         "exit_code": output.status.code(),
     });
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Start recording terminal output in asciicast v2 format.
 ///
 /// Creates a `.cast` file with the asciicast header in `/tmp/panll/recordings/`.
-
 pub async fn valence_shell_record_start(name: String) -> Result<String, String> {
     let dir = recordings_dir()?;
     let id = generate_id();
@@ -351,8 +342,8 @@ pub async fn valence_shell_record_start(name: String) -> Result<String, String> 
         }
     });
 
-    let header_line = serde_json::to_string(&header)
-        .map_err(|e| format!("Serialisation error: {e}"))?;
+    let header_line =
+        serde_json::to_string(&header).map_err(|e| format!("Serialisation error: {e}"))?;
 
     fs::write(&path, format!("{header_line}\n"))
         .map_err(|e| format!("Cannot write recording file: {e}"))?;
@@ -364,15 +355,13 @@ pub async fn valence_shell_record_start(name: String) -> Result<String, String> 
         "status": "recording",
     });
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Stop the active recording and close the `.cast` file.
 ///
 /// Stub: marks the most recent `.cast` file as complete by appending
 /// a final timestamp event.
-
 pub async fn valence_shell_record_stop() -> Result<String, String> {
     let dir = recordings_dir()?;
 
@@ -380,19 +369,17 @@ pub async fn valence_shell_record_stop() -> Result<String, String> {
     let latest = fs::read_dir(&dir)
         .map_err(|e| format!("Cannot read recordings dir: {e}"))?
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path()
-                .extension()
-                .and_then(|ext| ext.to_str())
-                == Some("cast")
-        })
+        .filter(|e| e.path().extension().and_then(|ext| ext.to_str()) == Some("cast"))
         .max_by_key(|e| e.metadata().ok().and_then(|m| m.modified().ok()));
 
     match latest {
         Some(entry) => {
             let path = entry.path();
             // Append a final event line: [elapsed, "o", "Recording stopped.\r\n"]
-            let stop_line = format!("[{}.0, \"o\", \"\\r\\nRecording stopped.\\r\\n\"]\n", unix_now());
+            let stop_line = format!(
+                "[{}.0, \"o\", \"\\r\\nRecording stopped.\\r\\n\"]\n",
+                unix_now()
+            );
             fs::OpenOptions::new()
                 .append(true)
                 .open(&path)
@@ -413,8 +400,7 @@ pub async fn valence_shell_record_stop() -> Result<String, String> {
                 "status": "stopped",
             });
 
-            serde_json::to_string(&result)
-                .map_err(|e| format!("Serialisation error: {e}"))
+            serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
         }
         None => Err("No active recording found".to_string()),
     }
@@ -423,14 +409,12 @@ pub async fn valence_shell_record_stop() -> Result<String, String> {
 /// List all recordings from `/tmp/panll/recordings/`.
 ///
 /// Returns a JSON array of recording metadata objects.
-
 pub async fn valence_shell_recordings_list() -> Result<String, String> {
     let dir = recordings_dir()?;
     let mut recordings = Vec::new();
 
     if dir.exists() {
-        let entries = fs::read_dir(&dir)
-            .map_err(|e| format!("Cannot read recordings dir: {e}"))?;
+        let entries = fs::read_dir(&dir).map_err(|e| format!("Cannot read recordings dir: {e}"))?;
 
         for entry in entries {
             let entry = entry.map_err(|e| format!("Dir entry error: {e}"))?;
@@ -449,7 +433,9 @@ pub async fn valence_shell_recordings_list() -> Result<String, String> {
                         content.lines().next().and_then(|line| {
                             serde_json::from_str::<serde_json::Value>(line)
                                 .ok()
-                                .and_then(|v| v.get("title").and_then(|t| t.as_str()).map(String::from))
+                                .and_then(|v| {
+                                    v.get("title").and_then(|t| t.as_str()).map(String::from)
+                                })
                         })
                     })
                     .unwrap_or_else(|| "Untitled".to_string());
@@ -466,17 +452,14 @@ pub async fn valence_shell_recordings_list() -> Result<String, String> {
         }
     }
 
-    serde_json::to_string(&recordings)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&recordings).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Delete a recording file by ID.
-
 pub async fn valence_shell_recording_delete(id: String) -> Result<String, String> {
     let path = recordings_dir()?.join(format!("{id}.cast"));
     if path.exists() {
-        fs::remove_file(&path)
-            .map_err(|e| format!("Delete error: {e}"))?;
+        fs::remove_file(&path).map_err(|e| format!("Delete error: {e}"))?;
         Ok(format!("Recording '{id}' deleted"))
     } else {
         Err(format!("Recording '{id}' not found"))
@@ -487,7 +470,6 @@ pub async fn valence_shell_recording_delete(id: String) -> Result<String, String
 ///
 /// Saves a JSON file with the label, timestamp, and a generated ID to
 /// `/tmp/panll/checkpoints/`.
-
 pub async fn valence_shell_checkpoint_create(label: String) -> Result<String, String> {
     let dir = checkpoints_dir()?;
     let id = generate_id();
@@ -503,11 +485,9 @@ pub async fn valence_shell_checkpoint_create(label: String) -> Result<String, St
     let json = serde_json::to_string_pretty(&checkpoint)
         .map_err(|e| format!("Serialisation error: {e}"))?;
 
-    fs::write(&path, &json)
-        .map_err(|e| format!("Cannot write checkpoint: {e}"))?;
+    fs::write(&path, &json).map_err(|e| format!("Cannot write checkpoint: {e}"))?;
 
-    serde_json::to_string(&checkpoint)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&checkpoint).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Restore a checkpoint by ID.
@@ -516,7 +496,6 @@ pub async fn valence_shell_checkpoint_create(label: String) -> Result<String, St
 /// status. If a `session_id` is provided and the checkpoint contains a
 /// `cwd` field, sends a `cd` command to the session to restore the
 /// working directory.
-
 pub async fn valence_shell_checkpoint_restore(
     id: String,
     session_id: Option<String>,
@@ -526,10 +505,9 @@ pub async fn valence_shell_checkpoint_restore(
         return Err(format!("Checkpoint '{id}' not found"));
     }
 
-    let content = fs::read_to_string(&path)
-        .map_err(|e| format!("Read error: {e}"))?;
-    let mut checkpoint: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| format!("Parse error: {e}"))?;
+    let content = fs::read_to_string(&path).map_err(|e| format!("Read error: {e}"))?;
+    let mut checkpoint: serde_json::Value =
+        serde_json::from_str(&content).map_err(|e| format!("Parse error: {e}"))?;
 
     // If a session is specified and the checkpoint has a cwd, restore it
     // by writing a `cd` command to the session's stdin.
@@ -554,21 +532,19 @@ pub async fn valence_shell_checkpoint_restore(
         obj.insert("status".to_string(), serde_json::json!("restored"));
     }
 
-    serde_json::to_string(&checkpoint)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&checkpoint).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// List all checkpoints from `/tmp/panll/checkpoints/`.
 ///
 /// Returns a JSON array of checkpoint objects.
-
 pub async fn valence_shell_checkpoints_list() -> Result<String, String> {
     let dir = checkpoints_dir()?;
     let mut checkpoints = Vec::new();
 
     if dir.exists() {
-        let entries = fs::read_dir(&dir)
-            .map_err(|e| format!("Cannot read checkpoints dir: {e}"))?;
+        let entries =
+            fs::read_dir(&dir).map_err(|e| format!("Cannot read checkpoints dir: {e}"))?;
 
         for entry in entries {
             let entry = entry.map_err(|e| format!("Dir entry error: {e}"))?;
@@ -587,8 +563,7 @@ pub async fn valence_shell_checkpoints_list() -> Result<String, String> {
         }
     }
 
-    serde_json::to_string(&checkpoints)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&checkpoints).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Capture the current terminal state from a session's output buffer.
@@ -600,7 +575,6 @@ pub async fn valence_shell_checkpoints_list() -> Result<String, String> {
 ///
 /// Returns JSON with `content` (the terminal text), `width`, `height`
 /// (number of lines returned), `timestamp`, and `session_id`.
-
 pub async fn valence_shell_screenshot(
     session_id: Option<String>,
     lines: Option<usize>,
@@ -629,8 +603,7 @@ pub async fn valence_shell_screenshot(
                 "height": buf[start..].len(),
                 "timestamp": unix_now(),
             });
-            return serde_json::to_string(&result)
-                .map_err(|e| format!("Serialisation error: {e}"));
+            return serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"));
         } else {
             return Err(format!("Session '{sid}' not found"));
         }
@@ -663,8 +636,7 @@ pub async fn valence_shell_screenshot(
             "height": 1,
             "timestamp": unix_now(),
         });
-        return serde_json::to_string(&result)
-            .map_err(|e| format!("Serialisation error: {e}"));
+        return serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"));
     }
 
     let result = serde_json::json!({
@@ -673,15 +645,13 @@ pub async fn valence_shell_screenshot(
         "timestamp": unix_now(),
     });
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Export a recording in a specified format.
 ///
 /// Stub implementation: confirms the export request. Real implementation
 /// will convert the `.cast` file to the requested format (e.g., gif, svg).
-
 pub async fn valence_shell_recording_export(id: String, format: String) -> Result<String, String> {
     let cast_path = recordings_dir()?.join(format!("{id}.cast"));
     if !cast_path.exists() {
@@ -695,8 +665,7 @@ pub async fn valence_shell_recording_export(id: String, format: String) -> Resul
         "message": format!("Recording '{id}' queued for export as {format}"),
     });
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 // ---------------------------------------------------------------------------
@@ -726,14 +695,12 @@ mod tests {
 
         // Also clear any leaked shell sessions from previous tests.
         // Recover from poisoned mutex to prevent cascading test failures.
-        if let Ok(mut sessions) = SESSIONS
+        let mut sessions = SESSIONS
             .lock()
-            .map_or_else(|poisoned| Ok::<_, std::convert::Infallible>(poisoned.into_inner()), Ok)
-        {
-            // Kill any lingering child processes before dropping sessions.
-            for (_, mut session) in sessions.drain() {
-                let _ = session.child.kill();
-            }
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        // Kill any lingering child processes before dropping sessions.
+        for (_, mut session) in sessions.drain() {
+            let _ = session.child.kill();
         }
     }
 
@@ -847,7 +814,9 @@ mod tests {
     async fn test_recording_delete() {
         let _guard = TEST_LOCK.lock().await;
         cleanup_test_dirs();
-        let start = valence_shell_record_start("delete-test".to_string()).await.unwrap();
+        let start = valence_shell_record_start("delete-test".to_string())
+            .await
+            .unwrap();
         let json: serde_json::Value = serde_json::from_str(&start).unwrap();
         let id = json["id"].as_str().unwrap().to_string();
 
@@ -915,7 +884,10 @@ mod tests {
         let result = valence_shell_screenshot(None, None).await;
         assert!(result.is_ok());
         let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
-        assert!(json["content"].as_str().unwrap().contains("No active sessions"));
+        assert!(json["content"]
+            .as_str()
+            .unwrap()
+            .contains("No active sessions"));
         assert_eq!(json["width"], 120);
     }
 

@@ -54,43 +54,36 @@ fn post(path: &str, body: serde_json::Value, timeout_secs: u64) -> Result<String
 }
 
 /// GET /health — BoJ server health check.
-
 pub fn boj_health() -> Result<String, String> {
     get("/health", 5)
 }
 
 /// GET /cartridges — list all loaded cartridges.
-
 pub fn boj_list_cartridges() -> Result<String, String> {
     get("/cartridges", 10)
 }
 
 /// GET /cartridges/{name} — get details of a specific cartridge.
-
 pub fn boj_get_cartridge(name: String) -> Result<String, String> {
     get(&format!("/cartridges/{}", name), 10)
 }
 
 /// POST /cartridges/{name}/load — load a cartridge.
-
 pub fn boj_load_cartridge(name: String) -> Result<String, String> {
     post(&format!("/cartridges/{}/load", name), json!({}), 30)
 }
 
 /// POST /cartridges/{name}/unload — unload a cartridge.
-
 pub fn boj_unload_cartridge(name: String) -> Result<String, String> {
     post(&format!("/cartridges/{}/unload", name), json!({}), 10)
 }
 
 /// GET /topology — get the BoJ service topology matrix.
-
 pub fn boj_topology() -> Result<String, String> {
     get("/topology", 10)
 }
 
 /// POST /cartridges/{name}/invoke — invoke a cartridge tool/function.
-
 pub fn boj_invoke(name: String, tool: String, args: Option<String>) -> Result<String, String> {
     let parsed_args: serde_json::Value = args
         .and_then(|a| serde_json::from_str(&a).ok())
@@ -103,7 +96,6 @@ pub fn boj_invoke(name: String, tool: String, args: Option<String>) -> Result<St
 }
 
 /// GET /umoja — get Umoja federation runtime status.
-
 pub fn boj_umoja_status() -> Result<String, String> {
     get("/umoja/status", 10)
 }

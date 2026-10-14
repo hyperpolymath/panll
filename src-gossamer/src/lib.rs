@@ -35,8 +35,64 @@ pub mod llm_coding;
 /// Previously orphaned (declared by no crate root, so never compiled). Wired
 /// into the library here so it builds, lints, and its tests run. Note: the
 /// async command handlers are not yet registered in the binary's IPC table —
-/// that integration is tracked as follow-up debt (see TECHNICAL_DEBT.md).
+/// that integration is tracked as follow-up debt (see
+/// `docs/TECHNICAL_DEBT.adoc`, F1/F2).
 pub mod coprocessor;
+
+// ---------------------------------------------------------------------------
+// Formerly orphaned modules — panel backends, live service connections
+// (`*_live`), and shared helpers (`compat`, `error`).
+//
+// These modules were declared by no crate root, so they were never compiled,
+// linted, or tested. They are GTK/WebKit-free and now build as part of the
+// library; each module's own `//!` docs describe it. Their command handlers
+// are NOT yet registered in the binary's IPC table (`register_commands` in
+// `main.rs`) — that is follow-up work (`docs/TECHNICAL_DEBT.adoc`, F1).
+// ---------------------------------------------------------------------------
+
+pub mod a2ml;
+pub mod aerie;
+pub mod ai;
+pub mod boj;
+pub mod boj_live;
+pub mod capture;
+pub mod clade_scanner;
+pub mod cloudguard;
+pub mod compat;
+pub mod dlc_workshop;
+pub mod echidna_live;
+pub mod error;
+pub mod farm;
+pub mod feedback;
+pub mod fleet;
+pub mod game_preview;
+pub mod governance;
+pub mod hypatia;
+pub mod k9;
+pub mod level_architect;
+pub mod minter;
+pub mod multiplayer_monitor;
+pub mod network_topology;
+pub mod observability;
+pub mod overlay;
+pub mod plaza;
+pub mod provenance;
+pub mod release_manager;
+pub mod repoloader;
+pub mod script_gist;
+pub mod security;
+pub mod system_update;
+pub mod typell;
+pub mod umoja;
+pub mod ums;
+pub mod ums_cartridge;
+pub mod valence_shell;
+pub mod verisim_live;
+pub mod vm_inspector;
+pub mod voicetag;
+pub mod watcher;
+pub mod wiring_inspector;
+pub mod workspace;
 
 /// Cross-module integration tests. These exercise the public command-backed
 /// functions end-to-end. They live in the lib (not `tests/`) so they run via
