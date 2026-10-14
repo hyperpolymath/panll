@@ -68,13 +68,14 @@ HEADER
     grep -qE '^[[:space:]]*resources[[:space:]]*=' "$cfg" || continue
     dir="$(basename -- "$(dirname -- "$cfg")")"
     id="$(camel "$dir")"
-    state="$(grep -E "^[[:space:]]*state = \{ peak = $nat, drift = $nat, budget = $nat \},[[:space:]]*$" "$cfg" || true)"
-    crossing="$(grep -E "^[[:space:]]*crossing = \{ loss = $nat, tolerance = $nat \},[[:space:]]*$" "$cfg" || true)"
+    block="$(sed -n '/^[[:space:]]*resources[[:space:]]*=/,/^[[:space:]]*},[[:space:]]*$/p' "$cfg")"
+    state="$(printf '%s\n' "$block" | grep -E "^[[:space:]]*state = \{ peak = $nat, drift = $nat, budget = $nat \},[[:space:]]*$" || true)"
+    crossing="$(printf '%s\n' "$block" | grep -E "^[[:space:]]*crossing = \{ loss = $nat, tolerance = $nat \},[[:space:]]*$" || true)"
     [ "$(printf '%s\n' "$state" | grep -c .)" -eq 1 ] \
       || fail "$cfg: resources.state is not one line of the form { peak = n, drift = n, budget = n }"
     [ "$(printf '%s\n' "$crossing" | grep -c .)" -eq 1 ] \
       || fail "$cfg: resources.crossing is not one line of the form { loss = n, tolerance = n }"
-    grep -qE '^[[:space:]]*status = "DESIGNED",' "$cfg" \
+    printf '%s\n' "$block" | grep -qE '^[[:space:]]*status = "DESIGNED",' \
       || fail "$cfg: resources.status must be \"DESIGNED\" (nothing measures these values yet)"
     read -r peak drift budget < <(printf '%s\n' "$state" | sed -E 's/.*peak = ([0-9]+), drift = ([0-9]+), budget = ([0-9]+).*/\1 \2 \3/')
     read -r loss tolerance < <(printf '%s\n' "$crossing" | sed -E 's/.*loss = ([0-9]+), tolerance = ([0-9]+).*/\1 \2/')
