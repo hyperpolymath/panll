@@ -35,7 +35,8 @@ TW="_build/dependencies/typed-wasm/src/abi"
 rm -rf "$TW/build"
 if ! (cd "$TW" && idris2 --build typed-wasm.ipkg) > "$OUT/kernel.log" 2>&1 \
    || grep -q '^Error' "$OUT/kernel.log"; then
-  grep -A10 '^Error' "$OUT/kernel.log" | head -30; die "typed-wasm's ABI package does not build at the pin"
+  { grep -A10 '^Error' "$OUT/kernel.log" || tail -30 "$OUT/kernel.log"; } | head -30
+  die "typed-wasm's ABI package does not build at the pin"
 fi
 pass "typed-wasm grade kernel built at $(git -C _build/dependencies/typed-wasm rev-parse --short HEAD)"
 KTTC="$ROOT/$TW/build/ttc"
@@ -46,7 +47,8 @@ st=$?
 if [ "$st" -eq 0 ] && ! grep -q '^Error' "$OUT/grades.log"; then
   pass "panel-clades-grades.ipkg builds against the kernel ($(grep -c ': Building ' "$OUT/grades.log") module(s), 0 errors)"
 else
-  grep -A12 '^Error' "$OUT/grades.log" | head -40; err "panel-clades-grades.ipkg (exit $st)"
+  { grep -A12 '^Error' "$OUT/grades.log" || tail -40 "$OUT/grades.log"; } | head -40
+  err "panel-clades-grades.ipkg (exit $st)"
 fi
 PTTC="$ROOT/src/abi/build/ttc"
 

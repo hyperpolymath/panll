@@ -64,15 +64,21 @@ jobs:
 
   # panel-clades grades ABI: PanelClades.ABI.Grades typechecks against
   # typed-wasm's grade kernel at its pin, and the expected rejections are
-  # refused.  Idris2 publishes no binaries, so 0.8.0 is built from its tag.
+  # refused.  Idris2 publishes no binaries, so 0.8.0 is built from source,
+  # fetched by the commit its v0.8.0 tag names (a tag can move; the SHA
+  # cannot).
   panel-clades-abi:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
       contents: read
+    env:
+      IDRIS2_COMMIT: 15a3e4e70843f7a34100f6470c04b791330788df  # v0.8.0
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install Chez Scheme and GMP
         run: |
@@ -81,7 +87,13 @@ jobs:
 
       - name: Build Idris2 0.8.0 from source
         run: |
-          git clone --quiet --depth 1 --branch v0.8.0 https://github.com/idris-lang/Idris2 "$RUNNER_TEMP/idris2-src"
+          git init --quiet "$RUNNER_TEMP/idris2-src"
+          git -C "$RUNNER_TEMP/idris2-src" fetch --quiet --depth 1 https://github.com/idris-lang/Idris2 "$IDRIS2_COMMIT"
+          git -C "$RUNNER_TEMP/idris2-src" checkout --quiet --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/idris2-src" rev-parse HEAD)" = "$IDRIS2_COMMIT"
+          # Local tag on the verified commit, so the Makefile reports the
+          # release version (0.8.0) rather than 0.8.0-<sha>.
+          git -C "$RUNNER_TEMP/idris2-src" tag v0.8.0
           make -C "$RUNNER_TEMP/idris2-src" bootstrap SCHEME=scheme -j"$(nproc)" > "$RUNNER_TEMP/idris2-build.log" 2>&1 \
             || { tail -60 "$RUNNER_TEMP/idris2-build.log"; exit 1; }
           make -C "$RUNNER_TEMP/idris2-src" install > "$RUNNER_TEMP/idris2-install.log" 2>&1 \
