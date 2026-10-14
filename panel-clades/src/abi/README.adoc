@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
 == panel-clades/src/abi/ — Idris2 ABI Formal Proofs
 
 === Purpose
@@ -8,7 +9,8 @@ safety for the Zig FFI layer.
 
 === Boundary
 
-* *Verified by*: Idris2 0.8.0 type checker
+* *Verified by*: Idris2 0.8.0 type checker — today only
+`+PanelClades/ABI/Grades.idr+` (`+scripts/check-abi.sh+`); see Check status
 * *Implemented by*: `+panel-clades/ffi/zig/+` (Zig FFI matching these
 proofs)
 * *Generated output*: `+generated/abi/*.h+` (C headers from ABI
@@ -26,7 +28,34 @@ proofs
 compliance
 
 |`+Foreign.idr+` |FFI function declarations with type signatures
+
+|`+PanelClades/ABI/Grades.idr+` |Graded clade resource contracts over
+typed-wasm's grade kernel: panel state by occupancy (HWM), the Panel-N →
+Panel-W crossing by loss (Loss); the `+neurosym-bridge+` contract
+
+|`+panel-clades-grades.ipkg+` |The package `+scripts/check-abi.sh+` builds
 |===
+
+=== Check status (2026-10-14)
+
+* `+PanelClades/ABI/Grades.idr+` *typechecks* under Idris2 0.8.0 against
+typed-wasm's grade kernel at the pin in `+scripts/fetch-siblings.sh+`
+(`+bash panel-clades/scripts/check-abi.sh+`), with two expected rejections
+(`+tests/reject/+`). Its lemmas are PROVEN; the `+neurosym-bridge+` budgets
+are declared values (DESIGNED), not measurements.
+* `+Types.idr+`, `+Layout.idr+`, `+Foreign.idr+` *do not typecheck* as of
+`+787ac2e+`. Their module names (`+PanelClades.ABI.*+`) do not match their
+paths, so Idris2 refuses them before checking anything. Laid out at
+matching paths, `+Types.idr+` still has 11 errors: `+%runElab+` without
+`+%language ElabReflection+`; `+DecEq+` used without
+`+import Decidable.Equality+` (twice); `+So+` auto-proofs that cannot be
+found for runtime values (`+createHandle+`, `+mkCladeId+`);
+`+Bits (ptrSize p)+` where a type is expected (`+CPtr+`); pattern
+matching on types (`+cSizeOf+`, `+cAlignOf+`); and `+allCladeKinds+` /
+`+cladeKindExhaustive+`, where `+cladeKindCount+` is auto-bound as a
+variable. The proof statuses below were therefore never machine-checked.
+Fixing them is open (owner decision: some need redesign, e.g. sizes by
+type).
 
 === Invariants
 
