@@ -36,13 +36,18 @@ case "$iv" in *"version 0.8.0"*) ;; *) [ -n "${ALLOW_ANY_IDRIS2:-}" ] || die "Id
 rm -rf "$OUT"; mkdir -p "$OUT"
 
 IPKG="src/abi/panel-clades-grades.ipkg"
-mapfile -d '' -t abi_files < <(find src/abi/PanelClades -type f -name '*.idr' -print0)
+# Enumerate into a file, not a process substitution, so a failing find is seen.
+abi_list="$OUT/abi-files"
+find src/abi/PanelClades -type f -name '*.idr' -print0 > "$abi_list" \
+  || die "could not enumerate .idr files under src/abi/PanelClades"
+mapfile -d '' -t abi_files < "$abi_list"
+[ "${#abi_files[@]}" -gt 0 ] || die "no .idr files found under src/abi/PanelClades"
 for f in "${abi_files[@]}"; do
   mod="$(printf '%s' "${f#src/abi/}" | sed 's|\.idr$||; s|/|.|g')"
   grep -qE "^[[:space:]]*(modules[[:space:]]*=|,)[[:space:]]*${mod//./\\.}[[:space:]]*$" "$IPKG" \
     || err "$mod is not listed in $IPKG (it would never be checked)"
 done
-if [ "${#abi_files[@]}" -gt 0 ] && grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO)\b' "${abi_files[@]}"; then
+if grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO)\b' "${abi_files[@]}"; then
   err "escape hatch in src/abi/PanelClades (lines above)"
 fi
 [ "$fail" -eq 0 ] && pass "every PanelClades module is listed in the ipkg; no escape hatches"
