@@ -1,5 +1,13 @@
+K9!
+# SPDX-License-Identifier: MPL-2.0
 # Auto-generated K9 contract for contract-workspace
 # Safety tier: yard
+
+pedigree = {
+  name = "contract-workspace",
+  version = "1.0.0",
+  leash = 'Yard,
+}
 
 [must]
 

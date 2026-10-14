@@ -54,7 +54,9 @@ let layout | LayoutPreset | PaneSizesSum100 = {
 
 {
   pedigree = LayoutPedigree & {
+    leash = 'Yard,
     metadata = {
+      version = layout.version,
       name = "panll-layout-database-design",
       description = layout.description,
     },

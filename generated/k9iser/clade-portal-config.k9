@@ -1,5 +1,13 @@
+K9!
+# SPDX-License-Identifier: MPL-2.0
 # Auto-generated K9 contract for clade-portal-config
 # Safety tier: yard
+
+pedigree = {
+  name = "clade-portal-config",
+  version = "1.0.0",
+  leash = 'Yard,
+}
 
 [must]
 app.security.sandbox.enabled : string { == true }

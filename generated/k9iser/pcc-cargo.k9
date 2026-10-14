@@ -1,5 +1,13 @@
+K9!
+# SPDX-License-Identifier: MPL-2.0
 # Auto-generated K9 contract for pcc-cargo
 # Safety tier: yard
+
+pedigree = {
+  name = "pcc-cargo",
+  version = "1.0.0",
+  leash = 'Yard,
+}
 
 [must]
 package.edition : string { == '2021' }

@@ -1,5 +1,13 @@
+K9!
+# SPDX-License-Identifier: MPL-2.0
 # Auto-generated K9 contract for rescript-compiler
 # Safety tier: yard
+
+pedigree = {
+  name = "rescript-compiler",
+  version = "1.0.0",
+  leash = 'Yard,
+}
 
 [must]
 name : string { == 'panll' }
