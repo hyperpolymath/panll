@@ -1,3 +1,4 @@
+# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
@@ -26,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+        uses: actions/checkout@v7.0.1
 
       - name: Check for manifest files (.a2ml/.deed)
         id: detect
@@ -39,7 +40,7 @@ jobs:
 
       - name: Validate DEED manifests
         if: steps.detect.outputs.count > 0
-        uses: hyperpolymath/deed-ecosystem/validate-action@aa4b836bd969df2bc58128cb8e3d20bbc88d5e79 # main
+        uses: hyperpolymath/deed-ecosystem/validate-action@main
         with:
           path: '.'
           strict: 'false'
@@ -70,7 +71,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+        uses: actions/checkout@v7.0.1
 
       - name: Check for K9 files
         id: detect
@@ -87,7 +88,7 @@ jobs:
 
       - name: Validate K9 contracts
         if: steps.detect.outputs.k9_count > 0
-        uses: hyperpolymath/k9-ecosystem/validate-action@89f3c2702f4f650a92aa7411502f38da06abd562 # main
+        uses: hyperpolymath/k9-ecosystem/validate-action@main
         with:
           path: '.'
           strict: 'false'
@@ -119,7 +120,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+        uses: actions/checkout@v7.0.1
 
       - name: Scan for invisible characters
         id: lint
@@ -183,7 +184,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+        uses: actions/checkout@v7.0.1
 
       - name: Check for Groove manifest
         id: groove
@@ -243,7 +244,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+        uses: actions/checkout@v7.0.1
 
       - name: Generate dogfooding scorecard
         run: |
