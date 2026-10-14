@@ -337,16 +337,11 @@ pub async fn game_preview_record_stop() -> Result<String, String> {
         })
         .collect();
 
-    if recordings.is_empty() {
-        return Err("No active recording found".to_string());
-    }
-
     // Sort by name (timestamp-based) so we get the latest.
     recordings.sort_by_key(|e| e.file_name());
-    // SAFETY: `recordings` is guaranteed non-empty — checked at line 146.
-    let latest = recordings
-        .last()
-        .expect("recordings: non-empty after is_empty guard");
+    let Some(latest) = recordings.last() else {
+        return Err("No active recording found".to_string());
+    };
     let recording_path = latest.path();
 
     // Read the recording metadata.
