@@ -52,7 +52,7 @@ jobs:
         run: cargo test --lib -- --test-threads=1
 
       - name: Setup Rust toolchain for PCC
-        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # v1 (toolchain: stable below)
         with:
           toolchain: stable
 
