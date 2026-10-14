@@ -42,6 +42,11 @@ if grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerform
   err "escape hatch in src/abi/PanelClades/ABI (lines above)"
 fi
 [ "$fail" -eq 0 ] && pass "every PanelClades/ABI module is listed in the ipkg; no escape hatches"
+if bash scripts/gen-budgets.sh --check; then
+  pass "Budgets.idr is current with the clade configs"
+else
+  err "Budgets.idr is stale or a clade config's resources block is malformed"
+fi
 
 bash scripts/fetch-siblings.sh || die "could not fetch typed-wasm at its pin"
 TW="_build/dependencies/typed-wasm/src/abi"

@@ -27,4 +27,17 @@
     requires_backend_health = true,
     requires_clade_manifest = true,
   },
+  # Resource contract, graded in typed-wasm's grade kernel by
+  # src/abi/PanelClades/ABI/Grades.idr.  DESIGNED: declared values for the
+  # owner to confirm, not measurements; nothing in the panel runtime emits
+  # or checks them yet.  scripts/gen-budgets.sh turns this block into
+  # src/abi/PanelClades/ABI/Budgets.idr (one line per record, as below).
+  #   state:    occupancy (HWM) — peak live state, state still held at the
+  #             end of one inference, and the budget the peak must fit.
+  #   crossing: loss on the Panel-N → Panel-W crossing, and its tolerance.
+  resources = {
+    status = "DESIGNED",
+    state = { peak = 48, drift = 16, budget = 64 },
+    crossing = { loss = 2, tolerance = 3 },
+  },
 }

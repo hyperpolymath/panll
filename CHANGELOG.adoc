@@ -34,6 +34,22 @@ ipkg, and on `+believe_me+` / `+assert_total+` / `+assert_smaller+` /
 * *Still open:* nothing checks that the Zig FFI agrees with these
 definitions (`+panel-clades/src/abi/README.adoc+`, Proof status).
 
+==== Changed (2026-10-14 — clade budgets come from the clade config)
+
+* A clade's declared resource budgets live in the `+resources+` block of its
+`+clades/<clade>/config.k9.ncl+`, not in Idris.
+* `+panel-clades/scripts/gen-budgets.sh+` generates
+`+PanelClades/ABI/Budgets.idr+` from those blocks. `+check-abi.sh+` fails
+when the file is stale or a block is malformed.
+* `+CladeResourceContract+` is parametric in a `+CladeBudget+`.
+`+declaredContract+` builds a contract from a config's values, and
+typechecks only when the declared peak fits the declared budget and the
+declared loss fits the tolerance (`+tests/reject/BudgetTooSmall.idr+`).
+* `+neurosym-bridge+` declares peak 48, drift 16, budget 64, loss 2,
+tolerance 3. These are DESIGNED values, not measurements.
+* The occupancy-vs-cost witnesses (64 vs 96) now use illustrative phases
+(`+examplePhase+`), independent of any config.
+
 ==== Added (2026-10-14 — graded clade contracts over typed-wasm's grade kernel, PWL-01)
 
 * `+panel-clades/src/abi/PanelClades/ABI/Grades.idr+` grades a clade's

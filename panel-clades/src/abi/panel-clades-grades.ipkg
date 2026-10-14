@@ -11,6 +11,7 @@ package panelcladesgrades
 sourcedir = "."
 
 modules = PanelClades.ABI.Types
+        , PanelClades.ABI.Budgets
         , PanelClades.ABI.Layout
         , PanelClades.ABI.Foreign
         , PanelClades.ABI.Grades

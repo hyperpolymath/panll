@@ -21,20 +21,25 @@
 ||| below), and loss alternatives keep the LESS lossy branch.
 |||
 ||| Status: the lemmas below are PROVEN (idris2 --build against the pinned
-||| kernel).  The contract for `neurosym-bridge` at the end is DESIGNED: its
-||| budgets are declared values for the owner to confirm, not measurements,
-||| and nothing in the panel runtime yet emits or checks these grades.
+||| kernel).  A contract is checked against its clade's DECLARED budget,
+||| which comes from the clade's config.k9.ncl through the generated
+||| PanelClades.ABI.Budgets; a budget the declared grades do not fit fails
+||| the typecheck.  The values are DESIGNED (declared for the owner to
+||| confirm, not measured), and nothing in the panel runtime yet emits or
+||| checks these grades.
 |||
 ||| No unsafe casts, postulates or totality escapes.  %default total.
 
 module PanelClades.ABI.Grades
 
 import Data.Nat
+import Data.So
 import TypedWasm.ABI.ResourceAlgebra
 import TypedWasm.ABI.ResourceAlgebra.Nat
 import TypedWasm.ABI.ResourceAlgebra.Loss
 import TypedWasm.ABI.ResourceAlgebra.MaxPlus
 import TypedWasm.ABI.ResourceAlgebra.HWM
+import PanelClades.ABI.Budgets
 
 %default total
 
@@ -114,71 +119,110 @@ betterOfTwo {a = Finite x} {b = Finite y} (MkLossWithin p) (MkLossWithin _) =
   MkLossWithin (lteTrans (minLeLeft x y) p)
 
 --------------------------------------------------------------------------------
--- The contract
+-- The contract, against a declared budget
 --------------------------------------------------------------------------------
 
-||| A clade's resource contract, graded in the kernel.
+||| An LTE proof found by evaluation.  For closed numbers `lte m n` reduces,
+||| so the `So` is found automatically and no proof term is written by hand;
+||| for numbers that do not fit there is no `So True`, and the typecheck
+||| fails at the use site.
 public export
-record CladeResourceContract where
+fits : (m, n : Nat) -> {auto ok : So (lte m n)} -> LTE m n
+fits m n {ok} = lteReflectsLTE m n (soToEq ok)
+
+||| What a clade's contract is checked against: its declared state budget
+||| and loss tolerance.
+public export
+record CladeBudget where
+  constructor MkCladeBudget
+  ||| Declared state budget, in the panel's state units.
+  stateBudget   : Nat
+  ||| Declared loss tolerance for the Panel-N → Panel-W crossing.
+  lossTolerance : Nat
+
+||| A clade's resource contract against a declared budget.
+public export
+record CladeResourceContract (budget : CladeBudget) where
   constructor MkCladeResourceContract
-  ||| The clade's id (its A2ML `clade-metadata.id`).
+  ||| The clade's id (its directory under panel-clades/clades/).
   cladeId       : String
   ||| Panel state over a run, as an occupancy grade (HWM).
   stateGrade    : HWMGrade
-  ||| Declared state budget, in the panel's state units.
-  stateBudget   : Nat
   ||| The state fits the budget.
-  stateFits     : StateWithin stateGrade stateBudget
+  stateFits     : StateWithin stateGrade (stateBudget budget)
   ||| Loss on the Panel-N → Panel-W crossing (Loss).
   crossingLoss  : LossGrade
-  ||| Declared loss tolerance for the crossing.
-  lossTolerance : Nat
   ||| The crossing stays within tolerance.
-  crossingFits  : LossWithin crossingLoss lossTolerance
+  crossingFits  : LossWithin crossingLoss (lossTolerance budget)
 
 ||| The contract's two grades on the wire, each tagged with its algebra.
 public export
-contractGrades : CladeResourceContract -> List TaggedGrade
+contractGrades : CladeResourceContract b -> List TaggedGrade
 contractGrades c =
   [ MkTaggedGrade AlgHWM  c.stateGrade
   , MkTaggedGrade AlgLoss c.crossingLoss ]
+
+||| The budget a clade declares in its config (via PanelClades.ABI.Budgets).
+public export
+budgetOf : DeclaredResources -> CladeBudget
+budgetOf d = MkCladeBudget (budget d) (tolerance d)
+
+||| The occupancy grade a clade declares (drift ≤ peak is checked here).
+public export
+declaredState : (d : DeclaredResources) -> {auto ok : So (lte (drift d) (peak d))} -> HWMGrade
+declaredState d = MkHWM (peak d) (drift d) (fits (drift d) (peak d))
+
+||| A clade's contract built from its config alone.  It typechecks exactly
+||| when the declared peak fits the declared budget and the declared loss
+||| fits the declared tolerance.
+public export
+declaredContract : (cladeId : String) -> (d : DeclaredResources)
+                -> {auto okDrift : So (lte (drift d) (peak d))}
+                -> {auto okState : So (lte (peak d) (budget d))}
+                -> {auto okLoss  : So (lte (loss d) (tolerance d))}
+                -> CladeResourceContract (budgetOf d)
+declaredContract cladeId d =
+  MkCladeResourceContract cladeId
+    (declaredState d) (MkStateWithin (fits (peak d) (budget d)))
+    (Finite (loss d)) (MkLossWithin (fits (loss d) (tolerance d)))
 
 --------------------------------------------------------------------------------
 -- One graded clade contract: neurosym-bridge (DESIGNED; values to confirm)
 --------------------------------------------------------------------------------
 --
--- neurosym-bridge (kind `bridge`, clades/neurosym-bridge/NeurosymBridge.a2ml)
--- translates neural results (Panel-N) into symbolic / world terms with
--- confidence gating.  Declared, not measured: its panel state peaks at 48
--- units and holds 16 between inferences, within a budget of 64; the
--- crossing loses 2 (two gating stages may each drop a candidate), within a
--- tolerance of 3.
+-- neurosym-bridge (kind `bridge`) translates neural results (Panel-N) into
+-- symbolic / world terms with confidence gating.  Its budgets are declared
+-- in clades/neurosym-bridge/config.k9.ncl (`resources`), not here.
 
-||| neurosym-bridge's panel state over one inference.
+||| The graded contract, against neurosym-bridge's declared budget.
 public export
-neurosymState : HWMGrade
-neurosymState = MkHWM 48 16 (lteAddRight 16)
+neurosymBridgeContract : CladeResourceContract (budgetOf Budgets.neurosymBridge)
+neurosymBridgeContract = declaredContract "neurosym-bridge" Budgets.neurosymBridge
 
-||| The graded contract.
-public export
-neurosymBridgeContract : CladeResourceContract
-neurosymBridgeContract = MkCladeResourceContract
-  "neurosym-bridge"
-  neurosymState 64 (MkStateWithin (lteAddRight 48))
-  (Finite 2) 3 (MkLossWithin (lteAddRight 2))
+--------------------------------------------------------------------------------
+-- Occupancy is not cost, at the panel (resource-algebra S-1)
+--------------------------------------------------------------------------------
+--
+-- Illustrative numbers, independent of any clade's config: a panel phase
+-- that peaks at 48 and holds 16, run twice.
 
-||| Two inferences back to back stay within budget: the second starts from
-||| the 16 units the first still holds (16 + 48 = 64 ≤ 64).
+||| One illustrative phase.
 public export
-neurosymTwoInferences : StateWithin (hwmSeq Grades.neurosymState Grades.neurosymState) 64
-neurosymTwoInferences =
-  phasesWithin {a = neurosymState} {b = neurosymState}
+examplePhase : HWMGrade
+examplePhase = MkHWM 48 16 (lteAddRight 16)
+
+||| Two phases back to back fit 64: the second starts from the 16 units the
+||| first still holds (16 + 48 = 64).
+public export
+exampleTwoPhases : StateWithin (hwmSeq Grades.examplePhase Grades.examplePhase) 64
+exampleTwoPhases =
+  phasesWithin {a = examplePhase} {b = examplePhase}
     (MkStateWithin (lteAddRight 48)) (lteRefl 64)
 
-||| Occupancy of those two inferences: 64 (the 32 freed between them are
-||| not charged again)...
+||| Occupancy of those two phases: 64 (the 32 freed between them are not
+||| charged again)...
 public export
-panelPhasesOccupancy : peak (hwmSeq Grades.neurosymState Grades.neurosymState) = 64
+panelPhasesOccupancy : peak (hwmSeq Grades.examplePhase Grades.examplePhase) = 64
 panelPhasesOccupancy = Refl
 
 ||| ...whereas reading the same two phases as COST (max-plus) charges 96:
