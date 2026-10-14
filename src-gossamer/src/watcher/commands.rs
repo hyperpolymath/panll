@@ -7,7 +7,7 @@
 //! to. Commands are designed to be safe to call multiple times (idempotent
 //! start/stop) and to survive the watched directory not existing yet.
 //!
-//! We use `notify` (https://docs.rs/notify) which wraps inotify/FSEvents/
+//! We use `notify` (<https://docs.rs/notify>) which wraps inotify/FSEvents/
 //! ReadDirectoryChangesW per-platform behind a unified API. The alternative
 //! in Go (`fsnotify`) has a long history of goroutine leaks on recursive
 //! watches and platform-specific edge cases that silently drop events. Rust's
@@ -97,7 +97,6 @@ fn build_watch_event(path: &std::path::Path, kind: WatchEventKind) -> WatchEvent
 /// Events are emitted on the `watcher://event` channel as JSON-serialised
 /// `WatchEvent` objects that the ReScript `WatcherCmd.listen` function
 /// deserialises into TEA messages.
-
 pub async fn watcher_start(
     app: crate::compat::AppHandle,
     paths: Vec<String>,
@@ -172,7 +171,6 @@ pub async fn watcher_start(
 /// Stop the filesystem watcher.
 ///
 /// Idempotent — safe to call even if the watcher is not running.
-
 pub async fn watcher_stop() -> Result<String, String> {
     let mut state = WATCHER.lock().map_err(|e| format!("Lock error: {e}"))?;
     state.debouncer = None;
@@ -185,7 +183,6 @@ pub async fn watcher_stop() -> Result<String, String> {
 ///
 /// If the watcher is not running, returns an error suggesting `watcher_start`
 /// should be called first. The path is watched recursively.
-
 pub async fn watcher_add_path(path: String) -> Result<String, String> {
     let mut state = WATCHER.lock().map_err(|e| format!("Lock error: {e}"))?;
 
@@ -218,7 +215,6 @@ pub async fn watcher_add_path(path: String) -> Result<String, String> {
 ///
 /// If the watcher is not running or the path is not being watched, this
 /// returns gracefully without error (idempotent).
-
 pub async fn watcher_remove_path(path: String) -> Result<String, String> {
     let mut state = WATCHER.lock().map_err(|e| format!("Lock error: {e}"))?;
 
@@ -241,7 +237,6 @@ pub async fn watcher_remove_path(path: String) -> Result<String, String> {
 ///
 /// Returns whether the watcher is running, which paths are watched, and
 /// the total event count since last start.
-
 pub async fn watcher_status() -> Result<String, String> {
     let state = WATCHER.lock().map_err(|e| format!("Lock error: {e}"))?;
 

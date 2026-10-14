@@ -54,7 +54,6 @@ pub struct OctadSummary {
 /// Check VeriSimDB health (async).
 ///
 /// `GET /health` — returns the full health envelope as a JSON string.
-
 pub async fn verisim_live_health() -> Result<String, String> {
     let endpoint = verisim_endpoint();
     let health: VeriSimHealth = http_client::get_json(&endpoint, "/health").await?;
@@ -64,7 +63,6 @@ pub async fn verisim_live_health() -> Result<String, String> {
 /// List octads from VeriSimDB (async).
 ///
 /// `GET /api/octads` — returns a JSON array of octad summaries.
-
 pub async fn verisim_live_list_octads() -> Result<String, String> {
     let endpoint = verisim_endpoint();
     let octads: Vec<OctadSummary> = http_client::get_json(&endpoint, "/api/octads").await?;
@@ -75,7 +73,6 @@ pub async fn verisim_live_list_octads() -> Result<String, String> {
 ///
 /// `POST /api/vcl` with a JSON body containing the query string.
 /// Returns the query result as a JSON string.
-
 pub async fn verisim_live_query(query: String) -> Result<String, String> {
     let endpoint = verisim_endpoint();
     let body = json!({ "query": query });
@@ -85,7 +82,6 @@ pub async fn verisim_live_query(query: String) -> Result<String, String> {
 /// Get a single octad by ID (async).
 ///
 /// `GET /api/octads/:id` — returns the octad with all modalities.
-
 pub async fn verisim_live_get_octad(id: String) -> Result<String, String> {
     let endpoint = verisim_endpoint();
     let path = format!("/api/octads/{}", id);

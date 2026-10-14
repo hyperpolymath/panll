@@ -69,7 +69,6 @@ fn detect_security_level(content: &str) -> &'static str {
 ///
 /// Returns the file content as a JSON object with `path`, `content`,
 /// `securityLevel`, and `hasK9Magic` fields.
-
 pub fn k9_load_contractile(path: String) -> Result<String, String> {
     let file_path = if Path::new(&path).is_absolute() {
         PathBuf::from(&path)
@@ -111,7 +110,6 @@ pub fn k9_load_contractile(path: String) -> Result<String, String> {
 ///   - Hunt-level files must have `signature_required = true`
 ///
 /// Returns a JSON object with `valid`, `errors`, `warnings`, and `securityLevel`.
-
 pub fn k9_validate(path: String) -> Result<String, String> {
     let file_path = if Path::new(&path).is_absolute() {
         PathBuf::from(&path)
@@ -222,7 +220,6 @@ pub fn k9_validate(path: String) -> Result<String, String> {
 /// is matched case-insensitively with hyphens replacing spaces.
 ///
 /// Example: `name = "Protocol Design"` matches `layouts/protocol-design.k9.ncl`.
-
 pub fn k9_apply_layout(name: String) -> Result<String, String> {
     let root = find_repo_root()?;
     let layouts_dir = root.join("layouts");

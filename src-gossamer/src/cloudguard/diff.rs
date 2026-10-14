@@ -180,14 +180,14 @@ pub fn compute_diff(
 
     let timestamp = super::config::list_saved_configs()
         .ok()
-        .and_then(|_| {
-            Some(format!(
+        .map(|_| {
+            format!(
                 "{}Z",
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .map(|d| d.as_secs())
                     .unwrap_or(0)
-            ))
+            )
         })
         .unwrap_or_default();
 

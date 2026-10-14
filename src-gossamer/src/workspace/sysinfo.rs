@@ -141,7 +141,6 @@ fn read_uptime() -> u64 {
 
 /// Tauri command: get current system information for status bar widgets.
 /// Returns a JSON-serialised SystemInfo struct.
-
 pub async fn get_system_info() -> Result<String, String> {
     let cpu_usage = read_cpu_usage();
     let (memory_total, memory_used) = read_memory_info();

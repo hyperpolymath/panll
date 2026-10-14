@@ -29,7 +29,6 @@ fn client() -> Result<reqwest::Client, String> {
 ///
 /// Returns a JSON array of network objects with name, status, and accuracy
 /// fields. On connection failure, returns an empty array.
-
 pub async fn hypatia_get_networks() -> Result<String, String> {
     let url = format!("{}/networks", hypatia_url());
     let client = client()?;
@@ -47,7 +46,6 @@ pub async fn hypatia_get_networks() -> Result<String, String> {
 ///
 /// Returns a JSON array of scan result objects. On connection failure, returns
 /// an empty array so the panel renders an empty table.
-
 pub async fn hypatia_get_scans() -> Result<String, String> {
     let url = format!("{}/scans", hypatia_url());
     let client = client()?;
@@ -67,7 +65,6 @@ pub async fn hypatia_get_scans() -> Result<String, String> {
 /// the user explicitly triggered an action. The repo_name parameter matches
 /// the ReScript frontend's `repoName` field (camelCase in JSON, snake_case
 /// in Rust via Tauri's automatic rename).
-
 pub async fn hypatia_scan_repo(repo_name: String) -> Result<String, String> {
     let url = format!("{}/scans", hypatia_url());
     let client = client()?;

@@ -30,7 +30,6 @@ fn client() -> Result<reqwest::Client, String> {
 /// On connection failure, returns a JSON array with all 6 canonical bots in
 /// "offline" status so the panel always has something to render. The bot list
 /// is: rhodibot, echidnabot, sustainabot, glambot, seambot, finishbot.
-
 pub async fn fleet_get_bots() -> Result<String, String> {
     let url = format!("{}/bots", fleet_url());
     let client = client()?;
@@ -77,7 +76,6 @@ pub async fn fleet_get_bots() -> Result<String, String> {
 ///
 /// On failure, returns an empty JSON array rather than an error so the panel
 /// renders an empty table instead of an error banner.
-
 pub async fn fleet_get_findings() -> Result<String, String> {
     let url = format!("{}/findings", fleet_url());
     let client = client()?;
@@ -103,7 +101,6 @@ pub async fn fleet_get_findings() -> Result<String, String> {
 ///
 /// Unlike the read commands, dispatch failures are surfaced as errors because
 /// the user explicitly triggered an action and needs to know it failed.
-
 pub async fn fleet_dispatch(finding_id: String, bot_id: String) -> Result<String, String> {
     let url = format!("{}/dispatch", fleet_url());
     let client = client()?;

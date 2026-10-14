@@ -55,7 +55,6 @@ fn save_config(config: &AiProvidersFile) -> Result<(), String> {
 /// Returns the provider's response as a JSON-serialised `SendMessageResponse`.
 /// If the provider returns 429, the response has `quota_exhausted: true` and
 /// the frontend should retry with the next provider.
-
 pub async fn ai_send_message(request: SendMessageRequest) -> Result<String, String> {
     let config_file = load_config()?;
 
@@ -94,7 +93,6 @@ pub async fn ai_send_message(request: SendMessageRequest) -> Result<String, Stri
 ///
 /// Sends a minimal request to verify the API key works.
 /// Returns a JSON object with `{ "status": "ready"|"error"|"no_key", "detail": "..." }`.
-
 pub async fn ai_check_provider(provider_id: String) -> Result<String, String> {
     let config_file = load_config()?;
     let pid: ProviderId = serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
@@ -162,7 +160,6 @@ pub async fn ai_check_provider(provider_id: String) -> Result<String, String> {
 }
 
 /// Change the selected model for a provider.
-
 pub async fn ai_set_model(provider_id: String, model: String) -> Result<String, String> {
     let mut config_file = load_config()?;
     let pid: ProviderId = serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
@@ -181,7 +178,6 @@ pub async fn ai_set_model(provider_id: String, model: String) -> Result<String, 
 }
 
 /// Change a provider's precedence ranking.
-
 pub async fn ai_set_priority(provider_id: String, priority: u32) -> Result<String, String> {
     let mut config_file = load_config()?;
     let pid: ProviderId = serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
@@ -200,7 +196,6 @@ pub async fn ai_set_priority(provider_id: String, priority: u32) -> Result<Strin
 }
 
 /// Enable or disable a provider (mute/unmute without losing the API key).
-
 pub async fn ai_toggle_provider(provider_id: String) -> Result<String, String> {
     let mut config_file = load_config()?;
     let pid: ProviderId = serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
@@ -222,7 +217,6 @@ pub async fn ai_toggle_provider(provider_id: String) -> Result<String, String> {
 /// Clear the conversation history. This is a frontend-only operation;
 /// this command exists as a hook for any backend cleanup needed later
 /// (e.g., clearing cached token counts).
-
 pub async fn ai_clear_history() -> Result<String, String> {
     Ok(serde_json::json!({ "cleared": true }).to_string())
 }
@@ -231,7 +225,6 @@ pub async fn ai_clear_history() -> Result<String, String> {
 ///
 /// Reads SCM files, AI manifest, detected languages, and assembles a
 /// structured context string for the AI system prompt.
-
 pub async fn ai_build_context(repo_path: String) -> Result<String, String> {
     let context_str = context::build_repo_context(&repo_path)?;
     Ok(serde_json::json!({ "context": context_str }).to_string())
@@ -241,7 +234,6 @@ pub async fn ai_build_context(repo_path: String) -> Result<String, String> {
 ///
 /// Returns the full `AiProvidersFile` as JSON. The frontend uses this
 /// to initialise the provider key ring on panel open.
-
 pub async fn ai_get_state() -> Result<String, String> {
     let config_file = load_config()?;
     serde_json::to_string(&config_file).map_err(|e| format!("Serialisation error: {e}"))
@@ -256,7 +248,6 @@ pub async fn ai_get_state() -> Result<String, String> {
 ///
 /// Returns `"streaming_started"` immediately. Errors during streaming are
 /// emitted as `StreamChunk::Error` events rather than returned here.
-
 pub async fn ai_send_message_streaming(
     app_handle: crate::compat::AppHandle,
     request: StreamingRequest,

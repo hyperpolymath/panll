@@ -68,7 +68,6 @@ pub struct ProofResult {
 /// Check ECHIDNA health (async).
 ///
 /// `GET /health` — returns the prover health envelope.
-
 pub async fn echidna_live_health() -> Result<String, String> {
     let endpoint = echidna_endpoint();
     let health: EchidnaHealth = http_client::get_json(&endpoint, "/health").await?;
@@ -79,7 +78,6 @@ pub async fn echidna_live_health() -> Result<String, String> {
 ///
 /// `POST /api/tactics/recommend` — given an obligation shape, returns
 /// ranked tactic recommendations with confidence scores.
-
 pub async fn echidna_live_recommend_tactics(obligation: String) -> Result<String, String> {
     let endpoint = echidna_endpoint();
     let body = json!({ "obligation": obligation });
@@ -90,7 +88,6 @@ pub async fn echidna_live_recommend_tactics(obligation: String) -> Result<String
 ///
 /// `POST /api/obligations/submit` — queues an obligation for the
 /// prover pool to attempt. Returns a tracking ID.
-
 pub async fn echidna_live_submit_obligation(obligation: String) -> Result<String, String> {
     let endpoint = echidna_endpoint();
     let body = json!({ "obligation": obligation });
@@ -100,7 +97,6 @@ pub async fn echidna_live_submit_obligation(obligation: String) -> Result<String
 /// Get the status/result of a submitted obligation (async).
 ///
 /// `GET /api/obligations/:id` — returns the proof result if complete.
-
 pub async fn echidna_live_get_result(obligation_id: String) -> Result<String, String> {
     let endpoint = echidna_endpoint();
     let path = format!("/api/obligations/{}", obligation_id);
@@ -110,7 +106,6 @@ pub async fn echidna_live_get_result(obligation_id: String) -> Result<String, St
 /// Get prover statistics — win rates, queue depth, load (async).
 ///
 /// `GET /api/stats` — aggregate prover performance metrics.
-
 pub async fn echidna_live_stats() -> Result<String, String> {
     let endpoint = echidna_endpoint();
     http_client::get_raw(&endpoint, "/api/stats").await

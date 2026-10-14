@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 //
-// commands.rs — Tauri IPC commands for the UMS BoJ cartridge proxy.
+// commands.rs — IPC commands for the UMS BoJ cartridge proxy.
 //
 // Author: Jonathan D.A. Jewell
 //
@@ -12,9 +12,9 @@
 // ## Architecture
 //
 // The validation logic is implemented as standalone functions (not tied to
-// Tauri) so that unit tests can call them directly without an async runtime
-// where possible. The Tauri `#[tauri::command]` wrappers are thin shells
-// around these core functions.
+// the IPC layer) so that unit tests can call them directly without an async
+// runtime where possible. The IPC command handlers are thin shells around
+// these core functions.
 //
 // ## Shared bridge directory
 //
@@ -346,7 +346,7 @@ fn check_devices_exist(level: &LevelData) -> (bool, Vec<String>) {
 
 /// Run all five validation checks and produce a composite result.
 ///
-/// This is the core validation function, usable without Tauri. It mirrors
+/// This is the core validation function, usable without the IPC layer. It mirrors
 /// `validate.validateLevel` in the Zig FFI and the `ValidatedLevel` record
 /// in `src/abi/Validation.idr`.
 ///
@@ -383,7 +383,7 @@ pub fn validate_level_data(level: &LevelData) -> ValidationResult {
 }
 
 // ---------------------------------------------------------------------------
-// Tauri commands — CartridgeAbi tool handlers for BoJ ums-mcp routing
+// IPC commands — CartridgeAbi tool handlers for BoJ ums-mcp routing
 // ---------------------------------------------------------------------------
 
 /// Run the five ABI proof checks on level data JSON.
@@ -406,7 +406,6 @@ pub fn validate_level_data(level: &LevelData) -> ValidationResult {
 /// # Returns
 ///
 /// JSON string containing the `ValidationResult`, or an error if parsing fails.
-
 pub async fn ums_cartridge_validate(level: String) -> Result<String, String> {
     let level_data: LevelData = serde_json::from_str(&level)
         .map_err(|e| format!("Failed to parse level data for validation: {e}"))?;
@@ -442,7 +441,6 @@ pub async fn ums_cartridge_validate(level: String) -> Result<String, String> {
 /// # Returns
 ///
 /// The level JSON as a string, or an error if the file cannot be read.
-
 pub async fn ums_cartridge_load_level(name: String) -> Result<String, String> {
     let file_path = if std::path::Path::new(&name).is_absolute() {
         PathBuf::from(&name)
@@ -476,7 +474,6 @@ pub async fn ums_cartridge_load_level(name: String) -> Result<String, String> {
 /// # Returns
 ///
 /// JSON object with `saved: true` and the file path, or an error.
-
 pub async fn ums_cartridge_save_level(level: String) -> Result<String, String> {
     let dir = ensure_bridge_dir()?;
 
@@ -513,7 +510,6 @@ pub async fn ums_cartridge_save_level(level: String) -> Result<String, String> {
 /// # Returns
 ///
 /// JSON array of `{ name, path }` objects, or an error.
-
 pub async fn ums_cartridge_list_levels() -> Result<String, String> {
     let dir = ensure_bridge_dir()?;
 
@@ -550,7 +546,6 @@ pub async fn ums_cartridge_list_levels() -> Result<String, String> {
 /// # Returns
 ///
 /// ReScript source code as a string, or an error if parsing fails.
-
 pub async fn ums_cartridge_export_config(level: String) -> Result<String, String> {
     let level_data: LevelData = serde_json::from_str(&level)
         .map_err(|e| format!("Failed to parse level for export: {e}"))?;
@@ -901,7 +896,7 @@ mod tests {
         assert!(result.errors.len() >= 3, "Should have at least 3 errors");
     }
 
-    // -- Tauri command integration tests (async) ---------------------------
+    // -- IPC command integration tests (async) -----------------------------
 
     #[test]
     fn test_ums_cartridge_validate_valid_level() {

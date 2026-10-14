@@ -44,7 +44,6 @@ fn now_ts() -> u64 {
 ///
 /// Scans for `.project.json` manifest files and returns their contents
 /// as a JSON array, sorted by project name.
-
 pub async fn ums_load_projects() -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
 
@@ -73,7 +72,6 @@ pub async fn ums_load_projects() -> Result<String, String> {
 ///
 /// Creates a project directory under the UMS root and writes a
 /// `.project.json` manifest file with initial metadata.
-
 pub async fn ums_create_project(name: String, description: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
 
@@ -135,7 +133,6 @@ pub async fn ums_create_project(name: String, description: String) -> Result<Str
 ///
 /// Reads the `.project.json` manifest from the project directory
 /// and returns its contents.
-
 pub async fn ums_open_project(project_id: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
     let manifest_path = ums_dir.join(&project_id).join(".project.json");
@@ -150,7 +147,6 @@ pub async fn ums_open_project(project_id: String) -> Result<String, String> {
 /// Delete a mod project by its ID.
 ///
 /// Removes the entire project directory and all its contents.
-
 pub async fn ums_delete_project(project_id: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
     let project_dir = ums_dir.join(&project_id);
@@ -175,7 +171,6 @@ pub async fn ums_delete_project(project_id: String) -> Result<String, String> {
 /// guards-in-zones, defence-targets-valid, zones-ordered, pbx-consistent,
 /// and devices-exist. When the real Idris2 ABI harness is integrated,
 /// these checks will delegate to the formally verified proofs.
-
 pub async fn ums_validate_level(level_id: String) -> Result<String, String> {
     // Stub: all proofs pass. When the real ABI harness is integrated,
     // each proof obligation will be checked against the level data.
@@ -200,7 +195,6 @@ pub async fn ums_validate_level(level_id: String) -> Result<String, String> {
 /// Returns a set of built-in templates for bootstrapping mod projects.
 /// When the template registry is implemented, this will scan the
 /// template directory for user-contributed templates as well.
-
 pub async fn ums_load_templates() -> Result<String, String> {
     let templates = json!([
         {
@@ -252,7 +246,6 @@ pub async fn ums_load_templates() -> Result<String, String> {
 /// Copies template files into a new project directory. Currently uses
 /// stub data; when the template registry is implemented, this will copy
 /// actual template files.
-
 pub async fn ums_instantiate_template(
     template_id: String,
     project_name: String,
@@ -283,7 +276,6 @@ pub async fn ums_instantiate_template(
 /// Scans the project's `assets/` directory for known asset file types
 /// and returns metadata. When the full asset pipeline is implemented,
 /// this will also read asset manifests and usage tracking.
-
 pub async fn ums_load_assets(project_id: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
     let assets_dir = ums_dir.join(&project_id).join("assets");
@@ -329,7 +321,6 @@ pub async fn ums_load_assets(project_id: String) -> Result<String, String> {
 /// Import an asset file into a project.
 ///
 /// Copies the file at `file_path` into the project's `assets/` directory.
-
 pub async fn ums_import_asset(project_id: String, file_path: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
     let assets_dir = ums_dir.join(&project_id).join("assets");
@@ -361,7 +352,6 @@ pub async fn ums_import_asset(project_id: String, file_path: String) -> Result<S
 /// Creates a distributable package in the project's `exports/` directory.
 /// When full distribution is implemented, this will upload to the
 /// specified platform (GitHub, Workshop, etc.).
-
 pub async fn ums_publish_mod(project_id: String, platform: String) -> Result<String, String> {
     let ums_dir = ensure_ums_dir()?;
     let project_dir = ums_dir.join(&project_id);
@@ -416,7 +406,6 @@ pub async fn ums_publish_mod(project_id: String, platform: String) -> Result<Str
 /// Returns built-in API entries for the IDApTIK modding API.
 /// When the full documentation system is implemented, this will
 /// load entries from doc-comment extraction and API manifests.
-
 pub async fn ums_load_api_reference() -> Result<String, String> {
     let entries = json!([
         {

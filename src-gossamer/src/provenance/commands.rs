@@ -26,7 +26,6 @@ use serde_json::json;
 ///
 /// Returns a JSON object with `authors` (array of {name, email, lines}),
 /// `co_authors` (array of {name, email}), and `total_lines`.
-
 pub async fn provenance_analyse_file(
     repo_path: String,
     file_path: String,
@@ -161,7 +160,6 @@ const UNSOUND_PATTERNS: &[(&str, &str, &str)] = &[
 /// Admitted, assert_total, unsafeCoerce, unsafePerformIO, Obj.magic, etc.).
 /// Returns a JSON object with `matches` (array of {pattern, line, line_number,
 /// language, severity}) and `total_matches`.
-
 pub async fn provenance_scan_unsound(file_path: String) -> Result<String, String> {
     let content =
         fs::read_to_string(&file_path).map_err(|e| format!("Cannot read {file_path}: {e}"))?;

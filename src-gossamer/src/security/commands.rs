@@ -18,7 +18,6 @@ use super::types::{DetectedSecret, RedactionPattern, RedactionResult, TrustfileP
 ///
 /// This is the workhorse of the security layer — called when sharing,
 /// saving, or displaying content that might contain secrets.
-
 pub async fn redact_text(
     text: String,
     panel_id: String,
@@ -75,7 +74,6 @@ pub async fn redact_text(
 }
 
 /// Store a secret in the vault via reasonably-good-tool CLI.
-
 pub async fn vault_store(key: String, value: String) -> Result<String, String> {
     let output = Command::new("reasonably-good-tool")
         .args(["vault", "set", &key, &value])
@@ -91,7 +89,6 @@ pub async fn vault_store(key: String, value: String) -> Result<String, String> {
 }
 
 /// Retrieve a secret from the vault via reasonably-good-tool CLI.
-
 pub async fn vault_retrieve(key: String) -> Result<String, String> {
     let output = Command::new("reasonably-good-tool")
         .args(["vault", "get", &key])
@@ -107,7 +104,6 @@ pub async fn vault_retrieve(key: String) -> Result<String, String> {
 }
 
 /// List all keys in the vault (names only, not values).
-
 pub async fn vault_list() -> Result<String, String> {
     let output = Command::new("reasonably-good-tool")
         .args(["vault", "list"])
@@ -137,7 +133,6 @@ pub async fn vault_list() -> Result<String, String> {
 ///
 /// The Trustfile defines the security policy for a workspace session.
 /// This command reads the file and returns a parsed TrustfilePolicy.
-
 pub async fn load_trustfile(repo_path: String) -> Result<String, String> {
     let trustfile_path = Path::new(&repo_path).join("Trustfile.a2ml");
 
@@ -176,9 +171,8 @@ fn parse_trustfile(content: &str, file_path: &str) -> Result<TrustfilePolicy, St
 
     // Check for 2FA requirements.
     let mut two_factor_reqs = Vec::new();
-    for op in &["vault-access", "panel-sharing", "export", "reset-all"] {
-        let field_name = format!("{op}");
-        if let Some(val) = extract_nested_field(content, "require-2fa", &field_name) {
+    for op in ["vault-access", "panel-sharing", "export", "reset-all"] {
+        if let Some(val) = extract_nested_field(content, "require-2fa", op) {
             two_factor_reqs.push(super::types::TwoFactorRequirement {
                 operation: op.to_string(),
                 required: val == "true",
@@ -208,10 +202,10 @@ fn extract_field(content: &str, field: &str) -> Option<String> {
     // Skip whitespace.
     let rest = rest.trim_start();
 
-    if rest.starts_with('"') {
+    if let Some(quoted) = rest.strip_prefix('"') {
         // Quoted string value.
-        let end = rest[1..].find('"')?;
-        Some(rest[1..1 + end].to_string())
+        let end = quoted.find('"')?;
+        Some(quoted[..end].to_string())
     } else {
         // Bare value (until whitespace or closing paren).
         let end = rest.find(|c: char| c.is_whitespace() || c == ')')?;

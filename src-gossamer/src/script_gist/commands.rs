@@ -27,7 +27,6 @@ fn gists_dir() -> Result<PathBuf, String> {
 /// writes to `~/.panll/gists/<id>.json`.
 ///
 /// Returns a JSON object with `path`, `id`, and `status`.
-
 pub async fn script_gist_save(gist_json: String) -> Result<String, String> {
     let dir = gists_dir()?;
     fs::create_dir_all(&dir).map_err(|e| format!("Failed to create gists directory: {e}"))?;
@@ -64,7 +63,6 @@ pub async fn script_gist_save(gist_json: String) -> Result<String, String> {
 ///   - `TargetBoj`: delegates to the BoJ cartridge invoke pathway
 ///
 /// The frontend receives the result and wraps it into a `gistResult`.
-
 pub async fn script_gist_execute(gist_json: String) -> Result<String, String> {
     let parsed: Value =
         serde_json::from_str(&gist_json).map_err(|e| format!("Invalid JSON in gist: {e}"))?;
@@ -73,7 +71,7 @@ pub async fn script_gist_execute(gist_json: String) -> Result<String, String> {
 
     let target = parsed["target"]
         .as_str()
-        .or_else(|| parsed["target"].as_object().and_then(|_| Some("TargetBoj")))
+        .or_else(|| parsed["target"].as_object().map(|_| "TargetBoj"))
         .unwrap_or("TargetDeno");
 
     let code = parsed["code"].as_str().unwrap_or("");
@@ -120,8 +118,9 @@ pub async fn script_gist_execute(gist_json: String) -> Result<String, String> {
                 "invoker": "user",
             })
         }
-        "TargetBoj" | _ => {
-            // BoJ cartridge dispatch — extract cartridge name from target.
+        _ => {
+            // "TargetBoj" and any unrecognised target fall through to BoJ
+            // cartridge dispatch — extract cartridge name from target.
             let cartridge = parsed["target"]
                 .as_object()
                 .and_then(|obj| obj.get("TargetBoj"))
@@ -149,7 +148,6 @@ pub async fn script_gist_execute(gist_json: String) -> Result<String, String> {
 ///
 /// Receives the full serialised `scriptGistState` JSON and returns it
 /// after validation. The frontend replaces its state with the returned data.
-
 pub async fn script_gist_restore_snapshot(snapshot_json: String) -> Result<String, String> {
     // Validate the snapshot is well-formed JSON.
     let parsed: Value =
@@ -174,7 +172,6 @@ pub async fn script_gist_restore_snapshot(snapshot_json: String) -> Result<Strin
 /// List all saved gist files from `~/.panll/gists/`.
 ///
 /// Returns a JSON array of objects with `id` and `path` for each saved gist.
-
 pub async fn script_gist_list() -> Result<String, String> {
     let dir = gists_dir()?;
 

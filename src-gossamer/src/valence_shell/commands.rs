@@ -93,7 +93,6 @@ fn generate_id() -> String {
 /// Check if the `valence-shell` binary exists on PATH.
 ///
 /// Returns JSON: `{"available": bool, "version": "..."}`.
-
 pub async fn valence_shell_check() -> Result<String, String> {
     let available = which::which("valence-shell").is_ok();
     let version = if available {
@@ -125,7 +124,6 @@ pub async fn valence_shell_check() -> Result<String, String> {
 /// Stderr is merged into stdout via `2>&1` shell invocation.
 ///
 /// Returns JSON with the session_id, shell, cwd, and status.
-
 pub async fn valence_shell_spawn(shell: String, cwd: String) -> Result<String, String> {
     let session_id = generate_id();
 
@@ -198,7 +196,6 @@ pub async fn valence_shell_spawn(shell: String, cwd: String) -> Result<String, S
 ///
 /// Returns JSON with `output` (collected stdout text) and `exit_code`
 /// (null while the session is still alive).
-
 pub async fn valence_shell_input(
     session_id: Option<String>,
     input: String,
@@ -326,7 +323,6 @@ async fn run_oneshot(input: &str) -> Result<String, String> {
 /// Start recording terminal output in asciicast v2 format.
 ///
 /// Creates a `.cast` file with the asciicast header in `/tmp/panll/recordings/`.
-
 pub async fn valence_shell_record_start(name: String) -> Result<String, String> {
     let dir = recordings_dir()?;
     let id = generate_id();
@@ -366,7 +362,6 @@ pub async fn valence_shell_record_start(name: String) -> Result<String, String> 
 ///
 /// Stub: marks the most recent `.cast` file as complete by appending
 /// a final timestamp event.
-
 pub async fn valence_shell_record_stop() -> Result<String, String> {
     let dir = recordings_dir()?;
 
@@ -414,7 +409,6 @@ pub async fn valence_shell_record_stop() -> Result<String, String> {
 /// List all recordings from `/tmp/panll/recordings/`.
 ///
 /// Returns a JSON array of recording metadata objects.
-
 pub async fn valence_shell_recordings_list() -> Result<String, String> {
     let dir = recordings_dir()?;
     let mut recordings = Vec::new();
@@ -462,7 +456,6 @@ pub async fn valence_shell_recordings_list() -> Result<String, String> {
 }
 
 /// Delete a recording file by ID.
-
 pub async fn valence_shell_recording_delete(id: String) -> Result<String, String> {
     let path = recordings_dir()?.join(format!("{id}.cast"));
     if path.exists() {
@@ -477,7 +470,6 @@ pub async fn valence_shell_recording_delete(id: String) -> Result<String, String
 ///
 /// Saves a JSON file with the label, timestamp, and a generated ID to
 /// `/tmp/panll/checkpoints/`.
-
 pub async fn valence_shell_checkpoint_create(label: String) -> Result<String, String> {
     let dir = checkpoints_dir()?;
     let id = generate_id();
@@ -504,7 +496,6 @@ pub async fn valence_shell_checkpoint_create(label: String) -> Result<String, St
 /// status. If a `session_id` is provided and the checkpoint contains a
 /// `cwd` field, sends a `cd` command to the session to restore the
 /// working directory.
-
 pub async fn valence_shell_checkpoint_restore(
     id: String,
     session_id: Option<String>,
@@ -547,7 +538,6 @@ pub async fn valence_shell_checkpoint_restore(
 /// List all checkpoints from `/tmp/panll/checkpoints/`.
 ///
 /// Returns a JSON array of checkpoint objects.
-
 pub async fn valence_shell_checkpoints_list() -> Result<String, String> {
     let dir = checkpoints_dir()?;
     let mut checkpoints = Vec::new();
@@ -585,7 +575,6 @@ pub async fn valence_shell_checkpoints_list() -> Result<String, String> {
 ///
 /// Returns JSON with `content` (the terminal text), `width`, `height`
 /// (number of lines returned), `timestamp`, and `session_id`.
-
 pub async fn valence_shell_screenshot(
     session_id: Option<String>,
     lines: Option<usize>,
@@ -663,7 +652,6 @@ pub async fn valence_shell_screenshot(
 ///
 /// Stub implementation: confirms the export request. Real implementation
 /// will convert the `.cast` file to the requested format (e.g., gif, svg).
-
 pub async fn valence_shell_recording_export(id: String, format: String) -> Result<String, String> {
     let cast_path = recordings_dir()?.join(format!("{id}.cast"));
     if !cast_path.exists() {
@@ -707,14 +695,12 @@ mod tests {
 
         // Also clear any leaked shell sessions from previous tests.
         // Recover from poisoned mutex to prevent cascading test failures.
-        if let Ok(mut sessions) = SESSIONS.lock().map_or_else(
-            |poisoned| Ok::<_, std::convert::Infallible>(poisoned.into_inner()),
-            Ok,
-        ) {
-            // Kill any lingering child processes before dropping sessions.
-            for (_, mut session) in sessions.drain() {
-                let _ = session.child.kill();
-            }
+        let mut sessions = SESSIONS
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        // Kill any lingering child processes before dropping sessions.
+        for (_, mut session) in sessions.drain() {
+            let _ = session.child.kill();
         }
     }
 

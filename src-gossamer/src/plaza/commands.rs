@@ -179,7 +179,6 @@ fn scan_repo(repo_path: &Path) -> RepoScanResult {
 ///
 /// Takes a repo name and scans its directory under the canonical repos path.
 /// Returns a JSON-serialised `RepoScanResult`.
-
 pub async fn plaza_scan_repo(repo_name: String) -> Result<String, String> {
     let repo_path = repos_dir().join(&repo_name);
     if !repo_path.exists() {
@@ -194,7 +193,6 @@ pub async fn plaza_scan_repo(repo_name: String) -> Result<String, String> {
 ///
 /// Scans all directories under the canonical repos path and aggregates
 /// license detection results. Returns JSON-serialised `AdoptionStats`.
-
 pub async fn plaza_adoption_stats() -> Result<String, String> {
     let base = repos_dir();
     if !base.exists() {
@@ -259,7 +257,6 @@ pub async fn plaza_adoption_stats() -> Result<String, String> {
 /// Known compatibility matrix for PMPL with common licenses.
 /// PMPL-1.0 is file-level copyleft (like MPL-2.0), so it's compatible
 /// with most permissive and weak-copyleft licenses.
-
 pub async fn plaza_check_compatibility(license: String) -> Result<String, String> {
     let (compatible, notes) = match license.to_uppercase().as_str() {
         "MIT" => (

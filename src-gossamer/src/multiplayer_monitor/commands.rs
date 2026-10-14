@@ -55,7 +55,6 @@ fn now_secs() -> u64 {
 /// Validates the URL and records the connection in memory. Currently a stub
 /// that simulates a successful WebSocket handshake. When the real Phoenix
 /// bridge is implemented, this will open a persistent WebSocket connection.
-
 pub async fn multiplayer_connect(url: String) -> Result<String, String> {
     if url.is_empty() {
         return Err("Server URL cannot be empty".to_string());
@@ -81,7 +80,6 @@ pub async fn multiplayer_connect(url: String) -> Result<String, String> {
 ///
 /// Clears the in-memory connection state. When the real bridge is
 /// implemented, this will close the WebSocket and clean up channels.
-
 pub async fn multiplayer_disconnect() -> Result<String, String> {
     let mut state = CONNECTION_STATE
         .lock()
@@ -104,7 +102,6 @@ pub async fn multiplayer_disconnect() -> Result<String, String> {
 /// Returns stub data representing a typical multiplayer session with two
 /// players, two channels, and one device lock. When the real bridge is
 /// implemented, this will query the live Phoenix server state.
-
 pub async fn multiplayer_read_state() -> Result<String, String> {
     let state = CONNECTION_STATE
         .lock()
@@ -167,7 +164,6 @@ pub async fn multiplayer_read_state() -> Result<String, String> {
 /// Returns stub diff entries showing typical sync divergence scenarios.
 /// When the real bridge is implemented, this will compare local ETS state
 /// against the server's authoritative state.
-
 pub async fn multiplayer_read_diffs() -> Result<String, String> {
     let ts = now_secs() as f64;
 
@@ -201,7 +197,6 @@ pub async fn multiplayer_read_diffs() -> Result<String, String> {
 /// Returns stub ETS table entries representing typical Erlang Term Storage
 /// data from the Phoenix server. When the real bridge is implemented, this
 /// will query the server's ETS tables via the debug API.
-
 pub async fn multiplayer_read_ets() -> Result<String, String> {
     let result = json!({
         "entries": [
@@ -236,7 +231,6 @@ pub async fn multiplayer_read_ets() -> Result<String, String> {
 /// When the real bridge is implemented, this will actually drop and
 /// re-establish the WebSocket connection, measuring reconnection latency
 /// and state recovery.
-
 pub async fn multiplayer_reconnection_test() -> Result<String, String> {
     let state = CONNECTION_STATE
         .lock()

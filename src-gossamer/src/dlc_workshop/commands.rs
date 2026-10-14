@@ -34,7 +34,6 @@ fn ensure_dlc_dir() -> Result<PathBuf, String> {
 /// Reads `.puzzle.json` files from the DLC directory and returns their
 /// contents as a JSON array. Currently returns stub data when no puzzles
 /// exist on disk.
-
 pub async fn dlc_load_puzzles() -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
 
@@ -67,7 +66,6 @@ pub async fn dlc_load_puzzles() -> Result<String, String> {
 ///
 /// Expects a JSON string containing puzzle data with at least an `id` field.
 /// Writes the puzzle to `<DLC_DIR>/<id>.puzzle.json`.
-
 pub async fn dlc_save_puzzle(data: String) -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
 
@@ -101,7 +99,6 @@ pub async fn dlc_save_puzzle(data: String) -> Result<String, String> {
 /// Looks up the puzzle by ID and simulates running its solution test.
 /// When the real VM test harness is implemented, this will execute the
 /// puzzle's instructions and verify the solution against expected output.
-
 pub async fn dlc_run_test(puzzle_id: String) -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
     let path = dlc_dir.join(format!("{puzzle_id}.puzzle.json"));
@@ -126,7 +123,6 @@ pub async fn dlc_run_test(puzzle_id: String) -> Result<String, String> {
 /// Iterates over all `.puzzle.json` files and simulates running each test.
 /// Returns aggregate results. When the real VM test harness is implemented,
 /// this will execute each puzzle sequentially and report pass/fail.
-
 pub async fn dlc_run_all_tests() -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
 
@@ -157,7 +153,6 @@ pub async fn dlc_run_all_tests() -> Result<String, String> {
 /// Scans the DLC directory for asset files and returns metadata.
 /// Currently returns stub asset data. When asset management is fully
 /// implemented, this will scan actual sprite/sound directories.
-
 pub async fn dlc_browse_assets() -> Result<String, String> {
     let result = json!({
         "assets": [
@@ -188,7 +183,6 @@ pub async fn dlc_browse_assets() -> Result<String, String> {
 /// Creates a manifest file in the DLC directory. When full packaging is
 /// implemented, this will bundle puzzles and assets into a distributable
 /// archive.
-
 pub async fn dlc_package(data: String) -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
 
@@ -233,7 +227,6 @@ pub async fn dlc_package(data: String) -> Result<String, String> {
 ///
 /// Reads a JSON puzzle file from the given path and copies it into the
 /// DLC directory. The puzzle must have a valid `id` field.
-
 pub async fn dlc_import_puzzle(path: String) -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
     let source = PathBuf::from(&path);
@@ -274,7 +267,6 @@ pub async fn dlc_import_puzzle(path: String) -> Result<String, String> {
 /// Reads the puzzle by ID from the DLC directory and returns its contents
 /// along with the source path. The frontend can then use Tauri's save
 /// dialog to write the file to the user's chosen location.
-
 pub async fn dlc_export_puzzle(puzzle_id: String) -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
     let path = dlc_dir.join(format!("{puzzle_id}.puzzle.json"));

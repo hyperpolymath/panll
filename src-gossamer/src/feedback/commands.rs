@@ -28,7 +28,6 @@ fn feedback_dir() -> Result<std::path::PathBuf, String> {
 ///
 /// Returns a JSON object with `path` (where the file was saved) and `id`
 /// (the timestamp-based identifier).
-
 pub async fn feedback_save_report(report_json: String) -> Result<String, String> {
     let dir = feedback_dir()?;
     fs::create_dir_all(&dir).map_err(|e| format!("Failed to create feedback directory: {e}"))?;

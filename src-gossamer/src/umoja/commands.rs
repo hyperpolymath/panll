@@ -16,7 +16,6 @@ use serde_json::json;
 /// Add a new peer to the Umoja federation by address.
 ///
 /// Mock response: returns the new peer's assigned node ID and initial state.
-
 pub async fn umoja_add_peer(address: String) -> Result<String, String> {
     if address.is_empty() {
         return Err("Peer address must not be empty".to_string());
@@ -41,7 +40,6 @@ pub async fn umoja_add_peer(address: String) -> Result<String, String> {
 /// Disconnect a peer from the Umoja federation by node ID.
 ///
 /// Mock response: confirms disconnection and reports the peer as Stale.
-
 pub async fn umoja_disconnect_peer(node_id: String) -> Result<String, String> {
     if node_id.is_empty() {
         return Err("Node ID must not be empty".to_string());
@@ -58,7 +56,6 @@ pub async fn umoja_disconnect_peer(node_id: String) -> Result<String, String> {
 /// Trigger a manual gossip round across the Umoja federation.
 ///
 /// Mock response: returns the new round number and peer count.
-
 pub async fn umoja_trigger_gossip() -> Result<String, String> {
     let response = json!({
         "ok": true,
@@ -72,7 +69,6 @@ pub async fn umoja_trigger_gossip() -> Result<String, String> {
 /// Request a catalogue sync with a specific peer by node ID.
 ///
 /// Mock response: returns sync status and digest comparison.
-
 pub async fn umoja_sync_catalogue(node_id: String) -> Result<String, String> {
     if node_id.is_empty() {
         return Err("Node ID must not be empty".to_string());
@@ -92,7 +88,6 @@ pub async fn umoja_sync_catalogue(node_id: String) -> Result<String, String> {
 /// Retrieve metrics for a specific peer by node ID.
 ///
 /// Mock response: returns latency, uptime, and gossip round data.
-
 pub async fn umoja_peer_metrics(node_id: String) -> Result<String, String> {
     if node_id.is_empty() {
         return Err("Node ID must not be empty".to_string());

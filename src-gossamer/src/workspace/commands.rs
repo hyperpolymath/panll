@@ -20,7 +20,6 @@ fn config_dir() -> Result<PathBuf, String> {
 }
 
 /// Save an arrangement to disk as JSON.
-
 pub async fn save_arrangement(arrangement: Arrangement) -> Result<String, String> {
     let dir = config_dir()?.join("arrangements");
     fs::create_dir_all(&dir).map_err(|e| format!("Cannot create arrangements dir: {e}"))?;
@@ -39,7 +38,6 @@ pub async fn save_arrangement(arrangement: Arrangement) -> Result<String, String
 }
 
 /// Load all saved arrangements from disk.
-
 pub async fn load_arrangements() -> Result<String, String> {
     let dir = config_dir()?.join("arrangements");
     if !dir.exists() {
@@ -69,7 +67,6 @@ pub async fn load_arrangements() -> Result<String, String> {
 }
 
 /// Delete an arrangement file from disk.
-
 pub async fn delete_arrangement(arrangement_id: String) -> Result<String, String> {
     let path = config_dir()?
         .join("arrangements")
@@ -83,7 +80,6 @@ pub async fn delete_arrangement(arrangement_id: String) -> Result<String, String
 }
 
 /// Save a session to disk as JSON.
-
 pub async fn save_session(session: Session) -> Result<String, String> {
     let dir = config_dir()?.join("sessions");
     fs::create_dir_all(&dir).map_err(|e| format!("Cannot create sessions dir: {e}"))?;
@@ -102,7 +98,6 @@ pub async fn save_session(session: Session) -> Result<String, String> {
 }
 
 /// Load all saved sessions from disk.
-
 pub async fn load_sessions() -> Result<String, String> {
     let dir = config_dir()?.join("sessions");
     if !dir.exists() {
@@ -129,7 +124,6 @@ pub async fn load_sessions() -> Result<String, String> {
 }
 
 /// Delete a session file from disk.
-
 pub async fn delete_session(session_id: String) -> Result<String, String> {
     let path = config_dir()?
         .join("sessions")

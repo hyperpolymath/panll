@@ -16,7 +16,6 @@ use walkdir::WalkDir;
 /// Returns the raw JSON content so the ReScript frontend can parse it with
 /// its own type-safe deserialiser. If the file does not exist, returns an
 /// empty MRI file structure so the frontend can initialise cleanly.
-
 pub async fn voicetag_load(path: String) -> Result<String, String> {
     let p = Path::new(&path);
     if p.exists() {
@@ -32,7 +31,6 @@ pub async fn voicetag_load(path: String) -> Result<String, String> {
 ///
 /// The content is a pre-serialised JSON string from the ReScript frontend.
 /// Creates parent directories if they don't exist (handles nested source trees).
-
 pub async fn voicetag_save(path: String, content: String) -> Result<String, String> {
     let p = Path::new(&path);
 
@@ -53,7 +51,6 @@ pub async fn voicetag_save(path: String, content: String) -> Result<String, Stri
 ///
 /// Called when all tags are removed from a file — no point keeping an empty
 /// sidecar around. Silently succeeds if the file doesn't exist (idempotent).
-
 pub async fn voicetag_delete(path: String) -> Result<String, String> {
     let p = Path::new(&path);
     if p.exists() {
@@ -77,7 +74,6 @@ pub async fn voicetag_delete(path: String) -> Result<String, String> {
 ///   {"sidecar": "src/Update.res.mri.json", "source": "src/Update.res"}
 /// ]
 /// ```
-
 pub async fn voicetag_scan(path: String) -> Result<String, String> {
     let root = Path::new(&path);
     if !root.is_dir() {

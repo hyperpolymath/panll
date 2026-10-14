@@ -54,7 +54,6 @@ fn parse_semver(version: &str) -> Option<(u32, u32, u32)> {
 /// Accepts a `fromVersion` string and returns stub changelog entries
 /// representing commits since that version. When full git integration is
 /// implemented, this will run `git log` against the IDApTIK repository.
-
 pub async fn release_generate_changelog(from_version: String) -> Result<String, String> {
     let ts = now_secs();
 
@@ -97,7 +96,6 @@ pub async fn release_generate_changelog(from_version: String) -> Result<String, 
 /// Accepts a version string and a comma-separated list of platform targets.
 /// Currently returns stub artifact metadata. When full build integration is
 /// implemented, this will invoke Tauri's build pipeline for each target.
-
 pub async fn release_build_artifacts(version: String, platforms: String) -> Result<String, String> {
     if version.is_empty() {
         return Err("Version cannot be empty".to_string());
@@ -157,7 +155,6 @@ pub async fn release_build_artifacts(version: String, platforms: String) -> Resu
 /// stable). Creates a release manifest in the releases directory. When full
 /// distribution is implemented, this will upload artifacts and create a
 /// GitHub release.
-
 pub async fn release_publish(version: String, channel: String) -> Result<String, String> {
     if version.is_empty() {
         return Err("Version cannot be empty".to_string());
@@ -202,7 +199,6 @@ pub async fn release_publish(version: String, channel: String) -> Result<String,
 ///
 /// Scans the releases directory for release manifest files and returns
 /// them as a JSON array sorted by publication time (newest first).
-
 pub async fn release_read_history() -> Result<String, String> {
     let releases_dir = ensure_releases_dir()?;
 
@@ -234,7 +230,6 @@ pub async fn release_read_history() -> Result<String, String> {
 /// Accepts a bump type ("major", "minor", or "patch") and returns the
 /// bumped version. Reads the current version from a `version.json` file
 /// in the releases directory, defaulting to "0.1.0" if none exists.
-
 pub async fn release_bump_version(bump_type: String) -> Result<String, String> {
     let valid_bump_types = ["major", "minor", "patch"];
     if !valid_bump_types.contains(&bump_type.as_str()) {
@@ -420,9 +415,9 @@ mod tests {
         rt().block_on(async {
             let result = release_read_history().await;
             assert!(result.is_ok());
-            let releases: Vec<serde_json::Value> = serde_json::from_str(&result.unwrap()).unwrap();
-            // Should be a valid array (may be empty or contain previous test releases).
-            assert!(releases.len() >= 0);
+            // Must parse as a JSON array (may be empty or contain previous
+            // test releases).
+            let _releases: Vec<serde_json::Value> = serde_json::from_str(&result.unwrap()).unwrap();
         });
     }
 

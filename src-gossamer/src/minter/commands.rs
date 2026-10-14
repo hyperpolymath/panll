@@ -47,7 +47,6 @@ fn to_snake_case(name: &str) -> String {
 
 /// Validate a panel name against basic rules.
 /// Returns "valid" or an error description.
-
 pub async fn minter_validate_name(name: String) -> Result<String, String> {
     if name.is_empty() {
         return Ok("Panel name cannot be empty".to_string());
@@ -95,35 +94,20 @@ pub async fn minter_validate_name(name: String) -> Result<String, String> {
 /// Generates all ReScript source files and Rust backend stubs, then patches
 /// the global wiring files to register the new panel. Returns a JSON-serialised
 /// MintResult with the list of created and patched files.
-
-pub async fn minter_mint_panel(
-    panel_name: String,
-    short_name: String,
-    description: String,
-    icon: String,
-    backend_kind: String,
-    accessibility: String,
-    capabilities: String,
-    endpoint: String,
-    plugin_type: Option<String>,
-    protocol_dependencies: Option<String>,
-    sandbox_policy: Option<String>,
-    groove_endpoint: Option<String>,
-) -> Result<String, String> {
-    let _request = MintRequest {
-        panel_name: panel_name.clone(),
-        short_name: short_name.clone(),
-        description: description.clone(),
-        icon: icon.clone(),
-        backend_kind: backend_kind.clone(),
-        accessibility: accessibility.clone(),
-        capabilities: capabilities.clone(),
-        endpoint: endpoint.clone(),
-        plugin_type: plugin_type.clone(),
-        protocol_dependencies: protocol_dependencies.clone(),
-        sandbox_policy: sandbox_policy.clone(),
-        groove_endpoint: groove_endpoint.clone(),
-    };
+pub async fn minter_mint_panel(request: MintRequest) -> Result<String, String> {
+    // `plugin_type`, `protocol_dependencies`, `sandbox_policy` and
+    // `groove_endpoint` are accepted but not yet used by the generators.
+    let MintRequest {
+        panel_name,
+        short_name,
+        description,
+        icon,
+        backend_kind,
+        accessibility,
+        capabilities,
+        endpoint,
+        ..
+    } = request;
 
     // Validate panel_name to prevent path traversal — must be alphanumeric PascalCase.
     if panel_name.is_empty()
@@ -292,7 +276,7 @@ pub async fn minter_mint_panel(
 
     let manifest_dir = format!("src/panels/{}/panels", snake);
     let manifest_path = format!("{}/manifest.json", manifest_dir);
-    let manifest_content = generate_panel_manifest(&panel_name, &snake, has_backend);
+    let manifest_content = generate_panel_manifest(&snake, has_backend);
     write_file_safe(
         &manifest_path,
         &manifest_content,
@@ -841,7 +825,7 @@ fn patch_view(name: &str, camel: &str) -> Result<(), String> {
 /// This manifest declares the panel's endpoints for both Gossamer and Tauri
 /// runtimes, health check configuration, and data sources. PanelHarness
 /// discovers this file and wires the panel into the runtime.
-fn generate_panel_manifest(name: &str, snake: &str, has_backend: bool) -> String {
+fn generate_panel_manifest(snake: &str, has_backend: bool) -> String {
     let health_block = if has_backend {
         format!(
             r#",

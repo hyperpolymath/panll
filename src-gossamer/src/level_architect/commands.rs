@@ -19,7 +19,6 @@ use serde_json::json;
 ///
 /// Reads the file, validates it as JSON, and returns the content.
 /// Returns an error if the file does not exist or contains invalid JSON.
-
 pub async fn load_level(path: String) -> Result<String, String> {
     let file_path = Path::new(&path);
     if !file_path.exists() {
@@ -40,7 +39,6 @@ pub async fn load_level(path: String) -> Result<String, String> {
 ///
 /// Validates the data as JSON, pretty-prints it, and writes to disk.
 /// Creates parent directories if they do not exist.
-
 pub async fn save_level(path: String, data: String) -> Result<String, String> {
     let file_path = Path::new(&path);
 
@@ -72,7 +70,6 @@ pub async fn save_level(path: String, data: String) -> Result<String, String> {
 /// that can be pasted into the IDApTIK game source. Currently produces
 /// a stub template; future versions will fully translate entities,
 /// patrols, and defence flags into typed ReScript records.
-
 pub async fn export_level_config(data: String) -> Result<String, String> {
     let parsed: serde_json::Value =
         serde_json::from_str(&data).map_err(|e| format!("Invalid JSON data: {e}"))?;
@@ -133,7 +130,6 @@ let config = {{
 /// Returns a JSON array of assets grouped by category (devices, guards,
 /// collectables, decorations, triggers). Currently returns stub data
 /// representing sample IDApTIK game assets.
-
 pub async fn browse_level_assets() -> Result<String, String> {
     let result = json!({
         "assets": [
@@ -211,7 +207,6 @@ pub async fn browse_level_assets() -> Result<String, String> {
 /// overlapping entities, missing patrol waypoints, and empty defence flags.
 /// Takes the level JSON data as input and returns a JSON object with a
 /// `valid` boolean and an `issues` array.
-
 pub async fn validate_level(data: String) -> Result<String, String> {
     let parsed: serde_json::Value =
         serde_json::from_str(&data).map_err(|e| format!("Invalid JSON data: {e}"))?;

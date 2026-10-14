@@ -66,7 +66,6 @@ fn pcc_binary() -> Result<PathBuf, String> {
 /// - The PCC binary is not found
 /// - The subprocess fails to start
 /// - The subprocess exits with a non-zero code
-
 pub async fn wiring_inspector_verify() -> Result<String, String> {
     let binary = pcc_binary()?;
     let root = repo_root()?;
@@ -103,7 +102,6 @@ pub async fn wiring_inspector_verify() -> Result<String, String> {
 /// # Arguments
 ///
 /// * `panel_id` - The panel identifier to verify (e.g. "WiringInspector").
-
 pub async fn wiring_inspector_verify_panel(panel_id: String) -> Result<String, String> {
     let binary = pcc_binary()?;
     let root = repo_root()?;

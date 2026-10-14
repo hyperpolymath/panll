@@ -470,7 +470,6 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
 
 /// Read the current VM state. Returns JSON with pc, stack, memory, running
 /// status, instruction list, step counts, and history length.
-
 pub async fn vm_inspector_read_state() -> Result<String, String> {
     let vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
     state_to_json(&vm)
@@ -478,7 +477,6 @@ pub async fn vm_inspector_read_state() -> Result<String, String> {
 
 /// Execute one instruction forward. Captures a snapshot before execution
 /// so that `step_backward` can restore it.
-
 pub async fn vm_inspector_step_forward() -> Result<String, String> {
     let mut vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
     capture_snapshot(&mut vm);
@@ -488,7 +486,6 @@ pub async fn vm_inspector_step_forward() -> Result<String, String> {
 
 /// Reverse one instruction by restoring the most recent snapshot from
 /// the history ring buffer.
-
 pub async fn vm_inspector_step_backward() -> Result<String, String> {
     let mut vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
     let snap = vm
@@ -507,7 +504,6 @@ pub async fn vm_inspector_step_backward() -> Result<String, String> {
 /// Run the VM until end of program or error (simulates hitting a
 /// breakpoint). Executes up to 100,000 instructions to prevent
 /// infinite loops.
-
 pub async fn vm_inspector_run() -> Result<String, String> {
     let mut vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
     vm.running = true;
@@ -540,7 +536,6 @@ pub async fn vm_inspector_run() -> Result<String, String> {
 /// JLE, LOOP, CALL, SEND, RECV.
 ///
 /// Returns a JSON array of `Instruction` objects with tier assignments.
-
 pub async fn vm_inspector_load_program(assembly: String) -> Result<String, String> {
     let mut instructions = Vec::new();
 
@@ -625,7 +620,6 @@ pub async fn vm_inspector_load_program(assembly: String) -> Result<String, Strin
 
 /// Export the full current VM state as JSON, including the complete
 /// history buffer.
-
 pub async fn vm_inspector_export_snapshot() -> Result<String, String> {
     let vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
     serde_json::to_string(&*vm).map_err(|e| format!("Serialisation error: {e}"))
@@ -634,7 +628,6 @@ pub async fn vm_inspector_export_snapshot() -> Result<String, String> {
 /// Read VM state from a JSON file on disk. Parses the file as a
 /// `VmState` and loads it into the global VM, replacing the current
 /// state entirely.
-
 pub async fn vm_inspector_read_file(path: String) -> Result<String, String> {
     let content = fs::read_to_string(&path).map_err(|e| format!("Cannot read '{}': {e}", path))?;
     let loaded: VmState =

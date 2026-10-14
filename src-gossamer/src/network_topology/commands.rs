@@ -19,7 +19,6 @@ use serde_json::json;
 ///
 /// Currently returns stub data representing a small sample network. When the
 /// IDApTIK engine bridge is implemented this will query the live game state.
-
 pub async fn read_network_topology() -> Result<String, String> {
     let result = json!({
         "devices": [
@@ -110,7 +109,6 @@ pub async fn read_network_topology() -> Result<String, String> {
 /// Returns a JSON array of DNS entries, each with hostname, resolved IP,
 /// record type, and TTL. Currently returns stub data representing a sample
 /// DNS table from the IDApTIK game world.
-
 pub async fn read_dns_table() -> Result<String, String> {
     let result = json!({
         "entries": [
@@ -154,7 +152,6 @@ pub async fn read_dns_table() -> Result<String, String> {
 /// Returns a JSON array of recent packet flow events, each tied to a
 /// connection ID with timestamp, size, and blocked status. Currently
 /// returns stub data representing sample network traffic.
-
 pub async fn read_packet_flow() -> Result<String, String> {
     let ts = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -198,7 +195,6 @@ pub async fn read_packet_flow() -> Result<String, String> {
 /// devices as circles and connections as lines. Currently returns a stub
 /// SVG with placeholder geometry. When the engine bridge is implemented,
 /// this will render the live topology graph.
-
 pub async fn export_topology_svg() -> Result<String, String> {
     let svg = r#"<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">

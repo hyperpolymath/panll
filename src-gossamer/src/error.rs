@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! Unified error module for the PanLL Tauri backend.
+//! Unified error module for the PanLL Gossamer backend.
 //!
 //! Provides a single `PanllError` enum that covers all common failure modes
 //! across panels: I/O, JSON serialisation, mutex poisoning, missing resources,
 //! invalid input, network faults, and internal bugs. Every variant carries
 //! enough context for a human-readable error message.
 //!
-//! Tauri commands return `Result<T, String>`, so the module also provides
-//! [`to_tauri_result`] to convert `Result<T, PanllError>` at the command
-//! boundary, and an `Into<String>` impl for direct use with `.map_err()`.
+//! IPC command handlers return `Result<T, String>`, so the module also
+//! provides [`to_command_result`] to convert `Result<T, PanllError>` at the
+//! command boundary, and an `Into<String>` impl for direct use with
+//! `.map_err()`.
 
 use std::fmt;
 use std::sync::PoisonError;
@@ -98,7 +99,7 @@ impl<T> From<PoisonError<T>> for PanllError {
 }
 
 // ---------------------------------------------------------------------------
-// Into<String> — needed for Tauri command returns (Result<T, String>)
+// Into<String> — needed for IPC command returns (Result<T, String>)
 // ---------------------------------------------------------------------------
 
 impl From<PanllError> for String {
@@ -111,18 +112,17 @@ impl From<PanllError> for String {
 // Helper
 // ---------------------------------------------------------------------------
 
-/// Convert a `PanllError` result to a `String` result for Tauri command boundaries.
+/// Convert a `PanllError` result to a `String` result for IPC command boundaries.
 ///
-/// Tauri commands must return `Result<T, String>`. This helper lets internal
+/// IPC command handlers return `Result<T, String>`. This helper lets internal
 /// functions use the richer `PanllError` type and convert at the boundary:
 ///
 /// ```rust,ignore
-/// #[tauri::command]
 /// pub async fn my_command() -> Result<String, String> {
-///     to_tauri_result(do_work())
+///     to_command_result(do_work())
 /// }
 /// ```
-pub fn to_tauri_result<T>(result: Result<T, PanllError>) -> Result<T, String> {
+pub fn to_command_result<T>(result: Result<T, PanllError>) -> Result<T, String> {
     result.map_err(|e| e.to_string())
 }
 
@@ -209,16 +209,16 @@ mod tests {
     }
 
     #[test]
-    fn test_to_tauri_result_ok() {
+    fn test_to_command_result_ok() {
         let result: Result<i32, PanllError> = Ok(42);
-        let tauri_result = to_tauri_result(result);
-        assert_eq!(tauri_result, Ok(42));
+        let command_result = to_command_result(result);
+        assert_eq!(command_result, Ok(42));
     }
 
     #[test]
-    fn test_to_tauri_result_err() {
+    fn test_to_command_result_err() {
         let result: Result<i32, PanllError> = Err(PanllError::Internal("boom".to_string()));
-        let tauri_result = to_tauri_result(result);
-        assert_eq!(tauri_result, Err("Internal error: boom".to_string()));
+        let command_result = to_command_result(result);
+        assert_eq!(command_result, Err("Internal error: boom".to_string()));
     }
 }

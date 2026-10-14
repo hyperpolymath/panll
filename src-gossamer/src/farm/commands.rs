@@ -49,7 +49,6 @@ fn build_group_lookup(manifest: &FarmManifest) -> HashMap<String, String> {
 /// Returns a JSON-serialised `FarmInventory` with all repos, groups,
 /// distinct languages, and forge names. The frontend parses this once
 /// and caches it in the model.
-
 pub async fn farm_list_repos() -> Result<String, String> {
     let manifest = load_manifest()?;
     let group_lookup = build_group_lookup(&manifest);
@@ -119,7 +118,6 @@ pub async fn farm_list_repos() -> Result<String, String> {
 /// Get details for a single repo by name.
 ///
 /// Returns the repo entry as JSON, or an error if not found.
-
 pub async fn farm_get_repo(name: String) -> Result<String, String> {
     let manifest = load_manifest()?;
     let group_lookup = build_group_lookup(&manifest);
@@ -146,7 +144,6 @@ pub async fn farm_get_repo(name: String) -> Result<String, String> {
 /// Get aggregate statistics from the farm manifest.
 ///
 /// Returns counts grouped by language, forge, priority, and group.
-
 pub async fn farm_get_stats() -> Result<String, String> {
     let manifest = load_manifest()?;
 
@@ -157,7 +154,7 @@ pub async fn farm_get_stats() -> Result<String, String> {
     let mut total = 0u32;
 
     if let Some(repos) = &manifest.repos {
-        for (_name, repo) in repos {
+        for repo in repos.values() {
             total += 1;
             let lang = repo
                 .language
@@ -181,7 +178,7 @@ pub async fn farm_get_stats() -> Result<String, String> {
 
     // Count repos per group.
     let group_lookup = build_group_lookup(&manifest);
-    for (_repo, group) in &group_lookup {
+    for group in group_lookup.values() {
         *by_group.entry(group.clone()).or_insert(0) += 1;
     }
 

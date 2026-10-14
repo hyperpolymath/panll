@@ -79,7 +79,6 @@ fn generate_recording_id() -> String {
 /// Makes a GET request with a short timeout and returns connectivity status.
 /// The frontend uses this to show the connection indicator in the Game Preview
 /// panel header.
-
 pub async fn game_preview_check_server(url: String) -> Result<String, String> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
@@ -116,7 +115,6 @@ pub async fn game_preview_check_server(url: String) -> Result<String, String> {
 ///   - `npx` (from Node/Deno) available on `$PATH`.
 ///
 /// Returns JSON with `pid`, `url`, and `projectDir` on success.
-
 pub async fn game_preview_start_server(
     project_dir: String,
     port: Option<u16>,
@@ -188,7 +186,6 @@ pub async fn game_preview_start_server(
 /// Sends SIGTERM (Unix) or taskkill (Windows) to the tracked dev-server
 /// process. Clears the tracked state afterwards regardless of kill outcome
 /// so a new server can be started.
-
 pub async fn game_preview_stop_server() -> Result<String, String> {
     let (pid, url) = {
         let state = DEV_SERVER.lock().map_err(|e| format!("Lock error: {e}"))?;
@@ -242,7 +239,6 @@ pub async fn game_preview_stop_server() -> Result<String, String> {
 ///
 /// The engine control endpoint is expected to be provided by an IDApTIK
 /// Vite plugin that injects `/__engine/*` routes into the dev server.
-
 pub async fn game_preview_control(command: String) -> Result<String, String> {
     let valid_commands = ["pause", "resume", "step"];
     if !valid_commands.contains(&command.as_str()) {
@@ -292,7 +288,6 @@ pub async fn game_preview_control(command: String) -> Result<String, String> {
 ///
 /// Creates a marker file in `/tmp/panll/game-clips/` to track the recording.
 /// Returns the generated recording ID so the frontend can reference it later.
-
 pub async fn game_preview_record_start(name: String) -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
     let id = generate_recording_id();
@@ -326,7 +321,6 @@ pub async fn game_preview_record_start(name: String) -> Result<String, String> {
 ///
 /// Finds the active `.recording` marker, renames it to `.clip`, and returns
 /// clip metadata. If no active recording is found, returns an error.
-
 pub async fn game_preview_record_stop() -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
 
@@ -392,7 +386,6 @@ pub async fn game_preview_record_stop() -> Result<String, String> {
 /// Prerequisites:
 ///   - Dev server running (via `game_preview_start_server`).
 ///   - IDApTIK Vite plugin providing the `/__engine/screenshot` endpoint.
-
 pub async fn game_preview_screenshot() -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
     let ts = SystemTime::now()
@@ -459,7 +452,6 @@ pub async fn game_preview_screenshot() -> Result<String, String> {
 /// Prerequisites:
 ///   - Dev server running (via `game_preview_start_server`).
 ///   - IDApTIK Vite plugin providing the `/__engine/stats` endpoint.
-
 pub async fn game_preview_stats() -> Result<String, String> {
     // Try to fetch live stats from the running engine.
     let server_url = {
@@ -500,7 +492,6 @@ pub async fn game_preview_stats() -> Result<String, String> {
 ///
 /// Reads `.clip` files from the clips directory and returns their metadata
 /// as a JSON array. Clips are sorted by ID (timestamp-based, newest first).
-
 pub async fn game_preview_clips_list() -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
 
@@ -534,7 +525,6 @@ pub async fn game_preview_clips_list() -> Result<String, String> {
 ///
 /// Removes the corresponding `.clip` file from the clips directory.
 /// Returns confirmation JSON on success.
-
 pub async fn game_preview_clip_delete(id: String) -> Result<String, String> {
     let clips_dir = ensure_clips_dir()?;
     let clip_path = clips_dir.join(format!("{id}.clip"));

@@ -36,7 +36,6 @@ fn speed_test_url() -> String {
 /// runtime for too long. For a truly non-blocking version, this would need
 /// tokio::net::TcpStream, but the timeout keeps it safe enough for a panel
 /// probe that runs on user action.
-
 pub async fn aerie_get_latency() -> Result<String, String> {
     let target = latency_target();
     let addr: std::net::SocketAddr = target
@@ -69,7 +68,6 @@ pub async fn aerie_get_latency() -> Result<String, String> {
 /// Downloads a 1 MB payload from the configured URL and measures throughput.
 /// Returns JSON with `speed_mbps`, `bytes_downloaded`, `duration_ms`, and
 /// `status` fields. On failure, returns `status: "failed"` with the error.
-
 pub async fn aerie_speed_test() -> Result<String, String> {
     let url = speed_test_url();
     let client = reqwest::Client::builder()

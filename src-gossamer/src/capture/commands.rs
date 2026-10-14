@@ -32,7 +32,6 @@ fn demos_dir() -> Result<PathBuf, String> {
 /// The frontend captures a panel's DOM via html2canvas, converts to base64,
 /// and sends it here for persistence. File naming uses the capture ID for
 /// deterministic paths.
-
 pub async fn save_screenshot(
     capture_id: String,
     panel_id: String,
@@ -115,7 +114,6 @@ fn base64_decode(input: &str) -> Result<Vec<u8>, String> {
 
 /// Invoke the system print dialog for the active panel.
 /// Uses Tauri's webview print capability.
-
 pub async fn print_panel(panel_id: String) -> Result<String, String> {
     // The actual printing is triggered in the frontend via window.print().
     // This command exists for logging and to return the panel ID for confirmation.
@@ -123,7 +121,6 @@ pub async fn print_panel(panel_id: String) -> Result<String, String> {
 }
 
 /// Save a demo package as a JSON file. Full ZIP packaging is a future enhancement.
-
 pub async fn save_demo(demo_json: String) -> Result<String, String> {
     let dir = demos_dir()?;
 
@@ -142,7 +139,6 @@ pub async fn save_demo(demo_json: String) -> Result<String, String> {
 }
 
 /// Load all demo packages from the demos directory.
-
 pub async fn load_demos() -> Result<String, String> {
     let dir = demos_dir()?;
     if !dir.exists() {
@@ -169,7 +165,6 @@ pub async fn load_demos() -> Result<String, String> {
 }
 
 /// Delete a demo package from disk.
-
 pub async fn delete_demo(demo_id: String) -> Result<String, String> {
     let dir = demos_dir()?;
     let filename = format!("{demo_id}.panll-demo.json");

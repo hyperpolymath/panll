@@ -79,7 +79,6 @@ fn update_recent(repo_path: &str, repo_name: &str) -> Result<(), String> {
 ///
 /// If the repo has a `.machine_readable/PANELS.a2ml`, parses it and returns
 /// the saved config. Otherwise, generates fresh suggestions from scan data.
-
 pub async fn repoloader_scan(repo_path: String) -> Result<String, String> {
     let path = PathBuf::from(&repo_path);
     let repo = scanner::scan_repo(&path)?;
@@ -118,7 +117,6 @@ pub async fn repoloader_scan(repo_path: String) -> Result<String, String> {
 /// Save panel configuration to `.machine_readable/PANELS.a2ml`.
 ///
 /// Takes the repo path and a JSON array of panel entries.
-
 pub async fn repoloader_save_panels(
     repo_path: String,
     panels_json: String,
@@ -171,7 +169,6 @@ pub async fn repoloader_save_panels(
 }
 
 /// List recently loaded repositories.
-
 pub async fn repoloader_list_recent() -> Result<String, String> {
     let recent = load_recent();
     serde_json::to_string(&recent).map_err(|e| format!("Serialisation error: {e}"))
@@ -180,7 +177,6 @@ pub async fn repoloader_list_recent() -> Result<String, String> {
 /// Search the git-private-farm manifest for repos matching a query.
 ///
 /// Searches repo names and descriptions (case-insensitive substring match).
-
 pub async fn repoloader_search_farm(query: String) -> Result<String, String> {
     let home = dirs::home_dir().ok_or("Cannot determine home directory")?;
     let manifest_path = home.join(".git-private-farm").join("farm-manifest.json");
