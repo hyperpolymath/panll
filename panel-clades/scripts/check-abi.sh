@@ -23,8 +23,11 @@ ROOT="$(pwd)"
 OUT="_build/check-abi"
 WRONG_REASON='Undefined name|Couldn.t parse|Parse error|not in the source directory|Can.t find import|Module .* not found|INTERNAL ERROR|does not match file name'
 fail=0
+# Print the supplied success message to standard output with a PASS prefix.
 pass() { printf 'PASS: %s\n' "$1"; }
+# Print the supplied failure message and set fail=1, then continue checking.
 err()  { printf 'FAIL: %s\n' "$1"; fail=1; }
+# Print the supplied failure message and terminate the gate with exit status 1.
 die()  { printf 'FAIL: %s\n' "$1"; exit 1; }
 
 command -v idris2 >/dev/null || die "idris2 not on PATH (a gate that cannot run must not report OK)"
@@ -33,15 +36,21 @@ case "$iv" in *"version 0.8.0"*) ;; *) [ -n "${ALLOW_ANY_IDRIS2:-}" ] || die "Id
 rm -rf "$OUT"; mkdir -p "$OUT"
 
 IPKG="src/abi/panel-clades-grades.ipkg"
-for f in src/abi/PanelClades/ABI/*.idr; do
+# Enumerate into a file, not a process substitution, so a failing find is seen.
+abi_list="$OUT/abi-files"
+find src/abi/PanelClades -type f -name '*.idr' -print0 > "$abi_list" \
+  || die "could not enumerate .idr files under src/abi/PanelClades"
+mapfile -d '' -t abi_files < "$abi_list"
+[ "${#abi_files[@]}" -gt 0 ] || die "no .idr files found under src/abi/PanelClades"
+for f in "${abi_files[@]}"; do
   mod="$(printf '%s' "${f#src/abi/}" | sed 's|\.idr$||; s|/|.|g')"
   grep -qE "^[[:space:]]*(modules[[:space:]]*=|,)[[:space:]]*${mod//./\\.}[[:space:]]*$" "$IPKG" \
     || err "$mod is not listed in $IPKG (it would never be checked)"
 done
-if grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO)\b' src/abi/PanelClades/ABI/*.idr; then
-  err "escape hatch in src/abi/PanelClades/ABI (lines above)"
+if grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO)\b' "${abi_files[@]}"; then
+  err "escape hatch in src/abi/PanelClades (lines above)"
 fi
-[ "$fail" -eq 0 ] && pass "every PanelClades/ABI module is listed in the ipkg; no escape hatches"
+[ "$fail" -eq 0 ] && pass "every PanelClades module is listed in the ipkg; no escape hatches"
 if bash scripts/gen-budgets.sh --check; then
   pass "Budgets.idr is current with the clade configs"
 else

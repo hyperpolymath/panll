@@ -93,6 +93,7 @@ resultTag InvalidParam = 2
 resultTag OutOfMemory  = 3
 resultTag NullPointer  = 4
 
+||| Decode a natural-number result tag; return Nothing for tags above 4.
 public export
 resultFromTag : Nat -> Maybe Result
 resultFromTag 0 = Just Ok
@@ -102,6 +103,7 @@ resultFromTag 3 = Just OutOfMemory
 resultFromTag 4 = Just NullPointer
 resultFromTag _ = Nothing
 
+||| Prove that decoding a result's natural-number tag recovers that result.
 public export
 resultTagRetract : (r : Result) -> resultFromTag (resultTag r) = Just r
 resultTagRetract Ok           = Refl
@@ -360,6 +362,7 @@ cladeKindTag Inspector  = 10
 cladeKindTag Bridge     = 11
 cladeKindTag Terminal   = 12
 
+||| Decode a natural-number clade tag; return Nothing for tags above 12.
 public export
 cladeKindFromTag : Nat -> Maybe CladeKind
 cladeKindFromTag 0  = Just Directive
@@ -377,6 +380,7 @@ cladeKindFromTag 11 = Just Bridge
 cladeKindFromTag 12 = Just Terminal
 cladeKindFromTag _  = Nothing
 
+||| Prove that decoding a kind's natural-number tag recovers that kind.
 public export
 cladeKindTagRetract : (k : CladeKind) -> cladeKindFromTag (cladeKindTag k) = Just k
 cladeKindTagRetract Directive  = Refl
@@ -465,6 +469,7 @@ namespace Verify
   ptrLinux : HasSize Linux CTPtr 8
   ptrLinux = SizeIs
 
+  ||| Prove that a WASM pointer occupies 4 bytes in this ABI.
   export
   ptrWasm : HasSize WASM CTPtr 4
   ptrWasm = SizeIs
