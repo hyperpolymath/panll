@@ -16,7 +16,7 @@
 # A missing toolchain is a failure, never a skip.  Types.idr / Layout.idr /
 # Foreign.idr are NOT checked: they do not typecheck (src/abi/README.adoc).
 set -uo pipefail
-cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || exit 1
 ROOT="$(pwd)"
 OUT="_build/check-abi"
 WRONG_REASON='Undefined name|Couldn.t parse|Parse error|not in the source directory|Can.t find import|Module .* not found|INTERNAL ERROR|does not match file name'
@@ -33,8 +33,8 @@ rm -rf "$OUT"; mkdir -p "$OUT"
 bash scripts/fetch-siblings.sh || die "could not fetch typed-wasm at its pin"
 TW="_build/dependencies/typed-wasm/src/abi"
 rm -rf "$TW/build"
-(cd "$TW" && idris2 --build typed-wasm.ipkg) > "$OUT/kernel.log" 2>&1
-if [ $? -ne 0 ] || grep -q '^Error' "$OUT/kernel.log"; then
+if ! (cd "$TW" && idris2 --build typed-wasm.ipkg) > "$OUT/kernel.log" 2>&1 \
+   || grep -q '^Error' "$OUT/kernel.log"; then
   grep -A10 '^Error' "$OUT/kernel.log" | head -30; die "typed-wasm's ABI package does not build at the pin"
 fi
 pass "typed-wasm grade kernel built at $(git -C _build/dependencies/typed-wasm rev-parse --short HEAD)"
