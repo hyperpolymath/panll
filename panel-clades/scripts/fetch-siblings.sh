@@ -9,13 +9,14 @@
 #                transcribed from hyperpolymath/resource-algebra @ cf9235c) is
 #                imported by PanelClades.ABI.Grades, never re-declared.
 #
-# Pinned at typed-wasm main 9403258 (#271, the kernel's landing).  Re-pin
-# deliberately, one commit per pin.  Override for an experiment with
+# Pinned at typed-wasm main 117bbf8 (#274; the kernel landed in #271, its
+# Nat lemmas such as maxLub in #273).  Re-pin deliberately, one commit per
+# pin.  Override for an experiment with
 #   TYPED_WASM_COMMIT=<sha> panel-clades/scripts/fetch-siblings.sh
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 
-TYPED_WASM_COMMIT="${TYPED_WASM_COMMIT:-940325876dcc3e768e853dec2bb9b290200cb16a}"
+TYPED_WASM_COMMIT="${TYPED_WASM_COMMIT:-117bbf895b513673ba06eb6c4ebb0e26e276e295}"
 
 fetch() { # fetch <name> <commit>
   local name="$1" commit="$2" dir="_build/dependencies/$1"

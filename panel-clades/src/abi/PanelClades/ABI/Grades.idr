@@ -71,13 +71,6 @@ data StateWithin : HWMGrade -> Nat -> Type where
   MkStateWithin : {g : HWMGrade} -> {budget : Nat} ->
                   LTE (peak g) budget -> StateWithin g budget
 
-||| max is the least upper bound (local: the pinned kernel predates
-||| typed-wasm's `maxLub`; drop this when re-pinned past it).
-maxLeast : {a, b, c : Nat} -> LTE a c -> LTE b c -> LTE (maximum a b) c
-maxLeast LTEZero     q           = q
-maxLeast (LTESucc p) LTEZero     = LTESucc p
-maxLeast (LTESucc p) (LTESucc q) = LTESucc (maxLeast p q)
-
 ||| Two phases of a panel's life (e.g. before and after it transmutes): the
 ||| second starts from what the first still holds, so the run fits the
 ||| budget if the first phase does and the second fits in what the first
@@ -87,7 +80,7 @@ phasesWithin : {a, b : HWMGrade} -> {m : Nat} ->
                StateWithin a m -> LTE (drift a + peak b) m ->
                StateWithin (hwmSeq a b) m
 phasesWithin {a = MkHWM p1 n1 _} {b = MkHWM p2 n2 _} (MkStateWithin fits) after =
-  MkStateWithin (maxLeast fits after)
+  MkStateWithin (maxLub fits after)
 
 --------------------------------------------------------------------------------
 -- The Panel-N → Panel-W crossing: loss
