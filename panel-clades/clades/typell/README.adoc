@@ -19,6 +19,9 @@ and universes. All panels MUST degrade gracefully when TypeLL is unavailable.
 * Proof obligation generation
 * Cross-panel dispatch via TypeLLService helpers
 * Backend on port 7800
+* Grades on the wire carry their algebra: `schema/typell-grade.schema.json`
+  (`{grade, algebra}`, algebra ∈ loss / maxplus / hwm, from typed-wasm's grade
+  kernel). DESIGNED — the JSON-RPC wiring to Panel-L is not built yet.
 
 == Integration Points
 

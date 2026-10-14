@@ -9,6 +9,24 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === https://github.com/hyperpolymath/panll/compare/v0.1.0...HEAD[Unreleased]
 
+==== Added (2026-10-14 — graded clade contracts over typed-wasm's grade kernel, PWL-01)
+
+* `+panel-clades/src/abi/PanelClades/ABI/Grades.idr+` grades a clade's
+resource contract in typed-wasm's grade kernel, pinned by
+`+panel-clades/scripts/fetch-siblings.sh+` at typed-wasm `+9403258+`. Panel
+state is graded by occupancy (HWM) and the Panel-N → Panel-W crossing by
+loss (Loss). It includes the `+neurosym-bridge+` contract (DESIGNED: the
+budgets are declared values) and the computed occupancy-vs-cost witness
+(64 vs 96).
+* `+panel-clades/scripts/check-abi.sh+` builds it against the kernel and runs
+two expected rejections (`+panel-clades/tests/reject/+`). It runs in CI
+(`+build-validation.yml+`, job `+panel-clades-abi+`).
+* `+schema/typell-grade.schema.json+` defines the `+{grade, algebra}+` wire
+payload for TypeLL (DESIGNED).
+* *Finding:* `+panel-clades/src/abi/{Types,Layout,Foreign}.idr+` do not
+typecheck, because of module/path mismatch and 11 errors in `+Types.idr+`. The
+ABI README now says so.
+
 ==== Changed (2026-05-30 — npm → Deno migration)
 
 * *`+package.json+` + `+package-lock.json+` deleted.* ReScript and
