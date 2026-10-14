@@ -33,15 +33,16 @@ case "$iv" in *"version 0.8.0"*) ;; *) [ -n "${ALLOW_ANY_IDRIS2:-}" ] || die "Id
 rm -rf "$OUT"; mkdir -p "$OUT"
 
 IPKG="src/abi/panel-clades-grades.ipkg"
-for f in src/abi/PanelClades/ABI/*.idr; do
+mapfile -d '' -t abi_files < <(find src/abi/PanelClades -type f -name '*.idr' -print0)
+for f in "${abi_files[@]}"; do
   mod="$(printf '%s' "${f#src/abi/}" | sed 's|\.idr$||; s|/|.|g')"
   grep -qE "^[[:space:]]*(modules[[:space:]]*=|,)[[:space:]]*${mod//./\\.}[[:space:]]*$" "$IPKG" \
     || err "$mod is not listed in $IPKG (it would never be checked)"
 done
-if grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO)\b' src/abi/PanelClades/ABI/*.idr; then
-  err "escape hatch in src/abi/PanelClades/ABI (lines above)"
+if [ "${#abi_files[@]}" -gt 0 ] && grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO)\b' "${abi_files[@]}"; then
+  err "escape hatch in src/abi/PanelClades (lines above)"
 fi
-[ "$fail" -eq 0 ] && pass "every PanelClades/ABI module is listed in the ipkg; no escape hatches"
+[ "$fail" -eq 0 ] && pass "every PanelClades module is listed in the ipkg; no escape hatches"
 if bash scripts/gen-budgets.sh --check; then
   pass "Budgets.idr is current with the clade configs"
 else
