@@ -217,8 +217,7 @@ mod tests {
 
     #[test]
     fn test_to_tauri_result_err() {
-        let result: Result<i32, PanllError> =
-            Err(PanllError::Internal("boom".to_string()));
+        let result: Result<i32, PanllError> = Err(PanllError::Internal("boom".to_string()));
         let tauri_result = to_tauri_result(result);
         assert_eq!(tauri_result, Err("Internal error: boom".to_string()));
     }

@@ -9,15 +9,14 @@
 //! These run in-process (no external service needed) using std::net for
 //! latency and reqwest for download throughput measurement.
 
+use serde_json::json;
 use std::net::TcpStream;
 use std::time::Instant;
-use serde_json::json;
 
 /// Default target for latency probes. Override with AERIE_LATENCY_TARGET env var.
 /// Format: "host:port".
 fn latency_target() -> String {
-    std::env::var("AERIE_LATENCY_TARGET")
-        .unwrap_or_else(|_| "1.1.1.1:443".to_string())
+    std::env::var("AERIE_LATENCY_TARGET").unwrap_or_else(|_| "1.1.1.1:443".to_string())
 }
 
 /// Default URL for speed test downloads. Override with AERIE_SPEED_URL env var.
@@ -55,15 +54,13 @@ pub async fn aerie_get_latency() -> Result<String, String> {
             })
             .to_string())
         }
-        Err(e) => {
-            Ok(json!({
-                "latency_ms": null,
-                "target": target,
-                "status": "unreachable",
-                "error": format!("{e}"),
-            })
-            .to_string())
-        }
+        Err(e) => Ok(json!({
+            "latency_ms": null,
+            "target": target,
+            "status": "unreachable",
+            "error": format!("{e}"),
+        })
+        .to_string()),
     }
 }
 
@@ -83,7 +80,10 @@ pub async fn aerie_speed_test() -> Result<String, String> {
     let start = Instant::now();
     match client.get(&url).send().await {
         Ok(resp) => {
-            let bytes = resp.bytes().await.map_err(|e| format!("Download error: {e}"))?;
+            let bytes = resp
+                .bytes()
+                .await
+                .map_err(|e| format!("Download error: {e}"))?;
             let elapsed = start.elapsed();
             let bytes_count = bytes.len() as f64;
             let duration_secs = elapsed.as_secs_f64();
@@ -99,17 +99,15 @@ pub async fn aerie_speed_test() -> Result<String, String> {
             })
             .to_string())
         }
-        Err(e) => {
-            Ok(json!({
-                "speed_mbps": null,
-                "bytes_downloaded": 0,
-                "duration_ms": 0,
-                "url": url,
-                "status": "failed",
-                "error": format!("{e}"),
-            })
-            .to_string())
-        }
+        Err(e) => Ok(json!({
+            "speed_mbps": null,
+            "bytes_downloaded": 0,
+            "duration_ms": 0,
+            "url": url,
+            "status": "failed",
+            "error": format!("{e}"),
+        })
+        .to_string()),
     }
 }
 

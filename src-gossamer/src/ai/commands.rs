@@ -34,8 +34,7 @@ fn load_config() -> Result<AiProvidersFile, String> {
         save_config(&defaults)?;
         return Ok(defaults);
     }
-    let content =
-        fs::read_to_string(&path).map_err(|e| format!("Cannot read config: {e}"))?;
+    let content = fs::read_to_string(&path).map_err(|e| format!("Cannot read config: {e}"))?;
     serde_json::from_str(&content).map_err(|e| format!("Cannot parse config: {e}"))
 }
 
@@ -44,8 +43,7 @@ fn save_config(config: &AiProvidersFile) -> Result<(), String> {
     let path = config_path()?;
     // Ensure parent directory exists.
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("Cannot create config directory: {e}"))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Cannot create config directory: {e}"))?;
     }
     let json = serde_json::to_string_pretty(config)
         .map_err(|e| format!("Cannot serialise config: {e}"))?;
@@ -72,16 +70,13 @@ pub async fn ai_send_message(request: SendMessageRequest) -> Result<String, Stri
             .clone()
     } else {
         // Auto-select: highest priority (lowest number), enabled.
-        let mut candidates: Vec<&ProviderConfig> = config_file
-            .providers
-            .iter()
-            .filter(|p| p.enabled)
-            .collect();
+        let mut candidates: Vec<&ProviderConfig> =
+            config_file.providers.iter().filter(|p| p.enabled).collect();
         candidates.sort_by_key(|p| p.priority);
         (*candidates
             .first()
             .ok_or("No enabled providers configured")?)
-            .clone()
+        .clone()
     };
 
     let response = providers::send_message(
@@ -102,9 +97,8 @@ pub async fn ai_send_message(request: SendMessageRequest) -> Result<String, Stri
 
 pub async fn ai_check_provider(provider_id: String) -> Result<String, String> {
     let config_file = load_config()?;
-    let pid: ProviderId =
-        serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
-            .map_err(|_| format!("Unknown provider: {provider_id}"))?;
+    let pid: ProviderId = serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
+        .map_err(|_| format!("Unknown provider: {provider_id}"))?;
 
     let provider = config_file
         .providers
@@ -171,9 +165,8 @@ pub async fn ai_check_provider(provider_id: String) -> Result<String, String> {
 
 pub async fn ai_set_model(provider_id: String, model: String) -> Result<String, String> {
     let mut config_file = load_config()?;
-    let pid: ProviderId =
-        serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
-            .map_err(|_| format!("Unknown provider: {provider_id}"))?;
+    let pid: ProviderId = serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
+        .map_err(|_| format!("Unknown provider: {provider_id}"))?;
 
     let found = config_file
         .providers
@@ -191,9 +184,8 @@ pub async fn ai_set_model(provider_id: String, model: String) -> Result<String, 
 
 pub async fn ai_set_priority(provider_id: String, priority: u32) -> Result<String, String> {
     let mut config_file = load_config()?;
-    let pid: ProviderId =
-        serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
-            .map_err(|_| format!("Unknown provider: {provider_id}"))?;
+    let pid: ProviderId = serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
+        .map_err(|_| format!("Unknown provider: {provider_id}"))?;
 
     let found = config_file
         .providers
@@ -211,9 +203,8 @@ pub async fn ai_set_priority(provider_id: String, priority: u32) -> Result<Strin
 
 pub async fn ai_toggle_provider(provider_id: String) -> Result<String, String> {
     let mut config_file = load_config()?;
-    let pid: ProviderId =
-        serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
-            .map_err(|_| format!("Unknown provider: {provider_id}"))?;
+    let pid: ProviderId = serde_json::from_str(&format!("\"{}\"", provider_id.to_lowercase()))
+        .map_err(|_| format!("Unknown provider: {provider_id}"))?;
 
     let found = config_file
         .providers
@@ -284,16 +275,13 @@ pub async fn ai_send_message_streaming(
             .clone()
     } else {
         // Auto-select: highest priority, enabled, Anthropic preferred.
-        let mut candidates: Vec<&ProviderConfig> = config_file
-            .providers
-            .iter()
-            .filter(|p| p.enabled)
-            .collect();
+        let mut candidates: Vec<&ProviderConfig> =
+            config_file.providers.iter().filter(|p| p.enabled).collect();
         candidates.sort_by_key(|p| p.priority);
         (*candidates
             .first()
             .ok_or("No enabled providers configured")?)
-            .clone()
+        .clone()
     };
 
     // Verify this is Anthropic — streaming is only implemented for Anthropic.
@@ -328,10 +316,7 @@ pub async fn ai_send_message_streaming(
         .await
         {
             use crate::compat::Emitter;
-            let _ = app_handle.emit(
-                "ai:stream-chunk",
-                &StreamChunk::Error(e),
-            );
+            let _ = app_handle.emit("ai:stream-chunk", &StreamChunk::Error(e));
         }
     });
 

@@ -54,7 +54,12 @@ pub async fn minter_validate_name(name: String) -> Result<String, String> {
     }
 
     // Must start with uppercase letter
-    if !name.chars().next().map(|c| c.is_uppercase()).unwrap_or(false) {
+    if !name
+        .chars()
+        .next()
+        .map(|c| c.is_uppercase())
+        .unwrap_or(false)
+    {
         return Ok("Panel name must be PascalCase (start with uppercase)".to_string());
     }
 
@@ -65,8 +70,8 @@ pub async fn minter_validate_name(name: String) -> Result<String, String> {
 
     // Check for reserved names
     let reserved = [
-        "Model", "View", "Update", "Msg", "App", "Main", "Tea", "Panel",
-        "Pane", "PaneL", "PaneN", "PaneW",
+        "Model", "View", "Update", "Msg", "App", "Main", "Tea", "Panel", "Pane", "PaneL", "PaneN",
+        "PaneW",
     ];
     if reserved.contains(&name.as_str()) {
         return Ok(format!("'{}' is a reserved name", name));
@@ -75,7 +80,11 @@ pub async fn minter_validate_name(name: String) -> Result<String, String> {
     // Check if files already exist (collision detection)
     let model_path = PathBuf::from("src/model").join(format!("{}Model.res", name));
     if model_path.exists() {
-        return Ok(format!("Panel '{}' already exists (found {})", name, model_path.display()));
+        return Ok(format!(
+            "Panel '{}' already exists (found {})",
+            name,
+            model_path.display()
+        ));
     }
 
     Ok("valid".to_string())
@@ -118,7 +127,11 @@ pub async fn minter_mint_panel(
 
     // Validate panel_name to prevent path traversal — must be alphanumeric PascalCase.
     if panel_name.is_empty()
-        || !panel_name.chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
+        || !panel_name
+            .chars()
+            .next()
+            .map(|c| c.is_uppercase())
+            .unwrap_or(false)
         || !panel_name.chars().all(|c| c.is_alphanumeric())
     {
         return Err("Panel name must be non-empty alphanumeric PascalCase".to_string());
@@ -141,25 +154,45 @@ pub async fn minter_mint_panel(
     let model_path = PathBuf::from("src/model").join(format!("{}Model.res", panel_name));
     let model_path = model_path.to_string_lossy().to_string();
     let model_content = generate_model(&panel_name, &camel, &description);
-    write_file_safe(&model_path, &model_content, &mut files_created, &mut warnings)?;
+    write_file_safe(
+        &model_path,
+        &model_content,
+        &mut files_created,
+        &mut warnings,
+    )?;
 
     // 2. Module registration
     let module_path = PathBuf::from("src/modules").join(format!("{}Module.res", panel_name));
     let module_path = module_path.to_string_lossy().to_string();
     let module_content = generate_module(&panel_name, &description, &capabilities);
-    write_file_safe(&module_path, &module_content, &mut files_created, &mut warnings)?;
+    write_file_safe(
+        &module_path,
+        &module_content,
+        &mut files_created,
+        &mut warnings,
+    )?;
 
     // 3. Engine (pure computation)
     let engine_path = PathBuf::from("src/core").join(format!("{}Engine.res", panel_name));
     let engine_path = engine_path.to_string_lossy().to_string();
     let engine_content = generate_engine(&panel_name);
-    write_file_safe(&engine_path, &engine_content, &mut files_created, &mut warnings)?;
+    write_file_safe(
+        &engine_path,
+        &engine_content,
+        &mut files_created,
+        &mut warnings,
+    )?;
 
     // 4. Component (view)
     let component_path = PathBuf::from("src/components").join(format!("{}.res", panel_name));
     let component_path = component_path.to_string_lossy().to_string();
     let component_content = generate_component(&panel_name, &camel, &description);
-    write_file_safe(&component_path, &component_content, &mut files_created, &mut warnings)?;
+    write_file_safe(
+        &component_path,
+        &component_content,
+        &mut files_created,
+        &mut warnings,
+    )?;
 
     // 5. Commands (if backend needed)
     if has_backend {
@@ -180,15 +213,30 @@ pub async fn minter_mint_panel(
 
         let mod_path = rust_dir.join("mod.rs");
         let mod_content = generate_rust_mod(&panel_name, &description);
-        write_file_safe(&mod_path.to_string_lossy(), &mod_content, &mut files_created, &mut warnings)?;
+        write_file_safe(
+            &mod_path.to_string_lossy(),
+            &mod_content,
+            &mut files_created,
+            &mut warnings,
+        )?;
 
         let types_path = rust_dir.join("types.rs");
         let types_content = generate_rust_types(&panel_name);
-        write_file_safe(&types_path.to_string_lossy(), &types_content, &mut files_created, &mut warnings)?;
+        write_file_safe(
+            &types_path.to_string_lossy(),
+            &types_content,
+            &mut files_created,
+            &mut warnings,
+        )?;
 
         let commands_path = rust_dir.join("commands.rs");
         let commands_content = generate_rust_commands(&panel_name, &snake);
-        write_file_safe(&commands_path.to_string_lossy(), &commands_content, &mut files_created, &mut warnings)?;
+        write_file_safe(
+            &commands_path.to_string_lossy(),
+            &commands_content,
+            &mut files_created,
+            &mut warnings,
+        )?;
     }
 
     // =========================================================================
@@ -203,7 +251,8 @@ pub async fn minter_mint_panel(
     }
 
     // Patch PanelRegistry.res — add panel metadata entry
-    if let Err(e) = patch_panel_registry(&panel_name, &short_name, &description, &icon, has_backend) {
+    if let Err(e) = patch_panel_registry(&panel_name, &short_name, &description, &icon, has_backend)
+    {
         warnings.push(format!("Could not patch PanelRegistry.res: {}", e));
     } else {
         files_patched.push("src/modules/PanelRegistry.res".to_string());
@@ -244,7 +293,12 @@ pub async fn minter_mint_panel(
     let manifest_dir = format!("src/panels/{}/panels", snake);
     let manifest_path = format!("{}/manifest.json", manifest_dir);
     let manifest_content = generate_panel_manifest(&panel_name, &snake, has_backend);
-    write_file_safe(&manifest_path, &manifest_content, &mut files_created, &mut warnings)?;
+    write_file_safe(
+        &manifest_path,
+        &manifest_content,
+        &mut files_created,
+        &mut warnings,
+    )?;
 
     // =========================================================================
     // Generate clade manifest (A2ML)
@@ -253,7 +307,12 @@ pub async fn minter_mint_panel(
     let clade_dir = format!("panel-clades/clades/{}", camel);
     let clade_path = format!("{}/{}.a2ml", clade_dir, panel_name);
     let clade_content = generate_clade_manifest(&panel_name, &camel, &description, has_backend);
-    write_file_safe(&clade_path, &clade_content, &mut files_created, &mut warnings)?;
+    write_file_safe(
+        &clade_path,
+        &clade_content,
+        &mut files_created,
+        &mut warnings,
+    )?;
 
     // =========================================================================
     // Generate bot directives
@@ -262,7 +321,12 @@ pub async fn minter_mint_panel(
     let directives_dir = "panel-clades/.machine_readable/bot_directives";
     let directive_path = format!("{}/{}.scm", directives_dir, snake);
     let directive_content = generate_bot_directives(&panel_name, &snake, has_backend);
-    write_file_safe(&directive_path, &directive_content, &mut files_created, &mut warnings)?;
+    write_file_safe(
+        &directive_path,
+        &directive_content,
+        &mut files_created,
+        &mut warnings,
+    )?;
 
     // =========================================================================
     // Post-mint validation: verify wiring + run bot checks
@@ -294,8 +358,7 @@ pub async fn minter_mint_panel(
         bot_findings,
     };
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Failed to serialise result: {}", e))
+    serde_json::to_string(&result).map_err(|e| format!("Failed to serialise result: {}", e))
 }
 
 // =============================================================================
@@ -320,8 +383,7 @@ fn write_file_safe(
             .map_err(|e| format!("Failed to create directory for {}: {}", path, e))?;
     }
 
-    fs::write(path, content)
-        .map_err(|e| format!("Failed to write {}: {}", path, e))?;
+    fs::write(path, content).map_err(|e| format!("Failed to write {}: {}", path, e))?;
 
     created.push(path.to_string());
     Ok(())
@@ -359,10 +421,10 @@ type {camel}State = {{
 /// Generate the XModule.res file — capability registration.
 fn generate_module(name: &str, description: &str, capabilities_json: &str) -> String {
     // Parse capabilities from JSON
-    let caps: Vec<(String, String)> = serde_json::from_str(capabilities_json)
-        .unwrap_or_default();
+    let caps: Vec<(String, String)> = serde_json::from_str(capabilities_json).unwrap_or_default();
 
-    let cap_entries: String = caps.iter()
+    let cap_entries: String = caps
+        .iter()
         .map(|(id, label)| format!(r#"  {{id: "{}", label: "{}"}}"#, id, label))
         .collect::<Vec<_>>()
         .join(",\n");
@@ -608,8 +670,7 @@ pub async fn {snake}_health() -> Result<String, String> {{
 /// Patch PanelSwitcherModel.res to add a new panel ID variant.
 fn patch_panel_switcher_model(name: &str) -> Result<(), String> {
     let path = "src/model/PanelSwitcherModel.res";
-    let content = fs::read_to_string(path)
-        .map_err(|e| format!("Read failed: {}", e))?;
+    let content = fs::read_to_string(path).map_err(|e| format!("Read failed: {}", e))?;
 
     let variant = format!("Panel{}", name);
     if content.contains(&variant) {
@@ -622,13 +683,9 @@ fn patch_panel_switcher_model(name: &str) -> Result<(), String> {
         return Err("Could not find PanelMinter variant as anchor".to_string());
     }
 
-    let patched = content.replace(
-        anchor,
-        &format!("{}\n  | {}", anchor, variant),
-    );
+    let patched = content.replace(anchor, &format!("{}\n  | {}", anchor, variant));
 
-    fs::write(path, patched)
-        .map_err(|e| format!("Write failed: {}", e))
+    fs::write(path, patched).map_err(|e| format!("Write failed: {}", e))
 }
 
 /// Patch PanelRegistry.res to add panel metadata.
@@ -640,8 +697,7 @@ fn patch_panel_registry(
     has_backend: bool,
 ) -> Result<(), String> {
     let path = "src/modules/PanelRegistry.res";
-    let content = fs::read_to_string(path)
-        .map_err(|e| format!("Read failed: {}", e))?;
+    let content = fs::read_to_string(path).map_err(|e| format!("Read failed: {}", e))?;
 
     let panel_id = format!("Panel{}", name);
     if content.contains(&panel_id) {
@@ -676,15 +732,13 @@ fn patch_panel_registry(
     );
 
     let patched = content.replace(anchor, &entry);
-    fs::write(path, patched)
-        .map_err(|e| format!("Write failed: {}", e))
+    fs::write(path, patched).map_err(|e| format!("Write failed: {}", e))
 }
 
 /// Patch Model.res to add include and state field.
 fn patch_model(name: &str, camel: &str) -> Result<(), String> {
     let path = "src/Model.res";
-    let content = fs::read_to_string(path)
-        .map_err(|e| format!("Read failed: {}", e))?;
+    let content = fs::read_to_string(path).map_err(|e| format!("Read failed: {}", e))?;
 
     if content.contains(&format!("include {}Model", name)) {
         return Ok(()); // Already included
@@ -694,10 +748,7 @@ fn patch_model(name: &str, camel: &str) -> Result<(), String> {
     let include_anchor = "include PanelSwitcherModel";
     let patched = content.replace(
         include_anchor,
-        &format!(
-            "include {}Model\n\n{}",
-            name, include_anchor,
-        ),
+        &format!("include {}Model\n\n{}", name, include_anchor,),
     );
 
     // Add state field before panelSwitcher field
@@ -720,15 +771,13 @@ fn patch_model(name: &str, camel: &str) -> Result<(), String> {
         ),
     );
 
-    fs::write(path, patched)
-        .map_err(|e| format!("Write failed: {}", e))
+    fs::write(path, patched).map_err(|e| format!("Write failed: {}", e))
 }
 
 /// Patch Msg.res to add message type and routing variant.
 fn patch_msg(name: &str, camel: &str) -> Result<(), String> {
     let path = "src/Msg.res";
-    let content = fs::read_to_string(path)
-        .map_err(|e| format!("Read failed: {}", e))?;
+    let content = fs::read_to_string(path).map_err(|e| format!("Read failed: {}", e))?;
 
     if content.contains(&format!("| {}(", name)) {
         return Ok(()); // Already present
@@ -754,21 +803,16 @@ type {camel}Msg =
     let variant_anchor = "  | PanelSwitcher(panelSwitcherMsg)";
     let patched = patched.replace(
         variant_anchor,
-        &format!(
-            "  | {}({}Msg)\n{}",
-            name, camel, variant_anchor,
-        ),
+        &format!("  | {}({}Msg)\n{}", name, camel, variant_anchor,),
     );
 
-    fs::write(path, patched)
-        .map_err(|e| format!("Write failed: {}", e))
+    fs::write(path, patched).map_err(|e| format!("Write failed: {}", e))
 }
 
 /// Patch View.res to add renderActivePanel case.
 fn patch_view(name: &str, camel: &str) -> Result<(), String> {
     let path = "src/View.res";
-    let content = fs::read_to_string(path)
-        .map_err(|e| format!("Read failed: {}", e))?;
+    let content = fs::read_to_string(path).map_err(|e| format!("Read failed: {}", e))?;
 
     let case = format!("Panel{}", name);
     if content.contains(&case) {
@@ -785,8 +829,7 @@ fn patch_view(name: &str, camel: &str) -> Result<(), String> {
         ),
     );
 
-    fs::write(path, patched)
-        .map_err(|e| format!("Write failed: {}", e))
+    fs::write(path, patched).map_err(|e| format!("Write failed: {}", e))
 }
 
 // =============================================================================
@@ -822,11 +865,7 @@ fn generate_panel_manifest(name: &str, snake: &str, has_backend: bool) -> String
         String::new()
     };
 
-    let capabilities = if has_backend {
-        r#"["shell"]"#
-    } else {
-        "[]"
-    };
+    let capabilities = if has_backend { r#"["shell"]"# } else { "[]" };
 
     format!(
         r#"{{
@@ -858,7 +897,12 @@ fn generate_panel_manifest(name: &str, snake: &str, has_backend: bool) -> String
 ///
 /// This registers the panel in the clade taxonomy so the CladeBrowser,
 /// Provisioner, and bot fleet can discover and classify it.
-fn generate_clade_manifest(name: &str, camel: &str, description: &str, has_backend: bool) -> String {
+fn generate_clade_manifest(
+    name: &str,
+    camel: &str,
+    description: &str,
+    has_backend: bool,
+) -> String {
     let backend_trait = if has_backend { "true" } else { "false" };
     format!(
         r#"; SPDX-License-Identifier: MPL-2.0
@@ -968,12 +1012,7 @@ fn generate_bot_directives(name: &str, snake: &str, has_backend: bool) -> String
 ///
 /// This is what powers the Wiring Inspector — it checks whether each
 /// global file was successfully patched with the panel's entry.
-fn verify_wiring(
-    name: &str,
-    _camel: &str,
-    snake: &str,
-    has_backend: bool,
-) -> Vec<WiringDetail> {
+fn verify_wiring(name: &str, _camel: &str, snake: &str, has_backend: bool) -> Vec<WiringDetail> {
     let variant = format!("Panel{}", name);
     let include_marker = format!("include {}Model", name);
     let msg_marker = format!("| {}(", name);
@@ -981,12 +1020,24 @@ fn verify_wiring(
     let update_marker = format!("update{}", name);
 
     let checks = vec![
-        ("src/model/PanelSwitcherModel.res", "Panel ID variant", &variant),
-        ("src/modules/PanelRegistry.res", "Panel metadata entry", &variant),
+        (
+            "src/model/PanelSwitcherModel.res",
+            "Panel ID variant",
+            &variant,
+        ),
+        (
+            "src/modules/PanelRegistry.res",
+            "Panel metadata entry",
+            &variant,
+        ),
         ("src/Model.res", "Include + state field", &include_marker),
         ("src/Msg.res", "Message type + routing variant", &msg_marker),
         ("src/View.res", "renderActivePanel case", &view_marker),
-        ("src/Update.res", "Sub-updater + routing case", &update_marker),
+        (
+            "src/Update.res",
+            "Sub-updater + routing case",
+            &update_marker,
+        ),
     ];
 
     let mut details: Vec<WiringDetail> = checks
@@ -999,7 +1050,11 @@ fn verify_wiring(
                 file: file.to_string(),
                 description: desc.to_string(),
                 connected,
-                note: if connected { None } else { Some(format!("Missing: {}", marker)) },
+                note: if connected {
+                    None
+                } else {
+                    Some(format!("Missing: {}", marker))
+                },
             }
         })
         .collect();
@@ -1117,7 +1172,8 @@ fn run_post_mint_checks(
                 bot: "glambot".to_string(),
                 rule_id: "PANEL-010".to_string(),
                 severity: "warning".to_string(),
-                message: "Component has no ARIA labels — screen readers cannot navigate".to_string(),
+                message: "Component has no ARIA labels — screen readers cannot navigate"
+                    .to_string(),
                 file: Some(component_path.clone()),
             });
         }
@@ -1126,7 +1182,9 @@ fn run_post_mint_checks(
                 bot: "glambot".to_string(),
                 rule_id: "PANEL-010".to_string(),
                 severity: "info".to_string(),
-                message: "Component has no role attributes — consider adding for semantic structure".to_string(),
+                message:
+                    "Component has no role attributes — consider adding for semantic structure"
+                        .to_string(),
                 file: Some(component_path.clone()),
             });
         }
@@ -1138,7 +1196,8 @@ fn run_post_mint_checks(
             bot: "glambot".to_string(),
             rule_id: "PANEL-012".to_string(),
             severity: "warning".to_string(),
-            message: "A2ML clade manifest not generated — panel won't appear in CladeBrowser".to_string(),
+            message: "A2ML clade manifest not generated — panel won't appear in CladeBrowser"
+                .to_string(),
             file: Some(clade_path.to_string()),
         });
     }
@@ -1151,7 +1210,8 @@ fn run_post_mint_checks(
                 bot: "glambot".to_string(),
                 rule_id: "PANEL-013".to_string(),
                 severity: "info".to_string(),
-                message: "Engine has no doc comments — add /// annotations for documentation".to_string(),
+                message: "Engine has no doc comments — add /// annotations for documentation"
+                    .to_string(),
                 file: Some(engine_path),
             });
         }
@@ -1187,7 +1247,10 @@ fn run_post_mint_checks(
             bot: "finishbot".to_string(),
             rule_id: "PANEL-040".to_string(),
             severity: "warning".to_string(),
-            message: format!("No test file found at {} — create tests before release", test_path),
+            message: format!(
+                "No test file found at {} — create tests before release",
+                test_path
+            ),
             file: Some(test_path),
         });
     }
@@ -1198,7 +1261,8 @@ fn run_post_mint_checks(
             bot: "finishbot".to_string(),
             rule_id: "PANEL-044".to_string(),
             severity: "warning".to_string(),
-            message: "Bot directives file not generated — fleet cannot validate this panel".to_string(),
+            message: "Bot directives file not generated — fleet cannot validate this panel"
+                .to_string(),
             file: Some(directive_path.to_string()),
         });
     }
@@ -1209,8 +1273,7 @@ fn run_post_mint_checks(
 /// Patch Update.res to add a minimal sub-updater and routing case.
 fn patch_update(name: &str, camel: &str) -> Result<(), String> {
     let path = "src/Update.res";
-    let content = fs::read_to_string(path)
-        .map_err(|e| format!("Read failed: {}", e))?;
+    let content = fs::read_to_string(path).map_err(|e| format!("Read failed: {}", e))?;
 
     if content.contains(&format!("update{}", name)) {
         return Ok(()); // Already present
@@ -1249,6 +1312,5 @@ let update{name} = (model: model, msg: {camel}Msg): (model, Tea_Cmd.t<msg>) => {
         ),
     );
 
-    fs::write(path, patched)
-        .map_err(|e| format!("Write failed: {}", e))
+    fs::write(path, patched).map_err(|e| format!("Write failed: {}", e))
 }

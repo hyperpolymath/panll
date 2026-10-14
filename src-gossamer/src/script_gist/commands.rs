@@ -16,8 +16,7 @@ use serde_json::{json, Value};
 
 /// Resolve the gist storage directory (`~/.panll/gists/`).
 fn gists_dir() -> Result<PathBuf, String> {
-    let home = dirs::home_dir()
-        .ok_or_else(|| "Cannot determine home directory".to_string())?;
+    let home = dirs::home_dir().ok_or_else(|| "Cannot determine home directory".to_string())?;
     Ok(home.join(".panll").join("gists"))
 }
 
@@ -31,11 +30,10 @@ fn gists_dir() -> Result<PathBuf, String> {
 
 pub async fn script_gist_save(gist_json: String) -> Result<String, String> {
     let dir = gists_dir()?;
-    fs::create_dir_all(&dir)
-        .map_err(|e| format!("Failed to create gists directory: {e}"))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Failed to create gists directory: {e}"))?;
 
-    let parsed: Value = serde_json::from_str(&gist_json)
-        .map_err(|e| format!("Invalid JSON in gist: {e}"))?;
+    let parsed: Value =
+        serde_json::from_str(&gist_json).map_err(|e| format!("Invalid JSON in gist: {e}"))?;
 
     let id = parsed["id"]
         .as_str()
@@ -44,11 +42,10 @@ pub async fn script_gist_save(gist_json: String) -> Result<String, String> {
     let filename = format!("{id}.json");
     let filepath = dir.join(&filename);
 
-    let content = serde_json::to_string_pretty(&parsed)
-        .map_err(|e| format!("Serialisation error: {e}"))?;
+    let content =
+        serde_json::to_string_pretty(&parsed).map_err(|e| format!("Serialisation error: {e}"))?;
 
-    fs::write(&filepath, content)
-        .map_err(|e| format!("Failed to write gist: {e}"))?;
+    fs::write(&filepath, content).map_err(|e| format!("Failed to write gist: {e}"))?;
 
     Ok(json!({
         "path": filepath.to_string_lossy(),
@@ -69,21 +66,17 @@ pub async fn script_gist_save(gist_json: String) -> Result<String, String> {
 /// The frontend receives the result and wraps it into a `gistResult`.
 
 pub async fn script_gist_execute(gist_json: String) -> Result<String, String> {
-    let parsed: Value = serde_json::from_str(&gist_json)
-        .map_err(|e| format!("Invalid JSON in gist: {e}"))?;
+    let parsed: Value =
+        serde_json::from_str(&gist_json).map_err(|e| format!("Invalid JSON in gist: {e}"))?;
 
-    let id = parsed["id"]
-        .as_str()
-        .unwrap_or("unknown");
+    let id = parsed["id"].as_str().unwrap_or("unknown");
 
     let target = parsed["target"]
         .as_str()
         .or_else(|| parsed["target"].as_object().and_then(|_| Some("TargetBoj")))
         .unwrap_or("TargetDeno");
 
-    let code = parsed["code"]
-        .as_str()
-        .unwrap_or("");
+    let code = parsed["code"].as_str().unwrap_or("");
 
     // Dispatch based on target type.
     let result = match target {
@@ -159,16 +152,17 @@ pub async fn script_gist_execute(gist_json: String) -> Result<String, String> {
 
 pub async fn script_gist_restore_snapshot(snapshot_json: String) -> Result<String, String> {
     // Validate the snapshot is well-formed JSON.
-    let parsed: Value = serde_json::from_str(&snapshot_json)
-        .map_err(|e| format!("Invalid snapshot JSON: {e}"))?;
+    let parsed: Value =
+        serde_json::from_str(&snapshot_json).map_err(|e| format!("Invalid snapshot JSON: {e}"))?;
 
     // Verify it has the expected top-level fields for a scriptGistState.
     if !parsed.is_object() {
         return Err("Snapshot must be a JSON object".to_string());
     }
 
-    let obj = parsed.as_object()
-        .ok_or_else(|| "Snapshot is not a JSON object (unreachable after is_object check)".to_string())?;
+    let obj = parsed.as_object().ok_or_else(|| {
+        "Snapshot is not a JSON object (unreachable after is_object check)".to_string()
+    })?;
     if !obj.contains_key("gists") {
         return Err("Snapshot missing 'gists' field — not a valid scriptGistState".to_string());
     }
@@ -205,8 +199,7 @@ pub async fn script_gist_list() -> Result<String, String> {
         })
         .collect();
 
-    serde_json::to_string(&entries)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&entries).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 #[cfg(test)]
@@ -245,7 +238,9 @@ mod tests {
     #[tokio::test]
     async fn test_script_gist_restore_valid() {
         let snapshot = r#"{"gists":[],"templates":[]}"#;
-        let result = script_gist_restore_snapshot(snapshot.to_string()).await.unwrap();
+        let result = script_gist_restore_snapshot(snapshot.to_string())
+            .await
+            .unwrap();
         let parsed: Value = serde_json::from_str(&result).unwrap();
         assert!(parsed["gists"].is_array());
     }

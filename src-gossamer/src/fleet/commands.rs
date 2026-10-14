@@ -14,8 +14,7 @@ use serde_json::json;
 
 /// Base URL for the fleet API. Override with FLEET_URL env var.
 fn fleet_url() -> String {
-    std::env::var("FLEET_URL")
-        .unwrap_or_else(|_| "http://localhost:8080/api/v1".to_string())
+    std::env::var("FLEET_URL").unwrap_or_else(|_| "http://localhost:8080/api/v1".to_string())
 }
 
 /// HTTP client with a 5-second timeout — fleet is local, should be fast.
@@ -38,7 +37,10 @@ pub async fn fleet_get_bots() -> Result<String, String> {
 
     match client.get(&url).send().await {
         Ok(resp) if resp.status().is_success() => {
-            let body = resp.text().await.map_err(|e| format!("Body read error: {e}"))?;
+            let body = resp
+                .text()
+                .await
+                .map_err(|e| format!("Body read error: {e}"))?;
             // Validate the response is actually JSON (not a stray HTML page from
             // another service on the same port).
             if serde_json::from_str::<serde_json::Value>(&body).is_ok() {
@@ -82,7 +84,10 @@ pub async fn fleet_get_findings() -> Result<String, String> {
 
     match client.get(&url).send().await {
         Ok(resp) if resp.status().is_success() => {
-            let body = resp.text().await.map_err(|e| format!("Body read error: {e}"))?;
+            let body = resp
+                .text()
+                .await
+                .map_err(|e| format!("Body read error: {e}"))?;
             // Validate the response is JSON, not HTML from a stray service.
             if serde_json::from_str::<serde_json::Value>(&body).is_ok() {
                 Ok(body)
@@ -116,7 +121,9 @@ pub async fn fleet_dispatch(finding_id: String, bot_id: String) -> Result<String
         .map_err(|e| format!("Fleet dispatch failed (server unreachable): {e}"))?;
 
     if resp.status().is_success() {
-        resp.text().await.map_err(|e| format!("Body read error: {e}"))
+        resp.text()
+            .await
+            .map_err(|e| format!("Body read error: {e}"))
     } else {
         Err(format!("Fleet dispatch returned HTTP {}", resp.status()))
     }

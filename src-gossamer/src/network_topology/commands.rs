@@ -102,8 +102,7 @@ pub async fn read_network_topology() -> Result<String, String> {
             }
         ]
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Read DNS resolution entries from the running game.
@@ -147,8 +146,7 @@ pub async fn read_dns_table() -> Result<String, String> {
             }
         ]
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Read packet flow events from the running game for animation.
@@ -191,8 +189,7 @@ pub async fn read_packet_flow() -> Result<String, String> {
             }
         ]
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Export the current topology as an SVG string.
@@ -232,8 +229,7 @@ pub async fn export_topology_svg() -> Result<String, String> {
         "connectionCount": 3,
         "stub": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 #[cfg(test)]

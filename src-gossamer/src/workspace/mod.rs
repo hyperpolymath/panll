@@ -10,6 +10,6 @@
 //!
 //! All state serialisation uses JSON files in the PanLL config directory.
 
-pub mod types;
 pub mod commands;
 pub mod sysinfo;
+pub mod types;

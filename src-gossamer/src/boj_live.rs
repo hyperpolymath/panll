@@ -77,8 +77,7 @@ pub async fn boj_live_invoke(
     params: String,
 ) -> Result<String, String> {
     let endpoint = boj_endpoint();
-    let parsed_params: serde_json::Value =
-        serde_json::from_str(&params).unwrap_or(json!({}));
+    let parsed_params: serde_json::Value = serde_json::from_str(&params).unwrap_or(json!({}));
     let body = json!({
         "tool": tool,
         "args": parsed_params,

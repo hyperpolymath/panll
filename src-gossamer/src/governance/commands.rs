@@ -155,8 +155,14 @@ mod tests {
         let result = governance_nesy_query("vexation=0.5,stability=0.55".to_string()).await;
         assert!(result.is_ok(), "Expected Ok with mock response");
         let body = result.unwrap();
-        assert!(body.contains("confidence"), "Mock should contain confidence field");
-        assert!(body.contains("mock"), "Mock should identify itself as mock source");
+        assert!(
+            body.contains("confidence"),
+            "Mock should contain confidence field"
+        );
+        assert!(
+            body.contains("mock"),
+            "Mock should identify itself as mock source"
+        );
     }
 
     #[tokio::test]
@@ -164,8 +170,14 @@ mod tests {
         let result = governance_nesy_validate("HaltInference: test reason".to_string()).await;
         assert!(result.is_ok(), "Expected Ok with mock response");
         let body = result.unwrap();
-        assert!(body.contains("approved"), "Mock should contain approved field");
-        assert!(body.contains("mock"), "Mock should identify itself as mock source");
+        assert!(
+            body.contains("approved"),
+            "Mock should contain approved field"
+        );
+        assert!(
+            body.contains("mock"),
+            "Mock should identify itself as mock source"
+        );
     }
 
     #[tokio::test]
@@ -181,6 +193,9 @@ mod tests {
             body.contains("recommendation"),
             "Mock should contain recommendation field"
         );
-        assert!(body.contains("mock"), "Mock should identify itself as mock source");
+        assert!(
+            body.contains("mock"),
+            "Mock should identify itself as mock source"
+        );
     }
 }

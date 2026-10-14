@@ -134,11 +134,12 @@ pub fn overlay_tor_status() -> Result<String, String> {
 /// POST /tor/hidden-service — create a new Tor hidden service.
 /// Body: `{port, target_port}`
 
-pub fn overlay_tor_create_hidden_service(
-    port: u16,
-    target_port: u16,
-) -> Result<String, String> {
-    post("/tor/hidden-service", json!({"port": port, "target_port": target_port}), 30)
+pub fn overlay_tor_create_hidden_service(port: u16, target_port: u16) -> Result<String, String> {
+    post(
+        "/tor/hidden-service",
+        json!({"port": port, "target_port": target_port}),
+        30,
+    )
 }
 
 /// DELETE /tor/hidden-service/{onion} — destroy a hidden service.
@@ -271,7 +272,11 @@ pub fn overlay_eth_status() -> Result<String, String> {
 /// Body: `{proof_hash}`. Returns tx hash, block number, timestamp.
 
 pub fn overlay_eth_timestamp_proof(proof_hash: String) -> Result<String, String> {
-    post("/eth/timestamp-proof", json!({"proof_hash": proof_hash}), 60)
+    post(
+        "/eth/timestamp-proof",
+        json!({"proof_hash": proof_hash}),
+        60,
+    )
 }
 
 /// POST /eth/verify-timestamp — verify a previously anchored timestamp.

@@ -35,9 +35,8 @@ impl ConnectionState {
     }
 }
 
-static CONNECTION_STATE: Lazy<Mutex<ConnectionState>> = Lazy::new(|| {
-    Mutex::new(ConnectionState::new())
-});
+static CONNECTION_STATE: Lazy<Mutex<ConnectionState>> =
+    Lazy::new(|| Mutex::new(ConnectionState::new()));
 
 /// Serialises tests that share `CONNECTION_STATE` so they cannot race.
 #[cfg(test)]
@@ -62,7 +61,9 @@ pub async fn multiplayer_connect(url: String) -> Result<String, String> {
         return Err("Server URL cannot be empty".to_string());
     }
 
-    let mut state = CONNECTION_STATE.lock().map_err(|e| format!("Lock error: {e}"))?;
+    let mut state = CONNECTION_STATE
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
     state.connected = true;
     state.server_url = Some(url.clone());
     state.connected_at = Some(now_secs());
@@ -73,8 +74,7 @@ pub async fn multiplayer_connect(url: String) -> Result<String, String> {
         "wsState": "connected",
         "connectedAt": state.connected_at,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Disconnect from the sync server.
@@ -83,7 +83,9 @@ pub async fn multiplayer_connect(url: String) -> Result<String, String> {
 /// implemented, this will close the WebSocket and clean up channels.
 
 pub async fn multiplayer_disconnect() -> Result<String, String> {
-    let mut state = CONNECTION_STATE.lock().map_err(|e| format!("Lock error: {e}"))?;
+    let mut state = CONNECTION_STATE
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
     let was_connected = state.connected;
     state.connected = false;
     state.server_url = None;
@@ -94,8 +96,7 @@ pub async fn multiplayer_disconnect() -> Result<String, String> {
         "wasConnected": was_connected,
         "wsState": "disconnected",
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Read the current multiplayer state (players, channels, locks).
@@ -105,7 +106,9 @@ pub async fn multiplayer_disconnect() -> Result<String, String> {
 /// implemented, this will query the live Phoenix server state.
 
 pub async fn multiplayer_read_state() -> Result<String, String> {
-    let state = CONNECTION_STATE.lock().map_err(|e| format!("Lock error: {e}"))?;
+    let state = CONNECTION_STATE
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
     let ts = now_secs() as f64;
 
     let result = json!({
@@ -156,8 +159,7 @@ pub async fn multiplayer_read_state() -> Result<String, String> {
             },
         ],
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Read state diffs between local and remote.
@@ -191,8 +193,7 @@ pub async fn multiplayer_read_diffs() -> Result<String, String> {
         "totalUnresolved": 1,
         "totalResolved": 1,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Read ETS cache entries for inspection.
@@ -226,8 +227,7 @@ pub async fn multiplayer_read_ets() -> Result<String, String> {
         "tableCount": 2,
         "totalEntries": 3,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Trigger a reconnection test cycle.
@@ -238,7 +238,9 @@ pub async fn multiplayer_read_ets() -> Result<String, String> {
 /// and state recovery.
 
 pub async fn multiplayer_reconnection_test() -> Result<String, String> {
-    let state = CONNECTION_STATE.lock().map_err(|e| format!("Lock error: {e}"))?;
+    let state = CONNECTION_STATE
+        .lock()
+        .map_err(|e| format!("Lock error: {e}"))?;
 
     if !state.connected {
         return Err("Cannot run reconnection test: not connected".to_string());
@@ -252,8 +254,7 @@ pub async fn multiplayer_reconnection_test() -> Result<String, String> {
         "channelsRejoined": 2,
         "messagesLost": 0,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 #[cfg(test)]

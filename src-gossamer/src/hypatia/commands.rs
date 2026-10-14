@@ -14,8 +14,7 @@ use serde_json::json;
 
 /// Base URL for the Hypatia API. Override with HYPATIA_URL env var.
 fn hypatia_url() -> String {
-    std::env::var("HYPATIA_URL")
-        .unwrap_or_else(|_| "http://localhost:4040/api/v1".to_string())
+    std::env::var("HYPATIA_URL").unwrap_or_else(|_| "http://localhost:4040/api/v1".to_string())
 }
 
 /// HTTP client with a 10-second timeout — scans can take a moment.
@@ -36,9 +35,10 @@ pub async fn hypatia_get_networks() -> Result<String, String> {
     let client = client()?;
 
     match client.get(&url).send().await {
-        Ok(resp) if resp.status().is_success() => {
-            resp.text().await.map_err(|e| format!("Body read error: {e}"))
-        }
+        Ok(resp) if resp.status().is_success() => resp
+            .text()
+            .await
+            .map_err(|e| format!("Body read error: {e}")),
         _ => Ok("[]".to_string()),
     }
 }
@@ -53,9 +53,10 @@ pub async fn hypatia_get_scans() -> Result<String, String> {
     let client = client()?;
 
     match client.get(&url).send().await {
-        Ok(resp) if resp.status().is_success() => {
-            resp.text().await.map_err(|e| format!("Body read error: {e}"))
-        }
+        Ok(resp) if resp.status().is_success() => resp
+            .text()
+            .await
+            .map_err(|e| format!("Body read error: {e}")),
         _ => Ok("[]".to_string()),
     }
 }
@@ -83,7 +84,9 @@ pub async fn hypatia_scan_repo(repo_name: String) -> Result<String, String> {
         .map_err(|e| format!("Hypatia scan failed (server unreachable): {e}"))?;
 
     if resp.status().is_success() {
-        resp.text().await.map_err(|e| format!("Body read error: {e}"))
+        resp.text()
+            .await
+            .map_err(|e| format!("Body read error: {e}"))
     } else {
         Err(format!("Hypatia scan returned HTTP {}", resp.status()))
     }

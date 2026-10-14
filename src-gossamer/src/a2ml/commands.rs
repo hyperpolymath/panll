@@ -46,7 +46,11 @@ fn collect_a2ml_files(dir: &Path, results: &mut Vec<String>, root: &Path) {
                     || name_str == "docs"
                 {
                     collect_a2ml_files(&path, results, root);
-                } else if !name_str.starts_with('.') && name_str != "node_modules" && name_str != "target" && name_str != "lib" {
+                } else if !name_str.starts_with('.')
+                    && name_str != "node_modules"
+                    && name_str != "target"
+                    && name_str != "lib"
+                {
                     collect_a2ml_files(&path, results, root);
                 }
             } else if let Some(ext) = path.extension() {
@@ -152,7 +156,9 @@ pub fn a2ml_validate(path: String) -> Result<String, String> {
     let has_spdx = trimmed.contains("SPDX-License-Identifier");
 
     if !has_sexpr && !has_sections && !has_dividers {
-        warnings.push("No recognisable A2ML structure (S-expressions, sections, or headers)".to_string());
+        warnings.push(
+            "No recognisable A2ML structure (S-expressions, sections, or headers)".to_string(),
+        );
     }
 
     if !has_spdx {

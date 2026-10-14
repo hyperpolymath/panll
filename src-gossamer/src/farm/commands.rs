@@ -24,10 +24,9 @@ fn manifest_path() -> Result<std::path::PathBuf, String> {
 /// Read and parse the farm manifest from disk.
 fn load_manifest() -> Result<FarmManifest, String> {
     let path = manifest_path()?;
-    let content = fs::read_to_string(&path)
-        .map_err(|e| format!("Cannot read {}: {}", path.display(), e))?;
-    serde_json::from_str(&content)
-        .map_err(|e| format!("Cannot parse manifest: {e}"))
+    let content =
+        fs::read_to_string(&path).map_err(|e| format!("Cannot read {}: {}", path.display(), e))?;
+    serde_json::from_str(&content).map_err(|e| format!("Cannot parse manifest: {e}"))
 }
 
 /// Build a reverse lookup from repo name → group name.
@@ -62,7 +61,10 @@ pub async fn farm_list_repos() -> Result<String, String> {
     if let Some(repos) = &manifest.repos {
         for (name, repo) in repos {
             let lang = repo.language.clone().unwrap_or_default();
-            let priority = repo.priority.clone().unwrap_or_else(|| "medium".to_string());
+            let priority = repo
+                .priority
+                .clone()
+                .unwrap_or_else(|| "medium".to_string());
             let forges = repo.forges.clone().unwrap_or_default();
             let auto_prop = repo.auto_propagate.unwrap_or(false);
             let description = repo.description.clone().unwrap_or_default();
@@ -99,10 +101,7 @@ pub async fn farm_list_repos() -> Result<String, String> {
     let mut groups = HashMap::new();
     if let Some(manifest_groups) = &manifest.repo_groups {
         for (name, group) in manifest_groups {
-            groups.insert(
-                name.clone(),
-                group.repos.clone().unwrap_or_default(),
-            );
+            groups.insert(name.clone(), group.repos.clone().unwrap_or_default());
         }
     }
 
@@ -114,8 +113,7 @@ pub async fn farm_list_repos() -> Result<String, String> {
         forge_names,
     };
 
-    serde_json::to_string(&inventory)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&inventory).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Get details for a single repo by name.
@@ -133,14 +131,16 @@ pub async fn farm_get_repo(name: String) -> Result<String, String> {
         name: name.clone(),
         description: repo.description.clone().unwrap_or_default(),
         language: repo.language.clone().unwrap_or_default(),
-        priority: repo.priority.clone().unwrap_or_else(|| "medium".to_string()),
+        priority: repo
+            .priority
+            .clone()
+            .unwrap_or_else(|| "medium".to_string()),
         forges: repo.forges.clone().unwrap_or_default(),
         auto_propagate: repo.auto_propagate.unwrap_or(false),
         group: group_lookup.get(&name).cloned(),
     };
 
-    serde_json::to_string(&entry)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&entry).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Get aggregate statistics from the farm manifest.
@@ -159,10 +159,16 @@ pub async fn farm_get_stats() -> Result<String, String> {
     if let Some(repos) = &manifest.repos {
         for (_name, repo) in repos {
             total += 1;
-            let lang = repo.language.clone().unwrap_or_else(|| "unknown".to_string());
+            let lang = repo
+                .language
+                .clone()
+                .unwrap_or_else(|| "unknown".to_string());
             *by_language.entry(lang).or_insert(0) += 1;
 
-            let pri = repo.priority.clone().unwrap_or_else(|| "medium".to_string());
+            let pri = repo
+                .priority
+                .clone()
+                .unwrap_or_else(|| "medium".to_string());
             *by_priority.entry(pri).or_insert(0) += 1;
 
             if let Some(forges) = &repo.forges {
@@ -187,6 +193,5 @@ pub async fn farm_get_stats() -> Result<String, String> {
         "by_group": by_group,
     });
 
-    serde_json::to_string(&stats)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&stats).map_err(|e| format!("Serialisation error: {e}"))
 }

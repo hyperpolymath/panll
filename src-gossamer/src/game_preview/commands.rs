@@ -93,16 +93,14 @@ pub async fn game_preview_check_server(url: String) -> Result<String, String> {
                 "connected": resp.status().is_success(),
                 "status": status,
             });
-            serde_json::to_string(&result)
-                .map_err(|e| format!("Serialisation error: {e}"))
+            serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
         }
         Err(_) => {
             let result = json!({
                 "connected": false,
                 "status": 0,
             });
-            serde_json::to_string(&result)
-                .map_err(|e| format!("Serialisation error: {e}"))
+            serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
         }
     }
 }
@@ -182,8 +180,7 @@ pub async fn game_preview_start_server(
         "projectDir": project_dir,
         "status": "started",
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Stop the running Vite dev-server.
@@ -233,8 +230,7 @@ pub async fn game_preview_stop_server() -> Result<String, String> {
         "pid": pid,
         "url": url,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Send a control command to the game engine.
@@ -289,8 +285,7 @@ pub async fn game_preview_control(command: String) -> Result<String, String> {
 
     // Fallback: echo the command state locally.
     let result = json!({ "state": command });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Start a named game recording session.
@@ -313,16 +308,18 @@ pub async fn game_preview_record_start(name: String) -> Result<String, String> {
         "status": "recording",
     });
 
-    fs::write(&marker_path, serde_json::to_string_pretty(&metadata).unwrap_or_default())
-        .map_err(|e| format!("Cannot write recording marker: {e}"))?;
+    fs::write(
+        &marker_path,
+        serde_json::to_string_pretty(&metadata).unwrap_or_default(),
+    )
+    .map_err(|e| format!("Cannot write recording marker: {e}"))?;
 
     let result = json!({
         "id": id,
         "name": name,
         "status": "recording",
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Stop the current game recording session.
@@ -338,7 +335,9 @@ pub async fn game_preview_record_stop() -> Result<String, String> {
         .map_err(|e| format!("Cannot read clips directory: {e}"))?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
-            entry.path().extension()
+            entry
+                .path()
+                .extension()
                 .map(|ext| ext == "recording")
                 .unwrap_or(false)
         })
@@ -351,7 +350,9 @@ pub async fn game_preview_record_stop() -> Result<String, String> {
     // Sort by name (timestamp-based) so we get the latest.
     recordings.sort_by_key(|e| e.file_name());
     // SAFETY: `recordings` is guaranteed non-empty — checked at line 146.
-    let latest = recordings.last().expect("recordings: non-empty after is_empty guard");
+    let latest = recordings
+        .last()
+        .expect("recordings: non-empty after is_empty guard");
     let recording_path = latest.path();
 
     // Read the recording metadata.
@@ -362,22 +363,21 @@ pub async fn game_preview_record_stop() -> Result<String, String> {
 
     // Update status and add end timestamp.
     metadata["status"] = json!("complete");
-    metadata["ended_at"] = json!(
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs()
-    );
+    metadata["ended_at"] = json!(SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs());
 
     // Rename .recording → .clip
     let clip_path = recording_path.with_extension("clip");
-    fs::write(&clip_path, serde_json::to_string_pretty(&metadata).unwrap_or_default())
-        .map_err(|e| format!("Cannot write clip file: {e}"))?;
-    fs::remove_file(&recording_path)
-        .map_err(|e| format!("Cannot remove recording marker: {e}"))?;
+    fs::write(
+        &clip_path,
+        serde_json::to_string_pretty(&metadata).unwrap_or_default(),
+    )
+    .map_err(|e| format!("Cannot write clip file: {e}"))?;
+    fs::remove_file(&recording_path).map_err(|e| format!("Cannot remove recording marker: {e}"))?;
 
-    serde_json::to_string(&metadata)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&metadata).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Capture the current game frame as a screenshot.
@@ -442,8 +442,7 @@ pub async fn game_preview_screenshot() -> Result<String, String> {
         "filename": filename,
         "stub": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Return render statistics from the game engine.
@@ -494,8 +493,7 @@ pub async fn game_preview_stats() -> Result<String, String> {
         "spriteCount": 342,
         "stub": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// List all saved clips from `/tmp/panll/game-clips/`.
@@ -510,7 +508,9 @@ pub async fn game_preview_clips_list() -> Result<String, String> {
         .map_err(|e| format!("Cannot read clips directory: {e}"))?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
-            entry.path().extension()
+            entry
+                .path()
+                .extension()
                 .map(|ext| ext == "clip")
                 .unwrap_or(false)
         })
@@ -527,8 +527,7 @@ pub async fn game_preview_clips_list() -> Result<String, String> {
         id_b.cmp(id_a)
     });
 
-    serde_json::to_string(&clips)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&clips).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Delete a clip by its ID.
@@ -544,15 +543,13 @@ pub async fn game_preview_clip_delete(id: String) -> Result<String, String> {
         return Err(format!("Clip not found: {id}"));
     }
 
-    fs::remove_file(&clip_path)
-        .map_err(|e| format!("Cannot delete clip {id}: {e}"))?;
+    fs::remove_file(&clip_path).map_err(|e| format!("Cannot delete clip {id}: {e}"))?;
 
     let result = json!({
         "deleted": id,
         "success": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 #[cfg(test)]
@@ -572,7 +569,10 @@ mod tests {
     #[test]
     fn test_generate_recording_id() {
         let id = generate_recording_id();
-        assert!(id.starts_with("clip-"), "ID should start with 'clip-': {id}");
+        assert!(
+            id.starts_with("clip-"),
+            "ID should start with 'clip-': {id}"
+        );
         // ID should contain a numeric timestamp after the prefix.
         let timestamp_part = &id[5..];
         assert!(
@@ -630,7 +630,10 @@ mod tests {
             assert!(result.is_ok());
             let json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
             assert!(json["stub"].as_bool().unwrap());
-            assert!(json["filename"].as_str().unwrap().starts_with("screenshot-"));
+            assert!(json["filename"]
+                .as_str()
+                .unwrap()
+                .starts_with("screenshot-"));
             assert!(json["filename"].as_str().unwrap().ends_with(".png"));
         });
     }
@@ -660,8 +663,7 @@ mod tests {
             // Stop the recording.
             let stop_result = game_preview_record_stop().await;
             assert!(stop_result.is_ok());
-            let stop_json: serde_json::Value =
-                serde_json::from_str(&stop_result.unwrap()).unwrap();
+            let stop_json: serde_json::Value = serde_json::from_str(&stop_result.unwrap()).unwrap();
             assert_eq!(stop_json["status"], "complete");
 
             // Clip should appear in the list.

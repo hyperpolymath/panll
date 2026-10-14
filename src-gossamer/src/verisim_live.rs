@@ -21,8 +21,7 @@ const DEFAULT_VERISIMDB_URL: &str = "http://localhost:8080";
 /// Build the VeriSimDB endpoint, respecting the `VERISIMDB_URL`
 /// environment variable if set.
 fn verisim_endpoint() -> ServiceEndpoint {
-    let url =
-        std::env::var("VERISIMDB_URL").unwrap_or_else(|_| DEFAULT_VERISIMDB_URL.to_string());
+    let url = std::env::var("VERISIMDB_URL").unwrap_or_else(|_| DEFAULT_VERISIMDB_URL.to_string());
     ServiceEndpoint::new(&url)
 }
 

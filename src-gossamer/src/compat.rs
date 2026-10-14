@@ -14,9 +14,9 @@
 //! that need richer capabilities should be refactored to use gossamer-rs
 //! directly.
 
-use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
 use serde::Serialize;
+use std::sync::{Arc, Mutex};
 
 /// Global event bus — collects events that the main loop will flush to the webview.
 ///

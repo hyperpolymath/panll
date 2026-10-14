@@ -109,7 +109,10 @@ mod tests {
             quantum_signed_repos: 5,
             by_license: std::collections::HashMap::new(),
         };
-        assert!(stats.pmpl_repos + stats.mpl_fallback_repos + stats.unlicensed_repos <= stats.total_repos + 1);
+        assert!(
+            stats.pmpl_repos + stats.mpl_fallback_repos + stats.unlicensed_repos
+                <= stats.total_repos + 1
+        );
         // Allow slight over-count since quantum_signed can overlap with pmpl
     }
 

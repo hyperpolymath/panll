@@ -129,6 +129,8 @@ pub async fn wiring_inspector_verify_panel(panel_id: String) -> Result<String, S
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
         let code = output.status.code().unwrap_or(-1);
-        Err(format!("PCC exited with code {code} for panel {panel_id}: {stderr}"))
+        Err(format!(
+            "PCC exited with code {code} for panel {panel_id}: {stderr}"
+        ))
     }
 }

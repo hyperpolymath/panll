@@ -89,8 +89,7 @@ pub async fn release_generate_changelog(from_version: String) -> Result<String, 
         "totalEntries": 3,
         "stub": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Build artifacts for the specified platforms.
@@ -99,10 +98,7 @@ pub async fn release_generate_changelog(from_version: String) -> Result<String, 
 /// Currently returns stub artifact metadata. When full build integration is
 /// implemented, this will invoke Tauri's build pipeline for each target.
 
-pub async fn release_build_artifacts(
-    version: String,
-    platforms: String,
-) -> Result<String, String> {
+pub async fn release_build_artifacts(version: String, platforms: String) -> Result<String, String> {
     if version.is_empty() {
         return Err("Version cannot be empty".to_string());
     }
@@ -113,8 +109,12 @@ pub async fn release_build_artifacts(
     }
 
     let valid_platforms = [
-        "web", "desktop-linux", "desktop-mac", "desktop-windows",
-        "mobile-android", "mobile-ios",
+        "web",
+        "desktop-linux",
+        "desktop-mac",
+        "desktop-windows",
+        "mobile-android",
+        "mobile-ios",
     ];
 
     for p in &platform_list {
@@ -148,8 +148,7 @@ pub async fn release_build_artifacts(
         "status": "ready",
         "stub": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Publish a release to a channel.
@@ -159,10 +158,7 @@ pub async fn release_build_artifacts(
 /// distribution is implemented, this will upload artifacts and create a
 /// GitHub release.
 
-pub async fn release_publish(
-    version: String,
-    channel: String,
-) -> Result<String, String> {
+pub async fn release_publish(version: String, channel: String) -> Result<String, String> {
     if version.is_empty() {
         return Err("Version cannot be empty".to_string());
     }
@@ -199,8 +195,7 @@ pub async fn release_publish(
         "manifestPath": release_path.to_string_lossy(),
         "publishedAt": ts,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Read release history.
@@ -231,8 +226,7 @@ pub async fn release_read_history() -> Result<String, String> {
         ts_b.cmp(&ts_a)
     });
 
-    serde_json::to_string(&releases)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&releases).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Bump the version number.
@@ -293,8 +287,7 @@ pub async fn release_bump_version(bump_type: String) -> Result<String, String> {
     )
     .map_err(|e| format!("Cannot write version file: {e}"))?;
 
-    serde_json::to_string(&version_data)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&version_data).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 #[cfg(test)]
@@ -321,8 +314,7 @@ mod tests {
 
     /// Clean up release manifests created during tests.
     fn cleanup_release(version: &str, channel: &str) {
-        let path =
-            PathBuf::from(RELEASES_DIR).join(format!("release-{version}-{channel}.json"));
+        let path = PathBuf::from(RELEASES_DIR).join(format!("release-{version}-{channel}.json"));
         let _ = fs::remove_file(path);
     }
 
@@ -345,7 +337,10 @@ mod tests {
         let result = ensure_releases_dir();
         assert!(result.is_ok(), "Should create releases directory");
         let path = result.unwrap();
-        assert!(path.exists(), "Releases directory should exist after creation");
+        assert!(
+            path.exists(),
+            "Releases directory should exist after creation"
+        );
     }
 
     #[test]
@@ -413,8 +408,7 @@ mod tests {
     #[test]
     fn test_release_publish_invalid_channel() {
         rt().block_on(async {
-            let result =
-                release_publish("1.0.0".to_string(), "nightly".to_string()).await;
+            let result = release_publish("1.0.0".to_string(), "nightly".to_string()).await;
             assert!(result.is_err());
             assert!(result.unwrap_err().contains("Unknown channel"));
         });
@@ -426,8 +420,7 @@ mod tests {
         rt().block_on(async {
             let result = release_read_history().await;
             assert!(result.is_ok());
-            let releases: Vec<serde_json::Value> =
-                serde_json::from_str(&result.unwrap()).unwrap();
+            let releases: Vec<serde_json::Value> = serde_json::from_str(&result.unwrap()).unwrap();
             // Should be a valid array (may be empty or contain previous test releases).
             assert!(releases.len() >= 0);
         });

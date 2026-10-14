@@ -60,8 +60,8 @@ pub fn scan_repo(repo_path: &Path) -> Result<RepoInfo, String> {
     let has_machine_readable = mr_dir.exists();
     let has_panels_manifest = mr_dir.join("PANELS.a2ml").exists();
     let has_state = mr_dir.join("STATE.scm").exists();
-    let has_ai_manifest = repo_path.join("0-AI-MANIFEST.a2ml").exists()
-        || repo_path.join("AI.a2ml").exists();
+    let has_ai_manifest =
+        repo_path.join("0-AI-MANIFEST.a2ml").exists() || repo_path.join("AI.a2ml").exists();
 
     // Extract description from AI manifest if available.
     let description = extract_description(repo_path).unwrap_or_default();
@@ -231,7 +231,10 @@ pub fn suggest_panels(repo: &RepoInfo) -> Vec<PanelSuggestion> {
     if repo.languages.len() >= 3 {
         suggestions.push(PanelSuggestion {
             panel_name: "Playgrounds".to_string(),
-            reason: format!("Multi-language repo ({} languages detected)", repo.languages.len()),
+            reason: format!(
+                "Multi-language repo ({} languages detected)",
+                repo.languages.len()
+            ),
             priority: "low".to_string(),
             enabled: false,
         });

@@ -131,8 +131,14 @@ fn discover_rpm_ostree() -> Component {
 
 /// Discover Flatpak apps with updates.
 fn discover_flatpak() -> Vec<Component> {
-    let output = run_cmd_quiet("flatpak", &["list", "--app", "--columns=application,version"]);
-    let update_output = run_cmd_quiet("flatpak", &["remote-ls", "--updates", "--columns=application,version"]);
+    let output = run_cmd_quiet(
+        "flatpak",
+        &["list", "--app", "--columns=application,version"],
+    );
+    let update_output = run_cmd_quiet(
+        "flatpak",
+        &["remote-ls", "--updates", "--columns=application,version"],
+    );
 
     let updates: Vec<&str> = update_output.lines().collect();
 
@@ -387,8 +393,7 @@ pub fn system_update_apply_component(component_id: String) -> Result<String, Str
         }
     } else if component_id.starts_with("asdf-") {
         let plugin = component_id.trim_start_matches("asdf-");
-        let latest = run_cmd("opsm", &["latest", plugin])
-            .unwrap_or_else(|_| "latest".to_string());
+        let latest = run_cmd("opsm", &["latest", plugin]).unwrap_or_else(|_| "latest".to_string());
         match run_cmd("opsm", &["install", plugin, latest.trim()]) {
             Ok(o) => (true, o),
             Err(e) => (false, e),
@@ -515,9 +520,7 @@ pub fn system_update_last_summary() -> Result<String, String> {
         .collect::<Vec<&str>>()
         .join("\n");
 
-    let flatpak_count = run_cmd_quiet("flatpak", &["list", "--app"])
-        .lines()
-        .count();
+    let flatpak_count = run_cmd_quiet("flatpak", &["list", "--app"]).lines().count();
 
     let asdf_count = run_cmd_quiet("opsm", &["plugin", "list"])
         .lines()

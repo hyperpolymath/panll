@@ -38,7 +38,11 @@ fn read_cpu_usage() -> f64 {
     let nice: f64 = parts[2].parse().unwrap_or(0.0);
     let system: f64 = parts[3].parse().unwrap_or(0.0);
     let idle: f64 = parts[4].parse().unwrap_or(0.0);
-    let iowait: f64 = if parts.len() > 5 { parts[5].parse().unwrap_or(0.0) } else { 0.0 };
+    let iowait: f64 = if parts.len() > 5 {
+        parts[5].parse().unwrap_or(0.0)
+    } else {
+        0.0
+    };
 
     let total = user + nice + system + idle + iowait;
     if total > 0.0 {
@@ -60,12 +64,14 @@ fn read_memory_info() -> (u64, u64) {
 
     for line in content.lines() {
         if line.starts_with("MemTotal:") {
-            total_kb = line.split_whitespace()
+            total_kb = line
+                .split_whitespace()
                 .nth(1)
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0);
         } else if line.starts_with("MemAvailable:") {
-            available_kb = line.split_whitespace()
+            available_kb = line
+                .split_whitespace()
                 .nth(1)
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0);
@@ -92,9 +98,9 @@ fn read_disk_usage() -> (u64, u64) {
 
     // Prefer the mount point named in PANLL_DATA_MOUNT (default: "eclipse"),
     // then fall back to root.
-    let mount_hint = std::env::var("PANLL_DATA_MOUNT")
-        .unwrap_or_else(|_| "eclipse".to_string());
-    let mount_point = content.lines()
+    let mount_hint = std::env::var("PANLL_DATA_MOUNT").unwrap_or_else(|_| "eclipse".to_string());
+    let mount_point = content
+        .lines()
         .find(|l| l.contains(&mount_hint))
         .or_else(|| content.lines().find(|l| l.starts_with("/ ")))
         .and_then(|l| l.split_whitespace().nth(1))
@@ -125,7 +131,8 @@ fn read_uptime() -> u64 {
         Err(_) => return 0,
     };
 
-    content.split_whitespace()
+    content
+        .split_whitespace()
         .next()
         .and_then(|v| v.parse::<f64>().ok())
         .map(|v| v as u64)
@@ -150,6 +157,5 @@ pub async fn get_system_info() -> Result<String, String> {
         uptime_seconds,
     };
 
-    serde_json::to_string(&info)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&info).map_err(|e| format!("Serialisation error: {e}"))
 }

@@ -8,26 +8,22 @@
 //! Demo packages are ZIP files containing captures + state JSON.
 
 use std::fs;
-use std::path::PathBuf;
 use std::io::Write;
+use std::path::PathBuf;
 
 /// Get the PanLL captures directory, creating it if needed.
 fn captures_dir() -> Result<PathBuf, String> {
-    let base = dirs::data_dir()
-        .ok_or_else(|| "Cannot determine data directory".to_string())?;
+    let base = dirs::data_dir().ok_or_else(|| "Cannot determine data directory".to_string())?;
     let dir = base.join("panll").join("captures");
-    fs::create_dir_all(&dir)
-        .map_err(|e| format!("Cannot create captures dir: {e}"))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Cannot create captures dir: {e}"))?;
     Ok(dir)
 }
 
 /// Get the PanLL demos directory, creating it if needed.
 fn demos_dir() -> Result<PathBuf, String> {
-    let base = dirs::data_dir()
-        .ok_or_else(|| "Cannot determine data directory".to_string())?;
+    let base = dirs::data_dir().ok_or_else(|| "Cannot determine data directory".to_string())?;
     let dir = base.join("panll").join("demos");
-    fs::create_dir_all(&dir)
-        .map_err(|e| format!("Cannot create demos dir: {e}"))?;
+    fs::create_dir_all(&dir).map_err(|e| format!("Cannot create demos dir: {e}"))?;
     Ok(dir)
 }
 
@@ -65,8 +61,7 @@ pub async fn save_screenshot(
     // For now, write raw base64 and let the frontend handle display.
     let decoded = base64_decode(raw_b64)?;
 
-    let mut file = fs::File::create(&path)
-        .map_err(|e| format!("Cannot create file: {e}"))?;
+    let mut file = fs::File::create(&path).map_err(|e| format!("Cannot create file: {e}"))?;
     file.write_all(&decoded)
         .map_err(|e| format!("Write error: {e}"))?;
 
@@ -84,7 +79,10 @@ pub async fn save_screenshot(
 fn base64_decode(input: &str) -> Result<Vec<u8>, String> {
     let table: [u8; 256] = {
         let mut t = [255u8; 256];
-        for (i, &c) in b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".iter().enumerate() {
+        for (i, &c) in b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+            .iter()
+            .enumerate()
+        {
             t[c as usize] = i as u8;
         }
         t[b'=' as usize] = 0;
@@ -129,17 +127,16 @@ pub async fn print_panel(panel_id: String) -> Result<String, String> {
 pub async fn save_demo(demo_json: String) -> Result<String, String> {
     let dir = demos_dir()?;
 
-    let demo: super::types::DemoPackage = serde_json::from_str(&demo_json)
-        .map_err(|e| format!("Invalid demo JSON: {e}"))?;
+    let demo: super::types::DemoPackage =
+        serde_json::from_str(&demo_json).map_err(|e| format!("Invalid demo JSON: {e}"))?;
 
     let filename = format!("{}.panll-demo.json", demo.id);
     let path = dir.join(&filename);
 
-    let pretty = serde_json::to_string_pretty(&demo)
-        .map_err(|e| format!("Serialisation error: {e}"))?;
+    let pretty =
+        serde_json::to_string_pretty(&demo).map_err(|e| format!("Serialisation error: {e}"))?;
 
-    fs::write(&path, &pretty)
-        .map_err(|e| format!("Write error: {e}"))?;
+    fs::write(&path, &pretty).map_err(|e| format!("Write error: {e}"))?;
 
     Ok(format!("Demo '{}' saved to {}", demo.title, path.display()))
 }
@@ -153,8 +150,7 @@ pub async fn load_demos() -> Result<String, String> {
     }
 
     let mut demos: Vec<super::types::DemoPackage> = Vec::new();
-    let entries = fs::read_dir(&dir)
-        .map_err(|e| format!("Cannot read demos dir: {e}"))?;
+    let entries = fs::read_dir(&dir).map_err(|e| format!("Cannot read demos dir: {e}"))?;
 
     for entry in entries {
         let entry = entry.map_err(|e| format!("Dir entry error: {e}"))?;
@@ -169,8 +165,7 @@ pub async fn load_demos() -> Result<String, String> {
         }
     }
 
-    serde_json::to_string(&demos)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&demos).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Delete a demo package from disk.
@@ -181,8 +176,7 @@ pub async fn delete_demo(demo_id: String) -> Result<String, String> {
     let path = dir.join(&filename);
 
     if path.exists() {
-        fs::remove_file(&path)
-            .map_err(|e| format!("Delete error: {e}"))?;
+        fs::remove_file(&path).map_err(|e| format!("Delete error: {e}"))?;
         Ok(format!("Demo '{demo_id}' deleted"))
     } else {
         Err(format!("Demo '{demo_id}' not found"))

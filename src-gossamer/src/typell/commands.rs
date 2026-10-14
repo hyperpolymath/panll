@@ -65,7 +65,11 @@ pub fn typell_check(expression: String, context: Option<String>) -> Result<Strin
     let ctx: serde_json::Value = context
         .and_then(|c| serde_json::from_str(&c).ok())
         .unwrap_or(json!({}));
-    post("/check", json!({"expression": expression, "context": ctx}), 30)
+    post(
+        "/check",
+        json!({"expression": expression, "context": ctx}),
+        30,
+    )
 }
 
 /// POST /infer — infer the type of an expression.

@@ -24,7 +24,9 @@ pub async fn umoja_add_peer(address: String) -> Result<String, String> {
     // Mock: generate a deterministic node ID from the address.
     let node_id = format!(
         "node-{:08x}",
-        address.bytes().fold(0u32, |acc, b| acc.wrapping_mul(31).wrapping_add(b as u32))
+        address
+            .bytes()
+            .fold(0u32, |acc, b| acc.wrapping_mul(31).wrapping_add(b as u32))
     );
     let response = json!({
         "ok": true,

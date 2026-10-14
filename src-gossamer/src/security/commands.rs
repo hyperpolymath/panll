@@ -24,8 +24,8 @@ pub async fn redact_text(
     panel_id: String,
     patterns_json: String,
 ) -> Result<String, String> {
-    let patterns: Vec<RedactionPattern> = serde_json::from_str(&patterns_json)
-        .map_err(|e| format!("Invalid patterns JSON: {e}"))?;
+    let patterns: Vec<RedactionPattern> =
+        serde_json::from_str(&patterns_json).map_err(|e| format!("Invalid patterns JSON: {e}"))?;
 
     let mut result_text = text.clone();
     let mut secrets: Vec<DetectedSecret> = Vec::new();
@@ -60,7 +60,9 @@ pub async fn redact_text(
         }
 
         // Apply redaction to the result text.
-        result_text = re.replace_all(&result_text, placeholder.as_str()).to_string();
+        result_text = re
+            .replace_all(&result_text, placeholder.as_str())
+            .to_string();
     }
 
     let result = RedactionResult {
@@ -69,8 +71,7 @@ pub async fn redact_text(
         total_redacted,
     };
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Store a secret in the vault via reasonably-good-tool CLI.
@@ -115,7 +116,8 @@ pub async fn vault_list() -> Result<String, String> {
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let keys: Vec<VaultKey> = stdout.lines()
+        let keys: Vec<VaultKey> = stdout
+            .lines()
             .filter(|l| !l.is_empty())
             .map(|l| VaultKey {
                 key: l.trim().to_string(),
@@ -124,8 +126,7 @@ pub async fn vault_list() -> Result<String, String> {
             })
             .collect();
 
-        serde_json::to_string(&keys)
-            .map_err(|e| format!("Serialisation error: {e}"))
+        serde_json::to_string(&keys).map_err(|e| format!("Serialisation error: {e}"))
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         Err(format!("Vault list failed: {stderr}"))
@@ -144,27 +145,25 @@ pub async fn load_trustfile(repo_path: String) -> Result<String, String> {
         return Err("No Trustfile.a2ml found in this repository".to_string());
     }
 
-    let content = fs::read_to_string(&trustfile_path)
-        .map_err(|e| format!("Cannot read Trustfile: {e}"))?;
+    let content =
+        fs::read_to_string(&trustfile_path).map_err(|e| format!("Cannot read Trustfile: {e}"))?;
 
     // Parse the Trustfile content. The a2ml format uses S-expression-like
     // syntax. For now, we do a simplified parse extracting key fields.
     let policy = parse_trustfile(&content, &trustfile_path.to_string_lossy())?;
 
-    serde_json::to_string(&policy)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&policy).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Simplified Trustfile parser. Extracts key security policy fields from
 /// the a2ml S-expression format.
 fn parse_trustfile(content: &str, file_path: &str) -> Result<TrustfilePolicy, String> {
     // Extract security-level.
-    let security_level = extract_field(content, "security-level")
-        .unwrap_or_else(|| "medium".to_string());
+    let security_level =
+        extract_field(content, "security-level").unwrap_or_else(|| "medium".to_string());
 
     // Extract redaction mode.
-    let redaction_mode = extract_field(content, "mode")
-        .unwrap_or_else(|| "on-share".to_string());
+    let redaction_mode = extract_field(content, "mode").unwrap_or_else(|| "on-share".to_string());
 
     // Extract require-approval.
     let require_approval = extract_field(content, "require-approval")
@@ -172,8 +171,8 @@ fn parse_trustfile(content: &str, file_path: &str) -> Result<TrustfilePolicy, St
         .unwrap_or(false);
 
     // Extract default-permission.
-    let default_sharing = extract_field(content, "default-permission")
-        .unwrap_or_else(|| "view-only".to_string());
+    let default_sharing =
+        extract_field(content, "default-permission").unwrap_or_else(|| "view-only".to_string());
 
     // Check for 2FA requirements.
     let mut two_factor_reqs = Vec::new();

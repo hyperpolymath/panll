@@ -13,5 +13,5 @@
 //! navigation by default — it is structurally harder to create an
 //! inaccessible panel than an accessible one.
 
-pub mod types;
 pub mod commands;
+pub mod types;

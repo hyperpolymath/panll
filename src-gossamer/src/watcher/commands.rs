@@ -22,11 +22,11 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use crate::compat::Emitter;
 use notify::RecursiveMode;
 use notify_debouncer_mini::{new_debouncer, DebouncedEventKind};
 use once_cell::sync::Lazy;
 use serde_json::json;
-use crate::compat::Emitter;
 
 use super::types::{WatchEvent, WatchEventKind, WatcherStatus};
 

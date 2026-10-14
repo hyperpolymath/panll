@@ -40,8 +40,7 @@ fn load_recent() -> RecentReposFile {
 fn save_recent(recent: &RecentReposFile) -> Result<(), String> {
     let path = recent_repos_path()?;
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("Cannot create config directory: {e}"))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Cannot create config directory: {e}"))?;
     }
     let json = serde_json::to_string_pretty(recent)
         .map_err(|e| format!("Cannot serialise recent repos: {e}"))?;
@@ -128,12 +127,11 @@ pub async fn repoloader_save_panels(
     let mr_dir = path.join(".machine_readable");
 
     // Ensure .machine_readable/ exists.
-    fs::create_dir_all(&mr_dir)
-        .map_err(|e| format!("Cannot create .machine_readable/: {e}"))?;
+    fs::create_dir_all(&mr_dir).map_err(|e| format!("Cannot create .machine_readable/: {e}"))?;
 
     // Parse the panels from JSON.
-    let panels: Vec<PanelEntry> = serde_json::from_str(&panels_json)
-        .map_err(|e| format!("Cannot parse panels JSON: {e}"))?;
+    let panels: Vec<PanelEntry> =
+        serde_json::from_str(&panels_json).map_err(|e| format!("Cannot parse panels JSON: {e}"))?;
 
     let repo_name = path
         .file_name()
@@ -158,15 +156,11 @@ pub async fn repoloader_save_panels(
     }
     output.push_str("  )\n");
     output.push_str("  (portfolio\n");
-    output.push_str(&format!(
-        "    (name \"{} Development\")\n",
-        repo_name
-    ));
+    output.push_str(&format!("    (name \"{} Development\")\n", repo_name));
     output.push_str("    (isolation \"native\")))\n");
 
     let panels_path = mr_dir.join("PANELS.a2ml");
-    fs::write(&panels_path, &output)
-        .map_err(|e| format!("Cannot write PANELS.a2ml: {e}"))?;
+    fs::write(&panels_path, &output).map_err(|e| format!("Cannot write PANELS.a2ml: {e}"))?;
 
     Ok(serde_json::json!({
         "saved": true,
@@ -198,8 +192,8 @@ pub async fn repoloader_search_farm(query: String) -> Result<String, String> {
     let content = fs::read_to_string(&manifest_path)
         .map_err(|e| format!("Cannot read farm manifest: {e}"))?;
 
-    let manifest: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| format!("Cannot parse farm manifest: {e}"))?;
+    let manifest: serde_json::Value =
+        serde_json::from_str(&content).map_err(|e| format!("Cannot parse farm manifest: {e}"))?;
 
     let query_lower = query.to_lowercase();
     let mut results: Vec<serde_json::Value> = Vec::new();
