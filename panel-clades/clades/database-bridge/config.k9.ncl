@@ -5,6 +5,7 @@
   pedigree = {
     name = "database-bridge-config",
     version = "0.1.0",
+    magic_number = "K9!",
     author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
     leash = 'Kennel,
   },

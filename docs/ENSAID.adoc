@@ -37,7 +37,7 @@ _how PanLL implements_ each spec section — not the spec itself.
 
 | 06-panel-taxonomy
 | `CladeBrowserEngine.res` with 13 CladeKinds. Idris2 ABI in
-  `panel-clades/src/abi/Types.idr`.
+  `panel-clades/src/abi/PanelClades/ABI/Types.idr`.
 
 | 07-contractiles
 | `ContractilesEngine.res` — Strict/Warn/Adaptive modes.

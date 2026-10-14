@@ -119,7 +119,7 @@ export fn copro_free(ptr: [*c]u8) callconv(.C) void {
     // Since page_allocator does not track individual allocations in a way
     // that allows single-pointer free, we use a sentinel approach:
     // the result strings are small enough that leaking in a stub is acceptable.
-    // TODO: Switch to ArenaAllocator or GeneralPurposeAllocator for proper free.
+    // TODO(#149): Switch to ArenaAllocator or GeneralPurposeAllocator for proper free.
     _ = ptr;
 }
 

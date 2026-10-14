@@ -119,10 +119,7 @@ pub async fn post_json<B: serde::Serialize, T: DeserializeOwned>(
 ///
 /// Useful when the caller wants to forward the raw JSON to the frontend
 /// without deserialising into a specific Rust type.
-pub async fn get_raw(
-    endpoint: &ServiceEndpoint,
-    path: &str,
-) -> Result<String, String> {
+pub async fn get_raw(endpoint: &ServiceEndpoint, path: &str) -> Result<String, String> {
     let url = format!("{}{}", endpoint.base_url, path);
     let client = reqwest::Client::builder()
         .timeout(endpoint.timeout)
@@ -186,10 +183,7 @@ pub async fn post_json_raw<B: serde::Serialize>(
 ///
 /// Returns `Ok(true)` if the endpoint responds with 2xx, `Ok(false)` if
 /// the request fails or returns a non-success status.
-pub async fn check_health(
-    endpoint: &ServiceEndpoint,
-    health_path: &str,
-) -> Result<bool, String> {
+pub async fn check_health(endpoint: &ServiceEndpoint, health_path: &str) -> Result<bool, String> {
     let url = format!("{}{}", endpoint.base_url, health_path);
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(5))

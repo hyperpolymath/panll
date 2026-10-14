@@ -29,10 +29,22 @@ path = "src-gossamer/src/lib.rs"
 [[bin]]
 name = "panll-gossamer"
 path = "src-gossamer/src/main.rs"
+required-features = ["gossamer"]
+
+# The desktop shell is opt-in: gossamer-rs compiles libgossamer from source
+# (Zig 0.15.2 + GTK 3 + WebKitGTK 4.1), so it must not be pulled into the lib.
+#   cargo run --features gossamer --bin panll-gossamer
+# To build against a local gossamer checkout instead of the pinned commit, put
+# a [patch."https://github.com/metadatastician/gossamer"] entry in your own
+# .cargo/config.toml (not committed).
+[features]
+default = []
+gossamer = ["dep:gossamer-rs"]
 
 [dependencies]
-# Gossamer webview shell — replaces tauri
-gossamer-rs = { path = "../gossamer/bindings/rust" }
+# Gossamer webview shell — replaces tauri. Pinned by commit: a path dependency
+# on a sibling checkout cannot resolve in CI or for anyone else.
+gossamer-rs = { git = "https://github.com/metadatastician/gossamer", rev = "c234fea6d8e41a6c9080b3dea97a1885fca1f9a7", optional = true }
 
 # Serialisation — used by every command handler
 serde = { version = "1", features = ["derive"] }

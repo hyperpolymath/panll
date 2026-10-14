@@ -3,6 +3,15 @@
 
 ## Build Commands
 
+> **Stale:** #108 removed `deno.json`, so the `deno task` commands in this file
+> no longer run, and #107 replaced the ReScript sources with stubs. The Deno
+> and pcc gates were removed from CI; the frontend is being ported to
+> AffineScript (owner decision 2026-10-14, no ReScript restore), tracked in
+> #148, which re-adds those gates. There is no JS manifest in the repo yet; a
+> Bun `package.json` + `bun.lock` is the replacement (see Critical Rules).
+> The Rust desktop shell needs `--features gossamer` (Zig 0.15.2 + GTK 3 +
+> WebKitGTK 4.1).
+
 ```bash
 # Compile ReScript modules
 npx rescript build
@@ -72,7 +81,7 @@ deno task test:coverage
 
 - **NEVER use Tauri** — project migrated to Gossamer. All backend refs use `src-gossamer/`
 - **NEVER use TypeScript** — AffineScript only (ReScript is also banned; RS/TS/JS → AffineScript → typed-wasm)
-- **NEVER use npm/bun** — Deno only (npm used only for ReScript compiler)
+- **JS runtime: Bun** (estate primary, owner 2026-10-14), then pnpm, then npm. Deno is retired estate-wide (2026-09-22): add no new Deno tooling. npm is still how the ReScript compiler is fetched until AffineScript replaces it.
 - **Panels, not panes** — PanLL uses "panels" terminology
 - **TEA pattern only** — no MVC, no Redux, no hooks. Model -> Msg -> Update -> View
 - **All state in Model.model** — no global mutable state
@@ -109,3 +118,10 @@ declaration is superseded. NOTE for agents: the **Palimpsest Plaza** panel
 references PMPL as a *feature subject* — a PMPL-adoption/compliance hub. Those
 PMPL strings are intentional product content, NOT this repo's licence; do not
 sweep them.)
+
+## Asking the owner
+
+Put every question that needs the owner's decision through the selector
+(the AskUserQuestion tool), not as prose at the end of a report. Batch up to
+four per call, offer concrete options with the recommended one first, and say
+what each option would cause.

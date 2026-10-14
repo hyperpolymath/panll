@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# check-abi.sh — typecheck the panel-clades grades ABI against typed-wasm's
-# grade kernel at its pin, and run the expected rejections.
+# check-abi.sh — typecheck the panel-clades ABI (all of src/abi/PanelClades)
+# against typed-wasm's grade kernel at its pin, and run the expected
+# rejections.
 #
 #   1. fetch typed-wasm at the pin (scripts/fetch-siblings.sh) and build its
 #      ABI package (the kernel's TTCs);
@@ -13,8 +14,9 @@
 #      the message in its `-- EXPECT:` line, and not for a scope/parse/path
 #      reason.
 #
-# A missing toolchain is a failure, never a skip.  Types.idr / Layout.idr /
-# Foreign.idr are NOT checked: they do not typecheck (src/abi/README.adoc).
+# A missing toolchain is a failure, never a skip.  Every module under
+# src/abi/PanelClades/ must be listed in the ipkg (an unlisted one would be
+# skipped silently), and none may use an escape hatch.
 set -uo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || exit 1
 ROOT="$(pwd)"
@@ -29,6 +31,22 @@ command -v idris2 >/dev/null || die "idris2 not on PATH (a gate that cannot run 
 iv="$(idris2 --version)"; echo "$iv"
 case "$iv" in *"version 0.8.0"*) ;; *) [ -n "${ALLOW_ANY_IDRIS2:-}" ] || die "Idris2 0.8.0 required (set ALLOW_ANY_IDRIS2=1 to try another)" ;; esac
 rm -rf "$OUT"; mkdir -p "$OUT"
+
+IPKG="src/abi/panel-clades-grades.ipkg"
+for f in src/abi/PanelClades/ABI/*.idr; do
+  mod="$(printf '%s' "${f#src/abi/}" | sed 's|\.idr$||; s|/|.|g')"
+  grep -qE "^[[:space:]]*(modules[[:space:]]*=|,)[[:space:]]*${mod//./\\.}[[:space:]]*$" "$IPKG" \
+    || err "$mod is not listed in $IPKG (it would never be checked)"
+done
+if grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO)\b' src/abi/PanelClades/ABI/*.idr; then
+  err "escape hatch in src/abi/PanelClades/ABI (lines above)"
+fi
+[ "$fail" -eq 0 ] && pass "every PanelClades/ABI module is listed in the ipkg; no escape hatches"
+if bash scripts/gen-budgets.sh --check; then
+  pass "Budgets.idr is current with the clade configs"
+else
+  err "Budgets.idr is stale or a clade config's resources block is malformed"
+fi
 
 bash scripts/fetch-siblings.sh || die "could not fetch typed-wasm at its pin"
 TW="_build/dependencies/typed-wasm/src/abi"
@@ -71,4 +89,4 @@ done
 
 echo
 [ "$fail" -eq 0 ] || { echo "PANEL-CLADES ABI CHECK FAILED"; exit 1; }
-echo "OK: panel-clades grades ABI — builds against the kernel, ${n} rejection(s)"
+echo "OK: panel-clades ABI — builds against the kernel, ${n} rejection(s)"

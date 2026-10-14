@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: MPL-2.0
+# Paths the estate Code Hygiene Gate (hyperpolymath/cicd-suite
+# code-hygiene-check) does not scan for debt markers. One git pathspec per
+# line. Every entry names a file whose marker words are data, not debt;
+# real debt is linked as MARKER(#issue) instead (see #148, #149).
+#
+# The maintenance runner IS a debt-marker scanner: its --skip-todo help text
+# and its rg pattern spell the markers it looks for.
+panel-clades/scripts/maintenance/run-maintenance.sh
+# Asserts that tagTypeLabel maps the "Todo"/"Fixme" voice-tag kinds to the
+# display labels "TODO"/"FIXME"; the words are the expected output.
+tests/voicetag_engine_test.js

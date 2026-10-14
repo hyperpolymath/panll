@@ -16,5 +16,5 @@
 //
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-pub mod types;
 pub mod commands;
+pub mod types;

@@ -42,7 +42,8 @@ pub fn init(app: &gossamer_rs::App) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
 
     // Attach main window to tray
-    app.tray_set_window(tray_handle).map_err(|e| e.to_string())?;
+    app.tray_set_window(tray_handle)
+        .map_err(|e| e.to_string())?;
 
     // Add menu items
     app.tray_add_menu_item(tray_handle, "Show PanLL")

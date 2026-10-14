@@ -48,8 +48,7 @@ impl Default for PanllSettings {
                 .unwrap_or_else(|_| "http://localhost:9000".into()),
             burble_url: std::env::var("BURBLE_URL")
                 .unwrap_or_else(|_| "http://localhost:6473".into()),
-            boj_url: std::env::var("BOJ_URL")
-                .unwrap_or_else(|_| "http://localhost:7700".into()),
+            boj_url: std::env::var("BOJ_URL").unwrap_or_else(|_| "http://localhost:7700".into()),
             typell_url: std::env::var("TYPELL_URL")
                 .unwrap_or_else(|_| "http://localhost:7800".into()),
             config_dir: config_dir().to_string_lossy().into_owned(),
@@ -75,8 +74,7 @@ fn config_path() -> PathBuf {
 /// Global settings instance, loaded from disk on first access.
 static SETTINGS: Lazy<Mutex<PanllSettings>> = Lazy::new(|| {
     let settings = match fs::read_to_string(config_path()) {
-        Ok(contents) => serde_json::from_str::<PanllSettings>(&contents)
-            .unwrap_or_default(),
+        Ok(contents) => serde_json::from_str::<PanllSettings>(&contents).unwrap_or_default(),
         Err(_) => PanllSettings::default(),
     };
     Mutex::new(settings)
@@ -86,24 +84,26 @@ static SETTINGS: Lazy<Mutex<PanllSettings>> = Lazy::new(|| {
 fn persist_to_disk(settings: &PanllSettings) -> Result<(), String> {
     let dir = config_dir();
     if !dir.exists() {
-        fs::create_dir_all(&dir)
-            .map_err(|e| format!("Failed to create config dir: {}", e))?;
+        fs::create_dir_all(&dir).map_err(|e| format!("Failed to create config dir: {}", e))?;
     }
     let json = serde_json::to_string_pretty(settings)
         .map_err(|e| format!("JSON serialise error: {}", e))?;
-    fs::write(config_path(), json)
-        .map_err(|e| format!("Failed to write config: {}", e))
+    fs::write(config_path(), json).map_err(|e| format!("Failed to write config: {}", e))
 }
 
 /// Get all settings as a JSON Value.
 pub fn settings_get() -> Result<serde_json::Value, String> {
-    let settings = SETTINGS.lock().map_err(|e| format!("Settings lock: {}", e))?;
+    let settings = SETTINGS
+        .lock()
+        .map_err(|e| format!("Settings lock: {}", e))?;
     serde_json::to_value(&*settings).map_err(|e| format!("JSON serialise error: {}", e))
 }
 
 /// Set a single setting by key. Persists to disk immediately.
 pub fn settings_set(key: &str, value: &str) -> Result<serde_json::Value, String> {
-    let mut settings = SETTINGS.lock().map_err(|e| format!("Settings lock: {}", e))?;
+    let mut settings = SETTINGS
+        .lock()
+        .map_err(|e| format!("Settings lock: {}", e))?;
 
     match key {
         "verisimdb_url" => settings.verisimdb_url = value.to_string(),
@@ -131,9 +131,11 @@ pub fn settings_set(key: &str, value: &str) -> Result<serde_json::Value, String>
 
 /// Replace all settings from a JSON string. Persists to disk immediately.
 pub fn settings_save(settings_json: &str) -> Result<serde_json::Value, String> {
-    let new_settings: PanllSettings = serde_json::from_str(settings_json)
-        .map_err(|e| format!("Invalid settings JSON: {}", e))?;
-    let mut settings = SETTINGS.lock().map_err(|e| format!("Settings lock: {}", e))?;
+    let new_settings: PanllSettings =
+        serde_json::from_str(settings_json).map_err(|e| format!("Invalid settings JSON: {}", e))?;
+    let mut settings = SETTINGS
+        .lock()
+        .map_err(|e| format!("Settings lock: {}", e))?;
     *settings = new_settings;
     persist_to_disk(&settings)?;
     serde_json::to_value(&*settings).map_err(|e| format!("JSON serialise error: {}", e))
@@ -141,7 +143,9 @@ pub fn settings_save(settings_json: &str) -> Result<serde_json::Value, String> {
 
 /// Reset all settings to defaults. Persists to disk immediately.
 pub fn settings_reset() -> Result<serde_json::Value, String> {
-    let mut settings = SETTINGS.lock().map_err(|e| format!("Settings lock: {}", e))?;
+    let mut settings = SETTINGS
+        .lock()
+        .map_err(|e| format!("Settings lock: {}", e))?;
     *settings = PanllSettings::default();
     persist_to_disk(&settings)?;
     serde_json::to_value(&*settings).map_err(|e| format!("JSON serialise error: {}", e))

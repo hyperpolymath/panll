@@ -12,8 +12,9 @@
 |||   - queryTraits — query the traits/capabilities of a loaded clade
 |||   - cladeKindCount — return the compile-time count of clade kinds (13)
 |||
-||| All functions are declared here with type signatures and safety proofs.
-||| Implementations live in ffi/zig/
+||| Implementations live in ffi/zig/.  This module typechecks (check-abi.sh);
+||| nothing checks that the Zig side exports these symbols with these
+||| types, and nothing here links against it.
 
 module PanelClades.ABI.Foreign
 
@@ -68,6 +69,37 @@ process h input = do
     n => Right n
 
 --------------------------------------------------------------------------------
+-- String Operations
+--------------------------------------------------------------------------------
+
+||| Convert C string to Idris String
+export
+%foreign "support:idris2_getString, libidris2_support"
+prim__getString : Bits64 -> String
+
+||| Free C string
+export
+%foreign "C:panel_clades_free_string, libpanel_clades"
+prim__freeString : Bits64 -> PrimIO ()
+
+||| Get string result from library
+export
+%foreign "C:panel_clades_get_string, libpanel_clades"
+prim__getResult : Bits64 -> PrimIO Bits64
+
+||| Safe string getter
+export
+getString : Handle -> IO (Maybe String)
+getString h = do
+  ptr <- primIO (prim__getResult (handlePtr h))
+  if ptr == 0
+    then pure Nothing
+    else do
+      let str = prim__getString ptr
+      primIO (prim__freeString ptr)
+      pure (Just str)
+
+--------------------------------------------------------------------------------
 -- Clade-Specific FFI
 --------------------------------------------------------------------------------
 
@@ -87,15 +119,6 @@ loadClade h cladeIdStr = do
     Just Ok  => Right ()
     Just err => Left err
     Nothing  => Left Error
-  where
-    resultFromInt : Bits32 -> Maybe Result
-    resultFromInt 0 = Just Ok
-    resultFromInt 1 = Just Error
-    resultFromInt 2 = Just InvalidParam
-    resultFromInt 3 = Just OutOfMemory
-    resultFromInt 4 = Just NullPointer
-    resultFromInt _ = Nothing
-
 ||| Query the traits (capabilities) of a loaded clade.
 ||| Returns a pointer to a null-terminated trait descriptor string, or 0
 ||| on failure.  The caller must free the string via panel_clades_free_string.
@@ -133,37 +156,6 @@ verifyCladeKindCount = do
   pure (n == cast cladeKindCount)
 
 --------------------------------------------------------------------------------
--- String Operations
---------------------------------------------------------------------------------
-
-||| Convert C string to Idris String
-export
-%foreign "support:idris2_getString, libidris2_support"
-prim__getString : Bits64 -> String
-
-||| Free C string
-export
-%foreign "C:panel_clades_free_string, libpanel_clades"
-prim__freeString : Bits64 -> PrimIO ()
-
-||| Get string result from library
-export
-%foreign "C:panel_clades_get_string, libpanel_clades"
-prim__getResult : Bits64 -> PrimIO Bits64
-
-||| Safe string getter
-export
-getString : Handle -> IO (Maybe String)
-getString h = do
-  ptr <- primIO (prim__getResult (handlePtr h))
-  if ptr == 0
-    then pure Nothing
-    else do
-      let str = prim__getString ptr
-      primIO (prim__freeString ptr)
-      pure (Just str)
-
---------------------------------------------------------------------------------
 -- Array/Buffer Operations
 --------------------------------------------------------------------------------
 
@@ -181,15 +173,6 @@ processArray h buf len = do
     Just Ok => Right ()
     Just err => Left err
     Nothing => Left Error
-  where
-    resultFromInt : Bits32 -> Maybe Result
-    resultFromInt 0 = Just Ok
-    resultFromInt 1 = Just Error
-    resultFromInt 2 = Just InvalidParam
-    resultFromInt 3 = Just OutOfMemory
-    resultFromInt 4 = Just NullPointer
-    resultFromInt _ = Nothing
-
 --------------------------------------------------------------------------------
 -- Error Handling
 --------------------------------------------------------------------------------
@@ -259,7 +242,7 @@ export
 %foreign "C:panel_clades_register_callback, libpanel_clades"
 prim__registerCallback : Bits64 -> AnyPtr -> PrimIO Bits32
 
--- TODO: Implement safe callback registration.
+-- TODO(#149): Implement safe callback registration.
 -- The callback must be wrapped via a proper FFI callback mechanism.
 -- Do NOT use cast — it is banned per project safety standards.
 -- See: https://idris2.readthedocs.io/en/latest/ffi/ffi.html#callbacks
