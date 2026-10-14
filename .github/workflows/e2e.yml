@@ -2,10 +2,13 @@
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# PanLL — E2E + Crosscutting + Bench CI Pipeline
+# PanLL — E2E pipeline
 #
-# Runs the existing Deno test suite including E2E message roundtrip,
-# panel lifecycle, crosscutting aspect tests, and benchmarks.
+# Builds and tests the Gossamer desktop shell. The Deno E2E, crosscutting and
+# bench jobs were removed (owner decision; #137, #148): every one of them
+# imported src/**/*.res.js, which #107 deleted, through a deno.json that #108
+# deleted. The bench job's `| tee` also hid its failure, so it showed green.
+# They come back against the AffineScript frontend under #148.
 
 name: E2E + Crosscutting + Bench
 
@@ -37,83 +40,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  e2e-deno:
-    name: E2E — Message Roundtrip + Panel Lifecycle
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-
-      - name: Install Deno
-        uses: denoland/setup-deno@v2.0.5
-        with:
-          deno-version: v2.x
-
-      - name: Install dependencies
-        run: deno install
-
-      - name: Build ReScript
-        run: deno task res:build || echo "ReScript build attempted"
-
-      - name: Run E2E tests
-        run: deno test tests/e2e_*.js tests/cross_panel_integration_test.js tests/update_integration_test.js --allow-read --allow-env
-
-  crosscutting:
-    name: Aspect — Crosscutting Concern Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-
-      - name: Install Deno
-        uses: denoland/setup-deno@v2.0.5
-        with:
-          deno-version: v2.x
-
-      - name: Install dependencies
-        run: deno install
-
-      - name: Build ReScript
-        run: deno task res:build || echo "ReScript build attempted"
-
-      - name: Run crosscutting aspect tests
-        run: deno test tests/*_crosscutting_test.js tests/panelbus_propagation_test.js --allow-read --allow-env
-
-  benchmarks:
-    name: Bench — TEA Update Cycle + Engine Performance
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-
-      - name: Install Deno
-        uses: denoland/setup-deno@v2.0.5
-        with:
-          deno-version: v2.x
-
-      - name: Install dependencies
-        run: deno install
-
-      - name: Build ReScript
-        run: deno task res:build || echo "ReScript build attempted"
-
-      - name: Run benchmarks
-        run: deno test tests/*_bench_test.js --allow-read --allow-env 2>&1 | tee /tmp/bench-results.txt
-
-      - name: Upload benchmark results
-        if: always()
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: benchmark-results
-          path: /tmp/bench-results.txt
-          retention-days: 30
-
   gossamer-backend:
     name: Rust Backend — Build + Check
     runs-on: ubuntu-latest
