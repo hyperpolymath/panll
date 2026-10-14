@@ -38,8 +38,7 @@ workflows:
     '.github/workflows/label-triage.yml': []
     '.github/workflows/labels.yml': []
     '.github/workflows/main-estate-audit.yml':
-        - 'actions/checkout@v7.0.1'
-        - 'hyperpolymath/cicd-suite@main'
+        - 'hyperpolymath/cicd-suite@4f5404281dd7092fa77cc18daec7237c4f1ee4ac'
     '.github/workflows/mirror.yml':
         - 'hyperpolymath/standards@092dedada188f56c5915f74a5fd40aac093742c3'
     '.github/workflows/push-email-notify.yml':
@@ -56,6 +55,11 @@ dependencies:
         commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         owner_id: 44036562
         repo_id: 215566462
+    'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1':
+        ref: '3d3c42e5aac5ba805825da76410c181273ba90b1'
+        commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
+        owner_id: 44036562
+        repo_id: 197814629
     'actions/checkout@v7.0.1':
         ref: 'v7.0.1'
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
@@ -108,14 +112,22 @@ dependencies:
         commit: 'sha1-0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d'
         owner_id: 75048950
         repo_id: 623796603
-    'hyperpolymath/cicd-suite@main':
-        ref: 'main'
-        commit: 'sha1-5a10b72e574ef63855fafd4568a4c178657f3294'
+    'hyperpolymath/cicd-suite@1aa6bfb657f8240db089a8eef1ad4a7ac198bcf0':
+        ref: '1aa6bfb657f8240db089a8eef1ad4a7ac198bcf0'
+        commit: 'sha1-1aa6bfb657f8240db089a8eef1ad4a7ac198bcf0'
         owner_id: 6759885
         repo_id: 1326697643
         uses:
             - 'hyperpolymath/deed-ecosystem@f9d999b60cb5f383679ea19912bcdc49c944973a'
             - 'hyperpolymath/k9-ecosystem@2155aa26a21758f2ba119f61bc7e0e1981c106fb'
+    'hyperpolymath/cicd-suite@4f5404281dd7092fa77cc18daec7237c4f1ee4ac':
+        ref: '4f5404281dd7092fa77cc18daec7237c4f1ee4ac'
+        commit: 'sha1-4f5404281dd7092fa77cc18daec7237c4f1ee4ac'
+        owner_id: 6759885
+        repo_id: 1326697643
+        uses:
+            - 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
+            - 'hyperpolymath/cicd-suite@1aa6bfb657f8240db089a8eef1ad4a7ac198bcf0'
     'hyperpolymath/deed-ecosystem@f9d999b60cb5f383679ea19912bcdc49c944973a':
         ref: 'main'
         commit: 'sha1-f9d999b60cb5f383679ea19912bcdc49c944973a'
