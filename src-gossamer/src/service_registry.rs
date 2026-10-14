@@ -59,8 +59,7 @@ static REGISTRY: Lazy<Mutex<HashMap<String, ServiceEntry>>> = Lazy::new(|| {
         "verisim".into(),
         ServiceEntry {
             name: "VeriSimDB".into(),
-            url: std::env::var("VERISIMDB_URL")
-                .unwrap_or_else(|_| "http://localhost:8080".into()),
+            url: std::env::var("VERISIMDB_URL").unwrap_or_else(|_| "http://localhost:8080".into()),
             health_path: "/health".into(),
             status: ServiceStatus::Stopped,
         },
@@ -70,8 +69,7 @@ static REGISTRY: Lazy<Mutex<HashMap<String, ServiceEntry>>> = Lazy::new(|| {
         "echidna".into(),
         ServiceEntry {
             name: "ECHIDNA".into(),
-            url: std::env::var("ECHIDNA_URL")
-                .unwrap_or_else(|_| "http://localhost:9000".into()),
+            url: std::env::var("ECHIDNA_URL").unwrap_or_else(|_| "http://localhost:9000".into()),
             health_path: "/health".into(),
             status: ServiceStatus::Stopped,
         },
@@ -81,8 +79,7 @@ static REGISTRY: Lazy<Mutex<HashMap<String, ServiceEntry>>> = Lazy::new(|| {
         "burble".into(),
         ServiceEntry {
             name: "Burble".into(),
-            url: std::env::var("BURBLE_URL")
-                .unwrap_or_else(|_| "http://localhost:6473".into()),
+            url: std::env::var("BURBLE_URL").unwrap_or_else(|_| "http://localhost:6473".into()),
             health_path: "/health".into(),
             status: ServiceStatus::Stopped,
         },
@@ -92,8 +89,7 @@ static REGISTRY: Lazy<Mutex<HashMap<String, ServiceEntry>>> = Lazy::new(|| {
         "boj".into(),
         ServiceEntry {
             name: "BoJ Server".into(),
-            url: std::env::var("BOJ_URL")
-                .unwrap_or_else(|_| "http://localhost:7700".into()),
+            url: std::env::var("BOJ_URL").unwrap_or_else(|_| "http://localhost:7700".into()),
             health_path: "/health".into(),
             status: ServiceStatus::Stopped,
         },
@@ -103,8 +99,7 @@ static REGISTRY: Lazy<Mutex<HashMap<String, ServiceEntry>>> = Lazy::new(|| {
         "typell".into(),
         ServiceEntry {
             name: "TypeLL".into(),
-            url: std::env::var("TYPELL_URL")
-                .unwrap_or_else(|_| "http://localhost:7800".into()),
+            url: std::env::var("TYPELL_URL").unwrap_or_else(|_| "http://localhost:7800".into()),
             health_path: "/health".into(),
             status: ServiceStatus::Stopped,
         },
@@ -118,9 +113,11 @@ static REGISTRY: Lazy<Mutex<HashMap<String, ServiceEntry>>> = Lazy::new(|| {
 /// Probes each service endpoint via `http_client::blocking` (5-second timeout).
 /// Returns the full registry as a JSON Value.
 pub fn check_all_services() -> Result<serde_json::Value, String> {
-    let mut reg = REGISTRY.lock().map_err(|e| format!("Registry lock: {}", e))?;
+    let mut reg = REGISTRY
+        .lock()
+        .map_err(|e| format!("Registry lock: {}", e))?;
 
-    for (_key, entry) in reg.iter_mut() {
+    for entry in reg.values_mut() {
         let endpoint = http_client::ServiceEndpoint::new(&entry.url).with_timeout(5);
         entry.status = match http_client::blocking::get_raw(&endpoint, &entry.health_path) {
             Ok(_) => ServiceStatus::Running,
@@ -136,7 +133,9 @@ pub fn check_all_services() -> Result<serde_json::Value, String> {
 ///
 /// Returns the updated entry as a JSON Value, or an error if the key is unknown.
 pub fn check_service(service_key: &str) -> Result<serde_json::Value, String> {
-    let mut reg = REGISTRY.lock().map_err(|e| format!("Registry lock: {}", e))?;
+    let mut reg = REGISTRY
+        .lock()
+        .map_err(|e| format!("Registry lock: {}", e))?;
 
     let entry = reg
         .get_mut(service_key)
@@ -155,7 +154,9 @@ pub fn check_service(service_key: &str) -> Result<serde_json::Value, String> {
 ///
 /// Resets the service status to `Stopped` after URL change (requires re-check).
 pub fn update_service_url(service_key: &str, new_url: &str) -> Result<serde_json::Value, String> {
-    let mut reg = REGISTRY.lock().map_err(|e| format!("Registry lock: {}", e))?;
+    let mut reg = REGISTRY
+        .lock()
+        .map_err(|e| format!("Registry lock: {}", e))?;
 
     let entry = reg
         .get_mut(service_key)
@@ -169,7 +170,9 @@ pub fn update_service_url(service_key: &str, new_url: &str) -> Result<serde_json
 
 /// Get the full registry as a JSON Value.
 pub fn get_registry() -> Result<serde_json::Value, String> {
-    let reg = REGISTRY.lock().map_err(|e| format!("Registry lock: {}", e))?;
+    let reg = REGISTRY
+        .lock()
+        .map_err(|e| format!("Registry lock: {}", e))?;
     let snapshot: HashMap<String, ServiceEntry> = reg.clone();
     serde_json::to_value(&snapshot).map_err(|e| format!("JSON serialise error: {}", e))
 }
@@ -203,8 +206,7 @@ mod tests {
     fn update_service_url_sets_url_and_resets_status() {
         // Assert on the returned entry (not a shared global re-read) so the
         // test is robust under parallel execution.
-        let updated =
-            update_service_url("typell", "http://example.test:9999/").expect("update ok");
+        let updated = update_service_url("typell", "http://example.test:9999/").expect("update ok");
         assert_eq!(updated["url"], "http://example.test:9999");
         // Status resets to Stopped after a URL change. ServiceStatus is
         // `#[serde(tag = "status")]`, so the unit variant serialises as the

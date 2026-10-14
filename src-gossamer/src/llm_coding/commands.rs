@@ -9,6 +9,7 @@
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
 use super::types::*;
+use once_cell::sync::Lazy;
 use serde_json::json;
 use std::collections::HashMap;
 use std::fs;
@@ -16,7 +17,6 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
-use once_cell::sync::Lazy;
 use uuid::Uuid;
 
 /// Coordination directory for inter-session state.
@@ -39,11 +39,17 @@ fn read_system_memory() -> (u64, u64) {
     let mut avail_kb = 0u64;
     for line in meminfo.lines() {
         if line.starts_with("MemTotal:") {
-            total_kb = line.split_whitespace().nth(1)
-                .and_then(|s| s.parse().ok()).unwrap_or(0);
+            total_kb = line
+                .split_whitespace()
+                .nth(1)
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0);
         } else if line.starts_with("MemAvailable:") {
-            avail_kb = line.split_whitespace().nth(1)
-                .and_then(|s| s.parse().ok()).unwrap_or(0);
+            avail_kb = line
+                .split_whitespace()
+                .nth(1)
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0);
         }
     }
     (avail_kb / 1024, total_kb / 1024)
@@ -52,7 +58,8 @@ fn read_system_memory() -> (u64, u64) {
 /// Read /proc/[pid]/statm for RSS memory of a single process (MB).
 fn read_process_memory(pid: u32) -> u64 {
     let statm = fs::read_to_string(format!("/proc/{pid}/statm")).unwrap_or_default();
-    statm.split_whitespace()
+    statm
+        .split_whitespace()
         .nth(1)
         .and_then(|s| s.parse::<u64>().ok())
         .map(|pages| pages * 4096 / 1024 / 1024)
@@ -168,14 +175,17 @@ pub fn llm_coding_spawn(request: SpawnRequest) -> Result<String, String> {
 
     // Persist and register
     persist_session(&session);
-    SESSIONS.lock().map_err(|e| e.to_string())?
+    SESSIONS
+        .lock()
+        .map_err(|e| e.to_string())?
         .insert(session_id.clone(), session);
 
     Ok(json!({
         "status": "ok",
         "session_id": session_id,
         "pid": pid
-    }).to_string())
+    })
+    .to_string())
 }
 
 /// Freeze a session (pause resource usage).

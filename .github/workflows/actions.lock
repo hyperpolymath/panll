@@ -28,6 +28,7 @@ workflows:
         - 'actions/upload-artifact@v7.0.1'
         - 'denoland/setup-deno@v2.0.5'
         - 'dtolnay/rust-toolchain@v1'
+        - 'goto-bus-stop/setup-zig@v2.2.1'
         - 'swatinem/rust-cache@v2.9.2'
     '.github/workflows/governance.yml':
         - 'hyperpolymath/standards@092dedada188f56c5915f74a5fd40aac093742c3'
@@ -107,6 +108,11 @@ dependencies:
         commit: 'sha1-2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2'
         owner_id: 9919
         repo_id: 259445878
+    'goto-bus-stop/setup-zig@v2.2.1':
+        ref: 'v2.2.1'
+        commit: 'sha1-abea47f85e598557f500fa1fd2ab7464fcb39406'
+        owner_id: 1006268
+        repo_id: 212984112
     'haskell-actions/setup@v2.12.1':
         ref: 'v2.12.1'
         commit: 'sha1-0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d'

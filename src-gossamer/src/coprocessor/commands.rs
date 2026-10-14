@@ -109,10 +109,7 @@ fn ffi_so_path() -> std::path::PathBuf {
 /// - "axiom": Queries Axiom.jl at localhost:7780/api/compute
 /// - "boj": Queries BoJ server at localhost:7800/invoke
 /// - "local": Dispatches through Zig FFI if loaded, else returns stub
-pub async fn query_compute_engine(
-    engine_id: String,
-    operation: String,
-) -> Result<String, String> {
+pub async fn query_compute_engine(engine_id: String, operation: String) -> Result<String, String> {
     let start = std::time::Instant::now();
 
     let result = match engine_id.as_str() {
@@ -311,14 +308,13 @@ pub async fn coprocessor_ffi_dispatch(
         // never crosses an async boundary.
         let outcome: Result<String, String> = (|| {
             let guard = FFI_STATE.lock().map_err(|e| e.to_string())?;
-            let lib = guard
-                .library
-                .as_ref()
-                .ok_or_else(|| "FFI reported available but library handle is missing".to_string())?;
-
-            let backend_u8 = copro_backend.map(|b| b as u8).ok_or_else(|| {
-                format!("Unknown backend: {}", backend)
+            let lib = guard.library.as_ref().ok_or_else(|| {
+                "FFI reported available but library handle is missing".to_string()
             })?;
+
+            let backend_u8 = copro_backend
+                .map(|b| b as u8)
+                .ok_or_else(|| format!("Unknown backend: {}", backend))?;
             let op_c = std::ffi::CString::new(operation.as_str())
                 .map_err(|e| format!("Invalid operation string: {}", e))?;
             let payload_c = std::ffi::CString::new(payload.as_str())

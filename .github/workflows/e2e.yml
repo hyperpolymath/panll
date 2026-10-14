@@ -16,6 +16,8 @@ on:
       - 'src/**'
       - 'src-gossamer/**'
       - 'tests/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
       - '.github/workflows/e2e.yml'
   pull_request:
     branches: [main, master]
@@ -23,6 +25,9 @@ on:
       - 'src/**'
       - 'src-gossamer/**'
       - 'tests/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/e2e.yml'
   workflow_dispatch:
 
 permissions: read-all
@@ -112,7 +117,7 @@ jobs:
   gossamer-backend:
     name: Rust Backend — Build + Check
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -129,8 +134,17 @@ jobs:
       - name: Install GTK/WebKit dev headers
         run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
 
+      # gossamer-rs compiles libgossamer from its Zig source and requires
+      # exactly this version (bindings/rust/build.rs, SUPPORTED_ZIG).
+      - name: Install Zig 0.15.2
+        uses: goto-bus-stop/setup-zig@v2.2.1
+        with:
+          version: 0.15.2
+
+      # The desktop shell is behind the `gossamer` feature; the library and
+      # Rust CI build without it.
       - name: Build Gossamer backend
-        run: cargo build --release
+        run: cargo build --release --locked --features gossamer --bin panll-gossamer
 
       - name: Run Rust tests
-        run: cargo test
+        run: cargo test --locked --features gossamer
