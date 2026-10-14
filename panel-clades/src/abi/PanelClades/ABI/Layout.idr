@@ -40,6 +40,7 @@ data Divides : Nat -> Nat -> Type where
 ||| Units of `unit` bytes needed to cover `size` bytes, counting down a
 ||| fuel bound.  Structural, so it computes during type checking (Nat `div`
 ||| does not).  With fuel ≥ size and unit ≥ 1 the fuel never runs out.
+||| The result is capped at fuel; for unit = 0 and size > 0 it is fuel.
 public export
 unitsFor : (fuel : Nat) -> (size : Nat) -> (unit : Nat) -> Nat
 unitsFor Z        _     _    = Z
@@ -54,11 +55,14 @@ alignUnits _    Z         = Z
 alignUnits size (S align) = unitsFor size size (S align)
 
 ||| Round up to the next alignment boundary: a whole number of units.
+||| Returns a byte count, unchanged when already aligned, or 0 when
+||| the alignment is 0.
 public export
 alignUp : (size : Nat) -> (alignment : Nat) -> Nat
 alignUp size alignment = alignUnits size alignment * alignment
 
 ||| Padding needed after `offset` to reach the next boundary.
+||| Returns bytes; 0 when already aligned or when the alignment is 0.
 public export
 paddingFor : (offset : Nat) -> (alignment : Nat) -> Nat
 paddingFor offset alignment = alignUp offset alignment `minus` offset
@@ -105,7 +109,7 @@ public export
 nextFieldOffset : Field -> Nat
 nextFieldOffset f = alignUp (fieldEnd f) f.alignment
 
-||| The furthest byte any field reaches
+||| The greatest field end offset in bytes, or 0 for an empty list.
 public export
 structEnd : List Field -> Nat
 structEnd = foldr (\f, acc => max (fieldEnd f) acc) 0
@@ -114,6 +118,7 @@ structEnd = foldr (\f, acc => max (fieldEnd f) acc) 0
 ||| alignment.  (Fields carry explicit offsets, so this is the C rule; the
 ||| earlier fold here ignored its accumulator and mixed up which field it
 ||| measured.)
+||| Returns bytes; 0 for an empty field list or an alignment of 0.
 public export
 calcStructSize : List Field -> Nat -> Nat
 calcStructSize fields align = alignUp (structEnd fields) align
@@ -149,6 +154,8 @@ data FieldsAligned : List Field -> Type where
 
 ||| Build a layout whose size is computed from its fields; refused when
 ||| the computed size does not cover them.
+||| Returns Right with the layout, or Left "Invalid struct size".
+||| Field offsets are checked separately by `checkCABI`.
 public export
 verifyLayout : (fields : List Field) -> (align : Nat) -> Either String StructLayout
 verifyLayout fields align =
@@ -185,7 +192,8 @@ proveFieldsAligned (f :: rest) =
         Left err => Left err
         Right restProof => Right (ConsField f rest here restProof)
 
-||| Check if layout follows C ABI
+||| Return a proof that every field offset is a multiple of its alignment,
+||| or propagate the first field-alignment error from `proveFieldsAligned`.
 public export
 checkCABI : (layout : StructLayout) -> Either String (CABICompliant layout)
 checkCABI layout =
@@ -204,12 +212,14 @@ PlatformLayout _ _ = StructLayout
 
 ||| Check a per-platform layout on every platform in `allPlatforms`
 ||| (this used to return `Right ()` without looking).
+||| Returns Right () if all pass, or the first `checkCABI` error in that order.
 public export
 verifyAllPlatforms :
   (layouts : (p : Platform) -> PlatformLayout p t) ->
   Either String ()
 verifyAllPlatforms layouts = go allPlatforms
   where
+    ||| Check the remaining platforms, stopping at the first alignment error.
     go : List Platform -> Either String ()
     go [] = Right ()
     go (p :: ps) = case checkCABI (layouts p) of
@@ -253,6 +263,7 @@ exampleFieldsAligned =
         (DivideBy 2 Refl)
         NoFields))
 
+||| Prove that every field in the example layout is correctly aligned.
 export
 exampleLayoutValid : CABICompliant PanelClades.ABI.Layout.exampleLayout
 exampleLayoutValid = CABIOk exampleLayout exampleFieldsAligned
@@ -262,6 +273,7 @@ exampleLayoutValid = CABIOk exampleLayout exampleFieldsAligned
 --------------------------------------------------------------------------------
 
 ||| Find a field by name.
+||| Returns the first exact match, or Nothing if no field has that name.
 public export
 lookupField : (layout : StructLayout) -> (fieldName : String) -> Maybe Field
 lookupField layout name = find (\f => f.name == name) layout.fields

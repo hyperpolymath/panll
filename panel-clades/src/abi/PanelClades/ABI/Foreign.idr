@@ -109,8 +109,10 @@ export
 %foreign "C:panel_clades_load_clade, libpanel_clades"
 prim__loadClade : Bits64 -> String -> PrimIO Bits32
 
-||| Safely load a clade definition into the library context.
-||| Returns Ok on success or an error Result on failure.
+||| Submit a clade identifier to the library.  The current FFI validates
+||| that it is non-empty but does not store a clade definition.
+||| Returns Right () for Ok, Left with a recognised error Result, or
+||| Left Error for an unknown result code.
 export
 loadClade : Handle -> String -> IO (Either Result ())
 loadClade h cladeIdStr = do
@@ -164,7 +166,12 @@ export
 %foreign "C:panel_clades_process_array, libpanel_clades"
 prim__processArray : Bits64 -> Bits64 -> Bits32 -> PrimIO Bits32
 
-||| Safe array processor
+||| Submit a buffer address and its length in bytes to the library.
+||| The caller must supply memory covering that length; this wrapper
+||| does not check the buffer or its bounds.  The current FFI validates
+||| the pointers and handle state but does not process the contents.
+||| Returns Right () for Ok, Left with a recognised error Result, or
+||| Left Error for an unknown result code.
 export
 processArray : Handle -> (buffer : Bits64) -> (len : Bits32) -> IO (Either Result ())
 processArray h buf len = do

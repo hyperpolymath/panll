@@ -174,7 +174,7 @@ declaredState d = MkHWM (peak d) (drift d) (fits (drift d) (peak d))
 
 ||| A clade's contract built from its config alone.  It typechecks exactly
 ||| when the declared peak fits the declared budget and the declared loss
-||| fits the declared tolerance.
+||| fits the declared tolerance, with declared drift no greater than peak.
 public export
 declaredContract : (cladeId : String) -> (d : DeclaredResources)
                 -> {auto okDrift : So (lte (drift d) (peak d))}

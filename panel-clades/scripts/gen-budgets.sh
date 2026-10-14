@@ -27,12 +27,16 @@ set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 OUT="src/abi/PanelClades/ABI/Budgets.idr"
 mode="${1:-write}"
+# Write the supplied diagnostic to standard error and exit with status 1.
 fail() { printf 'gen-budgets: %s\n' "$1" >&2; exit 1; }
 
 # kebab-case clade id -> lowerCamelCase Idris name
 camel() { printf '%s' "$1" | sed -E 's/-([a-z0-9])/\U\1/g'; }
 
 nat='[0-9]+'
+# Emit the Idris budget module to standard output from clade resources blocks.
+# Exit with status 1 if a block fails the state, crossing or DESIGNED status
+# checks, or if no config declares resources.  Configs without resources are skipped.
 emit() {
   cat <<'HEADER'
 -- SPDX-License-Identifier: MPL-2.0
