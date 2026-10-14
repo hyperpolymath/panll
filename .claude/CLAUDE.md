@@ -4,9 +4,13 @@
 ## Build Commands
 
 > **Stale:** #108 removed `deno.json`, so the `deno task` commands in this file
-> and the Deno steps in `.github/workflows/build-validation.yml` no longer run.
-> There is no JS manifest in the repo yet; a Bun `package.json` + `bun.lock` is
-> the replacement (see Critical Rules).
+> no longer run, and #107 replaced the ReScript sources with stubs. The Deno
+> and pcc gates were removed from CI; the frontend is being ported to
+> AffineScript (owner decision 2026-10-14, no ReScript restore), tracked in
+> #148, which re-adds those gates. There is no JS manifest in the repo yet; a
+> Bun `package.json` + `bun.lock` is the replacement (see Critical Rules).
+> The Rust desktop shell needs `--features gossamer` (Zig 0.15.2 + GTK 3 +
+> WebKitGTK 4.1).
 
 ```bash
 # Compile ReScript modules

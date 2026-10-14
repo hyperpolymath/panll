@@ -58,7 +58,9 @@ fn get_str(payload: &serde_json::Value, key: &str) -> Result<String, String> {
         .ok_or_else(|| format!("Missing or invalid key: {}", key))
 }
 
-fn result_to_json<T: serde::Serialize>(result: Result<T, String>) -> Result<serde_json::Value, String> {
+fn result_to_json<T: serde::Serialize>(
+    result: Result<T, String>,
+) -> Result<serde_json::Value, String> {
     match result {
         Ok(val) => Ok(json!({"ok": true, "result": val})),
         Err(err) => Ok(json!({"ok": false, "error": err})),
@@ -71,7 +73,7 @@ fn result_to_json<T: serde::Serialize>(result: Result<T, String>) -> Result<serd
 fn result_str_to_json(result: Result<String, String>) -> Result<serde_json::Value, String> {
     match result {
         Ok(s) => result_to_json(Ok(
-            serde_json::from_str::<serde_json::Value>(&s).unwrap_or(serde_json::Value::Null),
+            serde_json::from_str::<serde_json::Value>(&s).unwrap_or(serde_json::Value::Null)
         )),
         Err(e) => result_to_json::<serde_json::Value>(Err(e)),
     }
@@ -82,11 +84,18 @@ fn blocking_get(url: &str, timeout_secs: u64) -> Result<String, String> {
         .timeout(std::time::Duration::from_secs(timeout_secs))
         .build()
         .map_err(|e| format!("HTTP client error: {}", e))?;
-    let resp = client.get(url).send().map_err(|e| format!("GET failed: {}", e))?;
+    let resp = client
+        .get(url)
+        .send()
+        .map_err(|e| format!("GET failed: {}", e))?;
     if resp.status().is_success() {
         resp.text().map_err(|e| format!("Read failed: {}", e))
     } else {
-        Err(format!("HTTP {} - {}", resp.status(), resp.text().unwrap_or_default()))
+        Err(format!(
+            "HTTP {} - {}",
+            resp.status(),
+            resp.text().unwrap_or_default()
+        ))
     }
 }
 
@@ -95,11 +104,19 @@ fn blocking_post(url: &str, body: &serde_json::Value, timeout_secs: u64) -> Resu
         .timeout(std::time::Duration::from_secs(timeout_secs))
         .build()
         .map_err(|e| format!("HTTP client error: {}", e))?;
-    let resp = client.post(url).json(body).send().map_err(|e| format!("POST failed: {}", e))?;
+    let resp = client
+        .post(url)
+        .json(body)
+        .send()
+        .map_err(|e| format!("POST failed: {}", e))?;
     if resp.status().is_success() {
         resp.text().map_err(|e| format!("Read failed: {}", e))
     } else {
-        Err(format!("HTTP {} - {}", resp.status(), resp.text().unwrap_or_default()))
+        Err(format!(
+            "HTTP {} - {}",
+            resp.status(),
+            resp.text().unwrap_or_default()
+        ))
     }
 }
 
@@ -108,11 +125,18 @@ fn blocking_post_empty(url: &str, timeout_secs: u64) -> Result<String, String> {
         .timeout(std::time::Duration::from_secs(timeout_secs))
         .build()
         .map_err(|e| format!("HTTP client error: {}", e))?;
-    let resp = client.post(url).send().map_err(|e| format!("POST failed: {}", e))?;
+    let resp = client
+        .post(url)
+        .send()
+        .map_err(|e| format!("POST failed: {}", e))?;
     if resp.status().is_success() {
         resp.text().map_err(|e| format!("Read failed: {}", e))
     } else {
-        Err(format!("HTTP {} - {}", resp.status(), resp.text().unwrap_or_default()))
+        Err(format!(
+            "HTTP {} - {}",
+            resp.status(),
+            resp.text().unwrap_or_default()
+        ))
     }
 }
 
@@ -269,7 +293,12 @@ fn register_commands(app: &mut gossamer_rs::App) {
         let panll_state = get_str(&payload, "panll_state").unwrap_or_default();
         let settings = get_str(&payload, "settings").unwrap_or_default();
         let service_urls = get_str(&payload, "service_urls").unwrap_or_default();
-        result_to_json(identity::identity_save(&name, &panll_state, &settings, &service_urls))
+        result_to_json(identity::identity_save(
+            &name,
+            &panll_state,
+            &settings,
+            &service_urls,
+        ))
     });
 
     app.command("identity_load", |payload| {

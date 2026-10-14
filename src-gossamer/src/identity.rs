@@ -57,8 +57,7 @@ fn identities_dir() -> PathBuf {
 fn ensure_identities_dir() -> Result<(), String> {
     let dir = identities_dir();
     if !dir.exists() {
-        fs::create_dir_all(&dir)
-            .map_err(|e| format!("Failed to create identities dir: {}", e))?;
+        fs::create_dir_all(&dir).map_err(|e| format!("Failed to create identities dir: {}", e))?;
     }
     Ok(())
 }
@@ -78,7 +77,12 @@ fn iso_now() -> String {
 /// Primary storage: VeriSimDB (POST /api/identity).
 /// Fallback: `~/.panll/identities/<id>.json`.
 /// Returns the full snapshot as a JSON Value.
-pub fn identity_save(name: &str, panll_state: &str, settings: &str, service_urls: &str) -> Result<serde_json::Value, String> {
+pub fn identity_save(
+    name: &str,
+    panll_state: &str,
+    settings: &str,
+    service_urls: &str,
+) -> Result<serde_json::Value, String> {
     ensure_identities_dir()?;
 
     let snapshot = IdentitySnapshot {
@@ -94,8 +98,8 @@ pub fn identity_save(name: &str, panll_state: &str, settings: &str, service_urls
         .map_err(|e| format!("JSON serialise error: {}", e))?;
 
     // Primary: VeriSimDB; fallback to filesystem on any error.
-    let verisim_url = std::env::var("VERISIMDB_URL")
-        .unwrap_or_else(|_| "http://localhost:8080/api/v1".into());
+    let verisim_url =
+        std::env::var("VERISIMDB_URL").unwrap_or_else(|_| "http://localhost:8080/api/v1".into());
     let endpoint = http_client::ServiceEndpoint::new(&verisim_url);
     let path = format!("/state/{}", snapshot.id);
     if http_client::blocking::post_raw(&endpoint, &path, &json!({"state": json_str})).is_err() {
@@ -112,8 +116,8 @@ pub fn identity_save(name: &str, panll_state: &str, settings: &str, service_urls
 /// Primary source: VeriSimDB (GET /state/<id>).
 /// Fallback: `~/.panll/identities/<id>.json`.
 pub fn identity_load(id: &str) -> Result<serde_json::Value, String> {
-    let verisim_url = std::env::var("VERISIMDB_URL")
-        .unwrap_or_else(|_| "http://localhost:8080/api/v1".into());
+    let verisim_url =
+        std::env::var("VERISIMDB_URL").unwrap_or_else(|_| "http://localhost:8080/api/v1".into());
     let endpoint = http_client::ServiceEndpoint::new(&verisim_url);
     if let Ok(body) = http_client::blocking::get_raw(&endpoint, &format!("/state/{}", id)) {
         if let Ok(val) = serde_json::from_str::<serde_json::Value>(&body) {
@@ -122,8 +126,7 @@ pub fn identity_load(id: &str) -> Result<serde_json::Value, String> {
     }
 
     let path = identities_dir().join(format!("{}.json", id));
-    let contents = fs::read_to_string(&path)
-        .map_err(|e| format!("Snapshot not found: {}", e))?;
+    let contents = fs::read_to_string(&path).map_err(|e| format!("Snapshot not found: {}", e))?;
     serde_json::from_str::<serde_json::Value>(&contents)
         .map_err(|e| format!("JSON parse error: {}", e))
 }
@@ -135,8 +138,8 @@ pub fn identity_list() -> Result<serde_json::Value, String> {
     let dir = identities_dir();
     let mut metas: Vec<SnapshotMeta> = Vec::new();
 
-    let entries = fs::read_dir(&dir)
-        .map_err(|e| format!("Failed to read identities dir: {}", e))?;
+    let entries =
+        fs::read_dir(&dir).map_err(|e| format!("Failed to read identities dir: {}", e))?;
 
     for entry in entries.flatten() {
         let path = entry.path();
@@ -163,8 +166,7 @@ pub fn identity_list() -> Result<serde_json::Value, String> {
 pub fn identity_delete(id: &str) -> Result<serde_json::Value, String> {
     let path = identities_dir().join(format!("{}.json", id));
     if path.exists() {
-        fs::remove_file(&path)
-            .map_err(|e| format!("Failed to delete snapshot: {}", e))?;
+        fs::remove_file(&path).map_err(|e| format!("Failed to delete snapshot: {}", e))?;
         Ok(json!({"deleted": id}))
     } else {
         Err(format!("Snapshot not found: {}", id))
@@ -180,8 +182,7 @@ pub fn identity_delete(id: &str) -> Result<serde_json::Value, String> {
 /// POST to the Burble server's broadcast endpoint. Team members receive
 /// the snapshot and can choose to apply it.
 pub fn team_broadcast_state(snapshot_json: &str) -> Result<serde_json::Value, String> {
-    let burble_url = std::env::var("BURBLE_URL")
-        .unwrap_or_else(|_| "http://localhost:6473".into());
+    let burble_url = std::env::var("BURBLE_URL").unwrap_or_else(|_| "http://localhost:6473".into());
     let endpoint = http_client::ServiceEndpoint::new(&burble_url);
     let body = json!({
         "type": "identity_snapshot",

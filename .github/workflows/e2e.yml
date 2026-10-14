@@ -1,10 +1,14 @@
+# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# PanLL — E2E + Crosscutting + Bench CI Pipeline
+# PanLL — E2E pipeline
 #
-# Runs the existing Deno test suite including E2E message roundtrip,
-# panel lifecycle, crosscutting aspect tests, and benchmarks.
+# Builds and tests the Gossamer desktop shell. The Deno E2E, crosscutting and
+# bench jobs were removed (owner decision; #137, #148): every one of them
+# imported src/**/*.res.js, which #107 deleted, through a deno.json that #108
+# deleted. The bench job's `| tee` also hid its failure, so it showed green.
+# They come back against the AffineScript frontend under #148.
 
 name: E2E + Crosscutting + Bench
 
@@ -15,6 +19,8 @@ on:
       - 'src/**'
       - 'src-gossamer/**'
       - 'tests/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
       - '.github/workflows/e2e.yml'
   pull_request:
     branches: [main, master]
@@ -22,6 +28,9 @@ on:
       - 'src/**'
       - 'src-gossamer/**'
       - 'tests/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/e2e.yml'
   workflow_dispatch:
 
 permissions: read-all
@@ -31,105 +40,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  e2e-deno:
-    name: E2E — Message Roundtrip + Panel Lifecycle
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v4
-
-      - name: Install Deno
-        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed  # v2.0.5
-        with:
-          deno-version: v2.x
-
-      - name: Install dependencies
-        run: deno install
-
-      - name: Build ReScript
-        run: deno task res:build || echo "ReScript build attempted"
-
-      - name: Run E2E tests
-        run: deno test tests/e2e_*.js tests/cross_panel_integration_test.js tests/update_integration_test.js --allow-read --allow-env
-
-  crosscutting:
-    name: Aspect — Crosscutting Concern Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v4
-
-      - name: Install Deno
-        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed  # v2.0.5
-        with:
-          deno-version: v2.x
-
-      - name: Install dependencies
-        run: deno install
-
-      - name: Build ReScript
-        run: deno task res:build || echo "ReScript build attempted"
-
-      - name: Run crosscutting aspect tests
-        run: deno test tests/*_crosscutting_test.js tests/panelbus_propagation_test.js --allow-read --allow-env
-
-  benchmarks:
-    name: Bench — TEA Update Cycle + Engine Performance
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v4
-
-      - name: Install Deno
-        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed  # v2.0.5
-        with:
-          deno-version: v2.x
-
-      - name: Install dependencies
-        run: deno install
-
-      - name: Build ReScript
-        run: deno task res:build || echo "ReScript build attempted"
-
-      - name: Run benchmarks
-        run: deno test tests/*_bench_test.js --allow-read --allow-env 2>&1 | tee /tmp/bench-results.txt
-
-      - name: Upload benchmark results
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
-        with:
-          name: benchmark-results
-          path: /tmp/bench-results.txt
-          retention-days: 30
-
   gossamer-backend:
     name: Rust Backend — Build + Check
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v4
+        uses: actions/checkout@v7.0.1
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # v1 (toolchain: stable below)
+        uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
 
       - name: Rust cache
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6  # v2
+        uses: Swatinem/rust-cache@v2.9.2
 
       - name: Install GTK/WebKit dev headers
         run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
 
+      # gossamer-rs compiles libgossamer from its Zig source and requires
+      # exactly this version (bindings/rust/build.rs, SUPPORTED_ZIG).
+      - name: Install Zig 0.15.2
+        uses: goto-bus-stop/setup-zig@v2.2.1
+        with:
+          version: 0.15.2
+
+      # The desktop shell is behind the `gossamer` feature; the library and
+      # Rust CI build without it.
       - name: Build Gossamer backend
-        run: cargo build --release
+        run: cargo build --release --locked --features gossamer --bin panll-gossamer
 
       - name: Run Rust tests
-        run: cargo test
+        run: cargo test --locked --features gossamer

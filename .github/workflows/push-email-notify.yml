@@ -1,3 +1,4 @@
+# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
 # Dormant push-email notification. ARMED by setting the repo variable
 # PUSH_EMAIL_ENABLED=true (the single on/off switch). Addresses are pre-filled;
@@ -39,7 +40,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Send push notification email
-        uses: hyperpolymath/smtp-notify-action@c1c9fa07992a02c1fd3d67a0dc1b08cccb852aef # v0.5.0
+        uses: hyperpolymath/smtp-notify-action@v0.5.0
         with:
           server_address: ${{ secrets.SMTP_HOST }}
           server_port: ${{ secrets.SMTP_PORT }}

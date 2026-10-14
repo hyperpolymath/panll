@@ -58,6 +58,7 @@ let layout | LayoutPreset | PaneSizesSum100 = {
     metadata = {
       version = layout.version,
       name = "panll-layout-database-design",
+      magic_number = "K9!",
       description = layout.description,
     },
   },

@@ -4,6 +4,7 @@ K9!
   pedigree = {
     name = "gsa-history-config",
     version = "1.0.0",
+    magic_number = "K9!",
     author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
     leash = 'Kennel,
   },

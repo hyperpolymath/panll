@@ -247,7 +247,12 @@ fn handle_groove_feedback(
     let feedback = match parsed {
         Ok(v) => v,
         Err(_) => {
-            send_response(stream, 400, "application/json", r#"{"ok":false,"error":"invalid JSON"}"#)?;
+            send_response(
+                stream,
+                400,
+                "application/json",
+                r#"{"ok":false,"error":"invalid JSON"}"#,
+            )?;
             return Ok(());
         }
     };
@@ -475,11 +480,9 @@ fn extract_service_id_from_response(response: &str) -> String {
 pub fn spawn_mesh_monitor() {
     std::thread::Builder::new()
         .name("panll-mesh-monitor".into())
-        .spawn(|| {
-            loop {
-                probe_mesh_peers();
-                std::thread::sleep(std::time::Duration::from_secs(30));
-            }
+        .spawn(|| loop {
+            probe_mesh_peers();
+            std::thread::sleep(std::time::Duration::from_secs(30));
         })
         .expect("Failed to spawn mesh monitor thread");
 }

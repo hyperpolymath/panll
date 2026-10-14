@@ -55,9 +55,8 @@ mod integration_tests {
         for k in ["verisim", "echidna", "burble", "boj", "typell"] {
             assert!(obj.contains_key(k), "missing {k}");
         }
-        let updated =
-            service_registry::update_service_url("boj", "http://boj.test:7700/")
-                .expect("update_service_url");
+        let updated = service_registry::update_service_url("boj", "http://boj.test:7700/")
+            .expect("update_service_url");
         assert_eq!(updated["url"], "http://boj.test:7700");
         assert!(service_registry::check_service("nope").is_err());
         assert!(service_registry::update_service_url("nope", "http://x").is_err());
@@ -65,15 +64,17 @@ mod integration_tests {
 
     #[test]
     fn llm_coding_system_resources_reports_real_host() {
-        let json = llm_coding::commands::llm_coding_system_resources()
-            .expect("system_resources");
+        let json = llm_coding::commands::llm_coding_system_resources().expect("system_resources");
         let v: serde_json::Value = serde_json::from_str(&json).expect("parse");
         assert!(
             v["memory_total_mb"].as_u64().unwrap_or(0) > 0,
             "memory_total_mb should be positive, got {json}"
         );
         let cpu = v["cpu_percent"].as_f64().unwrap_or(-1.0);
-        assert!((0.0..=100.0).contains(&cpu), "cpu_percent out of range: {cpu}");
+        assert!(
+            (0.0..=100.0).contains(&cpu),
+            "cpu_percent out of range: {cpu}"
+        );
     }
 
     #[test]
