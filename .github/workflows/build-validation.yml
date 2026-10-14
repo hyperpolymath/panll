@@ -61,3 +61,32 @@ jobs:
 
       - name: Panel wiring verification gate
         run: ./tools/pcc/target/release/panll panel verify --repo-root .
+
+  # panel-clades grades ABI: PanelClades.ABI.Grades typechecks against
+  # typed-wasm's grade kernel at its pin, and the expected rejections are
+  # refused.  Idris2 publishes no binaries, so 0.8.0 is built from its tag.
+  panel-clades-abi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Chez Scheme and GMP
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq chezscheme libgmp-dev
+
+      - name: Build Idris2 0.8.0 from source
+        run: |
+          git clone --quiet --depth 1 --branch v0.8.0 https://github.com/idris-lang/Idris2 "$RUNNER_TEMP/idris2-src"
+          make -C "$RUNNER_TEMP/idris2-src" bootstrap SCHEME=scheme -j"$(nproc)" > "$RUNNER_TEMP/idris2-build.log" 2>&1 \
+            || { tail -60 "$RUNNER_TEMP/idris2-build.log"; exit 1; }
+          make -C "$RUNNER_TEMP/idris2-src" install > "$RUNNER_TEMP/idris2-install.log" 2>&1 \
+            || { tail -60 "$RUNNER_TEMP/idris2-install.log"; exit 1; }
+          echo "$HOME/.idris2/bin" >> "$GITHUB_PATH"
+
+      - name: panel-clades grades ABI
+        run: bash panel-clades/scripts/check-abi.sh

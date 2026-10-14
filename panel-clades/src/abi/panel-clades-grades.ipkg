@@ -1,0 +1,16 @@
+-- SPDX-License-Identifier: MPL-2.0
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+--
+-- The panel-clades modules that typecheck under Idris2 0.8.0, against
+-- typed-wasm's grade kernel at the pin in scripts/fetch-siblings.sh.
+-- Check with panel-clades/scripts/check-abi.sh.
+--
+-- Types.idr / Layout.idr / Foreign.idr are NOT listed: they do not
+-- typecheck (module names do not match their paths, and Types.idr has 11
+-- type errors at 787ac2e; see README.adoc in this directory).
+
+package panelcladesgrades
+
+sourcedir = "."
+
+modules = PanelClades.ABI.Grades
