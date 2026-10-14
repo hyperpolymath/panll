@@ -23,8 +23,11 @@ ROOT="$(pwd)"
 OUT="_build/check-abi"
 WRONG_REASON='Undefined name|Couldn.t parse|Parse error|not in the source directory|Can.t find import|Module .* not found|INTERNAL ERROR|does not match file name'
 fail=0
+# Print the supplied success message to standard output with a PASS prefix.
 pass() { printf 'PASS: %s\n' "$1"; }
+# Print the supplied failure message and set fail=1, then continue checking.
 err()  { printf 'FAIL: %s\n' "$1"; fail=1; }
+# Print the supplied failure message and terminate the gate with exit status 1.
 die()  { printf 'FAIL: %s\n' "$1"; exit 1; }
 
 command -v idris2 >/dev/null || die "idris2 not on PATH (a gate that cannot run must not report OK)"
