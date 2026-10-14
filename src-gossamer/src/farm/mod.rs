@@ -6,5 +6,5 @@
 //! exposes it to the ReScript frontend via Tauri commands. No HTTP service
 //! required — this is purely filesystem-based.
 
-pub mod types;
 pub mod commands;
+pub mod types;

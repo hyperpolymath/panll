@@ -78,7 +78,8 @@ mod tests {
         ];
         for kind in kinds {
             let json = serde_json::to_string(&kind).expect("serialise WatchEventKind must succeed");
-            let _back: WatchEventKind = serde_json::from_str(&json).expect("deserialise must succeed");
+            let _back: WatchEventKind =
+                serde_json::from_str(&json).expect("deserialise must succeed");
         }
     }
 

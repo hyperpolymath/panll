@@ -25,8 +25,7 @@ const DLC_DIR: &str = "/tmp/panll/dlc-workshop";
 /// Ensure the DLC directory exists, creating it lazily if needed.
 fn ensure_dlc_dir() -> Result<PathBuf, String> {
     let path = PathBuf::from(DLC_DIR);
-    fs::create_dir_all(&path)
-        .map_err(|e| format!("Cannot create DLC directory {DLC_DIR}: {e}"))?;
+    fs::create_dir_all(&path).map_err(|e| format!("Cannot create DLC directory {DLC_DIR}: {e}"))?;
     Ok(path)
 }
 
@@ -35,7 +34,6 @@ fn ensure_dlc_dir() -> Result<PathBuf, String> {
 /// Reads `.puzzle.json` files from the DLC directory and returns their
 /// contents as a JSON array. Currently returns stub data when no puzzles
 /// exist on disk.
-
 pub async fn dlc_load_puzzles() -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
 
@@ -43,7 +41,10 @@ pub async fn dlc_load_puzzles() -> Result<String, String> {
         .map_err(|e| format!("Cannot read DLC directory: {e}"))?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
-            entry.file_name().to_string_lossy().ends_with(".puzzle.json")
+            entry
+                .file_name()
+                .to_string_lossy()
+                .ends_with(".puzzle.json")
         })
         .filter_map(|entry| {
             let content = fs::read_to_string(entry.path()).ok()?;
@@ -58,38 +59,39 @@ pub async fn dlc_load_puzzles() -> Result<String, String> {
         name_a.cmp(name_b)
     });
 
-    serde_json::to_string(&puzzles)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&puzzles).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Save a puzzle to disk.
 ///
 /// Expects a JSON string containing puzzle data with at least an `id` field.
 /// Writes the puzzle to `<DLC_DIR>/<id>.puzzle.json`.
-
 pub async fn dlc_save_puzzle(data: String) -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
 
-    let puzzle: serde_json::Value = serde_json::from_str(&data)
-        .map_err(|e| format!("Invalid puzzle JSON: {e}"))?;
+    let puzzle: serde_json::Value =
+        serde_json::from_str(&data).map_err(|e| format!("Invalid puzzle JSON: {e}"))?;
 
-    let id = puzzle.get("id")
+    let id = puzzle
+        .get("id")
         .and_then(|v| v.as_str())
         .ok_or_else(|| "Puzzle data must contain an 'id' field".to_string())?;
 
     let filename = format!("{id}.puzzle.json");
     let path = dlc_dir.join(&filename);
 
-    fs::write(&path, serde_json::to_string_pretty(&puzzle).unwrap_or_default())
-        .map_err(|e| format!("Cannot write puzzle file: {e}"))?;
+    fs::write(
+        &path,
+        serde_json::to_string_pretty(&puzzle).unwrap_or_default(),
+    )
+    .map_err(|e| format!("Cannot write puzzle file: {e}"))?;
 
     let result = json!({
         "saved": true,
         "id": id,
         "path": path.to_string_lossy(),
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Run the solution test suite for a single puzzle.
@@ -97,7 +99,6 @@ pub async fn dlc_save_puzzle(data: String) -> Result<String, String> {
 /// Looks up the puzzle by ID and simulates running its solution test.
 /// When the real VM test harness is implemented, this will execute the
 /// puzzle's instructions and verify the solution against expected output.
-
 pub async fn dlc_run_test(puzzle_id: String) -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
     let path = dlc_dir.join(format!("{puzzle_id}.puzzle.json"));
@@ -114,8 +115,7 @@ pub async fn dlc_run_test(puzzle_id: String) -> Result<String, String> {
         "output": "All assertions passed",
         "stub": !puzzle_exists,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Run all tests in the DLC pack.
@@ -123,7 +123,6 @@ pub async fn dlc_run_test(puzzle_id: String) -> Result<String, String> {
 /// Iterates over all `.puzzle.json` files and simulates running each test.
 /// Returns aggregate results. When the real VM test harness is implemented,
 /// this will execute each puzzle sequentially and report pass/fail.
-
 pub async fn dlc_run_all_tests() -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
 
@@ -131,7 +130,10 @@ pub async fn dlc_run_all_tests() -> Result<String, String> {
         .map_err(|e| format!("Cannot read DLC directory: {e}"))?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
-            entry.file_name().to_string_lossy().ends_with(".puzzle.json")
+            entry
+                .file_name()
+                .to_string_lossy()
+                .ends_with(".puzzle.json")
         })
         .count();
 
@@ -143,8 +145,7 @@ pub async fn dlc_run_all_tests() -> Result<String, String> {
         "totalTimeMs": puzzle_count as u64 * 42,
         "results": [],
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Browse DLC assets (sprites, sounds, etc.).
@@ -152,7 +153,6 @@ pub async fn dlc_run_all_tests() -> Result<String, String> {
 /// Scans the DLC directory for asset files and returns metadata.
 /// Currently returns stub asset data. When asset management is fully
 /// implemented, this will scan actual sprite/sound directories.
-
 pub async fn dlc_browse_assets() -> Result<String, String> {
     let result = json!({
         "assets": [
@@ -174,8 +174,7 @@ pub async fn dlc_browse_assets() -> Result<String, String> {
         "totalAssets": 2,
         "totalSizeBytes": 32768,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Package the DLC pack for distribution.
@@ -184,14 +183,14 @@ pub async fn dlc_browse_assets() -> Result<String, String> {
 /// Creates a manifest file in the DLC directory. When full packaging is
 /// implemented, this will bundle puzzles and assets into a distributable
 /// archive.
-
 pub async fn dlc_package(data: String) -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
 
-    let meta: serde_json::Value = serde_json::from_str(&data)
-        .map_err(|e| format!("Invalid packaging JSON: {e}"))?;
+    let meta: serde_json::Value =
+        serde_json::from_str(&data).map_err(|e| format!("Invalid packaging JSON: {e}"))?;
 
-    let pack_name = meta.get("name")
+    let pack_name = meta
+        .get("name")
         .and_then(|v| v.as_str())
         .unwrap_or("unnamed-pack");
 
@@ -209,8 +208,11 @@ pub async fn dlc_package(data: String) -> Result<String, String> {
         "format": "idaptik-dlc-v1",
     });
 
-    fs::write(&manifest_path, serde_json::to_string_pretty(&manifest).unwrap_or_default())
-        .map_err(|e| format!("Cannot write pack manifest: {e}"))?;
+    fs::write(
+        &manifest_path,
+        serde_json::to_string_pretty(&manifest).unwrap_or_default(),
+    )
+    .map_err(|e| format!("Cannot write pack manifest: {e}"))?;
 
     let result = json!({
         "packaged": true,
@@ -218,15 +220,13 @@ pub async fn dlc_package(data: String) -> Result<String, String> {
         "manifestPath": manifest_path.to_string_lossy(),
         "stub": true,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Import a puzzle from a file path.
 ///
 /// Reads a JSON puzzle file from the given path and copies it into the
 /// DLC directory. The puzzle must have a valid `id` field.
-
 pub async fn dlc_import_puzzle(path: String) -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
     let source = PathBuf::from(&path);
@@ -235,19 +235,23 @@ pub async fn dlc_import_puzzle(path: String) -> Result<String, String> {
         return Err(format!("Source file not found: {path}"));
     }
 
-    let content = fs::read_to_string(&source)
-        .map_err(|e| format!("Cannot read source file: {e}"))?;
+    let content =
+        fs::read_to_string(&source).map_err(|e| format!("Cannot read source file: {e}"))?;
 
-    let puzzle: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| format!("Invalid puzzle JSON: {e}"))?;
+    let puzzle: serde_json::Value =
+        serde_json::from_str(&content).map_err(|e| format!("Invalid puzzle JSON: {e}"))?;
 
-    let id = puzzle.get("id")
+    let id = puzzle
+        .get("id")
         .and_then(|v| v.as_str())
         .ok_or_else(|| "Imported puzzle must contain an 'id' field".to_string())?;
 
     let dest = dlc_dir.join(format!("{id}.puzzle.json"));
-    fs::write(&dest, serde_json::to_string_pretty(&puzzle).unwrap_or_default())
-        .map_err(|e| format!("Cannot write imported puzzle: {e}"))?;
+    fs::write(
+        &dest,
+        serde_json::to_string_pretty(&puzzle).unwrap_or_default(),
+    )
+    .map_err(|e| format!("Cannot write imported puzzle: {e}"))?;
 
     let result = json!({
         "imported": true,
@@ -255,8 +259,7 @@ pub async fn dlc_import_puzzle(path: String) -> Result<String, String> {
         "sourcePath": path,
         "destPath": dest.to_string_lossy(),
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Export a puzzle to a file.
@@ -264,7 +267,6 @@ pub async fn dlc_import_puzzle(path: String) -> Result<String, String> {
 /// Reads the puzzle by ID from the DLC directory and returns its contents
 /// along with the source path. The frontend can then use Tauri's save
 /// dialog to write the file to the user's chosen location.
-
 pub async fn dlc_export_puzzle(puzzle_id: String) -> Result<String, String> {
     let dlc_dir = ensure_dlc_dir()?;
     let path = dlc_dir.join(format!("{puzzle_id}.puzzle.json"));
@@ -273,11 +275,10 @@ pub async fn dlc_export_puzzle(puzzle_id: String) -> Result<String, String> {
         return Err(format!("Puzzle not found: {puzzle_id}"));
     }
 
-    let content = fs::read_to_string(&path)
-        .map_err(|e| format!("Cannot read puzzle file: {e}"))?;
+    let content = fs::read_to_string(&path).map_err(|e| format!("Cannot read puzzle file: {e}"))?;
 
-    let puzzle: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| format!("Cannot parse puzzle file: {e}"))?;
+    let puzzle: serde_json::Value =
+        serde_json::from_str(&content).map_err(|e| format!("Cannot parse puzzle file: {e}"))?;
 
     let result = json!({
         "exported": true,
@@ -285,8 +286,7 @@ pub async fn dlc_export_puzzle(puzzle_id: String) -> Result<String, String> {
         "sourcePath": path.to_string_lossy(),
         "puzzle": puzzle,
     });
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 #[cfg(test)]
@@ -328,8 +328,7 @@ mod tests {
             // Save the puzzle.
             let save_result = dlc_save_puzzle(puzzle_data.to_string()).await;
             assert!(save_result.is_ok());
-            let save_json: serde_json::Value =
-                serde_json::from_str(&save_result.unwrap()).unwrap();
+            let save_json: serde_json::Value = serde_json::from_str(&save_result.unwrap()).unwrap();
             assert_eq!(save_json["saved"], true);
             assert_eq!(save_json["id"], "test-puzzle-save");
 

@@ -12,8 +12,8 @@
 //! `CLOUDFLARE_API_TOKEN` env var (CLI/CI).
 
 pub mod api;
-pub mod types;
 pub mod commands;
 pub mod config;
 pub mod diff;
 pub mod trustfile;
+pub mod types;

@@ -6,6 +6,6 @@
 //! detects languages, and suggests which PanLL panels to activate.
 //! Panel configs are saved as `.machine_readable/PANELS.a2ml` portfolios.
 
-pub mod types;
-pub mod scanner;
 pub mod commands;
+pub mod scanner;
+pub mod types;

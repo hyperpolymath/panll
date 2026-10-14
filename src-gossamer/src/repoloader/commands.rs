@@ -40,8 +40,7 @@ fn load_recent() -> RecentReposFile {
 fn save_recent(recent: &RecentReposFile) -> Result<(), String> {
     let path = recent_repos_path()?;
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("Cannot create config directory: {e}"))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Cannot create config directory: {e}"))?;
     }
     let json = serde_json::to_string_pretty(recent)
         .map_err(|e| format!("Cannot serialise recent repos: {e}"))?;
@@ -80,7 +79,6 @@ fn update_recent(repo_path: &str, repo_name: &str) -> Result<(), String> {
 ///
 /// If the repo has a `.machine_readable/PANELS.a2ml`, parses it and returns
 /// the saved config. Otherwise, generates fresh suggestions from scan data.
-
 pub async fn repoloader_scan(repo_path: String) -> Result<String, String> {
     let path = PathBuf::from(&repo_path);
     let repo = scanner::scan_repo(&path)?;
@@ -119,7 +117,6 @@ pub async fn repoloader_scan(repo_path: String) -> Result<String, String> {
 /// Save panel configuration to `.machine_readable/PANELS.a2ml`.
 ///
 /// Takes the repo path and a JSON array of panel entries.
-
 pub async fn repoloader_save_panels(
     repo_path: String,
     panels_json: String,
@@ -128,12 +125,11 @@ pub async fn repoloader_save_panels(
     let mr_dir = path.join(".machine_readable");
 
     // Ensure .machine_readable/ exists.
-    fs::create_dir_all(&mr_dir)
-        .map_err(|e| format!("Cannot create .machine_readable/: {e}"))?;
+    fs::create_dir_all(&mr_dir).map_err(|e| format!("Cannot create .machine_readable/: {e}"))?;
 
     // Parse the panels from JSON.
-    let panels: Vec<PanelEntry> = serde_json::from_str(&panels_json)
-        .map_err(|e| format!("Cannot parse panels JSON: {e}"))?;
+    let panels: Vec<PanelEntry> =
+        serde_json::from_str(&panels_json).map_err(|e| format!("Cannot parse panels JSON: {e}"))?;
 
     let repo_name = path
         .file_name()
@@ -158,15 +154,11 @@ pub async fn repoloader_save_panels(
     }
     output.push_str("  )\n");
     output.push_str("  (portfolio\n");
-    output.push_str(&format!(
-        "    (name \"{} Development\")\n",
-        repo_name
-    ));
+    output.push_str(&format!("    (name \"{} Development\")\n", repo_name));
     output.push_str("    (isolation \"native\")))\n");
 
     let panels_path = mr_dir.join("PANELS.a2ml");
-    fs::write(&panels_path, &output)
-        .map_err(|e| format!("Cannot write PANELS.a2ml: {e}"))?;
+    fs::write(&panels_path, &output).map_err(|e| format!("Cannot write PANELS.a2ml: {e}"))?;
 
     Ok(serde_json::json!({
         "saved": true,
@@ -177,7 +169,6 @@ pub async fn repoloader_save_panels(
 }
 
 /// List recently loaded repositories.
-
 pub async fn repoloader_list_recent() -> Result<String, String> {
     let recent = load_recent();
     serde_json::to_string(&recent).map_err(|e| format!("Serialisation error: {e}"))
@@ -186,7 +177,6 @@ pub async fn repoloader_list_recent() -> Result<String, String> {
 /// Search the git-private-farm manifest for repos matching a query.
 ///
 /// Searches repo names and descriptions (case-insensitive substring match).
-
 pub async fn repoloader_search_farm(query: String) -> Result<String, String> {
     let home = dirs::home_dir().ok_or("Cannot determine home directory")?;
     let manifest_path = home.join(".git-private-farm").join("farm-manifest.json");
@@ -198,8 +188,8 @@ pub async fn repoloader_search_farm(query: String) -> Result<String, String> {
     let content = fs::read_to_string(&manifest_path)
         .map_err(|e| format!("Cannot read farm manifest: {e}"))?;
 
-    let manifest: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| format!("Cannot parse farm manifest: {e}"))?;
+    let manifest: serde_json::Value =
+        serde_json::from_str(&content).map_err(|e| format!("Cannot parse farm manifest: {e}"))?;
 
     let query_lower = query.to_lowercase();
     let mut results: Vec<serde_json::Value> = Vec::new();

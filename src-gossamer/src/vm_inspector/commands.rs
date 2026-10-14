@@ -123,8 +123,7 @@ fn state_to_json(vm: &VmState) -> Result<String, String> {
         "history_len": vm.history.len(),
         "channels": vm.channels,
     });
-    serde_json::to_string(&payload)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&payload).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Capture a pre-execution snapshot and push it onto the history ring buffer.
@@ -471,7 +470,6 @@ fn execute_one(vm: &mut VmState) -> Result<(), String> {
 
 /// Read the current VM state. Returns JSON with pc, stack, memory, running
 /// status, instruction list, step counts, and history length.
-
 pub async fn vm_inspector_read_state() -> Result<String, String> {
     let vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
     state_to_json(&vm)
@@ -479,7 +477,6 @@ pub async fn vm_inspector_read_state() -> Result<String, String> {
 
 /// Execute one instruction forward. Captures a snapshot before execution
 /// so that `step_backward` can restore it.
-
 pub async fn vm_inspector_step_forward() -> Result<String, String> {
     let mut vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
     capture_snapshot(&mut vm);
@@ -489,10 +486,11 @@ pub async fn vm_inspector_step_forward() -> Result<String, String> {
 
 /// Reverse one instruction by restoring the most recent snapshot from
 /// the history ring buffer.
-
 pub async fn vm_inspector_step_backward() -> Result<String, String> {
     let mut vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
-    let snap = vm.history.pop_back()
+    let snap = vm
+        .history
+        .pop_back()
         .ok_or_else(|| "No history to reverse".to_string())?;
     vm.pc = snap.pc;
     vm.stack = snap.stack;
@@ -506,7 +504,6 @@ pub async fn vm_inspector_step_backward() -> Result<String, String> {
 /// Run the VM until end of program or error (simulates hitting a
 /// breakpoint). Executes up to 100,000 instructions to prevent
 /// infinite loops.
-
 pub async fn vm_inspector_run() -> Result<String, String> {
     let mut vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
     vm.running = true;
@@ -539,7 +536,6 @@ pub async fn vm_inspector_run() -> Result<String, String> {
 /// JLE, LOOP, CALL, SEND, RECV.
 ///
 /// Returns a JSON array of `Instruction` objects with tier assignments.
-
 pub async fn vm_inspector_load_program(assembly: String) -> Result<String, String> {
     let mut instructions = Vec::new();
 
@@ -561,10 +557,31 @@ pub async fn vm_inspector_load_program(assembly: String) -> Result<String, Strin
         // Validate mnemonic.
         let valid = matches!(
             mnemonic.as_str(),
-            "ADD" | "SUB" | "PUSH" | "POP" | "LOAD" | "STORE" | "SWAP"
-            | "NEGATE" | "NOOP" | "XOR" | "FLIP" | "ROL" | "ROR"
-            | "AND" | "OR" | "MUL" | "DIV" | "IF_ZERO" | "IF_POS"
-            | "JNZ" | "JLE" | "LOOP" | "CALL" | "SEND" | "RECV"
+            "ADD"
+                | "SUB"
+                | "PUSH"
+                | "POP"
+                | "LOAD"
+                | "STORE"
+                | "SWAP"
+                | "NEGATE"
+                | "NOOP"
+                | "XOR"
+                | "FLIP"
+                | "ROL"
+                | "ROR"
+                | "AND"
+                | "OR"
+                | "MUL"
+                | "DIV"
+                | "IF_ZERO"
+                | "IF_POS"
+                | "JNZ"
+                | "JLE"
+                | "LOOP"
+                | "CALL"
+                | "SEND"
+                | "RECV"
         );
         if !valid {
             return Err(format!(
@@ -598,28 +615,23 @@ pub async fn vm_inspector_load_program(assembly: String) -> Result<String, Strin
         ..VmState::default()
     };
 
-    serde_json::to_string(&instructions)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&instructions).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Export the full current VM state as JSON, including the complete
 /// history buffer.
-
 pub async fn vm_inspector_export_snapshot() -> Result<String, String> {
     let vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
-    serde_json::to_string(&*vm)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&*vm).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Read VM state from a JSON file on disk. Parses the file as a
 /// `VmState` and loads it into the global VM, replacing the current
 /// state entirely.
-
 pub async fn vm_inspector_read_file(path: String) -> Result<String, String> {
-    let content = fs::read_to_string(&path)
-        .map_err(|e| format!("Cannot read '{}': {e}", path))?;
-    let loaded: VmState = serde_json::from_str(&content)
-        .map_err(|e| format!("Cannot parse VM state: {e}"))?;
+    let content = fs::read_to_string(&path).map_err(|e| format!("Cannot read '{}': {e}", path))?;
+    let loaded: VmState =
+        serde_json::from_str(&content).map_err(|e| format!("Cannot parse VM state: {e}"))?;
 
     let mut vm = VM.lock().map_err(|e| format!("Lock poisoned: {e}"))?;
     *vm = loaded;
@@ -832,11 +844,11 @@ mod tests {
         let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
-            instr_op("PUSH", 99),   // value to store
-            instr_op("PUSH", 10),   // address
-            instr("STORE"),         // mem[10] = 99
-            instr_op("PUSH", 10),   // address to load
-            instr("LOAD"),          // push mem[10] → 99
+            instr_op("PUSH", 99), // value to store
+            instr_op("PUSH", 10), // address
+            instr("STORE"),       // mem[10] = 99
+            instr_op("PUSH", 10), // address to load
+            instr("LOAD"),        // push mem[10] → 99
         ]);
         {
             let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
@@ -917,10 +929,10 @@ mod tests {
         let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
-            instr_op("PUSH", 5),  // tier 0
-            instr_op("PUSH", 3),  // tier 0
-            instr("ADD"),         // tier 1
-            instr("NOOP"),        // tier 3
+            instr_op("PUSH", 5), // tier 0
+            instr_op("PUSH", 3), // tier 0
+            instr("ADD"),        // tier 1
+            instr("NOOP"),       // tier 3
         ]);
         {
             let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
@@ -1003,11 +1015,7 @@ mod tests {
     fn test_mul() {
         let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
-        load_instructions(vec![
-            instr_op("PUSH", 6),
-            instr_op("PUSH", 7),
-            instr("MUL"),
-        ]);
+        load_instructions(vec![instr_op("PUSH", 6), instr_op("PUSH", 7), instr("MUL")]);
         {
             let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
             for _ in 0..3 {
@@ -1039,10 +1047,10 @@ mod tests {
         reset_vm();
         // PUSH 1, JNZ 4, PUSH 99, NOOP, PUSH 42
         load_instructions(vec![
-            instr_op("PUSH", 1),   // 0: push 1
-            instr_op("JNZ", 3),    // 1: TOS=1 != 0, jump to 3
-            instr_op("PUSH", 99),  // 2: should be skipped
-            instr_op("PUSH", 42),  // 3: lands here
+            instr_op("PUSH", 1),  // 0: push 1
+            instr_op("JNZ", 3),   // 1: TOS=1 != 0, jump to 3
+            instr_op("PUSH", 99), // 2: should be skipped
+            instr_op("PUSH", 42), // 3: lands here
         ]);
         {
             let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
@@ -1060,10 +1068,10 @@ mod tests {
         let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         load_instructions(vec![
-            instr_op("PUSH", 0),   // 0: push 0
-            instr_op("JNZ", 3),    // 1: TOS=0, no jump
-            instr_op("PUSH", 99),  // 2: executed
-            instr_op("PUSH", 42),  // 3: also executed
+            instr_op("PUSH", 0),  // 0: push 0
+            instr_op("JNZ", 3),   // 1: TOS=0, no jump
+            instr_op("PUSH", 99), // 2: executed
+            instr_op("PUSH", 42), // 3: also executed
         ]);
         {
             let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
@@ -1085,8 +1093,8 @@ mod tests {
             instr_op("PUSH", 5),
             instr_op("PUSH", 3),
             instr_op("JLE", 4),
-            instr_op("PUSH", 99),  // 3: skipped
-            instr_op("PUSH", 42),  // 4: lands here
+            instr_op("PUSH", 99), // 3: skipped
+            instr_op("PUSH", 42), // 4: lands here
         ]);
         {
             let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
@@ -1104,16 +1112,18 @@ mod tests {
         reset_vm();
         // PUSH 3, LOOP back to 1 → decrements 3→2→1→0, pops on 0
         load_instructions(vec![
-            instr_op("PUSH", 3),  // 0: counter = 3
-            instr_op("LOOP", 1),  // 1: decrement, loop if > 0
-            instr("NOOP"),        // 2: after loop
+            instr_op("PUSH", 3), // 0: counter = 3
+            instr_op("LOOP", 1), // 1: decrement, loop if > 0
+            instr("NOOP"),       // 2: after loop
         ]);
         {
             let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
             // Execute: PUSH(3), LOOP(3→2, jump), LOOP(2→1, jump), LOOP(1→0, pop), NOOP
             for _ in 0..5 {
                 capture_snapshot(&mut vm);
-                if execute_one(&mut vm).is_err() { break; }
+                if execute_one(&mut vm).is_err() {
+                    break;
+                }
             }
             // Counter was popped when it reached 0.
             assert!(vm.stack.is_empty());
@@ -1146,11 +1156,7 @@ mod tests {
         let _guard = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         reset_vm();
         // PUSH 77, SEND, RECV — should round-trip through channel.
-        load_instructions(vec![
-            instr_op("PUSH", 77),
-            instr("SEND"),
-            instr("RECV"),
-        ]);
+        load_instructions(vec![instr_op("PUSH", 77), instr("SEND"), instr("RECV")]);
         {
             let mut vm = VM.lock().unwrap_or_else(|e| e.into_inner());
             for _ in 0..3 {

@@ -39,14 +39,10 @@ fn collect_a2ml_files(dir: &Path, results: &mut Vec<String>, root: &Path) {
                 // non-source directories to keep discovery fast.
                 let name = entry.file_name();
                 let name_str = name.to_string_lossy();
-                if name_str == ".machine_readable"
-                    || name_str == "panel-clades"
-                    || name_str == "layouts"
-                    || name_str == "src"
-                    || name_str == "docs"
-                {
-                    collect_a2ml_files(&path, results, root);
-                } else if !name_str.starts_with('.') && name_str != "node_modules" && name_str != "target" && name_str != "lib" {
+                let skip = name_str != ".machine_readable"
+                    && (name_str.starts_with('.')
+                        || matches!(name_str.as_ref(), "node_modules" | "target" | "lib"));
+                if !skip {
                     collect_a2ml_files(&path, results, root);
                 }
             } else if let Some(ext) = path.extension() {
@@ -66,7 +62,6 @@ fn collect_a2ml_files(dir: &Path, results: &mut Vec<String>, root: &Path) {
 ///
 /// Returns the file content as a JSON object with `path` and `content` fields.
 /// The ReScript A2mlEngine handles the actual parsing.
-
 pub fn a2ml_load_manifest(path: String) -> Result<String, String> {
     let file_path = if Path::new(&path).is_absolute() {
         PathBuf::from(&path)
@@ -100,7 +95,6 @@ pub fn a2ml_load_manifest(path: String) -> Result<String, String> {
 ///   - File contains recognisable A2ML markers (sections, S-expressions, or headers)
 ///
 /// Returns a JSON object with `valid`, `errors`, and `warnings` fields.
-
 pub fn a2ml_validate(path: String) -> Result<String, String> {
     let file_path = if Path::new(&path).is_absolute() {
         PathBuf::from(&path)
@@ -152,7 +146,9 @@ pub fn a2ml_validate(path: String) -> Result<String, String> {
     let has_spdx = trimmed.contains("SPDX-License-Identifier");
 
     if !has_sexpr && !has_sections && !has_dividers {
-        warnings.push("No recognisable A2ML structure (S-expressions, sections, or headers)".to_string());
+        warnings.push(
+            "No recognisable A2ML structure (S-expressions, sections, or headers)".to_string(),
+        );
     }
 
     if !has_spdx {
@@ -185,7 +181,6 @@ pub fn a2ml_validate(path: String) -> Result<String, String> {
 /// Recursively searches the repository tree (excluding `node_modules`, `target`,
 /// `lib`, and hidden directories other than `.machine_readable`). Returns a
 /// JSON array of relative file paths.
-
 pub fn a2ml_list() -> Result<String, String> {
     let root = find_repo_root()?;
     let mut files: Vec<String> = Vec::new();
@@ -213,10 +208,10 @@ mod tests {
     fn test_find_repo_root_from_subdir() {
         // This test will work when run from within the PanLL repo
         let result = find_repo_root();
-        // Should succeed or fail gracefully — we just check it doesn't panic
-        match result {
-            Ok(path) => assert!(path.exists()),
-            Err(_) => {} // OK if not in a repo context
+        // Should succeed or fail gracefully — we just check it doesn't panic.
+        // An Err is fine when not in a repo context.
+        if let Ok(path) = result {
+            assert!(path.exists());
         }
     }
 

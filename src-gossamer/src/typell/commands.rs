@@ -54,28 +54,28 @@ fn post(path: &str, body: serde_json::Value, timeout_secs: u64) -> Result<String
 }
 
 /// GET /health — TypeLL server health check.
-
 pub fn typell_health() -> Result<String, String> {
     get("/health", 5)
 }
 
 /// POST /check — type-check a term or expression.
-
 pub fn typell_check(expression: String, context: Option<String>) -> Result<String, String> {
     let ctx: serde_json::Value = context
         .and_then(|c| serde_json::from_str(&c).ok())
         .unwrap_or(json!({}));
-    post("/check", json!({"expression": expression, "context": ctx}), 30)
+    post(
+        "/check",
+        json!({"expression": expression, "context": ctx}),
+        30,
+    )
 }
 
 /// POST /infer — infer the type of an expression.
-
 pub fn typell_infer(expression: String) -> Result<String, String> {
     post("/infer", json!({"expression": expression}), 30)
 }
 
 /// POST /refine — apply refinement types to a specification.
-
 pub fn typell_refine(spec: String, constraints: Option<String>) -> Result<String, String> {
     let cons: serde_json::Value = constraints
         .and_then(|c| serde_json::from_str(&c).ok())
@@ -84,19 +84,16 @@ pub fn typell_refine(spec: String, constraints: Option<String>) -> Result<String
 }
 
 /// POST /compute — evaluate a type-level computation.
-
 pub fn typell_compute(term: String) -> Result<String, String> {
     post("/compute", json!({"term": term}), 30)
 }
 
 /// GET /signatures — list available type signatures.
-
 pub fn typell_list_signatures() -> Result<String, String> {
     get("/signatures", 10)
 }
 
 /// GET /universes — get type universe hierarchy.
-
 pub fn typell_universes() -> Result<String, String> {
     get("/universes", 10)
 }

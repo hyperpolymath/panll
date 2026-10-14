@@ -141,7 +141,8 @@ mod tests {
             visible: true,
         };
         let json = serde_json::to_string(&pos).expect("PanelPosition must serialise");
-        let back: PanelPosition = serde_json::from_str(&json).expect("PanelPosition must deserialise");
+        let back: PanelPosition =
+            serde_json::from_str(&json).expect("PanelPosition must deserialise");
         assert_eq!(back.panel_id, "panel-l");
         assert!(back.visible);
         assert!(back.width > 0.0);
@@ -192,9 +193,18 @@ mod tests {
             disk_used: 100_000_000_000,
             uptime_seconds: 86400,
         };
-        assert!(info.memory_used <= info.memory_total, "used memory must not exceed total");
-        assert!(info.disk_used <= info.disk_total, "used disk must not exceed total");
-        assert!(info.cpu_usage >= 0.0 && info.cpu_usage <= 100.0, "CPU must be in [0,100]");
+        assert!(
+            info.memory_used <= info.memory_total,
+            "used memory must not exceed total"
+        );
+        assert!(
+            info.disk_used <= info.disk_total,
+            "used disk must not exceed total"
+        );
+        assert!(
+            info.cpu_usage >= 0.0 && info.cpu_usage <= 100.0,
+            "CPU must be in [0,100]"
+        );
     }
 
     #[test]
@@ -202,13 +212,21 @@ mod tests {
         let group = PanelGroup {
             id: "grp-001".to_string(),
             name: "Dev Tools".to_string(),
-            panel_ids: vec!["panel-l".to_string(), "panel-n".to_string(), "panel-w".to_string()],
+            panel_ids: vec![
+                "panel-l".to_string(),
+                "panel-n".to_string(),
+                "panel-w".to_string(),
+            ],
             locked: false,
             visible: true,
             z_index: 0,
             shared_with: vec![],
         };
         let ids: std::collections::HashSet<_> = group.panel_ids.iter().collect();
-        assert_eq!(ids.len(), group.panel_ids.len(), "panel IDs in group must be unique");
+        assert_eq!(
+            ids.len(),
+            group.panel_ids.len(),
+            "panel IDs in group must be unique"
+        );
     }
 }

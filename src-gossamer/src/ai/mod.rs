@@ -12,7 +12,7 @@
 //!   - `context.rs`: System prompt assembly from repo SCM files, panels, VoiceTags
 //!   - `commands.rs`: Tauri command handlers exposed to the ReScript frontend
 
-pub mod types;
-pub mod providers;
-pub mod context;
 pub mod commands;
+pub mod context;
+pub mod providers;
+pub mod types;

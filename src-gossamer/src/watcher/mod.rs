@@ -17,5 +17,5 @@
 //! The watcher is debounced (500ms) to avoid flooding the TEA loop with
 //! rapid successive events from editors that write-then-rename.
 
-pub mod types;
 pub mod commands;
+pub mod types;

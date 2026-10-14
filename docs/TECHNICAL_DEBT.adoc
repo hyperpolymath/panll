@@ -156,8 +156,12 @@ bridge), done first. |Medium
 [arabic]
 . *Pilot (F2):* finish `+coprocessor+` IPC registration → builds the
 reusable async→sync `+block_on+` bridge for `+app.command+`.
-. *Census:* declare all 38 modules; `+cargo check+` each; record which
-compile clean vs. bit-rotted (never compiled — expect API drift).
+. *Census:* ✅ done 2026-10-14. All 43 orphaned modules (38 directories
+plus `+boj_live+`, `+compat+`, `+echidna_live+`, `+error+`,
+`+verisim_live+`) are declared in `+lib.rs+`. None needed
+`+gossamer_rs+`; all compiled with no API drift. Clippy/rustfmt fixes
+applied and Tauri leftovers removed. `+cargo test --lib+`: 285 passing
+(was 23). Handlers are still *not registered* in `+register_commands+`.
 . *Bulk wire* in dependency/risk order using the proven pattern;
 de-Tauri as we go; cross-check command names against the ReScript
 frontend `+invoke()+` contract so we wire what the UI actually calls.
@@ -171,8 +175,10 @@ Original debt items:         5  (D1–D5)
 Resolved:                     5  (all — 2026-05-17)
 Follow-up debt opened:        3  (F1–F3, see above)
 Build status:                 cargo check / clippy green; bin link needs GTK env
-Clippy -D warnings:           clean (0, all targets)
-Lib tests:                    23 passing (cargo test --lib, GTK-free)
+Clippy -D warnings:           clean (0, all targets, default features)
+Lib tests:                    285 passing (cargo test --lib, GTK-free; 2026-10-14)
+F1 census:                    done — 43 modules compile in the lib; 36 IPC
+                              commands registered, rest pending
 ....
 
 === Success Criteria

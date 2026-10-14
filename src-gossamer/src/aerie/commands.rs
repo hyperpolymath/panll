@@ -9,15 +9,14 @@
 //! These run in-process (no external service needed) using std::net for
 //! latency and reqwest for download throughput measurement.
 
+use serde_json::json;
 use std::net::TcpStream;
 use std::time::Instant;
-use serde_json::json;
 
 /// Default target for latency probes. Override with AERIE_LATENCY_TARGET env var.
 /// Format: "host:port".
 fn latency_target() -> String {
-    std::env::var("AERIE_LATENCY_TARGET")
-        .unwrap_or_else(|_| "1.1.1.1:443".to_string())
+    std::env::var("AERIE_LATENCY_TARGET").unwrap_or_else(|_| "1.1.1.1:443".to_string())
 }
 
 /// Default URL for speed test downloads. Override with AERIE_SPEED_URL env var.
@@ -37,7 +36,6 @@ fn speed_test_url() -> String {
 /// runtime for too long. For a truly non-blocking version, this would need
 /// tokio::net::TcpStream, but the timeout keeps it safe enough for a panel
 /// probe that runs on user action.
-
 pub async fn aerie_get_latency() -> Result<String, String> {
     let target = latency_target();
     let addr: std::net::SocketAddr = target
@@ -55,15 +53,13 @@ pub async fn aerie_get_latency() -> Result<String, String> {
             })
             .to_string())
         }
-        Err(e) => {
-            Ok(json!({
-                "latency_ms": null,
-                "target": target,
-                "status": "unreachable",
-                "error": format!("{e}"),
-            })
-            .to_string())
-        }
+        Err(e) => Ok(json!({
+            "latency_ms": null,
+            "target": target,
+            "status": "unreachable",
+            "error": format!("{e}"),
+        })
+        .to_string()),
     }
 }
 
@@ -72,7 +68,6 @@ pub async fn aerie_get_latency() -> Result<String, String> {
 /// Downloads a 1 MB payload from the configured URL and measures throughput.
 /// Returns JSON with `speed_mbps`, `bytes_downloaded`, `duration_ms`, and
 /// `status` fields. On failure, returns `status: "failed"` with the error.
-
 pub async fn aerie_speed_test() -> Result<String, String> {
     let url = speed_test_url();
     let client = reqwest::Client::builder()
@@ -83,7 +78,10 @@ pub async fn aerie_speed_test() -> Result<String, String> {
     let start = Instant::now();
     match client.get(&url).send().await {
         Ok(resp) => {
-            let bytes = resp.bytes().await.map_err(|e| format!("Download error: {e}"))?;
+            let bytes = resp
+                .bytes()
+                .await
+                .map_err(|e| format!("Download error: {e}"))?;
             let elapsed = start.elapsed();
             let bytes_count = bytes.len() as f64;
             let duration_secs = elapsed.as_secs_f64();
@@ -99,17 +97,15 @@ pub async fn aerie_speed_test() -> Result<String, String> {
             })
             .to_string())
         }
-        Err(e) => {
-            Ok(json!({
-                "speed_mbps": null,
-                "bytes_downloaded": 0,
-                "duration_ms": 0,
-                "url": url,
-                "status": "failed",
-                "error": format!("{e}"),
-            })
-            .to_string())
-        }
+        Err(e) => Ok(json!({
+            "speed_mbps": null,
+            "bytes_downloaded": 0,
+            "duration_ms": 0,
+            "url": url,
+            "status": "failed",
+            "error": format!("{e}"),
+        })
+        .to_string()),
     }
 }
 

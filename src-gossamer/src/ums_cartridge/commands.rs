@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 //
-// commands.rs — Tauri IPC commands for the UMS BoJ cartridge proxy.
+// commands.rs — IPC commands for the UMS BoJ cartridge proxy.
 //
 // Author: Jonathan D.A. Jewell
 //
@@ -12,9 +12,9 @@
 // ## Architecture
 //
 // The validation logic is implemented as standalone functions (not tied to
-// Tauri) so that unit tests can call them directly without an async runtime
-// where possible. The Tauri `#[tauri::command]` wrappers are thin shells
-// around these core functions.
+// the IPC layer) so that unit tests can call them directly without an async
+// runtime where possible. The IPC command handlers are thin shells around
+// these core functions.
 //
 // ## Shared bridge directory
 //
@@ -346,7 +346,7 @@ fn check_devices_exist(level: &LevelData) -> (bool, Vec<String>) {
 
 /// Run all five validation checks and produce a composite result.
 ///
-/// This is the core validation function, usable without Tauri. It mirrors
+/// This is the core validation function, usable without the IPC layer. It mirrors
 /// `validate.validateLevel` in the Zig FFI and the `ValidatedLevel` record
 /// in `src/abi/Validation.idr`.
 ///
@@ -383,7 +383,7 @@ pub fn validate_level_data(level: &LevelData) -> ValidationResult {
 }
 
 // ---------------------------------------------------------------------------
-// Tauri commands — CartridgeAbi tool handlers for BoJ ums-mcp routing
+// IPC commands — CartridgeAbi tool handlers for BoJ ums-mcp routing
 // ---------------------------------------------------------------------------
 
 /// Run the five ABI proof checks on level data JSON.
@@ -406,7 +406,6 @@ pub fn validate_level_data(level: &LevelData) -> ValidationResult {
 /// # Returns
 ///
 /// JSON string containing the `ValidationResult`, or an error if parsing fails.
-
 pub async fn ums_cartridge_validate(level: String) -> Result<String, String> {
     let level_data: LevelData = serde_json::from_str(&level)
         .map_err(|e| format!("Failed to parse level data for validation: {e}"))?;
@@ -426,8 +425,7 @@ pub async fn ums_cartridge_validate(level: String) -> Result<String, String> {
         "source": "ums-cartridge",
     });
 
-    serde_json::to_string(&output)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&output).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Load level JSON from the shared bridge directory.
@@ -443,7 +441,6 @@ pub async fn ums_cartridge_validate(level: String) -> Result<String, String> {
 /// # Returns
 ///
 /// The level JSON as a string, or an error if the file cannot be read.
-
 pub async fn ums_cartridge_load_level(name: String) -> Result<String, String> {
     let file_path = if std::path::Path::new(&name).is_absolute() {
         PathBuf::from(&name)
@@ -477,12 +474,11 @@ pub async fn ums_cartridge_load_level(name: String) -> Result<String, String> {
 /// # Returns
 ///
 /// JSON object with `saved: true` and the file path, or an error.
-
 pub async fn ums_cartridge_save_level(level: String) -> Result<String, String> {
     let dir = ensure_bridge_dir()?;
 
-    let parsed: Value = serde_json::from_str(&level)
-        .map_err(|e| format!("Failed to parse level JSON: {e}"))?;
+    let parsed: Value =
+        serde_json::from_str(&level).map_err(|e| format!("Failed to parse level JSON: {e}"))?;
 
     let name = parsed
         .get("name")
@@ -494,8 +490,7 @@ pub async fn ums_cartridge_save_level(level: String) -> Result<String, String> {
     let pretty = serde_json::to_string_pretty(&parsed)
         .map_err(|e| format!("Failed to serialise level: {e}"))?;
 
-    fs::write(&file_path, &pretty)
-        .map_err(|e| format!("Failed to write level file: {e}"))?;
+    fs::write(&file_path, &pretty).map_err(|e| format!("Failed to write level file: {e}"))?;
 
     let result = json!({
         "saved": true,
@@ -504,8 +499,7 @@ pub async fn ums_cartridge_save_level(level: String) -> Result<String, String> {
         "savedAt": now_ts().to_string(),
     });
 
-    serde_json::to_string(&result)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&result).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// List available levels in the shared bridge directory.
@@ -516,7 +510,6 @@ pub async fn ums_cartridge_save_level(level: String) -> Result<String, String> {
 /// # Returns
 ///
 /// JSON array of `{ name, path }` objects, or an error.
-
 pub async fn ums_cartridge_list_levels() -> Result<String, String> {
     let dir = ensure_bridge_dir()?;
 
@@ -537,8 +530,7 @@ pub async fn ums_cartridge_list_levels() -> Result<String, String> {
         })
         .collect();
 
-    serde_json::to_string(&entries)
-        .map_err(|e| format!("Serialisation error: {e}"))
+    serde_json::to_string(&entries).map_err(|e| format!("Serialisation error: {e}"))
 }
 
 /// Generate a ReScript LevelConfig from level data.
@@ -554,7 +546,6 @@ pub async fn ums_cartridge_list_levels() -> Result<String, String> {
 /// # Returns
 ///
 /// ReScript source code as a string, or an error if parsing fails.
-
 pub async fn ums_cartridge_export_config(level: String) -> Result<String, String> {
     let level_data: LevelData = serde_json::from_str(&level)
         .map_err(|e| format!("Failed to parse level for export: {e}"))?;
@@ -571,18 +562,9 @@ pub async fn ums_cartridge_export_config(level: String) -> Result<String, String
 
     out.push_str(&format!("let levelConfig_{safe_name} = {{\n"));
     out.push_str(&format!("  name: \"{}\",\n", level_data.name));
-    out.push_str(&format!(
-        "  deviceCount: {},\n",
-        level_data.devices.len()
-    ));
-    out.push_str(&format!(
-        "  zoneCount: {},\n",
-        level_data.zones.len()
-    ));
-    out.push_str(&format!(
-        "  guardCount: {},\n",
-        level_data.guards.len()
-    ));
+    out.push_str(&format!("  deviceCount: {},\n", level_data.devices.len()));
+    out.push_str(&format!("  zoneCount: {},\n", level_data.zones.len()));
+    out.push_str(&format!("  guardCount: {},\n", level_data.guards.len()));
     out.push_str(&format!("  hasPbx: {},\n", level_data.has_pbx));
 
     // Embed device IPs for quick reference.
@@ -716,11 +698,17 @@ mod tests {
 
         assert!(result.valid, "Valid level should pass all checks");
         assert!(result.guards_in_zones, "GuardsInZones should pass");
-        assert!(result.defence_targets_valid, "DefenceTargetsValid should pass");
+        assert!(
+            result.defence_targets_valid,
+            "DefenceTargetsValid should pass"
+        );
         assert!(result.zones_ordered, "ZonesOrdered should pass");
         assert!(result.pbx_consistent, "PBXConsistent should pass");
         assert!(result.devices_exist, "DevicesExist should pass");
-        assert!(result.errors.is_empty(), "No errors expected for valid level");
+        assert!(
+            result.errors.is_empty(),
+            "No errors expected for valid level"
+        );
     }
 
     #[test]
@@ -733,7 +721,10 @@ mod tests {
 
         let result = validate_level_data(&level);
 
-        assert!(!result.valid, "Should fail with invalid guard zone reference");
+        assert!(
+            !result.valid,
+            "Should fail with invalid guard zone reference"
+        );
         assert!(!result.guards_in_zones, "GuardsInZones should fail");
         assert!(
             result.errors.iter().any(|e| e.contains("phantom_zone")),
@@ -765,7 +756,10 @@ mod tests {
         assert!(!result.valid, "Should fail with unordered transitions");
         assert!(!result.zones_ordered, "ZonesOrdered should fail");
         assert!(
-            result.errors.iter().any(|e| e.contains("not monotonically ordered")),
+            result
+                .errors
+                .iter()
+                .any(|e| e.contains("not monotonically ordered")),
             "Error should describe the ordering violation"
         );
     }
@@ -809,7 +803,10 @@ mod tests {
         level.pbx_ip = Some("10.0.0.99".to_string()); // Not in registry, but PBX is off.
 
         let result = validate_level_data(&level);
-        assert!(result.pbx_consistent, "PBX check should pass when PBX is disabled");
+        assert!(
+            result.pbx_consistent,
+            "PBX check should pass when PBX is disabled"
+        );
     }
 
     #[test]
@@ -876,8 +873,14 @@ mod tests {
 
         // Break zones_ordered.
         level.zone_transitions = vec![
-            ZoneTransition { world_x: 999.0, target_zone: "server_room".to_string() },
-            ZoneTransition { world_x: 1.0, target_zone: "lobby".to_string() },
+            ZoneTransition {
+                world_x: 999.0,
+                target_zone: "server_room".to_string(),
+            },
+            ZoneTransition {
+                world_x: 1.0,
+                target_zone: "lobby".to_string(),
+            },
         ];
 
         // Break pbx_consistent.
@@ -893,7 +896,7 @@ mod tests {
         assert!(result.errors.len() >= 3, "Should have at least 3 errors");
     }
 
-    // -- Tauri command integration tests (async) ---------------------------
+    // -- IPC command integration tests (async) -----------------------------
 
     #[test]
     fn test_ums_cartridge_validate_valid_level() {
@@ -939,8 +942,7 @@ mod tests {
             assert_eq!(save_parsed["name"], "cartridge_test_level");
 
             // Load it back.
-            let load_result =
-                ums_cartridge_load_level("cartridge_test_level".to_string()).await;
+            let load_result = ums_cartridge_load_level("cartridge_test_level".to_string()).await;
             assert!(load_result.is_ok(), "Load should succeed after save");
 
             let loaded: LevelData = serde_json::from_str(&load_result.unwrap()).unwrap();
@@ -955,8 +957,7 @@ mod tests {
     #[test]
     fn test_load_level_not_found() {
         rt().block_on(async {
-            let result =
-                ums_cartridge_load_level("nonexistent_level_12345".to_string()).await;
+            let result = ums_cartridge_load_level("nonexistent_level_12345".to_string()).await;
             assert!(result.is_err(), "Should fail for missing level");
             assert!(result.unwrap_err().contains("Level not found"));
         });
@@ -987,12 +988,15 @@ mod tests {
                 entries.len()
             );
 
-            let names: Vec<&str> = entries
-                .iter()
-                .filter_map(|e| e["name"].as_str())
-                .collect();
-            assert!(names.contains(&"list_test_alpha"), "Should find list_test_alpha");
-            assert!(names.contains(&"list_test_bravo"), "Should find list_test_bravo");
+            let names: Vec<&str> = entries.iter().filter_map(|e| e["name"].as_str()).collect();
+            assert!(
+                names.contains(&"list_test_alpha"),
+                "Should find list_test_alpha"
+            );
+            assert!(
+                names.contains(&"list_test_bravo"),
+                "Should find list_test_bravo"
+            );
 
             cleanup_bridge_level("list_test_alpha");
             cleanup_bridge_level("list_test_bravo");

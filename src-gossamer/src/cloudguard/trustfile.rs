@@ -234,7 +234,13 @@ pub fn default_constraints() -> Vec<PolicyConstraint> {
 fn normalise_setting_value(v: &Value) -> String {
     match v {
         Value::String(s) => format!("\"{}\"", s),
-        Value::Bool(b) => if *b { "\"on\"".to_string() } else { "\"off\"".to_string() },
+        Value::Bool(b) => {
+            if *b {
+                "\"on\"".to_string()
+            } else {
+                "\"off\"".to_string()
+            }
+        }
         Value::Number(n) => n.to_string(),
         Value::Null => "null".to_string(),
         _ => serde_json::to_string(v).unwrap_or_else(|_| "?".to_string()),
@@ -248,10 +254,8 @@ pub fn evaluate_constraints(
     settings: &[CfZoneSetting],
     constraints: &[PolicyConstraint],
 ) -> AuditResult {
-    let settings_map: std::collections::HashMap<&str, &Value> = settings
-        .iter()
-        .map(|s| (s.id.as_str(), &s.value))
-        .collect();
+    let settings_map: std::collections::HashMap<&str, &Value> =
+        settings.iter().map(|s| (s.id.as_str(), &s.value)).collect();
 
     let mut findings = Vec::new();
     let mut passed = 0u32;
@@ -297,7 +301,11 @@ pub fn evaluate_constraints(
     }
 
     let total = (passed + findings.len() as u32) as f64;
-    let score = if total > 0.0 { passed as f64 / total } else { 0.0 };
+    let score = if total > 0.0 {
+        passed as f64 / total
+    } else {
+        0.0
+    };
 
     let timestamp = format!(
         "{}Z",
@@ -321,17 +329,31 @@ pub fn evaluate_constraints(
 /// Check if the HSTS setting matches the expected configuration:
 /// enabled=true, max_age>=31536000, includeSubDomains=true, preload=true, nosniff=true.
 fn check_hsts_constraint(value: &Value) -> bool {
-    let sts = value
-        .get("strict_transport_security")
-        .or_else(|| value.get("value").and_then(|v| v.get("strict_transport_security")));
+    let sts = value.get("strict_transport_security").or_else(|| {
+        value
+            .get("value")
+            .and_then(|v| v.get("strict_transport_security"))
+    });
 
     match sts {
         Some(obj) => {
-            let enabled = obj.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false);
+            let enabled = obj
+                .get("enabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
             let max_age = obj.get("max_age").and_then(|v| v.as_u64()).unwrap_or(0);
-            let subdomains = obj.get("include_subdomains").and_then(|v| v.as_bool()).unwrap_or(false);
-            let preload = obj.get("preload").and_then(|v| v.as_bool()).unwrap_or(false);
-            let nosniff = obj.get("nosniff").and_then(|v| v.as_bool()).unwrap_or(false);
+            let subdomains = obj
+                .get("include_subdomains")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            let preload = obj
+                .get("preload")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            let nosniff = obj
+                .get("nosniff")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
 
             enabled && max_age >= 31536000 && subdomains && preload && nosniff
         }

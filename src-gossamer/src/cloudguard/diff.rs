@@ -60,7 +60,13 @@ pub struct DiffResult {
 fn normalise_value(v: &Value) -> String {
     match v {
         Value::String(s) => s.clone(),
-        Value::Bool(b) => if *b { "on".to_string() } else { "off".to_string() },
+        Value::Bool(b) => {
+            if *b {
+                "on".to_string()
+            } else {
+                "off".to_string()
+            }
+        }
         Value::Number(n) => n.to_string(),
         Value::Null => "null".to_string(),
         _ => serde_json::to_string(v).unwrap_or_else(|_| "?".to_string()),
@@ -174,10 +180,15 @@ pub fn compute_diff(
 
     let timestamp = super::config::list_saved_configs()
         .ok()
-        .and_then(|_| Some(format!("{}Z", std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_secs())
-            .unwrap_or(0))))
+        .map(|_| {
+            format!(
+                "{}Z",
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0)
+            )
+        })
         .unwrap_or_default();
 
     Ok(DiffResult {

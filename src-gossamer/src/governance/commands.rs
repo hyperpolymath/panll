@@ -58,7 +58,6 @@ async fn nesy_invoke(tool: &str, args: serde_json::Value) -> Result<String, Stri
 /// action, and reasoning.
 ///
 /// Falls back to a mock response when the BoJ server is unreachable.
-
 pub async fn governance_nesy_query(query: String) -> Result<String, String> {
     match nesy_invoke("confidence-query", json!({"query": query})).await {
         Ok(response) => Ok(response),
@@ -85,7 +84,6 @@ pub async fn governance_nesy_query(query: String) -> Result<String, String> {
 /// subsystem can approve or reject with reasoning.
 ///
 /// Falls back to a mock approval when the BoJ server is unreachable.
-
 pub async fn governance_nesy_validate(adjustment: String) -> Result<String, String> {
     match nesy_invoke("validate-adjustment", json!({"adjustment": adjustment})).await {
         Ok(response) => Ok(response),
@@ -111,7 +109,6 @@ pub async fn governance_nesy_validate(adjustment: String) -> Result<String, Stri
 /// Returns coherence, drift magnitude, and a stability recommendation.
 ///
 /// Falls back to a mock neutral report when the BoJ server is unreachable.
-
 pub async fn governance_nesy_probe() -> Result<String, String> {
     match nesy_invoke("stability-probe", json!({})).await {
         Ok(response) => Ok(response),
@@ -155,8 +152,14 @@ mod tests {
         let result = governance_nesy_query("vexation=0.5,stability=0.55".to_string()).await;
         assert!(result.is_ok(), "Expected Ok with mock response");
         let body = result.unwrap();
-        assert!(body.contains("confidence"), "Mock should contain confidence field");
-        assert!(body.contains("mock"), "Mock should identify itself as mock source");
+        assert!(
+            body.contains("confidence"),
+            "Mock should contain confidence field"
+        );
+        assert!(
+            body.contains("mock"),
+            "Mock should identify itself as mock source"
+        );
     }
 
     #[tokio::test]
@@ -164,8 +167,14 @@ mod tests {
         let result = governance_nesy_validate("HaltInference: test reason".to_string()).await;
         assert!(result.is_ok(), "Expected Ok with mock response");
         let body = result.unwrap();
-        assert!(body.contains("approved"), "Mock should contain approved field");
-        assert!(body.contains("mock"), "Mock should identify itself as mock source");
+        assert!(
+            body.contains("approved"),
+            "Mock should contain approved field"
+        );
+        assert!(
+            body.contains("mock"),
+            "Mock should identify itself as mock source"
+        );
     }
 
     #[tokio::test]
@@ -181,6 +190,9 @@ mod tests {
             body.contains("recommendation"),
             "Mock should contain recommendation field"
         );
-        assert!(body.contains("mock"), "Mock should identify itself as mock source");
+        assert!(
+            body.contains("mock"),
+            "Mock should identify itself as mock source"
+        );
     }
 }

@@ -113,7 +113,7 @@ pub fn identity_save(
 
 /// Load an identity snapshot by ID.
 ///
-/// Primary source: VeriSimDB (GET /state/<id>).
+/// Primary source: VeriSimDB (`GET /state/<id>`).
 /// Fallback: `~/.panll/identities/<id>.json`.
 pub fn identity_load(id: &str) -> Result<serde_json::Value, String> {
     let verisim_url =

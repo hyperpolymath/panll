@@ -84,13 +84,11 @@ fn delete(path: &str, timeout_secs: u64) -> Result<String, String> {
 
 /// GET /status — combined status of all overlay networks.
 /// Returns JSON: `{tor: "connected"|"disconnected"|..., ipfs: ..., ethereum: ...}`
-
 pub fn overlay_status() -> Result<String, String> {
     get("/status", 5)
 }
 
 /// GET /health — overlay subsystem health check.
-
 pub fn overlay_health() -> Result<String, String> {
     get("/health", 5)
 }
@@ -101,7 +99,6 @@ pub fn overlay_health() -> Result<String, String> {
 
 /// POST /tor/connect — connect to Tor control port.
 /// Body: `{control_host?, control_port?, socks_port?, auth_method?, auth_data?}`
-
 pub fn overlay_tor_connect(
     control_host: Option<String>,
     control_port: Option<u16>,
@@ -120,48 +117,42 @@ pub fn overlay_tor_connect(
 }
 
 /// POST /tor/disconnect — disconnect from Tor.
-
 pub fn overlay_tor_disconnect() -> Result<String, String> {
     post("/tor/disconnect", json!({}), 5)
 }
 
 /// GET /tor/status — Tor connection status.
-
 pub fn overlay_tor_status() -> Result<String, String> {
     get("/tor/status", 5)
 }
 
 /// POST /tor/hidden-service — create a new Tor hidden service.
 /// Body: `{port, target_port}`
-
-pub fn overlay_tor_create_hidden_service(
-    port: u16,
-    target_port: u16,
-) -> Result<String, String> {
-    post("/tor/hidden-service", json!({"port": port, "target_port": target_port}), 30)
+pub fn overlay_tor_create_hidden_service(port: u16, target_port: u16) -> Result<String, String> {
+    post(
+        "/tor/hidden-service",
+        json!({"port": port, "target_port": target_port}),
+        30,
+    )
 }
 
 /// DELETE /tor/hidden-service/{onion} — destroy a hidden service.
-
 pub fn overlay_tor_destroy_hidden_service(onion_address: String) -> Result<String, String> {
     delete(&format!("/tor/hidden-service/{}", onion_address), 10)
 }
 
 /// GET /tor/circuits — list active Tor circuits.
-
 pub fn overlay_tor_list_circuits() -> Result<String, String> {
     get("/tor/circuits", 10)
 }
 
 /// GET /tor/circuits/{id} — get a specific circuit's details (hops, status).
-
 pub fn overlay_tor_get_circuit(circuit_id: String) -> Result<String, String> {
     get(&format!("/tor/circuits/{}", circuit_id), 10)
 }
 
 /// POST /tor/resolve — resolve a hostname through Tor.
 /// Body: `{hostname}`
-
 pub fn overlay_tor_resolve(hostname: String) -> Result<String, String> {
     post("/tor/resolve", json!({"hostname": hostname}), 30)
 }
@@ -172,7 +163,6 @@ pub fn overlay_tor_resolve(hostname: String) -> Result<String, String> {
 
 /// POST /ipfs/connect — connect to IPFS daemon.
 /// Body: `{api_host?, api_port?, gateway_port?, repo_path?}`
-
 pub fn overlay_ipfs_connect(
     api_host: Option<String>,
     api_port: Option<u16>,
@@ -189,20 +179,17 @@ pub fn overlay_ipfs_connect(
 }
 
 /// POST /ipfs/disconnect — disconnect from IPFS.
-
 pub fn overlay_ipfs_disconnect() -> Result<String, String> {
     post("/ipfs/disconnect", json!({}), 5)
 }
 
 /// GET /ipfs/status — IPFS daemon status.
-
 pub fn overlay_ipfs_status() -> Result<String, String> {
     get("/ipfs/status", 5)
 }
 
 /// POST /ipfs/add — add content to IPFS, returns CID.
 /// Body: `{data, content_type?}`
-
 pub fn overlay_ipfs_add(data: String, content_type: Option<String>) -> Result<String, String> {
     post(
         "/ipfs/add",
@@ -212,25 +199,21 @@ pub fn overlay_ipfs_add(data: String, content_type: Option<String>) -> Result<St
 }
 
 /// GET /ipfs/cat/{cid} — retrieve content by CID.
-
 pub fn overlay_ipfs_cat(cid: String) -> Result<String, String> {
     get(&format!("/ipfs/cat/{}", cid), 30)
 }
 
 /// POST /ipfs/pin — pin content by CID.
-
 pub fn overlay_ipfs_pin(cid: String) -> Result<String, String> {
     post("/ipfs/pin", json!({"cid": cid}), 30)
 }
 
 /// POST /ipfs/unpin — unpin content by CID.
-
 pub fn overlay_ipfs_unpin(cid: String) -> Result<String, String> {
     post("/ipfs/unpin", json!({"cid": cid}), 30)
 }
 
 /// GET /ipfs/dag/{cid} — get DAG node for proof graph traversal.
-
 pub fn overlay_ipfs_dag_get(cid: String) -> Result<String, String> {
     get(&format!("/ipfs/dag/{}", cid), 30)
 }
@@ -241,7 +224,6 @@ pub fn overlay_ipfs_dag_get(cid: String) -> Result<String, String> {
 
 /// POST /eth/connect — connect to Ethereum JSON-RPC endpoint.
 /// Body: `{rpc_url?, network?, chain_id?}`
-
 pub fn overlay_eth_connect(
     rpc_url: Option<String>,
     network: Option<String>,
@@ -256,27 +238,27 @@ pub fn overlay_eth_connect(
 }
 
 /// POST /eth/disconnect — disconnect from Ethereum.
-
 pub fn overlay_eth_disconnect() -> Result<String, String> {
     post("/eth/disconnect", json!({}), 5)
 }
 
 /// GET /eth/status — Ethereum connection status.
-
 pub fn overlay_eth_status() -> Result<String, String> {
     get("/eth/status", 5)
 }
 
 /// POST /eth/timestamp-proof — anchor a proof certificate hash on-chain.
 /// Body: `{proof_hash}`. Returns tx hash, block number, timestamp.
-
 pub fn overlay_eth_timestamp_proof(proof_hash: String) -> Result<String, String> {
-    post("/eth/timestamp-proof", json!({"proof_hash": proof_hash}), 60)
+    post(
+        "/eth/timestamp-proof",
+        json!({"proof_hash": proof_hash}),
+        60,
+    )
 }
 
 /// POST /eth/verify-timestamp — verify a previously anchored timestamp.
 /// Body: `{tx_hash}`. Returns proof hash, block, timestamp, contract address.
-
 pub fn overlay_eth_verify_timestamp(tx_hash: String) -> Result<String, String> {
     post("/eth/verify-timestamp", json!({"tx_hash": tx_hash}), 30)
 }

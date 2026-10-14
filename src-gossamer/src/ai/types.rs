@@ -131,7 +131,10 @@ pub enum StreamChunk {
     /// The tool_use content block is complete; input JSON is fully accumulated.
     ToolUseEnd,
     /// The message is complete. Carries final token usage.
-    Complete { input_tokens: u32, output_tokens: u32 },
+    Complete {
+        input_tokens: u32,
+        output_tokens: u32,
+    },
     /// An error occurred during streaming.
     Error(String),
 }
@@ -256,20 +259,28 @@ mod tests {
         ];
         for id in &ids {
             let json = serde_json::to_string(id).expect("ProviderId must serialise");
-            let _back: ProviderId = serde_json::from_str(&json).expect("ProviderId must deserialise");
+            let _back: ProviderId =
+                serde_json::from_str(&json).expect("ProviderId must deserialise");
         }
     }
 
     #[test]
     fn smoke_ai_providers_file_defaults_has_five_providers() {
         let file = AiProvidersFile::defaults();
-        assert_eq!(file.providers.len(), 5, "defaults() must return 5 providers");
+        assert_eq!(
+            file.providers.len(),
+            5,
+            "defaults() must return 5 providers"
+        );
     }
 
     #[test]
     fn smoke_ai_providers_file_defaults_anthropic_is_enabled_and_priority_one() {
         let file = AiProvidersFile::defaults();
-        let anthropic = file.providers.iter().find(|p| p.id == ProviderId::Anthropic)
+        let anthropic = file
+            .providers
+            .iter()
+            .find(|p| p.id == ProviderId::Anthropic)
             .expect("Anthropic provider must exist");
         assert!(anthropic.enabled, "Anthropic must be enabled by default");
         assert_eq!(anthropic.priority, 1, "Anthropic must have priority 1");

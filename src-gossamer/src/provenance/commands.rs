@@ -26,7 +26,6 @@ use serde_json::json;
 ///
 /// Returns a JSON object with `authors` (array of {name, email, lines}),
 /// `co_authors` (array of {name, email}), and `total_lines`.
-
 pub async fn provenance_analyse_file(
     repo_path: String,
     file_path: String,
@@ -81,12 +80,13 @@ pub async fn provenance_analyse_file(
     // Build the authors array sorted by line count (descending).
     let mut author_list: Vec<serde_json::Value> = authors
         .into_iter()
-        .map(|(name, (email, lines))| {
-            json!({ "name": name, "email": email, "lines": lines })
-        })
+        .map(|(name, (email, lines))| json!({ "name": name, "email": email, "lines": lines }))
         .collect();
     author_list.sort_by(|a, b| {
-        b["lines"].as_u64().unwrap_or(0).cmp(&a["lines"].as_u64().unwrap_or(0))
+        b["lines"]
+            .as_u64()
+            .unwrap_or(0)
+            .cmp(&a["lines"].as_u64().unwrap_or(0))
     });
 
     let result = json!({
@@ -160,10 +160,9 @@ const UNSOUND_PATTERNS: &[(&str, &str, &str)] = &[
 /// Admitted, assert_total, unsafeCoerce, unsafePerformIO, Obj.magic, etc.).
 /// Returns a JSON object with `matches` (array of {pattern, line, line_number,
 /// language, severity}) and `total_matches`.
-
 pub async fn provenance_scan_unsound(file_path: String) -> Result<String, String> {
-    let content = fs::read_to_string(&file_path)
-        .map_err(|e| format!("Cannot read {file_path}: {e}"))?;
+    let content =
+        fs::read_to_string(&file_path).map_err(|e| format!("Cannot read {file_path}: {e}"))?;
 
     let mut matches = Vec::new();
 

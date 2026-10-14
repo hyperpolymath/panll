@@ -34,7 +34,6 @@ fn clades_dir() -> PathBuf {
 ///
 /// Each entry is `{"id": "<dir-name>", "content": "<file-content>"}`.
 /// Directories without an `.a2ml` file are silently skipped.
-
 pub async fn scan_clade_files() -> Result<String, String> {
     let dir = clades_dir();
     if !dir.is_dir() {

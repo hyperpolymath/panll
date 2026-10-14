@@ -85,8 +85,7 @@ pub fn download_zone_config(zone_id: &str) -> Result<String, String> {
     let json = serde_json::to_string_pretty(&config)
         .map_err(|e| format!("JSON serialisation error: {}", e))?;
 
-    fs::write(&path, json)
-        .map_err(|e| format!("Failed to write config to {:?}: {}", path, e))?;
+    fs::write(&path, json).map_err(|e| format!("Failed to write config to {:?}: {}", path, e))?;
 
     Ok(path.to_string_lossy().to_string())
 }
@@ -120,8 +119,8 @@ pub fn list_saved_configs() -> Result<String, String> {
     let dir = config_dir()?;
     let mut configs = Vec::new();
 
-    let entries = fs::read_dir(&dir)
-        .map_err(|e| format!("Failed to read config directory: {}", e))?;
+    let entries =
+        fs::read_dir(&dir).map_err(|e| format!("Failed to read config directory: {}", e))?;
 
     for entry in entries {
         let entry = entry.map_err(|e| format!("Directory entry error: {}", e))?;
@@ -141,8 +140,7 @@ pub fn list_saved_configs() -> Result<String, String> {
         }
     }
 
-    serde_json::to_string(&configs)
-        .map_err(|e| format!("JSON serialisation error: {}", e))
+    serde_json::to_string(&configs).map_err(|e| format!("JSON serialisation error: {}", e))
 }
 
 /// Sanitise a domain name for use as a filename (replace dots with underscores,
@@ -150,7 +148,13 @@ pub fn list_saved_configs() -> Result<String, String> {
 fn sanitise_filename(domain: &str) -> String {
     domain
         .chars()
-        .map(|c| if c.is_alphanumeric() || c == '-' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '-' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect()
 }
 

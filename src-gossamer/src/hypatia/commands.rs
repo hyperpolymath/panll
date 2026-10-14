@@ -14,8 +14,7 @@ use serde_json::json;
 
 /// Base URL for the Hypatia API. Override with HYPATIA_URL env var.
 fn hypatia_url() -> String {
-    std::env::var("HYPATIA_URL")
-        .unwrap_or_else(|_| "http://localhost:4040/api/v1".to_string())
+    std::env::var("HYPATIA_URL").unwrap_or_else(|_| "http://localhost:4040/api/v1".to_string())
 }
 
 /// HTTP client with a 10-second timeout — scans can take a moment.
@@ -30,15 +29,15 @@ fn client() -> Result<reqwest::Client, String> {
 ///
 /// Returns a JSON array of network objects with name, status, and accuracy
 /// fields. On connection failure, returns an empty array.
-
 pub async fn hypatia_get_networks() -> Result<String, String> {
     let url = format!("{}/networks", hypatia_url());
     let client = client()?;
 
     match client.get(&url).send().await {
-        Ok(resp) if resp.status().is_success() => {
-            resp.text().await.map_err(|e| format!("Body read error: {e}"))
-        }
+        Ok(resp) if resp.status().is_success() => resp
+            .text()
+            .await
+            .map_err(|e| format!("Body read error: {e}")),
         _ => Ok("[]".to_string()),
     }
 }
@@ -47,15 +46,15 @@ pub async fn hypatia_get_networks() -> Result<String, String> {
 ///
 /// Returns a JSON array of scan result objects. On connection failure, returns
 /// an empty array so the panel renders an empty table.
-
 pub async fn hypatia_get_scans() -> Result<String, String> {
     let url = format!("{}/scans", hypatia_url());
     let client = client()?;
 
     match client.get(&url).send().await {
-        Ok(resp) if resp.status().is_success() => {
-            resp.text().await.map_err(|e| format!("Body read error: {e}"))
-        }
+        Ok(resp) if resp.status().is_success() => resp
+            .text()
+            .await
+            .map_err(|e| format!("Body read error: {e}")),
         _ => Ok("[]".to_string()),
     }
 }
@@ -66,7 +65,6 @@ pub async fn hypatia_get_scans() -> Result<String, String> {
 /// the user explicitly triggered an action. The repo_name parameter matches
 /// the ReScript frontend's `repoName` field (camelCase in JSON, snake_case
 /// in Rust via Tauri's automatic rename).
-
 pub async fn hypatia_scan_repo(repo_name: String) -> Result<String, String> {
     let url = format!("{}/scans", hypatia_url());
     let client = client()?;
@@ -83,7 +81,9 @@ pub async fn hypatia_scan_repo(repo_name: String) -> Result<String, String> {
         .map_err(|e| format!("Hypatia scan failed (server unreachable): {e}"))?;
 
     if resp.status().is_success() {
-        resp.text().await.map_err(|e| format!("Body read error: {e}"))
+        resp.text()
+            .await
+            .map_err(|e| format!("Body read error: {e}"))
     } else {
         Err(format!("Hypatia scan returned HTTP {}", resp.status()))
     }

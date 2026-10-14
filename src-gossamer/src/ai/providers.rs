@@ -117,7 +117,10 @@ pub async fn send_anthropic(
         });
     }
 
-    let resp_text = resp.text().await.map_err(|e| format!("Body read error: {e}"))?;
+    let resp_text = resp
+        .text()
+        .await
+        .map_err(|e| format!("Body read error: {e}"))?;
     if !status.is_success() {
         return Err(format!("Anthropic HTTP {}: {}", status, resp_text));
     }
@@ -213,7 +216,10 @@ pub async fn send_google(
         });
     }
 
-    let resp_text = resp.text().await.map_err(|e| format!("Body read error: {e}"))?;
+    let resp_text = resp
+        .text()
+        .await
+        .map_err(|e| format!("Body read error: {e}"))?;
     if !status.is_success() {
         return Err(format!("Google HTTP {}: {}", status, resp_text));
     }
@@ -353,7 +359,10 @@ async fn send_openai_compatible(
         });
     }
 
-    let resp_text = resp.text().await.map_err(|e| format!("Body read error: {e}"))?;
+    let resp_text = resp
+        .text()
+        .await
+        .map_err(|e| format!("Body read error: {e}"))?;
     if !status.is_success() {
         return Err(format!("{:?} HTTP {}: {}", provider_id, status, resp_text));
     }
@@ -369,9 +378,7 @@ async fn send_openai_compatible(
         .to_string();
 
     let input_tokens = parsed["usage"]["prompt_tokens"].as_u64().unwrap_or(0) as u32;
-    let output_tokens = parsed["usage"]["completion_tokens"]
-        .as_u64()
-        .unwrap_or(0) as u32;
+    let output_tokens = parsed["usage"]["completion_tokens"].as_u64().unwrap_or(0) as u32;
 
     Ok(SendMessageResponse {
         content,
@@ -432,7 +439,10 @@ pub async fn send_local(
         .map_err(|e| format!("Local (Ollama) request failed: {e}"))?;
 
     let status = resp.status();
-    let resp_text = resp.text().await.map_err(|e| format!("Body read error: {e}"))?;
+    let resp_text = resp
+        .text()
+        .await
+        .map_err(|e| format!("Body read error: {e}"))?;
     if !status.is_success() {
         return Err(format!("Local HTTP {}: {}", status, resp_text));
     }
@@ -480,8 +490,8 @@ pub async fn send_anthropic_streaming(
     tool_results: Option<&[ToolResult]>,
     app_handle: crate::compat::AppHandle,
 ) -> Result<(), String> {
-    use futures::StreamExt;
     use crate::compat::Emitter;
+    use futures::StreamExt;
 
     let api_key = resolve_api_key(config)?;
 
@@ -628,10 +638,8 @@ pub async fn send_anthropic_streaming(
                             .as_str()
                             .unwrap_or("")
                             .to_string();
-                        let _ = app_handle.emit(
-                            "ai:stream-chunk",
-                            &StreamChunk::ToolUseStart { id, name },
-                        );
+                        let _ = app_handle
+                            .emit("ai:stream-chunk", &StreamChunk::ToolUseStart { id, name });
                     }
                     // text blocks: wait for deltas
                 }
@@ -639,37 +647,29 @@ pub async fn send_anthropic_streaming(
                     let delta_type = parsed["delta"]["type"].as_str().unwrap_or("");
                     match delta_type {
                         "text_delta" => {
-                            let text = parsed["delta"]["text"]
-                                .as_str()
-                                .unwrap_or("")
-                                .to_string();
-                            let _ = app_handle
-                                .emit("ai:stream-chunk", &StreamChunk::TextDelta(text));
+                            let text = parsed["delta"]["text"].as_str().unwrap_or("").to_string();
+                            let _ =
+                                app_handle.emit("ai:stream-chunk", &StreamChunk::TextDelta(text));
                         }
                         "input_json_delta" => {
                             let partial_json = parsed["delta"]["partial_json"]
                                 .as_str()
                                 .unwrap_or("")
                                 .to_string();
-                            let _ = app_handle.emit(
-                                "ai:stream-chunk",
-                                &StreamChunk::ToolUseDelta(partial_json),
-                            );
+                            let _ = app_handle
+                                .emit("ai:stream-chunk", &StreamChunk::ToolUseDelta(partial_json));
                         }
                         _ => {}
                     }
                 }
                 "content_block_stop" => {
                     if in_tool_use {
-                        let _ =
-                            app_handle.emit("ai:stream-chunk", &StreamChunk::ToolUseEnd);
+                        let _ = app_handle.emit("ai:stream-chunk", &StreamChunk::ToolUseEnd);
                         in_tool_use = false;
                     }
                 }
                 "message_delta" => {
-                    output_tokens = parsed["usage"]["output_tokens"]
-                        .as_u64()
-                        .unwrap_or(0) as u32;
+                    output_tokens = parsed["usage"]["output_tokens"].as_u64().unwrap_or(0) as u32;
                 }
                 "message_stop" => {
                     let _ = app_handle.emit(
@@ -685,8 +685,7 @@ pub async fn send_anthropic_streaming(
                         .as_str()
                         .unwrap_or("Unknown streaming error")
                         .to_string();
-                    let _ = app_handle
-                        .emit("ai:stream-chunk", &StreamChunk::Error(error_msg));
+                    let _ = app_handle.emit("ai:stream-chunk", &StreamChunk::Error(error_msg));
                 }
                 _ => {}
             }
@@ -704,7 +703,9 @@ pub async fn send_message(
     user_content: &str,
 ) -> Result<SendMessageResponse, String> {
     match config.id {
-        ProviderId::Anthropic => send_anthropic(config, system_prompt, messages, user_content).await,
+        ProviderId::Anthropic => {
+            send_anthropic(config, system_prompt, messages, user_content).await
+        }
         ProviderId::Google => send_google(config, system_prompt, messages, user_content).await,
         ProviderId::Mistral => send_mistral(config, system_prompt, messages, user_content).await,
         ProviderId::OpenAI => send_openai(config, system_prompt, messages, user_content).await,

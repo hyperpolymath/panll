@@ -299,8 +299,8 @@ mod tests {
     #[test]
     fn smoke_cf_api_response_success_parse() {
         let json = r#"{"success":true,"errors":[],"messages":[],"result":"ok"}"#;
-        let resp: CfApiResponse<String> = serde_json::from_str(json)
-            .expect("CfApiResponse<String> must parse");
+        let resp: CfApiResponse<String> =
+            serde_json::from_str(json).expect("CfApiResponse<String> must parse");
         assert!(resp.success);
         assert!(resp.errors.is_empty());
         assert_eq!(resp.result, Some("ok".to_string()));
@@ -309,8 +309,8 @@ mod tests {
     #[test]
     fn smoke_cf_api_response_failure_parse() {
         let json = r#"{"success":false,"errors":[{"code":1003,"message":"Invalid zone"}],"messages":[],"result":null}"#;
-        let resp: CfApiResponse<serde_json::Value> = serde_json::from_str(json)
-            .expect("Failed CfApiResponse must parse");
+        let resp: CfApiResponse<serde_json::Value> =
+            serde_json::from_str(json).expect("Failed CfApiResponse must parse");
         assert!(!resp.success);
         assert_eq!(resp.errors.len(), 1);
         assert_eq!(resp.errors[0].code, 1003);
@@ -318,7 +318,10 @@ mod tests {
 
     #[test]
     fn smoke_cf_api_error_has_code_and_message() {
-        let err = CfApiError { code: 7003, message: "Could not route to /zones".to_string() };
+        let err = CfApiError {
+            code: 7003,
+            message: "Could not route to /zones".to_string(),
+        };
         assert_eq!(err.code, 7003);
         assert!(!err.message.is_empty());
     }
