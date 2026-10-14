@@ -1,3 +1,4 @@
+K9!
 # K9 Kennel: Strategy Drift Panel Configuration
 # SPDX-License-Identifier: MPL-2.0
 #

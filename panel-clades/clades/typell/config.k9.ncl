@@ -1,3 +1,4 @@
+K9!
 # K9 Kennel: TypeLL Panel Configuration
 # Auto-generated from PanelRegistry — pure data, no execution
 # SPDX-License-Identifier: MPL-2.0

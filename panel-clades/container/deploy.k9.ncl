@@ -1,3 +1,4 @@
+K9!
 # SPDX-License-Identifier: MPL-2.0
 # deploy.k9.ncl — {{PROJECT_NAME}} deployment component (Hunt level)
 #
@@ -11,61 +12,6 @@
 #   nickel typecheck container/deploy.k9.ncl
 #   k9-svc validate container/deploy.k9.ncl
 #   k9-svc deploy container/deploy.k9.ncl --env production
-
-# The component's pedigree (self-description across five layers)
-let component_pedigree = {
-  # ─────────────────────────────────────────────────────────────
-  # L1: The Snout — Identity
-  # ─────────────────────────────────────────────────────────────
-  metadata = {
-    name = "{{SERVICE_NAME}}-deploy",
-    version = "{{VERSION}}",
-    breed = "application/vnd.k9+nickel",
-    magic_number = "K9!",
-    description = "{{PROJECT_NAME}} deployment component (Hunt level)",
-  },
-
-  # ─────────────────────────────────────────────────────────────
-  # L2: The Scent — Target Environment
-  # ─────────────────────────────────────────────────────────────
-  target = {
-    os = 'Linux,
-    is_edge = false,
-    requires_podman = true,
-    min_memory_mb = 256,
-  },
-
-  # ─────────────────────────────────────────────────────────────
-  # L3: The Leash — Security
-  # ─────────────────────────────────────────────────────────────
-  security = {
-    trust_level = 'Hunt,
-    allow_network = true,
-    allow_filesystem_write = true,
-    allow_subprocess = true,
-    # In production, replace with a real Ed25519 signature.
-    signature = "PLACEHOLDER-SIGNATURE-REQUIRED-FOR-HUNT",
-  },
-
-  # ─────────────────────────────────────────────────────────────
-  # L4: The Gut — Self-Validation
-  # ─────────────────────────────────────────────────────────────
-  validation = {
-    checksum = "sha256:placeholder",
-    pedigree_version = "1.0.0",
-    hunt_authorized = false,  # Must be set true after handshake
-  },
-
-  # ─────────────────────────────────────────────────────────────
-  # L5: The Muscle — Deployment Recipes
-  # ─────────────────────────────────────────────────────────────
-  recipes = {
-    install = "just container-build",
-    validate = "just container-verify",
-    deploy = "just container-up",
-    migrate = "just container-build && just container-up",
-  },
-} in
 
 # Deployment configuration
 let deployment = {
@@ -143,7 +89,59 @@ echo "K9: Rollback complete."
 
 # Export the component
 {
-  pedigree = component_pedigree,
+  pedigree = {
+    # ─────────────────────────────────────────────────────────────
+    # L1: The Snout — Identity
+    # ─────────────────────────────────────────────────────────────
+    metadata = {
+      name = "{{SERVICE_NAME}}-deploy",
+      version = "{{VERSION}}",
+      breed = "application/vnd.k9+nickel",
+      magic_number = "K9!",
+      description = "{{PROJECT_NAME}} deployment component (Hunt level)",
+    },
+
+    # ─────────────────────────────────────────────────────────────
+    # L2: The Scent — Target Environment
+    # ─────────────────────────────────────────────────────────────
+    target = {
+      os = 'Linux,
+      is_edge = false,
+      requires_podman = true,
+      min_memory_mb = 256,
+    },
+
+    # ─────────────────────────────────────────────────────────────
+    # L3: The Leash — Security
+    # ─────────────────────────────────────────────────────────────
+    security = {
+      trust_level = 'Hunt,
+      allow_network = true,
+      allow_filesystem_write = true,
+      allow_subprocess = true,
+      # In production, replace with a real Ed25519 signature.
+      signature = "PLACEHOLDER-SIGNATURE-REQUIRED-FOR-HUNT",
+    },
+
+    # ─────────────────────────────────────────────────────────────
+    # L4: The Gut — Self-Validation
+    # ─────────────────────────────────────────────────────────────
+    validation = {
+      checksum = "sha256:placeholder",
+      pedigree_version = "1.0.0",
+      hunt_authorized = false,  # Must be set true after handshake
+    },
+
+    # ─────────────────────────────────────────────────────────────
+    # L5: The Muscle — Deployment Recipes
+    # ─────────────────────────────────────────────────────────────
+    recipes = {
+      install = "just container-build",
+      validate = "just container-verify",
+      deploy = "just container-up",
+      migrate = "just container-build && just container-up",
+    },
+  },
   deployment = deployment,
   scripts = scripts,
 

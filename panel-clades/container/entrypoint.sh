@@ -54,7 +54,7 @@ fi
 # Replace the entrypoint shell with the application process so that
 # signals are delivered directly and PID 1 is the application.
 #
-# TODO: Replace the command below with your application binary.
+# TODO(#149): Replace the command below with your application binary.
 # Examples:
 #   exec /app/{{SERVICE_NAME}}
 #   exec /app/release/bin/{{SERVICE_NAME}} start

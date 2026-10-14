@@ -249,7 +249,7 @@ export
 %foreign "C:panel_clades_register_callback, libpanel_clades"
 prim__registerCallback : Bits64 -> AnyPtr -> PrimIO Bits32
 
--- TODO: Implement safe callback registration.
+-- TODO(#149): Implement safe callback registration.
 -- The callback must be wrapped via a proper FFI callback mechanism.
 -- Do NOT use cast — it is banned per project safety standards.
 -- See: https://idris2.readthedocs.io/en/latest/ffi/ffi.html#callbacks

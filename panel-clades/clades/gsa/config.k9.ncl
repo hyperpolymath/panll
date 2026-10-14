@@ -1,3 +1,4 @@
+K9!
 # SPDX-License-Identifier: MPL-2.0
 # K9 kennel configuration for GSA root panel clade
 {

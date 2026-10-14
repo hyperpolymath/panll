@@ -1,3 +1,4 @@
+K9!
 # SPDX-License-Identifier: MPL-2.0
 # logic-and-proofs.k9.ncl — PanLL discipline layout for formal methods work.
 #
