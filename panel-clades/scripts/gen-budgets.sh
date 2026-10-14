@@ -37,6 +37,7 @@ nat='[0-9]+'
 # Emit the Idris budget module to standard output from clade resources blocks.
 # Exit with status 1 if a block fails the state, crossing or DESIGNED status
 # checks, or if no config declares resources.  Configs without resources are skipped.
+# Output may be partial on failure.
 emit() {
   cat <<'HEADER'
 -- SPDX-License-Identifier: MPL-2.0
