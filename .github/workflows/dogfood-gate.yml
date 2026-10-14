@@ -24,6 +24,7 @@ jobs:
   deed-validate:
     name: Validate DEED manifests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
@@ -68,6 +69,7 @@ jobs:
   k9-validate:
     name: Validate K9 contracts
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
@@ -117,6 +119,7 @@ jobs:
   empty-lint:
     name: Empty-linter (invisible characters)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
@@ -181,6 +184,7 @@ jobs:
   groove-check:
     name: Groove manifest check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
@@ -239,6 +243,7 @@ jobs:
   dogfood-summary:
     name: Dogfooding compliance summary
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [deed-validate, k9-validate, empty-lint, groove-check]
     if: always()
 

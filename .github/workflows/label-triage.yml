@@ -47,6 +47,7 @@ permissions:
 jobs:
   triage:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Classify and label
         env:

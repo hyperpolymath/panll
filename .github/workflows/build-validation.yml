@@ -20,6 +20,7 @@ jobs:
   # against the AffineScript frontend under #148.
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
 

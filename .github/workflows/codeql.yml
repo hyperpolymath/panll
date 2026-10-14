@@ -25,6 +25,7 @@ permissions:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       security-events: write
@@ -33,6 +34,10 @@ jobs:
       matrix:
         include:
           - language: javascript-typescript
+            build-mode: none
+          # Scans the workflow YAML itself (injection and other CI/CD
+          # weaknesses), as rsr-template-repo's codeql.yml does.
+          - language: actions
             build-mode: none
 
     steps:
