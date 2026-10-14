@@ -3,13 +3,15 @@
 # PanLL eNSAID — Gossamer backend
 #
 # This replaces the former src-tauri/ Tauri 2.0 backend with a Gossamer-native
-# binary. All 103 command handlers are registered via gossamer_rs::App::command()
-# instead of #[tauri::command] macros. Business logic is unchanged — only the
-# IPC dispatch layer changed.
+# binary. IPC commands are registered via gossamer_rs::App::command() in
+# `register_commands` (src-gossamer/src/main.rs) instead of #[tauri::command]
+# macros. Only 36 command handlers are registered today; the panel-backend
+# modules in the lib carry many more that compile and are tested but are not
+# yet registered (docs/TECHNICAL_DEBT.adoc, F1).
 #
-# The gossamer-rs crate links to libgossamer.so (Zig FFI) at runtime, providing
-# the same webview + IPC channel that Tauri provided, but without the Tauri
-# runtime dependency.
+# The gossamer-rs crate statically links libgossamer (Zig FFI, built from
+# source or taken from GOSSAMER_LIB_DIR), providing the same webview + IPC
+# channel that Tauri provided, but without the Tauri runtime dependency.
 
 [package]
 name = "panll"

@@ -41,7 +41,7 @@ Soundness is relative to ReScript's type system. It guarantees the UI state mach
 ____5 MB binary vs 100+ MB Electron. No garbage collector pauses during real-time panel updates.____
 
 How this is implemented::
-The backend is Rust (`link:src-tauri/[]` or equivalent Rust backend) using Gossamer (WebKitGTK) for the webview shell. Rust's ownership model eliminates GC. Gossamer compiles to a ~5 MB binary. Filesystem watching uses the `notify` crate.
+The backend is Rust (`link:src-gossamer/[]`) using Gossamer (WebKitGTK) for the webview shell. Rust's ownership model eliminates GC. Gossamer compiles to a ~5 MB binary. Filesystem watching uses the `notify` crate.
 
 Caveat::
 The 5 MB figure is the Rust binary; the full installation includes WebKitGTK dependencies (provided by the host OS or container). Linux is the primary target; macOS and Windows require WebKitGTK availability. Gossamer is actively maintained but less battle-tested than Electron.
@@ -133,8 +133,8 @@ The import validates JSON structure, not the semantic truth of the event chain. 
 | `src/` (ReScript)
 | 4-pane UI, TEA architecture, Anti-Crash, Vexometer, Contractiles
 
-| `src-tauri/` or Rust backend
-| Gossamer webview, 270 migrated commands, filesystem watching
+| `src-gossamer/` (Rust backend)
+| Gossamer webview shell. 36 IPC commands are registered in `main.rs`; the other panel backends (including filesystem watching) compile and are tested in the lib, but their handlers are not yet registered
 
 | `beam/panll_beam/`
 | BEAM middleware scaffold (HTTP/GraphQL/gRPC)
