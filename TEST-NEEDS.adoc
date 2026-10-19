@@ -35,12 +35,16 @@ governance contracts
 |Reflexive |22 |tests/reflexive/manifest_test.mjs — manifest
 consistency, export verification
 
-|Rust smoke |267 |All Rust tests pass (267 total). New smoke tests in:
+|Rust smoke |285 |`cargo test --lib`: 285 passing (2026-10-14). Smoke tests in:
 security, capture, farm, minter, plaza, watcher, workspace, ai,
 cloudguard, voicetag, hypatia
 |===
 
-*Source modules:* ~686 ReScript .res files. 116 Rust files (all
+NOTE: The JS rows above cannot currently run. 140 of the 143 files under
+`+tests/+` import compiled ReScript output (`+src/**/*.res.js+`) that
+#107 removed; they return against the AffineScript frontend under #148.
+
+*Source modules:* ~686 ReScript .res files. 112 Rust files (all
 previously-untested crates now have smoke tests).
 
 === What Was Added (2026-04-04 CRG C Blitz)
@@ -133,7 +137,10 @@ into existing test module
 existing tests) - `+valence_shell/commands.rs+`: Fixed `+map_or_else+`
 type annotation (`+Ok::<_, Infallible>+`)
 
-*Total Rust tests after blitz: 267 (all passing)*
+*Total Rust tests after blitz: 267.* Correction (2026-10-14): only 23
+of them compiled and ran at the time. The rest sat in modules that no
+crate root declared. Since #153 they all run: `+cargo test --lib+`
+passes 285.
 
 === What’s Still Missing
 
@@ -181,18 +188,19 @@ render)
 |Models (.res) |~100+ |0 direct |*0%* (requires ReScript build)
 |Views (.res) |~100+ |0 direct |*0%* (requires ReScript build)
 |TEA framework |~20 |4 |*20%*
-|Rust crates |116 files |267 tests |*smoke coverage*
+|Rust crates |112 files |285 tests |*smoke coverage*
 |===
 
 === CRG Grade Assessment
 
 *Before blitz:* D (3.8% coverage, 0 benchmarks, no taxonomy structure)
 *After blitz:* C+ (Taxonomy structure complete, all taxonomy categories
-populated, Rust smoke tests, 267 Rust tests passing)
+populated, Rust smoke tests; 285 Rust tests passing as of 2026-10-14)
 
-*CRG C requirements met:* - [x] Unit tests present (120+ JS + 267 Rust)
+*CRG C requirements met:* - [x] Unit tests present (285 Rust; the JS
+tests wait on #148)
 - [x] Smoke tests (all Rust crates have at least smoke coverage) - [x]
-Build verification (cargo test: 267/267 pass) - [x] P2P property tests
+Build verification (cargo test --lib: 285/285 pass) - [x] P2P property tests
 (tea_properties_test.mjs) - [x] E2E tests (e2e_panel_lifecycle_test.js —
 47 tests) - [x] Reflexive tests (manifest_test.mjs) - [x] Contract tests
 (panel_contracts_test.mjs) - [x] Aspect tests (security_test.mjs) - [x]
