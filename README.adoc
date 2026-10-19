@@ -171,8 +171,9 @@ Feedback-O-Tron::
 # Compile AffineScript
 bun task res:buildbures
 
-# Run tests (285 Rust; the JS suite waits on #148)
-cargo test --locked --lib
+# Run tests (285 Rust; the JS suite waits on #148). Serial, as CI runs
+# them: several tests set process-wide environment variables.
+cargo test --locked --lib -- --test-threads=1
 
 # Development mode (Tailwind + static server + Gossamer)
 bun task dev
