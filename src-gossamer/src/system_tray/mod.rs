@@ -6,7 +6,7 @@
 //! Provides system tray icon and menu for PanLL, including service toggling
 //! for Burble and Gossamer.
 
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 /// System tray state
 struct SystemTrayState {
@@ -16,7 +16,7 @@ struct SystemTrayState {
 }
 
 impl SystemTrayState {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             tray_handle: None,
             burble_enabled: true,
@@ -25,12 +25,8 @@ impl SystemTrayState {
     }
 }
 
-lazy_static::lazy_static! {
-    /// Global system tray state
-    static ref SYSTEM_TRAY_STATE: Arc<Mutex<SystemTrayState>> = {
-        Arc::new(Mutex::new(SystemTrayState::new()))
-    };
-}
+/// Global system tray state
+static SYSTEM_TRAY_STATE: Mutex<SystemTrayState> = Mutex::new(SystemTrayState::new());
 
 /// Initialize the system tray
 pub fn init(app: &gossamer_rs::App) -> Result<(), String> {

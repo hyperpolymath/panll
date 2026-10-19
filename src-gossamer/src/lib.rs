@@ -32,12 +32,13 @@ pub mod llm_coding;
 
 /// Coprocessor — external compute control plane + Zig FFI data plane.
 ///
-/// Previously orphaned (declared by no crate root, so never compiled). Wired
-/// into the library here so it builds, lints, and its tests run. Note: the
-/// async command handlers are not yet registered in the binary's IPC table —
-/// that integration is tracked as follow-up debt (see
-/// `docs/TECHNICAL_DEBT.adoc`, F1/F2).
+/// Previously orphaned (declared by no crate root, so never compiled). Its
+/// command handlers are registered through [`ipc`].
 pub mod coprocessor;
+
+/// IPC command table — adapts the panel-backend handlers to Gossamer's IPC
+/// handler shape. `main.rs` registers every entry with `command_async`.
+pub mod ipc;
 
 // ---------------------------------------------------------------------------
 // Formerly orphaned modules — panel backends, live service connections
@@ -93,6 +94,23 @@ pub mod voicetag;
 pub mod watcher;
 pub mod wiring_inspector;
 pub mod workspace;
+
+/// Serialises the tests that set or remove process environment variables
+/// (`BOJ_URL`, `OVERLAY_URL`, `HYPATIA_URL`, `TYPELL_URL`). `cargo test` runs
+/// tests on parallel threads and the environment is process-wide, so without
+/// this lock one test can read the value another has just set.
+#[cfg(test)]
+pub(crate) mod test_env {
+    use std::sync::{Mutex, MutexGuard};
+
+    static LOCK: Mutex<()> = Mutex::new(());
+
+    /// Hold the guard for the whole test. A test that panics while holding it
+    /// poisons the lock; the next test takes it anyway.
+    pub(crate) fn lock() -> MutexGuard<'static, ()> {
+        LOCK.lock().unwrap_or_else(|e| e.into_inner())
+    }
+}
 
 /// Cross-module integration tests. These exercise the public command-backed
 /// functions end-to-end. They live in the lib (not `tests/`) so they run via

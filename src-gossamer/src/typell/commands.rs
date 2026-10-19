@@ -104,6 +104,7 @@ mod tests {
 
     #[test]
     fn typell_url_default_and_override() {
+        let _env = crate::test_env::lock();
         std::env::remove_var("TYPELL_URL");
         assert_eq!(typell_url(), DEFAULT_TYPELL_URL);
         let custom = "http://typell.local:9999/v2";

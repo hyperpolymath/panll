@@ -404,4 +404,16 @@ fn register_commands(app: &mut gossamer_rs::App) {
         let url = format!("{}/state/{}", verisim_url(), key);
         result_str_to_json(blocking_get(&url, 10))
     });
+
+    // -----------------------------------------------------------------------
+    // Panel-backend commands (the lib's IPC table)
+    //
+    // `command_async` runs each call on a Gossamer worker thread, so blocking
+    // I/O and `async fn` handlers never stall the GTK main thread. Argument
+    // and response conventions are documented in `panll::ipc`.
+    // -----------------------------------------------------------------------
+
+    for cmd in panll::ipc::commands() {
+        app.command_async(cmd.name, cmd.handler);
+    }
 }

@@ -106,6 +106,7 @@ mod tests {
 
     #[test]
     fn boj_url_default_and_override() {
+        let _env = crate::test_env::lock();
         std::env::remove_var("BOJ_URL");
         assert_eq!(boj_url(), DEFAULT_BOJ_URL);
         let custom = "http://boj.local:9999/v2";

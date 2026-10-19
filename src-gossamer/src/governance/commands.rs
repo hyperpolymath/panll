@@ -134,12 +134,14 @@ mod tests {
 
     #[test]
     fn boj_url_default() {
+        let _env = crate::test_env::lock();
         std::env::remove_var("BOJ_URL");
         assert_eq!(boj_url(), DEFAULT_BOJ_URL);
     }
 
     #[test]
     fn boj_url_override() {
+        let _env = crate::test_env::lock();
         let custom = "http://nesy.local:8800/v2";
         std::env::set_var("BOJ_URL", custom);
         assert_eq!(boj_url(), custom);
