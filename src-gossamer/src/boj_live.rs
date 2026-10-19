@@ -122,6 +122,7 @@ mod tests {
     /// Verify the endpoint builder respects BOJ_URL and strips trailing slashes.
     #[test]
     fn boj_endpoint_default_and_override() {
+        let _env = crate::test_env::lock();
         std::env::remove_var("BOJ_URL");
         let ep = boj_endpoint();
         assert_eq!(ep.base_url, DEFAULT_BOJ_URL);
