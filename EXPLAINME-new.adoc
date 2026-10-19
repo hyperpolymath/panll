@@ -46,13 +46,13 @@ The backend is Rust (`link:src-gossamer/[]`) using Gossamer (WebKitGTK) for the 
 Caveat::
 The 5 MB figure is the Rust binary; the full installation includes WebKitGTK dependencies (provided by the host OS or container). Linux is the primary target; macOS and Windows require WebKitGTK availability. Gossamer is actively maintained but less battle-tested than Electron.
 
-=== 109 tests passing (97 JS + 12 Rust)
+=== 285 Rust tests passing
 
 [quote, README.adoc]
-____109 tests passing (97 JS via Deno.test + 12 Rust via cargo test)____
+____`cargo test` (285 Rust); the JS suite under `tests/` waits on the AffineScript port (#148)____
 
 How this is implemented::
-`deno task test` runs the Deno test suite (97 tests covering UI components, state management, event-chain import, Anti-Crash gating, Vexometer polling). `cargo test` runs the Rust suite (12 tests covering backend commands, filesystem watching, identity state capture). CI enforces both.
+`cargo test --locked --lib` runs the Rust suite: 285 tests across the backend modules in `link:src-gossamer/src/[]` (panel backends, service registry, settings, identity, coprocessor FFI loading, filesystem watching). CI runs it on every PR. The JS suite under `tests/` is not run: 140 of its 143 files import compiled ReScript output (`src/**/*.res.js`) that #107 removed, and #108 removed `deno.json`. It returns against the AffineScript frontend under #148.
 
 Caveat::
 These are integration and unit tests, not formal proofs. They verify component behavior, not system-wide soundness. The Typell integration (when wired) will add formal verification for Pane-L constraints.
