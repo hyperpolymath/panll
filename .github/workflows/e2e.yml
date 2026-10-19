@@ -54,8 +54,17 @@ jobs:
         with:
           toolchain: stable
 
+      # gossamer-rs builds libgossamer with Zig for the host CPU (no -mcpu), so
+      # a target/ cache restored on a runner with another CPU model can die
+      # with SIGILL. Key the cache on the CPU model.
+      - name: CPU model for the cache key
+        id: cpu
+        run: echo "model=$(grep -m1 'model name' /proc/cpuinfo | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+
       - name: Rust cache
         uses: Swatinem/rust-cache@v2.9.2
+        with:
+          key: cpu-${{ steps.cpu.outputs.model }}
 
       - name: Install GTK/WebKit dev headers
         run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
