@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MPL-2.0
+#
+# Exact historical fingerprints only (commit:file:rule:line), for the
+# full-history gitleaks pass in standards' secret-scanner-reusable. None is a
+# real credential, and the current tree no longer carries any of them:
+# - docs/api-reference.md: the placeholder snapshot id `abc123-def456` in the
+#   API examples, replaced by an obviously fake id in #140.
+# - tests/aspect/security_test.mjs: synthetic OpenAI/GitHub-shaped tokens
+#   (ABCDEFGHIJ… fixtures) for the redaction tests, now built at runtime by
+#   syntheticToken() since #122.
+# These entries suppress nothing in any other commit or location.
+aff07811392d0b2a884f08284a0f4e8ab0e1cc68:docs/api-reference.md:generic-api-key:38
+aff07811392d0b2a884f08284a0f4e8ab0e1cc68:docs/api-reference.md:generic-api-key:72
+9eed9ac0fe21b99aed24be00d9c43007d8df3046:tests/aspect/security_test.mjs:generic-api-key:263
+9eed9ac0fe21b99aed24be00d9c43007d8df3046:tests/aspect/security_test.mjs:generic-api-key:269
