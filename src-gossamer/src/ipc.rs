@@ -157,8 +157,11 @@ fn coprocessor(t: &mut Table) {
     t.add("discover_compute_devices", &[], |_| {
         block_on(c::discover_compute_devices())
     });
-    t.add("coprocessor_load_ffi", &["lib_path"], |p| {
-        block_on(c::coprocessor_load_ffi(arg(p, "lib_path")?))
+    // An empty `lib_path` means "use runtime discovery", which is how the
+    // "Load Local FFI" action calls it (no path at all).
+    t.add("coprocessor_load_ffi", &[], |p| {
+        let lib_path: Option<String> = arg(p, "lib_path")?;
+        block_on(c::coprocessor_load_ffi(lib_path.unwrap_or_default()))
     });
     t.add(
         "coprocessor_ffi_dispatch",
@@ -329,6 +332,15 @@ mod tests {
             json!({ "libPath": "/no/such/libpanll_copro.so" }),
         );
         assert_eq!(load["ok"], false, "{load}");
+
+        // `lib_path` is optional: omitting it selects runtime discovery
+        // rather than failing as a missing argument.
+        let commands = commands();
+        let load_ffi = commands
+            .iter()
+            .find(|c| c.name == "coprocessor_load_ffi")
+            .expect("coprocessor_load_ffi is registered");
+        assert!(load_ffi.required.is_empty());
 
         let missing = call("query_compute_engine", json!({ "operation": "x" }));
         assert_eq!(missing["error"], "missing argument `engine_id`");
