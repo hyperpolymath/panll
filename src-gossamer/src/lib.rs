@@ -95,6 +95,23 @@ pub mod watcher;
 pub mod wiring_inspector;
 pub mod workspace;
 
+/// Serialises the tests that set or remove process environment variables
+/// (`BOJ_URL`, `OVERLAY_URL`, `HYPATIA_URL`, `TYPELL_URL`). `cargo test` runs
+/// tests on parallel threads and the environment is process-wide, so without
+/// this lock one test can read the value another has just set.
+#[cfg(test)]
+pub(crate) mod test_env {
+    use std::sync::{Mutex, MutexGuard};
+
+    static LOCK: Mutex<()> = Mutex::new(());
+
+    /// Hold the guard for the whole test. A test that panics while holding it
+    /// poisons the lock; the next test takes it anyway.
+    pub(crate) fn lock() -> MutexGuard<'static, ()> {
+        LOCK.lock().unwrap_or_else(|e| e.into_inner())
+    }
+}
+
 /// Cross-module integration tests. These exercise the public command-backed
 /// functions end-to-end. They live in the lib (not `tests/`) so they run via
 /// `cargo test --lib` without cargo also force-building the GTK-linked

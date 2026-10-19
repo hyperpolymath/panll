@@ -273,6 +273,7 @@ mod tests {
 
     #[test]
     fn overlay_url_default_and_override() {
+        let _env = crate::test_env::lock();
         std::env::remove_var("OVERLAY_URL");
         assert_eq!(overlay_url(), DEFAULT_OVERLAY_URL);
         let custom = "http://overlay.local:9999/v2";
