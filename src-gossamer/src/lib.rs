@@ -32,12 +32,13 @@ pub mod llm_coding;
 
 /// Coprocessor — external compute control plane + Zig FFI data plane.
 ///
-/// Previously orphaned (declared by no crate root, so never compiled). Wired
-/// into the library here so it builds, lints, and its tests run. Note: the
-/// async command handlers are not yet registered in the binary's IPC table —
-/// that integration is tracked as follow-up debt (see
-/// `docs/TECHNICAL_DEBT.adoc`, F1/F2).
+/// Previously orphaned (declared by no crate root, so never compiled). Its
+/// command handlers are registered through [`ipc`].
 pub mod coprocessor;
+
+/// IPC command table — adapts the panel-backend handlers to Gossamer's IPC
+/// handler shape. `main.rs` registers every entry with `command_async`.
+pub mod ipc;
 
 // ---------------------------------------------------------------------------
 // Formerly orphaned modules — panel backends, live service connections
