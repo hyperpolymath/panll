@@ -108,10 +108,16 @@ pub fn arg<T: DeserializeOwned>(payload: &Value, name: &str) -> Result<T, String
 }
 
 /// Read a struct argument: the value under `name` (or its camelCase form) if
-/// present, otherwise the whole payload. The old frontend sent both shapes.
+/// present, otherwise the whole payload. The old frontend sent both shapes,
+/// and sent some structs as JSON text (`save_arrangement`, `save_session`),
+/// so a string value is parsed as JSON first.
 pub fn struct_arg<T: DeserializeOwned>(payload: &Value, name: &str) -> Result<T, String> {
-    let value = lookup(payload, name).unwrap_or(payload).clone();
-    serde_json::from_value(value).map_err(|e| format!("invalid argument `{name}`: {e}"))
+    let invalid = |e: serde_json::Error| format!("invalid argument `{name}`: {e}");
+    let value = match lookup(payload, name).unwrap_or(payload) {
+        Value::String(text) => serde_json::from_str(text).map_err(invalid)?,
+        other => other.clone(),
+    };
+    serde_json::from_value(value).map_err(invalid)
 }
 
 /// Wrap a handler result in the IPC response envelope.
@@ -1158,6 +1164,13 @@ mod tests {
         let flat = json!({ "content": "hi" });
         assert_eq!(struct_arg::<Req>(&nested, "request").unwrap().content, "hi");
         assert_eq!(struct_arg::<Req>(&flat, "request").unwrap().content, "hi");
+        let text = json!({ "request": r#"{"content":"hi"}"# });
+        assert_eq!(struct_arg::<Req>(&text, "request").unwrap().content, "hi");
+        assert!(
+            struct_arg::<Req>(&json!({ "request": "not json" }), "request")
+                .unwrap_err()
+                .starts_with("invalid argument `request`")
+        );
         assert!(struct_arg::<Req>(&json!({}), "request")
             .unwrap_err()
             .contains("missing"));
