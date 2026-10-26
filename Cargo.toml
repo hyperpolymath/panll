@@ -5,7 +5,7 @@
 # This replaces the former src-tauri/ Tauri 2.0 backend with a Gossamer-native
 # binary. IPC commands are registered via gossamer_rs::App::command() in
 # `register_commands` (src-gossamer/src/main.rs) instead of #[tauri::command]
-# macros. 269 command handlers are registered: 36 in main.rs and 233 from
+# macros. 275 command handlers are registered: 36 in main.rs and 239 from
 # the lib's IPC table (src-gossamer/src/ipc.rs), which covers every
 # panel-backend module.
 #

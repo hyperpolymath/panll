@@ -134,7 +134,7 @@ The import validates JSON structure, not the semantic truth of the event chain. 
 | 4-pane UI, TEA architecture, Anti-Crash, Vexometer, Contractiles
 
 | `src-gossamer/` (Rust backend)
-| Gossamer webview shell. 269 IPC commands are registered: 36 in `main.rs` and 233 panel-backend commands from the lib's table in `src-gossamer/src/ipc.rs`. Backend events (AI streaming, file watching) reach the webview through an event pump in `main.rs`
+| Gossamer webview shell. 275 IPC commands are registered: 36 in `main.rs` and 239 panel-backend commands from the lib's table in `src-gossamer/src/ipc.rs`. Backend events (AI streaming, file watching) reach the webview through an event pump in `main.rs`
 
 | `beam/panll_beam/`
 | BEAM middleware scaffold (HTTP/GraphQL/gRPC)

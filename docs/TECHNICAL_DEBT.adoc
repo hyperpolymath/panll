@@ -164,7 +164,7 @@ plus `+boj_live+`, `+compat+`, `+echidna_live+`, `+error+`,
 applied and Tauri leftovers removed. `+cargo test --lib+`: 285 passing
 (was 23). Handlers are still *not registered* in `+register_commands+`.
 . *Bulk wire:* ✅ done 2026-10-26. The IPC table in
-`+src-gossamer/src/ipc.rs+` registers all 233 panel-backend commands;
+`+src-gossamer/src/ipc.rs+` registers all 239 panel-backend commands;
 `+main.rs+` keeps its own 36. Argument names were checked against the
 pre-#107 ReScript `+invoke()+` calls: every required argument was sent
 by the old frontend. A test fails if a public handler in a command
@@ -182,8 +182,8 @@ Follow-up debt opened:        3  (F1–F3, see above)
 Build status:                 cargo check / clippy green; bin link needs GTK env
 Clippy -D warnings:           clean (0, all targets, default features)
 Lib tests:                    294 passing (cargo test --lib, GTK-free; 2026-10-26)
-F1:                           done — 43 modules compile in the lib; 269 IPC
-                              commands registered (36 main.rs + 233 ipc.rs)
+F1:                           done — 43 modules compile in the lib; 275 IPC
+                              commands registered (36 main.rs + 239 ipc.rs)
 ....
 
 === Success Criteria

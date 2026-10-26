@@ -64,6 +64,7 @@ pub fn commands() -> Vec<Command> {
     k9(&mut table);
     level_architect(&mut table);
     minter(&mut table);
+    multiplayer_monitor(&mut table);
     network_topology(&mut table);
     observability(&mut table);
     overlay(&mut table);
@@ -603,6 +604,28 @@ fn minter(t: &mut Table) {
     });
     t.add("minter_mint_panel", &["request"], |p| {
         block_on(c::minter_mint_panel(struct_arg(p, "request")?))
+    });
+}
+
+fn multiplayer_monitor(t: &mut Table) {
+    use crate::multiplayer_monitor::commands as c;
+    t.add("multiplayer_connect", &["url"], |p| {
+        block_on(c::multiplayer_connect(arg(p, "url")?))
+    });
+    t.add("multiplayer_disconnect", &[], |_| {
+        block_on(c::multiplayer_disconnect())
+    });
+    t.add("multiplayer_read_state", &[], |_| {
+        block_on(c::multiplayer_read_state())
+    });
+    t.add("multiplayer_read_diffs", &[], |_| {
+        block_on(c::multiplayer_read_diffs())
+    });
+    t.add("multiplayer_read_ets", &[], |_| {
+        block_on(c::multiplayer_read_ets())
+    });
+    t.add("multiplayer_reconnection_test", &[], |_| {
+        block_on(c::multiplayer_reconnection_test())
     });
 }
 
@@ -1238,8 +1261,12 @@ mod tests {
         let mut missing = Vec::new();
         for file in files {
             let text = std::fs::read_to_string(&file).expect("read command file");
-            // Only the code before the unit tests.
-            let text = text.split("#[cfg(test)]").next().unwrap_or_default();
+            // Only the code before the unit-test module. Other `#[cfg(test)]`
+            // items (e.g. a test lock) can sit above the handlers.
+            let text = text
+                .split("#[cfg(test)]\nmod tests")
+                .next()
+                .unwrap_or_default();
             for line in text.lines() {
                 let Some(rest) = line
                     .strip_prefix("pub async fn ")

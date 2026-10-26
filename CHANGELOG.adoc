@@ -11,9 +11,9 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 ==== Added (2026-10-26 — every panel-backend command registered)
 
-* *The IPC table in `+src-gossamer/src/ipc.rs+` now registers all 233
+* *The IPC table in `+src-gossamer/src/ipc.rs+` now registers all 239
 panel-backend commands* (the coprocessor pilot was 10). With the 36 in
-`+main.rs+`, the desktop shell exposes 269. Command and argument names
+`+main.rs+`, the desktop shell exposes 275. Command and argument names
 match the pre-#107 frontend's `+invoke()+` calls.
 * *Event pump.* `+main.rs+` delivers the events backend modules queue
 through `+compat+` (AI streaming chunks, file-watcher events) to the
