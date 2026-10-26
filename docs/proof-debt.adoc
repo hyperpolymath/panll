@@ -9,13 +9,14 @@ what it still needs to prove, is in link:../PROOF-NEEDS.adoc[`PROOF-NEEDS.adoc`]
 Last reconciled: 2026-10-26 (`main` at `1937c6b`).
 
 * *Idris2* (`panel-clades/src/abi/`): no `believe_me`, `assert_total`,
-  `assert_smaller`, `idris_crash`, `postulate` or holes. `check-abi.sh`
-  fails CI if one appears.
+  `assert_smaller`, `idris_crash`, `unsafePerformIO`, `postulate` or holes,
+  measured on the date above. `check-abi.sh` fails CI if any of those six
+  keywords appears; it does not scan for holes.
 * *Estate check*: standards' `scripts/check-trusted-base.sh` finds 2
   escape-hatch signatures, both documented below as not proof debt.
-* *Rust*: the estate check does not scan Rust. The `unsafe` blocks in
-  `src-gossamer/` are listed under (d) because none carries a `TRUSTED:`
-  annotation or a refutation budget yet.
+* *Rust*: the estate check does not scan Rust. The `unsafe` blocks and
+  declarations in `src-gossamer/` are listed under (d) because none carries
+  a `TRUSTED:` annotation or a refutation budget yet.
 
 == (a) Discharged in this repository
 
@@ -32,9 +33,10 @@ Last reconciled: 2026-10-26 (`main` at `1937c6b`).
 
 == (d) Debt — actively to be closed
 
-Each entry is a Rust `unsafe` block at an FFI or system-call boundary.
-None is annotated with `// TRUSTED:`, and none has a stated test budget, so
-none qualifies as (b) yet.
+Each entry is a Rust `unsafe` block, or an `unsafe extern "C" fn` type
+declaration, at an FFI or system-call boundary. None is annotated with
+`// TRUSTED:`, and none has a stated test budget, so none qualifies as (b)
+yet.
 
 *Owner*: @hyperpolymath. *Deadline*: INDEFINITE — the disposition of each
 group (annotate and budget as (b), or remove the `unsafe`) is an owner

@@ -14,8 +14,9 @@ toc::[]
 
 The only machine-checked proofs live in the panel-clades ABI,
 `panel-clades/src/abi/PanelClades/ABI/` (Idris2 0.8.0, `%default total`,
-about 1,300 lines). There are no holes, `believe_me`, `assert_total`,
-`assert_smaller`, `idris_crash` or `postulate` in any `.idr` file.
+about 1,300 lines). As of the date above, no `.idr` file contains a hole,
+`believe_me`, `assert_total`, `assert_smaller`, `idris_crash`,
+`unsafePerformIO` or `postulate`.
 
 The CI job `panel-clades-abi` in `.github/workflows/build-validation.yml`
 runs `panel-clades/scripts/check-abi.sh`, which:
@@ -25,7 +26,9 @@ runs `panel-clades/scripts/check-abi.sh`, which:
 * builds `panel-clades/src/abi/panel-clades-grades.ipkg` against it and
   fails on any `Error:` line, even when `idris2` exits 0;
 * fails if any module under `PanelClades/` is missing from the ipkg, or
-  uses an escape hatch;
+  contains `believe_me`, `assert_total`, `assert_smaller`, `idris_crash`,
+  `unsafePerformIO` or `postulate` (a keyword scan; it does not look for
+  holes);
 * fails if `Budgets.idr` is stale against the clade configs
   (`scripts/gen-budgets.sh --check`);
 * requires each of the six fixtures in `panel-clades/tests/reject/` to be
