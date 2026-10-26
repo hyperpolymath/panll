@@ -21,6 +21,9 @@
 use gossamer_rs::App;
 use serde_json::json;
 use std::env;
+use std::ffi::{c_char, c_int, CString};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 
 // -----------------------------------------------------------------------
 // Module imports
@@ -159,8 +162,51 @@ fn main() {
     if let Ok(mut app_ok) = app {
         register_commands(&mut app_ok);
         let _ = system_tray::init(&app_ok);
+        spawn_event_pump(app_ok.raw_handle());
         app_ok.run();
+        EVENT_PUMP_STOP.store(true, Ordering::Release);
         system_tray::cleanup();
+    }
+}
+
+// -----------------------------------------------------------------------
+// Event pump
+// -----------------------------------------------------------------------
+
+extern "C" {
+    // gossamer-rs keeps its binding private, and `App::emit` needs `&App`,
+    // which is not `Send`. The Zig side queues delivery on the GTK main thread
+    // with `g_idle_add` and copies both strings, so any thread may call it.
+    fn gossamer_emit(handle: u64, event_name: *const c_char, payload_json: *const c_char) -> c_int;
+}
+
+/// Set once `run()` returns, so the pump stops using the window handle.
+static EVENT_PUMP_STOP: AtomicBool = AtomicBool::new(false);
+
+/// Deliver the events backend modules queue with `compat::Emitter::emit`
+/// (AI streaming chunks, file-watcher events) to the webview every 50 ms.
+fn spawn_event_pump(handle: u64) {
+    let pump = move || {
+        while !EVENT_PUMP_STOP.load(Ordering::Acquire) {
+            for event in panll::compat::drain_events() {
+                let (Ok(channel), Ok(payload)) =
+                    (CString::new(event.channel), CString::new(event.payload))
+                else {
+                    continue;
+                };
+                // SAFETY: `handle` comes from `App::raw_handle` and stays valid
+                // until `run()` returns; both strings are NUL-terminated and
+                // outlive the call.
+                unsafe { gossamer_emit(handle, channel.as_ptr(), payload.as_ptr()) };
+            }
+            std::thread::sleep(Duration::from_millis(50));
+        }
+    };
+    if let Err(e) = std::thread::Builder::new()
+        .name("panll-event-pump".into())
+        .spawn(pump)
+    {
+        eprintln!("[panll] event pump not started: {e}");
     }
 }
 
