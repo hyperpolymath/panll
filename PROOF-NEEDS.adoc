@@ -1,50 +1,182 @@
-== PROOF-NEEDS.md — panll
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Proof needs — PanLL
+:toc: macro
 
-=== Current State
+What PanLL proves today, what it deliberately does not, and what is still
+owed. Escape hatches and their dispositions are tracked separately in
+link:docs/proof-debt.adoc[`docs/proof-debt.adoc`].
 
-* *src/abi/*: YES — contains `+cartridge-schema.json+` and `+README.md+`
-(no Idris2 files)
-* *Dangerous patterns*: 0 in own code (164 references are all in UI
-display code that shows believe_me/Admitted counts from OTHER repos)
-* *LOC*: ~138,000 (ReScript + Rust)
-* *ABI layer*: Schema-only, no Idris2 proofs
+Last reconciled against the tree: 2026-10-26 (`main` at `1937c6b`).
 
-=== What Needs Proving
+toc::[]
 
-[width="100%",cols="51%,27%,22%",options="header",]
+== Current state
+
+The only machine-checked proofs live in the panel-clades ABI,
+`panel-clades/src/abi/PanelClades/ABI/` (Idris2 0.8.0, `%default total`,
+about 1,300 lines). There are no holes, `believe_me`, `assert_total`,
+`assert_smaller`, `idris_crash` or `postulate` in any `.idr` file.
+
+The CI job `panel-clades-abi` in `.github/workflows/build-validation.yml`
+runs `panel-clades/scripts/check-abi.sh`, which:
+
+* builds typed-wasm's grade kernel at the pin in
+  `panel-clades/scripts/fetch-siblings.sh` (`117bbf8`);
+* builds `panel-clades/src/abi/panel-clades-grades.ipkg` against it and
+  fails on any `Error:` line, even when `idris2` exits 0;
+* fails if any module under `PanelClades/` is missing from the ipkg, or
+  uses an escape hatch;
+* fails if `Budgets.idr` is stale against the clade configs
+  (`scripts/gen-budgets.sh --check`);
+* requires each of the six fixtures in `panel-clades/tests/reject/` to be
+  refused at its `invalid` declaration, with the expected message.
+
+=== What is proved
+
+[cols="1,3",options="header"]
 |===
-|Component |What |Why
-|Cartridge schema validation |Cartridge loading validates against schema
-correctly |Malformed cartridges crash panels or produce wrong output
+|Module |Proved
 
-|PCC constraint propagator |Constraint propagation is sound and complete
-|PanLL Constraint Checker is the build-time safety net
+|`Types.idr`
+|The C tag encodings of `Result` and `CladeKind` round-trip, so they are
+injective (`resultRoundTrip`, `cladeKindRoundTrip`). Equality on both is
+decidable without a catch-all `absurd` (`decEqViaTag`). `allCladeKinds`
+lists every kind (`cladeKindExhaustive`) and has length `cladeKindCount`.
+A `Handle` is never null and a `CladeId` is never empty, by construction.
 
-|PCC ReScript scanner |Scanner correctly identifies all constraint
-violations |Missed violations bypass safety checks
+|`Layout.idr`
+|Rounding up to an alignment lands on a multiple of it (`alignUpCorrect`).
+Every computed struct size is a multiple of its alignment
+(`calcStructSizeAligned`). Field alignment is decided by an equation on
+`Nat` (`decDivides`, `proveFieldsAligned`), not by a Boolean test.
 
-|Verification Dashboard accuracy |Dashboard accurately reflects actual
-proof state |Displaying wrong verification state gives false confidence
+|`Grades.idr`
+|Clade resource contracts are graded in typed-wasm's kernel (transcribed
+from hyperpolymath/resource-algebra), not re-declared. Occupancy composes
+within a bound (`phasesWithin`). Loss adds across two crossings
+(`crossTwice`), and the better of two alternatives stays within a shared
+bound (`betterOfTwo`). Occupancy and cost are kept apart
+(`panelPhasesOccupancy` vs `panelPhasesCost`). The neurosym-bridge
+contract typechecks against its declared budget
+(`neurosymBridgeContract`).
 
-|Provenance engine |Provenance tracking is complete and unforgeable
-|Provenance gaps break audit trail
+|`Budgets.idr`
+|Generated from the clades' `config.k9.ncl` resource blocks. It proves
+nothing itself; it is the input `Grades.idr` checks against. Only
+neurosym-bridge declares a budget so far.
 
-|Gossamer coprocessor commands |Command dispatch is total (no unhandled
-commands) |Unhandled commands silently fail
-
-|Wiring Inspector |Wiring analysis correctly identifies all connections
-|Missing wires mean broken panel communication
+|`Foreign.idr`
+|Typechecks only. It declares the Zig FFI surface; it proves nothing.
 |===
 
-=== Recommended Prover
+The reject fixtures pin down what the types refuse: `BudgetTooSmall`,
+`CollapseWithinTolerance`, `MisalignedField`, `NullHandle`, `OverBudget`
+and `WasmPointerIsEightBytes`.
 
-*Idris2* — Replace schema-only ABI with proper Idris2 types. PCC
-constraint propagation is a natural fit for formal verification. The
-Rust PCC tool (`+tools/pcc/+`) should have soundness proofs.
+=== What is not proved
 
-=== Priority
+These limits are stated in the modules themselves.
 
-*MEDIUM* — PanLL is the developer panel system. PCC soundness is the
-highest-value proof (it checks constraints across the ecosystem). The
-Verification Dashboard must accurately reflect proof state to avoid
-false confidence.
+* *Struct size covers the last field.* `Layout.idr` does not prove that a
+  computed size is at least the end of the last field; `verifyLayout`
+  checks it at run time and refuses a layout that fails.
+* *The Zig side matches.* Nothing checks that `panel-clades/ffi/zig/`
+  exports the symbols `Foreign.idr` declares, with those types, or uses
+  the sizes and tags `Types.idr` proves. `ffi/zig/src/main.zig` restates
+  them by hand.
+* *Grades reach the runtime.* The budgets are DESIGNED values from the
+  configs, not measurements, and nothing in the panel runtime emits or
+  checks these grades yet.
+
+== What needs proving
+
+[cols="2,3,2,1",options="header"]
+|===
+|Item |What |Status |Tracked
+
+|Struct size lower bound
+|Prove `calcStructSize` is at least the end of the last field, and drop
+the run-time check in `verifyLayout`.
+|Not started. Induction over the field list plus a lemma about rounding
+up.
+|—
+
+|Safe callback registration
+|A safe wrapper for `prim__registerCallback` in `Foreign.idr`, using
+Idris2's FFI callback mechanism (`cast` is banned).
+|Not started.
+|#149
+
+|Zig/Idris FFI agreement
+|Check that the Zig exports match `Foreign.idr` and the proven sizes and
+tags. This is a CI check, not a proof.
+|Not started.
+|—
+
+|Grade kernel identity
+|Confirm typed-wasm's transcription matches resource-algebra's Agda
+`MaxPlus` kernel, which is now the family instance.
+|Open question; PanLL already imports the kernel through typed-wasm.
+|#143
+
+|More clade budgets
+|As clade configs declare resource blocks, `gen-budgets.sh` emits them
+and their contracts need to typecheck.
+|One clade so far (neurosym-bridge).
+|—
+
+|IPC dispatch is total
+|Every command the frontend invokes has a registered handler.
+|Partly covered by tests: `src-gossamer/src/ipc.rs` checks every table
+entry and that the table and `main.rs` never register the same name
+twice. Completing it needs the frontend's `invoke` names, which wait on
+the AffineScript port.
+|#148
+
+|PCC soundness
+|The PanLL Constraint Checker (`tools/pcc`) propagates constraints soundly
+and finds every violation.
+|Blocked: `tools/pcc` still scans ReScript `.res` sources, which #107
+removed. It must be rebuilt for AffineScript before a proof means
+anything, and it needs a written specification first.
+|#148
+
+|Verification Dashboard accuracy
+|The dashboard reports the real proof state of the repos it inspects.
+|Better served by fixture tests than by proof. Waits on the frontend
+port.
+|#148
+
+|Provenance engine
+|Provenance tracking is complete (every action is recorded). "Unforgeable"
+is a cryptographic claim and needs a threat model first.
+|Not started; needs a specification.
+|—
+
+|Cartridge schema validation
+|Loading a cartridge validates it against `src/abi/cartridge-schema.json`.
+|Schema only; no validator to prove against yet.
+|—
+
+|Wiring Inspector
+|Wiring analysis finds every panel connection.
+|Waits on the frontend port.
+|#148
+|===
+
+== Recommended prover
+
+*Idris2 0.8.0* for anything at the ABI or grade level, matching the
+existing modules and the typed-wasm kernel they import. Rust-side
+properties (IPC dispatch, PCC) are better served first by tests with a
+stated budget; a mechanised proof only pays once each has a written
+specification.
+
+== Priority
+
+. Struct size lower bound and the safe callback wrapper (#149): small,
+  local, and they close the two gaps the modules admit to.
+. Zig/Idris FFI agreement check: cheap, and it removes the largest
+  unchecked assumption under the proofs.
+. PCC soundness: the highest-value proof, but only after the AffineScript
+  port (#148) gives it something to check.
