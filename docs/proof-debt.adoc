@@ -1,9 +1,26 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
 = Proof Debt
 
+Schema: hyperpolymath/standards
+`docs/TRUSTED-BASE-REDUCTION-POLICY.adoc`. This ledger records every
+soundness-relevant escape hatch and its disposition. What PanLL proves, and
+what it still needs to prove, is in link:../PROOF-NEEDS.adoc[`PROOF-NEEDS.adoc`].
+
+Last reconciled: 2026-10-26 (`main` at `1937c6b`).
+
+* *Idris2* (`panel-clades/src/abi/`): no `believe_me`, `assert_total`,
+  `assert_smaller`, `idris_crash`, `postulate` or holes. `check-abi.sh`
+  fails CI if one appears.
+* *Estate check*: standards' `scripts/check-trusted-base.sh` finds 2
+  escape-hatch signatures, both documented below as not proof debt.
+* *Rust*: the estate check does not scan Rust. The `unsafe` blocks in
+  `src-gossamer/` are listed under (d) because none carries a `TRUSTED:`
+  annotation or a refutation budget yet.
+
 == (a) Discharged in this repository
 
-* None.
+* None. No escape hatch has been replaced by a proof here; the
+  panel-clades ABI was written without any.
 
 == (b) Budgeted — tested with a refutation budget
 
@@ -15,7 +32,39 @@
 
 == (d) Debt — actively to be closed
 
-* None.
+Each entry is a Rust `unsafe` block at an FFI or system-call boundary.
+None is annotated with `// TRUSTED:`, and none has a stated test budget, so
+none qualifies as (b) yet.
+
+*Owner*: @hyperpolymath. *Deadline*: INDEFINITE — the disposition of each
+group (annotate and budget as (b), or remove the `unsafe`) is an owner
+decision. *Plan* for each: add a `// TRUSTED: <kind>; <budget>` annotation
+and the test that sets the budget, then move the entry to (b).
+
+* `src-gossamer/src/coprocessor/commands.rs:238`, `:242`, `:244`, `:327` —
+  `libloading` load of the Zig coprocessor library and calls to
+  `copro_init`, `copro_dispatch` and `copro_free`.
+** *Kind*: extraction boundary (Rust → Zig, dynamic library).
+** *Note*: the `SAFETY` comment at `:322` says the result is freed by
+   `copro_free`, but the Zig `copro_free` currently frees nothing (#149),
+   so every dispatch result leaks.
+* `src-gossamer/src/coprocessor/mod.rs:114`, `:117`, `:120`, `:123` — the
+  `unsafe extern "C" fn` types for those symbols. These are declarations;
+  they share the entry above.
+* `src-gossamer/src/llm_coding/commands.rs:197`, `:217`, `:237` —
+  `libc::kill` sending `SIGSTOP` / `SIGCONT` / `SIGTERM` to a session's
+  process.
+** *Kind*: system call. No `SAFETY` comment.
+* `src-gossamer/src/game_preview/commands.rs:203`, `:206` — `libc::kill`
+  sending `SIGTERM` to a preview's process group, then its pid.
+** *Kind*: system call. No `SAFETY` comment.
+* `src-gossamer/src/workspace/sysinfo.rs:113` — `libc::statvfs` into a
+  zeroed struct.
+** *Kind*: system call. Has a `SAFETY` comment.
+* `src-gossamer/src/system_tray/mod.rs:101` — `gossamer_tray_destroy` on a
+  tray handle.
+** *Kind*: extraction boundary (Rust → Gossamer C ABI). No `SAFETY`
+   comment. Compiled only with `--features gossamer`.
 
 == Scanner signatures that are not proof debt
 
