@@ -47,7 +47,7 @@ for f in "${abi_files[@]}"; do
   grep -qE "^[[:space:]]*(modules[[:space:]]*=|,)[[:space:]]*${mod//./\\.}[[:space:]]*$" "$IPKG" \
     || err "$mod is not listed in $IPKG (it would never be checked)"
 done
-if grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO)\b' "${abi_files[@]}"; then
+if grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO|postulate)\b' "${abi_files[@]}"; then
   err "escape hatch in src/abi/PanelClades (lines above)"
 fi
 [ "$fail" -eq 0 ] && pass "every PanelClades module is listed in the ipkg; no escape hatches"
