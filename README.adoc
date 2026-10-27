@@ -127,7 +127,7 @@ Feedback-O-Tron::
 | No `node_modules`. URL imports. Secure-by-default permissions. AffineScript/Tailwind run through `npm:` specifiers; no `package.json`.
 
 | Testing
-| `cargo test` (285 Rust); the JS suite under `tests/` waits on the AffineScript port (#148)
+| `cargo test` (294 Rust); the JS suite under `tests/` waits on the AffineScript port (#148)
 | Built into the toolchain. No extra framework.
 
 | Styling
@@ -171,7 +171,7 @@ Feedback-O-Tron::
 # Compile AffineScript
 bun task res:buildbures
 
-# Run tests (285 Rust; the JS suite waits on #148). Serial, as CI runs
+# Run tests (294 Rust; the JS suite waits on #148). Serial, as CI runs
 # them: several tests set process-wide environment variables.
 cargo test --locked --lib -- --test-threads=1
 

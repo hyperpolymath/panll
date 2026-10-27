@@ -9,6 +9,18 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === https://github.com/hyperpolymath/panll/compare/v0.1.0...HEAD[Unreleased]
 
+==== Added (2026-10-26 — every panel-backend command registered)
+
+* *The IPC table in `+src-gossamer/src/ipc.rs+` now registers all 239
+panel-backend commands* (the coprocessor pilot was 10). With the 36 in
+`+main.rs+`, the desktop shell exposes 275. Command and argument names
+match the pre-#107 frontend's `+invoke()+` calls.
+* *Event pump.* `+main.rs+` delivers the events backend modules queue
+through `+compat+` (AI streaming chunks, file-watcher events) to the
+webview every 50 ms.
+* A test fails if a public handler in a command module is not
+registered (`+every_backend_command_is_registered+`).
+
 ==== Changed (2026-10-14 — orphaned Rust backend modules wired into the lib)
 
 * *43 orphaned modules under `+src-gossamer/src/+` now compile.* They were
