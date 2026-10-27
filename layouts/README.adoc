@@ -54,18 +54,31 @@ The `pedigree-layout.ncl` schema enforces:
 
 == Validating a Preset
 
+Each preset is a K9 component: line 1 is the `K9!` envelope, which is not
+Nickel, so the `nickel` CLI cannot read the file directly. Validate it with
+the K9 validator, or evaluate the Nickel body (everything after line 1) from
+inside `layouts/` so the `./pedigree-layout.ncl` import resolves:
+
 [source,bash]
 ----
-nickel typecheck layouts/logic-and-proofs.k9.ncl
-nickel export layouts/logic-and-proofs.k9.ncl --format json
+# K9 contract v1.0.0 conformance (envelope, pedigree, and a body typecheck)
+k9-validate.sh --strict --layer L2 layouts/logic-and-proofs.k9.ncl
+
+# Evaluate the preset against pedigree-layout.ncl's contracts
+cd layouts
+tail -n +2 logic-and-proofs.k9.ncl | nickel typecheck
+tail -n +2 logic-and-proofs.k9.ncl | nickel export --format json
 ----
+
+`k9-validate.sh` is standards' `1-formats/k9/tools/k9-validate.sh`; CI runs
+it on every PR through the K9-DEED conformance lane.
 
 == Creating a Custom Layout
 
 . Copy an existing preset
 . Modify pane sizes (must sum to 100)
 . Change panel visibility and prover priority
-. Run `nickel typecheck` to validate
+. Validate it as above (`k9-validate.sh`, then `nickel export` on the body)
 
 Community-contributed presets are welcome — submit a PR with your `.k9.ncl`
 file and it will be validated against the pedigree schema automatically.
