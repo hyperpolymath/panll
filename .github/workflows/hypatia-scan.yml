@@ -34,6 +34,6 @@ jobs:
       actions: read
       contents: read
       security-events: write
-    uses:metadatastician/standards/.github/workflows/hypatia-scan-reusable.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    uses: metadatastician/standards/.github/workflows/hypatia-scan-reusable.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
     secrets:
       HYPATIA_SCAN_PAT: ${{ secrets.HYPATIA_SCAN_PAT }}
