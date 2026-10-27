@@ -21,6 +21,7 @@
 use gossamer_rs::App;
 use serde_json::json;
 use std::env;
+use std::ffi::{c_char, c_int, c_void, CString};
 
 // -----------------------------------------------------------------------
 // Module imports
@@ -159,9 +160,53 @@ fn main() {
     if let Ok(mut app_ok) = app {
         register_commands(&mut app_ok);
         let _ = system_tray::init(&app_ok);
+        start_event_pump(app_ok.raw_handle());
         app_ok.run();
         system_tray::cleanup();
     }
+}
+
+// -----------------------------------------------------------------------
+// Event pump
+// -----------------------------------------------------------------------
+
+extern "C" {
+    // gossamer-rs keeps its binding private, and `App::emit` needs `&App`.
+    fn gossamer_emit(handle: u64, event_name: *const c_char, payload_json: *const c_char) -> c_int;
+    // GLib, linked through GTK.
+    fn g_timeout_add(
+        interval_ms: u32,
+        function: extern "C" fn(*mut c_void) -> c_int,
+        data: *mut c_void,
+    ) -> u32;
+}
+
+/// Deliver the events backend modules queue with `compat::Emitter::emit`
+/// (AI streaming chunks, file-watcher events) to the webview every 50 ms.
+///
+/// The timer runs on the GTK main thread inside `run()`'s event loop, so it
+/// only fires while the window handle is alive: `gossamer_run` frees the
+/// handle after the loop exits, and no timer fires after that. A background
+/// thread could not know when that happens.
+fn start_event_pump(handle: u64) {
+    extern "C" fn pump(data: *mut c_void) -> c_int {
+        let handle = data as u64;
+        for event in panll::compat::drain_events() {
+            let (Ok(channel), Ok(payload)) =
+                (CString::new(event.channel), CString::new(event.payload))
+            else {
+                continue;
+            };
+            // SAFETY: this runs inside the GTK event loop, where `handle`
+            // (from `App::raw_handle`) is live; both strings are
+            // NUL-terminated and `gossamer_emit` copies them.
+            unsafe { gossamer_emit(handle, channel.as_ptr(), payload.as_ptr()) };
+        }
+        1 // G_SOURCE_CONTINUE
+    }
+    // SAFETY: called on the main thread after GTK is initialised by
+    // `App::new`; `pump` matches GLib's `GSourceFunc`.
+    unsafe { g_timeout_add(50, pump, handle as *mut c_void) };
 }
 
 fn register_commands(app: &mut gossamer_rs::App) {

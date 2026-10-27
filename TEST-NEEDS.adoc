@@ -35,7 +35,7 @@ governance contracts
 |Reflexive |22 |tests/reflexive/manifest_test.mjs — manifest
 consistency, export verification
 
-|Rust smoke |285 |`cargo test --lib`: 285 passing (2026-10-14). Smoke tests in:
+|Rust smoke |294 |`cargo test --lib`: 294 passing (2026-10-26). Smoke tests in:
 security, capture, farm, minter, plaza, watcher, workspace, ai,
 cloudguard, voicetag, hypatia
 |===
@@ -44,7 +44,7 @@ NOTE: The JS rows above cannot currently run. 140 of the 143 files under
 `+tests/+` import compiled ReScript output (`+src/**/*.res.js+`) that
 #107 removed; they return against the AffineScript frontend under #148.
 
-*Source modules:* ~686 ReScript .res files. 112 Rust files (all
+*Source modules:* ~686 ReScript .res files. 113 Rust files (all
 previously-untested crates now have smoke tests).
 
 === What Was Added (2026-04-04 CRG C Blitz)
@@ -188,19 +188,19 @@ render)
 |Models (.res) |~100+ |0 direct |*0%* (requires ReScript build)
 |Views (.res) |~100+ |0 direct |*0%* (requires ReScript build)
 |TEA framework |~20 |4 |*20%*
-|Rust crates |112 files |285 tests |*smoke coverage*
+|Rust crates |113 files |294 tests |*smoke coverage*
 |===
 
 === CRG Grade Assessment
 
 *Before blitz:* D (3.8% coverage, 0 benchmarks, no taxonomy structure)
 *After blitz:* C+ (Taxonomy structure complete, all taxonomy categories
-populated, Rust smoke tests; 285 Rust tests passing as of 2026-10-14)
+populated, Rust smoke tests; 294 Rust tests passing as of 2026-10-26)
 
-*CRG C requirements met:* - [x] Unit tests present (285 Rust; the JS
+*CRG C requirements met:* - [x] Unit tests present (294 Rust; the JS
 tests wait on #148)
 - [x] Smoke tests (all Rust crates have at least smoke coverage) - [x]
-Build verification (cargo test --lib: 285/285 pass) - [x] P2P property tests
+Build verification (cargo test --lib: 294/294 pass) - [x] P2P property tests
 (tea_properties_test.mjs) - [x] E2E tests (e2e_panel_lifecycle_test.js —
 47 tests) - [x] Reflexive tests (manifest_test.mjs) - [x] Contract tests
 (panel_contracts_test.mjs) - [x] Aspect tests (security_test.mjs) - [x]

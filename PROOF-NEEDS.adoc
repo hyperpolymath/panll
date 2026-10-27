@@ -130,10 +130,12 @@ and their contracts need to typecheck.
 
 |IPC dispatch is total
 |Every command the frontend invokes has a registered handler.
-|Partly covered by tests: `src-gossamer/src/ipc.rs` checks every table
-entry and that the table and `main.rs` never register the same name
-twice. Completing it needs the frontend's `invoke` names, which wait on
-the AffineScript port.
+|Backend side covered by tests in `src-gossamer/src/ipc.rs`:
+`every_backend_command_is_registered` fails if a public handler in a
+command module is reachable from neither the table nor `main.rs`, and
+the table and `main.rs` never register the same name twice. Checking the
+frontend side needs its `invoke` names, which wait on the AffineScript
+port.
 |#148
 
 |PCC soundness

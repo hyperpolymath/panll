@@ -46,10 +46,10 @@ The backend is Rust (`link:src-gossamer/[]`) using Gossamer (WebKitGTK) for the 
 Caveat::
 The 5 MB figure is the Rust binary; the full installation includes WebKitGTK dependencies (provided by the host OS or container). Linux is the primary target; macOS and Windows require WebKitGTK availability. Gossamer is actively maintained but less battle-tested than Electron.
 
-=== 285 Rust tests passing
+=== 294 Rust tests passing
 
 [quote, README.adoc]
-____`cargo test` (285 Rust); the JS suite under `tests/` waits on the AffineScript port (#148)____
+____`cargo test` (294 Rust); the JS suite under `tests/` waits on the AffineScript port (#148)____
 
 How this is implemented::
 `cargo test --locked --lib -- --test-threads=1` runs the Rust suite: 285 tests across the backend modules in `link:src-gossamer/src/[]` (panel backends, service registry, settings, identity, coprocessor FFI loading, filesystem watching). It runs serially because several tests set process-wide environment variables. CI runs it on every PR. The JS suite under `tests/` is not run: 140 of its 143 files import compiled ReScript output (`src/**/*.res.js`) that #107 removed, and #108 removed `deno.json`. It returns against the AffineScript frontend under #148.
@@ -134,7 +134,7 @@ The import validates JSON structure, not the semantic truth of the event chain. 
 | 4-pane UI, TEA architecture, Anti-Crash, Vexometer, Contractiles
 
 | `src-gossamer/` (Rust backend)
-| Gossamer webview shell. 36 IPC commands are registered in `main.rs`; the other panel backends (including filesystem watching) compile and are tested in the lib, but their handlers are not yet registered
+| Gossamer webview shell. 275 IPC commands are registered: 36 in `main.rs` and 239 panel-backend commands from the lib's table in `src-gossamer/src/ipc.rs`. Backend events (AI streaming, file watching) reach the webview through an event pump in `main.rs`
 
 | `beam/panll_beam/`
 | BEAM middleware scaffold (HTTP/GraphQL/gRPC)

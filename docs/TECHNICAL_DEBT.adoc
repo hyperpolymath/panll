@@ -138,13 +138,14 @@ farm, provenance, k9, governance, …; ~19,181 LOC). NOT dead code — real
 panel backends orphaned by the same defect as `+coprocessor+` (declared
 by no crate root → never compiled → IPC commands never registered).
 *Decision (2026-05-17): integrate, not delete.* Also carry stale Tauri
-refs. Tracked as the F1 integration workstream. |High (lost
-functionality)
+refs. Tracked as the F1 integration workstream. *Resolved 2026-10-26:* all
+panel-backend commands are registered through `+src-gossamer/src/ipc.rs+`.
+|High (lost functionality) — resolved
 
 |F2 |`+coprocessor+`’s async command handlers are implemented + tested
 but *not registered* in the binary’s IPC table (`+main.rs+`). Wire them
 — this is the *pilot* for F1 (establishes the async→sync `+app.command+`
-bridge), done first. |Medium
+bridge), done first. *Resolved:* #157. |Medium — resolved
 
 |F3 |Binary cannot be built/linked locally without GTK/WebKit + a built
 `+libgossamer+`. Document the dev-env setup or provide a container.
@@ -162,9 +163,13 @@ plus `+boj_live+`, `+compat+`, `+echidna_live+`, `+error+`,
 `+gossamer_rs+`; all compiled with no API drift. Clippy/rustfmt fixes
 applied and Tauri leftovers removed. `+cargo test --lib+`: 285 passing
 (was 23). Handlers are still *not registered* in `+register_commands+`.
-. *Bulk wire* in dependency/risk order using the proven pattern;
-de-Tauri as we go; cross-check command names against the ReScript
-frontend `+invoke()+` contract so we wire what the UI actually calls.
+. *Bulk wire:* ✅ done 2026-10-26. The IPC table in
+`+src-gossamer/src/ipc.rs+` registers all 239 panel-backend commands;
+`+main.rs+` keeps its own 36. Argument names were checked against the
+pre-#107 ReScript `+invoke()+` calls: every required argument was sent
+by the old frontend. A test fails if a public handler in a command
+module is not registered, and `+main.rs+` runs an event pump that
+delivers `+compat+` events to the webview.
 
 '''''
 
@@ -176,9 +181,9 @@ Resolved:                     5  (all — 2026-05-17)
 Follow-up debt opened:        3  (F1–F3, see above)
 Build status:                 cargo check / clippy green; bin link needs GTK env
 Clippy -D warnings:           clean (0, all targets, default features)
-Lib tests:                    285 passing (cargo test --lib, GTK-free; 2026-10-14)
-F1 census:                    done — 43 modules compile in the lib; 36 IPC
-                              commands registered, rest pending
+Lib tests:                    294 passing (cargo test --lib, GTK-free; 2026-10-26)
+F1:                           done — 43 modules compile in the lib; 275 IPC
+                              commands registered (36 main.rs + 239 ipc.rs)
 ....
 
 === Success Criteria
