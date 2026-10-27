@@ -63,11 +63,24 @@ jobs:
             echo "Scanned **${MANIFEST_COUNT}** .a2ml/.deed manifest(s). See step output for details." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-  # K9 contract validation moved to fork-governance.yml, which runs the
-  # canonical K9-DEED conformance lane (metadatastician/standards
-  # k9-conformance.yml, contract v1.0.0) and reports it in the PR comment.
-  # The k9-ecosystem validate-action that ran here rejected the `K9!`
-  # envelope the contract requires, so the two could not both pass.
+  # ---------------------------------------------------------------------------
+  # Job 2: K9-DEED conformance on pushes to main/master
+  # ---------------------------------------------------------------------------
+  # The canonical lane (metadatastician/standards k9-conformance.yml, contract
+  # v1.0.0). Pull requests run it in fork-governance.yml, which reports it in
+  # the PR comment, so it runs here on push only: a PR does not check twice,
+  # and a direct push to main is still checked. It replaces the k9-ecosystem
+  # validate-action, which rejected the `K9!` envelope the contract requires.
+  k9-conformance:
+    name: K9-DEED conformance (push)
+    if: github.event_name == 'push'
+    uses: metadatastician/standards/.github/workflows/k9-conformance.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      require-files: true
+      fail-on-indeterminate: false
 
   # ---------------------------------------------------------------------------
   # Job 3: Empty-linter — invisible character detection

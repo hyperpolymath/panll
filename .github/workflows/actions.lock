@@ -21,6 +21,7 @@ workflows:
     '.github/workflows/dogfood-gate.yml':
         - 'actions/checkout@v7.0.1'
         - 'hyperpolymath/deed-ecosystem@main'
+        - 'metadatastician/standards@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8'
     '.github/workflows/e2e.yml':
         - 'actions/checkout@v7.0.1'
         - 'dtolnay/rust-toolchain@v1'
