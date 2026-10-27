@@ -1,15 +1,18 @@
 # This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
-# Thin wrapper around hyperpolymath/standards hypatia-scan-reusable.yml.
+# Thin wrapper around metadatastician/standards hypatia-scan-reusable.yml.
 # See standards#191 for the reusable's purpose and design.
+#
+# Pull requests run the Hypatia lane through fork-governance.yml, which posts
+# its verdict grid in the PR comment. This workflow has no pull_request
+# trigger so a PR does not scan twice and upload duplicate code-scanning
+# results (standards 3-practice/fork-governance/ADOPTION.adoc §3).
 
 name: Hypatia Security Scan
 
 on:
   push:
     branches: [main, master, develop]
-  pull_request:
-    branches: [main, master]
   schedule:
     - cron: '0 0 * * 0'
   workflow_dispatch:
@@ -27,6 +30,6 @@ permissions:
 
 jobs:
   hypatia:
-    uses: hyperpolymath/standards/.github/workflows/hypatia-scan-reusable.yml@75bd5994470661a099df562d6d5ad2fe744dbd66
+    uses: metadatastician/standards/.github/workflows/hypatia-scan-reusable.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
     secrets:
       HYPATIA_SCAN_PAT: ${{ secrets.HYPATIA_SCAN_PAT }}

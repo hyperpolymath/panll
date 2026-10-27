@@ -1,0 +1,74 @@
+# This workflow is managed by gh actions-lock.
+# SPDX-License-Identifier: MPL-2.0
+# fork-governance.yml — one PR comment for the DEED, K9-DEED and Hypatia lanes.
+#
+# Adopted per metadatastician/standards 3-practice/fork-governance/ADOPTION.adoc.
+# The three lanes produce verdicts and artifacts; the verdict job reads them
+# from this workflow's `needs` graph (a reusable cannot see its caller's jobs)
+# and posts one comment, updated in place on every push.
+#
+# All four `uses:` and `canon-ref` are the same standards commit: two refs that
+# can drift are two renderers that can disagree.
+#
+# DEED: `require-files: false` — PanLL has no `.deed` files yet (its manifests
+# are still `.a2ml`, pending the estate-wide `.a2ml` → `.deed` migration,
+# standards #837), so the lane reports grey "not applicable" instead of red.
+name: Fork governance
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deed:
+    name: DEED syntax
+    uses: metadatastician/standards/.github/workflows/deed-conformance.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    permissions:
+      contents: read
+    with:
+      require-files: false
+
+  k9:
+    name: K9-DEED conformance
+    uses: metadatastician/standards/.github/workflows/k9-conformance.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      require-files: true
+      fail-on-indeterminate: false
+
+  hypatia:
+    name: Hypatia verdict grid
+    uses: metadatastician/standards/.github/workflows/hypatia-scan-reusable.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    secrets:
+      HYPATIA_SCAN_PAT: ${{ secrets.HYPATIA_SCAN_PAT }}
+
+  verdict:
+    name: Post the fork governance summary
+    needs: [deed, k9, hypatia]
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    uses: metadatastician/standards/.github/workflows/fork-governance-reusable.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    with:
+      pr-number: ${{ github.event.pull_request.number }}
+      deed-result: ${{ needs.deed.result }}
+      k9-result: ${{ needs.k9.result }}
+      k9-verdict: ${{ needs.k9.outputs.verdict }}
+      hypatia-result: ${{ needs.hypatia.result }}
+      hypatia-verdict: ${{ needs.hypatia.outputs.verdict }}
+      canon-ref: 1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
