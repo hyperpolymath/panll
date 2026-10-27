@@ -22,14 +22,18 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Read-only at the top level; the job gets the one write it needs (uploading
+# SARIF), which is all the reusable declares. No pull_request trigger, so no
+# pull-requests permission.
 permissions:
-  actions: read
   contents: read
-  security-events: write
-  pull-requests: write
 
 jobs:
   hypatia:
-    uses: metadatastician/standards/.github/workflows/hypatia-scan-reusable.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses:metadatastician/standards/.github/workflows/hypatia-scan-reusable.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
     secrets:
       HYPATIA_SCAN_PAT: ${{ secrets.HYPATIA_SCAN_PAT }}
