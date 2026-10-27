@@ -529,6 +529,26 @@ container-init:
         fi
     done
 
+    # The k9-svc deploy component ships as a template (deploy.k9.ncl.in): a
+    # file with brace tokens is not a K9 component. Render it once nothing is
+    # left to fill (init fills PROJECT_NAME and VERSION), so the K9 lane
+    # validates the real thing. The bracket spellings keep just from reading
+    # the token pattern as an interpolation.
+    DEPLOY_IN="container/deploy.k9.ncl.in"
+    DEPLOY_OUT="${DEPLOY_IN%.in}"
+    if [ -f "$DEPLOY_IN" ]; then
+        LEFT=$(grep -oE '[{][{][A-Za-z_]+[}][}]' "$DEPLOY_IN" | sort -u | tr '\n' ' ' || true)
+        if [ -n "$LEFT" ]; then
+            echo "Kept $DEPLOY_IN: unfilled tokens ${LEFT}remain."
+            echo "  Run 'just init', then 'just container-init' again to render it."
+        elif [ -e "$DEPLOY_OUT" ]; then
+            echo "Kept $DEPLOY_IN: $DEPLOY_OUT already exists, so it was not overwritten."
+        else
+            mv "$DEPLOY_IN" "$DEPLOY_OUT"
+            echo "Rendered $DEPLOY_OUT (K9 component, contract v1.0.0)."
+        fi
+    fi
+
     echo "Container templates initialised."
     echo ""
     echo "Next steps:"

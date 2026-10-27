@@ -27,6 +27,13 @@ K9!
       allow_filesystem_write = true,
       allow_subprocess = true,
       signature_required = true,
+      # Default-deny (K9-S007): each flag above must be granted here. Drop the
+      # ones the component does not need, together with their flags.
+      capabilities = [
+        "net.fetch",      # allow_network
+        "fs.write",       # allow_filesystem_write
+        "process.spawn",  # allow_subprocess
+      ],
     },
     metadata = {
       name = "TODO: component-name",
@@ -45,6 +52,12 @@ K9!
       "TODO: List what commands this executes",
       "TODO: List what network access this requires",
     ],
+    # Ed25519, presence only (K9-S009). Signing (step 6 below) adds
+    # payload_hash and signature; verification is K9-C001 (L3).
+    signature = {
+      algorithm = "Ed25519",
+      key_id = "TODO: signing-key-id",
+    },
   },
 
   # Configuration with contracts (Yard-level validation)
