@@ -1,5 +1,17 @@
 K9!
 # SPDX-License-Identifier: MPL-2.0
+#
+# .k9.ncl.in — a TEMPLATE, not a component (standards#1058, MIGRATION-1058 M3).
+# The `.in` suffix is deliberate: a template is never loaded, so it must not
+# claim the reserved `.k9.ncl` component suffix. Nothing tries to leash it and
+# no gate mistakes its TODOs for a component's declaration. The placeholders
+# are the point. Instantiate them, and the copy becomes a real component:
+#
+#   cp template-hunt.k9.ncl.in my-task.k9.ncl   # then fill in every TODO
+#
+# The `K9!` line is kept so the INSTANTIATED file carries the envelope, which
+# §11.2 makes the thing that makes a leash enforceable at all.
+#
 # K9 Hunt-level template: Full execution with Just recipes
 # Security Level: Hunt (full system access)
 # ⚠️ SIGNATURE REQUIRED - Review carefully before use

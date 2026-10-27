@@ -1,3 +1,4 @@
+K9!
 # SPDX-License-Identifier: MPL-2.0
 # language-design.k9.ncl — PanLL discipline layout for programming language work.
 #
@@ -11,10 +12,10 @@
 #
 # Security level: Yard (pure configuration, no I/O)
 
-let { LayoutPreset, LayoutPedigree, PaneSizesSum100, .. } =
+let { LayoutPreset, PaneSizesSum100, .. } =
   import "./pedigree-layout.ncl" in
 
-let layout | LayoutPreset | PaneSizesSum100 = {
+let preset | LayoutPreset | PaneSizesSum100 = {
   name = "Language Design",
   description = "Optimised for programming language design, type system verification, parser testing, and AST browsing. Metatheory proofs and grammar tools are front-and-centre.",
   version = "1.0.0",
@@ -50,12 +51,24 @@ let layout | LayoutPreset | PaneSizesSum100 = {
 } in
 
 {
-  pedigree = LayoutPedigree & {
+  pedigree = {
+    schema_version = "1.0.0",
+    component_type = "panll-layout-preset",
+    security = {
+      leash = 'Yard,
+      trust_level = "contract-eval-only",
+      allow_network = false,
+      allow_filesystem_write = false,
+      allow_subprocess = false,
+      capabilities = [],
+    },
     metadata = {
       name = "panll-layout-language-design",
-      magic_number = "K9!",
-      description = layout.description,
+      version = preset.version,
+      description = preset.description,
+      breed = "application/vnd.k9+nickel",
     },
+    side_effects = [],
   },
-  layout,
+  layout = preset,
 }

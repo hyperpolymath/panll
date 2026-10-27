@@ -123,7 +123,7 @@ just container-down    # Stop services
 |`vordr.toml`
 |Runtime monitoring configuration
 
-|`deploy.k9.ncl`
+|`deploy.k9.ncl.in`
 |k9-svc Hunt-level deployment descriptor (Nickel)
 
 |`0-AI-MANIFEST.a2ml`

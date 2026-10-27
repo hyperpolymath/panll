@@ -1,16 +1,28 @@
-# K9 Kennel: Strategy Drift Panel Configuration
+K9!
 # SPDX-License-Identifier: MPL-2.0
+# K9 Kennel: Strategy Drift Panel Configuration
 #
 # N3: Panel showing top-prover-per-class over time, with drift events
 # flagged. Data source: Verisim's /api/v1/proof_attempts/strategy and
 # /certificates endpoints, plus hypatia's StrategyDrift ETS snapshots.
 {
   pedigree = {
-    name = "strategy-drift-config",
-    version = "0.1.0",
-    magic_number = "K9!",
-    author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
-    leash = 'Kennel,
+    schema_version = "1.0.0",
+    component_type = "panel-clade-config",
+    security = {
+      leash = 'Kennel,
+      trust_level = "data-only",
+      allow_network = false,
+      allow_filesystem_write = false,
+      allow_subprocess = false,
+      capabilities = [],
+    },
+    metadata = {
+      name = "strategy-drift-config",
+      version = "0.1.0",
+      author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
+    },
+    side_effects = [],
   },
   panel = {
     id = "StrategyDrift",

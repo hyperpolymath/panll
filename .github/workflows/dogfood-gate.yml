@@ -63,55 +63,11 @@ jobs:
             echo "Scanned **${MANIFEST_COUNT}** .a2ml/.deed manifest(s). See step output for details." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-  # ---------------------------------------------------------------------------
-  # Job 2: K9 contract validation
-  # ---------------------------------------------------------------------------
-  k9-validate:
-    name: Validate K9 contracts
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7.0.1
-
-      - name: Check for K9 files
-        id: detect
-        run: |
-          COUNT=$(find . \( -name '*.k9' -o -name '*.k9.ncl' \) -not -path './.git/*' | wc -l)
-          CONFIG_COUNT=$(find . \( -name '*.toml' -o -name '*.yaml' -o -name '*.yml' -o -name '*.json' \) \
-            -not -path './.git/*' -not -path './node_modules/*' -not -path './.deno/*' \
-            -not -name 'package-lock.json' -not -name 'Cargo.lock' -not -name 'deno.lock' | wc -l)
-          echo "k9_count=$COUNT" >> "$GITHUB_OUTPUT"
-          echo "config_count=$CONFIG_COUNT" >> "$GITHUB_OUTPUT"
-          if [ "$COUNT" -eq 0 ] && [ "$CONFIG_COUNT" -gt 0 ]; then
-            echo "::warning::Found $CONFIG_COUNT config files but no K9 contracts. Run k9iser to generate contracts."
-          fi
-
-      - name: Validate K9 contracts
-        if: steps.detect.outputs.k9_count > 0
-        uses: hyperpolymath/k9-ecosystem/validate-action@main
-        with:
-          path: '.'
-          strict: 'false'
-
-      - name: Write summary
-        run: |
-          K9_COUNT="${{ steps.detect.outputs.k9_count }}"
-          CFG_COUNT="${{ steps.detect.outputs.config_count }}"
-          if [ "$K9_COUNT" -eq 0 ]; then
-            cat <<'EOF' >> "$GITHUB_STEP_SUMMARY"
-          ## K9 Contract Validation
-
-          :warning: **No .a2ml/.deed manifest files found.** Every RSR-compliant repo should have a repo deed (`<reponame>_chora.deed`) at its root.
-
-          Generate contracts with: `k9iser generate .`
-          EOF
-          else
-            echo "## K9 Contract Validation" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Validated **${K9_COUNT}** K9 contract(s) against **${CFG_COUNT}** config file(s)." >> "$GITHUB_STEP_SUMMARY"
-          fi
+  # K9 contract validation moved to fork-governance.yml, which runs the
+  # canonical K9-DEED conformance lane (metadatastician/standards
+  # k9-conformance.yml, contract v1.0.0) and reports it in the PR comment.
+  # The k9-ecosystem validate-action that ran here rejected the `K9!`
+  # envelope the contract requires, so the two could not both pass.
 
   # ---------------------------------------------------------------------------
   # Job 3: Empty-linter — invisible character detection
@@ -244,7 +200,7 @@ jobs:
     name: Dogfooding compliance summary
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [deed-validate, k9-validate, empty-lint, groove-check]
+    needs: [deed-validate, empty-lint, groove-check]
     if: always()
 
     steps:

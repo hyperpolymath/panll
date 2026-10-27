@@ -136,9 +136,9 @@ K9 contractiles integrate with other RSR standards:
 
 Use these as starting points for your own K9 components:
 
-- `template-kennel.k9.ncl` - Pure data template
-- `template-yard.k9.ncl` - Validated config template
-- `template-hunt.k9.ncl` - Full execution template
+- `template-kennel.k9.ncl.in` - Pure data template
+- `template-yard.k9.ncl.in` - Validated config template
+- `template-hunt.k9.ncl.in` - Full execution template
 
 == Dependencies
 

@@ -14,21 +14,19 @@
 # Contracts — validation predicates for layout fields
 # ─────────────────────────────────────────────────────────────
 
-let ValidPercentage = std.contract.from_predicate (fun p => p >= 0 && p <= 100) in
+let valid_percentage = std.contract.from_predicate (fun p => p >= 0 && p <= 100) in
 
-let PaneSizesSum100 = fun label value =>
+let pane_sizes_sum_100 = std.contract.from_validator (fun value =>
   let total = value.pane_l_size + value.pane_n_size + value.pane_w_size in
   if total == 100 then
-    value
+    'Ok
   else
-    std.contract.blame_with_message
-      "Pane sizes must sum to 100 (got %{std.string.from_number total})"
-      label
-in
+    'Error { message = "Pane sizes must sum to 100 (got %{std.string.from_number total})" }
+) in
 
-let PanelVisibility = [| 'Expanded, 'Collapsed, 'Hidden |] in
+let panel_visibility = [| 'Expanded, 'Collapsed, 'Hidden |] in
 
-let KnownProver = [|
+let known_prover = [|
   'Coq,
   'Lean4,
   'Isabelle,
@@ -43,7 +41,7 @@ let KnownProver = [|
 # Layout Preset Schema
 # ─────────────────────────────────────────────────────────────
 
-let LayoutPreset = {
+let layout_preset = {
   # Identity
   name | String,
   description | String,
@@ -55,17 +53,17 @@ let LayoutPreset = {
        | optional,
 
   # Pane sizing (must sum to 100)
-  pane_l_size | ValidPercentage,
-  pane_n_size | ValidPercentage,
-  pane_w_size | ValidPercentage,
+  pane_l_size | valid_percentage,
+  pane_n_size | valid_percentage,
+  pane_w_size | valid_percentage,
 
   # Panel visibility
-  echidna_panel | PanelVisibility | default = 'Collapsed,
-  verisimdb_panel | PanelVisibility | default = 'Collapsed,
-  security_panel | PanelVisibility | default = 'Hidden,
+  echidna_panel | panel_visibility | default = 'Collapsed,
+  verisimdb_panel | panel_visibility | default = 'Collapsed,
+  security_panel | panel_visibility | default = 'Hidden,
 
   # Prover configuration
-  default_provers | Array KnownProver | default = ['Coq, 'Lean4, 'Z3],
+  default_provers | Array known_prover | default = ['Coq, 'Lean4, 'Z3],
 
   # Default notation mode
   default_notation | String | default = "panll-universal",
@@ -74,48 +72,12 @@ let LayoutPreset = {
   promoted_actions | Array String | default = [],
 } in
 
-# ─────────────────────────────────────────────────────────────
-# K9 Pedigree for layout presets (Yard level — no I/O)
-# ─────────────────────────────────────────────────────────────
-
-let LayoutPedigree = {
-  metadata = {
-    name = "panll-layout-preset",
-    version = "1.0.0",
-    breed = "application/vnd.k9+nickel",
-    description = "PanLL discipline layout preset — configures pane sizing, panel visibility, prover priority, and toolbar for a specific workflow.",
-  },
-  target = {
-    os = 'Linux,
-    is_edge = false,
-    requires_podman = false,
-    min_memory_mb = 0,
-  },
-  security = {
-    trust_level = 'Yard,
-    allow_network = false,
-    allow_filesystem_write = false,
-    allow_subprocess = false,
-  },
-  validation = {
-    checksum = "pending",
-    pedigree_version = "1.0.0",
-    hunt_authorized = false,
-  },
-  recipes = {
-    install = "echo 'Copy .k9.ncl to layouts/'",
-    validate = "nickel typecheck",
-    deploy = "echo 'No deployment — config only'",
-    migrate = "echo 'No migration needed'",
-  },
-} in
-
-# Export contracts for use by layout presets
+# Export contracts for use by layout presets. Each field names its binding
+# explicitly: `{ Foo, }` in a Nickel record declares Foo without defining it.
 {
-  LayoutPreset,
-  LayoutPedigree,
-  PaneSizesSum100,
-  PanelVisibility,
-  KnownProver,
-  ValidPercentage,
+  LayoutPreset = layout_preset,
+  PaneSizesSum100 = pane_sizes_sum_100,
+  PanelVisibility = panel_visibility,
+  KnownProver = known_prover,
+  ValidPercentage = valid_percentage,
 }

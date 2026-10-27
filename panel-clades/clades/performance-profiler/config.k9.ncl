@@ -1,13 +1,25 @@
+K9!
+# SPDX-License-Identifier: MPL-2.0
 # K9 Kennel: Performance Profiler Panel Configuration
 # Auto-generated from PanelRegistry — pure data, no execution
-# SPDX-License-Identifier: MPL-2.0
 {
   pedigree = {
-    name = "performance-profiler-config",
-    version = "0.1.0",
-    magic_number = "K9!",
-    author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
-    leash = 'Kennel,
+    schema_version = "1.0.0",
+    component_type = "panel-clade-config",
+    security = {
+      leash = 'Kennel,
+      trust_level = "data-only",
+      allow_network = false,
+      allow_filesystem_write = false,
+      allow_subprocess = false,
+      capabilities = [],
+    },
+    metadata = {
+      name = "performance-profiler-config",
+      version = "0.1.0",
+      author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
+    },
+    side_effects = [],
   },
   panel = {
     id = "Performance Profiler",

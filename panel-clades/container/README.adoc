@@ -59,7 +59,7 @@ All files use `container` tokens that are replaced by `just container-init`
 | **vordr** runtime monitoring configuration. Defines health endpoints,
   crash detection, resource thresholds, and log output.
 
-| `deploy.k9.ncl`
+| `deploy.k9.ncl.in`
 | **k9-svc** deployment component at Hunt trust level. Full pedigree
   (L1--L5), environment configs (dev/staging/prod), container
   configuration, and rolling deployment strategy.
@@ -155,7 +155,7 @@ For k9-svc managed deployments:
 [source,bash]
 ----
 # Validate the deployment component
-nickel typecheck container/deploy.k9.ncl
+nickel typecheck container/deploy.k9.ncl  # after rendering deploy.k9.ncl.in
 
 # Deploy (requires Hunt-level authorisation)
 k9-svc deploy container/deploy.k9.ncl --env production
