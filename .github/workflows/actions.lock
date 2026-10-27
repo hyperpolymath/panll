@@ -42,7 +42,7 @@ workflows:
     '.github/workflows/mirror.yml':
         - 'metadatastician/standards@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8'
     '.github/workflows/push-email-notify.yml':
-        - 'hyperpolymath/smtp-notify-action@v0.5.0'
+        - 'hyperpolymath/smtp-notify-action@v0.5.1'
     '.github/workflows/rust-ci.yml':
         - 'metadatastician/standards@412a7031577112b31ee287cc6060179d638d6500'
     '.github/workflows/scorecard.yml':
@@ -178,9 +178,9 @@ dependencies:
         commit: 'sha1-2155aa26a21758f2ba119f61bc7e0e1981c106fb'
         owner_id: 6759885
         repo_id: 1275650185
-    'hyperpolymath/smtp-notify-action@v0.5.0':
-        ref: 'v0.5.0'
-        commit: 'sha1-c1c9fa07992a02c1fd3d67a0dc1b08cccb852aef'
+    'hyperpolymath/smtp-notify-action@v0.5.1':
+        ref: 'v0.5.1'
+        commit: 'sha1-e384daf6167a7a7567642d6a62060106244d2413'
         owner_id: 6759885
         repo_id: 1352485172
     'metadatastician/standards@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8':
