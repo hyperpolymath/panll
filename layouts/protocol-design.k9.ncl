@@ -1,3 +1,4 @@
+K9!
 # SPDX-License-Identifier: MPL-2.0
 # protocol-design.k9.ncl — PanLL discipline layout for protocol work.
 #
@@ -11,10 +12,10 @@
 #
 # Security level: Yard (pure configuration, no I/O)
 
-let { LayoutPreset, LayoutPedigree, PaneSizesSum100, .. } =
+let { LayoutPreset, PaneSizesSum100, .. } =
   import "./pedigree-layout.ncl" in
 
-let layout | LayoutPreset | PaneSizesSum100 = {
+let preset | LayoutPreset | PaneSizesSum100 = {
   name = "Protocol Design",
   description = "Optimised for protocol specification, state machine modelling, liveness/safety verification, and message flow analysis. Model checking and protocol fuzzing are front-and-centre.",
   version = "1.0.0",
@@ -51,12 +52,24 @@ let layout | LayoutPreset | PaneSizesSum100 = {
 } in
 
 {
-  pedigree = LayoutPedigree & {
+  pedigree = {
+    schema_version = "1.0.0",
+    component_type = "panll-layout-preset",
+    security = {
+      leash = 'Yard,
+      trust_level = "contract-eval-only",
+      allow_network = false,
+      allow_filesystem_write = false,
+      allow_subprocess = false,
+      capabilities = [],
+    },
     metadata = {
       name = "panll-layout-protocol-design",
-      magic_number = "K9!",
-      description = layout.description,
+      version = preset.version,
+      description = preset.description,
+      breed = "application/vnd.k9+nickel",
     },
+    side_effects = [],
   },
-  layout,
+  layout = preset,
 }

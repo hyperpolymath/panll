@@ -99,7 +99,7 @@ This repo contains:
 │   ├── ct-build.sh             # Build/sign/verify pipeline
 │   ├── entrypoint.sh           # Container entrypoint
 │   ├── vordr.toml              # Runtime monitoring
-│   ├── deploy.k9.ncl           # k9-svc Hunt-level deployment
+│   ├── deploy.k9.ncl.in        # k9-svc Hunt-level deployment (template)
 │   ├── 0-AI-MANIFEST.a2ml      # AI manifest for container dir
 │   └── README.adoc             # Container directory documentation
 └── .machine_readable/          # ALL machine-readable content

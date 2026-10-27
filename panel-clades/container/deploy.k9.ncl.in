@@ -1,6 +1,15 @@
 # SPDX-License-Identifier: MPL-2.0
 # deploy.k9.ncl — {{PROJECT_NAME}} deployment component (Hunt level)
 #
+# .k9.ncl.in — a TEMPLATE, not a component (K9 contract v1.0.0, D173). Its
+# {{PLACEHOLDER}} tokens are not Nickel, so it must not claim the reserved
+# `.k9.ncl` suffix: a template is never loaded or leashed. Fill every token,
+# then bring the pedigree up to contract v1.0.0 (schema_version,
+# component_type, security.leash = 'Hunt with a capability grant,
+# side_effects and a signature block) before saving it as deploy.k9.ncl.
+# rsr-template-repo's build/container/stapeln/deploy.k9.ncl.in is the
+# v1.0.0-shaped version of this template.
+#
 # k9-svc deployment specification with full pedigree (L1-L5).
 # Security Level: 'Hunt (requires cryptographic handshake for execution).
 #
