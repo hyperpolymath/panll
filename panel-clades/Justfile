@@ -555,7 +555,6 @@ _render-deploy-k9:
     # spellings keep just from reading the token pattern as an interpolation.
     DEPLOY_IN="container/deploy.k9.ncl.in"
     DEPLOY_OUT="${DEPLOY_IN%.in}"
-    MANIFEST="container/0-AI-MANIFEST.a2ml"
     [ -f "$DEPLOY_IN" ] || exit 0
     LEFT=$(grep -oE '[{][{][A-Za-z_]+[}][}]' "$DEPLOY_IN" | sort -u | tr '\n' ' ' || true)
     if [ -n "$LEFT" ]; then
@@ -565,8 +564,11 @@ _render-deploy-k9:
         echo "Kept $DEPLOY_IN: $DEPLOY_OUT already exists, so it was not overwritten."
     else
         mv "$DEPLOY_IN" "$DEPLOY_OUT"
-        # The container manifest names the template; point it at the component.
-        [ -f "$MANIFEST" ] && sed -i 's|deploy\.k9\.ncl\.in|deploy.k9.ncl|g' "$MANIFEST"
+        # Both manifests name the template; point them at the component. The
+        # root inventory's line also loses its "(template)" note.
+        for MANIFEST in 0-AI-MANIFEST.a2ml container/0-AI-MANIFEST.a2ml; do
+            [ -f "$MANIFEST" ] && sed -i '/deploy\.k9\.ncl\.in/{s|deploy\.k9\.ncl\.in|deploy.k9.ncl|g; s| (template)||}' "$MANIFEST"
+        done
         echo "Rendered $DEPLOY_OUT (K9 component, contract v1.0.0)."
     fi
 
