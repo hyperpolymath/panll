@@ -29,7 +29,7 @@ permissions:
 jobs:
   deed:
     name: DEED syntax
-    uses: metadatastician/standards/.github/workflows/deed-conformance.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    uses: metadatastician/standards/.github/workflows/deed-conformance.yml@e064539116c2dcfdf282a4749dbd58c69961c7e6
     permissions:
       contents: read
     with:
@@ -37,7 +37,7 @@ jobs:
 
   k9:
     name: K9-DEED conformance
-    uses: metadatastician/standards/.github/workflows/k9-conformance.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    uses: metadatastician/standards/.github/workflows/k9-conformance.yml@e064539116c2dcfdf282a4749dbd58c69961c7e6
     permissions:
       contents: read
       pull-requests: read
@@ -47,7 +47,7 @@ jobs:
 
   hypatia:
     name: Hypatia verdict grid
-    uses: metadatastician/standards/.github/workflows/hypatia-scan-reusable.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    uses: metadatastician/standards/.github/workflows/hypatia-scan-reusable.yml@e064539116c2dcfdf282a4749dbd58c69961c7e6
     permissions:
       actions: read
       contents: read
@@ -59,7 +59,7 @@ jobs:
     name: Post the fork governance summary
     needs: [deed, k9, hypatia]
     if: ${{ always() && github.event_name == 'pull_request' }}
-    uses: metadatastician/standards/.github/workflows/fork-governance-reusable.yml@1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+    uses: metadatastician/standards/.github/workflows/fork-governance-reusable.yml@e064539116c2dcfdf282a4749dbd58c69961c7e6
     permissions:
       contents: read
       actions: read
@@ -71,4 +71,5 @@ jobs:
       k9-verdict: ${{ needs.k9.outputs.verdict }}
       hypatia-result: ${{ needs.hypatia.result }}
       hypatia-verdict: ${{ needs.hypatia.outputs.verdict }}
-      canon-ref: 1fdc61c0c1c8f4c94324f956700d78d1ea9584a8
+      hypatia-advisory: ${{ needs.hypatia.outputs.advisory }}
+      canon-ref: e064539116c2dcfdf282a4749dbd58c69961c7e6
