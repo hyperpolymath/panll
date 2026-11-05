@@ -141,9 +141,11 @@ port.
 |PCC soundness
 |The PanLL Constraint Checker (`tools/pcc`) propagates constraints soundly
 and finds every violation.
-|Blocked: `tools/pcc` still scans ReScript `.res` sources, which #107
-removed. It must be rebuilt for AffineScript before a proof means
-anything, and it needs a written specification first.
+|Blocked: `tools/pcc`'s ReScript scanner is retired, because #107 removed
+the `.res` sources it read. Its frontend-wiring checks now report
+"retired" until an AffineScript scanner replaces them. The propagator
+itself can be specified and proved first; the scanner proof waits on
+the AffineScript port, and it needs a written specification first.
 |#148
 
 |Verification Dashboard accuracy
@@ -153,10 +155,18 @@ port.
 |#148
 
 |Provenance engine
-|Provenance tracking is complete (every action is recorded). "Unforgeable"
-is a cryptographic claim and needs a threat model first.
-|Not started; needs a specification.
-|—
+|Provenance tracking is complete (every action is recorded) and
+unforgeable. Owner decision (2026-11-05): "unforgeable" means each
+provenance record follows `EXHIBIT-B-QUANTUM-SAFE.txt`. The record holds
+the author identity, a timestamp, a SHA3-256 content hash and, optionally,
+a parent hash. It is serialised as canonical JSON, signed with ML-DSA-65
+and witnessed, and verifies against keys published under
+`.well-known/keys/`. Today's engine (git blame plus Co-Authored-By
+trailers) is forgeable, so its output counts only as "claimed".
+|Not started. The signed record format and verifier come first; the
+proof obligation is that verification rejects any record whose fields,
+hash or chain were altered.
+|#173
 
 |Cartridge schema validation
 |Loading a cartridge validates it against `src/abi/cartridge-schema.json`.

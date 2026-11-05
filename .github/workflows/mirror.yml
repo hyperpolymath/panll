@@ -20,5 +20,7 @@ jobs:
       CODEBERG_SSH_KEY: ${{ secrets.CODEBERG_SSH_KEY }}
       SOURCEHUT_SSH_KEY: ${{ secrets.SOURCEHUT_SSH_KEY }}
       DISROOT_SSH_KEY: ${{ secrets.DISROOT_SSH_KEY }}
-      GITEA_SSH_KEY: ${{ secrets.GITEA_SSH_KEY }}
+      # Gitea is off for now: vars.GITEA_HOST is unset, so the job failed on
+      # every push. The reusable skips a forge whose key is not passed; add
+      # GITEA_SSH_KEY back here once the host is configured.
       RADICLE_KEY: ${{ secrets.RADICLE_KEY }}

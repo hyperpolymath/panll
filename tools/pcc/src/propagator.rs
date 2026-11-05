@@ -9,7 +9,9 @@
 //! the primary bottleneck — the single root failure blocking the most work.
 
 use crate::contract::PanelContract;
-use crate::obligation::{FailureClass, Obligation, ObligationKind, ObligationStatus};
+use crate::obligation::{
+    FailureClass, Obligation, ObligationKind, ObligationStatus, Repairability,
+};
 use crate::scanner::Scanner;
 use std::collections::{HashMap, HashSet};
 
@@ -103,6 +105,15 @@ pub fn propagate(
             } else {
                 obligation.status = ObligationStatus::Unsatisfied;
                 obligation.failure_class = Some(FailureClass::Root);
+                // The ReScript frontend is gone (#107), so checks against `.res`
+                // files are retired, and no repair should write ReScript.
+                if let Some(file) = obligation.file.as_deref().filter(|f| f.ends_with(".res")) {
+                    obligation.message = format!(
+                        "Check retired: {file} was ReScript, removed in #107; \
+                         an AffineScript scanner is tracked in #148"
+                    );
+                    obligation.repairability = Repairability::Manual;
+                }
             }
         } else {
             // Should not happen with our DAG, but defensive.
