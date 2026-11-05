@@ -155,9 +155,17 @@ port.
 |#148
 
 |Provenance engine
-|Provenance tracking is complete (every action is recorded). "Unforgeable"
-is a cryptographic claim and needs a threat model first.
-|Not started; needs a specification.
+|Provenance tracking is complete (every action is recorded) and
+unforgeable. Owner decision (2026-11-05): "unforgeable" means each
+provenance record follows `EXHIBIT-B-QUANTUM-SAFE.txt`. The record holds
+the author identity, a timestamp, a SHA3-256 content hash and, optionally,
+a parent hash. It is serialised as canonical JSON, signed with ML-DSA-65
+and witnessed, and verifies against keys published under
+`.well-known/keys/`. Today's engine (git blame plus Co-Authored-By
+trailers) is forgeable, so its output counts only as "claimed".
+|Not started. The signed record format and verifier come first; the
+proof obligation is that verification rejects any record whose fields,
+hash or chain were altered.
 |—
 
 |Cartridge schema validation
