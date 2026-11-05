@@ -166,7 +166,7 @@ trailers) is forgeable, so its output counts only as "claimed".
 |Not started. The signed record format and verifier come first; the
 proof obligation is that verification rejects any record whose fields,
 hash or chain were altered.
-|—
+|#173
 
 |Cartridge schema validation
 |Loading a cartridge validates it against `src/abi/cartridge-schema.json`.
