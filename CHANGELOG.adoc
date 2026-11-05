@@ -9,6 +9,16 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === https://github.com/hyperpolymath/panll/compare/v0.1.0...HEAD[Unreleased]
 
+==== Removed (2026-11-05)
+
+* *The PCC ReScript scanner (`tools/pcc/src/rescript_scanner.rs`) is
+retired.* #107 removed the `.res` sources it read. The seven
+frontend-wiring checks that used it report "retired" with the reason, and
+are marked for manual repair, so `pcc panel repair` no longer plans
+ReScript edits. An AffineScript scanner is tracked in #148.
+* *The Gitea mirror is off.* `mirror.yml` no longer passes `GITEA_SSH_KEY`,
+so the shared mirror workflow skips Gitea; the other forges are unchanged.
+
 ==== Added (2026-10-26 — every panel-backend command registered)
 
 * *The IPC table in `+src-gossamer/src/ipc.rs+` now registers all 239

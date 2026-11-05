@@ -141,9 +141,11 @@ port.
 |PCC soundness
 |The PanLL Constraint Checker (`tools/pcc`) propagates constraints soundly
 and finds every violation.
-|Blocked: `tools/pcc` still scans ReScript `.res` sources, which #107
-removed. It must be rebuilt for AffineScript before a proof means
-anything, and it needs a written specification first.
+|Blocked: `tools/pcc`'s ReScript scanner is retired, because #107 removed
+the `.res` sources it read. Its frontend-wiring checks now report
+"retired" until an AffineScript scanner replaces them. The propagator
+itself can be specified and proved first; the scanner proof waits on
+the AffineScript port, and it needs a written specification first.
 |#148
 
 |Verification Dashboard accuracy
