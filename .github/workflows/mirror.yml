@@ -13,6 +13,9 @@ permissions:
 
 jobs:
   mirror:
+    # A manual dispatch from a feature branch has no local main ref to push.
+    # Mirror only the canonical branch, as the push trigger already requires.
+    if: github.ref == 'refs/heads/main'
     uses: metadatastician/standards/.github/workflows/mirror-reusable.yml@e064539116c2dcfdf282a4749dbd58c69961c7e6
     secrets:
       GITLAB_SSH_KEY: ${{ secrets.GITLAB_SSH_KEY }}
