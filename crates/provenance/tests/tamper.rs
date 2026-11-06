@@ -156,6 +156,17 @@ fn trust_expiry_revocation_missing_witnesses_and_bad_signatures() {
     let mut bad = entry.clone();
     bad.envelope.attestations[0].signature = "bad".into();
     assert_eq!(verify(&[bad], keys.clone())[0].status, Status::Invalid);
+    let mut bad_witness = entry.clone();
+    bad_witness.envelope.attestations[0].signature = "bad".into();
+    assert_eq!(
+        verify(&[bad_witness.clone()], vec![keys[1].clone()])[0].status,
+        Status::Invalid
+    );
+    bad_witness.envelope.signature = NullableString::Null;
+    assert_eq!(
+        verify(&[bad_witness], keys.clone())[0].status,
+        Status::Invalid
+    );
     assert!(Registry::new(vec![keys[0].clone(), keys[0].clone()]).is_err());
     let mut same_identity = keys.clone();
     same_identity[1].author_identity = same_identity[0].author_identity.clone();
