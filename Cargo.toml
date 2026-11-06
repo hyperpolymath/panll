@@ -42,6 +42,7 @@ required-features = ["gossamer"]
 [workspace]
 members = ["crates/provenance"]
 default-members = [".", "crates/provenance"]
+exclude = ["tools/pcc"]
 resolver = "2"
 
 [features]
