@@ -92,12 +92,66 @@ pub async fn provenance_analyse_file(
     let result = json!({
         "authors": author_list,
         "co_authors": co_authors,
+        "status": "claimed",
         "total_lines": total_lines,
         "file": file_path,
         "repo": repo_path,
     });
 
     Ok(result.to_string())
+}
+
+/// Verify Exhibit B records against this repository's independently approved
+/// `.well-known/keys/*.json` registry. No secret keys enter the IPC channel.
+pub async fn provenance_verify_records(
+    repo_path: String,
+    records_json: String,
+) -> Result<String, String> {
+    use panll_provenance::{Contribution, PublicKey, Registry};
+    if records_json.len() > 16 * 1024 * 1024 {
+        return Err("record batch exceeds 16 MiB".into());
+    }
+    let entries: Vec<Contribution> =
+        serde_json::from_str(&records_json).map_err(|e| e.to_string())?;
+    if entries.len() > 1024 {
+        return Err("record batch exceeds 1024 entries".into());
+    }
+    let directory = std::path::Path::new(&repo_path).join(".well-known/keys");
+    let mut keys: Vec<PublicKey> = Vec::new();
+    match fs::read_dir(directory) {
+        Ok(files) => {
+            for file in files {
+                let file = file.map_err(|e| e.to_string())?;
+                if file.path().extension().and_then(|s| s.to_str()) == Some("json") {
+                    if file.metadata().map_err(|e| e.to_string())?.len() > 65536 {
+                        return Err("public key file exceeds 64 KiB".into());
+                    }
+                    keys.push(
+                        serde_json::from_slice(&fs::read(file.path()).map_err(|e| e.to_string())?)
+                            .map_err(|e| format!("invalid key registry: {e}"))?,
+                    );
+                }
+            }
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+        Err(e) => return Err(e.to_string()),
+    }
+    let registry = Registry::new(keys)?;
+    // Adoption, not retrospective re-signing. Allow five minutes of clock skew.
+    let latest = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_secs()
+        .checked_add(300)
+        .ok_or("clock overflow")?;
+    let latest = panll_provenance::utc_timestamp(latest)?;
+    serde_json::to_string(&panll_provenance::verify_chain(
+        &entries,
+        &registry,
+        "2026-11-05T00:00:00Z",
+        &latest,
+    )?)
+    .map_err(|e| e.to_string())
 }
 
 /// Extract Co-Authored-By trailers from commits that touch a given file.
@@ -204,6 +258,37 @@ pub async fn provenance_scan_unsound(file_path: String) -> Result<String, String
 mod tests {
     use super::*;
     use std::io::Write;
+
+    #[tokio::test]
+    async fn test_signed_record_ipc_fails_closed_and_keeps_unsigned_claimed() {
+        let root = std::env::temp_dir().join(format!("panll-provenance-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&root).unwrap();
+        let repo = root.to_string_lossy().to_string();
+        let records = json!([{
+            "envelope": {
+                "record": {"version": 1, "algorithm": "ML-DSA-65", "key-id": "a".repeat(64),
+                    "author-identity": "Claimed author", "timestamp": "2026-11-05T12:00:00Z",
+                    "content-hash": panll_provenance::hash(b""), "parent-hash": null,
+                    "platform": null, "witnesses": []},
+                "signature": null, "attestations": []
+            },
+            "content-base64": ""
+        }])
+        .to_string();
+        let result = provenance_verify_records(repo.clone(), records.clone())
+            .await
+            .unwrap();
+        let result: serde_json::Value = serde_json::from_str(&result).unwrap();
+        assert_eq!(result[0]["status"], "claimed");
+        assert!(provenance_verify_records(repo.clone(), "not JSON".into())
+            .await
+            .is_err());
+        let keys = root.join(".well-known/keys");
+        fs::create_dir_all(&keys).unwrap();
+        fs::write(keys.join("broken.json"), b"{}").unwrap();
+        assert!(provenance_verify_records(repo, records).await.is_err());
+        fs::remove_dir_all(root).unwrap();
+    }
 
     #[tokio::test]
     async fn test_provenance_scan_unsound_finds_patterns() {

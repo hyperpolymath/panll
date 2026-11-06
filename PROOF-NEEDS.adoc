@@ -163,9 +163,12 @@ a parent hash. It is serialised as canonical JSON, signed with ML-DSA-65
 and witnessed, and verifies against keys published under
 `.well-known/keys/`. Today's engine (git blame plus Co-Authored-By
 trailers) is forgeable, so its output counts only as "claimed".
-|Not started. The signed record format and verifier come first; the
-proof obligation is that verification rejects any record whose fields,
-hash or chain were altered.
+|Implemented in `crates/provenance`: JCS records, ML-DSA-65 signing,
+approved public-key registry, independent witnesses, timestamp/content/chain
+verification and mutation/property tests. Symbolic binding model:
+`docs/models/Provenance.tla`; protocol and limits:
+`docs/PROVENANCE-EXHIBIT-B.adoc`. This does not prove every action is recorded,
+prevent tail truncation without a checkpoint, or prove cryptographic hardness.
 |#173
 
 |Cartridge schema validation

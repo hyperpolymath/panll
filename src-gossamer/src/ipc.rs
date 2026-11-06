@@ -746,6 +746,16 @@ fn plaza(t: &mut Table) {
 fn provenance(t: &mut Table) {
     use crate::provenance::commands as c;
     t.add(
+        "provenance_verify_records",
+        &["repo_path", "records_json"],
+        |p| {
+            block_on(c::provenance_verify_records(
+                arg(p, "repo_path")?,
+                arg(p, "records_json")?,
+            ))
+        },
+    );
+    t.add(
         "provenance_analyse_file",
         &["repo_path", "file_path"],
         |p| {
