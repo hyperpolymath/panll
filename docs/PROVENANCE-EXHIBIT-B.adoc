@@ -113,8 +113,11 @@ workflows after their owner moved. The selected-actions policy now admits
 the full reusable-workflow paths at the existing `metadatastician/standards` revisions
 `412a7031577112b31ee287cc6060179d638d6500` and
 `e064539116c2dcfdf282a4749dbd58c69961c7e6`, plus the exact third-party action
-commits already recorded in `actions.lock`. The admissions were exported
-through the canonical Kyaml parser. Existing action allowances and the
+commits already recorded in `actions.lock` or in the frozen Rust reusable
+workflow at `412a7031577112b31ee287cc6060179d638d6500`. Lockfile admissions
+were exported through the canonical Kyaml parser; the reusable workflow's
+toolchain/cache commits were checked against that exact revision.
+Existing action allowances and the
 mandatory SHA-pinning setting are preserved. Admission is not a test receipt;
 the actual hosted runs still determine whether the workflows passed.
 
