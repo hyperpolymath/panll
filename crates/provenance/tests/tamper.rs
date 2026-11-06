@@ -35,8 +35,8 @@ fn fixture() -> (Contribution, Vec<PublicKey>) {
         author_identity: keys[0].author_identity.clone(),
         timestamp: "2026-11-06T12:00:00Z".into(),
         content_hash: hash(b"contribution"),
-        parent_hash: None,
-        platform: Some("test".into()),
+        parent_hash: NullableString::Null,
+        platform: Some("test".into()).into(),
         witnesses: vec![keys[1].key_id.clone()],
     };
     let signature = Some(sign(&record, &secret).unwrap());
@@ -45,7 +45,7 @@ fn fixture() -> (Contribution, Vec<PublicKey>) {
         Contribution {
             envelope: Envelope {
                 record,
-                signature,
+                signature: signature.into(),
                 attestations,
             },
             content_base64: STANDARD.encode(b"contribution"),
@@ -87,6 +87,9 @@ fn signed_witnessed_round_trip_and_json_order() {
             "missing {field}"
         );
     }
+    let mut envelope = serde_json::to_value(&entry.envelope).unwrap();
+    envelope.as_object_mut().unwrap().remove("signature");
+    assert!(serde_json::from_value::<Envelope>(envelope).is_err());
 }
 
 #[test]
@@ -142,13 +145,13 @@ fn trust_expiry_revocation_missing_witnesses_and_bad_signatures() {
         Status::Invalid
     );
     let mut unsigned = entry.clone();
-    unsigned.envelope.signature = None;
+    unsigned.envelope.signature = NullableString::Null;
     assert_eq!(verify(&[unsigned], keys.clone())[0].status, Status::Claimed);
     let mut missing = entry.clone();
     missing.envelope.attestations.clear();
     assert_eq!(verify(&[missing], keys.clone())[0].status, Status::Claimed);
     let mut bad = entry.clone();
-    bad.envelope.signature = Some(STANDARD.encode([0; ml_dsa_65::SIG_LEN]));
+    bad.envelope.signature = Some(STANDARD.encode([0; ml_dsa_65::SIG_LEN])).into();
     assert_eq!(verify(&[bad], keys.clone())[0].status, Status::Invalid);
     let mut bad = entry.clone();
     bad.envelope.attestations[0].signature = "bad".into();
@@ -161,11 +164,11 @@ fn trust_expiry_revocation_missing_witnesses_and_bad_signatures() {
 
 fn child(parent: &Contribution, keys: &[PublicKey]) -> Contribution {
     let mut entry = parent.clone();
-    entry.envelope.record.parent_hash = Some(record_hash(&parent.envelope.record).unwrap());
+    entry.envelope.record.parent_hash = Some(record_hash(&parent.envelope.record).unwrap()).into();
     entry.envelope.record.timestamp = "2026-11-06T13:00:00Z".into();
     let (_, author) = ml_dsa_65::KG::keygen_from_seed(&[1; 32]);
     let (_, witness) = ml_dsa_65::KG::keygen_from_seed(&[2; 32]);
-    entry.envelope.signature = Some(sign(&entry.envelope.record, &author).unwrap());
+    entry.envelope.signature = Some(sign(&entry.envelope.record, &author).unwrap()).into();
     entry.envelope.attestations =
         vec![attest(&entry.envelope.record, keys[1].key_id.clone(), &witness).unwrap()];
     entry
@@ -191,7 +194,7 @@ fn chain_removal_splice_reorder_and_untrusted_ancestors() {
         Status::Invalid
     );
     let mut claimed = root.clone();
-    claimed.envelope.signature = None;
+    claimed.envelope.signature = NullableString::Null;
     assert_eq!(
         verify(&[claimed, next.clone()], keys.clone())[1].status,
         Status::Claimed
@@ -213,7 +216,7 @@ proptest! {
     #[test]
     fn arbitrary_metadata_mutations_never_verify(suffix in "[a-zA-Z0-9]{1,40}") {
         let (mut entry, keys) = fixture();
-        entry.envelope.record.platform = Some(format!("test{suffix}"));
+        entry.envelope.record.platform = Some(format!("test{suffix}")).into();
         prop_assert_eq!(verify(&[entry], keys)[0].status, Status::Invalid);
     }
     #[test]
@@ -222,7 +225,7 @@ proptest! {
         let mut next = child(&root, &keys);
         let spliced = hash(&bytes);
         prop_assume!(Some(&spliced) != next.envelope.record.parent_hash.as_ref());
-        next.envelope.record.parent_hash = Some(spliced);
+        next.envelope.record.parent_hash = Some(spliced).into();
         prop_assert_eq!(verify(&[root, next], keys)[1].status, Status::Invalid);
     }
 }

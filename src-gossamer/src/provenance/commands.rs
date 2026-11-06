@@ -107,6 +107,12 @@ pub async fn provenance_verify_records(
     repo_path: String,
     records_json: String,
 ) -> Result<String, String> {
+    tokio::task::spawn_blocking(move || verify_records_sync(repo_path, records_json))
+        .await
+        .map_err(|e| format!("provenance worker failed: {e}"))?
+}
+
+fn verify_records_sync(repo_path: String, records_json: String) -> Result<String, String> {
     use panll_provenance::{Contribution, PublicKey, Registry};
     if records_json.len() > 16 * 1024 * 1024 {
         return Err("record batch exceeds 16 MiB".into());
@@ -122,7 +128,7 @@ pub async fn provenance_verify_records(
         Ok(files) => {
             for file in files {
                 let file = file.map_err(|e| e.to_string())?;
-                if file.path().extension().and_then(|s| s.to_str()) == Some("json") {
+                if file.path().extension().and_then(std::ffi::OsStr::to_str) == Some("json") {
                     if file.metadata().map_err(|e| e.to_string())?.len() > 65536 {
                         return Err("public key file exceeds 64 KiB".into());
                     }

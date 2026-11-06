@@ -30,10 +30,8 @@ pub struct Record {
     pub author_identity: String,
     pub timestamp: String,
     pub content_hash: String,
-    #[serde(deserialize_with = "present_option")]
-    pub parent_hash: Option<String>,
-    #[serde(deserialize_with = "present_option")]
-    pub platform: Option<String>,
+    pub parent_hash: NullableString,
+    pub platform: NullableString,
     /// Required witness key fingerprints, covered by the author's signature.
     pub witnesses: Vec<String>,
 }
@@ -49,19 +47,35 @@ pub struct Attestation {
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Envelope {
     pub record: Record,
-    #[serde(deserialize_with = "present_option")]
-    pub signature: Option<String>,
+    pub signature: NullableString,
     pub attestations: Vec<Attestation>,
 }
 
-// `Option` normally accepts an absent JSON field. The v1 payload requires an
-// explicit null so deleting a field cannot be silently normalised away.
-fn present_option<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-    T: Deserialize<'de>,
-{
-    Option::<T>::deserialize(deserializer)
+/// A required wire field whose value can be a string or explicit JSON null.
+/// Unlike Option, an absent field is an error: deleting it is not normalised.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum NullableString {
+    Value(String),
+    Null,
+}
+
+impl NullableString {
+    pub fn as_ref(&self) -> Option<&String> {
+        match self {
+            Self::Value(value) => Some(value),
+            Self::Null => None,
+        }
+    }
+}
+
+impl From<Option<String>> for NullableString {
+    fn from(value: Option<String>) -> Self {
+        match value {
+            Some(value) => Self::Value(value),
+            None => Self::Null,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -145,7 +159,7 @@ fn digest_format(value: &str) -> bool {
             .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c))
 }
 
-/// Registry construction fails closed on duplicate identities/fingerprints,
+/// Registry construction fails closed on duplicate fingerprints,
 /// malformed keys or validity periods longer than the annual rotation limit.
 pub struct Registry(HashMap<String, PublicKey>);
 impl Registry {
@@ -213,6 +227,98 @@ impl Registry {
     }
 }
 
+struct ChainState {
+    parent: Option<String>,
+    parent_status: Status,
+    parent_time: Option<DateTime<FixedOffset>>,
+    seen: HashSet<String>,
+    earliest: DateTime<FixedOffset>,
+    latest: DateTime<FixedOffset>,
+}
+
+fn verify_witnesses(
+    envelope: &Envelope,
+    keys: &Registry,
+    time: DateTime<FixedOffset>,
+    message: &[u8],
+) -> Result<bool, String> {
+    let record = &envelope.record;
+    let declared: HashSet<_> = record.witnesses.iter().collect();
+    if declared.len() != record.witnesses.len()
+        || declared.contains(&record.key_id)
+        || record.witnesses.iter().any(|id| !digest_format(id))
+    {
+        return Err("duplicate, malformed or self witness".into());
+    }
+    let mut supplied = HashSet::new();
+    let mut complete = !declared.is_empty();
+    for attestation in &envelope.attestations {
+        if !declared.contains(&attestation.key_id) || !supplied.insert(attestation.key_id.clone()) {
+            return Err("undeclared or duplicate witness attestation".into());
+        }
+        if let (Some(author), Some(witness)) =
+            (keys.0.get(&record.key_id), keys.0.get(&attestation.key_id))
+        {
+            if author.author_identity == witness.author_identity {
+                return Err("author cannot witness own record".into());
+            }
+        }
+        complete &= keys.verify_signature(
+            &attestation.key_id,
+            None,
+            time,
+            message,
+            &attestation.signature,
+        )?;
+    }
+    Ok(complete && supplied.len() == declared.len())
+}
+
+fn verify_entry(
+    entry: &Contribution,
+    keys: &Registry,
+    id: &str,
+    state: &mut ChainState,
+) -> Result<(bool, DateTime<FixedOffset>), String> {
+    let record = &entry.envelope.record;
+    if record.version != 1
+        || record.algorithm != ALGORITHM
+        || record.author_identity.trim().is_empty()
+        || !digest_format(&record.key_id)
+        || !digest_format(&record.content_hash)
+    {
+        return Err("unsupported or malformed record".into());
+    }
+    let time = timestamp(&record.timestamp)?;
+    if time < state.earliest || time > state.latest || state.parent_time.is_some_and(|p| time < p) {
+        return Err("timestamp outside policy window or before parent".into());
+    }
+    if record.parent_hash.as_ref() != state.parent.as_ref() || !state.seen.insert(id.to_owned()) {
+        return Err("missing, reordered, duplicate or spliced chain link".into());
+    }
+    let content = STANDARD
+        .decode(&entry.content_base64)
+        .map_err(|_| "invalid content encoding")?;
+    if hash(&content) != record.content_hash {
+        return Err("content hash mismatch".into());
+    }
+    let message = canonical(record)?;
+    let author_verified = match entry.envelope.signature.as_ref() {
+        Some(sig) => keys.verify_signature(
+            &record.key_id,
+            Some(&record.author_identity),
+            time,
+            &message,
+            sig,
+        )?,
+        None => false,
+    };
+    // Evaluate witnesses even when the author is unknown: a supplied invalid
+    // witness signature is invalid, rather than merely incomplete evidence.
+    let witnesses_verified = verify_witnesses(&entry.envelope, keys, time, &message)?;
+    Ok((author_verified && witnesses_verified, time))
+}
+
 /// Verify a complete, ordered chain from its adoption root. The caller supplies
 /// a trusted time window; no record is permitted to select its own clock.
 /// A verified child cannot promote an unverified ancestor to verified.
@@ -227,99 +333,43 @@ pub fn verify_chain(
     if earliest > latest {
         return Err("inverted timestamp window".into());
     }
+    let mut state = ChainState {
+        parent: None,
+        parent_status: Status::Verified,
+        parent_time: None,
+        seen: HashSet::new(),
+        earliest,
+        latest,
+    };
     let mut results = Vec::new();
-    let mut parent: Option<String> = None;
-    let mut parent_status = Status::Verified;
-    let mut parent_time = None;
-    let mut seen = HashSet::new();
     for entry in entries {
-        let record = &entry.envelope.record;
-        let id = record_hash(record)?;
+        let id = record_hash(&entry.envelope.record)?;
         let mut reasons = Vec::new();
-        let checked = (|| -> Result<bool, String> {
-            if record.version != 1
-                || record.algorithm != ALGORITHM
-                || record.author_identity.trim().is_empty()
-                || !digest_format(&record.key_id)
-                || !digest_format(&record.content_hash)
-            {
-                return Err("unsupported or malformed record".into());
-            }
-            let time = timestamp(&record.timestamp)?;
-            if time < earliest || time > latest || parent_time.is_some_and(|p| time < p) {
-                return Err("timestamp outside policy window or before parent".into());
-            }
-            if record.parent_hash != parent || !seen.insert(id.clone()) {
-                return Err("missing, reordered, duplicate or spliced chain link".into());
-            }
-            let content = STANDARD
-                .decode(&entry.content_base64)
-                .map_err(|_| "invalid content encoding")?;
-            if hash(&content) != record.content_hash {
-                return Err("content hash mismatch".into());
-            }
-            let message = canonical(record)?;
-            let mut complete = match &entry.envelope.signature {
-                Some(sig) => keys.verify_signature(
-                    &record.key_id,
-                    Some(&record.author_identity),
-                    time,
-                    &message,
-                    sig,
-                )?,
-                None => false,
-            };
-            let declared: HashSet<_> = record.witnesses.iter().collect();
-            if declared.len() != record.witnesses.len()
-                || declared.contains(&record.key_id)
-                || record.witnesses.iter().any(|id| !digest_format(id))
-            {
-                return Err("duplicate, malformed or self witness".into());
-            }
-            let mut supplied = HashSet::new();
-            for attestation in &entry.envelope.attestations {
-                if !declared.contains(&attestation.key_id)
-                    || !supplied.insert(attestation.key_id.clone())
-                {
-                    return Err("undeclared or duplicate witness attestation".into());
-                }
-                if let (Some(author), Some(witness)) =
-                    (keys.0.get(&record.key_id), keys.0.get(&attestation.key_id))
-                {
-                    if author.author_identity == witness.author_identity {
-                        return Err("author cannot witness own record".into());
-                    }
-                }
-                complete &= keys.verify_signature(
-                    &attestation.key_id,
-                    None,
-                    time,
-                    &message,
-                    &attestation.signature,
-                )?;
-            }
-            complete &= !declared.is_empty() && supplied.len() == declared.len();
-            parent_time = Some(time);
-            Ok(complete)
-        })();
-        let status = match checked {
+        let status = match verify_entry(entry, keys, &id, &mut state) {
             Err(reason) => {
                 reasons.push(reason);
                 Status::Invalid
             }
-            Ok(_) if parent_status == Status::Invalid => {
-                reasons.push("invalid ancestor".into());
-                Status::Invalid
-            }
-            Ok(true) if parent_status == Status::Verified => Status::Verified,
-            Ok(_) => {
-                reasons
-                    .push("unsigned, unknown key, incomplete witnesses or claimed ancestor".into());
-                Status::Claimed
+            Ok((complete, time)) => {
+                state.parent_time = Some(time);
+                match (state.parent_status, complete) {
+                    (Status::Invalid, _) => {
+                        reasons.push("invalid ancestor".into());
+                        Status::Invalid
+                    }
+                    (Status::Verified, true) => Status::Verified,
+                    _ => {
+                        reasons.push(
+                            "unsigned, unknown key, incomplete witnesses or claimed ancestor"
+                                .into(),
+                        );
+                        Status::Claimed
+                    }
+                }
             }
         };
-        parent = Some(id.clone());
-        parent_status = status;
+        state.parent = Some(id.clone());
+        state.parent_status = status;
         results.push(Verdict {
             status,
             record_hash: id,

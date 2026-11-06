@@ -5,7 +5,7 @@ use fips204::{
     ml_dsa_65,
     traits::{KeyGen, SerDes},
 };
-use panll_provenance::*;
+use panll_provenance::{attest, hash, sign, Envelope, PublicKey, Record, Registry, ALGORITHM};
 use std::{fs, io::Write, path::Path};
 
 fn read<T: serde::de::DeserializeOwned>(path: &str) -> Result<T, String> {
@@ -43,8 +43,8 @@ fn run(args: &[String]) -> Result<(), String> {
         [command, identity, from, until, public, private] if command == "keygen" => {
             // Refuse a private key inside any Git working tree.
             let directory = Path::new(private).parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."));
-            if std::process::Command::new("git").args(["rev-parse", "--is-inside-work-tree"])
-                .current_dir(directory).output().map_err(|e| e.to_string())?.status.success() {
+            let directory = fs::canonicalize(directory).map_err(|e| e.to_string())?;
+            if directory.ancestors().any(|ancestor| ancestor.join(".git").exists()) {
                 return Err("store the private key outside a Git working tree".into());
             }
             let (pk, sk) = ml_dsa_65::KG::try_keygen().map_err(str::to_owned)?;
@@ -58,7 +58,7 @@ fn run(args: &[String]) -> Result<(), String> {
         [command, record, private, output] if command == "sign" => {
             let record: Record = read(record)?;
             let signature = Some(sign(&record, &secret(private)?)?);
-            let envelope = Envelope { record, signature, attestations: vec![] };
+            let envelope = Envelope { record, signature: signature.into(), attestations: vec![] };
             write_new(output, &serde_json::to_vec_pretty(&envelope).map_err(|e| e.to_string())?, false)
         },
         [command, input, public, private, output] if command == "witness" => {
