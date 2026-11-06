@@ -16,10 +16,11 @@ jobs:
     uses: metadatastician/standards/.github/workflows/mirror-reusable.yml@e064539116c2dcfdf282a4749dbd58c69961c7e6
     secrets:
       GITLAB_SSH_KEY: ${{ secrets.GITLAB_SSH_KEY }}
-      BITBUCKET_SSH_KEY: ${{ secrets.BITBUCKET_SSH_KEY }}
       CODEBERG_SSH_KEY: ${{ secrets.CODEBERG_SSH_KEY }}
-      SOURCEHUT_SSH_KEY: ${{ secrets.SOURCEHUT_SSH_KEY }}
-      DISROOT_SSH_KEY: ${{ secrets.DISROOT_SSH_KEY }}
+      # Owner pause, 2026-11-06: Bitbucket, SourceHut and Disroot are off
+      # pending their approved host/credential configuration. This reusable
+      # skips a target whose key is not passed. Restore each named secret
+      # here only after its configuration is ready; secrets are retained.
       # Gitea is off for now: vars.GITEA_HOST is unset, so the job failed on
       # every push. The reusable skips a forge whose key is not passed; add
       # GITEA_SSH_KEY back here once the host is configured.
