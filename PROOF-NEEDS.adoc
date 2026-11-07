@@ -185,10 +185,46 @@ prevent tail truncation without a checkpoint, or prove cryptographic hardness.
 == Recommended prover
 
 *Idris2 0.8.0* for anything at the ABI or grade level, matching the
-existing modules and the typed-wasm kernel they import. Rust-side
-properties (IPC dispatch, PCC) are better served first by tests with a
-stated budget; a mechanised proof only pays once each has a written
-specification.
+existing modules and the typed-wasm kernel they import.
+
+First-party Rust follows standards `3-practice/PROOF-POLICY.adoc` §1.2
+(owner ruling 2026-11-07): *Creusot* with *Pearlite* contracts, plus *Verus*.
+Tests and the bounded TLA+ model do not discharge implementation obligations.
+Pearlite is Creusot's specification language, not an independent prover.
+
+[cols="2,2,3,3",options="header"]
+|===
+|Implementation entrypoint |Verifier and status |Planned obligation |Trust boundary / next action
+|`crates/provenance/src/lib.rs`: `Registry::new`, `verify_chain`
+|Creusot / Pearlite: OPEN
+|Registry validity, chain predecessor handling and propagation of invalid or
+claimed ancestry to later verdicts.
+|Write contracts on the shipped Rust and qualify supported collection/string
+operations. No implementation proof has been run for these entrypoints.
+|`crates/provenance/src/lib.rs`: `verify_entry`, `verify_witnesses`
+|Verus: OPEN
+|A verified verdict requires valid author binding and every declared independent
+witness; rejected or missing evidence cannot promote a verdict.
+|Specify the production status transitions and establish a checked connection
+to the shipped functions. No separate model counts as a proof of them.
+|`canonical`, `hash`, `sign`, `attest`, signature verification and timestamp parsing
+|Dependency boundary: ASSUMED
+|JCS encoding, SHA3-256, ML-DSA-65, OS entropy and time parsing behave as specified.
+|Third-party crates remain unmodified. Record the exact locked versions and
+extern contracts when proofs are introduced; cryptographic hardness, civil
+identity approval and independent witness judgment are outside these proofs.
+|`src-gossamer/src/ipc.rs` dispatch and `tools/pcc` propagation
+|Creusot / Pearlite and Verus: OPEN
+|Allocate implementation contracts after writing the dispatch/propagation
+specifications; retain current tests as TESTED evidence only.
+|PCC frontend scanning remains blocked on the AffineScript port. Neither
+verifier is silently excluded because that separate dependency is unfinished.
+|===
+
+Any future proof receipt must name source/tool/solver versions, invocation,
+discharged obligations and assumptions. Shared SMT solvers or specifications
+do not establish independent witnesses. Approved contributor keys, independent
+witnesses and trusted checkpoints remain separate operational requirements.
 
 == Priority
 
