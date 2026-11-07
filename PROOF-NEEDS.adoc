@@ -201,16 +201,27 @@ Pearlite is Creusot's specification language, not an independent prover.
 claimed ancestry to later verdicts.
 |Write contracts on the shipped Rust and qualify supported collection/string
 operations. No implementation proof has been run for these entrypoints.
+|Action producers and provenance-recording call sites
+|Creusot / Pearlite and Verus: OPEN (specification prerequisite)
+|Define which actions must produce records and establish producer-side coverage,
+including failure and cancellation paths. Verifying supplied records does not
+prove that every required action was recorded.
+|Inventory the producers and specify the recording obligation before assigning
+implementation contracts; no completeness proof is claimed.
 |`crates/provenance/src/lib.rs`: `verify_entry`, `verify_witnesses`
 |Verus: OPEN
-|A verified verdict requires valid author binding and every declared independent
-witness; rejected or missing evidence cannot promote a verdict.
+|A verified verdict requires the supplied bytes to match the signed content
+hash, valid author binding and every declared independent witness; rejected or
+missing evidence cannot promote a verdict.
 |Specify the production status transitions and establish a checked connection
 to the shipped functions. No separate model counts as a proof of them.
 |`canonical`, `hash`, `sign`, `attest`, signature verification and timestamp parsing
-|Dependency boundary: ASSUMED
-|JCS encoding, SHA3-256, ML-DSA-65, OS entropy and time parsing behave as specified.
-|Third-party crates remain unmodified. Record the exact locked versions and
+|First-party wrappers: Creusot / Pearlite and Verus OPEN
+|Prove the wrappers preserve their input/output and error contracts, including
+canonicalisation of `content_hash` and the fields bound by signatures and
+attestations. Allocate the obligations against the shipped functions.
+|Only third-party JCS, SHA3-256, ML-DSA-65, entropy and time-parsing primitives
+and their specified behaviour are ASSUMED. Record exact locked versions and
 extern contracts when proofs are introduced; cryptographic hardness, civil
 identity approval and independent witness judgment are outside these proofs.
 |`src-gossamer/src/ipc.rs` dispatch and `tools/pcc` propagation
