@@ -46,17 +46,21 @@ import Decidable.Equality
 -- Nat lemmas (local, so this module imports nothing beyond base)
 --------------------------------------------------------------------------------
 
+||| Every natural number is less than or equal to itself.
 lteR : (n : Nat) -> LTE n n
 lteR Z     = LTEZero
 lteR (S n) = LTESucc (lteR n)
 
+||| Compose two less-than-or-equal proofs.
 lteT : LTE a b -> LTE b c -> LTE a c
 lteT LTEZero     _           = LTEZero
 lteT (LTESucc p) (LTESucc q) = LTESucc (lteT p q)
 
+||| Substitute an equal lower bound in a less-than-or-equal proof.
 lteEqL : a = b -> LTE b c -> LTE a c
 lteEqL Refl p = p
 
+||| Substitute an equal upper bound in a less-than-or-equal proof.
 lteEqR : LTE a b -> b = c -> LTE a c
 lteEqR p Refl = p
 
@@ -333,7 +337,8 @@ data AlignmentsPow2 : List Field -> Type where
   Pow2Nil  : AlignmentsPow2 []
   Pow2Cons : IsPow2 f.alignment -> AlignmentsPow2 rest -> AlignmentsPow2 (f :: rest)
 
-||| The C struct alignment: the largest field alignment, or 1 for no fields.
+||| The largest field alignment in bytes, with a minimum of 1 (also for an
+||| empty list or fields whose alignments are all 0).
 public export
 maxAlignment : List Field -> Nat
 maxAlignment []        = 1
@@ -372,6 +377,7 @@ proveFieldsAligned (f :: rest) =
         Right restProof => Right (ConsField f rest here restProof)
 
 ||| Attempt to prove there is a field and the first is at offset 0.
+||| Returns `Left` for an empty list or a non-zero first offset.
 public export
 proveFirstAtZero : (fields : List Field) -> Either String (FirstAtZero fields)
 proveFirstAtZero []       = Left "A C struct needs at least one member"
@@ -397,7 +403,8 @@ proveFieldsOrdered (f :: g :: rest) =
         Left err => Left err
         Right restProof => Right (OrdCons fit restProof)
 
-||| Attempt to prove every field alignment is a power of two.
+||| Attempt to prove every field alignment is a power of two.  Returns
+||| `Left` naming the first field whose alignment is not shown to be one.
 public export
 proveAlignmentsPow2 : (fields : List Field) -> Either String (AlignmentsPow2 fields)
 proveAlignmentsPow2 [] = Right Pow2Nil
@@ -410,7 +417,10 @@ proveAlignmentsPow2 (f :: rest) =
         Left err => Left err
         Right restProof => Right (Pow2Cons p restProof)
 
-||| Return C layout evidence for a layout, or the first rule it breaks.
+||| Return C layout evidence, or the first error encountered while checking
+||| field alignment, the first offset, field order, power-of-two alignments
+||| and struct alignment, in that order.  A field alignment error means the
+||| required evidence was not found.
 public export
 checkCABI : (layout : StructLayout) -> Either String (CABICompliant layout)
 checkCABI layout = do

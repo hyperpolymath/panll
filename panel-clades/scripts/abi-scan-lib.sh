@@ -102,8 +102,8 @@ scan_escapes() {
 # The modules the given files import, transitively, that resolve to a source
 # file under one of the roots, one path per line (the files themselves
 # first).  Imports are read from code only, at any indentation.  Imports
-# that resolve under no root are Idris2's own prelude/base/contrib, the
-# prover's trust base: their module names are written to BASE_FILE.
+# that resolve under no root are written as module names to BASE_FILE, which
+# is cleared first.  These may include Idris2's prelude/base/contrib modules.
 import_cone() {
   local base="$1"; shift
   local -a roots=() queue=() seen=()
