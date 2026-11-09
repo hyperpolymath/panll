@@ -6,12 +6,14 @@ Schema: hyperpolymath/standards
 soundness-relevant escape hatch and its disposition. What PanLL proves, and
 what it still needs to prove, is in link:../PROOF-NEEDS.adoc[`PROOF-NEEDS.adoc`].
 
-Last reconciled: 2026-10-26 (`main` at `1937c6b`).
+Last reconciled: 2026-11-09 (`main` at `7d1feaa`).
 
 * *Idris2* (`panel-clades/src/abi/`): no `believe_me`, `assert_total`,
-  `assert_smaller`, `idris_crash`, `unsafePerformIO`, `postulate` or holes,
-  measured on the date above. `check-abi.sh` fails CI if any of those six
-  keywords appears; it does not scan for holes.
+  `assert_smaller`, `idris_crash`, `unsafePerformIO`, `postulate`,
+  `partial`, `covering` or holes, measured on the date above. `check-abi.sh`
+  fails CI if any of them appears in code (comments and string literals set
+  aside) or a module lacks `%default total`, in PanLL's modules and in the
+  typed-wasm modules they import (the import cone).
 * *Estate check*: standards' `scripts/check-trusted-base.sh` finds 2
   escape-hatch signatures, both documented below as not proof debt.
 * *Rust*: the estate check does not scan Rust. The `unsafe` blocks and
@@ -38,6 +40,10 @@ declaration, at an FFI or system-call boundary. None is annotated with
 `// TRUSTED:`, and none has a stated test budget, so none qualifies as (b)
 yet.
 
+The verifier for these seams is Kani, under PROOF-POLICY §4.1, alongside
+Creusot / Pearlite and Verus. The obligations are listed in
+link:../PROOF-NEEDS.adoc[`PROOF-NEEDS.adoc`]; none has been run.
+
 *Owner*: @hyperpolymath. *Deadline*: INDEFINITE — the disposition of each
 group (annotate and budget as (b), or remove the `unsafe`) is an owner
 decision. *Plan* for each: add a `// TRUSTED: <kind>; <budget>` annotation
@@ -53,6 +59,12 @@ and the test that sets the budget, then move the entry to (b).
 * `src-gossamer/src/coprocessor/mod.rs:114`, `:117`, `:120`, `:123` — the
   `unsafe extern "C" fn` types for those symbols. These are declarations;
   they share the entry above.
+* `src-gossamer/src/main.rs:203`, `:209` — the event pump: `gossamer_emit`
+  delivers queued backend events to the webview, and `g_timeout_add`
+  schedules the pump on the GTK main loop. The `extern "C"` declarations
+  they call are at `:175` and `:177`.
+** *Kind*: extraction boundary (Rust → Gossamer C ABI, and GLib). Both have
+   a `SAFETY` comment. Added by #164.
 * `src-gossamer/src/llm_coding/commands.rs:197`, `:217`, `:237` —
   `libc::kill` sending `SIGSTOP` / `SIGCONT` / `SIGTERM` to a session's
   process.

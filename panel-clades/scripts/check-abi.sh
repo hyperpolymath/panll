@@ -16,7 +16,9 @@
 #
 # A missing toolchain is a failure, never a skip.  Every module under
 # src/abi/PanelClades/ must be listed in the ipkg (an unlisted one would be
-# skipped silently), and none may use an escape hatch.
+# skipped silently), declare `%default total`, and use no escape hatch and no
+# hole; the typed-wasm modules they import (the import cone) are held to the
+# same scan, and the cone is printed as the run's record of it.
 set -uo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || exit 1
 ROOT="$(pwd)"
@@ -29,6 +31,74 @@ pass() { printf 'PASS: %s\n' "$1"; }
 err()  { printf 'FAIL: %s\n' "$1"; fail=1; }
 # Print the supplied failure message and terminate the gate with exit status 1.
 die()  { printf 'FAIL: %s\n' "$1"; exit 1; }
+
+# Print each .idr file's code with comments and string literals blanked, as
+# FILE:LINE:TEXT, so a scan neither trips over prose ("NO believe_me") nor
+# misses code.  Handles nested {- -} block comments, `--` line comments (not
+# operators such as -->), `|||` doc comments, and "..." / '.' literals.
+code_only() {
+  awk '
+    FNR == 1 { depth = 0 }
+    {
+      line = $0; out = ""; i = 1; n = length(line)
+      if (depth == 0 && line ~ /^[[:space:]]*\|\|\|/) { print FILENAME ":" FNR ":"; next }
+      while (i <= n) {
+        two = substr(line, i, 2); c = substr(line, i, 1)
+        if (two == "{-") { depth++; i += 2; continue }
+        if (depth > 0) { if (two == "-}") { depth--; i += 2 } else i++; continue }
+        if (two == "--" && substr(line, i + 2, 1) !~ /[!#$%&*+.\/<=>?@\\^|~:-]/) break
+        if (c == "\"") { i++; while (i <= n && substr(line, i, 1) != "\"") { if (substr(line, i, 1) == "\\") i++; i++ }; i++; out = out "\"\""; continue }
+        if (c == "'"'"'" && substr(line, i + 2, 1) == "'"'"'") { i += 3; out = out "'"'"''"'"'"; continue }
+        out = out c; i++
+      }
+      print FILENAME ":" FNR ":" out
+    }' "$@"
+}
+
+# Escape hatches and holes in code, plus any module that does not declare
+# `%default total` (Idris2's default is `covering`, which does not check
+# termination).  Returns 0 and prints the offending lines if anything is found.
+#   believe_me assert_total assert_smaller idris_crash unsafePerformIO
+#   postulate             -- trust or totality escapes
+#   ?name                 -- a hole: idris2 --build accepts a module with holes
+#   partial / covering    -- a declaration opting out of %default total
+scan_escapes() {
+  local found=1 f
+  if code_only "$@" | grep -E \
+       -e ':[0-9]+:.*\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO|postulate)\b' \
+       -e ':[0-9]+:(.*[^A-Za-z0-9_'"'"'?])?\?[a-z_][A-Za-z0-9_'"'"']*' \
+       -e ':[0-9]+:.*\b(partial|covering)\b'; then
+    found=0
+  fi
+  for f in "$@"; do
+    grep -qE '^%default[[:space:]]+total[[:space:]]*$' "$f" || { printf '%s: no %%default total\n' "$f"; found=0; }
+  done
+  return "$found"
+}
+
+# The modules a PanelClades module imports, transitively, that resolve to a
+# source file under one of the given roots.  Imports that resolve nowhere
+# are Idris2's own prelude/base/contrib, the prover's trust base, and are
+# listed separately.  Output: one path per line (cone), and the unresolved
+# module names in "$OUT/import-base".
+import_cone() {
+  local -a queue=("$@") roots=(src/abi "$TW") seen=()
+  local f m r p hit
+  : > "$OUT/import-base"
+  while [ "${#queue[@]}" -gt 0 ]; do
+    f="${queue[0]}"; queue=("${queue[@]:1}")
+    case " ${seen[*]-} " in *" $f "*) continue ;; esac
+    seen+=("$f"); printf '%s\n' "$f"
+    while IFS= read -r m; do
+      hit=""
+      for r in "${roots[@]}"; do
+        p="$r/${m//.//}.idr"
+        [ -f "$p" ] && { hit="$p"; break; }
+      done
+      if [ -n "$hit" ]; then queue+=("$hit"); else printf '%s\n' "$m" >> "$OUT/import-base"; fi
+    done < <(sed -nE 's/^import[[:space:]]+(public[[:space:]]+)?([A-Za-z0-9_.]+).*/\2/p' "$f")
+  done
+}
 
 command -v idris2 >/dev/null || die "idris2 not on PATH (a gate that cannot run must not report OK)"
 iv="$(idris2 --version)"; echo "$iv"
@@ -47,10 +117,10 @@ for f in "${abi_files[@]}"; do
   grep -qE "^[[:space:]]*(modules[[:space:]]*=|,)[[:space:]]*${mod//./\\.}[[:space:]]*$" "$IPKG" \
     || err "$mod is not listed in $IPKG (it would never be checked)"
 done
-if grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO|postulate)\b' "${abi_files[@]}"; then
+if scan_escapes "${abi_files[@]}"; then
   err "escape hatch in src/abi/PanelClades (lines above)"
 fi
-[ "$fail" -eq 0 ] && pass "every PanelClades module is listed in the ipkg; no escape hatches"
+[ "$fail" -eq 0 ] && pass "every PanelClades module is listed in the ipkg, declares %default total, and has no escape hatch or hole"
 if bash scripts/gen-budgets.sh --check; then
   pass "Budgets.idr is current with the clade configs"
 else
@@ -67,6 +137,19 @@ if ! (cd "$TW" && idris2 --build typed-wasm.ipkg) > "$OUT/kernel.log" 2>&1 \
 fi
 pass "typed-wasm grade kernel built at $(git -C _build/dependencies/typed-wasm rev-parse --short HEAD)"
 KTTC="$ROOT/$TW/build/ttc"
+
+# The import cone (standards PROOF-POLICY §1.1): every first-party module the
+# proofs rest on, PanelClades and typed-wasm alike, is held to the same scan.
+# A kernel module with a hole or an escape hatch would be trusted silently.
+import_cone "${abi_files[@]}" > "$OUT/import-cone"
+mapfile -t cone < <(grep -v '^src/abi/PanelClades/' "$OUT/import-cone")
+[ "${#cone[@]}" -gt 0 ] || die "import cone has no typed-wasm module; Grades.idr imports the kernel"
+if scan_escapes "${cone[@]}"; then
+  err "escape hatch or hole in the typed-wasm import cone (lines above)"
+else
+  pass "import cone: ${#cone[@]} typed-wasm module(s), no escape hatch or hole; base: $(sort -u "$OUT/import-base" | tr '\n' ' ')"
+fi
+sed 's/^/  cone: /' "$OUT/import-cone"
 
 rm -rf src/abi/build
 (cd src/abi && IDRIS2_PATH="$KTTC" idris2 --build panel-clades-grades.ipkg) > "$OUT/grades.log" 2>&1
