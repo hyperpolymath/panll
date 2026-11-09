@@ -9,6 +9,28 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === https://github.com/hyperpolymath/panll/compare/v0.1.0...HEAD[Unreleased]
 
+==== Added (2026-11-09 — panel-clades layout proofs and a stricter ABI gate)
+
+* *Rounding up is tight.* For an alignment `+a ≥ 1+`, `+alignUp+` is at or
+above the size and below size plus `+a+` (`+alignUpCovers+`,
+`+alignUpTight+`).
+* *Struct size covers every field.* `+calcStructSizeCovers+` and
+`+fieldWithinStruct+` prove it, so `+verifyLayout+` drops its run-time
+check and refuses only an alignment of 0. `+StructLayout+` now carries
+that coverage as an `+LTE+` proof instead of a Boolean `+So+`.
+* *C layout evidence.* `+CABICompliant+` now also carries fields in order
+without overlap (`+FieldsOrdered+`), power-of-two alignments
+(`+AlignmentsPow2+`, decided by `+decPow2+`), and a struct alignment equal
+to the largest field alignment (`+maxAlignment+`). `+checkCABI+` decides
+all four parts.
+* *Tag tables agree.* `+resultTagsAgree+` and `+cladeKindTagsAgree+` tie
+each `+Bits32+` C encoding to its `+Nat+` equality tag.
+* Three more expected rejections: `+OverlappingFields+`,
+`+AlignmentNotPow2+`, `+StructUnderAligned+`.
+* `+check-abi.sh+` now also fails on holes, `+partial+`, `+covering+` and a
+module without `+%default total+`, reads code only (not comments or
+strings), and holds the typed-wasm import cone to the same scan.
+
 ==== Removed (2026-11-05)
 
 * *The PCC ReScript scanner (`tools/pcc/src/rescript_scanner.rs`) is

@@ -101,10 +101,11 @@ prelude and base (`Data.List`, `Data.Nat`, `Data.So`, `Data.Vect`,
 declaration
 |===
 
-That run predates the import-cone and hole scans and the tag-agreement
-proofs. On 2026-11-09 the same `check-abi.sh`, with those additions, ran
-locally with Idris2 0.8.0 built from the same commit and passed with the
-same result, listing the cone above. A local run is not a receipt. The
+That run predates the import-cone and hole scans, the tag-agreement
+proofs, the layout bounds and the C layout evidence. On 2026-11-09 the
+same `check-abi.sh`, with those additions, ran locally with Idris2 0.8.0
+built from the same commit and passed: 5 modules, 0 errors, 9 of 9
+fixtures refused, and the cone above clean. A local run is not a receipt. The
 first `main` run after this change is the first receipt to include them.
 A receipt is current only for its commit: rerun the job, never carry a
 result forward.
@@ -129,10 +130,19 @@ construction.
 
 |`Layout.idr`
 |`PROVEN`
-|Rounding up to an alignment lands on a multiple of it (`alignUpCorrect`).
-Every computed struct size is a multiple of its alignment
-(`calcStructSizeAligned`). Field alignment is decided by an equation on
-`Nat` (`decDivides`, `proveFieldsAligned`), not by a Boolean test.
+|Rounding up to an alignment `a ≥ 1` is tight: the result is a multiple
+of `a` (`alignUpCorrect`), at or above the size (`alignUpCovers`) and
+below size plus `a` (`alignUpTight`). A computed struct size is a
+multiple of its alignment (`calcStructSizeAligned`) and covers every field
+(`calcStructSizeCovers`, `fieldWithinEnd`, `fieldWithinStruct`), so
+`verifyLayout` has no run-time size check and refuses only an alignment of
+0. `CABICompliant` evidence carries every offset as a multiple of its
+alignment (`FieldsAligned`), the fields in order with each starting at or
+after the previous one's end (`FieldsOrdered`; no two overlap, since the
+chain is ordered), every alignment a power of two (`AlignmentsPow2`), and
+the struct aligned to its largest field alignment (`maxAlignment`). Each
+part is decided by an equation or an `LTE` proof (`decDivides`,
+`isLTE`, `decPow2`, `decEq`), not by a Boolean test.
 
 |`Grades.idr`
 |`PROVEN`
@@ -159,29 +169,20 @@ not measurements.
 |Typechecks only. It declares the Zig FFI surface; it proves nothing.
 |===
 
-The reject fixtures pin down what the types refuse: `BudgetTooSmall`,
-`CollapseWithinTolerance`, `MisalignedField`, `NullHandle`, `OverBudget`
+The reject fixtures pin down what the types and the decision procedures
+refuse: `AlignmentNotPow2`, `BudgetTooSmall`,
+`CollapseWithinTolerance`, `MisalignedField`, `NullHandle`, `OverBudget`,
+`OverlappingFields`, `StructUnderAligned`
 and `WasmPointerIsEightBytes`.
 
 === What is not proved
 
-The first item and the last two are stated in the modules themselves. The
-other two were found reviewing the proofs on 2026-11-09.
+These limits are stated in the modules themselves.
 
-* *Struct size covers the last field.* `Layout.idr` does not prove that a
-  computed size is at least the end of the last field; `verifyLayout`
-  checks it at run time and refuses a layout that fails.
-* *Rounding up reaches the size.* `alignUpCorrect` holds by construction:
-  `alignUp` is defined as a number of units times the alignment, so it is
-  always a multiple. The property that carries weight, that for an
-  alignment of at least 1 the result is at least the size and less than
-  size plus alignment, is not proved. It is the lemma the struct-size
-  lower bound needs.
-* *C layout beyond alignment.* `CABICompliant` certifies that each
-  field's offset is a multiple of its alignment, and nothing else. It does
-  not prove that fields are in order and do not overlap, that alignments
-  are powers of two (an alignment of 0 is accepted), or that the struct's
-  alignment is its largest field alignment.
+* *The decision procedures are complete.* `decDivides`, `decPow2` and
+  `checkCABI` are sound: every `Just` or `Right` carries real evidence. A
+  `Nothing` or `Left` means only "not shown"; that the property is then
+  false is not proved.
 * *The Zig side matches.* Nothing checks that `panel-clades/ffi/zig/`
   exports the symbols `Foreign.idr` declares, with those types, or uses
   the sizes and tags `Types.idr` proves. `ffi/zig/src/main.zig` restates
@@ -197,29 +198,6 @@ Status is the PROOF-POLICY §5 token. The note says why, and what comes next.
 [cols="2,3,1,2,1",options="header"]
 |===
 |Item |What |Status |Note |Tracked
-
-|Struct size lower bound
-|Prove `calcStructSize` is at least the end of the last field, and drop
-the run-time check in `verifyLayout`.
-|`OPEN`
-|Not started. Induction over the field list, plus the rounding lemma
-below.
-|—
-
-|Rounding up reaches the size
-|For an alignment `a ≥ 1`: `size ≤ alignUp size a < size + a`.
-|`OPEN`
-|Not started. Induction on the fuel of `unitsFor`. The struct-size lower
-bound rests on it.
-|—
-
-|C layout rules
-|Fields in order and not overlapping, every alignment a power of two, and
-the struct aligned to its largest field alignment, as `CABICompliant`
-evidence.
-|`OPEN`
-|Not started. Today `CABICompliant` carries field alignment only.
-|—
 
 |Safe callback registration
 |A safe wrapper for `prim__registerCallback` in `Foreign.idr`, using
@@ -425,9 +403,8 @@ that is not the definition of `Valid`.
 
 == Priority
 
-. Struct size lower bound and the safe callback wrapper (#149): small,
-  local, and they close the two gaps the modules admit to. The rounding
-  lemma comes first, since the lower bound rests on it.
+. The safe callback wrapper (#149): small and local, and the last gap
+  `Foreign.idr` admits to.
 . Zig/Idris FFI agreement check: cheap, and it removes the largest
   unchecked assumption under the proofs.
 . PCC soundness: the highest-value proof, but only after the AffineScript
