@@ -95,6 +95,11 @@ jobs:
         with:
           persist-credentials: false
 
+      # The source scans check-abi.sh relies on, tested both ways; needs no
+      # Idris2, so it fails fast before the 8-minute toolchain build.
+      - name: ABI scan regression tests
+        run: bash panel-clades/tests/scan/test-abi-scan.sh
+
       - name: Install Chez Scheme and GMP
         run: |
           sudo apt-get update -qq

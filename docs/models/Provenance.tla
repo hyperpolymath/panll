@@ -11,8 +11,9 @@
 \* record: PROOF-NEEDS.adoc, "Exceptions", "TLA+ model of provenance binding".
 \*   Obligation: verification accepts only the genuine chain while at least
 \*     one of the two signing keys is uncompromised.
-\*   Tool: TLA+ / TLC. Why: a symbolic protocol statement; Creusot/Pearlite
-\*     and Verus check the shipped Rust, and this model discharges none of it.
+\*   Tool: TLA+ / TLC. Why: a symbolic protocol statement. The shipped Rust is
+\*     for Creusot/Pearlite and Verus, planned and still OPEN; this model
+\*     discharges none of it.
 \*   Status: TESTED (bounded: two values, chains of two), from the
 \*     provenance-model job in build-validation.yml; see PROOF-NEEDS.adoc.
 \*   Assumed: signatures cannot be made without the key (ML-DSA-65

@@ -23,7 +23,7 @@ JAR="${1:?usage: check-provenance-model.sh /path/to/tla2tools.jar}"
 EXPECT_VERSION="TLC2 Version 2.19 of 08 August 2024"
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../docs/models" || exit 1
 command -v java >/dev/null || { echo "FAIL: java not on PATH"; exit 1; }
-[ -f "$JAR" ] || { echo "FAIL: $JAR not found"; exit 1; }
+[[ -f "$JAR" ]] || { echo "FAIL: $JAR not found"; exit 1; }
 
 work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT
 fail=0
@@ -37,7 +37,7 @@ for cfg in Provenance ProvenanceWitnessLeak; do
   run "$cfg"; st=$?
   grep -qF "$EXPECT_VERSION" "$work/$cfg.log" \
     || { echo "FAIL: $cfg: TLC is not '$EXPECT_VERSION'"; head -5 "$work/$cfg.log"; fail=1; continue; }
-  if [ "$st" -eq 0 ] && grep -q '^Model checking completed. No error has been found.' "$work/$cfg.log"; then
+  if [[ "$st" -eq 0 ]] && grep -q '^Model checking completed. No error has been found.' "$work/$cfg.log"; then
     echo "PASS: $cfg — $(grep -E '^[0-9]+ states generated' "$work/$cfg.log")"
   else
     tail -40 "$work/$cfg.log"; echo "FAIL: $cfg (exit $st): expected no error"; fail=1
@@ -48,11 +48,11 @@ cfg=ProvenanceBothLeak
 run "$cfg"; st=$?
 if ! grep -qF "$EXPECT_VERSION" "$work/$cfg.log"; then
   echo "FAIL: $cfg: TLC is not '$EXPECT_VERSION'"; head -5 "$work/$cfg.log"; fail=1
-elif [ "$st" -ne 0 ] && grep -q '^Error: Invariant Genuine is violated' "$work/$cfg.log"; then
+elif [[ "$st" -ne 0 ]] && grep -q '^Error: Invariant Genuine is violated' "$work/$cfg.log"; then
   echo "PASS: $cfg — TLC found the both-keys forgery, as it must"
 else
   tail -40 "$work/$cfg.log"; echo "FAIL: $cfg (exit $st): expected 'Invariant Genuine is violated'"; fail=1
 fi
 
-[ "$fail" -eq 0 ] || { echo "PROVENANCE MODEL CHECK FAILED"; exit 1; }
+[[ "$fail" -eq 0 ]] || { echo "PROVENANCE MODEL CHECK FAILED"; exit 1; }
 echo "OK: provenance model — Genuine holds with one leaked key, fails with two"

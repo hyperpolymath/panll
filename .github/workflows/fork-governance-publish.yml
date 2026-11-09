@@ -15,6 +15,10 @@
 # publisher must agree on the comment's marker and stamp.
 name: Fork governance publish
 
+# workflow_run, deliberately: it is the only way to write a comment for a
+# fork PR. Nothing from the fork runs here. The reusable checks out no code,
+# reads the artifact as data, and posts only to the open PR whose head is
+# the commit the run built.
 on:
   workflow_run:
     workflows: ["Fork governance"]
@@ -27,5 +31,5 @@ jobs:
   publish:
     uses: metadatastician/standards/.github/workflows/fork-governance-publish-reusable.yml@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5
     permissions:
-      actions: read
-      pull-requests: write
+      actions: read          # download the run's fork-governance-comment artifact
+      pull-requests: write   # post or update the one governance comment

@@ -157,17 +157,14 @@ contract typechecks against its declared budget
 it is not an assumption; whether its definitions match resource-algebra's
 is #143.
 
-|`Budgets.idr`
-|No obligation
-|Generated from the clades' `config.k9.ncl` resource blocks. It proves
-nothing itself; it is the input `Grades.idr` checks against. Only
-neurosym-bridge declares a budget so far. The budgets are DESIGNED values,
-not measurements.
-
-|`Foreign.idr`
-|No obligation
-|Typechecks only. It declares the Zig FFI surface; it proves nothing.
 |===
+
+Two modules carry no obligation and are not in the table.
+`Budgets.idr` is generated from the clades' `config.k9.ncl` resource
+blocks; it is the input `Grades.idr` checks against. Only neurosym-bridge
+declares a budget so far, and the budgets are DESIGNED values, not
+measurements. `Foreign.idr` declares the Zig FFI surface and only
+typechecks.
 
 The reject fixtures pin down what the types and the decision procedures
 refuse: `AlignmentNotPow2`, `BudgetTooSmall`,
@@ -230,15 +227,21 @@ and their contracts need to typecheck.
 budget).
 |—
 
-|IPC dispatch is total
-|Every command the frontend invokes has a registered handler.
-|`TESTED` (backend side); `OPEN` (frontend side)
+|IPC dispatch is total: backend side
+|Every public handler in a backend command module is registered, once.
+|`TESTED`
 |Tests in `src-gossamer/src/ipc.rs`:
 `every_backend_command_is_registered` fails if a public handler in a
 command module is reachable from neither the table nor `main.rs`, and
-the table and `main.rs` never register the same name twice. Checking the
-frontend side needs its `invoke` names, which wait on the AffineScript
-port. The Rust implementation obligation is in the next section.
+the table and `main.rs` never register the same name twice. The Rust
+implementation obligation is in the next section.
+|#148
+
+|IPC dispatch is total: frontend side
+|Every command the frontend invokes has a registered handler.
+|`OPEN`
+|Needs the frontend's `invoke` names, which wait on the AffineScript
+port.
 |#148
 
 |PCC soundness
@@ -268,7 +271,7 @@ a parent hash. It is serialised as canonical JSON, signed with ML-DSA-65
 and witnessed, and verifies against keys published under
 `.well-known/keys/`. Today's engine (git blame plus Co-Authored-By
 trailers) is forgeable, so its output counts only as "claimed".
-|`TESTED`; proofs `OPEN`
+|`TESTED`
 |Implemented in `crates/provenance`: JCS records, ML-DSA-65 signing,
 approved public-key registry, independent witnesses, timestamp/content/chain
 verification and mutation/property tests (the `TESTED` evidence).
@@ -276,8 +279,8 @@ Symbolic binding model: `docs/models/Provenance.tla`, `TESTED` in CI, a §4 exce
 whose record is below; protocol and limits:
 `docs/PROVENANCE-EXHIBIT-B.adoc`. This does not prove every action is
 recorded, prevent tail truncation without a checkpoint, or prove
-cryptographic hardness. The implementation proofs are in the next
-section.
+cryptographic hardness. The implementation proofs are `OPEN`, in the
+next section.
 |#173
 
 |Cartridge schema validation
@@ -389,10 +392,10 @@ tla2tools v1.7.4)
 
 |Why not the mapped verifier
 |The statement is about the protocol, symbolically, with signatures as
-sets that only a key holder can add to. The mapped verifiers (Creusot /
-Pearlite and Verus) check the shipped Rust instead; that obligation is the
-`verify_entry` / `verify_witnesses` row above, and this model does not
-discharge it.
+sets that only a key holder can add to. The mapped verifiers for the shipped Rust are Creusot /
+Pearlite and Verus. They are planned, not yet run: the `verify_entry` /
+`verify_witnesses` row above is `OPEN`, and this model does not discharge
+it.
 
 |Status
 |`TESTED`, with bounds: two field/digest values (`A`, `B`) plus `None`
