@@ -70,7 +70,7 @@ jobs:
 
       - name: Fetch TLA+ tools v1.7.4 (pinned by digest)
         run: |
-          curl -sSfL --retry 3 -o "$RUNNER_TEMP/tla2tools.jar" "$TLA2TOOLS_URL"
+          curl -fsSL --proto '=https' --proto-redir '=https' --tlsv1.2 --retry 3 -o "$RUNNER_TEMP/tla2tools.jar" "$TLA2TOOLS_URL"
           echo "$TLA2TOOLS_SHA256  $RUNNER_TEMP/tla2tools.jar" | sha256sum -c -
           java -version
 

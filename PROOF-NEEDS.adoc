@@ -265,11 +265,16 @@ port.
 |Provenance engine
 |Provenance tracking is complete (every action is recorded) and
 unforgeable. Owner decision (2026-11-05): "unforgeable" means each
-provenance record follows `EXHIBIT-B-QUANTUM-SAFE.txt`. The record holds
-the author identity, a timestamp, a SHA3-256 content hash and, optionally,
-a parent hash. It is serialised as canonical JSON, signed with ML-DSA-65
-and witnessed, and verifies against keys published under
-`.well-known/keys/`. Today's engine (git blame plus Co-Authored-By
+provenance record follows PanLL's profile of `EXHIBIT-B-QUANTUM-SAFE.txt`.
+The record holds the author identity, a timestamp, a SHA3-256 content hash
+and, optionally, a parent hash, serialised as canonical JSON. The profile
+is narrower than Exhibit B: ML-DSA-65 only (Exhibit B §2.1 and §4.1 also
+allow ML-DSA-87, SLH-DSA, FALCON or another approved alternative); at
+least one independent witness is required for `verified` (witnesses are
+optional in Exhibit B §3.2); and keys come only from the verifier's
+approved `.well-known/keys/` registry (Exhibit B §5.1 also lists OpenPGP
+keyservers and personal websites). Every record PanLL verifies therefore
+satisfies Exhibit B; some Exhibit B records verify only as `claimed`. Today's engine (git blame plus Co-Authored-By
 trailers) is forgeable, so its output counts only as "claimed".
 |`TESTED`
 |Implemented in `crates/provenance`: JCS records, ML-DSA-65 signing,
@@ -335,8 +340,11 @@ to the shipped functions. No separate model counts as a proof of them.
 canonicalisation of `content_hash` and the fields bound by signatures and
 attestations. Allocate the obligations against the shipped functions.
 |Only third-party JCS, SHA3-256, ML-DSA-65, entropy and time-parsing primitives
-and their specified behaviour are ASSUMED. Record exact locked versions and
-extern contracts when proofs are introduced; cryptographic hardness, civil
+and their specified behaviour are ASSUMED, at the versions `Cargo.lock` pins
+today: `fips204` 0.5.0 (ML-DSA-65; exact pin `=0.5.0` in
+`crates/provenance/Cargo.toml`), `sha3` 0.10.9, `serde_jcs` 0.2.0, `chrono`
+0.4.45 and `base64` 0.22.1. Record extern contracts when proofs are
+introduced; cryptographic hardness, civil
 identity approval and independent witness judgment are outside these proofs.
 |`src-gossamer/src/ipc.rs` dispatch and `tools/pcc` propagation
 |Creusot / Pearlite and Verus: OPEN
