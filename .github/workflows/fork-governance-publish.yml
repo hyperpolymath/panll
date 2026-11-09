@@ -1,0 +1,31 @@
+# This workflow is managed by gh actions-lock.
+# SPDX-License-Identifier: MPL-2.0
+# fork-governance-publish.yml — post the Fork governance comment on pull
+# requests from forks.
+#
+# On a fork PR GitHub gives the "Fork governance" run a read-only token, so
+# its verdict job uploads the rendered comment as an artifact instead of
+# posting it. This workflow runs after every "Fork governance" run, from the
+# default branch's copy with this repository's token, and posts that comment
+# after checking it (metadatastician/standards
+# 3-practice/fork-governance/ADOPTION.adoc §2). It skips same-repository runs,
+# which post their own comment. It takes effect once merged to main.
+#
+# Same standards commit as fork-governance.yml: the renderer and the
+# publisher must agree on the comment's marker and stamp.
+name: Fork governance publish
+
+on:
+  workflow_run:
+    workflows: ["Fork governance"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    uses: metadatastician/standards/.github/workflows/fork-governance-publish-reusable.yml@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5
+    permissions:
+      actions: read
+      pull-requests: write
