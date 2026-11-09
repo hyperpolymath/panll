@@ -101,9 +101,13 @@ input returns an empty array, never a batch-level success certification.
 real ML-DSA signatures, every metadata field, content mutations, witness
 tampering, identity binding, validity/revocation and chain deletion/splicing.
 Property tests generate arbitrary content, metadata and parent-hash mutations.
-`docs/models/Provenance.tla` models signature binding and chain verification
-symbolically. Its invariant is not a cryptographic proof of ML-DSA or SHA3,
-nor a proof of all implementation paths. Production adoption requires an
+`docs/models/Provenance.tla` models an adversary against chain verification
+symbolically: it can supply any chain and content, reuse published
+signatures, and sign with a leaked author key, while the honest witness
+attests only what the author intended. It is a PROOF-POLICY §4 exception,
+reported as `TESTED` within its bounds (see `PROOF-NEEDS.adoc`). It is not a
+cryptographic proof of ML-DSA or SHA3, nor a proof of all implementation
+paths. Production adoption requires an
 approved contributor key and independent witness; historical records are
 never silently re-signed.
 
@@ -124,7 +128,9 @@ the actual hosted runs still determine whether the workflows passed.
 Validation receipt, 2026-11-06: the Linux workspace suite passed 295 backend
 tests and seven signature/property tests (two existing documentation examples
 are ignored). The protocol crate also passed Windows tests and Clippy with
-warnings denied. TLC 2.19 from tlaplus/tlaplus release v1.7.4 checked
+warnings denied. Superseded 2026-11-09 (the model was rewritten because
+its `Sign` action let any party sign any payload, so `Binding` held by
+definition): TLC 2.19 from tlaplus/tlaplus release v1.7.4 checked
 `Provenance.cfg` with `Values = {a, b}`: 18,045,441 generated states, 68,096
 distinct states, no invariant violation. SHA-256 of the checked model:
 `c379ece2393e2cacfffccd6bb0360184ad179c77ae72dc875948a022d123444a`.

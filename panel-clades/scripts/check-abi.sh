@@ -16,7 +16,9 @@
 #
 # A missing toolchain is a failure, never a skip.  Every module under
 # src/abi/PanelClades/ must be listed in the ipkg (an unlisted one would be
-# skipped silently), and none may use an escape hatch.
+# skipped silently).  No module in the import cone (PanelClades and the
+# typed-wasm kernel at its pin) may use an escape hatch, leave a hole or opt
+# out of totality: scripts/scan-escape-hatches.sh.
 set -uo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || exit 1
 ROOT="$(pwd)"
@@ -47,10 +49,10 @@ for f in "${abi_files[@]}"; do
   grep -qE "^[[:space:]]*(modules[[:space:]]*=|,)[[:space:]]*${mod//./\\.}[[:space:]]*$" "$IPKG" \
     || err "$mod is not listed in $IPKG (it would never be checked)"
 done
-if grep -nE '\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO|postulate)\b' "${abi_files[@]}"; then
-  err "escape hatch in src/abi/PanelClades (lines above)"
+if ! bash scripts/scan-escape-hatches.sh "${abi_files[@]}"; then
+  err "escape hatch, hole or totality opt-out in src/abi/PanelClades (lines above)"
 fi
-[ "$fail" -eq 0 ] && pass "every PanelClades module is listed in the ipkg; no escape hatches"
+[ "$fail" -eq 0 ] && pass "every PanelClades module is listed in the ipkg; no escape hatches, holes or partial code"
 if bash scripts/gen-budgets.sh --check; then
   pass "Budgets.idr is current with the clade configs"
 else
@@ -59,6 +61,18 @@ fi
 
 bash scripts/fetch-siblings.sh || die "could not fetch typed-wasm at its pin"
 TW="_build/dependencies/typed-wasm/src/abi"
+# The kernel is part of the proofs' import cone: it is checked, not assumed,
+# only if it is free of escape hatches and holes too.
+kernel_list="$OUT/kernel-files"
+find "$TW/TypedWasm" -type f -name '*.idr' -print0 > "$kernel_list" \
+  || die "could not enumerate typed-wasm kernel sources"
+mapfile -d '' -t kernel_files < "$kernel_list"
+[ "${#kernel_files[@]}" -gt 0 ] || die "no typed-wasm kernel sources under $TW/TypedWasm"
+if bash scripts/scan-escape-hatches.sh "${kernel_files[@]}"; then
+  pass "typed-wasm import cone (${#kernel_files[@]} modules): no escape hatches, holes or partial code"
+else
+  err "escape hatch, hole or totality opt-out in the typed-wasm kernel (lines above)"
+fi
 rm -rf "$TW/build"
 if ! (cd "$TW" && idris2 --build typed-wasm.ipkg) > "$OUT/kernel.log" 2>&1 \
    || grep -q '^Error' "$OUT/kernel.log"; then

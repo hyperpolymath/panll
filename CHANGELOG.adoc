@@ -9,6 +9,23 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === https://github.com/hyperpolymath/panll/compare/v0.1.0...HEAD[Unreleased]
 
+==== Fixed (2026-11-09 — proof ledger reconciled with the estate proof policy)
+
+* *The Idris2 proof gate now covers the whole import cone.*
+`panel-clades/scripts/scan-escape-hatches.sh` fails on escape hatches,
+holes (`?name`, which `idris2 --build` accepts), `partial`/`covering` and a
+missing `%default total`, in PanelClades and in typed-wasm's kernel at its
+pin. Before, holes were not checked and the kernel was not scanned.
+* *The provenance TLA+ model checks something.* Its `Sign` action let any
+party sign any payload, so `Binding` held by definition. It now models a
+leaked author key, spliced chains and an honest witness, and CI
+(`provenance-model`) checks it both ways: a forgery must be found without
+the witness check, and a verified state must be reachable.
+* `PROOF-NEEDS.adoc` uses PROOF-POLICY's status tokens, records the import
+cone, the §4 exception and the §6 toolchain deviations, states that PanLL's
+provenance profile is narrower than Exhibit B, and corrects two overclaims
+(`decDivides` is a semi-decision; the struct-size bound needs `align >= 1`).
+
 ==== Removed (2026-11-05)
 
 * *The PCC ReScript scanner (`tools/pcc/src/rescript_scanner.rs`) is

@@ -48,7 +48,10 @@ jobs:
   # typed-wasm's grade kernel at its pin, and the expected rejections are
   # refused.  Idris2 publishes no binaries, so 0.8.0 is built from source,
   # fetched by the commit its v0.8.0 tag names (a tag can move; the SHA
-  # cannot).
+  # cannot).  Deviation (PROOF-POLICY §6): built from upstream source, not a
+  # Guix manifest or container (PanLL has neither for proof tools yet);
+  # the commit is asserted here and check-abi.sh asserts version 0.8.0.
+  # State: open.
   panel-clades-abi:
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -84,3 +87,28 @@ jobs:
 
       - name: panel-clades ABI
         run: bash panel-clades/scripts/check-abi.sh
+
+  # Provenance adversary model (PROOF-POLICY §4 exception, TESTED within the
+  # bounds in docs/models/Provenance.cfg), checked both ways by
+  # docs/models/check-models.sh. Deviation (PROOF-POLICY §6): TLC is fetched
+  # from the tlaplus/tlaplus v1.7.4 release, not a Guix manifest or
+  # container (PanLL has neither for proof tools yet); the script asserts
+  # the jar's SHA-256 and TLC 2.19 and fails on any mismatch. State: open.
+  provenance-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      TLA2TOOLS_URL: https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Fetch TLC 2.19 (tla2tools v1.7.4)
+        run: curl -fsSL --retry 3 -o "$RUNNER_TEMP/tla2tools.jar" "$TLA2TOOLS_URL"
+
+      - name: Model-check docs/models/Provenance.tla
+        run: bash docs/models/check-models.sh "$RUNNER_TEMP/tla2tools.jar"

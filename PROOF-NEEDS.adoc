@@ -6,17 +6,27 @@ What PanLL proves today, what it deliberately does not, and what is still
 owed. Escape hatches and their dispositions are tracked separately in
 link:docs/proof-debt.adoc[`docs/proof-debt.adoc`].
 
-Last reconciled against the tree: 2026-10-26 (`main` at `1937c6b`).
+This file follows the estate proof policy,
+https://github.com/metadatastician/standards/blob/9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5/3-practice/PROOF-POLICY.adoc[standards `3-practice/PROOF-POLICY.adoc`]
+(read at `9bdf864`). Every row carries one of its closed status tokens (§5):
+`PROVEN`, `PROVEN-WITH-AXIOMS`, `TESTED` (with bounds), `ASSUMED` or `OPEN`.
+
+*Proof Witness Grades do not apply.* Every PanLL obligation is engineering:
+each names a PanLL type, function, ABI or wire format (PROOF-POLICY §1). PanLL
+has no theory obligations of its own, so no row has a PWG (§8.1). The
+max-plus/min-plus kernel lemmas it imports are theory owned by
+hyperpolymath/resource-algebra; their grade is recorded there.
+
+Last reconciled against the tree: 2026-11-09 (`main` at `7d1feaa`, plus the
+change that added this line).
 
 toc::[]
 
 == Current state
 
-The only machine-checked proofs live in the panel-clades ABI,
+The only kernel-checked proofs live in the panel-clades ABI,
 `panel-clades/src/abi/PanelClades/ABI/` (Idris2 0.8.0, `%default total`,
-about 1,300 lines). As of the date above, no `.idr` file contains a hole,
-`believe_me`, `assert_total`, `assert_smaller`, `idris_crash`,
-`unsafePerformIO` or `postulate`.
+about 1,300 lines).
 
 The CI job `panel-clades-abi` in `.github/workflows/build-validation.yml`
 runs `panel-clades/scripts/check-abi.sh`, which:
@@ -25,20 +35,60 @@ runs `panel-clades/scripts/check-abi.sh`, which:
   `panel-clades/scripts/fetch-siblings.sh` (`117bbf8`);
 * builds `panel-clades/src/abi/panel-clades-grades.ipkg` against it and
   fails on any `Error:` line, even when `idris2` exits 0;
-* fails if any module under `PanelClades/` is missing from the ipkg, or
-  contains `believe_me`, `assert_total`, `assert_smaller`, `idris_crash`,
-  `unsafePerformIO` or `postulate` (a keyword scan; it does not look for
-  holes);
+* fails if any module under `PanelClades/` is missing from the ipkg;
+* runs `panel-clades/scripts/scan-escape-hatches.sh` over the whole import
+  cone (the five PanelClades modules and every typed-wasm kernel module at
+  the pin). It fails on `believe_me`, `assert_total`, `assert_smaller`,
+  `idris_crash`, `unsafePerformIO` or `postulate`, on a hole (`?name`:
+  `idris2 --build` accepts unsolved holes), on `partial` or `covering`, and
+  on a module without `%default total`. Comments are ignored;
 * fails if `Budgets.idr` is stale against the clade configs
   (`scripts/gen-budgets.sh --check`);
 * requires each of the six fixtures in `panel-clades/tests/reject/` to be
   refused at its `invalid` declaration, with the expected message.
 
-=== What is proved
+=== Import cone (PROOF-POLICY §1.1)
+
+The kernel is checked, not assumed:
 
 [cols="1,3",options="header"]
 |===
-|Module |Proved
+|Field |Value
+
+|Root
+|`panel-clades/src/abi/panel-clades-grades.ipkg` (5 modules)
+
+|Library
+|`hyperpolymath/typed-wasm` `src/abi/typed-wasm.ipkg` at
+`117bbf895b513673ba06eb6c4ebb0e26e276e295` (28 modules)
+
+|Checker and flags
+|Idris2 0.8.0 (built from `15a3e4e70843f7a34100f6470c04b791330788df`),
+`%default total` in every cone module
+
+|Escape hatches, holes, opt-outs
+|0, enforced by `scan-escape-hatches.sh` on every run
+
+|Outside the cone
+|Idris2's bundled `base`/`contrib` libraries (`Data.List`, `Data.Nat`,
+`Data.So`, `Data.Vect`, `Data.Vect.Elem`, `Decidable.Equality`) and the
+prelude belong to the toolchain's trusted base: `ASSUMED`, Idris2
+0.8.0.
+|===
+
+=== What is proved
+
+Receipt: Build Validation run
+https://github.com/hyperpolymath/panll/actions/runs/42408104327[42408104327],
+job `panel-clades-abi`, on `main` at
+`7d1feaaf112b3d91fd504aaf871be5ae49840434`, 2026-11-07: the package built
+with 0 errors and all six fixtures were refused for the expected reasons.
+The import-cone scan was added after that run; its first receipt is the CI
+run of the change that added it.
+
+[cols="1,3,1",options="header"]
+|===
+|Module |Proved |Status
 
 |`Types.idr`
 |The C tag encodings of `Result` and `CladeKind` round-trip, so they are
@@ -46,30 +96,40 @@ injective (`resultRoundTrip`, `cladeKindRoundTrip`). Equality on both is
 decidable without a catch-all `absurd` (`decEqViaTag`). `allCladeKinds`
 lists every kind (`cladeKindExhaustive`) and has length `cladeKindCount`.
 A `Handle` is never null and a `CladeId` is never empty, by construction.
+|`PROVEN`
 
 |`Layout.idr`
 |Rounding up to an alignment lands on a multiple of it (`alignUpCorrect`).
 Every computed struct size is a multiple of its alignment
-(`calcStructSizeAligned`). Field alignment is decided by an equation on
-`Nat` (`decDivides`, `proveFieldsAligned`), not by a Boolean test.
+(`calcStructSizeAligned`). `decDivides` returns a `Divides` witness when an
+offset is a multiple of its alignment, and `proveFieldsAligned` builds the
+`FieldsAligned` proof from those witnesses. `decDivides` is a semi-decision:
+`Nothing` carries no proof that the field is misaligned.
+|`PROVEN`
 
 |`Grades.idr`
-|Clade resource contracts are graded in typed-wasm's kernel (transcribed
-from hyperpolymath/resource-algebra), not re-declared. Occupancy composes
-within a bound (`phasesWithin`). Loss adds across two crossings
-(`crossTwice`), and the better of two alternatives stays within a shared
-bound (`betterOfTwo`). Occupancy and cost are kept apart
-(`panelPhasesOccupancy` vs `panelPhasesCost`). The neurosym-bridge
-contract typechecks against its declared budget
-(`neurosymBridgeContract`).
+|Clade resource contracts are graded in typed-wasm's kernel, not
+re-declared. Occupancy composes within a bound (`phasesWithin`). Loss adds
+across two crossings (`crossTwice`), and the better of two alternatives
+stays within a shared bound (`betterOfTwo`). Occupancy and cost are kept
+apart (`panelPhasesOccupancy` vs `panelPhasesCost`). The neurosym-bridge
+contract typechecks against its declared budget (`neurosymBridgeContract`).
+These hold of the kernel as transcribed in typed-wasm; that the
+transcription matches resource-algebra is the separate *Grade kernel
+identity* row.
+|`PROVEN`
 
 |`Budgets.idr`
 |Generated from the clades' `config.k9.ncl` resource blocks. It proves
 nothing itself; it is the input `Grades.idr` checks against. Only
-neurosym-bridge declares a budget so far.
+neurosym-bridge declares a budget so far. The budgets are DESIGNED values,
+not measurements.
+|— (input)
 
 |`Foreign.idr`
-|Typechecks only. It declares the Zig FFI surface; it proves nothing.
+|Typechecks only. It declares the Zig FFI surface with `%foreign`; the C
+side is not checked against it.
+|`ASSUMED`
 |===
 
 The reject fixtures pin down what the types refuse: `BudgetTooSmall`,
@@ -93,93 +153,185 @@ These limits are stated in the modules themselves.
 
 == What needs proving
 
-[cols="2,3,2,1",options="header"]
+[cols="2,3,1,2,1",options="header"]
 |===
-|Item |What |Status |Tracked
+|Item |What |Status |Notes |Tracked
 
 |Struct size lower bound
-|Prove `calcStructSize` is at least the end of the last field, and drop
-the run-time check in `verifyLayout`.
-|Not started. Induction over the field list plus a lemma about rounding
-up.
+|Prove `calcStructSize fields align` is at least `structEnd fields`, and
+drop the run-time check in `verifyLayout`.
+|`OPEN`
+|Needs the precondition `align >= 1`: `alignUp` returns 0 for alignment 0,
+so the bound is false there. Induction over the field list plus a lemma
+about rounding up.
 |—
 
 |Safe callback registration
 |A safe wrapper for `prim__registerCallback` in `Foreign.idr`, using
 Idris2's FFI callback mechanism (`cast` is banned).
-|Not started.
+|`OPEN`
+|
 |#149
 
 |Zig/Idris FFI agreement
 |Check that the Zig exports match `Foreign.idr` and the proven sizes and
-tags. This is a CI check, not a proof.
-|Not started.
+tags.
+|`OPEN`
+|A CI check, not a proof. Until it exists the FFI contract is `ASSUMED`.
 |—
 
 |Grade kernel identity
-|Confirm typed-wasm's transcription matches resource-algebra's Agda
-`MaxPlus` kernel, which is now the family instance.
-|Open question; PanLL already imports the kernel through typed-wasm.
+|typed-wasm's Idris2 transcription matches resource-algebra's Agda
+`MaxPlus`/`Loss` kernel (transcribed at `cf9235c`).
+|`ASSUMED`
+|A transcription no kernel has compared with its source.
 |#143
 
 |More clade budgets
 |As clade configs declare resource blocks, `gen-budgets.sh` emits them
 and their contracts need to typecheck.
+|`OPEN`
 |One clade so far (neurosym-bridge).
 |—
 
 |IPC dispatch is total
 |Every command the frontend invokes has a registered handler.
-|Backend side covered by tests in `src-gossamer/src/ipc.rs`:
-`every_backend_command_is_registered` fails if a public handler in a
-command module is reachable from neither the table nor `main.rs`, and
-the table and `main.rs` never register the same name twice. Checking the
-frontend side needs its `invoke` names, which wait on the AffineScript
-port.
+|`TESTED` (backend); `OPEN` (frontend)
+|`every_backend_command_is_registered` in `src-gossamer/src/ipc.rs` fails
+if a public handler in a command module is reachable from neither the table
+nor `main.rs`, and the table and `main.rs` never register the same name
+twice. Bound: the command modules present at each run. The frontend side
+needs its `invoke` names, which wait on the AffineScript port.
 |#148
 
 |PCC soundness
 |The PanLL Constraint Checker (`tools/pcc`) propagates constraints soundly
 and finds every violation.
-|Blocked: `tools/pcc`'s ReScript scanner is retired, because #107 removed
-the `.res` sources it read. Its frontend-wiring checks now report
-"retired" until an AffineScript scanner replaces them. The propagator
-itself can be specified and proved first; the scanner proof waits on
-the AffineScript port, and it needs a written specification first.
+|`OPEN`
+|Blocked: the ReScript scanner is retired (#107 removed the `.res` sources
+it read), and its frontend-wiring checks report "retired" until an
+AffineScript scanner replaces them. The propagator can be specified and
+proved first; the scanner proof waits on the port and needs a written
+specification.
 |#148
 
 |Verification Dashboard accuracy
 |The dashboard reports the real proof state of the repos it inspects.
-|Better served by fixture tests than by proof. Waits on the frontend
-port.
+|`OPEN`
+|Better served by fixture tests than by proof. Waits on the frontend port.
 |#148
 
-|Provenance engine
-|Provenance tracking is complete (every action is recorded) and
-unforgeable. Owner decision (2026-11-05): "unforgeable" means each
-provenance record follows `EXHIBIT-B-QUANTUM-SAFE.txt`. The record holds
-the author identity, a timestamp, a SHA3-256 content hash and, optionally,
-a parent hash. It is serialised as canonical JSON, signed with ML-DSA-65
-and witnessed, and verifies against keys published under
-`.well-known/keys/`. Today's engine (git blame plus Co-Authored-By
-trailers) is forgeable, so its output counts only as "claimed".
-|Implemented in `crates/provenance`: JCS records, ML-DSA-65 signing,
-approved public-key registry, independent witnesses, timestamp/content/chain
-verification and mutation/property tests. Symbolic binding model:
-`docs/models/Provenance.tla`; protocol and limits:
-`docs/PROVENANCE-EXHIBIT-B.adoc`. This does not prove every action is recorded,
-prevent tail truncation without a checkpoint, or prove cryptographic hardness.
+|Provenance: signed records verify only when genuine
+|A record is reported `verified` only when its content, metadata and chain
+are exactly what an approved author signed and an independent witness
+attested. PanLL's profile of `EXHIBIT-B-QUANTUM-SAFE.txt` (owner decision
+2026-11-05) is narrower than Exhibit B: ML-DSA-65 only (Exhibit B §2.1 and
+§4.1 also allow ML-DSA-87 or an approved alternative), at least one
+independent witness is required for `verified` (optional in Exhibit B
+§3.2), and keys come only from the verifier's approved `.well-known/keys/`
+registry (Exhibit B §5.1 also lists OpenPGP keyservers). Every record PanLL
+verifies therefore satisfies Exhibit B; some Exhibit B records verify only
+as `claimed`. Protocol: `docs/PROVENANCE-EXHIBIT-B.adoc`. Git blame and
+Co-Authored-By trailers stay `claimed`.
+|`TESTED`
+|`cargo test --manifest-path crates/provenance/Cargo.toml --locked`: 4
+mutation tests and 3 proptest properties (48 cases each) over
+content, metadata and chain splices; 7 passed on 2026-11-09 at `7d1feaa`.
+The adversary model `docs/models/Provenance.tla` is a §4 exception, below.
+Implementation proofs are `OPEN` (Rust table below).
+|#173
+
+|Provenance: every action is recorded
+|Every action that must produce a provenance record does.
+|`OPEN`
+|Needs the producer inventory and a written recording obligation first.
 |#173
 
 |Cartridge schema validation
 |Loading a cartridge validates it against `src/abi/cartridge-schema.json`.
+|`OPEN`
 |Schema only; no validator to prove against yet.
 |—
 
 |Wiring Inspector
 |Wiring analysis finds every panel connection.
+|`OPEN`
 |Waits on the frontend port.
 |#148
+|===
+
+== Exceptions (PROOF-POLICY §4)
+
+[cols="1,3",options="header"]
+|===
+|Field |Record
+
+|Artefact
+|`docs/models/Provenance.tla` with `Provenance.cfg`,
+`ProvenanceNoWitness.cfg` and `ProvenanceReachable.cfg` (the record is
+repeated in the module header)
+
+|Obligation
+|An attacker who can hand the verifier any chain with any content, attach
+any published signature, and sign with the author's key once it leaks,
+cannot obtain a `verified` verdict for a record the author did not intend,
+for content that does not match, or for a broken chain.
+
+|Tool
+|TLA+, checked by TLC
+
+|Why not the mapped verifiers
+|The property is about an adversary interleaving with honest parties.
+Creusot/Pearlite and Verus contracts on `verify_chain` state what one call
+returns, not what an attacker can reach. Those implementation obligations
+remain `OPEN` below.
+
+|Status
+|`TESTED` within the bounds in `Provenance.cfg`: 2 digests, 6 records
+(2 roots, 4 children), chains of length 1 or 2, one author and one witness
+key. Checked both ways: with the witness requirement removed
+(`ProvenanceNoWitness.cfg`) TLC must find a forgery, and
+`ProvenanceReachable.cfg` must reach a verified state, so the invariant is
+neither vacuous nor true by definition.
+
+|Trust boundary
+|Signatures and hashes are perfectly binding (symbolic); the author and
+witness keys are not both compromised. Not a cryptographic proof and not an
+implementation-correspondence proof.
+
+|Receipt
+|CI job `provenance-model` in `.github/workflows/build-validation.yml` runs
+`docs/models/check-models.sh` (TLC 2.19, jar SHA-256 pinned) on every push
+and pull request; its first run is on the change that rewrote the model. It
+was rewritten on 2026-11-09 because the earlier model let any party sign
+any payload, so its `Binding` invariant held by definition. The receipt in
+`docs/PROVENANCE-EXHIBIT-B.adoc` (TLC 2.19, 2026-11-06) is for that earlier
+model, `state: superseded`.
+|===
+
+== Toolchain deviations (PROOF-POLICY §6)
+
+PanLL has no Guix manifest or container for proof toolchains yet, so both
+CI proof lanes install outside them. Each lane asserts its version and fails
+on a mismatch; the record is repeated in the workflow.
+
+[cols="1,1,2,1",options="header"]
+|===
+|Leg |Tool and version |Install and digest |State
+
+|Idris2 ABI (`panel-clades-abi`)
+|Idris2 0.8.0
+|Built from `idris-lang/Idris2` at
+`15a3e4e70843f7a34100f6470c04b791330788df`; `check-abi.sh` asserts the
+version
+|`open`
+
+|Provenance model (`provenance-model`)
+|TLC 2.19 (tlaplus v1.7.4)
+|`tla2tools.jar` from the GitHub release, SHA-256
+`936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88`,
+asserted with the version by `check-models.sh`
+|`open`
 |===
 
 == Recommended prover
@@ -196,38 +348,39 @@ Pearlite is Creusot's specification language, not an independent prover.
 |===
 |Implementation entrypoint |Verifier and status |Planned obligation |Trust boundary / next action
 |`crates/provenance/src/lib.rs`: `Registry::new`, `verify_chain`
-|Creusot / Pearlite: OPEN
+|Creusot / Pearlite: `OPEN`
 |Registry validity, chain predecessor handling and propagation of invalid or
 claimed ancestry to later verdicts.
 |Write contracts on the shipped Rust and qualify supported collection/string
 operations. No implementation proof has been run for these entrypoints.
 |Action producers and provenance-recording call sites
-|Creusot / Pearlite and Verus: OPEN (specification prerequisite)
+|Creusot / Pearlite and Verus: `OPEN` (specification prerequisite)
 |Define which actions must produce records and establish producer-side coverage,
 including failure and cancellation paths. Verifying supplied records does not
 prove that every required action was recorded.
 |Inventory the producers and specify the recording obligation before assigning
 implementation contracts; no completeness proof is claimed.
 |`crates/provenance/src/lib.rs`: `verify_entry`, `verify_witnesses`
-|Verus: OPEN
+|Verus: `OPEN`
 |A verified verdict requires the supplied bytes to match the signed content
 hash, valid author binding and every declared independent witness; rejected or
 missing evidence cannot promote a verdict.
 |Specify the production status transitions and establish a checked connection
 to the shipped functions. No separate model counts as a proof of them.
 |`canonical`, `hash`, `sign`, `attest`, signature verification and timestamp parsing
-|First-party wrappers: Creusot / Pearlite and Verus OPEN
+|First-party wrappers: Creusot / Pearlite and Verus `OPEN`
 |Prove the wrappers preserve their input/output and error contracts, including
 canonicalisation of `content_hash` and the fields bound by signatures and
 attestations. Allocate the obligations against the shipped functions.
-|Only third-party JCS, SHA3-256, ML-DSA-65, entropy and time-parsing primitives
-and their specified behaviour are ASSUMED. Record exact locked versions and
-extern contracts when proofs are introduced; cryptographic hardness, civil
-identity approval and independent witness judgment are outside these proofs.
+|Third-party primitives are `ASSUMED` at their locked versions: `fips204`
+0.5.0 (ML-DSA-65 and its RNG), `sha3` 0.10.9, `serde_jcs` 0.2.0 (RFC 8785),
+`chrono` 0.4.45 (RFC 3339 parsing), `base64` 0.22.1. Extern contracts are
+written when proofs are introduced. Cryptographic hardness, civil identity
+approval and independent witness judgment are outside these proofs.
 |`src-gossamer/src/ipc.rs` dispatch and `tools/pcc` propagation
-|Creusot / Pearlite and Verus: OPEN
+|Creusot / Pearlite and Verus: `OPEN`
 |Allocate implementation contracts after writing the dispatch/propagation
-specifications; retain current tests as TESTED evidence only.
+specifications; retain current tests as `TESTED` evidence only.
 |PCC frontend scanning remains blocked on the AffineScript port. Neither
 verifier is silently excluded because that separate dependency is unfinished.
 |===
