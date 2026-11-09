@@ -53,7 +53,7 @@ against the clade's declared budget
 === Check status (2026-11-09)
 
 All five modules *typecheck* under Idris2 0.8.0
-(`+bash panel-clades/scripts/check-abi.sh+`), with ten expected
+(`+bash panel-clades/scripts/check-abi.sh+`), with eleven expected
 rejections in `+tests/reject/+`.
 
 Before 2026-10-14, `+Types.idr+`, `+Layout.idr+` and `+Foreign.idr+` had
@@ -107,7 +107,7 @@ says so.
 |`+Divides+` witnesses are equations |`+tests/reject/MisalignedField.idr+` |TESTED
 |Rounding up to an alignment a ≥ 1 is at or above the size and below size + a |`+alignUpCovers+`, `+alignUpTight+` |PROVEN
 |A computed struct size covers every field, so every field of a layout lies within its total size |`+calcStructSizeCovers+`, `+fieldWithinEnd+`, `+fieldWithinStruct+` |PROVEN
-|`+CABICompliant+` evidence: offsets aligned, first field at offset 0, fields in order without overlap, power-of-two alignments, struct alignment = largest field alignment |`+FieldsAligned+`, `+FirstAtZero+`, `+FieldsOrdered+`, `+AlignmentsPow2+`, `+maxAlignment+`; `+tests/reject/FirstFieldNotAtZero.idr+`, `+OverlappingFields.idr+`, `+AlignmentNotPow2.idr+`, `+StructUnderAligned.idr+` |PROVEN / TESTED
+|`+CABICompliant+` evidence: offsets aligned, at least one field with the first at offset 0, fields in order without overlap, power-of-two alignments, struct alignment = largest field alignment |`+FieldsAligned+`, `+FirstAtZero+`, `+FieldsOrdered+`, `+AlignmentsPow2+`, `+maxAlignment+`; `+tests/reject/EmptyStruct.idr+`, `+FirstFieldNotAtZero.idr+`, `+OverlappingFields.idr+`, `+AlignmentNotPow2.idr+`, `+StructUnderAligned.idr+` |PROVEN / TESTED
 |The example layout is C-ABI compliant and its computed size is 24 |`+exampleLayoutValid+`, `+exampleSizeComputed+`, `+exampleCheckPasses+` |PROVEN
 |The `+Nat+` and `+Bits32+` tag tables agree |`+resultTagsAgree+`, `+cladeKindTagsAgree+` |PROVEN
 |`+decDivides+` returns `+Nothing+` only when the divisor does not divide; `+decPow2+` returns `+Nothing+` only for a non-power of two |— |ASSUMED (not proved)

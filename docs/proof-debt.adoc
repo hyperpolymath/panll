@@ -12,7 +12,7 @@ Last reconciled: 2026-11-09 (`main` at `7d1feaa`).
   `assert_smaller`, `idris_crash`, `unsafePerformIO`, `postulate`,
   `partial`, `covering` or holes, measured on the date above. `check-abi.sh`
   fails CI if any of them appears in code (comments and string literals set
-  aside) or a module lacks `%default total` before its first declaration, in PanLL's modules and in the
+  aside, string interpolations scanned) or a module lacks `%default total` before its first declaration, in PanLL's modules and in the
   typed-wasm modules they import (the import cone).
 * *Estate check*: standards' `scripts/check-trusted-base.sh` finds 2
   escape-hatch signatures, both documented below as not proof debt.

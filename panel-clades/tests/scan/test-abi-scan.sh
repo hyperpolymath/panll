@@ -59,6 +59,16 @@ expect found "escape after a closed multi-line string"   's = """' 'text' '"""' 
 expect clean "words in a raw string"      'msg = #"say "believe_me" and ?ok"#'
 expect clean "words in a multi-line string" 's = """' 'believe_me ?x partial' '"""'
 expect clean "primed identifier then a char literal" "f' = g' 'a'"
+expect found "uppercase hole"             'f = ?Todo'
+expect found "escape inside an interpolation" 'bad = "\{believe_me {a=Nat} {b=String} 0}"'
+expect found "hole inside an interpolation"   'f = "x \{?h} y"'
+expect found "escape inside a raw-string interpolation" 'f = #"\#{believe_me v}"#'
+expect found "escape inside a multi-line interpolation" 's = """' '  \{believe_me v}' '"""'
+expect found "escape after nested braces in an interpolation" 'f = "\{g {x = 1} y}" ++ believe_me v'
+expect found "escape in a string nested in an interpolation, then code" 'f = "\{g "}" ++ believe_me v} z"'
+expect clean "words beside an interpolation" 'msg = "believe_me \{show n} partial"'
+expect clean "text after nested braces in an interpolation" 'f = "\{g {x = 1} y} believe_me"'
+expect clean "\\{ in a raw string is text"   'msg = #"\{believe_me}"#'
 
 # %default total: required in code, not in a comment.
 directive() { # directive found|clean DESCRIPTION BODY...

@@ -16,8 +16,9 @@
 |||     (`calcStructSizeCovers`, `fieldWithinStruct`), so `verifyLayout`
 |||     needs no run-time size check;
 |||   * C layout evidence (`CABICompliant`) carries, for every field, an
-|||     offset that is a multiple of its alignment (`FieldsAligned`), a
-|||     first field at offset 0 (`FirstAtZero`), fields in order and not overlapping (`FieldsOrdered`), alignments that are
+|||     offset that is a multiple of its alignment (`FieldsAligned`), at
+|||     least one field, the first at offset 0 (`FirstAtZero`), fields in
+|||     order and not overlapping (`FieldsOrdered`), alignments that are
 |||     powers of two (`AlignmentsPow2`), and a struct alignment equal to
 |||     the largest field alignment (`maxAlignment`).  Each is decided by an
 |||     equation or an `LTE` proof, never by a Boolean test followed by an
@@ -309,11 +310,12 @@ verifyLayout fields (S u) =
 -- C ABI Compatibility
 --------------------------------------------------------------------------------
 
-||| The first field starts at offset 0.  C allows padding between members
-||| and after the last, never before the first (C11 6.7.2.1p15).
+||| The struct has at least one field, and the first starts at offset 0.
+||| A C struct needs a member (C11 6.7.2.1p8: one with no named member is
+||| undefined), and C allows padding between members and after the last,
+||| never before the first (6.7.2.1p15).  There is no evidence for `[]`.
 public export
 data FirstAtZero : List Field -> Type where
-  ZeroNil  : FirstAtZero []
   ZeroHead : f.offset = 0 -> FirstAtZero (f :: rest)
 
 ||| Fields in declaration order, each starting at or after the end of the
@@ -338,9 +340,10 @@ maxAlignment []        = 1
 maxAlignment (f :: fs) = maximum f.alignment (maxAlignment fs)
 
 ||| Proof that a struct follows the C layout rules: every field offset is
-||| a multiple of its alignment, the first field is at offset 0, the fields
-||| are in order and do not overlap, every alignment is a power of two, and the struct is aligned
-||| to its largest field alignment.  (Size covering the fields, and being a
+||| a multiple of its alignment, there is a field and the first is at
+||| offset 0, the fields are in order and do not overlap, every alignment is
+||| a power of two, and the struct is aligned to its largest field
+||| alignment.  (Size covering the fields, and being a
 ||| multiple of the alignment, are carried by `StructLayout` itself.)
 public export
 data CABICompliant : StructLayout -> Type where
@@ -368,10 +371,10 @@ proveFieldsAligned (f :: rest) =
         Left err => Left err
         Right restProof => Right (ConsField f rest here restProof)
 
-||| Attempt to prove the first field is at offset 0.
+||| Attempt to prove there is a field and the first is at offset 0.
 public export
 proveFirstAtZero : (fields : List Field) -> Either String (FirstAtZero fields)
-proveFirstAtZero []       = Right ZeroNil
+proveFirstAtZero []       = Left "A C struct needs at least one member"
 proveFirstAtZero (f :: _) =
   case decEq f.offset 0 of
     No _    => Left ("First field " ++ f.name ++ " is at offset "

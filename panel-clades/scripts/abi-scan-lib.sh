@@ -13,14 +13,21 @@
 # strings #"..."# (any number of #, where \ is not an escape), multi-line
 # """...""" strings, and character literals including escapes ('\'',
 # '\"', '\x41').  A primed identifier (f') does not open a literal.
+# Interpolations are code, not text: \{...} in a string (\#{...} in a raw
+# string opened with one #, and so on) is kept and scanned, to its
+# matching }, with strings nested inside it handled the same way.
 code_only() {
   awk '
-    FNR == 1 { depth = 0; term = ""; ml = 0 }
+    FNR == 1 { depth = 0; term = ""; ml = 0; sp = 0 }
     {
       line = $0; out = ""; i = 1; n = length(line)
-      if (depth == 0 && term == "" && line ~ /^[[:space:]]*\|\|\|/) { print FILENAME ":" FNR ":"; next }
+      if (depth == 0 && term == "" && sp == 0 && line ~ /^[[:space:]]*\|\|\|/) { print FILENAME ":" FNR ":"; next }
       while (i <= n) {
         if (term != "") {
+          if (substr(line, i, 1) == "\\" && substr(line, i + 1, length(hk) + 1) == hk "{") {
+            sp++; st[sp] = term; se[sp] = esc; sm[sp] = ml; sh[sp] = hk; sb[sp] = 0
+            term = ""; i += length(hk) + 2; out = out " "; continue
+          }
           if (esc && substr(line, i, 1) == "\\") { i += 2; continue }
           if (substr(line, i, length(term)) == term) { i += length(term); term = ""; ml = 0; continue }
           i++; continue
@@ -31,9 +38,9 @@ code_only() {
         if (two == "--" && substr(line, i + 2, 1) !~ /[!#$%&*+.\/<=>?@\\^|~:-]/) break
         k = 0; while (substr(line, i + k, 1) == "#") k++
         if (substr(line, i + k, 1) == "\"") {
-          h = substr(line, i, k)
-          if (substr(line, i + k, 3) == "\"\"\"") { term = "\"\"\"" h; ml = 1; i += k + 3 }
-          else { term = "\"" h; ml = 0; i += k + 1 }
+          hk = substr(line, i, k)
+          if (substr(line, i + k, 3) == "\"\"\"") { term = "\"\"\"" hk; ml = 1; i += k + 3 }
+          else { term = "\"" hk; ml = 0; i += k + 1 }
           esc = (k == 0); out = out "\"\""; continue
         }
         if (c == SQ && (i == 1 || substr(line, i - 1, 1) !~ /[A-Za-z0-9_]/ && substr(line, i - 1, 1) != SQ)) {
@@ -42,9 +49,15 @@ code_only() {
             if (substr(line, j, 1) == SQ) { i = j + 1; out = out SQ SQ; continue }
           } else if (substr(line, i + 2, 1) == SQ) { i += 3; out = out SQ SQ; continue }
         }
+        if (sp > 0 && c == "{") { sb[sp]++; out = out c; i++; continue }
+        if (sp > 0 && c == "}") {
+          if (sb[sp] > 0) { sb[sp]--; out = out c; i++; continue }
+          term = st[sp]; esc = se[sp]; ml = sm[sp]; hk = sh[sp]; sp--; out = out " "; i++; continue
+        }
         out = out c; i++
       }
-      if (!ml) term = ""
+      if (term != "" && !ml) term = ""
+      if (sp > 0 && !sm[1]) sp = 0
       print FILENAME ":" FNR ":" out
     }' SQ="'" "$@"
 }
@@ -64,7 +77,7 @@ scan_escapes() {
   local found=1 f
   if code_only "$@" | grep -E \
        -e ':[0-9]+:.*\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO|postulate)\b' \
-       -e ':[0-9]+:(.*[^A-Za-z0-9_'"'"'?!#$%&*+./<=>@\^|~:-])?\?[a-z_][A-Za-z0-9_'"'"']*' \
+       -e ':[0-9]+:(.*[^A-Za-z0-9_'"'"'?!#$%&*+./<=>@\^|~:-])?\?[A-Za-z_][A-Za-z0-9_'"'"']*' \
        -e ':[0-9]+:.*\b(partial|covering)\b'; then
     found=0
   fi
