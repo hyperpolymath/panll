@@ -23,7 +23,6 @@ mod policy;
 mod propagator;
 mod repairer;
 mod reporter;
-mod rescript_scanner;
 mod scanner;
 
 use clap::{Parser, Subcommand};

@@ -21,6 +21,7 @@ lib/bs/
 
 # ── Rust / Gossamer ──────────────────────────────────────
 /target/
+/crates/provenance/target/
 src-gossamer/target/
 src-tauri/target/
 src-tauri/WixTools/

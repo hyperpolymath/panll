@@ -1,0 +1,132 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Exhibit B signed provenance, version 1
+
+== Wire format and signing
+
+`crates/provenance` implements the Exhibit B protocol independently of the
+desktop shell. `Record` uses kebab-case JSON fields: version (1), algorithm
+(`ML-DSA-65`), key-id, author-identity, timestamp, content-hash, parent-hash,
+platform and witnesses. Nullable fields must be present. Unknown and duplicate
+fields are rejected. Timestamps use RFC 3339, including an explicit zone.
+Hashes and key fingerprints are lowercase SHA3-256 hex; keys and signatures
+use standard base64. Content hashes cover the exact contribution bytes.
+
+RFC 8785 JCS (`serde_jcs`) canonicalises the entire Record. Pure ML-DSA-65
+signs those bytes with context `PanLL/Exhibit-B/v1`. The envelope separates
+the author signature and witness attestations to avoid recursive signatures.
+`witnesses` names the required witness key fingerprints and is itself signed;
+each attestation signs the identical canonical Record with its own key.
+At least one independent witness is required for verified status. A key with
+the same approved identity as the author cannot witness that author's record.
+
+`parent-hash` hashes the parent's canonical Record (not its mutable signature
+envelope). Supply the complete ordered chain from its adoption root. Genesis
+has a null parent. Removing, duplicating, reordering or splicing interior
+links fails; an invalid/claimed ancestor propagates to descendants. This
+does not prove an append-only log is complete: detecting tail truncation
+requires a separately trusted head/checkpoint. It does not prove every user
+action was recorded, establish a civil identity without key approval, or
+prove a signer told the truth about authorship or time.
+
+== Implementation decision
+
+`fips204` is pinned to 0.5.0 with only ML-DSA-65 and OS randomness enabled.
+It implements FIPS 204, exposes typed fixed-size key/signature decoding and
+uses zeroisation for its private-key types. This is a FIPS-aligned algorithm
+implementation, not a claim of FIPS 140 validation or an independent audit.
+See its upstream source at https://github.com/integritychain/fips204 and
+NIST FIPS 204. SHA3-256 is provided by RustCrypto `sha3`.
+
+== Key policy
+
+The trust root is the verifier's independently approved `.well-known/keys/`
+directory, containing one `PublicKey` JSON document per fingerprint. Required
+fields: key-id (SHA3-256 of the raw public key), author-identity, algorithm,
+public-key (base64), valid-from, valid-until and revoked (boolean).
+Duplicate fingerprints or malformed registry entries abort verification.
+Different keys may bind the same identity during planned rotation.
+
+Each validity interval is positive and no longer than 366 days. Publish and
+independently approve a new key before expiry; retain old public keys for
+historical verification. Verification checks validity at the record time.
+Rotate at least annually, on algorithm-policy changes, or immediately after
+suspected compromise. Mark compromised keys revoked; this rejects historical
+signatures too, since an attacker can backdate a record. Ordinary expiry
+does not revoke earlier records. Keys supplied by a distribution are never
+automatically enrolled. Secret keys stay outside Git and outside desktop IPC.
+
+== Offline adoption workflow
+
+Build the helper with `cargo build --manifest-path crates/provenance/Cargo.toml
+--example record`. Run the resulting executable directly:
+
+[source,text]
+----
+record keygen "Name <contact>" 2026-11-05T00:00:00Z 2027-11-05T00:00:00Z public.json /private/location/author.key
+record sign record.json /private/location/author.key signed.json
+record witness signed.json witness-public.json /private/location/witness.key witnessed.json
+----
+
+The helper uses create-new writes, refuses private keys in a Git working tree,
+and creates private files mode 0600 on Unix. On Windows use a private directory
+with a restricted inherited ACL. Approve the public fingerprint separately,
+then copy only its public JSON document into the registry. A witness must
+independently inspect the actual content and record before signing; the helper
+does not replace that human decision. The signed witness list must be chosen
+before author signing. Generate no keys for another person's identity.
+
+== Desktop verification
+
+`provenance_verify_records(repo_path, records_json)` takes a JSON array of
+`{envelope, content-base64}` contributions. It returns per-record status,
+record_hash and reasons. It uses adoption time 2026-11-05T00:00:00Z through
+the verifier's current clock plus five minutes. Older git history is claimed.
+The API `verify_chain` also supports an explicitly trusted time window for
+offline callers. Clock validation constrains a claim; it is not an independent
+timestamp authority.
+
+* verified: valid author signature, matching bytes, valid complete chain,
+  approved identity binding, valid key dates, and all independent witnesses.
+* claimed: unsigned record, unknown keys, absent witnesses, or claimed ancestor.
+* invalid: malformed/tampered signature, content or chain; revoked/mismatched
+  key; invalid timestamp; duplicate or undeclared witness; invalid ancestor.
+
+Malformed JSON and a malformed key registry fail the whole request. Empty
+input returns an empty array, never a batch-level success certification.
+`provenance_analyse_file` continues returning git blame/trailers as claimed.
+
+== Evidence and limits
+
+`cargo test --manifest-path crates/provenance/Cargo.toml --locked` exercises
+real ML-DSA signatures, every metadata field, content mutations, witness
+tampering, identity binding, validity/revocation and chain deletion/splicing.
+Property tests generate arbitrary content, metadata and parent-hash mutations.
+`docs/models/Provenance.tla` models signature binding and chain verification
+symbolically. Its invariant is not a cryptographic proof of ML-DSA or SHA3,
+nor a proof of all implementation paths. Production adoption requires an
+approved contributor key and independent witness; historical records are
+never silently re-signed.
+
+CI admission repair, 2026-11-06: the repository allowed GitHub-owned and
+verified actions but rejected its already configured standards reusable
+workflows after their owner moved. The selected-actions policy now admits
+the full reusable-workflow paths at the existing `metadatastician/standards` revisions
+`412a7031577112b31ee287cc6060179d638d6500` and
+`e064539116c2dcfdf282a4749dbd58c69961c7e6`, plus the exact third-party action
+commits already recorded in `actions.lock` or in the frozen Rust reusable
+workflow at `412a7031577112b31ee287cc6060179d638d6500`. Lockfile admissions
+were exported through the canonical Kyaml parser; the reusable workflow's
+toolchain/cache commits were checked against that exact revision.
+Existing action allowances and the
+mandatory SHA-pinning setting are preserved. Admission is not a test receipt;
+the actual hosted runs still determine whether the workflows passed.
+
+Validation receipt, 2026-11-06: the Linux workspace suite passed 295 backend
+tests and seven signature/property tests (two existing documentation examples
+are ignored). The protocol crate also passed Windows tests and Clippy with
+warnings denied. TLC 2.19 from tlaplus/tlaplus release v1.7.4 checked
+`Provenance.cfg` with `Values = {a, b}`: 18,045,441 generated states, 68,096
+distinct states, no invariant violation. SHA-256 of the checked model:
+`c379ece2393e2cacfffccd6bb0360184ad179c77ae72dc875948a022d123444a`.
+The model assumes signature/hash binding; it is not an implementation
+correspondence proof or a cryptographic hardness proof.

@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Contributor public-key registry
+
+Only public JSON key documents belong here. Never commit a private key.
+Key documents are reviewed identity bindings, not self-authenticating claims.
+Approve the fingerprint with the contributor over an independent trusted
+channel before merging it. A verifier must use its own approved checkout of
+this directory, never a registry provided by an untrusted distribution.
+
+The format and rotation policy are in `docs/PROVENANCE-EXHIBIT-B.adoc`.
+No production identities or private keys are manufactured by the implementation.
