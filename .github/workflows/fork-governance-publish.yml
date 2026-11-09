@@ -1,5 +1,6 @@
 # This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
+# SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 # fork-governance-publish.yml — post the Fork governance comment on pull
 # requests from forks.
 #
@@ -7,16 +8,16 @@
 # its verdict job uploads the rendered comment as an artifact instead of
 # posting it. This workflow runs after every "Fork governance" run, from the
 # default branch's copy with this repository's token, and posts that comment
-# after checking it (metadatastician/standards
-# 3-practice/fork-governance/ADOPTION.adoc §2). It skips same-repository runs,
+# as escaped, explicitly untrusted text. It skips same-repository runs,
 # which post their own comment. It takes effect once merged to main.
 #
-# Same standards commit as fork-governance.yml: the renderer and the
-# publisher must agree on the comment's marker and stamp.
+# Publisher vendored from metadatastician/standards at
+# 9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5, with safe artifact rendering.
+# Preserve the shared comment marker and publisher stamp protocol.
 name: Fork governance publish
 
 # workflow_run, deliberately: it is the only way to write a comment for a
-# fork PR. Nothing from the fork runs here. The reusable checks out no code,
+# fork PR. Nothing from the fork runs here. This job checks out no code,
 # reads the artifact as data, and posts only to the open PR whose head is
 # the commit the run built.
 on:
@@ -29,7 +30,152 @@ permissions:
 
 jobs:
   publish:
-    uses: metadatastician/standards/.github/workflows/fork-governance-publish-reusable.yml@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5
+    name: Publish the fork governance summary (fork PR)
+    # Only a completed pull_request run from a fork has anything to publish;
+    # every other run posted its own comment.
+    if: >-
+      ${{ github.event_name == 'workflow_run'
+          && github.event.workflow_run.event == 'pull_request'
+          && github.event.workflow_run.head_repository.full_name != github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # One publisher at a time per fork branch, so the read-compare-write of
+    # the comment below never interleaves with another publisher's.
+    concurrency:
+      group: fork-governance-publish-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: false
     permissions:
-      actions: read          # download the run's fork-governance-comment artifact
-      pull-requests: write   # post or update the one governance comment
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Download the rendered comment
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: fork-governance-comment
+          path: ${{ runner.temp }}/fork-governance-comment
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      # A run may leave no artifact only when it was replaced: a newer attempt
+      # of the same run, or a newer push to the fork branch (a newer run at a
+      # different commit; a push re-runs every pull request from the branch,
+      # so each one gets its own successor). Anything else is a missing report
+      # and fails here, including a run cancelled by hand with no successor.
+      - name: Fail on a missing comment
+        if: ${{ steps.download.outcome != 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          WORKFLOW_ID: ${{ github.event.workflow_run.workflow_id }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+          RUN_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          pushed=$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/$WORKFLOW_ID/runs" \
+              -f event=pull_request -f branch="$RUN_HEAD_BRANCH" -f per_page=100 \
+            | jq --arg repo "$RUN_HEAD_REPO" --arg sha "$RUN_HEAD_SHA" --argjson id "$RUN_ID" \
+                '[.workflow_runs[] | select(.head_repository.full_name == $repo and .id > $id and .head_sha != $sha)] | length')
+          attempt=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" --jq '.run_attempt')
+          if [ "$pushed" -gt 0 ] || [ "$attempt" -gt "$RUN_ATTEMPT" ]; then
+            echo "$RUN_URL left no comment, but a newer push or attempt replaced it; that run publishes."
+            exit 0
+          fi
+          echo "::error::$RUN_URL ($RUN_CONCLUSION) uploaded no fork-governance-comment artifact and nothing replaced it, so its pull request has no governance comment"
+          exit 1
+
+      - name: Publish the comment
+        if: ${{ steps.download.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GRID_AUTHOR: github-actions[bot]
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+          RUN_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/fork-governance-comment"
+          body="$dir/body.md"
+          meta="$dir/meta.json"
+          [ -f "$body" ] && [ -f "$meta" ] || { echo "::error::artifact is missing body.md or meta.json"; exit 1; }
+
+          pr=$(jq -r '.pr_number // ""' "$meta")
+          if ! [[ "$pr" =~ ^[1-9][0-9]{0,9}$ ]]; then
+            echo "::error::artifact pr_number is not a pull request number"; exit 1
+          fi
+
+          # The pull request must be this run's own: open, at the commit the
+          # run built, from the fork and branch the run came from (header).
+          # Captured first, so a failed lookup fails the step under `set -e`
+          # instead of reading as "not open".
+          pr_info=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$pr" \
+            --jq '[.state, .head.sha, (.head.repo.full_name // "-"), .head.ref] | join(" ")')
+          # A git ref cannot contain whitespace, so the branch is the last field.
+          read -r pr_state pr_sha pr_repo pr_branch <<< "$pr_info"
+          if [ "$pr_state" != open ]; then
+            echo "Pull request #$pr is $pr_state; nothing to publish."; exit 0
+          fi
+          if [ "$pr_sha" != "$RUN_HEAD_SHA" ]; then
+            echo "Pull request #$pr has moved past $RUN_HEAD_SHA; its newer run publishes."; exit 0
+          fi
+          if [ "$pr_repo" != "$RUN_HEAD_REPO" ] || [ "$pr_branch" != "$RUN_HEAD_BRANCH" ]; then
+            echo "::error::artifact names #$pr, which is not from $RUN_HEAD_REPO:$RUN_HEAD_BRANCH"; exit 1
+          fi
+
+          if ! head -n 1 "$body" | grep -q '^<!-- fork-governance-verdict:'; then
+            echo "::error::body does not start with the fork-governance marker"; exit 1
+          fi
+          # The run stamp is the comment's last line, written here and never by
+          # the fork, so the last stamp in a comment is always the publisher's.
+          {
+            # Fixed trusted framing; artifact bytes are text, never Markdown/HTML.
+            printf '<!-- fork-governance-verdict: untrusted-fork-report -->\n'
+            printf '## Untrusted fork governance report\n\n'
+            printf 'The following text was supplied by the fork. It is not a verified bot verdict. Consult the lane checks for results.\n\n'
+            printf '<pre>\n'
+            jq -Rrs '@html' "$body"
+            printf '</pre>\n'
+            printf '\n<sub>Rendered by the fork pull request run %s and published by fork-governance-publish.</sub>\n' "$RUN_URL"
+            printf '<!-- fork-governance-publish-run: %s.%s -->\n' "$RUN_ID" "$RUN_ATTEMPT"
+          } > "$dir/published.md"
+          # GitHub's limit is 65536 characters, not bytes; the glyphs are
+          # multibyte, so count characters.
+          if [ "$(LC_ALL=C.UTF-8 wc -m < "$dir/published.md")" -gt 65000 ]; then
+            echo "::error::body exceeds the 65000-character comment limit"; exit 1
+          fi
+
+          existing=$(gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/issues/$pr/comments" \
+            | jq -c --arg a "$GRID_AUTHOR" \
+                '[.[][] | select((.user.login // "") == $a and ((.body // "") | contains("<!-- fork-governance-verdict:")))]
+                 | last // {} | {id: (.id // ""), body: (.body // "")}')
+          comment_id=$(jq -r '.id' <<< "$existing")
+          # Runs for one pull request can finish out of order (a re-run, or a
+          # close and reopen). Never replace a comment a newer run published:
+          # compare this run's id, then attempt, with the comment's last stamp.
+          stamp=$(jq -r '.body' <<< "$existing" \
+            | sed -n 's/^<!-- fork-governance-publish-run: \([0-9]*\)\.\([0-9]*\) -->$/\1 \2/p' | tail -n 1)
+          if [ -n "$stamp" ]; then
+            read -r prev_id prev_attempt <<< "$stamp"
+            if [ "$prev_id" -gt "$RUN_ID" ] || { [ "$prev_id" -eq "$RUN_ID" ] && [ "$prev_attempt" -gt "$RUN_ATTEMPT" ]; }; then
+              echo "#$pr already carries the comment from newer run $prev_id.$prev_attempt; leaving it."; exit 0
+            fi
+          fi
+
+          jq -n --rawfile body "$dir/published.md" '{body: $body}' > "$dir/comment.json"
+          if [ -n "$comment_id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment_id" \
+              --input "$dir/comment.json" >/dev/null
+            echo "updated the fork governance comment on #$pr ($comment_id)"
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$pr/comments" \
+              --input "$dir/comment.json" >/dev/null
+            echo "posted the fork governance comment on #$pr"
+          fi
