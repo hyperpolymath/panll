@@ -413,7 +413,11 @@ for the genesis parent, so 12 possible payloads; chains of exactly two
 records; any subset of payloads forged under a leaked key. Checked both
 ways. With one leaked key, either one, `Genuine` holds over all 591,872
 distinct reachable states (depth 13). With both keys leaked, TLC must find
-the forgery and does, so the property is not vacuous. A mutation run that
+the forgery and does, so the property is not vacuous. Each single-key run
+must also exercise its leak: `check-provenance-model.sh` fails unless TLC's
+coverage report shows the leaked key's forge action reaching a state and
+the other forge action none, so a configuration that leaks no key cannot
+pass. A mutation run that
 dropped the witness check from `Valid` was caught too: one leaked author
 key then forges a chain. Local run on 2026-11-09, about 7 minutes; the
 `provenance-model` job's run on `main` is the receipt.

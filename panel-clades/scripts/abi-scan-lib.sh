@@ -57,12 +57,14 @@ code_only() {
 #   believe_me assert_total assert_smaller idris_crash unsafePerformIO
 #   postulate             -- trust or totality escapes
 #   ?name                 -- a hole: idris2 --build accepts a module with holes
+#                            (a ? after an operator character is part of
+#                            that operator, as in a =?b, not a hole)
 #   partial / covering    -- a declaration opting out of %default total
 scan_escapes() {
   local found=1 f
   if code_only "$@" | grep -E \
        -e ':[0-9]+:.*\b(believe_me|assert_total|assert_smaller|idris_crash|unsafePerformIO|postulate)\b' \
-       -e ':[0-9]+:(.*[^A-Za-z0-9_'"'"'?])?\?[a-z_][A-Za-z0-9_'"'"']*' \
+       -e ':[0-9]+:(.*[^A-Za-z0-9_'"'"'?!#$%&*+./<=>@\^|~:-])?\?[a-z_][A-Za-z0-9_'"'"']*' \
        -e ':[0-9]+:.*\b(partial|covering)\b'; then
     found=0
   fi

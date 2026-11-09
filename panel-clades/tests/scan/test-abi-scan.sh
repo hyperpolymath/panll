@@ -34,6 +34,8 @@ expect found "hole as an argument"        'f : Nat -> Nat' 'f x = plus x ?hole_1
 expect found "believe_me"                 'f = believe_me 1'
 expect found "idris_crash"                'g = idris_crash ""'
 expect found "assert_total"               'g = assert_total (f 1)'
+expect found "assert_smaller"             'g = assert_smaller x y'
+expect found "unsafePerformIO"            'g = unsafePerformIO action'
 expect found "postulate"                  'postulate p : Nat'
 expect found "partial declaration"        'partial' 'f : Nat'
 expect found "export partial"             'export partial' 'f : Nat'
@@ -44,6 +46,8 @@ expect clean "words in a doc comment"     '||| partial functions and ?holes are 
 expect clean "nested block comment"       '{- block' 'believe_me ?x' '{- nested -} still' '-}' 'f : Nat'
 expect clean "words in a string"          'msg = "is it ?ok to say believe_me"'
 expect clean "operator, not a comment"    'x = a --> b'
+expect clean "operator ending in ?, not a hole" 'x = a =?b'
+expect found "hole after an operator and a space" 'x = a =? ?b'
 expect clean "primed identifier"          "f' : Nat" "f' = 1"
 expect clean "identifier containing partial" 'partialSum : Nat'
 expect found "escape after an escaped-quote char literal" "f = ('\\\"', believe_me v)"
@@ -69,6 +73,7 @@ directive found "no %default total"            'f : Nat'
 directive found "%default total only in a block comment" '{-' '%default total' '-}' 'f : Nat'
 directive found "%default total only in a line comment"  '-- %default total' 'f : Nat'
 directive found "%default covering"            '%default covering' 'f : Nat'
+directive found "%default total only in a multi-line string" 's : String' 's = """' '%default total' '"""'
 directive clean "%default total in code"       '%default total' 'f : Nat'
 directive found "%default total after a declaration" 'loop : Nat -> Nat' 'loop n = loop n' '%default total'
 directive clean "imports and directives before %default total" 'import Data.Nat' '%hide Prelude.id' '%default total' 'f : Nat'
@@ -79,7 +84,8 @@ directive clean "%default total in a 20,000-line module" '%default total' "${lon
 
 # import_cone: commented-out imports are not dependencies; indented ones are.
 mkdir -p "$work/root/A" "$work/root/B"
-printf '%s\n' "module A.Real" "%default total" > "$work/root/A/Real.idr"
+printf '%s\n' "module A.Real" "%default total" "import A.Deep" > "$work/root/A/Real.idr"
+printf '%s\n' "module A.Deep" "%default total" > "$work/root/A/Deep.idr"
 printf '%s\n' "module A.Indented" "%default total" > "$work/root/A/Indented.idr"
 printf '%s\n' "module B.Ghost" "%default total" > "$work/root/B/Ghost.idr"
 printf '%s\n' "module Top" "%default total" \
@@ -92,6 +98,7 @@ check_cone() { # check_cone yes|no PATH DESCRIPTION
   if [[ "$got" == "$1" ]]; then echo "ok   cone $1: $3"; else echo "FAIL cone got $got, want $1: $3"; fail=1; fi
 }
 check_cone yes "$work/root/A/Real.idr"     "an import"
+check_cone yes "$work/root/A/Deep.idr"     "a transitive import"
 check_cone yes "$work/root/A/Indented.idr" "an indented import public"
 check_cone no  "$work/root/B/Ghost.idr"    "imports inside comments"
 n=$((n + 1))

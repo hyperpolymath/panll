@@ -104,9 +104,14 @@ Property tests generate arbitrary content, metadata and parent-hash mutations.
 `docs/models/Provenance.tla` models signature binding and chain verification
 symbolically, with an adversary that can sign under a leaked key. Its
 invariant `Genuine` says a verified chain is exactly the genuine one while
-either the author key or the witness key is uncompromised; TLC checks it in
-CI (`provenance-model` job) with each single key leaked, and must find the
-forgery when both are. It is not a cryptographic proof of ML-DSA or SHA3,
+either the author key or the witness key is uncompromised. It assumes that
+signatures cannot be made without the key and that the witness attests only
+genuine records: a witness persuaded to sign a forged record is outside the
+model. TLC checks it in CI (`provenance-model` job) with each single key
+leaked, and must find the forgery when both are. The check is bounded:
+two-record chains, built from 12 symbolic payloads (two field
+and digest values, and a parent that is one of them or `None`). Longer
+chains and larger domains are not checked. It is not a cryptographic proof of ML-DSA or SHA3,
 nor a proof of any implementation path (PROOF-NEEDS.adoc, "Exceptions"). Production adoption requires an
 approved contributor key and independent witness; historical records are
 never silently re-signed.
