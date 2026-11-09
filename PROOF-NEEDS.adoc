@@ -56,7 +56,8 @@ runs `panel-clades/scripts/check-abi.sh`, which:
 * builds `panel-clades/src/abi/panel-clades-grades.ipkg` against it and
   fails on any `Error:` line, even when `idris2` exits 0;
 * fails if any module under `PanelClades/` is missing from the ipkg or
-  does not declare `%default total`, or if its code (comments and string
+  does not declare `%default total` before its first declaration (the
+  directive applies only from where it appears), or if its code (comments and string
   literals set aside) contains a hole (`?name`; `idris2 --build` accepts a
   module with holes), `believe_me`, `assert_total`, `assert_smaller`,
   `idris_crash`, `unsafePerformIO`, `postulate`, `partial` or `covering`;
@@ -104,7 +105,7 @@ declaration
 That run predates the import-cone and hole scans, the tag-agreement
 proofs, the layout bounds and the C layout evidence. On 2026-11-09 the
 same `check-abi.sh`, with those additions, ran locally with Idris2 0.8.0
-built from the same commit and passed: 5 modules, 0 errors, 9 of 9
+built from the same commit and passed: 5 modules, 0 errors, 10 of 10
 fixtures refused, and the cone above clean. A local run is not a receipt. The
 first `main` run after this change is the first receipt to include them.
 A receipt is current only for its commit: rerun the job, never carry a
@@ -137,9 +138,10 @@ multiple of its alignment (`calcStructSizeAligned`) and covers every field
 (`calcStructSizeCovers`, `fieldWithinEnd`, `fieldWithinStruct`), so
 `verifyLayout` has no run-time size check and refuses only an alignment of
 0. `CABICompliant` evidence carries every offset as a multiple of its
-alignment (`FieldsAligned`), the fields in order with each starting at or
-after the previous one's end (`FieldsOrdered`; no two overlap, since the
-chain is ordered), every alignment a power of two (`AlignmentsPow2`), and
+alignment (`FieldsAligned`), the first field at offset 0, since C allows
+no padding before it (`FirstAtZero`), the fields in order with each
+starting at or after the previous one's end (`FieldsOrdered`; no two
+overlap, since the chain is ordered), every alignment a power of two (`AlignmentsPow2`), and
 the struct aligned to its largest field alignment (`maxAlignment`). Each
 part is decided by an equation or an `LTE` proof (`decDivides`,
 `isLTE`, `decPow2`, `decEq`), not by a Boolean test.

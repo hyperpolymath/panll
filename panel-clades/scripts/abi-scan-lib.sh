@@ -9,29 +9,50 @@
 
 # Print each .idr file's code with comments and string literals blanked, as
 # FILE:LINE:TEXT.  Handles nested {- -} block comments, `--` line comments
-# (not operators such as -->), `|||` doc comments, and "..." / '.' literals.
+# (not operators such as -->), `|||` doc comments, "..." strings, raw
+# strings #"..."# (any number of #, where \ is not an escape), multi-line
+# """...""" strings, and character literals including escapes ('\'',
+# '\"', '\x41').  A primed identifier (f') does not open a literal.
 code_only() {
   awk '
-    FNR == 1 { depth = 0 }
+    FNR == 1 { depth = 0; term = ""; ml = 0 }
     {
       line = $0; out = ""; i = 1; n = length(line)
-      if (depth == 0 && line ~ /^[[:space:]]*\|\|\|/) { print FILENAME ":" FNR ":"; next }
+      if (depth == 0 && term == "" && line ~ /^[[:space:]]*\|\|\|/) { print FILENAME ":" FNR ":"; next }
       while (i <= n) {
+        if (term != "") {
+          if (esc && substr(line, i, 1) == "\\") { i += 2; continue }
+          if (substr(line, i, length(term)) == term) { i += length(term); term = ""; ml = 0; continue }
+          i++; continue
+        }
         two = substr(line, i, 2); c = substr(line, i, 1)
         if (two == "{-") { depth++; i += 2; continue }
         if (depth > 0) { if (two == "-}") { depth--; i += 2 } else i++; continue }
         if (two == "--" && substr(line, i + 2, 1) !~ /[!#$%&*+.\/<=>?@\\^|~:-]/) break
-        if (c == "\"") { i++; while (i <= n && substr(line, i, 1) != "\"") { if (substr(line, i, 1) == "\\") i++; i++ }; i++; out = out "\"\""; continue }
-        if (c == "'"'"'" && substr(line, i + 2, 1) == "'"'"'") { i += 3; out = out "'"'"''"'"'"; continue }
+        k = 0; while (substr(line, i + k, 1) == "#") k++
+        if (substr(line, i + k, 1) == "\"") {
+          h = substr(line, i, k)
+          if (substr(line, i + k, 3) == "\"\"\"") { term = "\"\"\"" h; ml = 1; i += k + 3 }
+          else { term = "\"" h; ml = 0; i += k + 1 }
+          esc = (k == 0); out = out "\"\""; continue
+        }
+        if (c == SQ && (i == 1 || substr(line, i - 1, 1) !~ /[A-Za-z0-9_]/ && substr(line, i - 1, 1) != SQ)) {
+          if (substr(line, i + 1, 1) == "\\") {
+            j = i + 3; while (j <= n && j < i + 12 && substr(line, j, 1) != SQ) j++
+            if (substr(line, j, 1) == SQ) { i = j + 1; out = out SQ SQ; continue }
+          } else if (substr(line, i + 2, 1) == SQ) { i += 3; out = out SQ SQ; continue }
+        }
         out = out c; i++
       }
+      if (!ml) term = ""
       print FILENAME ":" FNR ":" out
-    }' "$@"
+    }' SQ="'" "$@"
 }
 
 # Escape hatches and holes in code, plus any module whose code does not
-# declare `%default total` (Idris2's default is `covering`, which does not
-# check termination; a directive inside a comment does not count).
+# declare `%default total` before its first declaration (Idris2's default is
+# `covering`, which does not check termination, and %default applies only
+# from where it appears; a directive inside a comment does not count).
 # Returns 0 and prints the offending lines if anything is found.
 #   believe_me assert_total assert_smaller idris_crash unsafePerformIO
 #   postulate             -- trust or totality escapes
@@ -45,9 +66,18 @@ scan_escapes() {
        -e ':[0-9]+:.*\b(partial|covering)\b'; then
     found=0
   fi
+  # Only the module header, imports and other % directives may precede it.
+  # The awk reads to the end: exiting early would SIGPIPE code_only, which
+  # pipefail reads as a missing directive.
   for f in "$@"; do
-    if ! code_only "$f" | grep -E '^[^:]*:[0-9]+:[[:space:]]*%default[[:space:]]+total[[:space:]]*$' > /dev/null; then
-      printf '%s: no %%default total in code\n' "$f"; found=0
+    if ! code_only "$f" | awk '
+        done { next }
+        { t = $0; sub(/^[^:]*:[0-9]+:/, "", t) }
+        t ~ /^[[:space:]]*%default[[:space:]]+total[[:space:]]*$/ { ok = 1; done = 1; next }
+        t ~ /^[[:space:]]*$/ || t ~ /^[[:space:]]*(module|import)([[:space:]]|$)/ || t ~ /^[[:space:]]*%/ { next }
+        { done = 1 }
+        END { exit !ok }'; then
+      printf '%s: no %%default total before the first declaration\n' "$f"; found=0
     fi
   done
   return "$found"

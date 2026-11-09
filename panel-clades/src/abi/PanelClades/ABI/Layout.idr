@@ -16,8 +16,8 @@
 |||     (`calcStructSizeCovers`, `fieldWithinStruct`), so `verifyLayout`
 |||     needs no run-time size check;
 |||   * C layout evidence (`CABICompliant`) carries, for every field, an
-|||     offset that is a multiple of its alignment (`FieldsAligned`), fields
-|||     in order and not overlapping (`FieldsOrdered`), alignments that are
+|||     offset that is a multiple of its alignment (`FieldsAligned`), a
+|||     first field at offset 0 (`FirstAtZero`), fields in order and not overlapping (`FieldsOrdered`), alignments that are
 |||     powers of two (`AlignmentsPow2`), and a struct alignment equal to
 |||     the largest field alignment (`maxAlignment`).  Each is decided by an
 |||     equation or an `LTE` proof, never by a Boolean test followed by an
@@ -309,6 +309,13 @@ verifyLayout fields (S u) =
 -- C ABI Compatibility
 --------------------------------------------------------------------------------
 
+||| The first field starts at offset 0.  C allows padding between members
+||| and after the last, never before the first (C11 6.7.2.1p15).
+public export
+data FirstAtZero : List Field -> Type where
+  ZeroNil  : FirstAtZero []
+  ZeroHead : f.offset = 0 -> FirstAtZero (f :: rest)
+
 ||| Fields in declaration order, each starting at or after the end of the
 ||| one before, so no two overlap.
 public export
@@ -331,8 +338,8 @@ maxAlignment []        = 1
 maxAlignment (f :: fs) = maximum f.alignment (maxAlignment fs)
 
 ||| Proof that a struct follows the C layout rules: every field offset is
-||| a multiple of its alignment, the fields are in order and do not
-||| overlap, every alignment is a power of two, and the struct is aligned
+||| a multiple of its alignment, the first field is at offset 0, the fields
+||| are in order and do not overlap, every alignment is a power of two, and the struct is aligned
 ||| to its largest field alignment.  (Size covering the fields, and being a
 ||| multiple of the alignment, are carried by `StructLayout` itself.)
 public export
@@ -340,6 +347,7 @@ data CABICompliant : StructLayout -> Type where
   CABIOk :
     (layout : StructLayout) ->
     FieldsAligned layout.fields ->
+    FirstAtZero layout.fields ->
     FieldsOrdered layout.fields ->
     AlignmentsPow2 layout.fields ->
     layout.alignment = maxAlignment layout.fields ->
@@ -359,6 +367,16 @@ proveFieldsAligned (f :: rest) =
       case proveFieldsAligned rest of
         Left err => Left err
         Right restProof => Right (ConsField f rest here restProof)
+
+||| Attempt to prove the first field is at offset 0.
+public export
+proveFirstAtZero : (fields : List Field) -> Either String (FirstAtZero fields)
+proveFirstAtZero []       = Right ZeroNil
+proveFirstAtZero (f :: _) =
+  case decEq f.offset 0 of
+    No _    => Left ("First field " ++ f.name ++ " is at offset "
+                     ++ show f.offset ++ ", not 0")
+    Yes zero => Right (ZeroHead zero)
 
 ||| Attempt to prove the fields are in order and do not overlap.  Returns
 ||| `Left` naming the first field that starts before the previous one ends.
@@ -392,21 +410,16 @@ proveAlignmentsPow2 (f :: rest) =
 ||| Return C layout evidence for a layout, or the first rule it breaks.
 public export
 checkCABI : (layout : StructLayout) -> Either String (CABICompliant layout)
-checkCABI layout =
-  case proveFieldsAligned layout.fields of
-    Left err => Left err
-    Right aligned =>
-      case proveFieldsOrdered layout.fields of
-        Left err => Left err
-        Right ordered =>
-          case proveAlignmentsPow2 layout.fields of
-            Left err => Left err
-            Right pow2 =>
-              case decEq layout.alignment (maxAlignment layout.fields) of
-                No _ => Left ("Struct alignment " ++ show layout.alignment
-                              ++ " is not the largest field alignment "
-                              ++ show (maxAlignment layout.fields))
-                Yes same => Right (CABIOk layout aligned ordered pow2 same)
+checkCABI layout = do
+  aligned <- proveFieldsAligned layout.fields
+  first   <- proveFirstAtZero layout.fields
+  ordered <- proveFieldsOrdered layout.fields
+  pow2    <- proveAlignmentsPow2 layout.fields
+  case decEq layout.alignment (maxAlignment layout.fields) of
+    No _ => Left ("Struct alignment " ++ show layout.alignment
+                  ++ " is not the largest field alignment "
+                  ++ show (maxAlignment layout.fields))
+    Yes same => Right (CABIOk layout aligned first ordered pow2 same)
 
 --------------------------------------------------------------------------------
 -- Platform-Specific Layouts
@@ -493,13 +506,14 @@ exampleAlignmentsPow2 = Pow2Cons four (Pow2Cons eight (Pow2Cons eight Pow2Nil))
     eight : IsPow2 8
     eight = Pow2Double four
 
-||| The example layout follows the C rules: aligned, ordered, power-of-two
+||| The example layout follows the C rules: aligned, first field at 0,
+||| ordered, power-of-two
 ||| alignments, and struct alignment 8, its largest field alignment.
 export
 exampleLayoutValid : CABICompliant PanelClades.ABI.Layout.exampleLayout
 exampleLayoutValid =
-  CABIOk exampleLayout exampleFieldsAligned exampleFieldsOrdered
-         exampleAlignmentsPow2 Refl
+  CABIOk exampleLayout exampleFieldsAligned (ZeroHead Refl)
+         exampleFieldsOrdered exampleAlignmentsPow2 Refl
 
 ||| The decision procedure agrees on the example.
 export

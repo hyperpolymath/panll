@@ -16,7 +16,8 @@
 #
 # A missing toolchain is a failure, never a skip.  Every module under
 # src/abi/PanelClades/ must be listed in the ipkg (an unlisted one would be
-# skipped silently), declare `%default total`, and use no escape hatch and no
+# skipped silently), declare `%default total` before its first declaration
+# (the directive applies only from where it appears), and use no escape hatch and no
 # hole; the typed-wasm modules they import (the import cone) are held to the
 # same scan, and the cone is printed as the run's record of it.
 set -uo pipefail

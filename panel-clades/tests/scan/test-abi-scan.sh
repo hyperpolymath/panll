@@ -46,6 +46,15 @@ expect clean "words in a string"          'msg = "is it ?ok to say believe_me"'
 expect clean "operator, not a comment"    'x = a --> b'
 expect clean "primed identifier"          "f' : Nat" "f' = 1"
 expect clean "identifier containing partial" 'partialSum : Nat'
+expect found "escape after an escaped-quote char literal" "f = ('\\\"', believe_me v)"
+expect found "escape after an escaped-apostrophe char"   "f = ('\\'', believe_me v)"
+expect found "escape after a quote char literal"         "f = ('\"', believe_me v)"
+expect found "escape after a hex char literal"           "f = ('\\x41', ?h)"
+expect found "escape after a raw string with a backslash" 'f = #"\"# ++ believe_me v'
+expect found "escape after a closed multi-line string"   's = """' 'text' '"""' 'g = believe_me 1'
+expect clean "words in a raw string"      'msg = #"say "believe_me" and ?ok"#'
+expect clean "words in a multi-line string" 's = """' 'believe_me ?x partial' '"""'
+expect clean "primed identifier then a char literal" "f' = g' 'a'"
 
 # %default total: required in code, not in a comment.
 directive() { # directive found|clean DESCRIPTION BODY...
@@ -61,6 +70,8 @@ directive found "%default total only in a block comment" '{-' '%default total' '
 directive found "%default total only in a line comment"  '-- %default total' 'f : Nat'
 directive found "%default covering"            '%default covering' 'f : Nat'
 directive clean "%default total in code"       '%default total' 'f : Nat'
+directive found "%default total after a declaration" 'loop : Nat -> Nat' 'loop n = loop n' '%default total'
+directive clean "imports and directives before %default total" 'import Data.Nat' '%hide Prelude.id' '%default total' 'f : Nat'
 # A long module: grep must read to the end, or SIGPIPE under pipefail reads
 # as a missing directive.
 mapfile -t long < <(for i in $(seq 1 20000); do printf 'v%d : Nat\n' "$i"; done)
