@@ -44,6 +44,39 @@ jobs:
       - name: Build Panel Contract Compiler
         run: cargo build --locked --release --manifest-path tools/pcc/Cargo.toml
 
+  # Provenance model (docs/models/Provenance.tla, a PROOF-POLICY §4
+  # exception recorded in PROOF-NEEDS.adoc): TLC checks that a chain
+  # verifies only if it is the genuine one while either signing key is
+  # uncompromised, and must find the forgery when both are.
+  #
+  # PROOF-POLICY §6 deviation (also recorded in PROOF-NEEDS.adoc, state
+  # open): PanLL has no Guix manifest or proof container that provides TLC,
+  # so the official tla2tools.jar release asset is fetched and checked
+  # against the SHA-256 recorded here; the script asserts the TLC version
+  # it ran.  Java is the runner image's.
+  provenance-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      TLA2TOOLS_URL: https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar
+      TLA2TOOLS_SHA256: 936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Fetch TLA+ tools v1.7.4 (pinned by digest)
+        run: |
+          curl -sSfL --retry 3 -o "$RUNNER_TEMP/tla2tools.jar" "$TLA2TOOLS_URL"
+          echo "$TLA2TOOLS_SHA256  $RUNNER_TEMP/tla2tools.jar" | sha256sum -c -
+          java -version
+
+      - name: Model-check the provenance binding (both ways)
+        run: bash scripts/check-provenance-model.sh "$RUNNER_TEMP/tla2tools.jar"
+
   # panel-clades ABI: every PanelClades.ABI module typechecks against
   # typed-wasm's grade kernel at its pin, and the expected rejections are
   # refused.  Idris2 publishes no binaries, so 0.8.0 is built from source,

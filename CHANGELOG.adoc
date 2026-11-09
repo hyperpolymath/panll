@@ -30,6 +30,13 @@ each `+Bits32+` C encoding to its `+Nat+` equality tag.
 * `+check-abi.sh+` now also fails on holes, `+partial+`, `+covering+` and a
 module without `+%default total+`, reads code only (not comments or
 strings), and holds the typed-wasm import cone to the same scan.
+* *Provenance model rewritten and run in CI.* `+docs/models/Provenance.tla+`
+now has an adversary that signs under a leaked key, separate author and
+witness signatures, and the invariant `+Genuine+`: a verified chain is
+exactly the genuine one while either key is uncompromised. The previous
+invariant held by construction. The `+provenance-model+` job
+(`+build-validation.yml+`) runs TLC with each single key leaked (must hold)
+and with both leaked (must find the forgery).
 
 ==== Removed (2026-11-05)
 

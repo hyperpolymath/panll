@@ -272,7 +272,7 @@ trailers) is forgeable, so its output counts only as "claimed".
 |Implemented in `crates/provenance`: JCS records, ML-DSA-65 signing,
 approved public-key registry, independent witnesses, timestamp/content/chain
 verification and mutation/property tests (the `TESTED` evidence).
-Symbolic binding model: `docs/models/Provenance.tla`, a §4 exception
+Symbolic binding model: `docs/models/Provenance.tla`, `TESTED` in CI, a §4 exception
 whose record is below; protocol and limits:
 `docs/PROVENANCE-EXHIBIT-B.adoc`. This does not prove every action is
 recorded, prevent tail truncation without a checkpoint, or prove
@@ -367,38 +367,60 @@ witnesses and trusted checkpoints remain separate operational requirements.
 |Field |Record
 
 |Artefact
-|`docs/models/Provenance.tla`, with `docs/models/Provenance.cfg`
+|`docs/models/Provenance.tla`, with three TLC configurations:
+`Provenance.cfg` (author key leaked), `ProvenanceWitnessLeak.cfg`
+(witness key leaked) and `ProvenanceBothLeak.cfg` (both leaked). They are
+run by `scripts/check-provenance-model.sh` in the `provenance-model` job of
+`.github/workflows/build-validation.yml`.
 
 |Obligation
-|A record chain is reported verified only when every entry carries both an
-author and a witness signature over its own payload, its content matches
-the signed digest, and the second entry's parent names the first.
+|A chain is verified only if it is exactly the genuine chain, in order and
+with its genuine content, while at least one of the two signing keys
+(author, independent witness) is uncompromised. `Valid` mirrors what
+`crates/provenance` `verify_chain` checks: an author signature and a
+witness attestation on every record, content matching its digest, and each
+record naming its predecessor (the first naming none). The property
+`Genuine` refers to the genuine chain, which the verifier never sees, so it
+is not `Valid` restated.
 
 |Tool
-|TLA+, checked with TLC
+|TLA+, checked with TLC (`TLC2 Version 2.19 of 08 August 2024`, from
+tla2tools v1.7.4)
 
 |Why not the mapped verifier
 |The statement is about the protocol, symbolically, with signatures as
-unforgeable sets. The mapped verifiers (Creusot / Pearlite and Verus)
-check the shipped Rust instead; that obligation is the
+sets that only a key holder can add to. The mapped verifiers (Creusot /
+Pearlite and Verus) check the shipped Rust instead; that obligation is the
 `verify_entry` / `verify_witnesses` row above, and this model does not
 discharge it.
 
 |Status
-|`OPEN`. TLC is not run in CI and no run has been recorded, so the model
-has no receipt. Once run, it is `TESTED` with its bounds:
-`Values = {a, b}`, chains of exactly two entries.
+|`TESTED`, with bounds: two field/digest values (`A`, `B`) plus `None`
+for the genesis parent, so 12 possible payloads; chains of exactly two
+records; any subset of payloads forged under a leaked key. Checked both
+ways. With one leaked key, either one, `Genuine` holds over all 591,872
+distinct reachable states (depth 13). With both keys leaked, TLC must find
+the forgery and does, so the property is not vacuous. A mutation run that
+dropped the witness check from `Valid` was caught too: one leaked author
+key then forges a chain. Local run on 2026-11-09, about 7 minutes; the
+`provenance-model` job's run on `main` is the receipt.
 
-|Design limit
-|The invariant `Binding` (`verified => Valid`) holds by construction:
-`Check` sets `verified' = Valid`, `Supply` resets `verified` to `FALSE`,
-and `Sign` only adds to the signed sets, which keeps `Valid` true. A TLC
-pass would therefore show only that `verified` tracks `Valid`. The model
-has no action that forges or replays a signature, and `Sign` adds the
-author and witness signatures together, so it cannot tell an
-author-signed record from a witnessed one. To carry weight it needs
-separate author and witness signing, an adversary action, and a property
-that is not the definition of `Valid`.
+|Assumed
+|Signatures cannot be produced without the key (ML-DSA-65 unforgeability),
+and the witness attests only genuine records. Timestamps, key
+registration, chains longer than two and tail truncation are not modelled.
+
+|Deviation (PROOF-POLICY §6)
+|*Leg:* this model check. *Tool:* tla2tools.jar v1.7.4, the
+tlaplus/tlaplus GitHub release asset, SHA-256
+`936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88`; TLC
+reports `TLC2 Version 2.19 of 08 August 2024`. *Why:* PanLL has no Guix
+manifest or proof container that provides TLC, so the job fetches the
+release asset, checks it against the digest pinned in the workflow, and
+the script fails on any other TLC version. The digest was taken from the
+asset as downloaded over TLS on 2026-11-09; tlaplus publishes no checksum
+file to compare it with. Java is the runner image's. *State:* `open`,
+until TLC comes from a Guix manifest or a pinned container.
 |===
 
 == Priority
@@ -409,5 +431,6 @@ that is not the definition of `Valid`.
   unchecked assumption under the proofs.
 . PCC soundness: the highest-value proof, but only after the AffineScript
   port (#148) gives it something to check.
-. The TLA+ provenance model: restate the property so a pass means
-  something, and run TLC in CI so it has a receipt.
+. The provenance implementation proofs (Creusot / Pearlite and Verus on
+  `verify_entry`, `verify_witnesses`, `verify_chain`): the TLA+ model now
+  says what the protocol is worth, but not that the Rust implements it.

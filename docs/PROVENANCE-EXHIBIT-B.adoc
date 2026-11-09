@@ -102,8 +102,12 @@ real ML-DSA signatures, every metadata field, content mutations, witness
 tampering, identity binding, validity/revocation and chain deletion/splicing.
 Property tests generate arbitrary content, metadata and parent-hash mutations.
 `docs/models/Provenance.tla` models signature binding and chain verification
-symbolically. Its invariant is not a cryptographic proof of ML-DSA or SHA3,
-nor a proof of all implementation paths. Production adoption requires an
+symbolically, with an adversary that can sign under a leaked key. Its
+invariant `Genuine` says a verified chain is exactly the genuine one while
+either the author key or the witness key is uncompromised; TLC checks it in
+CI (`provenance-model` job) with each single key leaked, and must find the
+forgery when both are. It is not a cryptographic proof of ML-DSA or SHA3,
+nor a proof of any implementation path (PROOF-NEEDS.adoc, "Exceptions"). Production adoption requires an
 approved contributor key and independent witness; historical records are
 never silently re-signed.
 
@@ -130,3 +134,6 @@ distinct states, no invariant violation. SHA-256 of the checked model:
 `c379ece2393e2cacfffccd6bb0360184ad179c77ae72dc875948a022d123444a`.
 The model assumes signature/hash binding; it is not an implementation
 correspondence proof or a cryptographic hardness proof.
+This receipt is superseded (2026-11-09): that model's invariant held by
+construction and it had no forging action. The rewritten model and its CI
+run replace it; see PROOF-NEEDS.adoc.
