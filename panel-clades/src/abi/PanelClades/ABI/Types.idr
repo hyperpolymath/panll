@@ -144,6 +144,17 @@ public export
 DecEq Result where
   decEq = decEqViaTag resultTag resultFromTag resultTagRetract
 
+||| The C encoding of a `Result` is its decidable-equality tag, as a
+||| `Bits32`.  The two tables are written out separately; this keeps them
+||| from drifting apart.
+export
+resultTagsAgree : (r : Result) -> resultToInt r = cast (resultTag r)
+resultTagsAgree Ok           = Refl
+resultTagsAgree Error        = Refl
+resultTagsAgree InvalidParam = Refl
+resultTagsAgree OutOfMemory  = Refl
+resultTagsAgree NullPointer  = Refl
+
 --------------------------------------------------------------------------------
 -- Opaque Handles
 --------------------------------------------------------------------------------
@@ -400,6 +411,24 @@ cladeKindTagRetract Terminal   = Refl
 public export
 DecEq CladeKind where
   decEq = decEqViaTag cladeKindTag cladeKindFromTag cladeKindTagRetract
+
+||| The C encoding of a `CladeKind` is its decidable-equality tag, as a
+||| `Bits32`, so the two tables cannot drift apart.
+export
+cladeKindTagsAgree : (k : CladeKind) -> cladeKindToInt k = cast (cladeKindTag k)
+cladeKindTagsAgree Directive  = Refl
+cladeKindTagsAgree Scanner    = Refl
+cladeKindTagsAgree Builder    = Refl
+cladeKindTagsAgree Database   = Refl
+cladeKindTagsAgree Network    = Refl
+cladeKindTagsAgree Viewer     = Refl
+cladeKindTagsAgree Ai         = Refl
+cladeKindTagsAgree Loader     = Refl
+cladeKindTagsAgree Meta       = Refl
+cladeKindTagsAgree Service    = Refl
+cladeKindTagsAgree Inspector  = Refl
+cladeKindTagsAgree Bridge     = Refl
+cladeKindTagsAgree Terminal   = Refl
 
 ||| The total number of clade kinds.
 public export

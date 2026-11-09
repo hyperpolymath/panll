@@ -101,10 +101,13 @@ prelude and base (`Data.List`, `Data.Nat`, `Data.So`, `Data.Vect`,
 declaration
 |===
 
-That run predates the import-cone and hole scans. The cone was scanned at
-the pin by hand, with the same rules, and is clean. The first `main` run
-after this change is the first receipt to include both. A receipt is
-current only for its commit: rerun the job, never carry a result forward.
+That run predates the import-cone and hole scans and the tag-agreement
+proofs. On 2026-11-09 the same `check-abi.sh`, with those additions, ran
+locally with Idris2 0.8.0 built from the same commit and passed with the
+same result, listing the cone above. A local run is not a receipt. The
+first `main` run after this change is the first receipt to include them.
+A receipt is current only for its commit: rerun the job, never carry a
+result forward.
 
 === What is proved
 
@@ -118,7 +121,11 @@ current only for its commit: rerun the job, never carry a result forward.
 injective (`resultRoundTrip`, `cladeKindRoundTrip`). Equality on both is
 decidable without a catch-all `absurd` (`decEqViaTag`). `allCladeKinds`
 lists every kind (`cladeKindExhaustive`) and has length `cladeKindCount`.
-A `Handle` is never null and a `CladeId` is never empty, by construction.
+Each tag is written twice, as a `Nat` for decidable equality and as a
+`Bits32` for the C encoding, and the two give the same number
+(`resultTagsAgree`, `cladeKindTagsAgree`), so the tables cannot drift
+apart. A `Handle` is never null and a `CladeId` is never empty, by
+construction.
 
 |`Layout.idr`
 |`PROVEN`
@@ -159,7 +166,7 @@ and `WasmPointerIsEightBytes`.
 === What is not proved
 
 The first item and the last two are stated in the modules themselves. The
-other three were found reviewing the proofs on 2026-11-09.
+other two were found reviewing the proofs on 2026-11-09.
 
 * *Struct size covers the last field.* `Layout.idr` does not prove that a
   computed size is at least the end of the last field; `verifyLayout`
@@ -175,11 +182,6 @@ other three were found reviewing the proofs on 2026-11-09.
   not prove that fields are in order and do not overlap, that alignments
   are powers of two (an alignment of 0 is accepted), or that the struct's
   alignment is its largest field alignment.
-* *The two tag tables agree.* `Types.idr` defines each tag twice: as a
-  `Nat` (`resultTag`, `cladeKindTag`, used for decidable equality) and as
-  a `Bits32` (`resultToInt`, `cladeKindToInt`, the C encoding). Each table
-  is proved to round-trip on its own; nothing proves the two give the same
-  number.
 * *The Zig side matches.* Nothing checks that `panel-clades/ffi/zig/`
   exports the symbols `Foreign.idr` declares, with those types, or uses
   the sizes and tags `Types.idr` proves. `ffi/zig/src/main.zig` restates
@@ -217,13 +219,6 @@ the struct aligned to its largest field alignment, as `CABICompliant`
 evidence.
 |`OPEN`
 |Not started. Today `CABICompliant` carries field alignment only.
-|—
-
-|Tag tables agree
-|`resultToInt r = cast (resultTag r)` for every `Result`, and the same for
-`CladeKind`, or one table derived from the other.
-|`OPEN`
-|Not started. A case-by-case equation for each constructor.
 |—
 
 |Safe callback registration
@@ -433,8 +428,6 @@ that is not the definition of `Valid`.
 . Struct size lower bound and the safe callback wrapper (#149): small,
   local, and they close the two gaps the modules admit to. The rounding
   lemma comes first, since the lower bound rests on it.
-. Tag tables agree: one equation per constructor, and it removes a
-  drift between the C encoding and the decidable-equality tags.
 . Zig/Idris FFI agreement check: cheap, and it removes the largest
   unchecked assumption under the proofs.
 . PCC soundness: the highest-value proof, but only after the AffineScript
