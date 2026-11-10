@@ -33,6 +33,6 @@ permissions:
 
 jobs:
   governance:
-    uses: metadatastician/standards/.github/workflows/governance-reusable.yml@e064539116c2dcfdf282a4749dbd58c69961c7e6
+    uses: metadatastician/standards/.github/workflows/governance-reusable.yml@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5
     secrets:
       HYPATIA_SCAN_PAT: ${{ secrets.HYPATIA_SCAN_PAT }}

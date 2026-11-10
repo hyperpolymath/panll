@@ -31,7 +31,8 @@ Handle, the C type universe (`+CType+`, `+cSizeOf+`, `+HasSize+`),
 CladeId, CladeKind
 
 |`+PanelClades/ABI/Layout.idr+` |Alignment and struct layout: `+Divides+`,
-`+alignUp+`, `+FieldsAligned+`, `+CABICompliant+`
+`+alignUp+` and its bounds, `+FieldsAligned+`, `+FirstAtZero+`, `+FieldsOrdered+`,
+`+AlignmentsPow2+`, `+CABICompliant+`
 
 |`+PanelClades/ABI/Foreign.idr+` |FFI function declarations and their safe
 wrappers
@@ -49,10 +50,10 @@ against the clade's declared budget
 (all five modules)
 |===
 
-=== Check status (2026-10-14)
+=== Check status (2026-11-09)
 
 All five modules *typecheck* under Idris2 0.8.0
-(`+bash panel-clades/scripts/check-abi.sh+`), with six expected
+(`+bash panel-clades/scripts/check-abi.sh+`), with eleven expected
 rejections in `+tests/reject/+`.
 
 Before 2026-10-14, `+Types.idr+`, `+Layout.idr+` and `+Foreign.idr+` had
@@ -104,9 +105,12 @@ says so.
 |`+HasSize+` admits only `+cSizeOf+`; C int is 4 bytes everywhere; pointers are 8 bytes on Linux and 4 on WASM; size_t is pointer-sized |`+Verify.*+`; `+tests/reject/WasmPointerIsEightBytes.idr+` |PROVEN / TESTED
 |`+alignUp+` gives a multiple of the alignment; every computed struct size is a multiple of its alignment |`+alignUpCorrect+`, `+calcStructSizeAligned+` |PROVEN
 |`+Divides+` witnesses are equations |`+tests/reject/MisalignedField.idr+` |TESTED
-|The example layout is C-ABI compliant and its computed size is 24 |`+exampleLayoutValid+`, `+exampleSizeComputed+` |PROVEN
-|A computed struct size covers every field |`+verifyLayout+` checks at run time |ASSUMED (not proved)
-|`+decDivides+` returns `+Nothing+` only when the divisor does not divide |— |ASSUMED (not proved)
+|Rounding up to an alignment a ≥ 1 is at or above the size and below size + a |`+alignUpCovers+`, `+alignUpTight+` |PROVEN
+|A computed struct size covers every field, so every field of a layout lies within its total size |`+calcStructSizeCovers+`, `+fieldWithinEnd+`, `+fieldWithinStruct+` |PROVEN
+|`+CABICompliant+` evidence: offsets aligned, at least one field with the first at offset 0, fields in order without overlap, power-of-two alignments, struct alignment = largest field alignment |`+FieldsAligned+`, `+FirstAtZero+`, `+FieldsOrdered+`, `+AlignmentsPow2+`, `+maxAlignment+`; `+tests/reject/EmptyStruct.idr+`, `+FirstFieldNotAtZero.idr+`, `+OverlappingFields.idr+`, `+AlignmentNotPow2.idr+`, `+StructUnderAligned.idr+` |PROVEN / TESTED
+|The example layout is C-ABI compliant and its computed size is 24 |`+exampleLayoutValid+`, `+exampleSizeComputed+`, `+exampleCheckPasses+` |PROVEN
+|The `+Nat+` and `+Bits32+` tag tables agree |`+resultTagsAgree+`, `+cladeKindTagsAgree+` |PROVEN
+|`+decDivides+` returns `+Nothing+` only when the divisor does not divide; `+decPow2+` returns `+Nothing+` only for a non-power of two |— |ASSUMED (not proved)
 |A clade contract typechecks only if its config's declared peak fits its declared budget and its declared loss its tolerance |`+declaredContract+`; `+tests/reject/BudgetTooSmall.idr+`; `+gen-budgets.sh --check+` |PROVEN / TESTED
 |The neurosym-bridge budgets (peak 48, drift 16, budget 64; loss 2, tolerance 3) describe the panel |declared in `+clades/neurosym-bridge/config.k9.ncl+` |DESIGNED (declared, not measured)
 |The Zig FFI uses these tags, sizes and symbols |hand-restated in `+ffi/zig/src/main.zig+` |OPEN (no check)
@@ -114,7 +118,7 @@ says so.
 
 === Invariants
 
-* `+%default total+` in every module.
+* `+%default total+` in every module, before its first declaration.
 * No `+believe_me+`, `+assert_total+`, `+assert_smaller+`, `+idris_crash+`
 or `+unsafePerformIO+`. `+scripts/check-abi.sh+` greps for them and fails.
 

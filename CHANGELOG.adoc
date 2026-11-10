@@ -9,6 +9,37 @@ https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
 === https://github.com/hyperpolymath/panll/compare/v0.1.0...HEAD[Unreleased]
 
+==== Added (2026-11-09 — panel-clades layout proofs and a stricter ABI gate)
+
+* *Rounding up is tight.* For an alignment `+a ≥ 1+`, `+alignUp+` is at or
+above the size and below size plus `+a+` (`+alignUpCovers+`,
+`+alignUpTight+`).
+* *Struct size covers every field.* `+calcStructSizeCovers+` and
+`+fieldWithinStruct+` prove it, so `+verifyLayout+` drops its run-time
+check and refuses only an alignment of 0. `+StructLayout+` now carries
+that coverage as an `+LTE+` proof instead of a Boolean `+So+`.
+* *C layout evidence.* `+CABICompliant+` now also carries at least one
+field, the first at offset 0 (`+FirstAtZero+`), fields in order without overlap
+(`+FieldsOrdered+`), power-of-two alignments
+(`+AlignmentsPow2+`, decided by `+decPow2+`), and a struct alignment equal
+to the largest field alignment (`+maxAlignment+`). `+checkCABI+` decides
+all five parts.
+* *Tag tables agree.* `+resultTagsAgree+` and `+cladeKindTagsAgree+` tie
+each `+Bits32+` C encoding to its `+Nat+` equality tag.
+* Five more expected rejections: `+EmptyStruct+`, `+FirstFieldNotAtZero+`,
+`+OverlappingFields+`, `+AlignmentNotPow2+`, `+StructUnderAligned+`.
+* `+check-abi.sh+` now also fails on holes, `+partial+`, `+covering+` and a
+module without `+%default total+` before its first declaration, reads
+code only (not comments, strings, raw or multi-line strings, or character
+literals, though string interpolations are scanned as code), and holds the typed-wasm import cone to the same scan.
+* *Provenance model rewritten and run in CI.* `+docs/models/Provenance.tla+`
+now has an adversary that signs under a leaked key, separate author and
+witness signatures, and the invariant `+Genuine+`: a verified chain is
+exactly the genuine one while either key is uncompromised. The previous
+invariant held by construction. The `+provenance-model+` job
+(`+build-validation.yml+`) runs TLC with each single key leaked (must hold)
+and with both leaked (must find the forgery).
+
 ==== Removed (2026-11-05)
 
 * *The PCC ReScript scanner (`tools/pcc/src/rescript_scanner.rs`) is

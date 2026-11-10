@@ -21,18 +21,20 @@ workflows:
     '.github/workflows/dogfood-gate.yml':
         - 'actions/checkout@v7.0.1'
         - 'hyperpolymath/deed-ecosystem@main'
-        - 'metadatastician/standards@e064539116c2dcfdf282a4749dbd58c69961c7e6'
+        - 'metadatastician/standards@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5'
     '.github/workflows/e2e.yml':
         - 'actions/checkout@v7.0.1'
         - 'dtolnay/rust-toolchain@v1'
         - 'goto-bus-stop/setup-zig@v2.2.1'
         - 'swatinem/rust-cache@v2.9.3'
+    '.github/workflows/fork-governance-publish.yml':
+        - 'metadatastician/standards@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5'
     '.github/workflows/fork-governance.yml':
-        - 'metadatastician/standards@e064539116c2dcfdf282a4749dbd58c69961c7e6'
+        - 'metadatastician/standards@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5'
     '.github/workflows/governance.yml':
-        - 'metadatastician/standards@e064539116c2dcfdf282a4749dbd58c69961c7e6'
+        - 'metadatastician/standards@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5'
     '.github/workflows/hypatia-scan.yml':
-        - 'metadatastician/standards@e064539116c2dcfdf282a4749dbd58c69961c7e6'
+        - 'metadatastician/standards@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5'
     '.github/workflows/instant-sync.yml':
         - 'peter-evans/repository-dispatch@v4.0.1'
     '.github/workflows/label-triage.yml': []
@@ -40,15 +42,15 @@ workflows:
     '.github/workflows/main-estate-audit.yml':
         - 'hyperpolymath/cicd-suite@4f5404281dd7092fa77cc18daec7237c4f1ee4ac'
     '.github/workflows/mirror.yml':
-        - 'metadatastician/standards@e064539116c2dcfdf282a4749dbd58c69961c7e6'
+        - 'metadatastician/standards@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5'
     '.github/workflows/push-email-notify.yml':
         - 'hyperpolymath/smtp-notify-action@v0.5.0'
     '.github/workflows/rust-ci.yml':
         - 'metadatastician/standards@412a7031577112b31ee287cc6060179d638d6500'
     '.github/workflows/scorecard.yml':
-        - 'metadatastician/standards@e064539116c2dcfdf282a4749dbd58c69961c7e6'
+        - 'metadatastician/standards@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5'
     '.github/workflows/secret-scanner.yml':
-        - 'metadatastician/standards@e064539116c2dcfdf282a4749dbd58c69961c7e6'
+        - 'metadatastician/standards@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5'
 dependencies:
     'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9':
         ref: 'v6.1.0'
@@ -183,9 +185,14 @@ dependencies:
         commit: 'sha1-c1c9fa07992a02c1fd3d67a0dc1b08cccb852aef'
         owner_id: 6759885
         repo_id: 1352485172
-    'metadatastician/standards@e064539116c2dcfdf282a4749dbd58c69961c7e6':
-        ref: 'e064539116c2dcfdf282a4749dbd58c69961c7e6'
-        commit: 'sha1-e064539116c2dcfdf282a4749dbd58c69961c7e6'
+    'metadatastician/standards@412a7031577112b31ee287cc6060179d638d6500':
+        ref: '412a7031577112b31ee287cc6060179d638d6500'
+        commit: 'sha1-412a7031577112b31ee287cc6060179d638d6500'
+        owner_id: 297579217
+        repo_id: 1116521501
+    'metadatastician/standards@9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5':
+        ref: '9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5'
+        commit: 'sha1-9bdf864cc7f2c8e24b4df84bf00d04158eee3ad5'
         owner_id: 297579217
         repo_id: 1116521501
         uses:
@@ -201,11 +208,6 @@ dependencies:
             - 'ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e'
             - 'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6'
             - 'webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555'
-    'metadatastician/standards@412a7031577112b31ee287cc6060179d638d6500':
-        ref: '412a7031577112b31ee287cc6060179d638d6500'
-        commit: 'sha1-412a7031577112b31ee287cc6060179d638d6500'
-        owner_id: 297579217
-        repo_id: 1116521501
     'ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e':
         ref: 'v2.5.0'
         commit: 'sha1-fa7117db83c52d787ae5a89f350999701505d78e'
