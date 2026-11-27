@@ -117,7 +117,7 @@ These are hard requirements — CI and pre-commit hooks fail if any check fails.
 ## Language Policy
 
 ### no-typescript
-- description: No TypeScript files (use ReScript)
+- description: No TypeScript files (use AffineScript)
 - run: test -z "$(find . -name '*.ts' -not -name '*.d.ts' -not -path '*/deps/*' -not -path '*/node_modules/*' 2>/dev/null)"
 - severity: warning
 

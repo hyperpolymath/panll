@@ -1246,7 +1246,7 @@ impl IdentityMetrics {
 ## Code Standards
 
 - Follow Rust API guidelines
-- Use ReScript best practices
+- Use AffineScript best practices
 - Write comprehensive tests
 - Document public APIs
 - Keep changes focused
