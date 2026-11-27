@@ -204,7 +204,7 @@ project/
 
 === Language Tiers
 
-* **Tier 1** (Gold): Rust, Elixir, Zig, Ada, Haskell, ReScript, Gleam
+* **Tier 1** (Gold): Rust, Elixir, Zig, Ada, Haskell, AffineScript, Gleam
 * **Tier 2** (Silver): Nickel, Guile Scheme, Nix, Idris2, OCaml
 * **Infrastructure**: Guix channels, derivations, Julia batch scripts
 
@@ -224,7 +224,7 @@ project/
 === Prohibited
 
 * Python outside `salt/` directory
-* TypeScript/JavaScript (use ReScript)
+* TypeScript/JavaScript (use AffineScript)
 * CUE (use Guile/Nickel)
 * `Dockerfile` (use `Containerfile`)
 * npm, Bun, pnpm, yarn (use Deno)
